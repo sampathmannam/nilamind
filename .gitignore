@@ -1,0 +1,52 @@
+node_modules/
+build/
+dist/
+dist-server/
+dev-dist/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.store
+
+# Android build outputs (keep the native project, ignore generated/build artifacts)
+android/build/
+android/app/build/
+android/.gradle/
+android/.idea/
+android/captures/
+android/local.properties
+android/app/release/
+
+# Packaged apps & signing material — NEVER commit
+*.apk
+*.aab
+*.keystore
+*.jks
+key.properties
+
+# On-device LLM weights (MediaPipe .task / GGUF / LiteRT) — large + never committed; side-loaded per device
+*.task
+*.gguf
+*.litertlm
+*.bin
+
+# Capacitor-synced web assets (generated from dist/ by `cap sync`)
+android/app/src/main/assets/public/
+android/app/src/main/assets/capacitor.config.json
+
+# Python research scripts — compiled bytecode (research/s1-eval, research/rs-spike)
+__pycache__/
+*.pyc
+
+# Tooling/session artifacts
+.claude/
+
+# superpowers subagent-driven-development scratch (briefs, reports, diffs, ledger)
+.superpowers/
+.aider*
+
+# Local model-training pipeline (teacher generation, QLoRA, eval gates) — kept on disk for future
+# training but NOT published with the app. Includes pulled crisis datasets (Aegis/CounselChat/Mendeley)
+# that were cleared for training/eval but are NEVER committed (sensitive crisis text lives with the model).
+research/

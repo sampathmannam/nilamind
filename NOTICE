@@ -1,0 +1,34 @@
+NilaMind
+Copyright 2026 The NilaMind Authors
+
+Licensed under the Apache License, Version 2.0 (the "License").
+You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+
+------------------------------------------------------------------------------
+NOT A MEDICAL DEVICE — SAFETY NOTICE
+------------------------------------------------------------------------------
+NilaMind is an experimental, self-help companion. It is NOT a medical device,
+NOT a substitute for professional care, and NOT a crisis service. It does not
+diagnose, treat, or prevent any condition. See SAFETY.md before using,
+modifying, or redistributing this software.
+
+If you fork or redistribute NilaMind, you are strongly urged to KEEP the
+crisis-safety layer ("§9" — src/services/safety.ts, crisisClassifier.ts, and
+the surfaces that route a person to a human and to emergency resources) intact.
+Shipping a mental-health companion with that layer removed or weakened can
+cause real harm.
+
+------------------------------------------------------------------------------
+THIRD-PARTY COMPONENTS
+------------------------------------------------------------------------------
+This product bundles or depends on third-party software and model assets, each
+under its own license, including (non-exhaustive):
+
+  - Vosk small English speech model (Apache-2.0) — public/models/vosk-*
+  - sentence-transformers/all-MiniLM-L6-v2 (Apache-2.0) — public/models/Xenova/*
+  - ONNX Runtime Web (MIT) — public/ort/*
+  - React, Vite, Capacitor, and other dependencies — see package.json
+
+The on-device language model (a GGUF file) is NOT included in this repository
+and is NOT covered by this License. Operators must supply their own model and
+comply with that model's license.

@@ -1,0 +1,196 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  /* Calm redesign: Nila's voice + headings move to a warm serif (Lora) so she reads as a person,
+     not a chatbot — applied anywhere `font-display`/`font-serif` is used. Body stays Inter. */
+  --font-display: "Lora", ui-serif, Georgia, serif;
+  --font-serif: "Lora", ui-serif, Georgia, serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* ── Warm-dark palette (UX redesign, see docs/UX_RESEARCH.md) ───────────────────────────────
+     The whole app is themed by REMAPPING Tailwind's named ramps here rather than editing ~1600
+     utility usages across 30 files. So a class like `text-blue-400` now renders soft magenta, not blue,
+     and `bg-slate-800` renders warm charcoal, not cool blue-gray. Research basis: near-black +
+     bright/cold-blue is the documented mood-worsening combo; soft warm low-saturation calms.
+     Roles: slate = warm neutrals (text/borders/surfaces) · blue = magenta (primary accent) ·
+     emerald = success · amber = warning · rose = terracotta (crisis) · purple = lavender (CFT) ·
+     peach = special highlight. Contrast on warm-dark kept ≥4.5 for body text. */
+
+  /* slate → warm taupe-gray neutrals */
+  --color-slate-100: #ECE5DA;  /* primary text */
+  --color-slate-200: #DBD2C5;
+  --color-slate-300: #C4BAAC;  /* secondary text */
+  --color-slate-350: #B5AA9B;
+  --color-slate-400: #A89D90;  /* muted text */
+  --color-slate-500: #948A7E;  /* hint text */
+  --color-slate-600: #8F8678;  /* faint text — lightened to clear WCAG AA (4.5:1) on cards (#211C17) */
+  --color-slate-700: #4A443B;  /* strong borders */
+  --color-slate-800: #2E2922;  /* borders / subtle surfaces */
+  --color-slate-805: #2A251F;
+  --color-slate-850: #221E18;
+  --color-slate-950: #15120E;
+
+  /* blue → WARM LAVENDER on dark (primary accent; soft + low-saturation = calm. Light stops are
+     bright enough for text on near-black, 500/600 are accent fills). Calm redesign. */
+  --color-blue-200: #E2D6EC;
+  --color-blue-300: #D1BFDF;
+  --color-blue-400: #BEA4D0;
+  --color-blue-500: #AC8FC2;
+  --color-blue-600: #997BB3;
+  --color-blue-700: #836497;
+
+  /* emerald → softened success green */
+  --color-emerald-300: #A7D2BC;
+  --color-emerald-400: #7FBFA0;
+  --color-emerald-500: #5AA483;
+  --color-emerald-600: #47896C;
+
+  /* rose → muted terracotta/berry for crisis & danger (never bright red) */
+  --color-rose-200: #ECC2B6;
+  --color-rose-300: #DDA593;
+  --color-rose-400: #CE8470;
+  --color-rose-450: #C2735E;
+  --color-rose-500: #B5614E;
+  --color-rose-600: #9E4F3E;
+
+  /* amber → warm honey warnings */
+  --color-amber-300: #E8C98C;
+  --color-amber-400: #DDB463;
+  --color-amber-500: #CE9A3A;
+
+  /* purple → warm lavender on dark (user bubbles, CFT — its original intended tone) */
+  --color-purple-300: #D1BFDF;
+  --color-purple-400: #BEA4D0;
+  --color-purple-500: #AC8FC2;
+  --color-purple-600: #997BB3;
+  --color-purple-650: #8A6BAC;
+
+  /* sky → folded into the lavender family */
+  --color-sky-300: #D1BFDF;
+  --color-sky-500: #AC8FC2;
+
+  /* peach — special warm highlight (hero actions); use with dark text */
+  --color-peach-300: #EBB48F;
+  --color-peach-400: #E3A57D;
+  --color-peach-500: #D6916A;
+
+  /* extra ramp stops used across screens — defined so they never fall back to cold Tailwind defaults */
+  --color-slate-105: #E8E1D6; --color-slate-150: #E0D8CC; --color-slate-250: #CFC5B7; --color-slate-650: #837A6F; --color-slate-900: #1A1611;
+  --color-blue-800: #3E2F54; --color-blue-900: #2D2240;
+  --color-emerald-200: #C3E6D2; --color-emerald-405: #7FBFA0;
+  --color-amber-100: #F5E6C0; --color-amber-200: #ECCF94; --color-amber-450: #DDB463;
+  --color-purple-200: #E2D6EC; --color-purple-550: #997BB3;
+  --color-sky-200: #E2D6EC;
+
+  /* semantic surfaces (theme-switchable; light values live under :root.theme-light) */
+  --color-page: #171311;    /* app background */
+  --color-card: #211C17;    /* cards */
+  --color-raised: #2A241D;  /* raised surfaces */
+}
+
+/* ── Light theme (opt-in via the `theme-light` class on <html>) ──────────────────────────────
+   Trauma-informed: there is NO universal calming palette, so we offer a choice rather than impose
+   one (docs/UX_RESEARCH.md — colour psychology + user control). Same warm, low-saturation character:
+   cream surfaces + warm near-black text + the same magenta / terracotta / peach accents, darkened where
+   they read as text on a light surface. Body-text contrast kept ≥4.5. */
+:root.theme-light {
+  /* ── SUNRISE + ROSE MAGENTA (the vibrant redesign) ──
+     Warm cream base, coral/peach/gold highlights, and ROSE MAGENTA as the primary accent (the old
+     "blue"/magenta role). Still low-saturation enough on body text to stay calm; vivid only on accents,
+     heroes and CTAs. Contrast on body text kept ≥4.5 (browns on cream). */
+  --color-page: #FFF6EE;     /* warm cream */
+  --color-card: #FFFFFF;
+  --color-raised: #FFF1E6;
+  /* slate → warm-brown neutrals (text on cream) */
+  --color-slate-100: #3B2A1C; --color-slate-200: #4A3526; --color-slate-300: #6A5648;
+  /* muted/hint/faint text darkened to clear WCAG AA (4.5:1) on the cream page (#FFF6EE) — the prior
+     #9A7B66/#AE8E79/#C9AE9A read 3.6 / 2.8 / 2.0 :1 (fail). 700/800 stay light (they're borders). */
+  --color-slate-350: #7C6757; --color-slate-400: #7A6150; --color-slate-500: #836958;
+  --color-slate-600: #846B5A; --color-slate-700: #E8D6C7; --color-slate-800: #F3E3D6;
+  --color-slate-805: #F6E8DD; --color-slate-850: #FAF0E8; --color-slate-950: #FFF1E6;
+  /* blue → WARM LAVENDER on cream — primary accent (dark stops are text on cream, 500/600 are fills) */
+  --color-blue-200: #5F4683; --color-blue-300: #6B5090; --color-blue-400: #7A5DA0;
+  --color-blue-500: #8E72B4; --color-blue-600: #7E6499; --color-blue-700: #6E5589;
+  /* emerald → success green that holds up on cream */
+  --color-emerald-300: #2F7A57; --color-emerald-400: #3B8A63; --color-emerald-500: #3F8060; --color-emerald-600: #357053;
+  /* rose → coral-red for crisis (warm, vivid, still readable as text) */
+  --color-rose-200: #B23A22; --color-rose-300: #D2492E; --color-rose-400: #D2492E;
+  --color-rose-450: #C8442B; --color-rose-500: #BE3F26; --color-rose-600: #AD3620;
+  /* amber → honey */
+  --color-amber-300: #9A6A18; --color-amber-400: #8E5F12; --color-amber-500: #82550E;
+  /* purple → warm lavender (user message bubbles, CFT — its original intended tone) */
+  --color-purple-300: #6B5090; --color-purple-400: #7A5DA0; --color-purple-500: #8E72B4;
+  --color-purple-600: #7E6499; --color-purple-650: #6B5090;
+  /* peach → coral / peach / gold — the warm hero highlight */
+  --color-peach-300: #FFB088; --color-peach-400: #FF9E7D; --color-peach-500: #FF8A5C;
+  /* extra ramp stops — Sunrise values (colored text darkened for contrast on cream; blue→magenta) */
+  --color-slate-105: #3F2D1F; --color-slate-150: #45321F; --color-slate-250: #574030; --color-slate-650: #B89A86; --color-slate-900: #F2E2D6;
+  --color-blue-800: #6E5589; --color-blue-900: #4A3270;
+  --color-emerald-200: #2F7A57; --color-emerald-405: #3C8A63;
+  --color-amber-100: #82550E; --color-amber-200: #82550E; --color-amber-450: #9A6A18;
+  --color-purple-200: #5F4683; --color-purple-550: #6B5090;
+  --color-sky-200: #6B5090;
+  /* categorical accents (charts, skill-group tones) — themed so they don't go cold/over-bright on cream */
+  --color-violet-200: #6E3D80; --color-violet-300: #7A4690; --color-violet-400: #8A4D9E; --color-violet-500: #9B5BA8;
+  --color-orange-300: #C2521E; --color-orange-400: #D2591E; --color-orange-500: #E8743A;
+  --color-teal-300: #1E7A6C; --color-teal-500: #1E8E7E;
+  --color-indigo-300: #5258B8; --color-indigo-500: #6757C4;
+}
+
+/* ── Sunrise motion + gradient embellishments (active in the Sunrise/light theme) ── */
+@keyframes sunriseRise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes sunriseGlow { 0%, 100% { box-shadow: 0 0 16px rgba(172,143,194,0.28); } 50% { box-shadow: 0 0 26px rgba(172,143,194,0.44); } }
+@keyframes sunriseDrift { 0%, 100% { transform: translate(0,0); } 50% { transform: translate(30px,-22px); } }
+@keyframes sunriseDrift2 { 0%, 100% { transform: translate(0,0); } 50% { transform: translate(-26px,20px); } }
+/* Calm redesign: soft LAVENDER gradients (no more bright coral→magenta), gentler glow + lower aurora
+   opacity — quiet depth, not vibrance. Reads calm on both cream and warm-dark. */
+.sun-rise { animation: sunriseRise 0.7s cubic-bezier(0.2,0.8,0.2,1) both; }
+.sun-orb { animation: sunriseGlow 5.2s ease-in-out infinite; }
+.sun-hero { background-image: linear-gradient(115deg, #C2A9DB, #AC8FC2 50%, #9E84BC); }
+.sun-cta { background-image: linear-gradient(135deg, #9E7CC1, #B093CE); color: #fff; }
+.sun-orb-bg { background-image: linear-gradient(135deg, #BEA4D0, #9E7CC1); box-shadow: 0 4px 14px rgba(158,124,193,0.38); }
+.sun-aurora { position: fixed; border-radius: 9999px; filter: blur(95px); pointer-events: none; z-index: -1; opacity: 0.10; }
+:root.theme-light .sun-aurora { opacity: 0.14; }
+
+/* Safe-area fill — makes the app background extend under notch/home-indicator */
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* The root surface + default text follow the active theme. */
+html, body { background-color: var(--color-page); color: var(--color-slate-100); }
+
+/* Nila's orb breathes slowly — a calm presence, not an attention-grab. */
+@keyframes nilaBreathe { 0%, 100% { transform: scale(1); opacity: 0.9; } 50% { transform: scale(1.06); opacity: 1; } }
+.nila-orb { animation: nilaBreathe 4.5s ease-in-out infinite; }
+
+/* Calm motion: honour the OS "reduce motion" setting (trauma-informed). */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+}
+
+/* ── Calm soft depth (redesign) ──────────────────────────────────────────────────────────────
+   A gentle, low-contrast lift on cards + raised surfaces — the "soft UI" the design system
+   recommends for wellness — kept subtle (tight negative-spread) so it never competes with content
+   or hurts contrast. Applied app-wide via the semantic surface utilities. */
+.bg-card { box-shadow: 0 1px 2px rgba(0,0,0,0.14), 0 10px 24px -14px rgba(0,0,0,0.28); }
+.bg-raised { box-shadow: 0 1px 2px rgba(0,0,0,0.16), 0 12px 28px -14px rgba(0,0,0,0.32); }
+:root.theme-light .bg-card { box-shadow: 0 1px 2px rgba(122,93,72,0.05), 0 10px 26px -16px rgba(122,93,72,0.15); }
+:root.theme-light .bg-raised { box-shadow: 0 1px 2px rgba(122,93,72,0.06), 0 12px 30px -16px rgba(122,93,72,0.19); }
+
+/* Custom scrollbar — follows the active theme */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-page);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-slate-700);
+  border-radius: 9999px;
+}
+

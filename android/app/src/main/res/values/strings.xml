@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">NilaMind</string>
+    <string name="title_activity_main">NilaMind</string>
+    <string name="package_name">com.nilamind.app</string>
+    <string name="custom_url_scheme">com.nilamind.app</string>
+    <string name="widget_description">Your gentle check-in streak — tap to check in.</string>
+</resources>
