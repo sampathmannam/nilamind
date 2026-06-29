@@ -59,6 +59,12 @@ default). NilaMind runs whatever on-device model you give it:
   backends. For **desktop development** you can point it at a local
   [Ollama](https://ollama.com) model instead of a phone.
 
+**Reference model (⚠️ research preview):** the project's own therapy-tuned Gemma-3-4B — the exact GGUF
+this app loads — is published at
+[`sampathmannam/nilamind-gemma-3-4b-GGUF`](https://huggingface.co/sampathmannam/nilamind-gemma-3-4b-GGUF).
+It has a **known role-confusion limitation** and **no built-in crisis-safety layer** — read its model
+card first, keep the app's §9 layer in front of it, and don't treat it as a usable therapist.
+
 Reply quality, latency, and failure modes depend entirely on the model you
 choose. Re-test the safety layer against your model before any real use.
 
