@@ -1,11 +1,59 @@
 package com.nilamind.app;
 
+import android.os.Bundle;
+import android.os.Process;
+import android.util.Log;
 import android.webkit.PermissionRequest;
 import android.webkit.WebChromeClient;
 import com.getcapacitor.Bridge;
 import com.getcapacitor.BridgeActivity;
+import java.io.File;
+import java.io.FileInputStream;
 
 public class MainActivity extends BridgeActivity {
+
+  // The on-device model file warmed at launch — must match the llama.cpp adapter's path
+  // (llamaCppLlmAdapter.ts DEFAULT_MODEL_PATH).
+  private static final String MODEL_FILE = "v2-4b-Q4_K_M.gguf";
+
+  @Override
+  public void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    precacheModelWeights();
+  }
+
+  // ── Cold-start mitigation ───────────────────────────────────────────────────
+  // The ~2.3GB GGUF cold-mmaps on the FIRST inference, paging every weight in from flash
+  // → a multi-minute first reply. Warm the OS page cache at launch by sequentially READING
+  // the file on a low-priority background thread, so llama.cpp's later mmap page-faults hit
+  // RAM instead of flash.
+  //
+  // CRITICAL: this is a plain FILE READ, NOT model inference. It must never call completion()
+  // / the llama plugin — running inference in the background blocks Capacitor's single shared
+  // plugin thread and starves STT/TTS (the warm-starvation lesson). Reading bytes touches no
+  // plugin and stays on its own thread. Bytes are discarded into a reused buffer, so the app
+  // heap never holds the model; the warmth lives in the kernel page cache (reclaimable under
+  // memory pressure → on a low-RAM device the benefit may be partial, never harmful).
+  private void precacheModelWeights() {
+    final File model = new File(getExternalFilesDir(null), MODEL_FILE);
+    new Thread(() -> {
+      try {
+        Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
+        if (!model.exists() || model.length() == 0) return;
+        long total = 0L;
+        final long start = System.currentTimeMillis();
+        final byte[] buf = new byte[8 * 1024 * 1024]; // 8MB chunks, reused (no heap blowup)
+        try (FileInputStream in = new FileInputStream(model)) {
+          int n;
+          while ((n = in.read(buf)) != -1) total += n;
+        }
+        Log.i("NilaPrecache", "warmed " + (total / (1024 * 1024)) + "MB in "
+            + (System.currentTimeMillis() - start) + "ms");
+      } catch (Throwable t) {
+        Log.w("NilaPrecache", "precache skipped: " + t.getMessage());
+      }
+    }, "nila-model-precache").start();
+  }
 
   // ── Activity lifecycle ──────────────────────────────────────────────────────
 

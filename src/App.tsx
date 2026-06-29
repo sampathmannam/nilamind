@@ -37,6 +37,7 @@ import { syncWidget } from "./services/widgetSync";
 import SettingsScreen from "./components/SettingsScreen";
 import ListeningIndicator from "./components/ListeningIndicator";
 import BiometricGateHost from "./components/BiometricGateHost";
+import ModelSetupGate from "./components/ModelSetupGate";
 
 import { onSummon, setCallOpen, summonNila } from "./services/nilaActivation";
 import { wakeWord } from "./services/wakeWord";
@@ -255,6 +256,9 @@ export default function App() {
 
       {/* BIOMETRIC GATE HOST — calm fallback confirm modal for no-secure-lock / web-preview path */}
       <BiometricGateHost />
+
+      {/* MODEL SETUP GATE — first-run "download Nila's brain" screen when no on-device model is present */}
+      <ModelSetupGate />
 
       {/* EMERGENCY CRISIS OVERLAY */}
       <CrisisOverlay
