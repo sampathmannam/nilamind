@@ -17,6 +17,12 @@ conversations, check-ins, mood, and notes never leave the device.
 
 📖 **Full documentation** — architecture, the on-device brain, the §9 safety design, privacy, features, building, and distribution — is in **[`docs/wiki/`](docs/wiki/)**.
 
+## Install
+
+**Use it:** download the latest signed APK from [**Releases**](https://github.com/sampathmannam/nilamind/releases), or visit the [**landing page**](https://sampathmannam.github.io/nilamind/). On first run the app downloads its on-device model (~2.5 GB, over Wi-Fi, integrity-verified) and then works fully offline. Requires **Android 7.0+ (arm64)**. Coming soon to **IzzyOnDroid** (F-Droid client). Step-by-step: [`docs/wiki/Getting-Started.md`](docs/wiki/Getting-Started.md).
+
+**Build it:** see *Build & run* below.
+
 ## Why it exists
 
 It was built as a personal research project for someone living with bipolar
@@ -50,13 +56,14 @@ Dexie (IndexedDB) · ONNX Runtime Web · Vosk · recharts.
 
 ## Bring your own model
 
-**The language model is not included in this repository** (GGUF files are large
+**The language model is not bundled in this repository** (GGUF files are large
 and licensed separately, and crisis-capable apps shouldn't ship a brain by
-default). NilaMind runs whatever on-device model you give it:
+default). The installed app **downloads its model on first run** (integrity-verified,
+over Wi-Fi); developers can side-load any GGUF instead:
 
 - On the device, replies are produced by `src/services/llamaCppLlmAdapter.ts`
-  from a **GGUF** you supply (e.g. a Gemma-3-4B-Instruct GGUF). The file is
-  side-loaded onto the device, not bundled in the app.
+  from a **GGUF** — downloaded in-app on first run, or side-loaded by a developer
+  (e.g. a Gemma-3-4B-Instruct GGUF). It is not committed to the app.
 - `src/services/localLlm.ts` is a small seam so you can wire other on-device
   backends. For **desktop development** you can point it at a local
   [Ollama](https://ollama.com) model instead of a phone.
@@ -64,8 +71,10 @@ default). NilaMind runs whatever on-device model you give it:
 **Reference model (⚠️ research preview):** the project's own therapy-tuned Gemma-3-4B — the exact GGUF
 this app loads — is published at
 [`sampathmannam/nilamind-gemma-3-4b-GGUF`](https://huggingface.co/sampathmannam/nilamind-gemma-3-4b-GGUF).
-It has a **known role-confusion limitation** and **no built-in crisis-safety layer** — read its model
-card first, keep the app's §9 layer in front of it, and don't treat it as a usable therapist.
+Its main practical limitation is **repetitive/formulaic phrasing**, and it has **no built-in
+crisis-safety layer** — read its model card, keep the app's §9 layer in front of it, and don't treat
+it as a usable therapist. (An earlier "role-confusion" concern turned out to be a single-turn
+eval-harness artifact — in the app's real prompt shape the model stays in Nila's voice.)
 
 Reply quality, latency, and failure modes depend entirely on the model you
 choose. Re-test the safety layer against your model before any real use.
