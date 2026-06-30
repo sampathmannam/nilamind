@@ -34,4 +34,4 @@ Please treat that seriously and report it. The crisis layer is high-recall but i
 No. It's experimental and personal — not clinically validated, no support guarantees. Use at your own risk.
 
 **Who built it, and why?**
-A personal research project by someone living with bipolar disorder, to support people who are struggling and may not feel able to open up. Shared openly under the rule: *help is the only metric — never gather data at any cost.*
+A personal research project by someone with lived experience of mental illness, to support people who are struggling and may not feel able to open up. Shared openly under the rule: *help is the only metric — never gather data at any cost.*

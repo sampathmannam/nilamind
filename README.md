@@ -25,9 +25,9 @@ conversations, check-ins, mood, and notes never leave the device.
 
 ## Why it exists
 
-It was built as a personal research project for someone living with bipolar
-disorder — to support people who are struggling and may not feel able to open
-up to anyone. It is shared openly so others can learn from it and build on it.
+It was built as a personal research project by someone with lived experience of
+mental illness — to support people who are struggling and may not feel able to
+open up to anyone. It is shared openly so others can learn from it and build on it.
 The one rule it holds above all: **help is the only metric — never gather data
 at any cost.**
 

@@ -11,7 +11,7 @@ NilaMind is an Android app built around *Nila* — a companion you can talk to, 
 
 ## Why it exists
 
-NilaMind was built as a personal research project by someone living with bipolar disorder — to support people who are struggling and may not feel able to open up to anyone. It is shared openly so others can learn from it and build on it.
+NilaMind was built as a personal research project by someone with lived experience of mental illness — to support people who are struggling and may not feel able to open up to anyone. It is shared openly so others can learn from it and build on it.
 
 The one rule it holds above all: **help is the only metric — never gather data at any cost.** That single constraint shapes every architectural decision: the model runs locally, storage is encrypted on-device, and the only thing that can ever leave the phone is a single training example the user explicitly chooses to donate (see [Privacy & Data](Privacy-and-Data.md)).
 

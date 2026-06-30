@@ -10,7 +10,7 @@ export interface SleepTip {
 }
 
 // Invitation-framed, cited. Clinical-review guardrails are baked into the COPY: stimulus control is gentle +
-// qualified (sleep interruption isn't for everyone — destabilizing for bipolar), alcohol is stated factually
+// qualified (sleep interruption isn't for everyone — destabilizing for some conditions), alcohol is stated factually
 // rather than as advice to avoid (AUD-aware), and a "limits" tip points to a clinician.
 export const SLEEP_TIPS: SleepTip[] = [
   {

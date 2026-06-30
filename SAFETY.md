@@ -8,7 +8,7 @@ service**. It does not diagnose, treat, cure, or prevent any condition. Nothing
 it says is medical, psychological, or clinical advice. Use it at your own risk.
 
 It was built as a personal, single-user research project with a specific design
-focus (bipolar / manic-episode awareness). It has **not** been clinically
+focus (mood-episode awareness). It has **not** been clinically
 validated, has not been through any regulatory process, and has not been tested
 across the range of people, languages, or conditions a real product would need.
 
