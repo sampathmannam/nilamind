@@ -1,0 +1,22 @@
+NilaMind is a calm, private space to talk through anxiety, low mood, and the hard days — with a companion called Nila that runs entirely on your phone.
+
+There is no account, no backend, and no analytics. Your conversations never leave the device: the AI model runs locally, and everything you write is stored only in encrypted on-device storage that you can view and delete at any time.
+
+What's inside:
+
+• Nila — a warm, on-device AI companion grounded in evidence-based approaches (CBT, DBT, ACT, and self-compassion). She listens first, and offers one small thing only when it actually helps.
+• A library of short, research-based self-help skills you can open and follow.
+• Voice: talk to Nila and have her replies read back to you.
+• Private journaling and gentle check-ins that stay on your device.
+• A built-in crisis safety layer that surfaces helplines when it detects you may be in danger — it runs on-device and independently of the AI.
+
+Privacy by design:
+Nila's "brain" is a local language model. There is no cloud chat endpoint, no API key, and no network call to generate replies. The app collects nothing about you.
+
+First-run download:
+On first launch the app downloads its on-device language model (about 2.5 GB) over Wi-Fi. That model is provided under Google's Gemma license (which is not a free/open-source license) and is fetched from Hugging Face. After the one-time download, the app works fully offline.
+
+Please read:
+NilaMind is an early research preview and a self-help support tool. It is not a medical device, not therapy, and not a substitute for professional care or human connection. If you are in crisis, please contact a local emergency number or a crisis line — Nila will say so too.
+
+The app is open source (Apache-2.0). The source code, the model card, and a full safety write-up are linked from the project repository.

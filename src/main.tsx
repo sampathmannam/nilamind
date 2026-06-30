@@ -38,17 +38,15 @@ if ((import.meta as any).env?.DEV) {
   });
 }
 
-// Native: on-device IS Nila's brain (no cloud). QUALITY-FIRST: a size-verified on-disk model — the
-// fine-tuned V2 4B GGUF (side-loaded OR downloaded in-app), run via llama.cpp — is the brain whenever
-// present. Only if there's NO valid local model do we fall back to Gemini Nano (Gemma-4 lineage,
-// provided by Android AICore) as a graceful bridge so a fresh install isn't brain-dead; and if there's
-// no Nano either, mark the brain as needing first-run setup so the user can download the 4B (no adb).
-// If none is ready, isLocalLlmReady() stays false and the chat is the calm offline companion.
-// Code-split so the native bindings never enter the web bundle.
+// Native: on-device IS Nila's brain (no cloud). A size-verified on-disk model — the fine-tuned V2 4B
+// GGUF (side-loaded OR downloaded in-app), run via llama.cpp — is the brain. findInstalledModel only
+// returns a file whose byte length matches the catalog exactly, so a truncated/corrupt file is never
+// loaded. If no valid model is on disk yet, mark the brain as needing first-run setup so the user can
+// download the 4B in-app (no adb). If nothing is ready, isLocalLlmReady() stays false and the chat is
+// the calm offline companion. (No Google/Gemini-Nano path — the app has ZERO proprietary deps so it
+// stays cleanly FOSS for the F-Droid ecosystem.) Code-split so the native bindings never enter the web bundle.
 if (Capacitor.isNativePlatform()) {
-  import("./services/localLlm").then(async ({ registerLocalLlmBackend }) => {
-    // 1. PREFER the local 4B specialist (the user's quality choice). findInstalledModel only returns a
-    //    file whose byte length matches the catalog exactly, so a truncated/corrupt file is never loaded.
+  import("./services/localLlm").then(async () => {
     try {
       const { findInstalledModel, registerDownloadedBackend } = await import("./services/modelDownload");
       const installed = await findInstalledModel();
@@ -57,26 +55,8 @@ if (Capacitor.isNativePlatform()) {
         return;
       }
     } catch {
-      /* nothing valid on disk → try Nano, then first-run setup */
+      /* nothing valid on disk → first-run setup */
     }
-    // 2. No local model: Gemini Nano as a bridge brain. If only 'downloadable', ask AICore to provision
-    //    it in the background (it fetches when the device is charging + on Wi-Fi + idle); it becomes
-    //    'available' on a later launch.
-    try {
-      const { LocalLLM } = await import("@capacitor/local-llm");
-      const { status } = await LocalLLM.systemAvailability();
-      if (status === "available") {
-        const { createNanoBackend } = await import("./services/nanoLlmAdapter");
-        registerLocalLlmBackend(createNanoBackend());
-        return;
-      }
-      if (status === "downloadable") {
-        LocalLLM.download().catch(() => {});
-      }
-    } catch {
-      /* no Nano on this device */
-    }
-    // 3. Neither: first-run setup → download the 4B in-app (no adb).
     const { setBrainStatus } = await import("./services/brainSetup");
     setBrainStatus("needs-setup");
   }).catch(() => {});

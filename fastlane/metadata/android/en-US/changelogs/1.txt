@@ -1,0 +1,8 @@
+First public release.
+
+• Nila — a fully on-device AI mental-health companion (no account, no backend, nothing leaves your phone).
+• Evidence-based self-help skills, voice in and out, private journaling and check-ins.
+• On-device crisis safety layer that surfaces helplines independently of the AI.
+• First run downloads the local language model (~2.5 GB) over Wi-Fi; fully offline afterwards.
+
+Early research preview — a self-help tool, not a medical device or a substitute for professional care.
