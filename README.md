@@ -15,6 +15,8 @@ conversations, check-ins, mood, and notes never leave the device.
 
 ---
 
+📖 **Full documentation** — architecture, the on-device brain, the §9 safety design, privacy, features, building, and distribution — is in **[`docs/wiki/`](docs/wiki/)**.
+
 ## Why it exists
 
 It was built as a personal research project for someone living with bipolar
