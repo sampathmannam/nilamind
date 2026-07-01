@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Anchor, Lock, Loader2 } from "lucide-react";
 import { bootSecure, hydrate } from "../services/secureLocal";
 import { unlockWithPin } from "../services/secureStore";
+import CrisisHelpButton from "./CrisisHelpButton";
 
 // Wraps the app: boots encryption-at-rest before any data screen mounts, and shows a PIN unlock
 // screen when the user has opted into PIN (zero-knowledge) mode. Device mode unlocks silently.
@@ -99,6 +100,9 @@ function UnlockScreen({ onUnlocked }: { onUnlocked: () => void }) {
           Your PIN never leaves this device and isn't stored anywhere — it only unlocks your data.
           If you've forgotten it, your encrypted entries can't be recovered.
         </p>
+
+        {/* Crisis help stays reachable even locked out — it needs no decryption or unlock. */}
+        <CrisisHelpButton />
       </div>
     </div>
   );

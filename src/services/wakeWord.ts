@@ -1,7 +1,11 @@
 // On-device wake-word listener for "Nila" (Vosk WASM). Foreground-only. Privacy: nothing is
 // recorded or sent — only partial hypotheses are inspected in memory for the word "nila".
 
-import { createModel } from "vosk-browser";
+// `vosk-browser` pulls in a ~6 MB WASM glue chunk. The wake word is OPT-IN, so importing it statically
+// made every user (most of whom never enable it) pay that JS at app boot. It's now dynamically imported
+// inside start() so the cost is only paid when the feature is actually turned on. These are TYPE-ONLY
+// imports (erased at build → no runtime dependency, no eager chunk).
+import type { createModel } from "vosk-browser";
 import type { ServerMessagePartialResult } from "vosk-browser/dist/interfaces";
 import { Capacitor } from "@capacitor/core";
 import { SpeechRecognition } from "@capacitor-community/speech-recognition";
@@ -57,8 +61,11 @@ export const wakeWord = {
         }
       }
 
-      // Load model once; keep it alive for subsequent start() calls.
+      // Load model once; keep it alive for subsequent start() calls. Dynamic import keeps the ~6 MB
+      // vosk-browser WASM glue out of the boot bundle — it's only fetched when the user enables the
+      // wake word and start() actually runs.
       if (!model) {
+        const { createModel } = await import("vosk-browser");
         model = await createModel(MODEL_URL);
       }
 

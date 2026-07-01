@@ -54,7 +54,8 @@ export default function CheckInScreen({ onCheckInSaved, onNavigateToCoach }: Che
     const saved = secureLocal.getItem("nilamind_checkins");
     let checkins: CheckInEntry[] = [];
     if (saved) {
-      try { checkins = JSON.parse(saved); } catch (e) { console.error(e); }
+      // Static message only — never log the error object: it can echo a snippet of decrypted check-in content to logcat.
+      try { checkins = JSON.parse(saved); } catch { console.error("Failed to parse stored check-ins"); }
     }
     checkins.push(newEntry);
     secureLocal.setItem("nilamind_checkins", JSON.stringify(checkins));
@@ -89,7 +90,8 @@ export default function CheckInScreen({ onCheckInSaved, onNavigateToCoach }: Che
     const saved = secureLocal.getItem("nilamind_checkins");
     let checkins: CheckInEntry[] = [];
     if (saved) {
-      try { checkins = JSON.parse(saved); } catch (e) { console.error(e); }
+      // Static message only — never log the error object: it can echo a snippet of decrypted check-in content to logcat.
+      try { checkins = JSON.parse(saved); } catch { console.error("Failed to parse stored check-ins"); }
     }
     checkins.push(newEntry);
     secureLocal.setItem("nilamind_checkins", JSON.stringify(checkins));

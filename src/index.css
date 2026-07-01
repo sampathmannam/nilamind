@@ -113,8 +113,11 @@
   /* blue → WARM LAVENDER on cream — primary accent (dark stops are text on cream, 500/600 are fills) */
   --color-blue-200: #5F4683; --color-blue-300: #6B5090; --color-blue-400: #7A5DA0;
   --color-blue-500: #8E72B4; --color-blue-600: #7E6499; --color-blue-700: #6E5589;
-  /* emerald → success green that holds up on cream */
-  --color-emerald-300: #2F7A57; --color-emerald-400: #3B8A63; --color-emerald-500: #3F8060; --color-emerald-600: #357053;
+  /* emerald → success green that holds up on cream. 400 is used as coloured TEXT 43× (icons/labels on
+     cream & white) + a few fills; #3B8A63 was only 3.93:1 as text on cream. Darkened to #2E6B4E →
+     5.9:1 as text on cream and 6.3:1 white-on-fill (clears WCAG AA in both roles). */
+  --color-emerald-500: #3A7659; /* darkened from #3F8060: cream/white text on emerald-500 fills now clears AA (4.85–5.36:1 vs 4.25–4.7:1), incl. the Reach-out send button's hover */
+  --color-emerald-300: #2F7A57; --color-emerald-400: #2E6B4E; --color-emerald-600: #357053;
   /* rose → coral-red for crisis (warm, vivid, still readable as text) */
   --color-rose-200: #B23A22; --color-rose-300: #D2492E; --color-rose-400: #D2492E;
   --color-rose-450: #C8442B; --color-rose-500: #BE3F26; --color-rose-600: #AD3620;
@@ -123,10 +126,15 @@
   /* purple → warm lavender (user message bubbles, CFT — its original intended tone) */
   --color-purple-300: #6B5090; --color-purple-400: #7A5DA0; --color-purple-500: #8E72B4;
   --color-purple-600: #7E6499; --color-purple-650: #6B5090;
-  /* peach → coral / peach / gold — the warm hero highlight */
+  /* peach → coral / peach / gold — the warm hero highlight. CONTRACT: dark text only (never white).
+     With the light-theme dark text (#3B2A1C) all three stops clear WCAG AA (5.9–7.7:1); white on peach
+     is ~2.3:1 and must not be used. (QA flagged white-on-peach; the fix is the dark-text pairing, which
+     is peach's documented role — darkening toward white-legibility would break the dark-text contrast.) */
   --color-peach-300: #FFB088; --color-peach-400: #FF9E7D; --color-peach-500: #FF8A5C;
   /* extra ramp stops — Sunrise values (colored text darkened for contrast on cream; blue→magenta) */
-  --color-slate-105: #3F2D1F; --color-slate-150: #45321F; --color-slate-250: #574030; --color-slate-650: #B89A86; --color-slate-900: #F2E2D6;
+  /* slate-650 is used as body/secondary text; #B89A86 was 2.46:1 on cream (fail). Darkened to
+     #7C6757 → 5.0:1 on cream / 5.3:1 on white (clears WCAG AA on both surfaces). */
+  --color-slate-105: #3F2D1F; --color-slate-150: #45321F; --color-slate-250: #574030; --color-slate-650: #7C6757; --color-slate-900: #F2E2D6;
   --color-blue-800: #6E5589; --color-blue-900: #4A3270;
   --color-emerald-200: #2F7A57; --color-emerald-405: #3C8A63;
   --color-amber-100: #82550E; --color-amber-200: #82550E; --color-amber-450: #9A6A18;
@@ -149,10 +157,17 @@
 .sun-rise { animation: sunriseRise 0.7s cubic-bezier(0.2,0.8,0.2,1) both; }
 .sun-orb { animation: sunriseGlow 5.2s ease-in-out infinite; }
 .sun-hero { background-image: linear-gradient(115deg, #C2A9DB, #AC8FC2 50%, #9E84BC); }
-.sun-cta { background-image: linear-gradient(135deg, #9E7CC1, #B093CE); color: #fff; }
+/* .sun-cta is the most-used control (Tap-to-talk / send / user chat bubbles). White text on the old
+   #9E7CC1→#B093CE stops was 2.7–3.4:1 (fails WCAG AA). Darkened into the purple-700 range so white text
+   clears ≥4.5:1 (5.4:1 / 6.6:1) while staying on-brand/calm — these are the app's own magenta stops. */
+.sun-cta { background-image: linear-gradient(135deg, #7A5DA0, #6B5090); color: #fff; }
 .sun-orb-bg { background-image: linear-gradient(135deg, #BEA4D0, #9E7CC1); box-shadow: 0 4px 14px rgba(158,124,193,0.38); }
-.sun-aurora { position: fixed; border-radius: 9999px; filter: blur(95px); pointer-events: none; z-index: -1; opacity: 0.10; }
-:root.theme-light .sun-aurora { opacity: 0.14; }
+/* Aurora glows are a LIGHT-THEME (Sunrise) embellishment only. They were rendering on the dark theme
+   too (JSX mounts them unconditionally), wasting three blur(95px) composited layers. Gate on the theme
+   class: hidden by default, shown only under .theme-light. A class check survives runtime theme switches
+   with no JS/listeners, so it never desyncs from the <html> theme-light toggle. */
+.sun-aurora { display: none; position: fixed; border-radius: 9999px; filter: blur(95px); pointer-events: none; z-index: -1; opacity: 0.10; }
+:root.theme-light .sun-aurora { display: block; opacity: 0.14; }
 
 /* Safe-area fill — makes the app background extend under notch/home-indicator */
 html, body, #root {

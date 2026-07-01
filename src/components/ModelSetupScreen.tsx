@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { Download, ShieldCheck, Lock } from "lucide-react";
+import { Download, ShieldCheck, Lock, WifiOff, ArrowRight } from "lucide-react";
 import NilaOrb from "./NilaOrb";
+import CrisisHelpButton from "./CrisisHelpButton";
 import { MODELS, formatSize } from "../services/modelCatalog";
 import {
   downloadModel,
@@ -9,6 +10,13 @@ import {
   type DownloadProgress,
 } from "../services/modelDownload";
 import { setBrainStatus } from "../services/brainSetup";
+
+// Best-effort connectivity read. navigator.onLine is a coarse signal (it only knows the radio/link is up,
+// not that traffic actually reaches the internet) but it reliably catches the common "no Wi-Fi / airplane
+// mode" case before we kick off a multi-GB transfer that would otherwise just fail opaquely.
+function isOffline(): boolean {
+  try { return typeof navigator !== "undefined" && navigator.onLine === false; } catch { return false; }
+}
 
 // First-run screen: the on-device brain isn't installed yet, so download it (no adb side-load).
 // The download is large and one-time; rather than just spin, the wait is used to BUILD TRUST and set
@@ -30,6 +38,7 @@ export default function ModelSetupScreen({ onReady }: { onReady: () => void }) {
   const [progress, setProgress] = useState<DownloadProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [tip, setTip] = useState(0);
+  const [offline, setOffline] = useState(isOffline());
 
   const totalMB = model.sizeBytes / 1e6;
 
@@ -40,7 +49,25 @@ export default function ModelSetupScreen({ onReady }: { onReady: () => void }) {
     return () => clearInterval(id);
   }, [busy]);
 
+  // Keep the offline banner live so it clears the moment Wi-Fi comes back (and appears if it drops).
+  useEffect(() => {
+    const sync = () => setOffline(isOffline());
+    window.addEventListener("online", sync);
+    window.addEventListener("offline", sync);
+    return () => {
+      window.removeEventListener("online", sync);
+      window.removeEventListener("offline", sync);
+    };
+  }, []);
+
   const start = async () => {
+    // Offline pre-check: don't kick off a multi-GB transfer that can only fail. Tell them plainly.
+    if (isOffline()) {
+      setOffline(true);
+      setConfirming(false);
+      setError("You're offline — connect to Wi-Fi to download Nila. Your tools and crisis help still work offline in the meantime.");
+      return;
+    }
     setError(null);
     setConfirming(false);
     setBusy(true);
@@ -52,21 +79,63 @@ export default function ModelSetupScreen({ onReady }: { onReady: () => void }) {
       await registerDownloadedBackend(model);
       setBrainStatus("ready");
       onReady();
-    } catch {
-      setError("That didn't finish downloading — check your connection and try again. Nothing was kept.");
+    } catch (e) {
+      // Distinguish the likely cause so the message is actionable rather than a generic "try again".
+      const msg = e instanceof Error ? e.message : "";
+      if (isOffline()) {
+        setError("The connection dropped mid-download — reconnect to Wi-Fi and try again. Nothing was kept.");
+      } else if (/incomplete|size mismatch|valid model|not a valid/i.test(msg)) {
+        // isComplete / hasValidHeader / verifySha256 rejected the file (truncated or corrupt).
+        setError("The download arrived damaged and was discarded, so nothing corrupt is ever loaded. Please try again — usually it works the second time.");
+      } else {
+        setError("That didn't finish downloading — check your connection and try again. Nothing was kept.");
+      }
       setBusy(false);
       setProgress(null);
     }
   };
 
+  // UX-level cancel. The native Filesystem.downloadFile transfer has no AbortSignal, so this can't kill the
+  // in-flight bytes; it unblocks the UI (the user is no longer stuck watching the bar) and returns to the
+  // idle screen. Any partial `.part` is cleaned up on the next download attempt (tryDelete) or on failure.
+  // TODO(modelDownload): thread an AbortController through downloadModel for a true byte-level cancel.
+  const cancel = () => {
+    setBusy(false);
+    setProgress(null);
+    setConfirming(false);
+    setError(null);
+  };
+
+  // Skip into the app without the model. The app is explicitly designed to run model-less — the chat falls
+  // back to the calm offline companion and every tool + crisis line stays available. Dismiss the gate by
+  // marking the brain "ready" for this session; on next launch main.tsx re-checks disk and, finding no
+  // model, will offer setup again. (Full deferral of the gate is intentionally NOT more invasive than this.)
+  const skipForNow = () => {
+    setBrainStatus("ready");
+    onReady();
+  };
+
   return (
-    <div className="fixed inset-0 z-[60] bg-page text-slate-200 flex flex-col items-center justify-center px-6 overflow-y-auto">
+    <div
+      className="fixed inset-0 z-[60] bg-page text-slate-200 flex flex-col items-center justify-center px-6 overflow-y-auto"
+      style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 88px)" }}
+    >
       <NilaOrb size={80} />
       <h1 className="text-xl font-semibold mt-4">Set up Nila</h1>
       <p className="text-sm text-slate-400 text-center mt-1.5 max-w-[18rem] leading-relaxed">
         Nila's brain runs entirely on your phone — nothing you say ever leaves the device. It downloads
         once, then works fully offline.
       </p>
+
+      {/* Offline pre-check banner — surfaces before the user taps download so the cause is obvious. */}
+      {offline && !busy && (
+        <div className="w-full max-w-[18rem] mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 flex gap-2" role="status">
+          <WifiOff className="w-4 h-4 text-amber-300 shrink-0 mt-0.5" />
+          <p className="text-[12px] text-amber-200/90 leading-relaxed">
+            You're offline — connect to Wi-Fi to download Nila. Your tools and crisis help work offline right now.
+          </p>
+        </div>
+      )}
 
       {busy ? (
         <div className="w-full max-w-[18rem] mt-8" aria-live="polite">
@@ -85,6 +154,13 @@ export default function ModelSetupScreen({ onReady }: { onReady: () => void }) {
               {TIPS[tip]}
             </p>
           </div>
+          <button
+            type="button"
+            onClick={cancel}
+            className="w-full mt-3 text-[13px] text-slate-400 hover:text-slate-200 py-2 min-h-[44px] transition-colors"
+          >
+            Cancel
+          </button>
         </div>
       ) : confirming ? (
         <div className="w-full max-w-[18rem] mt-8">
@@ -132,8 +208,23 @@ export default function ModelSetupScreen({ onReady }: { onReady: () => void }) {
             loaded.
           </p>
           {error && <p className="text-[12px] text-rose-400 mt-2">{error}</p>}
+
+          {/* Skip into the app now — the tools and crisis help work without the model; you can download later. */}
+          <button
+            type="button"
+            onClick={skipForNow}
+            id="model-setup-skip"
+            className="w-full mt-4 flex items-center justify-center gap-1.5 text-[13px] font-medium text-slate-300 hover:text-slate-100 py-2 min-h-[44px] transition-colors"
+          >
+            Skip for now — use tools &amp; crisis help
+            <ArrowRight className="w-3.5 h-3.5 shrink-0" />
+          </button>
         </div>
       )}
+
+      {/* Crisis help is reachable throughout setup — including during the multi-GB download. Fully offline
+          (region registry + tel:/URL links); no model or identity needed. Pinned so it never scrolls away. */}
+      <CrisisHelpButton variant="floating" />
     </div>
   );
 }

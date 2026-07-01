@@ -200,21 +200,24 @@ describe("§9 streaming guard (e2e) — companion tripped stream suppresses unsa
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// S3 Phase 2 (U4) — RAG grounding: buildNilaSystem injects the most-relevant skills when the latest
-// user message is known, but stays BYTE-IDENTICAL to the old prompt with no query (back-compat).
+// S3 Phase 2 (U4) — RAG grounding: with a known latest user message, buildNilaSystem injects ONLY the
+// top-3 most-relevant skills (not the whole 40-skill library) to cut re-prefilled prompt tokens every
+// turn (the dominant TTFT cost; KV prefix-reuse is impossible on this on-device binding). With NO query
+// it falls back to the full library as a safe default (also what the opening turn uses).
 // ─────────────────────────────────────────────────────────────────────────────
-describe("S3 RAG grounding — buildNilaSystem(query) is additive + back-compat", () => {
-  it("no-query output is byte-identical (undefined === '' === no-arg)", () => {
+describe("S3 RAG grounding — buildNilaSystem(query) uses top-3, no-query falls back to full library", () => {
+  it("no-query output is stable (undefined === '' === no-arg) and is the full library", () => {
     expect(buildNilaSystem()).toBe(buildNilaSystem(undefined));
     expect(buildNilaSystem()).toBe(buildNilaSystem(""));
+    expect(buildNilaSystem()).toContain("IN-APP SKILLS LIBRARY");
   });
-  it("a real query ADDS the grounding block; no-query does not", () => {
+  it("a real query injects the top-3 grounding block INSTEAD OF the full library dump", () => {
     const grounded = buildNilaSystem("I keep having the same negative automatic thought");
     expect(grounded).toContain("MOST RELEVANT");
     expect(grounded).toContain("Thought Record");
+    // top-3 REPLACES the full library on a query turn → fewer wasted prompt tokens re-prefilled
+    expect(grounded).not.toContain("IN-APP SKILLS LIBRARY");
+    // no-query stays the full library (safe default / opening turn), and never carries the top-3 header
     expect(buildNilaSystem()).not.toContain("MOST RELEVANT");
-    // additive: the full skills library list is still present in both
-    expect(grounded).toContain("IN-APP SKILLS LIBRARY");
-    expect(buildNilaSystem()).toContain("IN-APP SKILLS LIBRARY");
   });
 });

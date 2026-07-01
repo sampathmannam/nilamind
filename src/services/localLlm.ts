@@ -1,13 +1,13 @@
-// The on-device LLM runtime SEAM for the chosen base, Gemma 4 (E2B mid-range / E4B flagship, Apache-2.0).
+// The on-device LLM runtime SEAM for Nila's brain — the fine-tuned Gemma-3-4B (V2), shipped as a GGUF.
 //
-// The real binding (Google LiteRT-LM / @capgo/capacitor-llm) is a NATIVE, device-only dependency that
+// The real binding (llama.cpp via llama-cpp-capacitor) is a NATIVE, device-only dependency that
 // cannot run in the web build or in node/test — so it is deliberately NOT imported here. Instead the
 // native adapter REGISTERS a backend at runtime via registerLocalLlmBackend(). Until one is registered
 // (e.g. on web, or before the model finishes loading on device), the on-device model is simply
 // "unavailable" and Nila falls back to the calm offline companion — there is NO cloud transport. This
 // keeps the app fully working, and makes the routing logic unit-testable by registering a fake backend.
 //
-// Shipped bindings: capgoLlmAdapter.ts (native — @capgo/capacitor-llm over MediaPipe Gemma) and
+// Shipped bindings: llamaCppLlmAdapter.ts (native — llama.cpp over the GGUF) and
 // ollamaLlmAdapter.ts (desktop/dev). main.tsx registers the right one per platform once the model loads.
 
 export interface LocalGenParams {

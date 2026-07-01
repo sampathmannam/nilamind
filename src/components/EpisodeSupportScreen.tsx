@@ -1,7 +1,7 @@
 import { secureLocal } from "../services/secureLocal";
 import React, { useState, useEffect, useRef } from "react";
-import { scanForCrisis, getCrisisReply } from "../safety";
-import { crisisLinesInline } from "../services/crisisResources";
+import { getCrisisReply } from "../safety";
+import { detectCrisis } from "../services/crisisClassifier";
 import { logNilaTurn } from "../services/nilaSessions";
 import CrisisLines from "./CrisisLines";
 import { Shield, Save, LogOut } from "lucide-react";
@@ -114,7 +114,7 @@ export default function EpisodeSupportScreen({
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading, isWaitingForIntensityUpdate, escalationShown]);
 
-  const handleStartSession = () => {
+  const handleStartSession = async () => {
     if (!chatInput.trim()) return;
     const initialText = chatInput.trim();
     setChatInput("");
@@ -127,8 +127,10 @@ export default function EpisodeSupportScreen({
     const initialHistory: NilaUiMessage[] = [{ role: "user", content: initialText }];
     setMessages(initialHistory);
 
-    // Initial scan — crisis text never leaves the device
-    const isCrisis = scanForCrisis(initialText);
+    // Initial scan — crisis text never leaves the device. detectCrisis = keyword floor OR (when enabled)
+    // the on-device semantic classifier, so euphemistic crises the keyword list misses are caught too;
+    // fail-closed. Instant on a keyword hit; nothing is sent to the model on a crisis.
+    const isCrisis = await detectCrisis(initialText);
     if (isCrisis) {
       setIsCrisisMode(true);
       setMessages([...initialHistory, { role: "assistant", content: getCrisisReply() }]);
@@ -208,10 +210,10 @@ export default function EpisodeSupportScreen({
     const updatedHistory: NilaUiMessage[] = [...messages, { role: "user", content: userText }];
     setMessages(updatedHistory);
 
-    // Pre-send crisis scan — crisis text NEVER reaches the network.
-    // sendToNila also scans internally but we short-circuit here so we can
-    // set isCrisisMode and avoid calling sendToNila (no double-send).
-    if (scanForCrisis(userText)) {
+    // Pre-send crisis scan — crisis text NEVER reaches the network. detectCrisis = keyword floor OR the
+    // on-device semantic classifier (fail-closed), so euphemistic crises are caught. sendToNila also scans
+    // internally but we short-circuit here so we can set isCrisisMode and avoid calling it (no double-send).
+    if (await detectCrisis(userText)) {
       setIsCrisisMode(true);
       setMessages([...updatedHistory, { role: "assistant", content: getCrisisReply() }]);
       return;
@@ -305,7 +307,8 @@ export default function EpisodeSupportScreen({
     const saved = secureLocal.getItem("nilamind_episodes");
     let list: EpisodeRecord[] = [];
     if (saved) {
-      try { list = JSON.parse(saved); } catch (e) { console.error(e); }
+      // Log a STATIC string — never the SyntaxError, which would leak a snippet of decrypted content to logcat.
+      try { list = JSON.parse(saved); } catch { console.error("Failed to parse stored episode records"); }
     }
     list.push(epEntry);
     secureLocal.setItem("nilamind_episodes", JSON.stringify(list));
@@ -397,7 +400,7 @@ export default function EpisodeSupportScreen({
 
       {/* STAGE: ACTIVE CHAT VIEW */}
       {stage === "chat" && (
-        <div className="flex flex-col h-[76vh] bg-page border border-slate-805 border-slate-800 rounded-2xl overflow-hidden relative" id="episode-chat-dock">
+        <div className="flex flex-col h-[76dvh] bg-page border border-slate-805 border-slate-800 rounded-2xl overflow-hidden relative" id="episode-chat-dock">
           {/* Header Row */}
           <div className="bg-card py-3.5 px-4 border-b border-slate-805 border-slate-800 flex justify-between items-center shrink-0">
             <button
@@ -455,13 +458,13 @@ export default function EpisodeSupportScreen({
 
           {/* Controls Segment */}
           <div className="p-3 bg-card border-t border-slate-805 border-slate-800">
-            <div className="text-center pb-2">
-              <p className="text-[10px] text-slate-500 font-mono tracking-wider uppercase mb-0.5">
+            <div className="pb-2 space-y-1.5">
+              <p className="text-[10px] text-slate-500 font-mono tracking-wider uppercase text-center">
                 Not a therapist. Not a diagnosis tool.
               </p>
-              <p className="text-xs text-rose-450 font-semibold cursor-pointer">
-                In crisis? {crisisLinesInline()}
-              </p>
+              {/* Real tappable crisis lines (tel: links) — the numbers were previously plain text. */}
+              <p className="text-xs text-rose-200 font-semibold text-center">In crisis? Tap to call now:</p>
+              <CrisisLines tone="rose" compact />
             </div>
             {isCrisisMode ? (
               <div className="space-y-2">
@@ -596,7 +599,7 @@ export default function EpisodeSupportScreen({
                 onClick={() => setGuidedStep("extreme_tipp_2")}
                 className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-xl transition-all text-xs uppercase tracking-wider cursor-pointer text-center font-extrabold"
               >
-                I've done this (Proceed to Step 2)
+                Done — what's next
               </button>
             </div>
           )}
@@ -608,7 +611,7 @@ export default function EpisodeSupportScreen({
                   Step 2: Intense Exercise (I)
                 </p>
                 <p className="text-xs text-slate-300 leading-relaxed italic">
-                  "Let's move your body to burn the hyper-active cortisol. Do 20 rapid jumping jacks or run in place vigorously for one minute."
+                  "Let's move your body — it helps burn off some of that intense energy. Do 20 rapid jumping jacks or run in place vigorously for one minute."
                 </p>
               </div>
 
@@ -616,7 +619,7 @@ export default function EpisodeSupportScreen({
                 onClick={() => setGuidedStep("extreme_tipp_3")}
                 className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-xl transition-all text-xs uppercase tracking-wider cursor-pointer text-center font-extrabold"
               >
-                Done (Proceed to step 3)
+                Done — what's next
               </button>
             </div>
           )}
@@ -685,16 +688,16 @@ export default function EpisodeSupportScreen({
           {guidedStep === "medium_panic" && (
             <div className="space-y-4" id="guided-panic">
               <div className="bg-page p-4 rounded-xl border border-slate-800 space-y-2">
-                <h4 className="text-sm font-bold text-slate-150 text-slate-100">Box Breathing Solution</h4>
+                <h4 className="text-sm font-bold text-slate-150 text-slate-100">Box Breathing</h4>
                 <p className="text-xs text-slate-300 leading-relaxed font-sans">
-                  Box Breathing forces equalized CO2 levels in blood streams. Let's do 4-4-4-4 cycles: Breathe in 4s, Hold 4s, Out 4s, Hold 4s.
+                  Slow, even breathing steadies your body and helps calm a racing mind. Let's do 4-4-4-4 cycles: breathe in 4s, hold 4s, out 4s, hold 4s.
                 </p>
               </div>
               <button
                 onClick={() => setStage("debrief_1")}
                 className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-lg text-xs cursor-pointer font-extrabold uppercase transition-all"
               >
-                Complete Grounding Exercise
+                Done
               </button>
             </div>
           )}
@@ -711,7 +714,7 @@ export default function EpisodeSupportScreen({
                 onClick={() => setStage("debrief_1")}
                 className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-lg text-xs cursor-pointer font-extrabold uppercase transition-all"
               >
-                Save Sensation Check
+                Done
               </button>
             </div>
           )}
@@ -903,7 +906,7 @@ export default function EpisodeSupportScreen({
             }}
             className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-3.5 rounded-xl text-xs uppercase tracking-wider cursor-pointer transition-all font-extrabold"
           >
-            Return to Dashboard
+            I'm done for now
           </button>
         </div>
       )}

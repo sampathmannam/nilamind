@@ -17,6 +17,11 @@ export interface CatalogModel {
   // EXACT byte length of the file at `url`. The integrity check requires an exact match, so a
   // truncated transfer or an HTML/401 error-body is never mistaken for a complete model.
   sizeBytes: number;
+  // OPTIONAL expected lowercase 64-hex SHA-256 of the file at `url`. When set to a real hex digest,
+  // modelDownload verifies it before installing (defends a same-SIZE poisoned GGUF that would pass the
+  // byte-length + magic checks). The literal placeholder "TODO_SHA256" is a NO-OP — the check is skipped
+  // until a real hash is filled in, so shipping without the hash never blocks a legitimate download.
+  sha256?: string;
   runtime: ModelRuntime;
 }
 
@@ -28,6 +33,10 @@ export const MODELS: CatalogModel[] = [
     filename: "v2-4b-Q4_K_M.gguf",
     url: "https://huggingface.co/sampathmannam/nilamind-gemma-3-4b-GGUF/resolve/main/v2-4b-Q4_K_M.gguf",
     sizeBytes: 2489894016,
+    // SHA-256 of the hosted GGUF — CONFIRMED equal to the HuggingFace LFS oid for this file (verified
+    // against the HF tree API + the on-device copy). Enables full content-integrity verification of the
+    // download (a same-size, GGUF-magic-valid but poisoned model is rejected).
+    sha256: "338e11713fdf23c3b507de2b922fefb772557eb54efffea2e25ab9dd28e86fcf",
     runtime: "gguf",
   },
 ];

@@ -56,14 +56,26 @@ THINGS YOU NEVER DO — these keep them safe and are not optional
 
 You are one source of support in their life — a good, steady one — but never the only one.`;
 
-/** Assemble Nila's full system instruction: persona + (this user's) memory + the skills it can name. */
+/** Assemble Nila's system instruction: persona + (this user's) memory + the skills it can name.
+ *
+ * Skills grounding is RAG top-k, not the whole library. When the person's latest message is known we
+ * inject ONLY the top-3 most-relevant, evidence-cited skills (relevantSkillsBlock) — not all 40. Dumping
+ * the full library every turn re-prefilled ~300-500 wasted prompt tokens on each reply, and since KV
+ * persistence is impossible on this on-device binding there is no "byte-identical prefix for KV reuse"
+ * benefit to justify it (prefill is the dominant TTFT cost, so fewer tokens = a faster reply). Nila can
+ * still open any skill by exact name; the retriever just surfaces the best matches for the moment.
+ *
+ * No query (e.g. the opening turn, or a caller with no user text) falls back to the full library block —
+ * a safe, complete default when there's nothing to rank against. (The episode path builds its own prompt
+ * in episodePrompt.ts and is unaffected by this.)
+ */
 export function buildNilaSystem(query?: string): string {
   const persona = NILA_SYSTEM_PROMPT.replace("[REGION_CRISIS_LINES]", crisisLinesInline());
   const context = buildPersonalContext();
-  // RAG grounding (additive): when the person's latest message is known, surface the most-relevant
-  // evidence-based skills ABOVE the full library list. No query → byte-identical to the old prompt.
   const relevant = query ? relevantSkillsBlock(query) : "";
-  const skills = relevant ? `${relevant}\n\n${skillsPromptBlock()}` : skillsPromptBlock();
+  // Top-3 RAG block when we have a usable query with matches; otherwise the full library as the default.
+  // (A query that ranks nothing → relevant is "" → fall back to the full list so Nila still has skills.)
+  const skills = relevant || skillsPromptBlock();
   return [persona, context, skills].filter(Boolean).join("\n\n");
 }
 

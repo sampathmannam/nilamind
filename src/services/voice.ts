@@ -136,6 +136,13 @@ export function createSpeechQueue() {
     speaking = false;
   }
 
+  // A reply with no sentence-ending punctuation (the model streams "…so glad you reached out" and stops,
+  // or a long clause runs on) would otherwise sit in the buffer, unspoken, until flush() — silence for
+  // the whole reply. So after harvesting complete sentences we also drain on a NEWLINE boundary (a natural
+  // spoken pause) and, failing that, once the buffer grows past a max length (speak the safe head at the
+  // last word break so no word is cut). flush() still speaks whatever tail remains.
+  const MAX_BUFFER = 200; // chars before we force-speak a punctuation-less run
+
   // Pull any COMPLETE sentences out of the buffer and queue them.
   function harvest() {
     const re = /[^.!?]*[.!?]+[)"'’”\s]*/g;
@@ -146,8 +153,29 @@ export function createSpeechQueue() {
     if (out.length) {
       buffer = buffer.slice(lastIndex);
       for (const s of out) { const t = s.trim(); if (t) pending.push(t); }
-      void drain();
     }
+
+    // Fallback 1: no sentence terminator, but a newline marks a natural pause — speak up to the last one.
+    if (!out.length) {
+      const nl = buffer.lastIndexOf("\n");
+      if (nl >= 0) {
+        const head = buffer.slice(0, nl).trim();
+        buffer = buffer.slice(nl + 1);
+        if (head) { pending.push(head); out.push(head); }
+      }
+    }
+
+    // Fallback 2: a long punctuation-less run — force-speak the head at the last word break so nothing is
+    // spoken mid-word; keep the trailing partial word in the buffer for the next delta / flush.
+    if (!out.length && buffer.length > MAX_BUFFER) {
+      let cut = buffer.lastIndexOf(" ", MAX_BUFFER);
+      if (cut <= 0) cut = MAX_BUFFER; // one giant token with no spaces — hard-cut so we don't grow unbounded
+      const head = buffer.slice(0, cut).trim();
+      buffer = buffer.slice(cut);
+      if (head) { pending.push(head); out.push(head); }
+    }
+
+    if (out.length) void drain();
   }
 
   return {

@@ -1,7 +1,9 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { logNilaTurn } from "../services/nilaSessions";
 import { nilaWelcome } from "../services/nila";
 import { detectCrisis } from "../services/crisisClassifier";
+import { getCrisisReply } from "../safety";
+import CrisisLines from "./CrisisLines";
 import { useSettlingNote } from "./useSettlingNote";
 import PactNoticeBanner from "./PactNoticeBanner";
 import { activePactNotice, type PactNotice } from "../services/pactNotice";
@@ -76,6 +78,9 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
   const [loading, setLoading] = useState<boolean>(false);
   const thinkingNote = useSettlingNote(loading, "Nila is thinking..."); // calm copy that escalates if the on-device reply runs long
   const [activeTier, setActiveTier] = useState<"OnDevice" | "Offline mode">("OnDevice");
+  // Real flag for the inline offline-fallback nav (grounding/breathing/safety-plan) instead of matching a
+  // brittle copy substring in the reply text. True only for the latest turn when the model wasn't reached.
+  const [showOfflineNav, setShowOfflineNav] = useState<boolean>(false);
   const [isCrisisState, setIsCrisisState] = useState<boolean>(false);
   const [pactNotice, setPactNotice] = useState<PactNotice | null>(null);
   const [dependencyNudge, setDependencyNudge] = useState<boolean>(false);
@@ -100,6 +105,24 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
   // Keep a live handle on the latest messages so the unmount cleanup can summarise the real session.
   const messagesRef = useRef(messages);
   messagesRef.current = messages;
+  // Synchronous in-flight guard: `loading` is React state (async), so it can't gate a double-tap or a
+  // voice-send fired while the agent pre-pass is still awaiting. This ref flips instantly at the top of
+  // handleSendMessage and resets in its finally — prevents double-send / stale-history / context-collision.
+  const sendingRef = useRef(false);
+  // Mounted guard: the cold first on-device reply can take minutes; if the user navigates away the async
+  // continuation must NOT setState on an unmounted tree. Checked before every post-await setState.
+  const mountedRef = useRef(true);
+  // Live handle on crisis state for the unmount cleanup (which captures its closure once).
+  const crisisRef = useRef(isCrisisState);
+  crisisRef.current = isCrisisState;
+
+  // In-chat cards apply ONLY to the latest assistant turn, so compute them once and memoize on that
+  // turn's content instead of re-running cardsForReply on every render (feedback taps, opener state, etc).
+  const lastMessage = messages[messages.length - 1];
+  const lastReplyCards = useMemo(
+    () => (lastMessage && lastMessage.role === "assistant" ? cardsForReply(lastMessage.content, null, []) : []),
+    [lastMessage?.role, lastMessage?.content],
+  );
 
   // Inflection opener (Phase 2): pick at most once per mount; gated by the off-by-default toggle,
   // the once/day cap, and §9. recordDetectionPass() logs silently regardless of the toggle.
@@ -114,11 +137,21 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
   };
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    const reduce = typeof window !== "undefined"
+      && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    bottomRef.current?.scrollIntoView({ behavior: reduce ? "auto" : "smooth" });
   }, [messages, loading]);
 
   // When the user leaves Nila, quietly remember this talk (one note) — cross-session memory.
-  useEffect(() => () => { void rememberSession(messagesRef.current); }, []);
+  // Skip entirely if the session tripped §9: a crisis transcript must never be summarised/persisted.
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      if (crisisRef.current) return; // never remember a crisis session
+      void rememberSession(messagesRef.current);
+    };
+  }, []);
 
   // Pre-load the §9 crisis embedder off the hot path so it isn't competing for CPU with the first reply.
   // (We deliberately do NOT pre-warm the LLM: on the llama-cpp binding completion() runs synchronously on
@@ -127,9 +160,18 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
   // warmLocalLlm.) Companion mode only (episode uses a different prompt).
   useEffect(() => {
     if (mode !== "companion") return;
-    void detectCrisis("hello").catch(() => {}); // load the classifier embedder off the hot path
+    // Defer the classifier embedder warm off the FIRST-PAINT/first-reply critical path — even the
+    // embedder load competes for CPU with the cold prefill. Idle-time (or +2.5s) is soon enough; the
+    // gate is fail-closed to the keyword floor until it's ready.
+    const idle = (globalThis as any).requestIdleCallback as undefined | ((cb: () => void, o?: any) => number);
+    const warm = () => { void detectCrisis("hello").catch(() => {}); };
+    const t = idle ? idle(warm, { timeout: 4000 }) : (setTimeout(warm, 2500) as unknown as number);
     setPactNotice(activePactNotice()); // surface the user's pact if a real shift is noticed (read-only, dismissible)
     setDependencyNudge(activeDependencyNudge()); // nudge toward a human if Nila use is heavy + escalating
+    return () => {
+      const cancelIdle = (globalThis as any).cancelIdleCallback as undefined | ((h: number) => void);
+      if (idle && cancelIdle) cancelIdle(t); else clearTimeout(t);
+    };
   }, []);
 
   // Same-day reopen (no check-in due): the welcome is already seeded — swap in an opener if one fires.
@@ -191,94 +233,128 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
 
   const handleSendMessage = async (e?: React.FormEvent, override?: string) => {
     if (e) e.preventDefault();
+    // Synchronous re-entrancy guard: blocks a double-tap or a voice-send fired while a prior send is still
+    // awaiting (the agent pre-pass / the on-device reply). `loading` is async state and set too late to
+    // catch these. Reset in the finally below so the UI can never wedge.
+    if (sendingRef.current) return;
     const raw = (override ?? inputText).trim(); // override = spoken text from the voice-forward hero
     if (!raw || loading) return;
+    sendingRef.current = true;
 
-    if (openerSig && !openerDone) setOpenerDone(true); // typed instead of tapped = consequence-free wave-off (no ack)
+    try {
+      if (openerSig && !openerDone) setOpenerDone(true); // typed instead of tapped = consequence-free wave-off (no ack)
 
-    const userText = raw;
-    setInputText("");
-    logNilaTurn(mode === "episode" ? "episode" : "coach", userText);
+      const userText = raw;
+      setInputText("");
+      setShowOfflineNav(false); // clear any prior offline-nav affordance for the new turn
 
-    const newMessages: Message[] = [...messages, { role: "user", content: userText }];
-    setMessages(newMessages);
+      // ── §9 PRE-PASS GATE (top of the send path, BEFORE the agentic pre-pass) ──────────────────────────
+      // Crisis text must never front-run §9. The agentic pre-pass (runAgent) matches intents like
+      // "remind me to end my life tonight" as a reminder and would return a cheerful confirmation +
+      // schedule a notification, NEVER reaching the gated send. So we scan HERE first: on a hit we surface
+      // the deterministic crisis reply and stop — no command runs, nothing is sent/persisted, the text
+      // never leaves the device. sendToNila still re-scans as the authoritative floor for the model path.
+      if (await detectCrisis(userText)) {
+        if (!mountedRef.current) return;
+        setIsCrisisState(true);
+        setShowOfflineNav(false);
+        logNilaTurn(mode === "episode" ? "episode" : "coach", userText);
+        setMessages((prev) => [...prev, { role: "user", content: userText }, { role: "assistant", content: getCrisisReply() }]);
+        return;
+      }
 
-    // 1. On-device agentic command pre-pass (companion only) — actionable commands handled locally,
-    //    never sent to the model. Episode mode goes straight to the clinical send path.
-    if (mode === "companion") {
-      try {
-        const action = await runAgent(userText);
-        if (action.handled) {
-          setMessages((prev) => [...prev, { role: "assistant", content: action.reply }]);
-          speakReply(action.reply);
-          if (action.navigate) {
-            const view = action.navigate;
-            setTimeout(() => onAgentNavigate?.(view), 650);
+      logNilaTurn(mode === "episode" ? "episode" : "coach", userText);
+
+      const newMessages: Message[] = [...messages, { role: "user", content: userText }];
+      setMessages(newMessages);
+
+      // 1. On-device agentic command pre-pass (companion only) — actionable commands handled locally,
+      //    never sent to the model. Episode mode goes straight to the clinical send path.
+      if (mode === "companion") {
+        try {
+          const action = await runAgent(userText);
+          if (action.handled) {
+            if (!mountedRef.current) return;
+            setMessages((prev) => [...prev, { role: "assistant", content: action.reply }]);
+            speakReply(action.reply);
+            if (action.navigate) {
+              const view = action.navigate;
+              setTimeout(() => onAgentNavigate?.(view), 650);
+            }
+            return;
           }
-          return;
+        } catch (err) {
+          console.warn("Nila agent error — handling as a normal message:", err);
         }
-      } catch (err) {
-        console.warn("Nila agent error — handling as a normal message:", err);
       }
-    }
 
-    setLoading(true);
+      setLoading(true);
 
-    // 2. Unified, crisis-gated send. sendToNila scans for crisis BEFORE any network call (both modes),
-    //    strips synthetic turns, runs the output-safety gate, and streams via onDelta.
-    let started = false;
-    let streamed = "";
-    const result = await sendToNila(newMessages, mode, {
-      onDelta: (t) => {
-        streamed += t;
-        if (!started) {
-          started = true;
-          setLoading(false);
-          setMessages((prev) => [...prev, { role: "assistant", content: streamed }]);
-        } else {
-          setMessages((prev) => {
-            const copy = prev.slice();
-            copy[copy.length - 1] = { role: "assistant", content: streamed };
-            return copy;
-          });
+      // 2. Unified, crisis-gated send. sendToNila scans for crisis BEFORE any network call (both modes),
+      //    strips synthetic turns, runs the output-safety gate, and streams via onDelta.
+      let started = false;
+      let streamed = "";
+      const result = await sendToNila(newMessages, mode, {
+        onDelta: (t) => {
+          if (!mountedRef.current) return; // don't paint a stream into an unmounted tree
+          streamed += t;
+          if (!started) {
+            started = true;
+            setLoading(false);
+            setMessages((prev) => [...prev, { role: "assistant", content: streamed }]);
+          } else {
+            setMessages((prev) => {
+              const copy = prev.slice();
+              copy[copy.length - 1] = { role: "assistant", content: streamed };
+              return copy;
+            });
+          }
+        },
+      });
+
+      if (!mountedRef.current) return; // user left during the (possibly minutes-long) cold reply
+
+      // Crisis short-circuit — text never left the device; show the deterministic crisis reply.
+      if (result.blocked) {
+        setIsCrisisState(true);
+        setShowOfflineNav(false);
+        setMessages((prev) => [...prev, { role: "assistant", content: result.reply }]);
+        return;
+      }
+
+      let coachReply = "";
+      if (result.reachedAI) {
+        coachReply = result.reply || streamed || "Okay — done.";
+        setActiveTier("OnDevice");
+        setShowOfflineNav(false);
+      } else {
+        setActiveTier("Offline mode");
+        setShowOfflineNav(true); // drives the inline grounding/breathing/safety-plan nav (real flag, not copy)
+        coachReply = "Nila's on-device model isn't ready yet — it may still be loading. Your safety and grounding tools are pre-loaded and always work. Tap below to navigate:";
+      }
+
+      setMessages((prev) => {
+        const copy = prev.slice();
+        if (started && copy.length && copy[copy.length - 1].role === "assistant") {
+          copy[copy.length - 1] = { role: "assistant", content: coachReply };
+          return copy;
         }
-      },
-    });
+        return [...copy, { role: "assistant", content: coachReply }];
+      });
+      speakReply(coachReply);
 
-    // Crisis short-circuit — text never left the device; show the deterministic crisis reply.
-    if (result.blocked) {
-      setIsCrisisState(true);
-      setLoading(false);
-      setMessages((prev) => [...prev, { role: "assistant", content: result.reply }]);
-      return;
-    }
-
-    let coachReply = "";
-    if (result.reachedAI) {
-      coachReply = result.reply || streamed || "Okay — done.";
-      setActiveTier("OnDevice");
-    } else {
-      setActiveTier("Offline mode");
-      coachReply = "Nila's on-device model isn't ready yet — it may still be loading. Your safety and grounding tools are pre-loaded and always work. Tap below to navigate:";
-    }
-
-    setLoading(false);
-    setMessages((prev) => {
-      const copy = prev.slice();
-      if (started && copy.length && copy[copy.length - 1].role === "assistant") {
-        copy[copy.length - 1] = { role: "assistant", content: coachReply };
-        return copy;
+      if (result.reachedAI && result.openSkillId && onOpenSkill) {
+        const id = result.openSkillId;
+        setTimeout(() => onOpenSkill(id), 700);
+      } else if (result.reachedAI && result.navigate && onAgentNavigate) {
+        const view = result.navigate;
+        setTimeout(() => onAgentNavigate(view), 700);
       }
-      return [...copy, { role: "assistant", content: coachReply }];
-    });
-    speakReply(coachReply);
-
-    if (result.reachedAI && result.openSkillId && onOpenSkill) {
-      const id = result.openSkillId;
-      setTimeout(() => onOpenSkill(id), 700);
-    } else if (result.reachedAI && result.navigate && onAgentNavigate) {
-      const view = result.navigate;
-      setTimeout(() => onAgentNavigate(view), 700);
+    } finally {
+      // ALWAYS runs — a throw anywhere above (agent, send, gate) can no longer leave the UI stuck
+      // "thinking" forever or the send guard latched.
+      if (mountedRef.current) setLoading(false);
+      sendingRef.current = false;
     }
   };
 
@@ -343,7 +419,8 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
           id="coach-crisis-btn"
           aria-label="Crisis support and safety plan"
           title="Crisis support"
-          className="absolute top-3 right-3 z-20 flex items-center justify-center w-9 h-9 rounded-full bg-card/70 backdrop-blur-sm text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 cursor-pointer transition-colors"
+          style={{ top: "max(env(safe-area-inset-top), 12px)" }}
+          className="absolute right-3 z-20 flex items-center justify-center w-11 h-11 rounded-full bg-card/90 border border-rose-500/30 backdrop-blur-sm text-rose-300 hover:text-rose-200 hover:bg-rose-500/15 cursor-pointer transition-colors"
         >
           <LifeBuoy className="w-5 h-5" />
         </button>
@@ -451,14 +528,15 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
               <div
                 className={`leading-relaxed whitespace-pre-wrap ${
                   isUser
-                    ? "text-sm sun-cta bg-purple-600 text-white rounded-3xl rounded-br-md px-4 py-2.5 max-w-[85%] font-medium shadow-sm"
+                    ? "text-base sun-cta bg-purple-600 text-white rounded-3xl rounded-br-md px-4 py-2.5 max-w-[85%] font-medium shadow-sm"
                     : "text-slate-200 max-w-[92%] pr-1 font-display text-[15px] leading-7"
                 }`}
               >
                 {m.content}
 
-                {/* Offline fallback → inline navigation to the always-available tools */}
-                {!isUser && m.content.includes("Your safety and grounding tools are pre-loaded") && (
+                {/* Offline fallback → inline navigation to the always-available tools.
+                    Driven off the real `showOfflineNav` flag on the latest turn — NOT a copy substring. */}
+                {!isUser && showOfflineNav && idx === messages.length - 1 && (
                   <div className="grid grid-cols-2 gap-2 mt-4" id="coach-offline-nav">
                     <button
                       onClick={onNavigateToGrounding}
@@ -474,19 +552,38 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
                     </button>
                     <button
                       onClick={() => setIsCrisisState(true)}
-                      className="col-span-2 bg-rose-500/10 border border-rose-500/20 text-xs text-rose-450 hover:bg-rose-500/25 text-rose-450 text-rose-400 py-3 rounded-xl font-bold text-center mt-1 uppercase tracking-wider cursor-pointer transition-colors"
+                      className="col-span-2 bg-rose-500/10 border border-rose-500/20 text-xs text-rose-400 hover:bg-rose-500/25 py-3 rounded-xl font-bold text-center mt-1 uppercase tracking-wider cursor-pointer transition-colors"
                     >
                       Open Safety Plan
                     </button>
                   </div>
                 )}
 
-                {!isUser && (
+                {/* §9 crisis affordance — tappable region crisis lines + a one-tap route into the safety
+                    plan. Shown on the latest assistant turn whenever the session is in crisis (the pre-pass
+                    gate OR the model-path block both set isCrisisState). The crisis text never left the
+                    device; these lines are how the person reaches a human right now. */}
+                {!isUser && isCrisisState && idx === messages.length - 1 && (
+                  <div className="mt-3 space-y-2" id="coach-crisis-affordance">
+                    <CrisisLines tone="rose" />
+                    {onActivateCrisis && (
+                      <button
+                        onClick={onActivateCrisis}
+                        id="coach-crisis-open-safety-plan"
+                        className="w-full flex items-center justify-center gap-2 bg-rose-500/10 border border-rose-500/30 hover:bg-rose-500/20 text-rose-200 text-sm font-bold py-3 rounded-xl cursor-pointer transition-colors"
+                      >
+                        <Shield className="w-4 h-4 shrink-0" /> Open safety plan
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {!isUser && !isCrisisState && (
                   <div className="mt-2">
                     <div className="flex items-center gap-3 text-slate-500">
                       <button
                         onClick={() => speak(m.content)}
-                        className="hover:text-slate-300 cursor-pointer"
+                        className="hover:text-slate-300 cursor-pointer p-2 -m-2"
                         aria-label="Read aloud"
                         title="Read aloud"
                       >
@@ -494,7 +591,7 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
                       </button>
                       <button
                         onClick={() => { recordFeedback(m.content, "up"); setFbGiven((p) => ({ ...p, [idx]: "up" })); setSuggestIdx((s) => (s === idx ? null : s)); }}
-                        className={`cursor-pointer ${fbGiven[idx] === "up" ? "text-emerald-400" : "hover:text-slate-300"}`}
+                        className={`cursor-pointer p-2 -m-2 ${fbGiven[idx] === "up" ? "text-emerald-400" : "hover:text-slate-300"}`}
                         aria-label="This reply helped"
                         title="This helped"
                       >
@@ -502,7 +599,7 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
                       </button>
                       <button
                         onClick={() => { const e = recordFeedback(m.content, "down"); setFbGiven((p) => ({ ...p, [idx]: "down" })); setFbId((p) => ({ ...p, [idx]: e.id })); setSuggestIdx(idx); setSuggestDraft(""); }}
-                        className={`cursor-pointer ${fbGiven[idx] === "down" ? "text-amber-400" : "hover:text-slate-300"}`}
+                        className={`cursor-pointer p-2 -m-2 ${fbGiven[idx] === "down" ? "text-amber-400" : "hover:text-slate-300"}`}
                         aria-label="This reply missed the mark"
                         title="This missed"
                       >
@@ -596,7 +693,7 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
                     Hidden entirely during crisis state — no episode/screening affordances while shield is active. */}
                 {!isUser && idx === messages.length - 1 && !isCrisisState && (
                   <div className="mt-3 space-y-2">
-                    {cardsForReply(m.content, null, []).map((card, ci) => (
+                    {lastReplyCards.map((card, ci) => (
                       <button
                         key={ci}
                         onClick={() => dispatchCard(card)}
@@ -716,7 +813,7 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
       </div>
 
       {/* Input row */}
-      <div className="p-3 bg-card border-t border-slate-805 border-slate-800 shrink-0">
+      <div className="p-3 bg-card border-t border-slate-800 shrink-0">
         {isCrisisState ? (
           <div className="space-y-2">
             <div className="text-xs text-rose-400 font-semibold text-center bg-rose-500/10 border border-rose-500/20 rounded-xl py-2 flex items-center justify-center gap-1.5">
@@ -732,7 +829,7 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
                   }
                 ]);
               }}
-              className="w-full bg-emerald-500 hover:bg-emerald-405 hover:bg-emerald-400 text-slate-950 text-xs font-bold py-3.5 rounded-xl text-center cursor-pointer transition-colors font-extrabold"
+              className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold py-3.5 rounded-xl text-center cursor-pointer transition-colors font-extrabold"
             >
               I've reached out / I'm safer now
             </button>
@@ -749,7 +846,7 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
                   aria-label="Message Nila"
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
-                  className="flex-1 min-w-0 bg-transparent text-sm text-slate-100 py-2 focus:outline-none placeholder-slate-650"
+                  className="flex-1 min-w-0 bg-transparent text-base text-slate-100 py-2 focus:outline-none placeholder-slate-650"
                   placeholder="Type to Nila…"
                   disabled={loading}
                   autoFocus

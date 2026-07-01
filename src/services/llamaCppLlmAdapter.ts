@@ -89,7 +89,7 @@ export function createLlamaCppBackend(
         try { await ctx.stopCompletion(); } catch { /* ignore */ }
         try { await warmPromise; } catch { /* ignore */ }
       }
-      const prompt = toGemmaPrompt(system, windowMessages(messages)); // cap history to fit n_ctx
+      const prompt = toGemmaPrompt(system, windowMessages(messages, undefined, system)); // cap history to fit n_ctx (accounts for the real system-prompt budget)
       let full = "";
       let aborted = false;
       const onAbort = () => {
@@ -101,7 +101,10 @@ export function createLlamaCppBackend(
         const res = await ctx.completion(
           {
             prompt,
-            n_predict: 220, // cap reply length (decode is the per-token cost on CPU)
+            // Cap reply length — decode is the per-token cost on CPU. The model is fine-tuned for ~50-word
+            // replies and the Gemma turn-boundary stops end most replies well before this, so 140 just
+            // bounds the worst-case decode time without truncating a normal reply.
+            n_predict: 140,
             // Low temp tracks the validated greedy behaviour (briefer, more in-distribution) — the model
             // was fine-tuned for ~50-word replies; high temp drifts longer + slower to decode.
             temperature: 0.4,

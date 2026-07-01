@@ -34,7 +34,10 @@ export const INDIRECT_METAPHORS = [
 // tonight", "his overdose last year" must stay safe — none of these match those).
 export const OVERDOSE_PHRASES = [
   "overdosed", "took a bunch of pills", "took a whole bunch of my pills", "took all my pills",
-  "took too many pills", "swallowed a bunch of pills", "took a bottle of pills"
+  "took too many pills", "swallowed a bunch of pills", "took a bottle of pills",
+  // Ingestion self-harm beyond pills. Near-zero benign collision (unlike firearm phrasings, which are
+  // idiom-heavy — "shoot myself in the foot", "gun to my head" — and are left to the semantic classifier).
+  "drink bleach", "drinking bleach", "swallowed bleach", "drank bleach"
 ];
 
 export const DISSOCIATION_KEYWORDS = [
@@ -158,7 +161,7 @@ ${lines}
 
 These are free, confidential, and answered by people trained for exactly this moment.
 
-Your safety plan is one tap away — the red button below.`;
+You can reach any of these lines right now — and your safety plan is one tap away, just below.`;
 }
 
 /** Short fallback when an AI reply is judged unsafe — still points to a real crisis line. */

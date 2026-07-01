@@ -93,7 +93,8 @@ export default function ThoughtRecordScreen() {
     const saved = secureLocal.getItem("nilamind_thought_records");
     let records: ThoughtRecord[] = [];
     if (saved) {
-      try { records = JSON.parse(saved); } catch (e) { console.error(e); }
+      // Static message only — never log the error object: it can echo a snippet of a decrypted thought record to logcat.
+      try { records = JSON.parse(saved); } catch { console.error("Failed to parse stored thought records"); }
     }
     records.push(newRecord);
     secureLocal.setItem("nilamind_thought_records", JSON.stringify(records));

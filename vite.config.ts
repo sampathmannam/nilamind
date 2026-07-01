@@ -4,10 +4,28 @@ import path from 'path';
 import {defineConfig} from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
+// @huggingface/transformers emits its own copy of the onnxruntime-web wasm via `new URL(...)`, which vite
+// bundles into dist/assets (~22 MB). But the crisis classifier overrides ORT's wasmPaths to "/ort/" (served
+// from public/ort/, the single asyncify variant that actually loads in the Capacitor WebView), so this
+// bundled copy is NEVER fetched — pure APK/download bloat. Drop it from the output. Worst case (ORT somehow
+// falls back to the bundled path) it 404s and the classifier fails closed to the deterministic keyword §9
+// scan — still safe. publicDir files (public/ort/*) aren't part of this bundle, so only the dup is removed.
+function dropRedundantOrtWasm() {
+  return {
+    name: 'drop-redundant-ort-wasm',
+    generateBundle(_options: unknown, bundle: Record<string, unknown>) {
+      for (const key of Object.keys(bundle)) {
+        if (/ort-wasm.*\.wasm$/.test(key)) delete bundle[key];
+      }
+    },
+  };
+}
+
 export default defineConfig(() => {
   return {
     plugins: [
-      react(), 
+      dropRedundantOrtWasm(),
+      react(),
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
@@ -55,6 +73,22 @@ export default defineConfig(() => {
         }
       })
     ],
+    build: {
+      rollupOptions: {
+        output: {
+          // Split heavy, non-boot-critical libraries into their own chunks so they're no longer welded
+          // into the ~7.5 MB eager boot bundle. Each is only pulled when the screen that uses it mounts
+          // (charts/insights → recharts, PDF export → jspdf, markdown rendering → react-markdown, the
+          // encrypted local store → dexie). Shrinks first-paint parse/eval on a cold app open.
+          manualChunks: {
+            recharts: ['recharts'],
+            jspdf: ['jspdf'],
+            'react-markdown': ['react-markdown'],
+            dexie: ['dexie'],
+          },
+        },
+      },
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),

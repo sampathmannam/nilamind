@@ -2,9 +2,17 @@ import { secureLocal } from "../services/secureLocal";
 import React, { useState, useEffect, useRef } from "react";
 import { CriticEntry, CompassionateLetter, ShameReflectEntry } from "../types";
 import { Play, Pause, RefreshCw, Feather, Book, Heart, Sparkles } from "lucide-react";
+import { detectCrisis } from "../services/crisisClassifier";
+import CrisisCard from "./CrisisCard";
 
 export default function SelfCompassionScreen() {
   const [activeTab, setActiveTab] = useState<"soothing" | "critic" | "letter" | "shame">("soothing");
+
+  // §9 (QA v1.1 #2): these three workbooks persist free text that had NO crisis scan. We scan on save
+  // with detectCrisis (keyword floor OR the on-device semantic classifier; fail-closed) BEFORE writing.
+  // On a hit we surface the shared crisis card and do NOT persist — crisis text never leaves the device
+  // and is never stored. One flag is enough since only one tab's form is active at a time.
+  const [crisis, setCrisis] = useState<boolean>(false);
 
   // Soothing breath timer states
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
@@ -53,8 +61,12 @@ export default function SelfCompassionScreen() {
     };
   }, [isPlaying, breathPhase]);
 
-  const saveCriticLog = () => {
+  const saveCriticLog = async () => {
     if (!criticVoice || !criticTrigger || !criticFriendResp) return;
+
+    // §9: scan all three free-text fields before persisting; on a crisis, surface help and store nothing.
+    if (await detectCrisis([criticVoice, criticTrigger, criticFriendResp].join(" "))) { setCrisis(true); return; }
+
     const newEntry: CriticEntry = {
       id: "crit_" + Date.now(),
       date: new Date().toLocaleDateString(),
@@ -66,7 +78,8 @@ export default function SelfCompassionScreen() {
     const saved = secureLocal.getItem("nilamind_critic_logs");
     let logs: CriticEntry[] = [];
     if (saved) {
-      try { logs = JSON.parse(saved); } catch (e) { console.error(e); }
+      // Static log string — never the SyntaxError (it can carry a snippet of decrypted content to logcat).
+      try { logs = JSON.parse(saved); } catch { console.error("Failed to parse stored critic logs"); }
     }
     logs.push(newEntry);
     secureLocal.setItem("nilamind_critic_logs", JSON.stringify(logs));
@@ -80,8 +93,12 @@ export default function SelfCompassionScreen() {
     }, 1800);
   };
 
-  const saveCompassionateLetter = () => {
+  const saveCompassionateLetter = async () => {
     if (!letterContent) return;
+
+    // §9: scan the letter before persisting; on a crisis, surface help and store nothing.
+    if (await detectCrisis(letterContent)) { setCrisis(true); return; }
+
     const newEntry: CompassionateLetter = {
       id: "let_" + Date.now(),
       date: new Date().toLocaleDateString(),
@@ -91,7 +108,8 @@ export default function SelfCompassionScreen() {
     const saved = secureLocal.getItem("nilamind_compassionate_letters");
     let letters: CompassionateLetter[] = [];
     if (saved) {
-      try { letters = JSON.parse(saved); } catch (e) { console.error(e); }
+      // Static log string — never the SyntaxError (it can carry a snippet of decrypted content to logcat).
+      try { letters = JSON.parse(saved); } catch { console.error("Failed to parse stored compassionate letters"); }
     }
     letters.push(newEntry);
     secureLocal.setItem("nilamind_compassionate_letters", JSON.stringify(letters));
@@ -103,8 +121,12 @@ export default function SelfCompassionScreen() {
     }, 1800);
   };
 
-  const saveShameLog = () => {
+  const saveShameLog = async () => {
     if (!shameName || !shameOrigin || !shameProtection || !shameKinderView) return;
+
+    // §9: scan all four free-text fields before persisting; on a crisis, surface help and store nothing.
+    if (await detectCrisis([shameName, shameOrigin, shameProtection, shameKinderView].join(" "))) { setCrisis(true); return; }
+
     const newEntry: ShameReflectEntry = {
       id: "shm_" + Date.now(),
       date: new Date().toLocaleDateString(),
@@ -117,7 +139,8 @@ export default function SelfCompassionScreen() {
     const saved = secureLocal.getItem("nilamind_shame_protect_logs");
     let logs: ShameReflectEntry[] = [];
     if (saved) {
-      try { logs = JSON.parse(saved); } catch (e) { console.error(e); }
+      // Static log string — never the SyntaxError (it can carry a snippet of decrypted content to logcat).
+      try { logs = JSON.parse(saved); } catch { console.error("Failed to parse stored shame reflection logs"); }
     }
     logs.push(newEntry);
     secureLocal.setItem("nilamind_shame_protect_logs", JSON.stringify(logs));
@@ -130,6 +153,13 @@ export default function SelfCompassionScreen() {
       setShameProtection("");
       setShameKinderView("");
     }, 1800);
+  };
+
+  // Switching tabs clears any surfaced crisis card (and stops the breath timer) so each workbook starts clean.
+  const selectTab = (tab: "soothing" | "critic" | "letter" | "shame") => {
+    setActiveTab(tab);
+    setIsPlaying(false);
+    setCrisis(false);
   };
 
   return (
@@ -156,7 +186,7 @@ export default function SelfCompassionScreen() {
       {/* Tabs list */}
       <div className="grid grid-cols-4 bg-page p-1 gap-1 border border-slate-800 rounded-xl text-center" id="cft-navigation-tabs">
         <button
-          onClick={() => { setActiveTab("soothing"); setIsPlaying(false); }}
+          onClick={() => selectTab("soothing")}
           className={`text-[10px] py-2 rounded-lg font-bold uppercase transition-all cursor-pointer ${
             activeTab === "soothing" ? "bg-purple-650 bg-purple-600 text-white" : "text-slate-500 hover:text-slate-300"
           }`}
@@ -164,7 +194,7 @@ export default function SelfCompassionScreen() {
           Soothing
         </button>
         <button
-          onClick={() => { setActiveTab("critic"); setIsPlaying(false); }}
+          onClick={() => selectTab("critic")}
           className={`text-[10px] py-2 rounded-lg font-bold uppercase transition-all cursor-pointer ${
             activeTab === "critic" ? "bg-purple-650 bg-purple-600 text-white" : "text-slate-500 hover:text-slate-300"
           }`}
@@ -172,7 +202,7 @@ export default function SelfCompassionScreen() {
           Critic
         </button>
         <button
-          onClick={() => { setActiveTab("letter"); setIsPlaying(false); }}
+          onClick={() => selectTab("letter")}
           className={`text-[10px] py-2 rounded-lg font-bold uppercase transition-all cursor-pointer ${
             activeTab === "letter" ? "bg-purple-650 bg-purple-600 text-white" : "text-slate-500 hover:text-slate-300"
           }`}
@@ -180,7 +210,7 @@ export default function SelfCompassionScreen() {
           Letter
         </button>
         <button
-          onClick={() => { setActiveTab("shame"); setIsPlaying(false); }}
+          onClick={() => selectTab("shame")}
           className={`text-[10px] py-2 rounded-lg font-bold uppercase transition-all cursor-pointer ${
             activeTab === "shame" ? "bg-purple-650 bg-purple-600 text-white" : "text-slate-500 hover:text-slate-300"
           }`}
@@ -191,8 +221,11 @@ export default function SelfCompassionScreen() {
 
       {/* CFT TAB PANELS */}
       <div className="bg-card border border-slate-800 p-5 rounded-2xl relative">
+        {/* §9: a crisis disclosure in a save surfaces the shared crisis card and blocks the panel/persist. */}
+        {crisis && <CrisisCard heading="Please reach out — right now" id="cft-crisis-card" />}
+
         {/* 1. Soothing rhythm breathing tab */}
-        {activeTab === "soothing" && (
+        {!crisis && activeTab === "soothing" && (
           <div className="space-y-6" id="cft-soothing-tab">
             <div className="space-y-1">
               <h3 className="text-sm font-semibold text-slate-200 flex items-center gap-1.5">
@@ -270,7 +303,7 @@ export default function SelfCompassionScreen() {
         )}
 
         {/* 2. Critic form logs */}
-        {activeTab === "critic" && (
+        {!crisis && activeTab === "critic" && (
           <div className="space-y-4" id="cft-critic-tab">
             <h3 className="text-sm font-semibold text-slate-200 flex items-center gap-1.5 mb-1">
               <Feather className="text-purple-400 w-4 h-4" /> Inner Critic Workbook
@@ -333,7 +366,7 @@ export default function SelfCompassionScreen() {
         )}
 
         {/* 3. Letter form draft */}
-        {activeTab === "letter" && (
+        {!crisis && activeTab === "letter" && (
           <div className="space-y-4" id="cft-letter-tab">
             <h3 className="text-sm font-semibold text-slate-200 flex items-center gap-1.5 mb-1">
               <Feather className="text-purple-400 w-4 h-4" /> Compassionate Letter Writing
@@ -367,7 +400,7 @@ export default function SelfCompassionScreen() {
         )}
 
         {/* 4. Shame protector worksheet */}
-        {activeTab === "shame" && (
+        {!crisis && activeTab === "shame" && (
           <div className="space-y-4" id="cft-shame-tab">
             <h3 className="text-sm font-semibold text-slate-200 flex items-center gap-1.5 mb-1">
               <Feather className="text-purple-400 w-4 h-4" /> What Shame Protects

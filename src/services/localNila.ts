@@ -25,14 +25,16 @@ export async function askNilaLocalStream(
 ): Promise<LocalNilaResult> {
   if (!isLocalLlmReady()) return { reply: "", reachedAI: false };
 
-  // STABLE system prompt (no per-query RAG) so the prefix is byte-identical across turns for the native
-  // KV prefix-reuse — EXCEPT we append a deterministic mania-elevation steer when the latest message shows
-  // it (a rare, safety-warranted re-prefill). The elevation guard defends the sycophancy→mania
-  // amplification harm: the on-device model can't be trusted to reality-test, so we steer it here and, for
-  // the stopping-meds case, append a reliable scripted line below — rather than hope the model behaves.
+  // Ground the system prompt with RAG top-3 skills for THIS turn (buildNilaSystem(lastUser)) instead of
+  // dumping the whole 40-skill library — far fewer prompt tokens to re-prefill, which is the dominant
+  // TTFT cost here. (The old "byte-identical prefix for KV reuse" rationale is moot: KV persistence is
+  // impossible on this on-device binding, so there is no cross-turn prefix to preserve.) We also append a
+  // deterministic mania-elevation steer when the latest message shows it — the elevation guard defends the
+  // sycophancy→mania amplification harm: the on-device model can't be trusted to reality-test, so we steer
+  // it here and, for the stopping-meds case, append a reliable scripted line below.
   const lastUser = [...messages].reverse().find((m) => m.role === "user")?.content ?? "";
   const elevation = detectElevationRisk(lastUser);
-  const system = buildNilaSystem() + elevationGuardNote(elevation.level);
+  const system = buildNilaSystem(lastUser) + elevationGuardNote(elevation.level);
 
   try {
     // generateGuarded races a hang-timeout (Gate 6) so a true native deadlock still falls back to the

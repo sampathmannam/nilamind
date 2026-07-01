@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  NilaMind is privacy-first and on-device: the app's ONLY network egress is the HTTPS model
+  download from HuggingFace on first run. There is no plaintext HTTP traffic anywhere, so we
+  forbid cleartext on ALL API levels (the platform default only disables it from API 28+; this
+  closes the API 24-27 gap where cleartext is permitted by default). Any accidental http:// URL
+  now fails loudly instead of leaking data in the clear.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

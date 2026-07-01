@@ -9,6 +9,7 @@
 
 import { generateOnDevice } from "./localLlm";
 import { secureLocal } from "./secureLocal";
+import { checkResponse } from "../safety";
 import type { NilaMessage } from "./nila";
 
 const KEY = "nilamind_nila_memory";
@@ -74,5 +75,17 @@ export async function rememberSession(messages: NilaMessage[]): Promise<void> {
   // On-device summariser. With no model loaded this simply returns null and we skip — session memory
   // is best-effort and must never block or reach the network.
   const note = await generateOnDevice(SUMMARIZER, [{ role: "user", content: transcript }]);
-  if (note && !/^none[.!]?$/i.test(note.trim())) remember(note.trim());
+  if (!note) return;
+  const clean = note.trim();
+  if (/^none[.!]?$/i.test(clean)) return;
+  // Output-safety gate on the MODEL-GENERATED note before it is persisted — the same authority every
+  // other Nila reply passes through. checkResponse (against the transcript) rejects a note that agrees
+  // with a cognitive distortion, echoes method/means, or (if the person disclosed crisis) omits a crisis
+  // resource; we simply DON'T store an unsafe note rather than keep a bad "memory" of the person.
+  try {
+    if (!checkResponse(clean, transcript)) return;
+  } catch {
+    return; // fail-closed: never persist a note the gate couldn't vet
+  }
+  remember(clean);
 }

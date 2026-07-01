@@ -65,11 +65,16 @@ function isoWeek(date: string): string {
   return `${d.getFullYear()}-W${String(week).padStart(2, "0")}`;
 }
 
+// Copy note (red-panel): these openers come from a rough on-device heuristic over the person's own
+// numbers, so they must read as a tentative "I noticed, tell me if I'm off" — never a verdict. We dropped
+// the "Before anything else" primacy framing (it made an algorithmic hunch sound like a diagnosis leading
+// the whole conversation) and added explicit epistemic humility ("I might be reading it wrong") plus an
+// easy way to say it doesn't fit. The user is always the authority on their own experience.
 const OPENERS: Record<string, string> = {
-  "mood_trend|deterioration": "Before anything else — I've had a sense the last couple of weeks have felt a bit heavier than they usually are for you. Does that fit? You know yourself best.",
-  "mood_trend|improvement": "One thing I wanted to name: the last little while has looked a touch lighter than your usual. Does that feel right?",
-  "screening_change|deterioration": "Last time you did your {metric} it had moved up a fair bit from the time before. No conclusions — just checking in: has it felt harder lately?",
-  "screening_change|improvement": "Your last {metric} had come down a good bit from the time before — worth noticing. Does it feel like things have eased a little?",
+  "mood_trend|deterioration": "I've had a sense the last couple of weeks might have felt a bit heavier than they usually are for you — though I might be reading it wrong. Does that fit, or not really? You know yourself best.",
+  "mood_trend|improvement": "Something I thought I'd gently name — the last little while has looked maybe a touch lighter than your usual. I could be off, though. Does that feel right to you?",
+  "screening_change|deterioration": "Last time you did your {metric} it looked like it had moved up a fair bit from the time before. No conclusions from me — and I might be wrong — but I wanted to check: has it felt harder lately?",
+  "screening_change|improvement": "Your last {metric} looked like it had come down a good bit from the time before. I might be misreading it, but it seemed worth noticing — does it feel like things have eased a little?",
 };
 function openerFor(kind: InflectionKind, direction: InflectionDirection, metric: string): string {
   return (OPENERS[`${kind}|${direction}`] || "").replace("{metric}", metric);

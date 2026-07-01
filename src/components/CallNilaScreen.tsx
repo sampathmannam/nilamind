@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { PhoneOff, Mic, MicOff, Sparkles, LifeBuoy, Hand } from "lucide-react";
-import { scanForCrisis, getCrisisReply } from "../safety";
-import { crisisLinesInline } from "../services/crisisResources";
+import { getCrisisReply } from "../safety";
+import { detectCrisis } from "../services/crisisClassifier";
+import CrisisLines from "./CrisisLines";
 import { NilaMessage } from "../services/nila";
 import { askNilaLocalStream } from "../services/localNila";
 import { createStreamGuard, resolveStreamedVoiceReply } from "../services/nilaSend";
@@ -91,9 +92,12 @@ export default function CallNilaScreen({ onEnd }: { onEnd: () => void }) {
         setTranscript(heard);
         logNilaTurn("coach", heard);
 
-        // Crisis: handled locally, never sent to the model. Speak the safe reply and hold here.
-        if (scanForCrisis(heard)) {
+        // Crisis: handled locally, never sent to the model. detectCrisis = keyword floor OR the on-device
+        // semantic classifier (fail-closed), so euphemistic crises the keyword list misses are caught too.
+        // Speak the safe reply and hold here.
+        if (await detectCrisis(heard)) {
           await stopListening();
+          if (!active.current) break;
           const reply = getCrisisReply();
           setNilaLine(reply);
           setPhase("crisis");
@@ -145,6 +149,16 @@ export default function CallNilaScreen({ onEnd }: { onEnd: () => void }) {
           await speak(line);
         } else {
           await queue.flush(); // finish speaking the streamed reply
+          // SAFETY BELT (QA v1.1 #3): localNila appends the mania "loop in your doctor before touching
+          // your meds" note to the reply AFTER streaming, so it's in `line` but never made it into the
+          // streamed `shown` (nothing pushed it to the speech queue) and the caption showed only `shown`.
+          // Speak that appended tail and show the full line — this belt is model-INDEPENDENT and must be
+          // both heard and seen. (Guard on startsWith so we only speak a genuine appended suffix.)
+          if (active.current && line !== shown && line.startsWith(shown)) {
+            const tail = line.slice(shown.length).trim();
+            setNilaLine(line);
+            if (tail) await speak(tail);
+          }
         }
         speakQueue.current = null;
         convo.current = [...next, { role: "assistant", content: line }];
@@ -217,9 +231,11 @@ export default function CallNilaScreen({ onEnd }: { onEnd: () => void }) {
           <p className="text-sm font-semibold text-slate-300" role="status" aria-live="polite">{status}</p>
 
           {phase === "crisis" ? (
-            <div className="bg-rose-500/10 border border-rose-500/30 rounded-2xl p-4 space-y-2">
+            <div className="bg-rose-500/10 border border-rose-500/30 rounded-2xl p-4 space-y-3">
               <p className="text-sm text-slate-100 leading-relaxed">{nilaLine}</p>
-              <p className="text-xs text-rose-300 font-semibold leading-relaxed">{crisisLinesInline()}</p>
+              {/* Real tappable crisis lines (tel: links) — the numbers were previously plain, un-callable text. */}
+              <p className="text-xs text-rose-200 font-semibold">Tap to call now:</p>
+              <CrisisLines tone="rose" compact />
             </div>
           ) : phase === "unsupported" ? (
             <p className="text-sm text-slate-400 leading-relaxed">

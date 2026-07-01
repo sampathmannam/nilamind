@@ -19,7 +19,11 @@ conversations, check-ins, mood, and notes never leave the device.
 
 ## Install
 
-**Use it:** download the latest signed APK from [**Releases**](https://github.com/sampathmannam/nilamind/releases), or visit the [**landing page**](https://sampathmannam.github.io/nilamind/). On first run the app downloads its on-device model (~2.5 GB, over Wi-Fi, integrity-verified) and then works fully offline. Requires **Android 7.0+ (arm64)**. Coming soon to **IzzyOnDroid** (F-Droid client). Step-by-step: [`docs/wiki/Getting-Started.md`](docs/wiki/Getting-Started.md).
+**Recommended — [Obtainium](https://obtainium.imranr.dev) (auto-updates):** install Obtainium, then [**➕ Add to Obtainium**](https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/sampathmannam/nilamind) — or in Obtainium tap *Add App* and paste `https://github.com/sampathmannam/nilamind`. Obtainium installs NilaMind straight from GitHub Releases and keeps it updated automatically. This is the F-Droid-ecosystem home for an app this size (no store size limit).
+
+**Or install the APK directly:** grab the latest signed APK from [**Releases**](https://github.com/sampathmannam/nilamind/releases), or visit the [**landing page**](https://sampathmannam.github.io/nilamind/).
+
+On first run the app downloads its on-device model (~2.5 GB, over Wi-Fi, integrity-verified) and then works fully offline. Requires **Android 7.0+ (arm64)**. Step-by-step: [`docs/wiki/Getting-Started.md`](docs/wiki/Getting-Started.md).
 
 **Build it:** see *Build & run* below.
 

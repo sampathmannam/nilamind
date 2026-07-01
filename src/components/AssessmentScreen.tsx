@@ -51,6 +51,14 @@ const TONE: Record<
 // Static Tailwind grid classes per response-scale width (PHQ/GAD=4, PSS-4=5, WHO-5=6).
 const COLS: Record<number, string> = { 4: "grid-cols-4", 5: "grid-cols-5", 6: "grid-cols-6" };
 
+// Scroll to top when moving between assessment phases. Honour the OS "reduce motion" setting
+// (trauma-informed / vestibular): smooth-scroll only when motion is allowed, else jump instantly.
+function scrollToTop(): void {
+  let smooth = true;
+  try { smooth = !window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch { /* default smooth */ }
+  window.scrollTo({ top: 0, behavior: smooth ? "smooth" : "auto" });
+}
+
 interface Props {
   onActivateCrisis: () => void;
   /** When supplied the screen skips the menu and launches directly into the named instrument.
@@ -76,7 +84,7 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
     setResponses(new Array(INSTRUMENTS[id].items.length).fill(null));
     setResult(null);
     setPhase("running");
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    scrollToTop();
   };
 
   // When launched from a Nila screening card or the Tools "Screenings" entry with a specific
@@ -125,7 +133,7 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
     setHistory(saveAssessment(entry));
     setResult(scored);
     setPhase("result");
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    scrollToTop();
   };
 
   // ── MENU ──────────────────────────────────────────────────────────────────
@@ -219,12 +227,14 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
           )}
         </header>
 
-        {/* Anchor legend */}
+        {/* Anchor legend — maps each answer digit to its meaning; the answer buttons below show only the
+            digit, so this legend is what makes them understandable. Bumped 8px → 11px (8px is unreadable)
+            and lightened the label to slate-400 so it clears contrast at that size. */}
         <div className={`grid ${COLS[inst.responseOptions.length] ?? "grid-cols-4"} gap-1.5 sticky top-0 bg-page py-2 z-10`}>
           {inst.responseOptions.map((a, i) => (
             <div key={i} className="text-center">
-              <div className="text-[10px] font-mono text-slate-500">{i}</div>
-              <div className="text-[8px] text-slate-600 leading-tight">{a}</div>
+              <div className="text-[11px] font-mono font-semibold text-slate-300">{i}</div>
+              <div className="text-[11px] text-slate-400 leading-tight">{a}</div>
             </div>
           ))}
         </div>

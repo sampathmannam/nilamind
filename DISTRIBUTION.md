@@ -101,27 +101,38 @@ Play App Signing will re-sign on upload; your `upload-keystore.jks` is the *uplo
 
 ---
 
-## C. F-Droid ecosystem — via IzzyOnDroid (recommended FOSS route)
+## C. F-Droid ecosystem — via Obtainium (recommended FOSS route)
 
-NilaMind is genuinely FOSS (Apache-2.0, no Google Services, no analytics), but the **main F-Droid
-repo (f-droid.org) will not accept it as-built**. F-Droid builds every app from source on its own
-servers and bans proprietary deps and prebuilt binaries. NilaMind has **zero proprietary
-dependencies** (see "Toward mainline" below — the Google Nano/MLKit path was removed), but it still
-trips F-Droid's prebuilt-binary rule:
+> **Obtainium, not IzzyOnDroid.** IzzyOnDroid enforces a **~30 MB APK limit**; even after the size
+> trim (§D) NilaMind is **77 MB**, so it will not be accepted there. **[Obtainium](https://obtainium.imranr.dev)**
+> is the right home for a large FOSS app: **no size limit**, and it auto-updates users straight from
+> your GitHub Releases (which already exist — nothing new to host or maintain). The IzzyOnDroid notes
+> further below are kept only as a reference in case the app is ever split under the size cap.
 
-1. **Prebuilt llama.cpp engine** — `llama-cpp-capacitor` ships `libllama-cpp-arm64.so` (the 4B's
-   inference engine). F-Droid's scanner rejects prebuilt native binaries.
-2. **More prebuilt blobs** — `libexecutorch.so`, `libllm_inference_engine_jni.so` (`@capgo`, FOSS
-   but prebuilt; now dead code since the catalog is 4B-only).
+### Obtainium (do this)
+NilaMind is Obtainium-ready **today** — you already publish signed APKs to GitHub Releases.
+1. Users install **Obtainium** (from its [GitHub releases](https://github.com/ImranR98/Obtainium) or F-Droid).
+2. They tap the **Add to Obtainium** button on the [landing page](https://sampathmannam.github.io/nilamind/)
+   or README — deep link `https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/sampathmannam/nilamind` —
+   or, in Obtainium, *Add App* → paste `https://github.com/sampathmannam/nilamind`.
+3. Obtainium tracks your Releases and installs/updates NilaMind automatically. On your side there's
+   nothing to submit or maintain beyond cutting each release (§A "signed release" + `gh release`).
 
-(Plus the on-device model is downloaded at runtime under the **non-free Gemma license** → a
-"NonFreeNet" anti-feature.)
+FOSS credentials (relevant if you ever pursue a store that verifies them): Apache-2.0, no Google
+Services, no analytics, and — after removing `@capgo/capacitor-llm` — **zero proprietary
+dependencies** (the MediaPipe `tasks-genai` + `executorch` native libs are gone). The on-device model
+is still fetched at runtime under the **non-free Gemma license** (a "NonFreeNet" anti-feature to
+disclose anywhere that asks).
 
-**IzzyOnDroid (IoD)** is an F-Droid-format repository, installable from inside the F-Droid client,
-that accepts your **own signed APK** (it does not rebuild from source), tolerates prebuilt native
-libs, and simply *flags* the proprietary bits as disclosed anti-features. It is the standard home
-for FOSS apps that can't meet mainline F-Droid's build-from-source rule. It is fed from your GitHub
-Releases.
+---
+
+### IzzyOnDroid (reference only — currently blocked by the 30 MB size cap)
+
+An F-Droid-format repository, installable from inside the F-Droid client, that accepts your **own
+signed APK** (no rebuild-from-source) and merely *flags* prebuilt/native bits as disclosed
+anti-features. It would be a fine home **except for its size limit**. Mainline f-droid.org is a
+separate, stricter matter — it builds from source and rejects the prebuilt `libllama-cpp-arm64.so`
+(the 4B inference engine).
 
 ### Prereqs (already done in this repo)
 - ✅ FOSS license (`LICENSE`, Apache-2.0) and public source on GitHub.
@@ -175,6 +186,33 @@ None of these block IzzyOnDroid — they're only relevant if you later pursue th
 
 > ABI note: the build packages **arm64-v8a only** (`abiFilters` in `build.gradle`) — fine for almost
 > all modern phones; IzzyOnDroid handles per-ABI APKs.
+
+---
+
+## D. APK size trim (reproducible) — 174 MB → 77 MB
+
+The release APK was cut from **174 MB to 77 MB** by removing pure waste (no features changed). These
+are all in the repo now; a normal `npm ci && npm run build && npx cap sync android && ./gradlew
+assembleRelease` reproduces the 77 MB APK, **as long as the native strip runs** (below).
+
+1. **Native lib strip (biggest win, ~57 MB).** `llama-cpp-capacitor` ships `libllama-cpp-arm64.so`
+   *unstripped* (63 MB, "with debug_info"). `scripts/strip-native-libs.sh` runs `llvm-strip
+   --strip-all` → **6.3 MB** (keeps the dynamic symbol table; AGP stores `.so` uncompressed, so it's
+   a direct APK saving). It is wired as a **`postinstall`** hook (idempotent; skips gracefully if the
+   Android NDK isn't found) because `npm install` restores the unstripped lib from the package tarball.
+   If you ever build without `npm install` having run the hook, run `npm run strip-native` first.
+2. **ONNX Runtime wasm (~73 MB).** The crisis classifier only loads
+   `public/ort/ort-wasm-simd-threaded.asyncify.wasm`; the other three variants (jsep/jspi/plain) were
+   removed, and a vite `generateBundle` plugin (`dropRedundantOrtWasm` in `vite.config.ts`) drops the
+   duplicate copy `@huggingface/transformers` emits into `dist/assets`.
+3. **Dead `@capgo/capacitor-llm` (MediaPipe `.task` path).** Removed — it pulled
+   `com.google.mediapipe:tasks-genai` + `org.pytorch:executorch-android` native libs for a code path
+   the 4B-only catalog never uses.
+
+**Not trimmed (deliberate):** the `vosk` wake-word model (~41 MB, powers "Hey Nila") and the crisis
+classifier's MiniLM `.onnx` + asyncify `.wasm` (~44 MB, the §9 safety runtime). Dropping vosk (make
+the wake word an optional on-demand download) is the next ~41 MB if wanted — it's a feature call, not
+waste. **Always re-run the §9 device check after touching the ORT wasm** (it's the classifier's runtime).
 
 ---
 

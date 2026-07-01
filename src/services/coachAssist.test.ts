@@ -5,7 +5,7 @@ import { dirname, join, resolve } from "node:path";
 
 // coachAssist runs fully ON-DEVICE now (generateOnDevice). We register a fake LocalLlmBackend (the real
 // seam) so we can prove (a) crisis text NEVER reaches the model and (b) an unsafe model reply is gated.
-import { fetchBalancedThought, analyzeQuickNote, runDeepAssessment } from "./coachAssist";
+import { fetchBalancedThought, analyzeQuickNote, runDeepAssessment, MODEL_NOT_READY_MESSAGE } from "./coachAssist";
 import { registerLocalLlmBackend, type LocalLlmBackend } from "./localLlm";
 import { getCrisisReply, getUnsafeFallbackReply } from "../safety";
 
@@ -201,9 +201,28 @@ describe("coachAssist — benign inputs reach the on-device model and return res
     if (r.crisis === false) expect(r.reply).toBe("3 insights: …");
   });
 
-  it("throws a clear error when no on-device model is loaded (screen shows it)", async () => {
+  it("returns the not-ready sentinel (no throw) when no on-device model is loaded — first-run users", async () => {
     registerLocalLlmBackend(null);
-    await expect(analyzeQuickNote("a calm note")).rejects.toThrow(/on-device model isn't ready/);
+    const r = await analyzeQuickNote("a calm note");
+    expect(r.crisis).toBe(false);
+    if (r.crisis === false) {
+      expect(r.notReady).toBe(true);
+      expect(r.analysis).toBe(MODEL_NOT_READY_MESSAGE);
+      expect(r.tags).toEqual([]);
+    }
+  });
+
+  it("returns the not-ready sentinel for fetchBalancedThought + runDeepAssessment too", async () => {
+    registerLocalLlmBackend(null);
+    const bt = await fetchBalancedThought({
+      situation: "a rough day", feeling: "tired", automaticThought: "I did badly", beliefPercent: 40, selectedTraps: [],
+    });
+    expect(bt.crisis).toBe(false);
+    if (bt.crisis === false) { expect(bt.notReady).toBe(true); expect(bt.reply).toBe(MODEL_NOT_READY_MESSAGE); }
+
+    const da = await runDeepAssessment({ checkins: [], diaryEntries: [], episodes: [] });
+    expect(da.crisis).toBe(false);
+    if (da.crisis === false) { expect(da.notReady).toBe(true); expect(da.reply).toBe(MODEL_NOT_READY_MESSAGE); }
   });
 });
 

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Anchor, Copy, Check, ShieldCheck, AlertTriangle, KeyRound, ArrowLeft, Loader2, Download } from "lucide-react";
 import { newMnemonic, isValidMnemonic, createIdentity, importBackup } from "../services/identity";
+import CrisisHelpButton from "./CrisisHelpButton";
 
 // First-run identity: create a new private space (generates a recovery phrase) or restore from an
 // existing phrase (re-derives the same ID). No email, no password, no server.
@@ -148,7 +149,13 @@ export default function IdentityOnboarding({ onDone }: { onDone: () => void }) {
 function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-page flex flex-col items-center justify-center px-6 py-10">
-      <div className="w-full max-w-sm space-y-5" id="identity-onboarding">{children}</div>
+      <div className="w-full max-w-sm space-y-5" id="identity-onboarding">
+        {children}
+        {/* Always-visible crisis help — reachable before a space even exists (no model/identity needed). */}
+        <div className="pt-1">
+          <CrisisHelpButton />
+        </div>
+      </div>
     </div>
   );
 }

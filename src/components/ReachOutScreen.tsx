@@ -176,7 +176,10 @@ export default function ReachOutScreen() {
           <div className="flex gap-2">
             <button
               onClick={send}
-              className="flex-1 py-3 rounded-xl font-semibold text-xs bg-emerald-600 hover:bg-emerald-500 text-white transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-40"
+              /* Dark text on the green (matching the crisis-button contrast pattern): white was 4.15:1 /
+                 2.97:1 on hover in the dark theme (fails WCAG AA). text-slate-950 clears AA in both themes
+                 (dark 4.5/6.3:1, light 5.3/4.85:1 — light emerald-500 darkened a touch in index.css). */
+              className="flex-1 py-3 rounded-xl font-semibold text-xs bg-emerald-600 hover:bg-emerald-500 text-slate-950 transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-40"
               disabled={!draft.trim()}
             >
               <Send className="w-4 h-4" /> Send it myself

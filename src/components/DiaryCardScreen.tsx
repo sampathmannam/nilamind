@@ -48,8 +48,9 @@ export default function DiaryCardScreen() {
           setMorningIntention(existing.morningIntention || "");
           return;
         }
-      } catch (e) {
-        console.error(e);
+      } catch {
+        // Static message only — never log the error object: it can echo a snippet of decrypted diary content to logcat.
+        console.error("Failed to parse stored diary entries");
       }
     }
     // Default reset
@@ -85,8 +86,9 @@ export default function DiaryCardScreen() {
     if (saved) {
       try {
         entries = JSON.parse(saved);
-      } catch (e) {
-        console.error(e);
+      } catch {
+        // Static message only — never log the error object: it can echo a snippet of decrypted diary content to logcat.
+        console.error("Failed to parse stored diary entries");
       }
     }
 

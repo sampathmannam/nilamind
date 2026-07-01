@@ -230,7 +230,9 @@ export default function App() {
   return (
     <div className="min-h-screen bg-page text-slate-300 font-sans antialiased overflow-x-hidden">
 
-      {/* Sunrise aurora — soft drifting amaranth/coral glow behind everything (light theme only) */}
+      {/* Sunrise aurora — soft drifting amaranth/coral glow behind everything. LIGHT THEME ONLY: the
+          `.sun-aurora` class is `display:none` by default and only `display:block` under `:root.theme-light`
+          (see index.css), so these three blur layers never paint on the dark theme even though they mount. */}
       <div className="sun-aurora" style={{ width: 380, height: 380, top: -110, right: -90, background: "#EC6BA8", animation: "sunriseDrift 24s ease-in-out infinite" }} />
       <div className="sun-aurora" style={{ width: 320, height: 320, bottom: -90, left: -70, background: "#FF8A6E", animation: "sunriseDrift2 29s ease-in-out infinite" }} />
       <div className="sun-aurora" style={{ width: 300, height: 300, top: "45%", left: "52%", background: "#E85D9E", animation: "sunriseDrift 33s ease-in-out infinite" }} />
@@ -536,35 +538,27 @@ export default function App() {
       <div className="fixed bottom-0 left-0 right-0 z-30 bg-card border-t border-slate-800 py-2 px-1 text-center shadow-lg" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 8px)' }} id="app-footer-tabs">
         <div className="max-w-md mx-auto grid grid-cols-3 gap-1">
 
-          <button
-            onClick={() => { setAuxView(null); setActiveTab("nila"); setNilaMode("companion"); }}
-            className={`flex flex-col items-center gap-1 text-[10px] font-semibold py-1.5 rounded-lg active:scale-95 transition-all cursor-pointer ${
-              activeTab === "nila" && !auxView ? "text-blue-400" : "text-slate-500"
-            }`}
-          >
-            <Sparkles className="w-4.5 h-4.5" />
-            <span>Nila</span>
-          </button>
-
-          <button
-            onClick={() => { setAuxView(null); setActiveTab("tools"); setNilaMode("companion"); }}
-            className={`flex flex-col items-center gap-1 text-[10px] font-semibold py-1.5 rounded-lg active:scale-95 transition-all cursor-pointer ${
-              ["tools", "checkin", "diary", "plan"].includes(activeTab) && !auxView ? "text-blue-400" : "text-slate-500"
-            }`}
-          >
-            <Wrench className="w-4.5 h-4.5" />
-            <span>Tools</span>
-          </button>
-
-          <button
-            onClick={() => { setAuxView(null); setActiveTab("you"); setNilaMode("companion"); }}
-            className={`flex flex-col items-center gap-1 text-[10px] font-semibold py-1.5 rounded-lg active:scale-95 transition-all cursor-pointer ${
-              activeTab === "you" && !auxView ? "text-blue-400" : "text-slate-500"
-            }`}
-          >
-            <User className="w-4.5 h-4.5" />
-            <span>You</span>
-          </button>
+          {/* Active tab is cued by MORE than colour (accessibility: colour-only state fails for low-vision /
+              colour-blind users): the active tab gets a filled pill background, bold weight, and a top
+              indicator bar; inactive tabs stay medium-weight and muted. Labels raised 10px → 11px. */}
+          {([
+            { tab: "nila", label: "Nila", Icon: Sparkles, active: activeTab === "nila" && !auxView },
+            { tab: "tools", label: "Tools", Icon: Wrench, active: ["tools", "checkin", "diary", "plan"].includes(activeTab) && !auxView },
+            { tab: "you", label: "You", Icon: User, active: activeTab === "you" && !auxView },
+          ] as const).map(({ tab, label, Icon, active }) => (
+            <button
+              key={tab}
+              onClick={() => { setAuxView(null); setActiveTab(tab); setNilaMode("companion"); }}
+              aria-current={active ? "page" : undefined}
+              className={`relative flex flex-col items-center gap-1 text-[11px] py-1.5 rounded-lg active:scale-95 transition-all cursor-pointer ${
+                active ? "text-blue-400 font-bold bg-blue-400/10" : "text-slate-500 font-medium"
+              }`}
+            >
+              {active && <span aria-hidden="true" className="absolute top-0 h-0.5 w-6 rounded-full bg-blue-400" />}
+              <Icon className={`w-4.5 h-4.5 ${active ? "stroke-[2.5]" : ""}`} />
+              <span>{label}</span>
+            </button>
+          ))}
         </div>
       </div>
 

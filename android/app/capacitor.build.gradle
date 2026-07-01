@@ -18,7 +18,6 @@ dependencies {
     implementation project(':capacitor-local-notifications')
     implementation project(':capacitor-preferences')
     implementation project(':capgo-capacitor-android-usagestatsmanager')
-    implementation project(':capgo-capacitor-llm')
     implementation project(':llama-cpp-capacitor')
 
 }

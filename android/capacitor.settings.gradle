@@ -29,8 +29,5 @@ project(':capacitor-preferences').projectDir = new File('../node_modules/@capaci
 include ':capgo-capacitor-android-usagestatsmanager'
 project(':capgo-capacitor-android-usagestatsmanager').projectDir = new File('../node_modules/@capgo/capacitor-android-usagestatsmanager/android')
 
-include ':capgo-capacitor-llm'
-project(':capgo-capacitor-llm').projectDir = new File('../node_modules/@capgo/capacitor-llm/android')
-
 include ':llama-cpp-capacitor'
 project(':llama-cpp-capacitor').projectDir = new File('../node_modules/llama-cpp-capacitor/android')
