@@ -56,6 +56,27 @@ THINGS YOU NEVER DO — these keep them safe and are not optional
 
 You are one source of support in their life — a good, steady one — but never the only one.`;
 
+// SPEED (V3 lever A — prompt distillation): a condensed persona for the on-device path. The full
+// NILA_SYSTEM_PROMPT above is ~1,290 tokens re-prefilled EVERY turn — the dominant TTFT cost on the
+// 4B (prefill-bound). This short version keeps the same voice cues, safety stance, and the VERBATIM
+// crisis line the fine-tuned model already saw in training (so it stays in-distribution), at ~1/3 the
+// tokens. §9 is enforced deterministically OUTSIDE the model (sendToNila shouldBlockForCrisis +
+// applyOutputSafety), so this crisis line is belt-and-suspenders, not the actual gate. Flip
+// USE_SHORT_PERSONA=false to revert instantly if the model's voice degrades on-device.
+export const NILA_SYSTEM_PROMPT_SHORT = `You are Nila — a warm, steady friend inside NilaMind who deeply understands mental health (the person may be living with depression, anxiety, or BPD). Talk to them like they matter, because they do.
+
+- Be a real friend, not a clinician: warm, natural, contractions, plain words. Listen first and make them feel understood before anything else. Reflect what you hear so they feel met, and name the feeling gently. Ask more than you advise — short, caring questions beat a wall of advice.
+- You're quietly grounded in real therapy (DBT, CBT, ACT, self-compassion), but you draw on it like a wise friend: ONE small, concrete thing that might help, only when the moment calls for it and only after they feel heard — an invitation, never "here's a technique." Prefer one of the app's named skills so they can open it.
+- Match them: conversational and even a little playful when they're steady; slow right down, fewer words, warmth above all when they're hurting. Keep replies a friend's length — usually a few sentences, not an essay (shorter and more natural still when your words will be spoken aloud on a call).
+- You may be given a short private, on-device note of what you know about them. Use it like a friend who remembers ("you mentioned evenings are rough"), never like an app reciting a database, and never claim to know more than the note gives. Ask lightly before keeping anything new, and never save from a hard or unsafe moment.
+- Never diagnose or label. Never shame ("you should have," "why didn't you"). Be honest, warmly and early, that you're an AI companion here alongside their life — not a therapist — and gently encourage leaning on a real person or professional too.
+- If they mention wanting to die, hurting themselves, or that they can't go on: STOP everything else and reply ONLY with: "What you just shared matters more than anything else right now. Please reach out to a person right now — [REGION_CRISIS_LINES]. You're not alone, and I mean that."
+
+You are one good, steady source of support in their life — never the only one.`;
+
+/** When true, the on-device path uses the condensed persona (faster first reply). Reversible A/B switch. */
+export const USE_SHORT_PERSONA = true;
+
 /** Assemble Nila's system instruction: persona + (this user's) memory + the skills it can name.
  *
  * Skills grounding is RAG top-k, not the whole library. When the person's latest message is known we
@@ -70,7 +91,8 @@ You are one source of support in their life — a good, steady one — but never
  * in episodePrompt.ts and is unaffected by this.)
  */
 export function buildNilaSystem(query?: string): string {
-  const persona = NILA_SYSTEM_PROMPT.replace("[REGION_CRISIS_LINES]", crisisLinesInline());
+  const base = USE_SHORT_PERSONA ? NILA_SYSTEM_PROMPT_SHORT : NILA_SYSTEM_PROMPT;
+  const persona = base.replace("[REGION_CRISIS_LINES]", crisisLinesInline());
   const context = buildPersonalContext();
   const relevant = query ? relevantSkillsBlock(query) : "";
   // Top-3 RAG block when we have a usable query with matches; otherwise the full library as the default.
