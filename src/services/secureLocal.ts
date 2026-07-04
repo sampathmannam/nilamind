@@ -211,17 +211,23 @@ export const secureLocal = {
 /** Await all queued encrypted writes (used on pagehide and in tests). Also RETRIES any writes that previously
  *  failed — a failure may have been transient (IDB busy) or resolved (store re-unlocked), so a flush is our
  *  chance to get the data to disk before the app closes. */
+let retrying = false; // re-entry guard: concurrent flushes (pagehide + importBackup) must not double-queue retries
 export async function flush(): Promise<void> {
   await persistChain;
-  if (pendingFailures.size) {
-    // Retry with the CURRENT cache value, never the value captured at failure time — otherwise a retry could
-    // land AFTER a newer setItem on the FIFO persistChain and overwrite the newest write with stale data.
-    for (const k of [...pendingFailures.keys()]) {
-      const v = cache.get(k);
-      if (v === undefined) pendingFailures.delete(k); // removed since the failure — nothing to persist
-      else queuePersist(k, v);
+  if (pendingFailures.size && !retrying) {
+    retrying = true; // held across the await so a concurrent flush skips the retry instead of double-queuing
+    try {
+      // Retry with the CURRENT cache value, never the value captured at failure time — otherwise a retry could
+      // land AFTER a newer setItem on the FIFO persistChain and overwrite the newest write with stale data.
+      for (const k of [...pendingFailures.keys()]) {
+        const v = cache.get(k);
+        if (v === undefined) pendingFailures.delete(k); // removed since the failure — nothing to persist
+        else queuePersist(k, v);
+      }
+      await persistChain;
+    } finally {
+      retrying = false;
     }
-    await persistChain;
   }
 }
 

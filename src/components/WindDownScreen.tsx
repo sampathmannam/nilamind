@@ -16,6 +16,7 @@ type Stage = "park" | "settle" | "close" | "crisis";
 export default function WindDownScreen() {
   const [stage, setStage] = useState<Stage>("park");
   const [worry, setWorry] = useState("");
+  const submitting = useRef(false); // re-entry guard: a double-tap must not run submitWorry twice
   const tip = nightlyTip();
 
   // ── inline soothing breath (4 in / 6 out) — self-contained, same pattern as SelfCompassion's breather ──
@@ -71,11 +72,17 @@ export default function WindDownScreen() {
   }
 
   async function submitWorry() {
+    if (submitting.current) return; // a fast double-tap would else run again with worry already cleared to ""
+    submitting.current = true;
     const text = worry;
     setWorry(""); // §9: never keep/persist the worry text, even on a crisis hit
     setBreathing(false);
-    const crisis = await checkWindDownText(text);
-    setStage(crisis ? "crisis" : "settle");
+    try {
+      const crisis = await checkWindDownText(text);
+      setStage(crisis ? "crisis" : "settle");
+    } finally {
+      submitting.current = false;
+    }
   }
 
   const park = WINDDOWN_STEPS.find((s) => s.id === "park")!;

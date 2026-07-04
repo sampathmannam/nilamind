@@ -195,8 +195,11 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
   // and stop mirroring — the crisis disclosure is not retained or re-shown on return.
   useEffect(() => {
     if (isCrisisState) { clearSessionChat(); return; }
-    setSessionChat(messages);
-  }, [messages, isCrisisState]);
+    // Mirror on turn boundaries, NOT per streamed token: onDelta mutates messages once per token, and copying
+    // the whole transcript each time is wasted work. Skipping while `loading` captures the settled turn when
+    // streaming finishes (loading→false); a mid-stream tab-switch unmounts+aborts anyway, so nothing is lost.
+    if (!loading) setSessionChat(messages);
+  }, [messages, loading, isCrisisState]);
 
   // ── Check-in handlers ──────────────────────────────────────────────────────
 
