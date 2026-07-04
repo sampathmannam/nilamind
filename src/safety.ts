@@ -122,17 +122,26 @@ export function checkResponse(aiReply: string, userMessage: string): boolean {
   return true;
 }
 
+// Method words that also collide with BENIGN phrasing in a mental-health assistant: "try to HANG in there",
+// "hang on", "the instructions on your PILL bottle", "your PILLS as prescribed". For these two we keep the
+// live tripwire STRICT (the "how to" cue only) so warm / med-handoff replies are never cut mid-stream. Every
+// other method word is unambiguous enough in this context to also cut on "instruction"/"try".
+const AMBIGUOUS_METHOD_WORDS = new Set(["hang", "pill"]);
+
 /**
- * Strict live-stream tripwire: a method/means keyword co-occurring with the strongest instruction cue
- * ("how to"). Deliberately narrower than checkResponse Rule 2 — it cuts text LIVE (shown in chat,
- * spoken in a call), so it must never fire on a warm phrase like "try to hang in there". The broad
- * final gate (checkResponse) still runs on the finished reply as the authority.
+ * Live-stream tripwire: a method/means keyword co-occurring with an instruction cue. It cuts text LIVE (shown
+ * in chat, SPOKEN in a call), so it stays narrower than checkResponse Rule 2 in the one place that matters —
+ * the two ambiguous words above trip only on "how to". For every other (unambiguous) method word it now also
+ * trips on "instruction"/"try", closing the gap where "you could try the razor" streamed before checkResponse
+ * replaced it post-hoc. The broad final gate (checkResponse) still runs on the finished reply as the authority.
  */
 export function isStreamingHarm(text: string): boolean {
   if (!text) return false;
   const norm = text.toLowerCase();
   for (const method of UNSAFE_METHOD_KEYWORDS) {
-    if (norm.includes(method) && norm.includes("how to")) return true;
+    if (!norm.includes(method)) continue;
+    if (norm.includes("how to")) return true; // strongest cue — always cut
+    if (!AMBIGUOUS_METHOD_WORDS.has(method) && (norm.includes("instruction") || norm.includes("try"))) return true;
   }
   return false;
 }

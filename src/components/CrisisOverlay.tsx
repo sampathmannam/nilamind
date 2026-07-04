@@ -1,5 +1,5 @@
 import { secureLocal } from "../services/secureLocal";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { SafetyPlan } from "../types";
 import { INITIAL_SAFETY_PLAN } from "../data";
 import { parseSafetyPlan } from "../services/safetyPlan";
@@ -20,6 +20,7 @@ export default function CrisisOverlay({
   onNavigateToBreathing,
 }: CrisisOverlayProps) {
   const [safetyPlan, setSafetyPlan] = useState<SafetyPlan>(INITIAL_SAFETY_PLAN);
+  const headingRef = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -27,22 +28,27 @@ export default function CrisisOverlay({
       // must never blank the user's plan on a corrupt/malformed blob).
       const saved = secureLocal.getItem("nilamind_safetyplan");
       if (saved) setSafetyPlan(parseSafetyPlan(saved));
+      // a11y: move focus INTO the dialog so a screen-reader / keyboard user lands here, not behind the overlay.
+      headingRef.current?.focus();
     }
   }, [isOpen]);
 
   if (!isOpen) return null;
 
   return (
-    <div 
+    <div
       className="fixed inset-0 z-50 bg-page text-slate-300 overflow-y-auto"
       id="crisis-overlay-container"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="crisis-overlay-heading"
     >
       {/* Red safety top header */}
       <div className="bg-rose-500/10 border-b border-rose-500/25 py-6 px-4 text-center">
         <div className="flex justify-center mb-2">
           <ShieldAlert className="text-rose-500 w-12 h-12 stroke-[2.5]" />
         </div>
-        <h1 className="text-xl font-semibold tracking-tight text-slate-100 mb-1">
+        <h1 id="crisis-overlay-heading" ref={headingRef} tabIndex={-1} className="text-xl font-semibold tracking-tight text-slate-100 mb-1 outline-none">
           You reached for this.
         </h1>
         <p className="text-slate-400 text-sm max-w-md mx-auto leading-relaxed">
@@ -54,7 +60,7 @@ export default function CrisisOverlay({
         {/* Quick Help Tenders */}
         <div className="space-y-3">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-            Immediate Crisis Handlers
+            If you need someone right now
           </h2>
           
           <CrisisLines tone="rose" />
@@ -94,7 +100,7 @@ export default function CrisisOverlay({
         {/* Safety Plan Display */}
         <div className="space-y-4 pt-2">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-            Your Safety Plan Sections
+            Your safety plan
           </h2>
 
           {/* Section 1 */}
@@ -103,7 +109,7 @@ export default function CrisisOverlay({
               1. Warning signs I notice:
             </h3>
             <p className="text-slate-300 text-sm whitespace-pre-wrap">
-              {safetyPlan.warningSigns || "No warning signs documented yet. Edit in the 'Plan' tab."}
+              {safetyPlan.warningSigns || "This part is still blank — and that's okay. You're here now, and that counts."}
             </p>
           </div>
 
@@ -113,7 +119,7 @@ export default function CrisisOverlay({
               2. Things I can do on my own to cope:
             </h3>
             <p className="text-slate-300 text-sm whitespace-pre-wrap">
-              {safetyPlan.internalCoping || "No self-coping tools logged yet."}
+              {safetyPlan.internalCoping || "Nothing written here yet — that's okay."}
             </p>
           </div>
 
@@ -123,7 +129,7 @@ export default function CrisisOverlay({
               3. People and places that distract me:
             </h3>
             <p className="text-slate-300 text-sm whitespace-pre-wrap">
-              {safetyPlan.socialDistractors || "No safe distraction sources set yet."}
+              {safetyPlan.socialDistractors || "Nothing here yet — that's okay."}
             </p>
           </div>
 
@@ -133,7 +139,7 @@ export default function CrisisOverlay({
               4. People I can reach out to for help:
             </h3>
             <p className="text-slate-300 text-sm whitespace-pre-wrap">
-              {safetyPlan.trustedPeople || "No support network contacts saved."}
+              {safetyPlan.trustedPeople || "No names here yet — reaching even one person right now can help."}
             </p>
           </div>
 
@@ -156,7 +162,7 @@ export default function CrisisOverlay({
               6. Making my space safer:
             </h3>
             <p className="text-slate-300 text-sm whitespace-pre-wrap">
-              {safetyPlan.safeEnvironment || "No physical cleanup/safety parameters set yet."}
+              {safetyPlan.safeEnvironment || "Nothing here yet — that's okay."}
             </p>
           </div>
         </div>

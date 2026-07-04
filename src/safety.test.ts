@@ -1,19 +1,31 @@
 import { describe, it, expect } from "vitest";
 import { isStreamingHarm, scanForCrisis, METHOD_INTENT_PHRASES } from "./safety";
 
-describe("isStreamingHarm (live-stream tripwire: method + 'how to' only)", () => {
+describe("isStreamingHarm (live-stream tripwire: method + instruction cue)", () => {
   it("trips on a method keyword WITH 'how to'", () => {
     expect(isStreamingHarm("sure, here is how to overdose")).toBe(true);
     expect(isStreamingHarm("how to hang yourself")).toBe(true);
   });
-  it("does NOT trip on a method keyword ALONE (no 'how to')", () => {
+  it("does NOT trip on a method keyword ALONE (no cue)", () => {
     expect(isStreamingHarm("if you've taken an overdose, please call 988")).toBe(false);
     expect(isStreamingHarm("a razor is dangerous")).toBe(false);
   });
-  it("does NOT trip on the looser cues that would catch warm Nila phrases", () => {
-    expect(isStreamingHarm("Try to hang in there")).toBe(false); // 'try' + 'hang' must NOT trip live
-    expect(isStreamingHarm("have you tried taking your pill?")).toBe(false); // 'try'(tried) + 'pill'
-    expect(isStreamingHarm("instructions for the breathing exercise")).toBe(false);
+  // Closed gap: an UNAMBIGUOUS method word + 'instruction'/'try' now cuts LIVE (previously it streamed and
+  // was only replaced post-hoc by checkResponse — a transient exposure, spoken aloud in a call).
+  it("NOW trips on an unambiguous method + 'try'/'instruction' (no longer just 'how to')", () => {
+    expect(isStreamingHarm("you could try the razor")).toBe(true);
+    expect(isStreamingHarm("the instructions are to take the whole bottle of poison")).toBe(true);
+    expect(isStreamingHarm("try tying the rope")).toBe(true);
+    expect(isStreamingHarm("try to overdose")).toBe(true);
+  });
+  // The two AMBIGUOUS method words (hang, pill) stay STRICT (how-to only), so warm/med-handoff replies that
+  // legitimately contain them are never cut mid-stream. The final gate still catches these post-hoc.
+  it("keeps 'hang' and 'pill' strict so warm/med phrases are never live-cut", () => {
+    expect(isStreamingHarm("Try to hang in there")).toBe(false); // warm idiom
+    expect(isStreamingHarm("hang on, you're not alone")).toBe(false);
+    expect(isStreamingHarm("have you tried taking your pill?")).toBe(false);
+    expect(isStreamingHarm("check the instructions on your pill bottle, or ask your pharmacist")).toBe(false);
+    expect(isStreamingHarm("instructions for the breathing exercise")).toBe(false); // no method word at all
   });
   it("does NOT trip on benign text or empty", () => {
     expect(isStreamingHarm("let's take one breath together")).toBe(false);
