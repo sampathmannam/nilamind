@@ -21,8 +21,11 @@ function dropRedundantOrtWasm() {
   };
 }
 
-export default defineConfig(() => {
+export default defineConfig(({ mode }) => {
   return {
+    // Strip console.*/debugger from RELEASE bundles only (production + store) so nothing reaches logcat, where
+    // a co-located app with READ_LOGS could read it. Dev + test keep their logs for debugging.
+    esbuild: mode === 'production' || mode === 'store' ? { drop: ['console', 'debugger'] } : {},
     plugins: [
       dropRedundantOrtWasm(),
       react(),

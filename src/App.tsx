@@ -592,12 +592,12 @@ export default function App() {
               key={tab}
               onClick={() => { setAuxView(null); setActiveTab(tab); setNilaMode("companion"); }}
               aria-current={active ? "page" : undefined}
-              className={`relative flex flex-col items-center gap-1 text-[11px] py-1.5 rounded-lg active:scale-95 transition-all cursor-pointer ${
+              className={`relative flex flex-col items-center justify-center gap-1 text-[11px] py-2 min-h-[48px] rounded-lg active:scale-95 transition-all cursor-pointer ${
                 active ? "text-blue-400 font-bold bg-blue-400/10" : "text-slate-500 font-medium"
               }`}
             >
               {active && <span aria-hidden="true" className="absolute top-0 h-0.5 w-6 rounded-full bg-blue-400" />}
-              <Icon className={`w-4.5 h-4.5 ${active ? "stroke-[2.5]" : ""}`} />
+              <Icon className={`w-5 h-5 ${active ? "stroke-[2.5]" : ""}`} />
               <span>{label}</span>
             </button>
           ))}

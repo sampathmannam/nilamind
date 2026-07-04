@@ -15,12 +15,19 @@ initTheme(); // apply the saved System/Light/Dark choice before first paint
 // crises the keyword list misses (~40% of real disclosures). See crisisClassifier.ts / crisisEmbedder.ts.
 void (async () => {
   try {
-    const [{ transformersEmbedder }, cc] = await Promise.all([
+    const [{ transformersEmbedder, warmCrisisEmbedder }, cc] = await Promise.all([
       import("./services/crisisEmbedder"),
       import("./services/crisisClassifier"),
     ]);
     cc.setCrisisEmbedder(transformersEmbedder);
     cc.setCrisisClassifierEnabled(true);
+    // Warm the MiniLM shortly after startup, at idle, so the FIRST crisis check on ANY surface (episode,
+    // voice call, self-compassion — not just chat, which warms on mount) doesn't degrade to keyword-only
+    // during a cold load. Idle-deferred so it never delays first paint; safe on the plugin thread (this is
+    // Transformers.js in the WebView, NOT the native llama.cpp binding).
+    const warm = () => { void warmCrisisEmbedder().catch(() => {}); };
+    const ric = (globalThis as { requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => void }).requestIdleCallback;
+    if (ric) ric(warm, { timeout: 4000 }); else setTimeout(warm, 2500);
   } catch {
     /* classifier stays off → keyword-only §9 gate, no regression */
   }

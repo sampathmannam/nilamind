@@ -111,7 +111,10 @@ export async function openUsageAccessSettings(): Promise<void> {
   }
 }
 
-// ── Location variance: home baseline set once; only variance is stored, never coordinates ──
+// ── Home baseline: the home coordinates ARE stored (encrypted at rest via secureLocal — the key is in
+//    SENSITIVE_KEYS) and used only to compute distance-from-home VARIANCE for behaviour signals; the variance,
+//    not the coordinates, is what feeds downstream logic. This phone-sensor feature is OFF entirely in store /
+//    F-Droid builds (PHONE_FEATURES_ENABLED). ──
 const HOME_KEY = 'nilamind_home_coords';
 
 export function setHomeLocation(lat: number, lon: number): void {
