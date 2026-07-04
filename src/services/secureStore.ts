@@ -26,7 +26,9 @@ const DB_VERSION = 1;
 const SYS_STORE = "sys"; // 'meta' → Meta; 'deviceKey' → CryptoKey (non-extractable)
 const KV_STORE = "kv"; // original storage key → EncBlob
 
-const PBKDF2_ITERATIONS = 250_000;
+// OWASP-2023 minimum for PBKDF2-SHA256. Only affects NEWLY-set PINs — existing pin wraps store their own
+// `iter` and keep unlocking at whatever they were created with (see unlockWithPin → meta.pinWrap.iter).
+const PBKDF2_ITERATIONS = 600_000;
 
 export interface EncBlob {
   iv: string; // base64

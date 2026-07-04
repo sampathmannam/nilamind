@@ -76,11 +76,18 @@ export async function createIdentity(mnemonic: string): Promise<Identity> {
 // The backup blob is encrypted with a key derived from the phrase (PBKDF2 over the seed), so it can
 // be restored on any device by entering the same phrase. Independent of the device-bound DEK.
 
-async function backupKey(mnemonic: string): Promise<CryptoKey> {
+// Legacy (v1) backups derived the key from a FIXED salt + 150k iters. New (v2) backups carry a per-backup
+// RANDOM salt + a stronger iter count in the blob, so restore reads them back. v1 blobs (no salt field) fall
+// back to the legacy constants and still restore — full backward compatibility.
+const LEGACY_BACKUP_SALT = "mindanchor-backup-v1";
+const LEGACY_BACKUP_ITER = 150_000;
+const BACKUP_ITER = 600_000;
+
+async function backupKey(mnemonic: string, salt: Uint8Array, iter: number): Promise<CryptoKey> {
   const seed = mnemonicToSeedSync(normalize(mnemonic));
   const km = await crypto.subtle.importKey("raw", seed as unknown as BufferSource, "PBKDF2", false, ["deriveKey"]);
   return crypto.subtle.deriveKey(
-    { name: "PBKDF2", salt: enc.encode("mindanchor-backup-v1"), iterations: 150_000, hash: "SHA-256" },
+    { name: "PBKDF2", salt: salt as unknown as BufferSource, iterations: iter, hash: "SHA-256" },
     km,
     { name: "AES-GCM", length: 256 },
     false,
@@ -99,17 +106,22 @@ export async function exportBackup(mnemonic: string): Promise<string> {
     if (v != null) data[k] = v;
   }
   const payload = JSON.stringify({ v: 1, exportedAt: new Date().toISOString(), data });
-  const key = await backupKey(mnemonic);
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const key = await backupKey(mnemonic, salt, BACKUP_ITER);
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const ct = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, enc.encode(payload));
-  return btoa(JSON.stringify({ v: 1, iv: b64(iv), ct: b64(new Uint8Array(ct)) }));
+  // v:2 carries the per-backup random salt + iter so restore can re-derive the key.
+  return btoa(JSON.stringify({ v: 2, salt: b64(salt), iter: BACKUP_ITER, iv: b64(iv), ct: b64(new Uint8Array(ct)) }));
 }
 
 /** Restore data from a phrase-encrypted backup string. Returns the number of keys restored.
  *  Throws if the phrase is wrong (AES-GCM auth failure) or the blob is malformed. */
 export async function importBackup(blobB64: string, mnemonic: string): Promise<number> {
   const outer = JSON.parse(atob(blobB64.trim()));
-  const key = await backupKey(mnemonic);
+  // v2 blobs carry their own salt + iter; legacy v1 blobs (no salt field) use the fixed legacy constants.
+  const salt = outer.salt ? ub64(outer.salt) : enc.encode(LEGACY_BACKUP_SALT);
+  const iter = typeof outer.iter === "number" ? outer.iter : LEGACY_BACKUP_ITER;
+  const key = await backupKey(mnemonic, salt, iter);
   const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: ub64(outer.iv) }, key, ub64(outer.ct));
   const parsed = JSON.parse(dec.decode(pt));
   let n = 0;
