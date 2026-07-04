@@ -1,6 +1,35 @@
 import { describe, it, expect } from "vitest";
-import { skillCardFromReply, cardsForReply } from "./nilaCards";
+import { skillCardFromReply, skillCardFromMessage, cardsForReply } from "./nilaCards";
 import { CheckInEntry } from "../types";
+
+// The reframe: the app surfaces the right evidence-based tool DETERMINISTICALLY from the user's own words
+// (reliable regardless of what the small model generated), instead of depending on the model to name a skill.
+describe("skillCardFromMessage (tool routed from the USER's words, not the model's reply)", () => {
+  it("surfaces the evidence-based skill matched from the user's message", () => {
+    const c = skillCardFromMessage("I have an impulsive urge to act on it");
+    expect(c).not.toBeNull();
+    expect(c!.kind).toBe("skill");
+    expect(c!.skillId).toBe("stop");
+  });
+  it("returns null when nothing confident matches (never a wrong tool)", () => {
+    expect(skillCardFromMessage("hello how are you today")).toBeNull();
+    expect(skillCardFromMessage("")).toBeNull();
+  });
+});
+
+describe("cardsForReply — the user-message tool takes priority over the model's reply", () => {
+  it("surfaces the skill matched from the USER message, not the one the model named", () => {
+    // user's words -> tipp; the (formulaic) model reply happens to name STOP. The reliable tool wins.
+    const cards = cardsForReply("Let's try STOP together.", null, [], "everything is so overwhelming, my thinking brain feels offline");
+    const skillCards = cards.filter((c) => c.kind === "skill");
+    expect(skillCards.length).toBe(1);
+    expect(skillCards[0].skillId).toBe("tipp");
+  });
+  it("falls back to the model-named skill when the user message matches nothing", () => {
+    const cards = cardsForReply("Try TIPP.", null, [], "hello how are you");
+    expect(cards).toEqual([{ kind: "skill", skillId: "tipp", label: expect.any(String) }]);
+  });
+});
 
 describe("skillCardFromReply", () => {
   it("returns a skill card when Nila names an in-app skill (TIPP)", () => {

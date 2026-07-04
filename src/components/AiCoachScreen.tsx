@@ -125,9 +125,15 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
   // In-chat cards apply ONLY to the latest assistant turn, so compute them once and memoize on that
   // turn's content instead of re-running cardsForReply on every render (feedback taps, opener state, etc).
   const lastMessage = messages[messages.length - 1];
+  // The user message that PROMPTED the latest reply — cardsForReply routes the evidence-based tool off this
+  // (deterministic RAG), so the right tool is surfaced even when the small model's reply is thin/formulaic.
+  const lastUserMsg = useMemo(
+    () => { for (let i = messages.length - 1; i >= 0; i--) if (messages[i].role === "user") return messages[i].content; return ""; },
+    [messages],
+  );
   const lastReplyCards = useMemo(
-    () => (lastMessage && lastMessage.role === "assistant" ? cardsForReply(lastMessage.content, null, []) : []),
-    [lastMessage?.role, lastMessage?.content],
+    () => (lastMessage && lastMessage.role === "assistant" ? cardsForReply(lastMessage.content, null, [], lastUserMsg) : []),
+    [lastMessage?.role, lastMessage?.content, lastUserMsg],
   );
 
   // Inflection opener (Phase 2): pick at most once per mount; gated by the off-by-default toggle,
