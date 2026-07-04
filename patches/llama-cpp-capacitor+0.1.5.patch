@@ -1,0 +1,23 @@
+diff --git a/node_modules/llama-cpp-capacitor/android/src/main/java/ai/annadata/plugin/capacitor/LlamaCpp.java b/node_modules/llama-cpp-capacitor/android/src/main/java/ai/annadata/plugin/capacitor/LlamaCpp.java
+index b037159..3d74df0 100644
+--- a/node_modules/llama-cpp-capacitor/android/src/main/java/ai/annadata/plugin/capacitor/LlamaCpp.java
++++ b/node_modules/llama-cpp-capacitor/android/src/main/java/ai/annadata/plugin/capacitor/LlamaCpp.java
+@@ -497,6 +497,10 @@ public class LlamaCpp {
+             return;
+         }
+ 
++        // Load off the plugin thread: the ~2.5 GB model load must not block Capacitor's single plugin
++        // thread (doing so freezes the whole app — the warm-starvation bug). Mirrors downloadModel()'s
++        // background-thread pattern. The async callback -> call.resolve path is unchanged.
++        new Thread(() -> {
+         try {
+             // Extract parameters
+             String modelPath = params.getString("model", "");
+@@ -543,6 +547,7 @@ public class LlamaCpp {
+         } catch (Exception e) {
+             callback.onResult(LlamaResult.failure(new LlamaError("Context initialization failed: " + e.getMessage())));
+         }
++        }).start();
+     }
+ 
+     public void releaseContext(int contextId, LlamaCallback<Void> callback) {
