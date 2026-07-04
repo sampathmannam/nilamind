@@ -2,6 +2,7 @@ import { secureLocal } from "../services/secureLocal";
 import React, { useState, useEffect } from "react";
 import { SafetyPlan } from "../types";
 import { INITIAL_SAFETY_PLAN } from "../data";
+import { parseSafetyPlan } from "../services/safetyPlan";
 import { Heart, Wind, ShieldAlert, ArrowLeft } from "lucide-react";
 import CrisisLines from "./CrisisLines";
 
@@ -22,15 +23,10 @@ export default function CrisisOverlay({
 
   useEffect(() => {
     if (isOpen) {
-      // Reload safety plan when opened to make sure it is up to date
+      // Reload safety plan when opened to make sure it is up to date (defensive parse — the crisis surface
+      // must never blank the user's plan on a corrupt/malformed blob).
       const saved = secureLocal.getItem("nilamind_safetyplan");
-      if (saved) {
-        try {
-          setSafetyPlan(JSON.parse(saved));
-        } catch (e) {
-          console.error(e);
-        }
-      }
+      if (saved) setSafetyPlan(parseSafetyPlan(saved));
     }
   }, [isOpen]);
 

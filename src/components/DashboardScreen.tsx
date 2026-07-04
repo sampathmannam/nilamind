@@ -154,7 +154,7 @@ export default function DashboardScreen({ onManageData, onOpenConsole }: { onMan
 
       {/* ONE trend chart (7D/30D + Emotion/Context), fed by loadMoodHistory() */}
       {trendLength >= 2 ? (
-        <div className="bg-card border border-slate-800 rounded-2xl p-4 space-y-4">
+        <div className="glass rounded-2xl p-4 space-y-4">
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 font-mono flex items-center gap-1.5"><TrendUpIcon className="w-3.5 h-3.5" /> Trend</h3>
@@ -206,7 +206,7 @@ export default function DashboardScreen({ onManageData, onOpenConsole }: { onMan
 
       {/* Emotion distribution (suffix-stripped counts) */}
       {emoBars.length > 0 && (
-        <div className="bg-card border border-slate-800 rounded-2xl p-4 space-y-3">
+        <div className="glass rounded-2xl p-4 space-y-3">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 font-mono">Emotion log frequency</h3>
           <div className="w-full h-44">
             <ResponsiveContainer width="100%" height="100%">
@@ -233,7 +233,7 @@ export default function DashboardScreen({ onManageData, onOpenConsole }: { onMan
             const traj = trajectories.find((t) => t.id === `assessment-${id}`);
             const dirIcon = traj?.direction === "protective" ? <TrendingDown className="w-3.5 h-3.5 text-emerald-400" /> : traj?.direction === "risk" ? <TrendUpIcon className="w-3.5 h-3.5 text-amber-400" /> : <Minus className="w-3.5 h-3.5 text-slate-500" />;
             return (
-              <div key={id} className="bg-card border border-slate-800 rounded-xl p-3">
+              <div key={id} className="glass rounded-xl p-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-slate-100">{inst.measures.split(" ")[0]} · {id}</span>
                   <span className="text-xs text-slate-300">{last.total}/{inst.maxScore} <span className="text-slate-500">{last.severity}</span></span>
@@ -249,7 +249,7 @@ export default function DashboardScreen({ onManageData, onOpenConsole }: { onMan
 
       {/* Derived observations */}
       {observations.length > 0 && (
-        <div className="bg-card border border-slate-800 p-5 rounded-2xl space-y-3">
+        <div className="glass p-5 rounded-2xl space-y-3">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 font-mono flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5 text-emerald-400" /> Patterns from your data
           </h3>
@@ -265,7 +265,7 @@ export default function DashboardScreen({ onManageData, onOpenConsole }: { onMan
 
       {/* Quick-note tag cloud */}
       {topTags.length > 0 && (
-        <div className="bg-card border border-slate-800 p-5 rounded-2xl space-y-3">
+        <div className="glass p-5 rounded-2xl space-y-3">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 font-mono flex items-center gap-1.5">
             <Tag className="w-3.5 h-3.5 text-blue-400" /> Frequent quick-note subjects
           </h3>
@@ -310,7 +310,7 @@ export default function DashboardScreen({ onManageData, onOpenConsole }: { onMan
         <div className="space-y-2">
           <div className="text-[10px] uppercase font-mono tracking-widest text-slate-400 flex items-center gap-1.5"><MessageSquare className="w-3.5 h-3.5" /> Recent Nila sessions</div>
           {nila.recent.slice(0, 5).map((t) => (
-            <div key={t.id} className="bg-card border border-slate-800 rounded-xl p-3 flex items-start justify-between gap-2">
+            <div key={t.id} className="glass rounded-xl p-3 flex items-start justify-between gap-2">
               <span className="text-[11px] text-slate-300 italic min-w-0">"{t.snippet}{t.snippet.length >= 80 ? "…" : ""}"</span>
               <span className="text-[10px] text-slate-600 shrink-0">{t.surface === "episode" ? "episode" : "coach"} · {t.date.slice(5)}</span>
             </div>
@@ -350,7 +350,7 @@ export default function DashboardScreen({ onManageData, onOpenConsole }: { onMan
         </button>
       )}
       {onManageData && (
-        <button onClick={onManageData} id="dashboard-manage-data" className="w-full bg-card border border-slate-800 hover:bg-raised text-slate-300 text-xs font-semibold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5">
+        <button onClick={onManageData} id="dashboard-manage-data" className="w-full glass hover:bg-raised text-slate-300 text-xs font-semibold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5">
           <Database className="w-3.5 h-3.5" /> Manage, export or delete your data
         </button>
       )}
@@ -360,7 +360,7 @@ export default function DashboardScreen({ onManageData, onOpenConsole }: { onMan
 
 function Stat({ icon, value, label }: { icon: React.ReactNode; value: string; label: string }) {
   return (
-    <div className="bg-card border border-slate-800 rounded-2xl py-3 px-2 text-center">
+    <div className="glass rounded-2xl py-3 px-2 text-center">
       <div className="flex justify-center mb-1">{icon}</div>
       <div className="text-lg font-black text-slate-100 font-mono leading-none">{value}</div>
       <div className="text-[9px] text-slate-500 uppercase tracking-wide mt-1">{label}</div>
@@ -369,5 +369,5 @@ function Stat({ icon, value, label }: { icon: React.ReactNode; value: string; la
 }
 
 function EmptyCard({ text }: { text: string }) {
-  return <div className="bg-card border border-slate-800 rounded-2xl p-4 text-center text-[11px] text-slate-500 leading-relaxed">{text}</div>;
+  return <div className="glass rounded-2xl p-4 text-center text-[11px] text-slate-500 leading-relaxed">{text}</div>;
 }

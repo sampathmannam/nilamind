@@ -187,7 +187,7 @@ export default function ValuesToActionScreen() {
           <textarea aria-label="Note (optional)" value={rating.note} onChange={(e) => setRating({ ...rating, note: e.target.value })} placeholder="Anything you noticed…" className="w-full bg-page border border-slate-800 rounded-xl p-3 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-blue-500/50 min-h-[60px] resize-y" />
         </div>
         <div className="flex gap-2">
-          <button onClick={() => setRating(null)} className="flex-1 bg-card border border-slate-800 hover:bg-raised text-slate-300 font-semibold py-3 rounded-xl text-sm cursor-pointer">Cancel</button>
+          <button onClick={() => setRating(null)} className="flex-1 glass hover:bg-raised text-slate-300 font-semibold py-3 rounded-xl text-sm cursor-pointer">Cancel</button>
           <button onClick={saveRating} id="vta-save-rating" className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl text-sm cursor-pointer flex items-center justify-center gap-2"><Check className="w-4 h-4" /> Log it</button>
         </div>
       </div>
@@ -223,7 +223,7 @@ export default function ValuesToActionScreen() {
               {VALUE_DOMAINS.map((dom) => {
                 const r = draft[dom.id];
                 return (
-                  <div key={dom.id} className="bg-card border border-slate-800 rounded-2xl p-4 space-y-3" id={`vta-domain-${dom.id}`}>
+                  <div key={dom.id} className="glass rounded-2xl p-4 space-y-3" id={`vta-domain-${dom.id}`}>
                     <div>
                       <h3 className="text-sm font-bold text-slate-100">{dom.label}</h3>
                       <p className="text-[10px] text-slate-500 italic">{dom.examples}</p>
@@ -236,7 +236,7 @@ export default function ValuesToActionScreen() {
             </div>
             <div className="flex gap-2">
               {snapshot && (
-                <button onClick={() => setValuesMode("review")} className="flex-1 bg-card border border-slate-800 hover:bg-raised text-slate-300 font-semibold py-3 rounded-xl text-sm cursor-pointer">Cancel</button>
+                <button onClick={() => setValuesMode("review")} className="flex-1 glass hover:bg-raised text-slate-300 font-semibold py-3 rounded-xl text-sm cursor-pointer">Cancel</button>
               )}
               <button onClick={saveCompass} id="vta-values-save" className="flex-[2] bg-rose-600 hover:bg-rose-500 text-white font-bold py-3 rounded-xl text-sm cursor-pointer flex items-center justify-center gap-2"><Check className="w-4 h-4" /> See where to focus</button>
             </div>
@@ -247,12 +247,12 @@ export default function ValuesToActionScreen() {
               <h3 className="text-[10px] uppercase font-mono tracking-widest text-slate-400 flex items-center gap-1.5 pt-1">
                 <Target className="w-3.5 h-3.5" /> Why — highest-leverage areas
               </h3>
-              <button onClick={() => setValuesMode("rate")} className="shrink-0 text-[11px] font-semibold text-slate-400 hover:text-slate-100 flex items-center gap-1 cursor-pointer bg-card border border-slate-800 rounded-lg px-2.5 py-1.5">
+              <button onClick={() => setValuesMode("rate")} className="shrink-0 text-[11px] font-semibold text-slate-400 hover:text-slate-100 flex items-center gap-1 cursor-pointer glass rounded-lg px-2.5 py-1.5">
                 <Pencil className="w-3 h-3" /> Edit
               </button>
             </div>
             {gaps.length === 0 ? (
-              <div className="bg-card border border-slate-800 rounded-2xl p-4">
+              <div className="glass rounded-2xl p-4">
                 <p className="text-xs text-slate-400 leading-relaxed">
                   No big gaps showing between what you value and how you're living — or nothing rated as
                   highly important yet. Tap <span className="text-slate-200 font-semibold">Edit</span> any time.
@@ -261,7 +261,7 @@ export default function ValuesToActionScreen() {
             ) : (
               <div className="space-y-3" id="vta-gaps">
                 {gaps.slice(0, 4).map((g) => (
-                  <div key={g.domainId} className="bg-card border border-slate-800 rounded-2xl p-4 space-y-3">
+                  <div key={g.domainId} className="glass rounded-2xl p-4 space-y-3">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-bold text-slate-100">{g.label}</span>
                       {g.gap > 0 && (
@@ -307,7 +307,7 @@ export default function ValuesToActionScreen() {
         </div>
 
         {insight.done > 0 && (
-          <div className="bg-card border border-slate-800 rounded-2xl p-4 space-y-3" id="vta-insight">
+          <div className="glass rounded-2xl p-4 space-y-3" id="vta-insight">
             <h4 className="text-[10px] uppercase font-mono tracking-widest text-slate-400 flex items-center gap-1.5">
               <TrendingUp className="w-3.5 h-3.5" /> Your pattern · {insight.done} done
             </h4>
@@ -327,7 +327,7 @@ export default function ValuesToActionScreen() {
           </div>
         )}
 
-        <div className="bg-card border border-slate-800 rounded-2xl p-4 space-y-3">
+        <div className="glass rounded-2xl p-4 space-y-3">
           <div className="flex flex-wrap gap-1.5">
             {BA_CATEGORIES.map((c) => {
               const on = selectedCat === c.id;
@@ -370,7 +370,7 @@ export default function ValuesToActionScreen() {
           <h3 className="text-[10px] uppercase font-mono tracking-widest text-slate-400">To do</h3>
           {todo.map((item) =>
             item.kind === "activity" && item.activity ? (
-              <div key={item.id} className="bg-card border border-slate-800 rounded-xl p-3 flex items-center justify-between gap-2">
+              <div key={item.id} className="glass rounded-xl p-3 flex items-center justify-between gap-2">
                 <div className="min-w-0">
                   <span className="text-xs text-slate-200 font-medium">{item.title}</span>
                   <span className={`block text-[10px] ${TONE[categoryMeta(item.activity.category).tone].text}`}>{categoryMeta(item.activity.category).label}</span>
@@ -381,7 +381,7 @@ export default function ValuesToActionScreen() {
                 </div>
               </div>
             ) : item.kind === "step" && item.step ? (
-              <div key={item.id} className="bg-card border border-slate-800 rounded-xl p-3 flex items-center justify-between gap-2">
+              <div key={item.id} className="glass rounded-xl p-3 flex items-center justify-between gap-2">
                 <div className="min-w-0">
                   <span className="text-xs text-slate-200">{item.title}</span>
                   <span className="block text-[10px] text-rose-300 flex items-center gap-1"><ArrowRight className="w-3 h-3" /> {domainLabel(item.step.domainId)}</span>
@@ -426,7 +426,7 @@ export default function ValuesToActionScreen() {
 
 function RatingSlider({ label, help, value, onChange }: { label: string; help: string; value: number; onChange: (v: number) => void }) {
   return (
-    <div className="bg-card border border-slate-800 rounded-2xl p-4 space-y-2">
+    <div className="glass rounded-2xl p-4 space-y-2">
       <div className="flex justify-between items-baseline">
         <span className="text-sm font-bold text-slate-100">{label}</span>
         <span className="font-mono text-blue-400 text-sm">{value} / 10</span>

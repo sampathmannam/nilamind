@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { BookOpen, Search, X, ChevronDown, LifeBuoy, AlertTriangle } from "lucide-react";
 import { searchPsychoed, checkPsychoedQuery, type PsychoedTopic } from "../services/psychoed";
+import { detectCrisis } from "../services/crisisClassifier";
 import { getCrisisReply } from "../safety";
 import CrisisLines from "./CrisisLines";
 
@@ -18,11 +19,15 @@ export default function PsychoedScreen() {
   // §9: gate BEFORE storing/searching — query never holds crisis text, lexical search never runs on it.
   function onQueryChange(v: string) {
     if (checkPsychoedQuery(v)) {
+      // instant deterministic keyword floor — a keyword hit never reaches the search box
       setCrisis(true);
       setQuery("");
       return;
     }
     setQuery(v);
+    // Additive euphemism catch: the classifier may flag what keywords miss; elevate to crisis if so. Best-effort
+    // and off the typing path (keeps input responsive); fail-safe (worst case it clears a benign query to "").
+    if (v.trim()) void detectCrisis(v).then((c) => { if (c) { setCrisis(true); setQuery(""); } });
   }
   function needSupport() {
     setCrisis(true);
@@ -81,7 +86,7 @@ export default function PsychoedScreen() {
               onChange={(e) => onQueryChange(e.target.value)}
               placeholder="Search (e.g. panic, can't sleep, overthinking)…"
               id="understand-search"
-              className="w-full bg-card border border-slate-800 rounded-xl pl-9 pr-9 py-2.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500/50"
+              className="w-full glass rounded-xl pl-9 pr-9 py-2.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500/50"
             />
             {query && (
               <button
@@ -100,7 +105,7 @@ export default function PsychoedScreen() {
               {results.length} topic{results.length === 1 ? "" : "s"}
             </div>
             {results.length === 0 ? (
-              <div className="bg-card border border-slate-800 rounded-2xl p-5 text-center text-xs text-slate-400">
+              <div className="glass rounded-2xl p-5 text-center text-xs text-slate-400">
                 Nothing matches “{query}”. Try a feeling (panic, numb), a struggle (can't sleep, overthinking), or
                 a word (avoidance, values).
               </div>
@@ -124,7 +129,7 @@ function TopicCard({ topic, open, onToggle }: { topic: PsychoedTopic; open: bool
   return (
     <div
       id={`topic-${topic.id}`}
-      className="bg-card border border-slate-800 border-l-4 border-l-indigo-500 rounded-r-2xl overflow-hidden"
+      className="glass border-l-4 border-l-indigo-500 rounded-r-2xl overflow-hidden"
     >
       <button onClick={onToggle} className="w-full text-left p-4 flex items-start justify-between gap-3 cursor-pointer" aria-expanded={open}>
         <div className="min-w-0 space-y-1.5">

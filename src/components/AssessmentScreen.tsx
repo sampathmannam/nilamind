@@ -170,7 +170,7 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
               key={id}
               onClick={() => startInstrument(id)}
               id={`assessment-start-${id}`}
-              className="w-full bg-card border border-slate-800 hover:border-slate-700 hover:bg-raised p-4 rounded-2xl text-left transition-all cursor-pointer flex items-center justify-between gap-3"
+              className="w-full glass hover:brightness-125 hover:bg-raised p-4 rounded-2xl text-left transition-all cursor-pointer flex items-center justify-between gap-3"
             >
               <div className="space-y-1 min-w-0">
                 <div className="flex items-center gap-2">
@@ -216,7 +216,7 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
             <h2 className="text-lg font-bold text-slate-100">{inst.name}</h2>
             <span className="text-[10px] uppercase tracking-wider text-slate-500 font-mono">{inst.measures}</span>
           </div>
-          <p className="text-xs text-slate-300 leading-relaxed bg-card border border-slate-800 rounded-xl p-3">
+          <p className="text-xs text-slate-300 leading-relaxed glass rounded-xl p-3">
             {inst.prompt}
           </p>
           {inst.safetyItemIndex !== undefined && (
@@ -344,7 +344,7 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
         </div>
 
         {/* Cut-point + citation */}
-        <div className="bg-card border border-slate-800 rounded-xl p-4 space-y-2">
+        <div className="glass rounded-xl p-4 space-y-2">
           {overCut && (
             <div className="flex items-start gap-2">
               <Activity className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
@@ -361,7 +361,7 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
         <button
           onClick={() => speak(`Your ${inst.name} score is ${result.total} out of ${inst.maxScore}. ${result.band.label}. ${result.band.interpretation}`)}
           id="assessment-read-aloud"
-          className="w-full bg-card border border-slate-800 hover:bg-raised text-slate-300 text-xs font-semibold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5"
+          className="w-full glass hover:bg-raised text-slate-300 text-xs font-semibold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5"
         >
           <Volume2 className="w-3.5 h-3.5" /> Read this aloud
         </button>
@@ -378,7 +378,7 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
 
         <button
           onClick={() => { setPhase("menu"); setActive(null); }}
-          className="w-full bg-card border border-slate-800 hover:bg-raised text-slate-200 font-semibold py-3 rounded-xl text-sm cursor-pointer transition-colors"
+          className="w-full glass hover:bg-raised text-slate-200 font-semibold py-3 rounded-xl text-sm cursor-pointer transition-colors"
         >
           Done
         </button>
@@ -404,7 +404,7 @@ function TrendBlock({ instrumentId, history }: { instrumentId: InstrumentId; his
   if (data.length < 2) return null;
 
   return (
-    <div className="bg-card border border-slate-800 rounded-2xl p-4 space-y-2">
+    <div className="glass rounded-2xl p-4 space-y-2">
       <h4 className="text-[10px] uppercase font-mono tracking-widest text-slate-400">
         {inst.name} trend · last {data.length}
       </h4>

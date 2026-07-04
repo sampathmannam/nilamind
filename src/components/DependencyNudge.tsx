@@ -26,7 +26,7 @@ export default function DependencyNudge({ onDismiss, onReachOut }: { onDismiss: 
         <button
           onClick={onReachOut}
           id="dependency-nudge-reachout"
-          className="w-full flex items-center justify-between gap-2 bg-card border border-slate-800 hover:border-sky-500/40 rounded-xl px-3 py-2.5 text-xs font-semibold text-slate-200 transition-colors cursor-pointer"
+          className="w-full flex items-center justify-between gap-2 glass hover:border-sky-500/40 rounded-xl px-3 py-2.5 text-xs font-semibold text-slate-200 transition-colors cursor-pointer"
         >
           Help me reach out to someone
           <ChevronRight className="w-4 h-4 text-slate-500 shrink-0" />

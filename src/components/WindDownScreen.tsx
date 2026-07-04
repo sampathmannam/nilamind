@@ -70,10 +70,11 @@ export default function WindDownScreen() {
     setWindDownReminder(next);
   }
 
-  function submitWorry() {
-    const crisis = checkWindDownText(worry);
+  async function submitWorry() {
+    const text = worry;
     setWorry(""); // §9: never keep/persist the worry text, even on a crisis hit
     setBreathing(false);
+    const crisis = await checkWindDownText(text);
     setStage(crisis ? "crisis" : "settle");
   }
 
@@ -109,7 +110,7 @@ export default function WindDownScreen() {
 
       {/* ── PARK the day (skippable) ── */}
       {stage === "park" && (
-        <div className="bg-card border border-slate-800 p-5 rounded-2xl space-y-4">
+        <div className="glass p-5 rounded-2xl space-y-4">
           <div className="space-y-1">
             <h3 className="text-sm font-semibold text-slate-200 flex items-center gap-1.5">
               <Moon className="text-indigo-400 w-4 h-4" /> {park.title}
@@ -145,7 +146,7 @@ export default function WindDownScreen() {
 
       {/* ── SETTLE the body ── */}
       {stage === "settle" && (
-        <div className="bg-card border border-slate-800 p-5 rounded-2xl space-y-5">
+        <div className="glass p-5 rounded-2xl space-y-5">
           <div className="space-y-1">
             <h3 className="text-sm font-semibold text-slate-200 flex items-center gap-1.5">
               <Wind className="text-sky-400 w-4 h-4" /> Settle your body
@@ -191,7 +192,7 @@ export default function WindDownScreen() {
       {/* ── CLOSE + nightly tip + reminder ── */}
       {stage === "close" && (
         <>
-          <div className="bg-card border border-slate-800 p-5 rounded-2xl space-y-2">
+          <div className="glass p-5 rounded-2xl space-y-2">
             <h3 className="text-sm font-semibold text-slate-200 flex items-center gap-1.5">
               <Heart className="text-indigo-400 w-4 h-4" /> {close.title}
             </h3>
@@ -204,7 +205,7 @@ export default function WindDownScreen() {
             <p className="text-[10px] text-slate-500 italic">{tip.basis}</p>
           </div>
 
-          <div className="bg-card border border-slate-800 p-4 rounded-2xl space-y-3">
+          <div className="glass p-4 rounded-2xl space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 {reminder.enabled ? <Bell className="w-4 h-4 text-indigo-400" /> : <BellOff className="w-4 h-4 text-slate-500" />}

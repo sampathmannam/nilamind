@@ -10,6 +10,8 @@
 // Shipped bindings: llamaCppLlmAdapter.ts (native — llama.cpp over the GGUF) and
 // ollamaLlmAdapter.ts (desktop/dev). main.tsx registers the right one per platform once the model loads.
 
+import { runExclusive, tryRunExclusive } from "./modelLock";
+
 export interface LocalGenParams {
   /** Full system instruction (buildNilaSystem) — persona + on-device memory + skills. */
   system: string;
@@ -37,6 +39,11 @@ export interface LocalLlmBackend {
 }
 
 let backend: LocalLlmBackend | null = null;
+
+// Concurrency: the llama.cpp binding runs completion() synchronously on Capacitor's ONE plugin thread, so two
+// overlapping completions freeze the app. ALL model access is serialized through modelLock (see that module):
+// generateGuarded (chat/voice) waits its turn; generateOnDevice (reflection/coach/episode) skips if busy.
+export { isModelBusy as isGenerating } from "./modelLock";
 
 /** The native adapter calls this once its model is loaded; pass null to unregister (e.g. on unload). */
 export function registerLocalLlmBackend(b: LocalLlmBackend | null): void {
@@ -88,7 +95,7 @@ const GEN_HANG_TIMEOUT_MS = 600_000;
  * signal. EVERY on-device caller (companion + episode + coachAssist + reflection + memory) routes through
  * this so they share the same deadlock protection, rather than calling backend.generate directly.
  */
-export async function generateGuarded(params: LocalGenParams): Promise<string> {
+async function rawGuardedGenerate(params: LocalGenParams): Promise<string> {
   if (!backend) throw new Error("no on-device backend");
   const ctrl = new AbortController();
   const onOuter = () => ctrl.abort();
@@ -105,6 +112,12 @@ export async function generateGuarded(params: LocalGenParams): Promise<string> {
   }
 }
 
+/** PRIMARY on-device path (companion chat + voice call). Serialized through the model lock — WAITS its turn
+ *  so it can never overlap another completion on the one plugin thread. */
+export async function generateGuarded(params: LocalGenParams): Promise<string> {
+  return runExclusive(() => rawGuardedGenerate(params));
+}
+
 /**
  * One-shot on-device generation for the non-companion features (the episode prompt, the coachAssist
  * "Ask Nila" analyses, the reflection, the memory summariser). Streams via onToken if given, and resolves
@@ -119,9 +132,12 @@ export async function generateOnDevice(
   signal?: AbortSignal,
 ): Promise<string | null> {
   if (!backend || !backend.isReady()) return null;
+  // AUX path: never start a second completion on the one plugin thread. tryRunExclusive returns null the
+  // instant the model is busy (a live chat/voice reply, or another aux task) so we defer instead of piling
+  // up — the caller (reflection/coach/episode) degrades gracefully on null. It also runs the same hang guard.
   try {
-    const reply = await generateGuarded({ system, messages, onToken, signal });
-    return (reply || "").trim() || null;
+    const reply = await tryRunExclusive(() => rawGuardedGenerate({ system, messages, onToken, signal }));
+    return reply === null ? null : reply.trim() || null;
   } catch {
     return null;
   }

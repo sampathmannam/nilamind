@@ -39,7 +39,7 @@ export default function PactScreen() {
       </header>
 
       {pact && (
-        <div className="bg-card border border-slate-800 rounded-2xl p-3 text-[11px] text-slate-500 flex items-center justify-between gap-2">
+        <div className="glass rounded-2xl p-3 text-[11px] text-slate-500 flex items-center justify-between gap-2">
           <span>Written {fmt(pact.writtenAt)} · last confirmed {fmt(pact.ratifiedAt)}</span>
           {stale && (
             <button onClick={onRatify} className="text-amber-300 font-semibold flex items-center gap-1 cursor-pointer shrink-0">

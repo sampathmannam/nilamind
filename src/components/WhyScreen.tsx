@@ -99,7 +99,7 @@ export default function WhyScreen() {
 
       <div className="space-y-4">
         {WHY_WE_BUILT_THIS.map((f) => (
-          <article key={f.id} className="bg-card border border-slate-800 rounded-2xl p-4 space-y-3">
+          <article key={f.id} className="glass rounded-2xl p-4 space-y-3">
             <h2 className="text-sm font-bold text-slate-100">{f.title}</h2>
             <div className="space-y-2.5 text-xs leading-relaxed">
               <p className="text-slate-300"><span className="text-slate-500 font-semibold">What it is — </span>{f.what}</p>

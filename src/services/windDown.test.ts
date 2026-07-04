@@ -74,9 +74,9 @@ describe("getWindDownReminder / setWindDownReminder", () => {
 });
 
 describe("checkWindDownText (worry-park crisis gate)", () => {
-  it("true for crisis content, false for ordinary worry / empty", () => {
-    expect(checkWindDownText("I want to kill myself")).toBe(true);
-    expect(checkWindDownText("I'm stressed about my meeting tomorrow")).toBe(false);
-    expect(checkWindDownText("")).toBe(false);
+  it("true for crisis content (keyword floor), false for ordinary worry / empty", async () => {
+    expect(await checkWindDownText("I want to kill myself")).toBe(true);
+    expect(await checkWindDownText("I'm stressed about my meeting tomorrow")).toBe(false);
+    expect(await checkWindDownText("")).toBe(false);
   });
 });

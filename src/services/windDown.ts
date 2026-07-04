@@ -1,7 +1,7 @@
 // On-device sleep wind-down — pure, deterministic content + helpers. No model, no network.
 // Supportive/educational, NEVER medical (see the §9 section of the Wind-Down spec). The worry-park text is
 // crisis-checked via checkWindDownText and is never persisted by this module.
-import { scanForCrisis } from "../safety";
+import { detectCrisis } from "./crisisClassifier";
 
 export interface SleepTip {
   id: string;
@@ -110,8 +110,8 @@ export function setWindDownReminder(p: Partial<WindDownReminder>): void {
   }
 }
 
-/** Deterministic crisis gate for the worry textarea — wraps scanForCrisis. The screen surfaces crisis help
- *  on `true` and never persists the text. */
-export function checkWindDownText(text: string): boolean {
-  return scanForCrisis(text);
+/** §9 gate for the worry textarea — classifier-backed detectCrisis (keyword floor + euphemism catch). The
+ *  screen surfaces crisis help on `true` and never persists the text. Additive/fail-closed vs the keyword scan. */
+export async function checkWindDownText(text: string): Promise<boolean> {
+  return detectCrisis(text);
 }

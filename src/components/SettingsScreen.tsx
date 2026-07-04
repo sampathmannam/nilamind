@@ -31,7 +31,7 @@ export default function SettingsScreen({ disableAnchorPulse, onTogglePulse }: Se
 
       <AppearanceSection />
 
-      <div className="bg-card border border-slate-800 p-5 rounded-2xl space-y-4 shadow-lg">
+      <div className="glass p-5 rounded-2xl space-y-4 shadow-lg">
         <div>
           <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
             <EyeOff className="w-4 h-4 text-emerald-400" /> Sensory Overload
@@ -80,7 +80,7 @@ export default function SettingsScreen({ disableAnchorPulse, onTogglePulse }: Se
 function FeedbackSection() {
   const REPO = "https://github.com/sampathmannam/nilamind";
   return (
-    <div className="bg-card border border-slate-800 p-5 rounded-2xl space-y-3 shadow-lg" id="settings-feedback">
+    <div className="glass p-5 rounded-2xl space-y-3 shadow-lg" id="settings-feedback">
       <div>
         <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
           <MessageSquare className="w-4 h-4 text-purple-400" /> Feedback &amp; about
@@ -131,7 +131,7 @@ function AppearanceSection() {
   ];
   const pick = (c: ThemeChoice) => { setChoice(c); setThemeChoice(c); };
   return (
-    <div className="bg-card border border-slate-800 p-5 rounded-2xl space-y-3 shadow-lg" id="settings-appearance">
+    <div className="glass p-5 rounded-2xl space-y-3 shadow-lg" id="settings-appearance">
       <div>
         <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
           <Sun className="w-4 h-4 text-amber-400" /> Appearance
@@ -178,10 +178,10 @@ function RemindersSection() {
     });
   };
   const TimeInput = ({ value, on }: { value: string; on: (v: string) => void }) => (
-    <input type="time" value={value} onChange={(e) => on(e.target.value)} aria-label="Time" className="bg-card border border-slate-800 rounded-lg px-2 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500/50" />
+    <input type="time" value={value} onChange={(e) => on(e.target.value)} aria-label="Time" className="glass rounded-lg px-2 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500/50" />
   );
   return (
-    <div className="bg-card border border-slate-800 p-5 rounded-2xl space-y-4 shadow-lg" id="settings-reminders">
+    <div className="glass p-5 rounded-2xl space-y-4 shadow-lg" id="settings-reminders">
       <div>
         <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
           <Bell className="w-4 h-4 text-blue-400" /> Gentle Reminders
@@ -243,7 +243,7 @@ function VoiceSection() {
   };
 
   return (
-    <div className="bg-card border border-slate-800 p-5 rounded-2xl space-y-4 shadow-lg" id="settings-voice">
+    <div className="glass p-5 rounded-2xl space-y-4 shadow-lg" id="settings-voice">
       <div>
         <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
           <Volume2 className="w-4 h-4 text-blue-400" /> Soothing Voice
@@ -381,7 +381,7 @@ function InflectionSection() {
   const [on, setOn] = useState(getInflectionEnabled());
   const toggle = () => { const next = !on; setOn(next); setInflectionEnabled(next); };
   return (
-    <div className="bg-card border border-slate-800 p-5 rounded-2xl space-y-4 shadow-lg" id="settings-inflection">
+    <div className="glass p-5 rounded-2xl space-y-4 shadow-lg" id="settings-inflection">
       <div>
         <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
           <Activity className="w-4 h-4 text-blue-400" /> Gentle Nudges from Nila
@@ -423,7 +423,7 @@ function OnDeviceSection() {
   }, []);
 
   return (
-    <div className="bg-card border border-slate-800 p-5 rounded-2xl space-y-4 shadow-lg" id="settings-ondevice">
+    <div className="glass p-5 rounded-2xl space-y-4 shadow-lg" id="settings-ondevice">
       <div>
         <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
           <Cpu className="w-4 h-4 text-violet-400" /> Nila Runs On Your Device
@@ -486,7 +486,7 @@ function IdentitySection() {
   };
 
   return (
-    <div className="bg-card border border-slate-800 p-5 rounded-2xl space-y-4 shadow-lg" id="settings-identity">
+    <div className="glass p-5 rounded-2xl space-y-4 shadow-lg" id="settings-identity">
       <div>
         <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
           <KeyRound className="w-4 h-4 text-blue-400" /> Account & Recovery
@@ -528,13 +528,13 @@ function IdentitySection() {
         <span className="text-xs font-semibold text-slate-200">Encrypted backup</span>
         <p className="text-[11px] text-slate-500 leading-relaxed">A file you control, encrypted with your phrase — restore it on a new device by entering the same phrase. No cloud.</p>
         {!backup ? (
-          <button onClick={doExport} disabled={busy} id="settings-export-backup" className="w-full bg-card border border-slate-800 hover:bg-raised text-slate-200 text-xs font-semibold py-2.5 rounded-lg cursor-pointer flex items-center justify-center gap-1.5">
+          <button onClick={doExport} disabled={busy} id="settings-export-backup" className="w-full glass hover:bg-raised text-slate-200 text-xs font-semibold py-2.5 rounded-lg cursor-pointer flex items-center justify-center gap-1.5">
             {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <><Download className="w-3.5 h-3.5" /> Create backup</>}
           </button>
         ) : (
           <div className="flex gap-2">
             <button onClick={download} className="flex-1 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2.5 rounded-lg cursor-pointer">Download .txt</button>
-            <button onClick={() => navigator.clipboard.writeText(backup)} className="bg-card border border-slate-800 text-slate-300 text-xs px-3 py-2.5 rounded-lg cursor-pointer">Copy</button>
+            <button onClick={() => navigator.clipboard.writeText(backup)} className="glass text-slate-300 text-xs px-3 py-2.5 rounded-lg cursor-pointer">Copy</button>
           </div>
         )}
       </div>
@@ -586,7 +586,7 @@ function PrivacyLockSection() {
   };
 
   return (
-    <div className="bg-card border border-slate-800 p-5 rounded-2xl space-y-4 shadow-lg" id="settings-privacy">
+    <div className="glass p-5 rounded-2xl space-y-4 shadow-lg" id="settings-privacy">
       <div>
         <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
           <Lock className="w-4 h-4 text-blue-400" /> Privacy Lock
@@ -632,7 +632,7 @@ function PrivacyLockSection() {
               onChange={(e) => setPin(e.target.value)} placeholder="New PIN (min 4 digits)"
               aria-label="New PIN"
               id="settings-pin-input"
-              className="w-full bg-card border border-slate-800 rounded-lg px-3 py-2.5 text-sm text-slate-100 tracking-widest placeholder:tracking-normal placeholder:text-slate-600 focus:outline-none focus:border-blue-500/50"
+              className="w-full glass rounded-lg px-3 py-2.5 text-sm text-slate-100 tracking-widest placeholder:tracking-normal placeholder:text-slate-600 focus:outline-none focus:border-blue-500/50"
             />
             <input
               type="password" inputMode="numeric" value={confirm}
@@ -640,14 +640,14 @@ function PrivacyLockSection() {
               onKeyDown={(e) => e.key === "Enter" && doSetPin()}
               aria-label="Confirm PIN"
               id="settings-pin-confirm"
-              className="w-full bg-card border border-slate-800 rounded-lg px-3 py-2.5 text-sm text-slate-100 tracking-widest placeholder:tracking-normal placeholder:text-slate-600 focus:outline-none focus:border-blue-500/50"
+              className="w-full glass rounded-lg px-3 py-2.5 text-sm text-slate-100 tracking-widest placeholder:tracking-normal placeholder:text-slate-600 focus:outline-none focus:border-blue-500/50"
             />
             <p className="text-[10px] text-amber-300/80 leading-relaxed flex items-start gap-1">
               <AlertTriangle className="w-3 h-3 shrink-0 mt-0.5" /> If you forget this PIN, your encrypted entries cannot be recovered. There's no reset.
             </p>
             {error && <p className="text-[11px] text-rose-400">{error}</p>}
             <div className="flex gap-2">
-              <button onClick={reset} className="flex-1 bg-card border border-slate-800 text-slate-400 text-xs py-2 rounded-lg cursor-pointer">Cancel</button>
+              <button onClick={reset} className="flex-1 glass text-slate-400 text-xs py-2 rounded-lg cursor-pointer">Cancel</button>
               <button onClick={doSetPin} disabled={busy} id="settings-pin-save" className="flex-1 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 text-white text-xs font-bold py-2 rounded-lg cursor-pointer flex items-center justify-center gap-1.5">
                 {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Turn on PIN lock"}
               </button>
@@ -661,7 +661,7 @@ function PrivacyLockSection() {
             <p className="text-[11px] text-slate-400">Turn off the PIN? Your data stays encrypted on the device — it just won't ask for a PIN to open.</p>
             {error && <p className="text-[11px] text-rose-400">{error}</p>}
             <div className="flex gap-2">
-              <button onClick={reset} className="flex-1 bg-card border border-slate-800 text-slate-400 text-xs py-2 rounded-lg cursor-pointer">Keep it on</button>
+              <button onClick={reset} className="flex-1 glass text-slate-400 text-xs py-2 rounded-lg cursor-pointer">Keep it on</button>
               <button onClick={doRemovePin} disabled={busy} className="flex-1 bg-rose-600 hover:bg-rose-500 disabled:bg-slate-800 text-white text-xs font-bold py-2 rounded-lg cursor-pointer flex items-center justify-center gap-1.5">
                 {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Remove PIN"}
               </button>

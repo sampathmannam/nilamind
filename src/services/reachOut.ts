@@ -2,7 +2,7 @@
 // The app NEVER sends and NEVER stores the recipient/draft; it only prepares an editable opener the user
 // sends themselves via their own messaging app. checkReachText is the §9 gate, applied at the SEND action
 // (see the Reach-out spec). Educational/supportive, never medical.
-import { scanForCrisis } from "../safety";
+import { detectCrisis } from "./crisisClassifier";
 
 export interface ReachOpener {
   id: string;
@@ -63,8 +63,9 @@ export function buildSmsHref(text: string): string {
   return "sms:?body=" + encodeURIComponent(text);
 }
 
-/** Deterministic §9 gate for the editable opener — wraps scanForCrisis. Applied at the SEND action; on a
- *  hit the screen elevates crisis help to primary and demotes (not disables) send. scanForCrisis untouched. */
-export function checkReachText(text: string): boolean {
-  return scanForCrisis(text);
+/** §9 gate for the editable opener — classifier-backed detectCrisis (keyword floor + euphemism catch, per
+ *  crisisClassifier). Applied at the SEND action; on a hit the screen elevates crisis help to primary and
+ *  demotes (not disables) send. Additive/fail-closed: never detects LESS than the keyword scanner. */
+export async function checkReachText(text: string): Promise<boolean> {
+  return detectCrisis(text);
 }

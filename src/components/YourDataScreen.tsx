@@ -80,7 +80,7 @@ export default function YourDataScreen() {
         <p className="text-[11px] text-slate-400 leading-relaxed">Encrypted at rest and never uploaded. There is no server copy — if you wipe it here, it's gone.</p>
       </div>
 
-      <div className="bg-card border border-slate-800 rounded-2xl divide-y divide-slate-800/70">
+      <div className="glass rounded-2xl divide-y divide-slate-800/70">
         {rows.map((r) => (
           <div key={r.key} className="flex items-center justify-between px-4 py-2.5">
             <span className="text-xs text-slate-300">{r.label}</span>
@@ -94,7 +94,7 @@ export default function YourDataScreen() {
       </div>
 
       {/* Export */}
-      <div className="bg-card border border-slate-800 rounded-2xl p-4 space-y-2">
+      <div className="glass rounded-2xl p-4 space-y-2">
         <h3 className="text-xs font-bold text-slate-100 uppercase tracking-wider">Export (encrypted)</h3>
         <p className="text-[11px] text-slate-500 leading-relaxed">A backup file encrypted with your recovery phrase — restore it on a new device by entering the same phrase. No cloud.</p>
         {!backup ? (
@@ -122,7 +122,7 @@ export default function YourDataScreen() {
               <p className="text-[11px] text-rose-200/90">Are you sure? Everything will be gone and the app will restart at onboarding.</p>
             </div>
             <div className="flex gap-2">
-              <button onClick={() => setConfirmWipe(false)} disabled={busy} className="flex-1 bg-card border border-slate-800 text-slate-300 text-xs font-semibold py-2.5 rounded-xl cursor-pointer">Keep my data</button>
+              <button onClick={() => setConfirmWipe(false)} disabled={busy} className="flex-1 glass text-slate-300 text-xs font-semibold py-2.5 rounded-xl cursor-pointer">Keep my data</button>
               <button onClick={wipeEverything} disabled={busy} id="data-wipe-confirm" className="flex-1 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5">
                 {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Yes, delete everything"}
               </button>

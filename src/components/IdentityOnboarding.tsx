@@ -64,7 +64,7 @@ export default function IdentityOnboarding({ onDone }: { onDone: () => void }) {
           <button onClick={startCreate} id="identity-create" className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-xl text-sm cursor-pointer">
             Create a new private space
           </button>
-          <button onClick={() => { setMode("restore"); setError(null); }} id="identity-restore-open" className="w-full bg-card border border-slate-800 hover:bg-raised text-slate-200 font-semibold py-3.5 rounded-xl text-sm cursor-pointer flex items-center justify-center gap-2">
+          <button onClick={() => { setMode("restore"); setError(null); }} id="identity-restore-open" className="w-full glass hover:bg-raised text-slate-200 font-semibold py-3.5 rounded-xl text-sm cursor-pointer flex items-center justify-center gap-2">
             <KeyRound className="w-4 h-4" /> I have a recovery phrase
           </button>
         </div>
@@ -90,7 +90,7 @@ export default function IdentityOnboarding({ onDone }: { onDone: () => void }) {
             </div>
           ))}
         </div>
-        <button onClick={copyPhrase} className="w-full bg-card border border-slate-800 hover:bg-raised text-slate-300 text-xs font-semibold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-2">
+        <button onClick={copyPhrase} className="w-full glass hover:bg-raised text-slate-300 text-xs font-semibold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-2">
           {copied ? <><Check className="w-3.5 h-3.5 text-emerald-400" /> Copied</> : <><Copy className="w-3.5 h-3.5" /> Copy phrase</>}
         </button>
         <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 flex gap-2">

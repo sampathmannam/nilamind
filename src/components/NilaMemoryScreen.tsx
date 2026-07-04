@@ -72,7 +72,7 @@ export default function NilaMemoryScreen() {
       {facts.length > 0 && (
         <section className="space-y-2">
           <h2 className="text-[11px] font-mono uppercase tracking-widest text-slate-500 px-1">Things you've told Nila</h2>
-          <div className="bg-card border border-slate-800 rounded-2xl divide-y divide-slate-800/70">
+          <div className="glass rounded-2xl divide-y divide-slate-800/70">
             {facts.map((f) => (
               <div key={f.id} className="px-4 py-3 flex items-start gap-2">
                 <span className="flex-1 text-sm text-slate-200 leading-relaxed">{f.text}</span>
@@ -88,7 +88,7 @@ export default function NilaMemoryScreen() {
       {foci.length > 0 && (
         <section className="space-y-2">
           <h2 className="text-[11px] font-mono uppercase tracking-widest text-slate-500 px-1">What you're working on right now</h2>
-          <div className="bg-card border border-slate-800 rounded-2xl divide-y divide-slate-800/70">
+          <div className="glass rounded-2xl divide-y divide-slate-800/70">
             {foci.map((f) => (
               <div key={f.id} className="px-4 py-3 flex items-start gap-2">
                 <span className="flex-1 min-w-0">
@@ -105,7 +105,7 @@ export default function NilaMemoryScreen() {
       )}
 
       {groups.length === 0 && facts.length === 0 && foci.length === 0 ? (
-        <div className="bg-card border border-slate-800 rounded-2xl p-5 text-center">
+        <div className="glass rounded-2xl p-5 text-center">
           <p className="text-sm text-slate-300">Nothing yet.</p>
           <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
             As you check in and talk with Nila, she'll gently start to remember what matters to you.
@@ -115,7 +115,7 @@ export default function NilaMemoryScreen() {
         groups.map((g) => (
           <section key={g.kind} className="space-y-2">
             <h2 className="text-[11px] font-mono uppercase tracking-widest text-slate-500 px-1">{g.label}</h2>
-            <div className="bg-card border border-slate-800 rounded-2xl divide-y divide-slate-800/70">
+            <div className="glass rounded-2xl divide-y divide-slate-800/70">
               {g.items.map((i) => (
                 <div key={i.id} className="px-4 py-3">
                   {editingId === i.id ? (
@@ -159,7 +159,7 @@ export default function NilaMemoryScreen() {
         {noticed.length === 0 ? (
           <p className="text-[11px] text-slate-500 px-1 leading-relaxed">Nothing notable yet — Nila watches your own trends quietly.</p>
         ) : (
-          <div className="bg-card border border-slate-800 rounded-2xl divide-y divide-slate-800/70">
+          <div className="glass rounded-2xl divide-y divide-slate-800/70">
             {noticed.map((n) => (
               <div key={n.id} className="px-4 py-3 flex items-start gap-2">
                 {n.direction === "deterioration"
@@ -185,7 +185,7 @@ export default function NilaMemoryScreen() {
         <section className="space-y-2">
           <h2 className="text-[11px] font-mono uppercase tracking-widest text-slate-500 px-1">Helping improve Nila</h2>
           {fb.total > 0 && (
-            <div className="bg-card border border-slate-800 rounded-2xl p-4 space-y-2">
+            <div className="glass rounded-2xl p-4 space-y-2">
               <p className="text-sm text-slate-200 leading-relaxed">
                 You've rated <strong>{fb.total}</strong> {fb.total === 1 ? "reply" : "replies"} — {fb.up} 👍, {fb.down} 👎{fb.suggestions ? `, and suggested ${fb.suggestions} better ${fb.suggestions === 1 ? "reply" : "replies"}` : ""}.
               </p>
@@ -198,7 +198,7 @@ export default function NilaMemoryScreen() {
             </div>
           )}
           {donations > 0 && (
-            <div className="bg-card border border-slate-800 rounded-2xl p-4 space-y-2" id="memory-donations">
+            <div className="glass rounded-2xl p-4 space-y-2" id="memory-donations">
               <p className="text-sm text-slate-200 leading-relaxed">
                 You've chosen to share <strong>{donations}</strong> {donations === 1 ? "example" : "examples"} to help train Nila.
               </p>

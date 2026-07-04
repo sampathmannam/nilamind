@@ -132,7 +132,7 @@ export default function ThoughtRecordScreen() {
         </span>
       </div>
 
-      <div className="bg-card border border-slate-800 p-5 rounded-2xl relative">
+      <div className="glass p-5 rounded-2xl relative">
         {/* Step 1: What happened? */}
         {currentPage === 1 && (
           <div className="space-y-4" id="tr-step-1">

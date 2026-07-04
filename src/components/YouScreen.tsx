@@ -11,7 +11,7 @@ export default function YouScreen({ go }: { go: (target: string) => void }) {
   return (
     <div className="space-y-6 max-w-md mx-auto" id="you-hub">
       <header className="space-y-1">
-        <h1 className="text-3xl font-display font-semibold text-slate-100">You</h1>
+        <h1 className="editorial text-3xl text-slate-100">You</h1>
         <p className="text-sm text-slate-400 mt-0.5">Your progress and your privacy — held on your device.</p>
       </header>
 
@@ -24,7 +24,7 @@ export default function YouScreen({ go }: { go: (target: string) => void }) {
                 key={r.id}
                 onClick={() => go(r.id)}
                 id={`you-${r.id}`}
-                className="w-full flex items-center gap-3 bg-card border border-slate-800 hover:border-slate-700 p-4 rounded-2xl transition-all cursor-pointer text-left"
+                className="w-full flex items-center gap-3 glass hover:brightness-125 p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left"
               >
                 <span className="shrink-0"><r.Icon className={r.iconClass} /></span>
                 <span className="flex-1 min-w-0">

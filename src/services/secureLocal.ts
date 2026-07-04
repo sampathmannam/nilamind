@@ -63,6 +63,29 @@ let hydrated = false;
 let passthrough = false;
 let persistChain: Promise<void> = Promise.resolve();
 
+// A queued encrypted write can fail (DEK unavailable, IndexedDB quota/error) AFTER setItem already returned and
+// updated the cache — so without this the failure is SILENT and the write is lost on next boot. We record the
+// failing keys, notify listeners (so the UI can warn "couldn't save your changes"), and retry them on flush().
+// The data always survives in `cache` for the session regardless.
+const pendingFailures = new Map<string, string>();
+const persistListeners = new Set<(failingKeys: string[]) => void>();
+
+/** Subscribe to persist-failure changes; called with the keys whose last write didn't reach disk. Returns unsub. */
+export function onPersistError(cb: (failingKeys: string[]) => void): () => void {
+  persistListeners.add(cb);
+  return () => { persistListeners.delete(cb); };
+}
+/** Keys whose last encrypted write failed to reach disk (still safe in the in-memory cache; retried on flush). */
+export function pendingWriteFailures(): string[] {
+  return [...pendingFailures.keys()];
+}
+function notifyPersistListeners(): void {
+  const keys = [...pendingFailures.keys()];
+  for (const cb of persistListeners) {
+    try { cb(keys); } catch (e) { console.error("secureLocal persist listener threw:", e); }
+  }
+}
+
 const ls = (): Storage | null => {
   try {
     return (globalThis as any).localStorage ?? null;
@@ -76,7 +99,14 @@ function queuePersist(key: string, value: string) {
   persistChain = persistChain
     .then(() => encryptValue(value))
     .then((blob) => kvPut(key, blob))
-    .catch((e) => console.error("secureLocal persist failed:", key, e));
+    .then(() => {
+      if (pendingFailures.delete(key)) notifyPersistListeners(); // reached disk — clear any prior failure
+    })
+    .catch((e) => {
+      console.error("secureLocal persist failed:", key, e);
+      pendingFailures.set(key, value); // NOT silent: record it (data is still safe in cache) so flush can retry
+      notifyPersistListeners();
+    });
 }
 function queueDelete(key: string) {
   persistChain = persistChain.then(() => kvDel(key)).catch((e) => console.error("secureLocal delete failed:", key, e));
@@ -178,9 +208,15 @@ export const secureLocal = {
   },
 };
 
-/** Await all queued encrypted writes (used on pagehide and in tests). */
+/** Await all queued encrypted writes (used on pagehide and in tests). Also RETRIES any writes that previously
+ *  failed — a failure may have been transient (IDB busy) or resolved (store re-unlocked), so a flush is our
+ *  chance to get the data to disk before the app closes. */
 export async function flush(): Promise<void> {
   await persistChain;
+  if (pendingFailures.size) {
+    for (const [k, v] of [...pendingFailures]) queuePersist(k, v);
+    await persistChain;
+  }
 }
 
 if (typeof window !== "undefined") {

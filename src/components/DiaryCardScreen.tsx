@@ -131,7 +131,7 @@ export default function DiaryCardScreen() {
   return (
     <div className="space-y-6 max-w-md mx-auto" id="diary-card-screen">
       {/* Date Picker row */}
-      <div className="flex justify-between items-center bg-card border border-slate-800 p-4 rounded-xl">
+      <div className="flex justify-between items-center glass p-4 rounded-xl">
         <div>
           <h1 className="text-xl font-semibold text-slate-100">DBT Diary Card</h1>
           <p className="text-xs text-slate-500">Your daily tracking metrics</p>
@@ -149,7 +149,7 @@ export default function DiaryCardScreen() {
         </div>
       </div>
 
-      <div className="bg-card border border-slate-800 p-5 rounded-2xl space-y-6">
+      <div className="glass p-5 rounded-2xl space-y-6">
         {/* PART 1: Slide indicators for emotions */}
         <div className="space-y-4">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-2">

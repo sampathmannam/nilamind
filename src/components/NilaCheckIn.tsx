@@ -130,7 +130,7 @@ export default function NilaCheckIn({ onLogged, onSkip }: NilaCheckInProps) {
       </div>
 
       {/* Step content */}
-      <div className="bg-card border border-slate-800 rounded-2xl p-5 space-y-3">
+      <div className="glass rounded-2xl p-5 space-y-3">
 
         {/* ── Step 1: Mood chips ── */}
         {draft.step === "mood" && (

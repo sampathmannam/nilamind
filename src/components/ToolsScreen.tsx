@@ -18,7 +18,7 @@ export default function ToolsScreen({
   return (
     <div className="space-y-6 max-w-md mx-auto" id="tools-hub">
       <header className="space-y-1">
-        <h1 className="text-3xl font-display font-semibold text-slate-100">Tools</h1>
+        <h1 className="editorial text-3xl text-slate-100">Tools</h1>
         <p className="text-sm text-slate-400 mt-0.5">Everything's here when you want it — no rush.</p>
       </header>
 
@@ -31,7 +31,7 @@ export default function ToolsScreen({
                 key={r.id}
                 onClick={r.onTap}
                 id={`tools-${r.id}`}
-                className="w-full flex items-center gap-3 bg-card border border-slate-800 hover:border-slate-700 p-4 rounded-2xl transition-all cursor-pointer text-left"
+                className="w-full flex items-center gap-3 glass hover:brightness-125 p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left"
               >
                 <span className="shrink-0"><r.Icon className={r.iconClass} /></span>
                 <span className="flex-1 min-w-0">

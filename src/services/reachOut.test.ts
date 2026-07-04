@@ -1,6 +1,8 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach } from "vitest";
 import { REACH_OPENERS, REACH_FRAMING, buildSmsHref, checkReachText } from "./reachOut";
 import { scanForCrisis } from "../safety";
+import { setCrisisEmbedder, setCrisisClassifierEnabled } from "./crisisClassifier";
+import weights from "./crisisClassifier.weights.json";
 
 describe("REACH_OPENERS", () => {
   it("has >=4 non-empty, non-disclosing templates", () => {
@@ -44,16 +46,26 @@ describe("buildSmsHref", () => {
 });
 
 describe("checkReachText (send-time §9 gate)", () => {
-  it("fires across scanForCrisis categories", () => {
-    expect(checkReachText("I want to kill myself")).toBe(true); // suicidal
-    expect(checkReachText("I want to vanish")).toBe(true); // indirect metaphor
-    expect(checkReachText("I just want to be gone")).toBe(true); // indirect metaphor
-    expect(checkReachText("I want to cut myself")).toBe(true); // self-harm
-    expect(checkReachText("I'm going to hang myself")).toBe(true); // method+intent
+  afterEach(() => { setCrisisClassifierEnabled(false); setCrisisEmbedder(null); });
+
+  it("fires across the keyword floor (preserved through the async detectCrisis swap)", async () => {
+    expect(await checkReachText("I want to kill myself")).toBe(true); // suicidal
+    expect(await checkReachText("I want to vanish")).toBe(true); // indirect metaphor
+    expect(await checkReachText("I just want to be gone")).toBe(true); // indirect metaphor
+    expect(await checkReachText("I want to cut myself")).toBe(true); // self-harm
+    expect(await checkReachText("I'm going to hang myself")).toBe(true); // method+intent
   });
-  it("is false for ordinary openers / empty", () => {
-    expect(checkReachText("can we talk this week?")).toBe(false);
-    expect(checkReachText("I've been struggling a bit")).toBe(false);
-    expect(checkReachText("")).toBe(false);
+  it("is false for ordinary openers / empty", async () => {
+    expect(await checkReachText("can we talk this week?")).toBe(false);
+    expect(await checkReachText("I've been struggling a bit")).toBe(false);
+    expect(await checkReachText("")).toBe(false);
+  });
+  it("COVERAGE WIN: catches a keyword-MISS euphemism once the classifier is on", async () => {
+    const euphemism = "I've put my affairs in order and finally feel at peace with it";
+    expect(scanForCrisis(euphemism)).toBe(false); // deterministic keyword scanner is blind to it
+    expect(await checkReachText(euphemism)).toBe(false); // gate blind too while classifier OFF (old behavior)
+    setCrisisClassifierEnabled(true);
+    setCrisisEmbedder(async () => weights.coef as number[]); // crisis-positive stub (z = bias + ||coef||²)
+    expect(await checkReachText(euphemism)).toBe(true); // NOW the gate catches it — the fix
   });
 });

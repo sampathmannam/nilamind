@@ -113,7 +113,7 @@ export default function SkillsLibraryScreen({ focusSkillId }: { focusSkillId?: s
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search skills (e.g. urge, sleep, breathe, DEAR MAN)…"
           id="skills-search"
-          className="w-full bg-card border border-slate-800 rounded-xl pl-9 pr-9 py-2.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-blue-500/50"
+          className="w-full glass rounded-xl pl-9 pr-9 py-2.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-blue-500/50"
         />
         {query && (
           <button onClick={() => setQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 cursor-pointer" aria-label="Clear search">
@@ -151,7 +151,7 @@ export default function SkillsLibraryScreen({ focusSkillId }: { focusSkillId?: s
       <div className="space-y-2" id="skills-results">
         <div className="text-[10px] uppercase font-mono tracking-widest text-slate-500">{results.length} skill{results.length === 1 ? "" : "s"}</div>
         {results.length === 0 ? (
-          <div className="bg-card border border-slate-800 rounded-2xl p-5 text-center text-xs text-slate-400">
+          <div className="glass rounded-2xl p-5 text-center text-xs text-slate-400">
             No skills match “{query}”. Try a feeling (shame, panic), an action (breathe, say no), or a method (DBT, ACT).
           </div>
         ) : (
@@ -165,7 +165,7 @@ export default function SkillsLibraryScreen({ focusSkillId }: { focusSkillId?: s
 function SkillCard({ skill, open, onToggle }: { skill: Skill; open: boolean; onToggle: () => void }) {
   const tone = TONE[groupMeta(skill.group).tone];
   return (
-    <div id={`skill-${skill.id}`} className={`bg-card border border-slate-800 border-l-4 ${tone.border} rounded-r-2xl overflow-hidden scroll-mt-4`}>
+    <div id={`skill-${skill.id}`} className={`glass border-l-4 ${tone.border} rounded-r-2xl overflow-hidden scroll-mt-4`}>
       <button onClick={onToggle} className="w-full text-left p-4 flex items-start justify-between gap-3 cursor-pointer" aria-expanded={open}>
         <div className="min-w-0 space-y-1">
           <div className="flex items-center gap-2 flex-wrap">

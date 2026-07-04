@@ -11,7 +11,7 @@
 
 import { generateMnemonic, mnemonicToSeedSync, validateMnemonic } from "@scure/bip39";
 import { wordlist } from "@scure/bip39/wordlists/english.js";
-import { secureLocal, SENSITIVE_KEYS } from "./secureLocal";
+import { secureLocal, SENSITIVE_KEYS, flush } from "./secureLocal";
 
 export interface Identity {
   userId: string;
@@ -119,5 +119,9 @@ export async function importBackup(blobB64: string, mnemonic: string): Promise<n
       n++;
     }
   }
+  // setItem queues fire-and-forget encrypted writes; the caller navigates on immediately (onboarding), so
+  // WAIT for them to actually reach IndexedDB before reporting success — else a close/reload right after
+  // "restore" silently loses the just-restored data.
+  await flush();
   return n;
 }

@@ -2,6 +2,7 @@ import { secureLocal } from "../services/secureLocal";
 import React, { useState, useEffect } from "react";
 import { SafetyPlan } from "../types";
 import { INITIAL_SAFETY_PLAN } from "../data";
+import { parseSafetyPlan } from "../services/safetyPlan";
 import { getCrisisLines } from "../services/crisisResources";
 import { CheckCircle2, Save } from "lucide-react";
 
@@ -12,11 +13,7 @@ export default function SafetyPlanScreen() {
   useEffect(() => {
     const saved = secureLocal.getItem("nilamind_safetyplan");
     if (saved) {
-      try {
-        setSafetyPlan(JSON.parse(saved));
-      } catch (e) {
-        console.error(e);
-      }
+      setSafetyPlan(parseSafetyPlan(saved)); // defensive: recovers valid fields, never throws on a corrupt blob
     } else {
       // Pre-fill the crisis-lines section with the user's region (editable, not yet persisted).
       const lines = getCrisisLines().map((l) => `${l.name}: ${l.display}`).join("\n");

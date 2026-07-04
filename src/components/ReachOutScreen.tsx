@@ -54,10 +54,10 @@ export default function ReachOutScreen() {
     }
     window.location.href = buildSmsHref(text);
   }
-  function send() {
+  async function send() {
     const text = draft.trim();
     if (!text) return;
-    if (checkReachText(text)) {
+    if (await checkReachText(text)) {
       setCrisisElevated(true); // §9: elevate crisis to primary, demote send — do not send yet
       return;
     }

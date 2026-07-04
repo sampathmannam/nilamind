@@ -1,4 +1,4 @@
-import { secureLocal } from "./services/secureLocal";
+import { secureLocal, onPersistError } from "./services/secureLocal";
 import React, { useState, useEffect, useCallback } from "react";
 import { Sparkles, Wrench, User, ChevronLeft } from "lucide-react";
 import { App as CapApp } from "@capacitor/app";
@@ -63,6 +63,10 @@ export default function App() {
   const [wakeOn, setWakeOn] = useState<boolean>(false);
   const [hasRecentLogs, setHasRecentLogs] = useState<boolean>(false);
   const [disableAnchorPulse, setDisableAnchorPulse] = useState<boolean>(false);
+  // Surfaces when an encrypted write couldn't reach disk (so a save failure is never silent). The data is
+  // still safe in memory and retried on flush; this just tells the user rather than pretending it saved.
+  const [saveWarning, setSaveWarning] = useState<boolean>(false);
+  useEffect(() => onPersistError((failingKeys) => setSaveWarning(failingKeys.length > 0)), []);
 
   useEffect(() => {
     const savedAnimPref = localStorage.getItem("nilamind_disable_pulse");
@@ -80,17 +84,41 @@ export default function App() {
     return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
-  // Compounding memory: once a day, when the app goes to the background, consolidate the day's
-  // activity into Nila's durable memory. Off the main path (no UI block) and throttled to once/day,
-  // so it never competes with a live chat's prompt cache (which an on-open trigger would).
+  // Compounding memory: once a day, consolidate the day's activity into Nila's durable memory. This runs an
+  // on-device completion, which on the llama.cpp binding blocks Capacitor's SINGLE plugin thread — so it must
+  // run only while the app is FOREGROUND and the user is IDLE. Running it on 'hidden' froze the app on return
+  // (the "send a message, switch tabs, come back, nothing works" bug); firing it mid-use can collide with a
+  // live chat on the one model context. So: arm an idle timer, reset it on any interaction, and RE-CHECK
+  // visibility at fire time. Backstops: the single-flight guard (generateOnDevice defers if busy) + the
+  // once/day throttle inside runReflection.
   useEffect(() => {
-    const onVis = () => {
-      if (document.visibilityState === "hidden") {
-        runReflection(buildReflectionDigest()).catch(() => {});
-      }
+    let t: ReturnType<typeof setTimeout> | undefined;
+    const IDLE_MS = 20_000; // only reflect after ~20s of no interaction — keeps it clear of active use
+    const attempt = () => {
+      // fire-time gate: never start a completion while backgrounded, even if armed while visible
+      if (document.visibilityState !== "visible") return;
+      runReflection(buildReflectionDigest()).catch(() => {});
     };
+    const arm = () => {
+      if (t) { clearTimeout(t); t = undefined; }
+      if (document.visibilityState !== "visible") return; // never arm while backgrounded
+      t = setTimeout(attempt, IDLE_MS);
+    };
+    const onVis = () => {
+      if (document.visibilityState === "visible") arm();
+      else if (t) { clearTimeout(t); t = undefined; } // backgrounded → cancel any pending reflection
+    };
+    const onActivity = () => arm(); // any interaction resets the idle window
+    arm();
     document.addEventListener("visibilitychange", onVis);
-    return () => document.removeEventListener("visibilitychange", onVis);
+    window.addEventListener("pointerdown", onActivity, { passive: true });
+    window.addEventListener("keydown", onActivity, { passive: true });
+    return () => {
+      if (t) clearTimeout(t);
+      document.removeEventListener("visibilitychange", onVis);
+      window.removeEventListener("pointerdown", onActivity);
+      window.removeEventListener("keydown", onActivity);
+    };
   }, []);
 
   const checkRecentLogs = () => {
@@ -152,6 +180,7 @@ export default function App() {
   backStateRef.current = { isCrisisOverlayOpen, isCallOpen, auxView, activeTab };
   useEffect(() => {
     let handle: { remove: () => void } | undefined;
+    let removed = false; // async-registration race guard: if cleanup runs before addListener resolves…
     CapApp.addListener("backButton", () => {
       const s = backStateRef.current;
       if (s.isCrisisOverlayOpen) { setIsCrisisOverlayOpen(false); return; }
@@ -160,8 +189,8 @@ export default function App() {
       if (s.activeTab === "checkin" || s.activeTab === "diary" || s.activeTab === "plan") { setActiveTab("tools"); return; }
       if (s.activeTab !== "nila") { setActiveTab("nila"); return; }
       void CapApp.exitApp();
-    }).then((h) => { handle = h; });
-    return () => { handle?.remove(); };
+    }).then((h) => { handle = h; if (removed) h.remove(); }); // …remove it the moment it registers (no dup/stale listener)
+    return () => { removed = true; handle?.remove(); };
   }, []);
   // ─────────────────────────────────────────────────────────────────────────────
 
@@ -228,7 +257,20 @@ export default function App() {
   const nilaFull = !auxView && activeTab === "nila";
 
   return (
-    <div className="min-h-screen bg-page text-slate-300 font-sans antialiased overflow-x-hidden">
+    <div className="relative isolate min-h-screen bg-page text-slate-300 font-sans antialiased overflow-x-hidden">
+
+      {/* Living aurora atmosphere (bold redesign) — a slow breathing field of lavender/violet light
+          behind the whole app on BOTH themes. Cheap radial-gradient layers (not blur), mounted once.
+          See `.aurora-field` in index.css. Decorative, non-interactive. */}
+      <div className="aurora-field" aria-hidden="true" />
+
+      {/* Non-silent save-failure notice: an encrypted write couldn't reach disk. Data is safe in memory and
+          retried automatically; we tell the user rather than pretend it saved. */}
+      {saveWarning && (
+        <div role="status" className="fixed top-0 inset-x-0 z-[60] bg-amber-500/15 border-b border-amber-500/30 px-4 py-2 text-center text-[11px] text-amber-200 leading-relaxed">
+          Some changes couldn’t be saved to storage just now. They’re safe for now and we’ll keep trying — reopening the app usually fixes it.
+        </div>
+      )}
 
       {/* Sunrise aurora — soft drifting amaranth/coral glow behind everything. LIGHT THEME ONLY: the
           `.sun-aurora` class is `display:none` by default and only `display:block` under `:root.theme-light`

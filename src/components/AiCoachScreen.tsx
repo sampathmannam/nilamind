@@ -23,6 +23,7 @@ import NilaCheckIn from "./NilaCheckIn";
 import type { CheckInEntry } from "../types";
 import { sendToNila } from "../services/sendToNila";
 import { NilaMode, NilaUiMessage } from "../services/nilaSend";
+import { getSessionChat, setSessionChat } from "../services/sessionChat";
 import EpisodeSupportScreen from "./EpisodeSupportScreen";
 import NilaOrb from "./NilaOrb";
 import { Send, AlertTriangle, Shield, Volume2, VolumeX, Mic, Sparkles, BookOpen, ChevronRight, Phone, Zap, Brain, ClipboardList, LifeBuoy, ThumbsUp, ThumbsDown, Keyboard } from "lucide-react";
@@ -66,13 +67,18 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
   // Check-in gate: computed ONCE at component init, shared by showCheckin + messages initializer.
   // Using a ref-based init pattern to avoid calling shouldShowCheckin() twice.
   const initCheckin = useRef<boolean>(shouldShowCheckin());
-  const [showCheckin, setShowCheckin] = useState<boolean>(initCheckin.current);
+  // Were we mid-conversation when this screen mounted? (returning from a tab-switch, not opening fresh.) Only
+  // a transcript with a real USER turn counts — a lone seeded greeting must not suppress a due check-in.
+  // Snapshotted once at mount so the check-in gate + opener seed don't clobber a restore.
+  const restored = useRef<boolean>(getSessionChat().some((m) => m.role === "user"));
+  const [showCheckin, setShowCheckin] = useState<boolean>(initCheckin.current && !restored.current);
   // Cards surfaced by cardsForCheckin after a completed check-in; empty until onLogged fires.
   const [nilaCards, setNilaCards] = useState<NilaCard[]>([]);
 
-  // Seed the welcome message only once the check-in is dismissed (logged or skipped).
+  // Restore an in-progress conversation across a tab-switch (in-memory only, never persisted); otherwise seed
+  // the welcome once the check-in is dismissed (logged or skipped).
   const [messages, setMessages] = useState<Message[]>(() =>
-    initCheckin.current ? [] : [{ role: "assistant", content: nilaWelcome() }]
+    restored.current ? getSessionChat() : initCheckin.current ? [] : [{ role: "assistant", content: nilaWelcome() }]
   );
   const [inputText, setInputText] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
@@ -178,10 +184,14 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
   // Runs after first render, so pickOpener + isCrisisState are fully declared; openerPicked keeps it
   // idempotent under StrictMode's double-invoke.
   useEffect(() => {
-    if (initCheckin.current) return;             // check-in path seeds its own opener in the handlers
+    if (initCheckin.current || restored.current) return; // restore/check-in own the transcript — don't seed over it
     const sig = pickOpener();
     if (sig) { setOpenerSig(sig); setMessages([{ role: "assistant", content: sig.opener }]); }
   }, []);
+
+  // Mirror the live transcript into the ephemeral session store so a tab-switch (which unmounts this screen)
+  // restores the conversation instead of losing it. In-memory only — the chat is never written to disk here.
+  useEffect(() => { setSessionChat(messages); }, [messages]);
 
   // ── Check-in handlers ──────────────────────────────────────────────────────
 
@@ -484,8 +494,8 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
               <NilaOrb size={112} active={listening} />
             </button>
             <div className="text-center">
-              <div className="text-sm font-semibold text-slate-200">{listening ? "Listening…" : "Tap to talk to Nila"}</div>
-              <div className="text-[11px] text-slate-500 mt-0.5">{listening ? "say what's on your mind" : "speak, and I'll talk back — or type instead"}</div>
+              <div className="editorial text-[22px] text-slate-100">{listening ? "Listening…" : "Talk to Nila"}</div>
+              <div className="text-[11px] text-slate-500 mt-1.5">{listening ? "say what's on your mind" : "speak, and I'll talk back — or type instead"}</div>
             </div>
             {/* Conversation starters (mixed in) — never a blank wall; tap to send straight away. */}
             {!listening && (
@@ -496,7 +506,7 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
                     type="button"
                     onClick={() => handleSendMessage(undefined, s)}
                     disabled={loading}
-                    className={`text-xs py-2.5 px-4 rounded-2xl border cursor-pointer transition-colors ${i === 0 ? "bg-blue-500/10 border-blue-500/30 text-blue-100 hover:bg-blue-500/20" : "bg-card border-slate-800 text-slate-300 hover:border-slate-700"}`}
+                    className={`glass text-[13px] py-3 px-4 rounded-2xl cursor-pointer transition-transform active:scale-[0.98] hover:brightness-125 ${i === 0 ? "text-blue-100" : "text-slate-200"}`}
                   >
                     {s}
                   </button>
@@ -615,7 +625,7 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
                           rows={2}
                           placeholder="What would've helped more? (optional — helps improve Nila, stays on your device)"
                           aria-label="Suggest a better reply"
-                          className="w-full text-xs bg-card border border-slate-800 rounded-xl p-2 text-slate-200 focus:outline-none focus:border-blue-500"
+                          className="w-full text-xs glass rounded-xl p-2 text-slate-200 focus:outline-none focus:border-blue-500"
                         />
                         <div className="flex gap-2 justify-end">
                           <button onClick={() => { setSuggestIdx(null); setSuggestDraft(""); }} className="text-[11px] text-slate-500 hover:text-slate-300 px-2 py-1 cursor-pointer">Skip</button>

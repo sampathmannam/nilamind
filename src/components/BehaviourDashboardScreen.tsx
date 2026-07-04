@@ -93,7 +93,7 @@ export default function BehaviourDashboardScreen() {
   );
 
   const WebNote = (
-    <div className="bg-card border border-slate-800 rounded-2xl p-5 space-y-3 text-center">
+    <div className="glass rounded-2xl p-5 space-y-3 text-center">
       <Smartphone className="w-8 h-8 text-slate-500 mx-auto" />
       <h3 className="text-sm font-semibold text-slate-100">Passive phone signals run on the Android app</h3>
       <p className="text-xs text-slate-400 leading-relaxed">
@@ -103,7 +103,7 @@ export default function BehaviourDashboardScreen() {
   );
 
   const LockedConsent = (
-    <div className="bg-card border border-slate-800 rounded-2xl p-5 space-y-4">
+    <div className="glass rounded-2xl p-5 space-y-4">
       <div className="flex items-center gap-2 text-amber-400">
         <Lock className="w-4 h-4" />
         <h3 className="text-sm font-semibold">Turn on phone signals</h3>
@@ -140,7 +140,7 @@ export default function BehaviourDashboardScreen() {
   );
 
   const TodayCard = today && (
-    <div className="bg-card border border-slate-800 rounded-2xl p-4 space-y-3">
+    <div className="glass rounded-2xl p-4 space-y-3">
       <div className="text-[10px] uppercase font-mono tracking-widest text-slate-500">Today</div>
       <div className="grid grid-cols-3 gap-2 text-center">
         <div className="bg-page rounded-xl py-3 border border-slate-800/60">
@@ -176,7 +176,7 @@ export default function BehaviourDashboardScreen() {
   );
 
   const Chart = chartData.length > 0 && (
-    <div className="bg-card border border-slate-800 rounded-2xl p-4 space-y-2">
+    <div className="glass rounded-2xl p-4 space-y-2">
       <div className="flex items-center gap-1.5 text-[10px] uppercase font-mono tracking-widest text-slate-500">
         <TrendingUp className="w-3.5 h-3.5" /> Last 7 days · minutes by category
       </div>
@@ -206,7 +206,7 @@ export default function BehaviourDashboardScreen() {
         <Sparkles className="w-3.5 h-3.5 text-blue-400" /> Patterns from your data
       </div>
       {insights.length === 0 ? (
-        <div className="bg-card border border-slate-800 rounded-2xl p-5 text-center space-y-1">
+        <div className="glass rounded-2xl p-5 text-center space-y-1">
           <p className="text-xs text-slate-300 font-semibold">No patterns yet — keep logging.</p>
           <p className="text-[11px] text-slate-500 leading-relaxed">
             Patterns surface after about two weeks of check-ins (sleep, mood, connection). Phone-based patterns also need the Android app + Usage Access. Paired phone-days so far: <span className="text-slate-200 font-mono">{pairedDays}</span>.
@@ -250,7 +250,7 @@ export default function BehaviourDashboardScreen() {
       {phase === "ready" && (
         <button
           onClick={async () => { await clearBehaviourData(); await refresh(); }}
-          className="w-full bg-card border border-slate-800 hover:border-rose-500/40 hover:text-rose-400 text-slate-500 font-semibold py-2.5 rounded-xl text-[11px] transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+          className="w-full glass hover:border-rose-500/40 hover:text-rose-400 text-slate-500 font-semibold py-2.5 rounded-xl text-[11px] transition-colors cursor-pointer flex items-center justify-center gap-1.5"
         >
           <Trash2 className="w-3.5 h-3.5" /> Delete all behaviour data
         </button>

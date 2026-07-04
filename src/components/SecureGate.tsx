@@ -82,7 +82,7 @@ function UnlockScreen({ onUnlocked }: { onUnlocked: () => void }) {
             onKeyDown={(e) => e.key === "Enter" && submit()}
             placeholder="PIN"
             aria-label="Enter your PIN"
-            className="w-full bg-card border border-slate-800 rounded-xl px-4 py-3 text-center text-lg tracking-[0.4em] text-slate-100 placeholder:tracking-normal placeholder:text-slate-600 focus:outline-none focus:border-blue-500/50"
+            className="w-full glass rounded-xl px-4 py-3 text-center text-lg tracking-[0.4em] text-slate-100 placeholder:tracking-normal placeholder:text-slate-600 focus:outline-none focus:border-blue-500/50"
             id="unlock-pin-input"
           />
           {error && <p className="text-[11px] text-rose-400">{error}</p>}

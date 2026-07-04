@@ -197,6 +197,47 @@ html, body { background-color: var(--color-page); color: var(--color-slate-100);
 :root.theme-light .bg-card { box-shadow: 0 1px 2px rgba(122,93,72,0.05), 0 10px 26px -16px rgba(122,93,72,0.15); }
 :root.theme-light .bg-raised { box-shadow: 0 1px 2px rgba(122,93,72,0.06), 0 12px 30px -16px rgba(122,93,72,0.19); }
 
+/* ── Living aurora atmosphere (BOLD redesign) ─────────────────────────────────────────────────
+   A slow, breathing field of light behind the whole app — the "alive" backdrop the bold direction
+   asks for. Performance: two fixed layers built from radial-gradients (NOT filter:blur, which is the
+   expensive path the old sun-aurora used) drifting on long 24–34s loops. Mounted once at the app root.
+   Lavender/violet lead (Nila's colour) with a distant sage + peach warmth so it reads calm, not neon. */
+.aurora-field { position: fixed; inset: -25%; z-index: -1; pointer-events: none; }
+.aurora-field::before, .aurora-field::after { content: ""; position: absolute; inset: 0; will-change: transform; }
+.aurora-field::before {
+  background:
+    radial-gradient(36% 32% at 18% 12%, rgba(178,150,205,0.50), transparent 66%),
+    radial-gradient(44% 38% at 86% 22%, rgba(140,112,168,0.40), transparent 70%);
+  animation: auroraA 26s ease-in-out infinite;
+}
+.aurora-field::after {
+  background:
+    radial-gradient(48% 44% at 76% 86%, rgba(96,176,140,0.24), transparent 72%),
+    radial-gradient(40% 36% at 22% 82%, rgba(214,145,106,0.22), transparent 72%);
+  animation: auroraB 34s ease-in-out infinite;
+}
+@keyframes auroraA { 0%,100% { transform: translate3d(0,0,0) scale(1); } 50% { transform: translate3d(4%,-3%,0) scale(1.1); } }
+@keyframes auroraB { 0%,100% { transform: translate3d(0,0,0) scale(1); } 50% { transform: translate3d(-4%,3%,0) scale(1.08); } }
+:root.theme-light .aurora-field { opacity: 0.55; }
+
+/* ── Glassy depth (BOLD redesign) ─────────────────────────────────────────────────────────────
+   Translucent surface with a hairline top highlight so cards/chips/nav feel like frosted glass over
+   the aurora. backdrop-blur is gated behind @supports and kept light (7px) for mid-range phone GPUs;
+   without it the color-mix fill alone still reads glassy. NOT used on §9 crisis surfaces (they stay
+   solid + high-contrast). */
+.glass { background: color-mix(in srgb, var(--color-card) 68%, transparent); border: 1px solid rgba(255,255,255,0.07); box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 10px 30px -18px rgba(0,0,0,0.55); }
+@supports ((backdrop-filter: blur(6px)) or (-webkit-backdrop-filter: blur(6px))) {
+  .glass { backdrop-filter: blur(7px) saturate(1.1); -webkit-backdrop-filter: blur(7px) saturate(1.1); }
+}
+:root.theme-light .glass { background: color-mix(in srgb, var(--color-card) 74%, transparent); border-color: rgba(122,93,72,0.12); box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), 0 10px 30px -20px rgba(122,93,72,0.25); }
+
+/* Editorial display heading — the bold serif voice (Lora), tightened + optical size bump for hero copy. */
+.editorial { font-family: var(--font-display); font-weight: 500; letter-spacing: -0.01em; line-height: 1.15; }
+
+/* Hero orb aura — a second, slower halo pulse layered under Nila's orb (bold = a more alive presence). */
+@keyframes orbAura { 0%,100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.18); opacity: 0.85; } }
+.orb-aura { animation: orbAura 6s ease-in-out infinite; }
+
 /* Custom scrollbar — follows the active theme */
 ::-webkit-scrollbar {
   width: 4px;

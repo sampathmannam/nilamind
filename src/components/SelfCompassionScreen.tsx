@@ -220,7 +220,7 @@ export default function SelfCompassionScreen() {
       </div>
 
       {/* CFT TAB PANELS */}
-      <div className="bg-card border border-slate-800 p-5 rounded-2xl relative">
+      <div className="glass p-5 rounded-2xl relative">
         {/* §9: a crisis disclosure in a save surfaces the shared crisis card and blocks the panel/persist. */}
         {crisis && <CrisisCard heading="Please reach out — right now" id="cft-crisis-card" />}
 

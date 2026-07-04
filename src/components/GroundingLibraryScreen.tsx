@@ -194,7 +194,7 @@ export default function GroundingLibraryScreen() {
                   <div className="flex gap-2 justify-end pt-2 border-t border-slate-800/80">
                     <button
                       onClick={() => setExpandedIndex(null)}
-                      className="bg-card border border-slate-800 hover:bg-raised text-slate-250 text-xs px-4 py-2.5 rounded-lg font-medium transition-all cursor-pointer"
+                      className="glass hover:bg-raised text-slate-250 text-xs px-4 py-2.5 rounded-lg font-medium transition-all cursor-pointer"
                     >
                       Done
                     </button>

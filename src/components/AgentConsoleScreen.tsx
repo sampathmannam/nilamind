@@ -224,7 +224,7 @@ export default function AgentConsoleScreen({ onOpenDashboard, onOpenMemory, onOp
 
 function Stat({ icon, value, label }: { icon: React.ReactNode; value: string; label: string }) {
   return (
-    <div className="bg-card border border-slate-800 rounded-2xl py-3 px-2 text-center">
+    <div className="glass rounded-2xl py-3 px-2 text-center">
       <div className="flex justify-center mb-1">{icon}</div>
       <div className="text-lg font-black text-slate-100 font-mono leading-none">{value}</div>
       <div className="text-[9px] text-slate-500 uppercase tracking-wide mt-1">{label}</div>
@@ -234,7 +234,7 @@ function Stat({ icon, value, label }: { icon: React.ReactNode; value: string; la
 
 function Card({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
   return (
-    <div className="bg-card border border-slate-800 rounded-2xl p-4 space-y-2">
+    <div className="glass rounded-2xl p-4 space-y-2">
       <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 font-mono flex items-center gap-1.5">{icon} {title}</h3>
       {children}
     </div>
