@@ -23,7 +23,7 @@ import NilaCheckIn from "./NilaCheckIn";
 import type { CheckInEntry } from "../types";
 import { sendToNila } from "../services/sendToNila";
 import { NilaMode, NilaUiMessage } from "../services/nilaSend";
-import { getSessionChat, setSessionChat } from "../services/sessionChat";
+import { getSessionChat, setSessionChat, clearSessionChat } from "../services/sessionChat";
 import EpisodeSupportScreen from "./EpisodeSupportScreen";
 import NilaOrb from "./NilaOrb";
 import { Send, AlertTriangle, Shield, Volume2, VolumeX, Mic, Sparkles, BookOpen, ChevronRight, Phone, Zap, Brain, ClipboardList, LifeBuoy, ThumbsUp, ThumbsDown, Keyboard } from "lucide-react";
@@ -190,8 +190,13 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
   }, []);
 
   // Mirror the live transcript into the ephemeral session store so a tab-switch (which unmounts this screen)
-  // restores the conversation instead of losing it. In-memory only — the chat is never written to disk here.
-  useEffect(() => { setSessionChat(messages); }, [messages]);
+  // restores the conversation instead of losing it. In-memory only — never written to disk. §9: a crisis
+  // session must NEVER be remembered (same invariant as rememberSession), so once §9 trips we CLEAR the store
+  // and stop mirroring — the crisis disclosure is not retained or re-shown on return.
+  useEffect(() => {
+    if (isCrisisState) { clearSessionChat(); return; }
+    setSessionChat(messages);
+  }, [messages, isCrisisState]);
 
   // ── Check-in handlers ──────────────────────────────────────────────────────
 

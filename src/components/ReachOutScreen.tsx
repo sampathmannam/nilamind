@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { MessageCircle, Send, Copy, Check, LifeBuoy, Sparkles, ChevronRight } from "lucide-react";
-import { REACH_OPENERS, REACH_FRAMING, buildSmsHref, checkReachText } from "../services/reachOut";
-import { getCrisisReply } from "../safety";
+import { REACH_OPENERS, REACH_FRAMING, buildSmsHref } from "../services/reachOut";
+import { getCrisisReply, scanForCrisis } from "../safety";
+import { detectCrisis } from "../services/crisisClassifier";
 import CrisisLines from "./CrisisLines";
 
 // Reach-out (trusted-person bridge). The app NEVER sends and NEVER stores the recipient/draft — it prepares
@@ -54,10 +55,20 @@ export default function ReachOutScreen() {
     }
     window.location.href = buildSmsHref(text);
   }
-  async function send() {
+  // §9 gate on draft change: the sync keyword floor can't run here (that's checked at send), but the async
+  // classifier CAN run ahead of time and elevate crisis BEFORE the user taps Send — so send() stays fully
+  // synchronous and doesn't burn navigator.share's transient user-activation with an await.
+  function onDraftChange(v: string) {
+    setDraft(v);
+    if (crisisElevated) setCrisisElevated(false);
+    if (v.trim()) void detectCrisis(v).then((c) => { if (c) setCrisisElevated(true); });
+  }
+  function send() {
     const text = draft.trim();
     if (!text) return;
-    if (await checkReachText(text)) {
+    // SYNC keyword §9 gate at the consequential action — no await before doShare(), so Web Share keeps the
+    // click's activation. Euphemisms were already elevated ahead of time by onDraftChange's classifier.
+    if (scanForCrisis(text)) {
       setCrisisElevated(true); // §9: elevate crisis to primary, demote send — do not send yet
       return;
     }
@@ -163,10 +174,7 @@ export default function ReachOutScreen() {
           {/* editable draft */}
           <textarea
             value={draft}
-            onChange={(e) => {
-              setDraft(e.target.value);
-              if (crisisElevated) setCrisisElevated(false);
-            }}
+            onChange={(e) => onDraftChange(e.target.value)}
             placeholder="Your message — edit it however feels right."
             id="reachout-draft"
             className="w-full h-28 bg-page border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-300 placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition-all resize-none"

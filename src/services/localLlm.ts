@@ -130,13 +130,16 @@ export async function generateOnDevice(
   messages: { role: "user" | "assistant"; content: string }[],
   onToken: (t: string) => void = () => {},
   signal?: AbortSignal,
+  opts?: { wait?: boolean },
 ): Promise<string | null> {
   if (!backend || !backend.isReady()) return null;
-  // AUX path: never start a second completion on the one plugin thread. tryRunExclusive returns null the
-  // instant the model is busy (a live chat/voice reply, or another aux task) so we defer instead of piling
-  // up — the caller (reflection/coach/episode) degrades gracefully on null. It also runs the same hang guard.
+  // Never start a second completion on the one plugin thread. AUX callers (reflection, coachAssist "Ask Nila")
+  // pass nothing → tryRunExclusive returns null the instant the model is busy, so they defer and degrade
+  // gracefully. A PRIMARY user-facing caller (the EPISODE conversation) passes { wait:true } → runExclusive so
+  // it WAITS its turn and always produces a reply, rather than dropping the user to the offline walkthrough.
+  const run = opts?.wait ? runExclusive : tryRunExclusive;
   try {
-    const reply = await tryRunExclusive(() => rawGuardedGenerate({ system, messages, onToken, signal }));
+    const reply = await run(() => rawGuardedGenerate({ system, messages, onToken, signal }));
     return reply === null ? null : reply.trim() || null;
   } catch {
     return null;

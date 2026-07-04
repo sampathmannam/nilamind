@@ -83,4 +83,32 @@ describe("localLlm single-flight guard (one plugin thread)", () => {
     const aux = await generateOnDevice("sys", [{ role: "user", content: "reflect" }]);
     expect(aux).toBe("solo");
   });
+
+  it("generateOnDevice({ wait:true }) QUEUES behind a running primary (episode waits, never drops to null)", async () => {
+    let n = 0;
+    const resolvers: Array<(v: string) => void> = [];
+    const backend: LocalLlmBackend = {
+      id: "fake",
+      isReady: () => true,
+      generate: () => { n += 1; return new Promise<string>((res) => { resolvers.push(res); }); },
+    };
+    registerLocalLlmBackend(backend);
+
+    const chat = generateGuarded({ system: "s", messages: [{ role: "user", content: "chat" }], onToken: () => {} });
+    await Promise.resolve();
+    expect(n).toBe(1); // chat holds the lock
+
+    // episode = PRIMARY, uses wait:true → must NOT skip; it queues behind the chat
+    const episode = generateOnDevice("sys", [{ role: "user", content: "episode" }], () => {}, undefined, { wait: true });
+    await Promise.resolve();
+    expect(n).toBe(1); // episode has NOT started (queued, not skipped)
+
+    resolvers[0]("chat-done");
+    await chat;
+    await Promise.resolve();
+    expect(n).toBe(2); // now episode runs
+
+    resolvers[1]("episode-done");
+    expect(await episode).toBe("episode-done"); // real reply, not a null skip
+  });
 });

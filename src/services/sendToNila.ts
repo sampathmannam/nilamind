@@ -90,7 +90,9 @@ export async function sendToNila(
   // no model loaded it returns the offline experience, never the network.
   const systemInstruction = buildEpisodeSystem(loadRecentEpisodes()); // INVARIANT 4 substitution inside
   const guard = createStreamGuard(opts.onDelta);
-  const reply = (await generateOnDevice(systemInstruction, outgoing as NilaMessage[], guard.onDelta)) ?? "";
+  // wait:true — episode is a PRIMARY user conversation, so it waits its turn on the model lock instead of
+  // skipping-if-busy (which would drop a user mid-episode to the offline walkthrough).
+  const reply = (await generateOnDevice(systemInstruction, outgoing as NilaMessage[], guard.onDelta, undefined, { wait: true })) ?? "";
   if (!reply) return { reply: "", reachedAI: false };
   if (guard.tripped()) return { reply: getUnsafeFallbackReply(), reachedAI: true };
   const safe = applyOutputSafety(reply, userText, true); // INVARIANT 3

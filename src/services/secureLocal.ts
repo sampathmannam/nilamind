@@ -81,7 +81,7 @@ export function pendingWriteFailures(): string[] {
 }
 function notifyPersistListeners(): void {
   const keys = [...pendingFailures.keys()];
-  for (const cb of persistListeners) {
+  for (const cb of [...persistListeners]) { // snapshot: a listener may unsubscribe (mutate the Set) mid-notify
     try { cb(keys); } catch (e) { console.error("secureLocal persist listener threw:", e); }
   }
 }
@@ -214,7 +214,13 @@ export const secureLocal = {
 export async function flush(): Promise<void> {
   await persistChain;
   if (pendingFailures.size) {
-    for (const [k, v] of [...pendingFailures]) queuePersist(k, v);
+    // Retry with the CURRENT cache value, never the value captured at failure time — otherwise a retry could
+    // land AFTER a newer setItem on the FIFO persistChain and overwrite the newest write with stale data.
+    for (const k of [...pendingFailures.keys()]) {
+      const v = cache.get(k);
+      if (v === undefined) pendingFailures.delete(k); // removed since the failure — nothing to persist
+      else queuePersist(k, v);
+    }
     await persistChain;
   }
 }
