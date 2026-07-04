@@ -1,4 +1,4 @@
-import { secureLocal, onPersistError } from "./services/secureLocal";
+import { secureLocal, onPersistError, isPassthrough } from "./services/secureLocal";
 import React, { useState, useEffect, useCallback } from "react";
 import { Sparkles, Wrench, User, ChevronLeft } from "lucide-react";
 import { App as CapApp } from "@capacitor/app";
@@ -67,6 +67,11 @@ export default function App() {
   // still safe in memory and retried on flush; this just tells the user rather than pretending it saved.
   const [saveWarning, setSaveWarning] = useState<boolean>(false);
   useEffect(() => onPersistError((failingKeys) => setSaveWarning(failingKeys.length > 0)), []);
+  // Confidentiality is silently downgraded when the encrypted store can't start (private mode / crypto error)
+  // and secureLocal falls back to PLAINTEXT localStorage — never lock a person out of their safety plan, but
+  // don't hide it either. SecureGate boots before this mounts, so isPassthrough() is reliable here. Dismissible.
+  const [plaintextNotice, setPlaintextNotice] = useState<boolean>(false);
+  useEffect(() => { if (isPassthrough()) setPlaintextNotice(true); }, []);
 
   useEffect(() => {
     const savedAnimPref = localStorage.getItem("nilamind_disable_pulse");
@@ -269,6 +274,13 @@ export default function App() {
       {saveWarning && (
         <div role="status" className="fixed top-0 inset-x-0 z-[60] bg-amber-500/15 border-b border-amber-500/30 px-4 py-2 text-center text-[11px] text-amber-200 leading-relaxed">
           Some changes couldn’t be saved to storage just now. They’re safe for now and we’ll keep trying — reopening the app usually fixes it.
+        </div>
+      )}
+
+      {plaintextNotice && (
+        <div role="status" className="fixed top-0 inset-x-0 z-[60] bg-amber-500/15 border-b border-amber-500/30 px-4 py-2 text-center text-[11px] text-amber-200 leading-relaxed flex items-center justify-center gap-3">
+          <span>Encrypted storage couldn’t start on this device, so your notes are saved without encryption for now. Everything still stays on your phone.</span>
+          <button onClick={() => setPlaintextNotice(false)} className="underline underline-offset-2 shrink-0 cursor-pointer" aria-label="Dismiss">Got it</button>
         </div>
       )}
 
