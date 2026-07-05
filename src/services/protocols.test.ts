@@ -42,6 +42,10 @@ describe("routeToProtocol — modular matching (concern → the right evidence-b
     const p = routeToProtocol("i hate myself, i'm always so harsh on myself lately");
     expect(p?.id).toBe("self-compassion");
   });
+  it("routes insomnia / lying awake at night → Sleep Wind-Down", () => {
+    const p = routeToProtocol("i can't sleep, i lie awake for hours every night and i'm so exhausted");
+    expect(p?.id).toBe("sleep-wind-down");
+  });
   it("returns null when no clinical concern is matched (never force a protocol)", () => {
     expect(routeToProtocol("what's the weather like today")).toBeNull();
     expect(routeToProtocol("")).toBeNull();

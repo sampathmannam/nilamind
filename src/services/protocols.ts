@@ -107,6 +107,34 @@ export const PROTOCOLS: Protocol[] = [
         prompt: "How did that land — even slightly? Speaking to yourself the way you'd speak to someone you love takes practice; noticing the difference is the start." },
     ],
   },
+  {
+    id: "sleep-wind-down",
+    title: "Sleep Wind-Down",
+    basis:
+      "CBT-I is the first-line, guideline-recommended treatment for chronic insomnia, with durable effects. This " +
+      "is its POPULATION-SAFE subset — stimulus control, a consistent wake-time, and a wind-down buffer. It " +
+      "deliberately EXCLUDES sleep restriction: acute sleep loss is a documented mania trigger and this app's " +
+      "population includes bipolar, so Nila never tells anyone to sleep less.",
+    forConcerns: [
+      "can't sleep", "cant sleep", "can't fall asleep", "cant fall asleep", "can't stay asleep", "cant stay asleep",
+      "can't get to sleep", "cant get to sleep", "insomnia", "lie awake", "lying awake", "wide awake",
+      "toss and turn", "tossing and turning", "no sleep", "not sleeping", "sleepless", "up all night",
+      "wake up at night", "waking up at night", "trouble sleeping", "can't sleep at night", "cant sleep at night",
+      "mind races at night", "racing mind at night", "keep waking up", "3am", "middle of the night",
+    ],
+    steps: [
+      { id: "sw-1", kind: "psychoed", title: "How this works",
+        prompt: "When sleep won't come, the harder we try, the more wired we get — and the bed slowly turns into a place we associate with lying awake. This gentle routine does the opposite: it rebuilds bed = sleep, and lets sleep arrive on its own instead of being chased. Want to set it up together? (We won't cut your sleep — just help it settle.)" },
+      { id: "sw-2", kind: "plan", title: "Anchor your morning",
+        prompt: "The most powerful lever is a steady WAKE-UP time — same time every day, even after a rough night. It quietly resets your body clock. What wake-up time could you keep, most days?" },
+      { id: "sw-3", kind: "exercise", title: "A wind-down buffer",
+        prompt: "Give yourself a 30–60 minute buffer before bed: lights low, screens down, something calm — a warm shower, a few pages, slow breathing. It's a runway, not a switch. What could your wind-down look like tonight?" },
+      { id: "sw-4", kind: "exercise", title: "If sleep won't come",
+        prompt: "If you're still awake after around 20 minutes and getting frustrated, don't lie there fighting it — get up, keep the lights dim, do something quiet and boring, and go back only when you feel sleepy. It feels backwards, but it's how the bed relearns sleep. Does that feel doable?" },
+      { id: "sw-5", kind: "exercise", title: "Park the day",
+        prompt: "If your mind races the moment your head hits the pillow, park it BEFORE bed: jot tomorrow's worries and to-dos on paper, so your brain knows they're held and doesn't have to keep rehearsing them. Want to try a two-minute brain-dump tonight?" },
+    ],
+  },
 ];
 
 /**
