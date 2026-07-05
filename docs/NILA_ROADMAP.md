@@ -60,6 +60,31 @@ people who are suffering; the only metric is *help*.** Focus population includes
 - **Cross-cutting:** **V3 small fine-tuned model** for speed (Qwen3-1.7B hit a capacity ceiling → Llama-3.2-3B /
   Phi-3.5-mini next; needs the user's HF token + a pod); memory **reality-testing + elevation gating**.
 
+## Build progress — autopilot (Phase 0 + Phase 1 spine)
+
+Shipped this run (all TDD'd, committed + pushed; 541 tests green):
+- **Phase 0 — anti-sycophancy / reality-testing output gate.** `checkResponse` Rule 4 + `SYCOPHANTIC_AFFIRMATIONS`:
+  rejects a reply that AFFIRMS med-stopping, "better off dead/gone", isolation, mania sleep-denial, terminal
+  hopelessness, or deserving-suffering. Runs on every reply via `applyOutputSafety`. (`src/safety.ts`)
+- **Phase 1 — structured-protocol LOGIC spine (deterministic, on-rails):**
+  - `protocols.ts` — `Protocol`/`ProtocolStep` model + `routeToProtocol` (modular matching, returns null on benign
+    input), seeded with **Behavioral Activation** + **Worry-Postponement** (the two best-evidenced cards).
+  - `protocolProgress.ts` — encrypted-persistent `{protocolId, stepIndex}` (start/getActive/advance→done/abandon,
+    resumes across app restart) + `protocolOffer` (offer only when nothing active + a concern matches).
+  - **Deterministic UI bridge** — `NilaCard` kind `"protocol"`, `protocolCard(userText)` offer helper, `actionForCard`
+    → `{type:"protocol", protocolId}`. Step prompts are VETTED + injected directly (no model → no hallucination).
+
+**Remaining Phase-1 wire (needs device verification — blocked by the evicted model, or browser-verify):**
+1. In `AiCoachScreen`: after a reply, add `protocolCard(lastUserMsg)` to the cards — **suppress during crisis
+   (`isCrisisState`) and rate-limit** (don't re-offer every turn).
+2. Card-tap handler for `{type:"protocol"}` → `startProtocol(id)` → inject step-0 `prompt` as a Nila message +
+   a "Next"/"Not now" affordance.
+3. "Next" → `advanceProtocol()` → inject next step (or a warm completion on `{done}`); "Not now" → `abandonProtocol()`.
+4. Persisted progress means a program resumes on reopen (pairs with the chat-persistence work already shipped).
+5. Device-verify end-to-end once the 2.5 GB model is re-downloaded.
+
+**Then:** the async **between-sessions brain** (overnight reflection + memory update) — the other half of Phase 1.
+
 ## Open items / pending (the "before we go ahead" checklist)
 
 - **Device-verify auto-resume** — needs the phone's 2.5 GB model **re-downloaded** first (it got evicted by Android
