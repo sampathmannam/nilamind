@@ -94,6 +94,30 @@ describe("scanForCrisis — ideation recall (red-panel regression)", () => {
   });
 });
 
+// Self-harm recall gap found in live testing (2026-07-05): SUICIDAL_KEYWORDS carries gerund/past forms
+// ("killing myself") but SELF_HARM_KEYWORDS only had the base form ("hurt myself"), so a real active
+// disclosure phrased in the present-continuous ("I've been HURTING myself") slipped the deterministic
+// floor entirely. These MUST trip; paired benign controls keep the high-precision boundary.
+describe("scanForCrisis — self-harm gerund recall (live-test regression)", () => {
+  it.each([
+    "I've been hurting myself every night this week",
+    "I keep harming myself and I can't stop",
+    "I started burning myself again",
+    "I've been hitting myself when I get like this",
+    "I keep punishing myself for it",
+  ])("now trips on the present-continuous self-harm disclosure: %j", (s) => {
+    expect(scanForCrisis(s)).toBe(true);
+  });
+
+  it.each([
+    "I keep hurting my back at the gym",   // "hurting my" but not "hurting myself"
+    "I'm not hurting anyone by staying home",
+    "the sunburn is really burning today",
+  ])("still does NOT trip on benign control: %j", (s) => {
+    expect(scanForCrisis(s)).toBe(false);
+  });
+});
+
 describe("v1.1 §9 regression — ingestion phrases + the command-bypass floor", () => {
   it.each([
     "i want to drink bleach",

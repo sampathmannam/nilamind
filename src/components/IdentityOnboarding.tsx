@@ -40,7 +40,18 @@ export default function IdentityOnboarding({ onDone }: { onDone: () => void }) {
     try {
       await createIdentity(m);
       if (showBackupBox && backupInput.trim()) {
-        try { await importBackup(backupInput, m); } catch { /* identity still restored; backup optional */ }
+        // The user explicitly pasted a backup expecting their data back. A failed import here used to be
+        // swallowed and we proceeded anyway — dropping them into a FRESH EMPTY space that looks like a
+        // successful restore (silent data-loss at the exact worst moment). Surface it instead; the phrase
+        // itself worked, so they can re-check the paste and retry (createIdentity is idempotent), or clear
+        // the backup box to continue without it.
+        try {
+          await importBackup(backupInput, m);
+        } catch {
+          setError("Your phrase worked, but that backup couldn't be read — check you copied the whole thing and try again, or clear the backup box to continue without it.");
+          setBusy(false);
+          return;
+        }
       }
       onDone();
     } catch { setError("Couldn't restore from that phrase. Please try again."); setBusy(false); }

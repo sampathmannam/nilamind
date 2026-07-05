@@ -17,7 +17,11 @@ export const SUICIDAL_KEYWORDS = [
 
 export const SELF_HARM_KEYWORDS = [
   "hurt myself", "cut myself", "harm myself", "cutting", "self harm", "self-harm",
-  "burn myself", "hit myself", "punish myself", "deserve pain", "want to bleed"
+  "burn myself", "hit myself", "punish myself", "deserve pain", "want to bleed",
+  // present-continuous forms: a live disclosure ("I've been HURTING myself") must trip the floor too,
+  // mirroring the gerund/past coverage in SUICIDAL_KEYWORDS. The "…myself" suffix keeps the precision
+  // boundary (benign "hurting my back" / "not hurting anyone" stay safe).
+  "hurting myself", "harming myself", "burning myself", "hitting myself", "punishing myself"
 ];
 
 export const INDIRECT_METAPHORS = [
