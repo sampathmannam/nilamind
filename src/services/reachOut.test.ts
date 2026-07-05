@@ -2,7 +2,6 @@ import { describe, it, expect, afterEach } from "vitest";
 import { REACH_OPENERS, REACH_FRAMING, buildSmsHref, checkReachText } from "./reachOut";
 import { scanForCrisis } from "../safety";
 import { setCrisisEmbedder, setCrisisClassifierEnabled } from "./crisisClassifier";
-import weights from "./crisisClassifier.weights.json";
 
 describe("REACH_OPENERS", () => {
   it("has >=4 non-empty, non-disclosing templates", () => {
@@ -60,12 +59,20 @@ describe("checkReachText (send-time §9 gate)", () => {
     expect(await checkReachText("I've been struggling a bit")).toBe(false);
     expect(await checkReachText("")).toBe(false);
   });
-  it("COVERAGE WIN: catches a keyword-MISS euphemism once the classifier is on", async () => {
+  it("catches the 'affairs in order + at peace' euphemism DETERMINISTICALLY", async () => {
+    // History: this used to be a "classifier COVERAGE WIN" test, but it only passed because it STUBBED the
+    // embedder with a crisis-positive vector (weights.coef) — it never proved the real MiniLM catches this
+    // phrase. It doesn't: the real model scores it ~0.27, below the 0.58 threshold (see
+    // crisisClassifier.realmodel.test.ts). So the euphemism is now caught by the deterministic euphemism gate
+    // in scanForCrisis (prep-cue "affairs in order" CO-OCCURRING with acceptance-cue "at peace with it"),
+    // which is model-independent and always-on — strictly stronger than a soft classifier upgrade.
     const euphemism = "I've put my affairs in order and finally feel at peace with it";
-    expect(scanForCrisis(euphemism)).toBe(false); // deterministic keyword scanner is blind to it
-    expect(await checkReachText(euphemism)).toBe(false); // gate blind too while classifier OFF (old behavior)
-    setCrisisClassifierEnabled(true);
-    setCrisisEmbedder(async () => weights.coef as number[]); // crisis-positive stub (z = bias + ||coef||²)
-    expect(await checkReachText(euphemism)).toBe(true); // NOW the gate catches it — the fix
+    expect(scanForCrisis(euphemism)).toBe(true);           // deterministic floor now catches it
+    expect(await checkReachText(euphemism)).toBe(true);    // so the reach-out gate elevates it, classifier OFF
+  });
+
+  it("does NOT fire on either euphemism cue alone (precision boundary)", () => {
+    expect(scanForCrisis("I put my affairs in order before the vacation")).toBe(false); // prep cue only
+    expect(scanForCrisis("I lost the game but I'm at peace with it")).toBe(false);       // acceptance cue only
   });
 });

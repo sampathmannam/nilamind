@@ -23,7 +23,7 @@
  * device-verified — see crisisEmbedder.example.ts.
  */
 import weights from "./crisisClassifier.weights.json";
-import { scanForCrisis } from "../safety";
+import { scanForCrisis, isBenignMedicationAdherence } from "../safety";
 
 /** Returns a NORMALIZED (L2) sentence embedding of `dim` floats. The head was trained on normalized MiniLM
  *  mean-pooled embeddings, so the embedder MUST mean-pool + L2-normalize (Transformers.js:
@@ -82,6 +82,12 @@ export async function scoreCrisis(text: string): Promise<number | null> {
 export async function detectCrisis(text: string): Promise<boolean> {
   if (scanForCrisis(text)) return true; // deterministic floor — always honored
   if (!_enabled || !_embedder) return false; // classifier off/absent → keyword result (false here)
+  // NEGATIVE GUARD (applied only AFTER the keyword floor missed): the MiniLM head embeds calm medication-
+  // adherence talk near the overdose cluster and scores it above threshold ("take my pills exactly as
+  // prescribed" → 0.62), which would fire a crisis surface on a benign statement. Suppress the SOFT
+  // classifier upgrade for unambiguous adherence phrasing (never a keyword hit — those already returned
+  // above; never a medication+lethal-intent disclosure — the guard vetoes those). See safety.ts.
+  if (isBenignMedicationAdherence(text)) return false;
   const p = await scoreCrisis(text);
   return p !== null && p >= CRISIS_THRESHOLD;
 }
