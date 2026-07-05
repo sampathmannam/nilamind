@@ -1,1 +1,1 @@
-A private, on-device mental-health companion. Your data stays on your phone.
+A private, fully on-device mental-health companion. Nothing leaves your phone.

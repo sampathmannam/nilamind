@@ -1,0 +1,7 @@
+NilaMind v1.3
+
+• On-device voice: your speech is now turned into text right on the phone by default (Vosk), so nothing you say leaves the device. An optional setting can switch to your system recognizer for extra accuracy.
+• Your conversation is saved and restored if you leave the app mid-chat — including a message you were part-way through typing.
+• Faster replies (the model stays warm after the first one), a refreshed interface, and stronger backup encryption.
+
+Early research preview — a self-help tool, not a medical device or a substitute for professional care.

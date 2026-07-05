@@ -1,18 +1,17 @@
 # NilaMind
 
-**A privacy-first, fully on-device mental-health companion.** *(v1.2)*
+**A privacy-first, fully on-device mental-health companion.** *(v1.3)*
 
 NilaMind is a mobile app built around *Nila* — someone you can talk to (by voice
 or text) for everyday emotional support. The **language model, the crisis-safety
 checks, and all your data run on your phone**. There is **no account, no backend,
-and no analytics** — your text conversations, check-ins, mood, and notes never
+and no analytics** — your conversations, check-ins, mood, and notes never
 leave the device.
 
-> **One honest caveat about voice:** when you *speak* to Nila, your device's
-> built-in speech service transcribes the audio (on Android, usually Google's), so
-> spoken words may be processed by that service — like any dictation on your phone.
-> **Type instead and nothing leaves the device at all.** Fully on-device voice
-> transcription is on the roadmap.
+> **Voice stays on the phone too.** When you *speak* to Nila, your words are
+> transcribed **on-device** by default (Vosk — the same engine as the wake word),
+> so nothing you say leaves the phone. An optional setting can switch to your
+> device's system recognizer (a little more accurate, but it may use the cloud).
 
 > ⚠️ **Please read [`SAFETY.md`](SAFETY.md) first.** NilaMind is an experimental
 > self-help tool — **not a medical device, not therapy, and not a crisis
@@ -69,10 +68,10 @@ research-grounded tools, guided flows, private memory — do the heavy lifting.
 - **On-device LLM** via [`llama-cpp-capacitor`](https://www.npmjs.com/package/llama-cpp-capacitor)
   (runs a GGUF model locally — see *Bring your own model* below).
 - **Voice-first chat** — talk to Nila and hear her reply; typing always
-  available. Speech-to-text/text-to-speech go through the device's speech services
-  (`@capacitor-community/speech-recognition`, `text-to-speech`) — note the STT may
-  use the OS (often cloud) recognizer, so typing is the fully-private path; the
-  Vosk wake-word is on-device.
+  available. **Speech-to-text runs on-device by default** (Vosk WASM, the same
+  engine as the wake word) so your voice never leaves the phone; an optional setting
+  switches to the system recognizer (`@capacitor-community/speech-recognition`) for
+  extra accuracy. Text-to-speech uses the device's `text-to-speech` engine.
 - **A model-independent crisis-safety layer ("§9")** — a deterministic keyword
   scanner plus a small on-device MiniLM classifier (ONNX Runtime Web) that catches
   euphemistic disclosures the keywords miss, surfaces support, and routes toward a
@@ -158,15 +157,16 @@ profile (optional).
 Personal content is stored **only on the device, encrypted at rest** (AES-256-GCM;
 the key is non-extractable, or PIN-derived in optional zero-knowledge mode). There
 is no server, no account, and no telemetry. The app makes only one network call —
-the one-time, integrity-verified model download; after that, text chat is fully
-offline. The **one exception is voice input**, transcribed by the device's system
-speech service (often cloud-based), so typing is the fully-private path. If you
+the one-time, integrity-verified model download; after that it's fully offline,
+**including voice** — speech-to-text runs on-device (Vosk) by default, so nothing
+you say leaves the phone. (An optional setting can use the device's system speech
+recognizer instead, which may use the cloud.) If you
 modify NilaMind, **please don't add data collection** — that's the line the project
 won't cross.
 
 ## Status
 
-Experimental and personal (**v1.2**). Not clinically validated, not a product, no
+Experimental and personal (**v1.3**). Not clinically validated, not a product, no
 support guarantees. Shared in the hope it's useful — use at your own risk.
 
 ## License

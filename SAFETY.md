@@ -68,11 +68,11 @@ harm, and is contrary to the spirit in which this project is shared.
 
 ## Privacy
 
-NilaMind is designed so that **your text conversations and stored content never
-leave the device**: no account, no backend, no analytics. (**One exception:** voice
-input is transcribed by the device's system speech service — on Android, often
-cloud-based — so spoken audio may be processed by that service; typing avoids it
-entirely.) Chats, check-ins, mood, memories, and the
+NilaMind is designed so that **your conversations and stored content never leave
+the device**: no account, no backend, no analytics. Voice is transcribed on-device
+(Vosk) by default too, so spoken words stay on the phone. (An optional setting can
+switch speech-to-text to the device's system recognizer for extra accuracy, which
+may use the cloud.) Chats, check-ins, mood, memories, and the
 "letter to my unwell self" are stored locally (encrypted at rest via the app's
 `secureLocal`). If you modify the app, **do not add data collection** — the
 project's core commitment is that it helps without harvesting.
