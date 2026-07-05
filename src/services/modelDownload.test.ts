@@ -149,6 +149,44 @@ describe("downloadModel — integrity (size / magic / progress)", () => {
   });
 });
 
+describe("downloadModel — recovery of a complete-but-unfinalized partial", () => {
+  it("finalizes an existing complete `.part` WITHOUT re-downloading (interrupted verify/rename)", async () => {
+    // Simulate a prior attempt that fully downloaded but was killed before the rename: a complete `.part`
+    // is already on disk. (Hash-less model so we exercise the size/magic recovery path.)
+    h.files.set(PART, { size: modelNoHash.sizeBytes, magic: "GGUF" });
+    await expect(downloadModel(modelNoHash)).resolves.toBeUndefined();
+    expect(Filesystem.downloadFile).not.toHaveBeenCalled(); // no 2.5 GB re-transfer
+    expect(h.files.has(model.filename)).toBe(true); // promoted into place
+    expect(h.files.has(PART)).toBe(false);
+  });
+
+  it("reports 100% progress when recovering a complete `.part` (no stale bar)", async () => {
+    h.files.set(PART, { size: modelNoHash.sizeBytes, magic: "GGUF" });
+    const onProgress = vi.fn();
+    await downloadModel(modelNoHash, onProgress);
+    expect(onProgress).toHaveBeenCalledWith(expect.objectContaining({ pct: 100 }));
+  });
+
+  it("clears a WRONG-SIZE partial and re-downloads clean (not treated as recoverable)", async () => {
+    h.files.set(PART, { size: 1234, magic: "GGUF" }); // half-finished leftover
+    writeOnDownload(modelNoHash.sizeBytes, "GGUF");
+    await expect(downloadModel(modelNoHash)).resolves.toBeUndefined();
+    expect(Filesystem.downloadFile).toHaveBeenCalled(); // fresh transfer happened
+    expect(h.files.has(model.filename)).toBe(true);
+  });
+
+  it("rejects a complete-size but poisoned `.part` on recovery and cleans up (no re-download)", async () => {
+    // A complete-size `.part` with real bytes whose hash won't match the catalog digest.
+    const content = new Uint8Array([...Array.from("GGUF").map((c) => c.charCodeAt(0)), ...Array(2044).fill(0x41)]);
+    const m = { ...model, sizeBytes: content.length, sha256: "f".repeat(64) };
+    h.files.set(PART, { size: content.length, magic: "GGUF", content });
+    await expect(downloadModel(m)).rejects.toThrow(/SHA-256|hash/i);
+    expect(Filesystem.downloadFile).not.toHaveBeenCalled();
+    expect(h.files.has(PART)).toBe(false); // poisoned partial reclaimed
+    expect(h.files.has(model.filename)).toBe(false);
+  });
+});
+
 describe("downloadModel — SHA-256 content verification", () => {
   // Real bytes: "GGUF" magic + filler, small enough to hash in-test. The catalog's real 2.5GB hash is
   // exercised on-device; here we verify the CHUNKED hasher accepts a matching digest and rejects a swap.
