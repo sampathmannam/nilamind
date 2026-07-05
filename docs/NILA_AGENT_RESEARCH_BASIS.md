@@ -73,12 +73,70 @@ we already chose*, and adds a new one.
   engineering until their evidence + safety (esp. experiential-technique contraindications for bipolar/BPD/
   psychosis) is verified.
 
-## 4. TODO — research cut off by session limit (finish after ~7:10pm reset, no fabrication)
-- **JITAI:** efficacy of just-in-time adaptive interventions; does sensor-triggered timing beat fixed schedule; failure modes.
-- **Simulation / experiential:** evidence base + **safety contraindications** for IFS parts-work, empty-chair/EFT,
-  behavioral rehearsal/role-play delivered WITHOUT a therapist (retraumatization/abreaction/dissociation; who to exclude).
-- **Full efficacy sweep:** guided-vs-unguided magnitude; BA/self-compassion/CBT-for-GAD specifics; case-formulation-beats-generic evidence.
+## 4. JITAI — EMERGING category, but sensor-timing superiority is THIN (VERIFIED, completed)
 
-_Method note: parallel research subagents over-engineered into nested sub-workflows and several hit the API session
-limit; the harms thread + protocol anchors completed and were cross-source verified. Re-run the TODO threads
-directly (no sub-delegation) after reset._
+- **Small but real category effect.** von Lützow et al., *BMJ Mental Health 2025* (23 studies, N=2,563): pooled
+  **g = 0.15** (symptoms g=0.21; well-being g=0.03 = null). Target distress, not "flourishing." PMC12481328.
+- **The specific bet (passive-sensor-triggered timing beats fixed schedule) is NOT demonstrated in MH.** Only
+  **5 MH JITAIs exist across 9 papers; only 1 used passive sensing** (van Genugten et al., *Front Digit Health 2025*,
+  PMC11811111). Most "JITAIs" are non-adaptive EMIs. The timing wins (~38% better receptivity, Mishra IMWUT 2021)
+  come from *behavior-change*, not mood.
+- **Three failure modes that redesign JITAI:** (a) **decay** — even good tailored nudges fall to zero by ~4 weeks
+  (HeartSteps, *Ann Behav Med 2019*); (b) **mistiming BACKFIRES** — net-negative mood, not neutral (Intern Health
+  MRT, *JMIR 2020*, e15033); (c) **high momentary distress REDUCES engagement** — a naive "distress→intervene" rule
+  misfires (Jaremba et al., *Sci Rep 2026*). → **Trigger must model "receptive & able to act right now?", not just
+  "distressed?"; hand off to §9 at the top of the risk range rather than nudge; A/B (MRT) it on our own users.**
+  Verdict: **defensible bet that must prove itself**, not a slam-dunk.
+
+## 5. Efficacy sweep — STRUCTURE beats chat; LLM-as-guidance supported; formulation ≈ generic (VERIFIED)
+
+- **Structure > open-ended chat, decisively.** Every Tier-A/B result (iCBT-GAD, BA, self-compassion) is a
+  **structured multi-week module-based** protocol; **open-ended supportive chat has ~no controlled evidence as a
+  standalone treatment** (Woebot RCT *JMIR Ment Health 2017* PMC5478797; CBT-chatbot review *JMIR 2025* e78340).
+  → **Nila = warm delivery layer wrapped around structured evidence-based content, NOT free-form therapy-chat.**
+- **LLM-as-guidance is a well-supported bet.** Guided > unguided advantage is **small (−0.8 PHQ-9), severity-gated,
+  gone by 6 months** (Karyotaki IPD network MA, *JAMA Psych 2021*), works via **adherence + mere-contact** (Cuijpers
+  *PLOS ONE 2011*; JMIR 2020 e18100), and **for apps, human feedback added NOTHING** (Firth *World Psychiatry 2017*:
+  g=0.47 without vs 0.14 with). → An always-on LLM plausibly does guidance's *job* (accountability, responsiveness,
+  tailoring) — the retention lever. Not yet RCT-proven; Therabot is the closest positive.
+- **Best-evidenced cards:** iCBT-for-GAD/worry (d≈−0.91; face-to-face-equivalent, *Front Psychiatry 2022* PMC9366007)
+  and Behavioral Activation (SMD −0.51, larger in moderate-severe). Self-compassion real but quality-limited.
+- **⚠️ Personalized formulation does NOT reliably beat generic protocols** (Emmelkamp, *World Psychiatry 2021*): RCTs
+  show ≈ equivalence. The ONE personalization win is **modular MATCHING** (MATCH RCT beat fixed CBT). → **Build a
+  LIGHTWEIGHT formulation-for-ROUTING layer (5 P's as intake to select + personalize framing of modules), NOT a
+  heavy idiographic self-model engine.** Memory personalizes *framing/examples*; keep *therapeutic content* protocol-anchored.
+
+## 6. Simulation / experiential — mostly DEFER; permit only low-activation, heavily-railed (VERIFIED)
+
+- **Evidence tiers:** behavioral experiments **A−** (CBT engine, but isolated contribution under-tested); social-skills/
+  behavioral-rehearsal **A** for schizophrenia/**B** general (*Schizophr Bull 2018* PMC5890475); empty-chair/two-chair
+  (EFT) **B** (chairwork MA d≈0.90 within-session, *Psychotherapy 2023* PMID 37166937; EFT ≈ CBT for depression);
+  **IFS C→C+** (NREPP-listed 2015 → registry defunct 2018; only a rheumatoid-arthritis proof-of-concept RCT — NOT a
+  psychiatric-disorder trial; 2025 scoping review = "promising, major gaps").
+- **These are affect-AMPLIFYING by design, and the harms concentrate in our EXACT population.** Contraindications
+  (active mania, active psychosis, un-stabilized dissociation, acute suicidality; BPD needs containment) are explicit
+  (*Eur J Psychotraumatol 2012* PMC3406222). Phased treatment (stabilize→process) is the field's safety architecture
+  (*ScienceDirect 2022*). **IFS specifically** carries a documented harm (splitting → disorganization; iatrogenic
+  false-memory litigation). The safe simulation products keep a **trained human steering in real time** (AVATAR RCT,
+  *Lancet Psych 2018* PMC5746597: 0 attributable AEs — *because a therapist voiced the avatar*); the harmful cases are
+  autonomous LLM open-ended roleplay (Character.AI deaths).
+- **Verdict:** **DEFER open-ended IFS parts-work and trauma empty-chair** (highest-risk, weakest-evidence). **PERMIT
+  only:** behavioral experiments (safest, low-activation), behavioral/assertiveness rehearsal (neutral practice-partner,
+  future scenarios only), two-chair for *self-criticism* (not trauma) — **and only with ALL of:** deterministic §9
+  running on every turn that HALTS the sim on fire; consent + always-visible one-tap Stop; **population-exclusion
+  screening** (mania/psychosis/dissociation/acute-crisis out; BPD→skills-only); an **intensity ceiling + mandatory
+  grounding closure** (never "go deeper" — the opposite of sycophancy); never impersonate a therapist/abuser; pull-only.
+  **If §9 can't reliably interrupt a mid-simulation on-device, defer even behavioral rehearsal.**
+
+## 7. Final evidence-grounded frontier priorities
+
+- **Phase 0 (before anything): the anti-sycophancy + reality-testing guard** on model output (harms §1) — non-optional.
+- **Phase 1 flagship = async between-sessions presence + engagement** — best-evidenced (adherence is the lever; LLM does
+  guidance's job). PLUS wrap it around **structured, sequenced protocols** (structure > chat).
+- **Self-model → LIGHTWEIGHT formulation-for-routing** (not a heavy idiographic engine; reality-anchored, editable, elevation-gated).
+- **Protocol runner** = strongly supported; lead with **iCBT-GAD/worry + Behavioral Activation**.
+- **JITAI** = Emerging; build as an **A/B-instrumented, receptivity-gated** experiment that hands to §9 — not a static push loop.
+- **Simulation** = mostly DEFER; only low-activation behavioral experiments/rehearsal behind the full rail stack, gated on the §9-interrupt.
+
+_Method note: on re-run, subagents researched directly (no sub-delegation) and completed; all citations retrieved +
+cross-checked, unverifiable items flagged in-line. Nothing fabricated._
