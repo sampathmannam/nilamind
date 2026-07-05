@@ -1,0 +1,7 @@
+NilaMind v1.4
+
+• Safety hardening for the crisis-support layer (§9). Fixed a false alarm where calm medication talk ("I take my pills as prescribed") could wrongly trigger the crisis screen — a false "call a hotline" on a calm moment is itself harmful.
+• Closed a gap where an indirect way of talking about ending things ("I've put my affairs in order and I finally feel at peace") could slip past detection, and added a backstop so the assistant never affirms it.
+• Broader detection of active self-harm phrasing, and a fix so a failed backup restore surfaces an error instead of silently emptying your space.
+
+Early research preview — a self-help tool, not a medical device or a substitute for professional care.
