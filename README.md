@@ -3,10 +3,16 @@
 **A privacy-first, fully on-device mental-health companion.** *(v1.2)*
 
 NilaMind is a mobile app built around *Nila* — someone you can talk to (by voice
-or text) for everyday emotional support. Everything runs **on your phone**: the
-language model, the crisis-safety checks, speech-to-text and text-to-speech.
-There is **no account, no backend, and no analytics** — your conversations,
-check-ins, mood, and notes never leave the device.
+or text) for everyday emotional support. The **language model, the crisis-safety
+checks, and all your data run on your phone**. There is **no account, no backend,
+and no analytics** — your text conversations, check-ins, mood, and notes never
+leave the device.
+
+> **One honest caveat about voice:** when you *speak* to Nila, your device's
+> built-in speech service transcribes the audio (on Android, usually Google's), so
+> spoken words may be processed by that service — like any dictation on your phone.
+> **Type instead and nothing leaves the device at all.** Fully on-device voice
+> transcription is on the roadmap.
 
 > ⚠️ **Please read [`SAFETY.md`](SAFETY.md) first.** NilaMind is an experimental
 > self-help tool — **not a medical device, not therapy, and not a crisis
@@ -63,8 +69,10 @@ research-grounded tools, guided flows, private memory — do the heavy lifting.
 - **On-device LLM** via [`llama-cpp-capacitor`](https://www.npmjs.com/package/llama-cpp-capacitor)
   (runs a GGUF model locally — see *Bring your own model* below).
 - **Voice-first chat** — talk to Nila and hear her reply; typing always
-  available. On-device STT/TTS (`@capacitor-community/speech-recognition`,
-  `text-to-speech`) plus a Vosk wake-word path.
+  available. Speech-to-text/text-to-speech go through the device's speech services
+  (`@capacitor-community/speech-recognition`, `text-to-speech`) — note the STT may
+  use the OS (often cloud) recognizer, so typing is the fully-private path; the
+  Vosk wake-word is on-device.
 - **A model-independent crisis-safety layer ("§9")** — a deterministic keyword
   scanner plus a small on-device MiniLM classifier (ONNX Runtime Web) that catches
   euphemistic disclosures the keywords miss, surfaces support, and routes toward a
@@ -149,9 +157,12 @@ profile (optional).
 
 Personal content is stored **only on the device, encrypted at rest** (AES-256-GCM;
 the key is non-extractable, or PIN-derived in optional zero-knowledge mode). There
-is no server, no account, and no telemetry; the only network call is the one-time,
-integrity-verified model download. If you modify NilaMind, **please don't add data
-collection** — that's the line the project won't cross.
+is no server, no account, and no telemetry. The app makes only one network call —
+the one-time, integrity-verified model download; after that, text chat is fully
+offline. The **one exception is voice input**, transcribed by the device's system
+speech service (often cloud-based), so typing is the fully-private path. If you
+modify NilaMind, **please don't add data collection** — that's the line the project
+won't cross.
 
 ## Status
 
