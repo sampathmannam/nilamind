@@ -81,6 +81,32 @@ export const PROTOCOLS: Protocol[] = [
         prompt: "After a few days: did any worries lose their urgency by the time worry-time came around? What did you notice?" },
     ],
   },
+  {
+    id: "self-compassion",
+    title: "Self-Compassion",
+    basis:
+      "Self-compassion (CFT / Mindful Self-Compassion) reduces self-criticism and boosts self-compassion in " +
+      "clinical + non-clinical samples (meta-analyses of ~20–27 RCTs; evidence real but quality-limited). See " +
+      "docs/NILA_AGENT_RESEARCH_BASIS.md.",
+    forConcerns: [
+      "hate myself", "harsh on myself", "self-critical", "self critical", "inner critic", "beat myself up",
+      "beating myself up", "not good enough", "never good enough", "i'm a failure", "im a failure", "ashamed",
+      "shame", "so guilty", "self-hatred", "self hatred", "too hard on myself", "i'm useless", "im useless",
+      "i suck", "such an idiot", "hate the way i", "disgusted with myself", "let everyone down",
+    ],
+    steps: [
+      { id: "sc-1", kind: "psychoed", title: "How this works",
+        prompt: "Self-compassion isn't self-pity or letting yourself off the hook — it's treating yourself with the same kindness you'd give a good friend. It has three parts: kindness instead of harshness, remembering you're not alone in struggling, and holding your feelings with a bit of space. Want to try a little of it together?" },
+      { id: "sc-2", kind: "reflect", title: "Hear the critic",
+        prompt: "When you're hard on yourself, what does that inner voice actually say? You can tell me its words — we're just noticing it, not agreeing with it." },
+      { id: "sc-3", kind: "exercise", title: "The friend reframe",
+        prompt: "Here's the shift: if a close friend were in your exact situation, feeling exactly this, what would you say to them? Try saying it — out loud or here." },
+      { id: "sc-4", kind: "exercise", title: "A kinder line",
+        prompt: "Let's try a self-compassion phrase, in your own words — something like: 'This is a really hard moment. Hard moments are part of being human. Can I be a little gentle with myself right now?' What would yours sound like?" },
+      { id: "sc-5", kind: "reflect", title: "Notice what shifts",
+        prompt: "How did that land — even slightly? Speaking to yourself the way you'd speak to someone you love takes practice; noticing the difference is the start." },
+    ],
+  },
 ];
 
 /**
