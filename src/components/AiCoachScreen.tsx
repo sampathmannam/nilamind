@@ -202,9 +202,12 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
   useEffect(() => {
     if (isCrisisState) { clearSessionChat(); return; }
     // Mirror on turn boundaries, NOT per streamed token: onDelta mutates messages once per token, and copying
-    // the whole transcript each time is wasted work. Skipping while `loading` captures the settled turn when
-    // streaming finishes (loading→false); a mid-stream tab-switch unmounts+aborts anyway, so nothing is lost.
-    if (!loading) setSessionChat(messages);
+    // the whole transcript each time is wasted work. Persist when settled (loading→false, captures the reply)
+    // OR when the newest turn is the just-sent USER message (loading may be true) — so if the app is killed
+    // mid-generation, what the person typed is preserved and restored, not lost. The middle case (a streaming
+    // assistant turn, loading true) is still skipped, so there's no per-token write.
+    const newest = messages[messages.length - 1];
+    if (!loading || newest?.role === "user") setSessionChat(messages);
   }, [messages, loading, isCrisisState]);
 
   // ── Check-in handlers ──────────────────────────────────────────────────────
