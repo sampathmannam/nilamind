@@ -1,6 +1,18 @@
-# NilaMind
+<p align="center">
+  <img src="docs/assets/banner.png" alt="NilaMind — a private, fully on-device mental-health companion" width="100%">
+</p>
 
-**A privacy-first, fully on-device mental-health companion.** *(v1.3)*
+<p align="center">
+  <a href="LICENSE"><img alt="License Apache-2.0" src="https://img.shields.io/badge/License-Apache_2.0-a855f7"></a>
+  <img alt="Android 7.0+" src="https://img.shields.io/badge/Android-7.0%2B-a855f7?logo=android&logoColor=white">
+  <a href="https://github.com/sampathmannam/nilamind/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/sampathmannam/nilamind?label=release&color=7c3aed"></a>
+  <img alt="100% on-device" src="https://img.shields.io/badge/AI-100%25_on--device-34d399">
+  <a href="SAFETY.md"><img alt="Crisis safety §9" src="https://img.shields.io/badge/crisis_safety-%C2%A79-fbbf24"></a>
+</p>
+
+<h1 align="center">NilaMind</h1>
+
+<p align="center"><b>A privacy-first, fully on-device mental-health companion.</b> · <em>v1.3</em></p>
 
 NilaMind is a mobile app built around *Nila* — someone you can talk to (by voice
 or text) for everyday emotional support. The **language model, the crisis-safety
