@@ -118,6 +118,34 @@ export const DISTORTION_AGREEMENTS = [
   "you are a failure", "you're a failure", "youre a failure"
 ];
 
+// Phase 0 — anti-sycophancy / reality-testing. Research basis (docs/NILA_AGENT_RESEARCH_BASIS.md): a model
+// VALIDATING a harmful belief ("sycophancy") is THE documented harm mechanism of LLM mental-health tools
+// (OpenAI's GPT-4o rollback; the Danish registry's delusion + mania cases). checkResponse Rule 4 rejects a reply
+// that AFFIRMS a harmful belief a warm companion must never affirm — regardless of context. Complements
+// DISTORTION_AGREEMENTS (worthlessness/failure/burden) with the gaps the harms literature flags: med/treatment
+// discouragement (mania/bipolar risk), "better off dead/gone", isolation, mania sleep-denial, terminal
+// hopelessness, deserving-suffering. Kept HIGH-SIGNAL + LOW-false-positive (e.g. "you are beyond help", NOT bare
+// "beyond help", so a professional-referral "beyond what I can help with" isn't cut).
+export const SYCOPHANTIC_AFFIRMATIONS = [
+  // med / treatment discouragement
+  "you don't need your meds", "you dont need your meds",
+  "you don't need medication", "you dont need medication",
+  "stop taking your medication", "stop taking your meds", "you should stop your meds",
+  // mania: sleep denial
+  "you don't need sleep", "you dont need sleep", "you don't need to sleep", "you dont need to sleep",
+  // "better off dead/gone/without you" (crisis-adjacent affirmation)
+  "better off dead", "better off gone", "better off without you",
+  // isolation encouragement
+  "you're better off alone", "youre better off alone", "you are better off alone",
+  "no one can help you", "no-one can help you", "nobody can help you",
+  // terminal hopelessness (beyond the existing "it's hopeless")
+  "you'll never get better", "youll never get better", "you will never get better",
+  "you're beyond help", "youre beyond help", "you are beyond help",
+  "it will never get better", "nothing will ever change",
+  // deserving-suffering
+  "you deserve to suffer", "you deserve the pain", "you deserve this pain",
+];
+
 /**
  * True if `normalized` (already lowercased, apostrophe- and whitespace-collapsed) is a pre-suicide euphemism:
  * either an unambiguous "peace with death" phrase, OR a "settling final affairs" cue CO-OCCURRING with an
@@ -232,6 +260,15 @@ export function checkResponse(aiReply: string, userMessage: string): boolean {
   const replyNormApos = replyNorm.replace(/['’]/g, "'");
   for (const phrase of EUPHEMISM_DEATH_PHRASES) {
     if (replyNormApos.includes(phrase)) {
+      return false;
+    }
+  }
+
+  // Rule 5: Anti-sycophancy / reality-testing — the reply must never AFFIRM a harmful belief (med-stopping,
+  // "better off dead/gone", isolation, mania sleep-denial, terminal hopelessness, deserving-suffering).
+  // Sycophancy is the documented harm mechanism (see docs/NILA_AGENT_RESEARCH_BASIS.md).
+  for (const affirmation of SYCOPHANTIC_AFFIRMATIONS) {
+    if (replyNorm.includes(affirmation)) {
       return false;
     }
   }
