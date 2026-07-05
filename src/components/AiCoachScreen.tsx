@@ -15,7 +15,7 @@ import { runAgent, AgentView } from "../services/agent";
 import { hasCheckinToday, getSkipFlag, setSkipFlag } from "../services/checkin";
 import { secureLocal } from "../services/secureLocal";
 import { cardsForCheckin, NilaCard } from "../services/nilaOrchestration";
-import { cardsForReply, protocolCard, protocolResumeCard } from "../services/nilaCards";
+import { cardsForReply, protocolCard, protocolResumeCard, waitingCards } from "../services/nilaCards";
 import { startProtocol, advanceProtocol, getActiveProgress } from "../services/protocolProgress";
 import { getInflectionEnabled } from "../services/inflectionPrefs";
 import { recordDetectionPass, surfaceOpener, acknowledgeInflection, type InflectionSignal } from "../services/nilaInflection";
@@ -156,6 +156,13 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
       return offer ? [...base, offer] : base;
     },
     [lastMessage?.role, lastMessage?.content, lastUserMsg, isCrisisState],
+  );
+  // Deterministic help to offer WHILE the on-device model cold-loads (the multi-minute first reply). The tools
+  // matched from the person's OWN words work instantly with no model, so a distressed person can act during the
+  // wait instead of staring at a spinner. §9-gated: never while the crisis shield owns the screen.
+  const waitCards = useMemo(
+    () => (loading && !isCrisisState ? waitingCards(lastUserMsg) : []),
+    [loading, isCrisisState, lastUserMsg],
   );
 
   // Inflection opener (Phase 2): pick at most once per mount; gated by the off-by-default toggle,
@@ -919,7 +926,7 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
         )}
 
         {loading && (
-          <div className="flex justify-start">
+          <div className="flex flex-col items-start gap-2">
             <div className="bg-card border border-slate-850 rounded-2xl rounded-bl-none px-4 py-3 text-xs text-slate-400 flex items-center gap-2">
               <span className="flex gap-1 animate-pulse">
                 <span className="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
@@ -928,6 +935,25 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
               </span>
               <span>{thinkingNote}</span>
             </div>
+            {/* While the on-device model cold-loads, offer the tools matched from their words — these work NOW,
+                no model needed, so a hard moment isn't left waiting on a spinner. §9-gated via waitCards. */}
+            {waitCards.length > 0 && (
+              <div className="w-full space-y-2">
+                <p className="text-[11px] text-slate-500 px-1">While I'm getting ready — this might help right now:</p>
+                {waitCards.map((card, ci) => (
+                  <button
+                    key={ci}
+                    onClick={() => dispatchCard(card)}
+                    id={card.kind === "skill" ? `coach-wait-skill-${card.skillId}` : `coach-wait-card-${card.kind}`}
+                    className="w-full flex items-center gap-2.5 bg-page border border-blue-500/30 hover:border-blue-500/50 rounded-xl px-3 py-2.5 cursor-pointer transition-colors text-left"
+                  >
+                    <BookOpen className="w-4 h-4 text-blue-400 shrink-0" />
+                    <span className="flex-1 min-w-0 block text-xs font-bold text-slate-100">{card.label}</span>
+                    <ChevronRight className="w-4 h-4 text-slate-500 shrink-0" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
         <div ref={bottomRef} />

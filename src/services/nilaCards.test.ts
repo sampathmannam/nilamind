@@ -1,7 +1,23 @@
-import { describe, it, expect, afterEach } from "vitest";
-import { skillCardFromReply, skillCardFromMessage, cardsForReply, protocolCard, protocolResumeCard } from "./nilaCards";
+import { describe, it, expect, afterEach, beforeEach } from "vitest";
+import { skillCardFromReply, skillCardFromMessage, cardsForReply, protocolCard, protocolResumeCard, waitingCards } from "./nilaCards";
 import { startProtocol, abandonProtocol } from "./protocolProgress";
 import { CheckInEntry } from "../types";
+
+describe("waitingCards — deterministic help to offer WHILE Nila's model cold-loads (the multi-minute wait)", () => {
+  beforeEach(() => abandonProtocol()); // nothing active → a matched program can be offered
+  afterEach(() => abandonProtocol());
+
+  it("offers the tool(s) matched from the user's own words so they can act during the wait", () => {
+    const cards = waitingCards("i can't stop worrying, my mind keeps racing with what-ifs");
+    expect(cards.length).toBeGreaterThan(0);
+    expect(cards.some((c) => c.kind === "protocol" && c.protocolId === "worry-postponement")).toBe(true);
+  });
+
+  it("is empty for a benign / blank message (never clutter the wait with a wrong tool)", () => {
+    expect(waitingCards("hi how are you today")).toEqual([]);
+    expect(waitingCards("")).toEqual([]);
+  });
+});
 
 describe("protocolCard — offer a structured program when a concern matches (Phase 1)", () => {
   it("offers the matched protocol on a concern message (nothing active)", () => {

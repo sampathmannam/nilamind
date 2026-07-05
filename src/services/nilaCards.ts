@@ -56,6 +56,23 @@ export function skillCardFromMessage(userText: string): NilaCard | null {
 }
 
 /**
+ * Deterministic help to surface WHILE Nila's on-device model is still cold-loading (the multi-minute first
+ * reply). A distressed person shouldn't stare at a spinner — offer the evidence-based tool matched from their OWN
+ * words: an in-the-moment skill first (instant relief), then a structured program if one fits. Both work with no
+ * model, so nothing here can hallucinate or stall. Empty for a benign/blank message. The CALLER must still gate
+ * on §9 (a crisis turn is owned by the crisis UI, never a program offer). Same reliable routing as the reply
+ * cards, so it can never surface a wrong tool.
+ */
+export function waitingCards(userText: string): NilaCard[] {
+  const out: NilaCard[] = [];
+  const skill = skillCardFromMessage(userText);
+  if (skill) out.push(skill);
+  const protocol = protocolCard(userText);
+  if (protocol) out.push(protocol);
+  return out;
+}
+
+/**
  * Check-in cards + ONE skill card, with skill-card dedupe by skillId. The skill card PREFERS the tool matched
  * from the user's own words (skillCardFromMessage — reliable) and falls back to the skill the model named in
  * its reply (skillCardFromReply). userText is optional so existing callers stay unchanged.
