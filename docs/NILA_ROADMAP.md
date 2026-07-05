@@ -74,21 +74,26 @@ Shipped this run (all TDD'd, committed + pushed; 541 tests green):
   - **Deterministic UI bridge** — `NilaCard` kind `"protocol"`, `protocolCard(userText)` offer helper, `actionForCard`
     → `{type:"protocol", protocolId}`. Step prompts are VETTED + injected directly (no model → no hallucination).
 
-**Remaining Phase-1 wire (needs device verification — blocked by the evicted model, or browser-verify):**
-1. In `AiCoachScreen`: after a reply, add `protocolCard(lastUserMsg)` to the cards — **suppress during crisis
-   (`isCrisisState`) and rate-limit** (don't re-offer every turn).
-2. Card-tap handler for `{type:"protocol"}` → `startProtocol(id)` → inject step-0 `prompt` as a Nila message +
-   a "Next"/"Not now" affordance.
-3. "Next" → `advanceProtocol()` → inject next step (or a warm completion on `{done}`); "Not now" → `abandonProtocol()`.
-4. Persisted progress means a program resumes on reopen (pairs with the chat-persistence work already shipped).
-5. Device-verify end-to-end once the 2.5 GB model is re-downloaded.
+**Phase-1 wire — DONE + DEVICE-VERIFIED** (ZD2232FCR5, Jul 5; `a98b4af`, `aab03f2`). `AiCoachScreen` surfaces + runs
+the programs end to end:
+- Offer / continue card appended to `lastReplyCards`, **suppressed on a §9 crisis turn**. Deterministic, so it
+  appeared even while the model's cold first reply was still loading.
+- Tap → `startProtocol` / `advanceProtocol`; each VETTED step prompt injected as a Nila message + spoken (no model →
+  no hallucination). Completion → Nila's warm close + the encrypted progress self-clears.
+- Step prompts are ordinary assistant messages, so the existing `sessionChat` persistence carries a half-finished
+  program across a full app kill — **verified: force-stop mid-program → reopen → transcript restored AND program
+  resumed at the exact step (2 of 5)**. This is the between-sessions presence, live.
+- Fixed + verified: no immediate re-offer of a just-completed program on its own completion turn (self-lifts on the
+  next user message; a fresh session can still re-offer).
 
 **Then:** the async **between-sessions brain** (overnight reflection + memory update) — the other half of Phase 1.
 
 ## Open items / pending (the "before we go ahead" checklist)
 
-- **Device-verify auto-resume** — needs the phone's 2.5 GB model **re-downloaded** first (it got evicted by Android
-  storage cleanup); then one clean run (send → home → wait → reopen → Nila auto-answers).
+- **Auto-resume** — transcript + protocol-progress persistence across a full app kill is now **device-verified**
+  (model re-downloaded; force-stop mid-program → reopen → both the chat and the program's step restored). Still to
+  confirm: the mid-*generation* auto-answer (leave while Nila is still generating → reopen → she finishes the
+  pending reply) — every test run here let the reply land before force-stopping.
 - **V3 small model** — provide HF token + accept Llama-3.2 license (or fall back to Phi-3.5-mini), run the pod.
 - **Housekeeping** — rotate the leaked keys (HF write-token, NVIDIA); back up `android/nilamind-release.jks` OFF the laptop.
 - **First build step when we proceed:** Phase 0 (the anti-sycophancy/reality-testing guard) → then Phase 1.
