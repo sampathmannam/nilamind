@@ -7,7 +7,18 @@
 import { cardsForCheckin, type NilaCard } from "./nilaOrchestration";
 import { findSkillInText } from "./skillsLibrary";
 import { bestSkill } from "./skillRetrieval";
+import { protocolOffer } from "./protocolProgress";
 import { CheckInEntry } from "../types";
+
+/**
+ * A gentle "start a structured program" offer card, shown when the person's message matches an evidence-based
+ * protocol AND none is already active (Phase 1). Kept SEPARATE from cardsForReply — which stays pure — because
+ * it reads the active-protocol state. The CALLER must suppress it on a §9/crisis turn and rate-limit offers.
+ */
+export function protocolCard(userText: string): NilaCard | null {
+  const p = protocolOffer(userText);
+  return p ? { kind: "protocol", protocolId: p.id, label: `Try ${p.title} with me` } : null;
+}
 
 /** A skill card for the skill Nila named in a reply, or null when none was named. */
 export function skillCardFromReply(replyText: string): NilaCard | null {

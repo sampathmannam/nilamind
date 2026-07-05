@@ -1,6 +1,17 @@
 import { describe, it, expect } from "vitest";
-import { skillCardFromReply, skillCardFromMessage, cardsForReply } from "./nilaCards";
+import { skillCardFromReply, skillCardFromMessage, cardsForReply, protocolCard } from "./nilaCards";
 import { CheckInEntry } from "../types";
+
+describe("protocolCard — offer a structured program when a concern matches (Phase 1)", () => {
+  it("offers the matched protocol on a concern message (nothing active)", () => {
+    const c = protocolCard("i can't stop worrying, my mind keeps racing with what-ifs");
+    expect(c?.kind).toBe("protocol");
+    expect(c?.protocolId).toBe("worry-postponement");
+  });
+  it("returns null on a benign message (never forces a program)", () => {
+    expect(protocolCard("thanks so much, that really helped")).toBeNull();
+  });
+});
 
 // The reframe: the app surfaces the right evidence-based tool DETERMINISTICALLY from the user's own words
 // (reliable regardless of what the small model generated), instead of depending on the model to name a skill.

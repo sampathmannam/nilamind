@@ -9,8 +9,9 @@ import { latestFor, daysSince } from "./assessments";
 import type { CheckInEntry } from "../types";
 
 export type NilaCard = {
-  kind: "grounding" | "episode" | "skill" | "screening";
+  kind: "grounding" | "episode" | "skill" | "screening" | "protocol";
   skillId?: string;
+  protocolId?: string; // for kind:"protocol" — the structured program this card offers to start
   instrument?: "PHQ-9" | "GAD-7";
   label: string;
 };

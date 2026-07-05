@@ -24,4 +24,12 @@ describe("actionForCard", () => {
   it("returns null for a screening card missing its instrument", () => {
     expect(actionForCard({ kind: "screening", label: "broken" } as NilaCard)).toBeNull();
   });
+  it("maps a protocol card to a startProtocol action", () => {
+    expect(
+      actionForCard({ kind: "protocol", protocolId: "behavioral-activation", label: "Try Behavioral Activation with me" }),
+    ).toEqual({ type: "protocol", protocolId: "behavioral-activation" });
+  });
+  it("returns null for a protocol card missing its protocolId", () => {
+    expect(actionForCard({ kind: "protocol", label: "broken" } as NilaCard)).toBeNull();
+  });
 });
