@@ -1,18 +1,20 @@
 <svg width="2560" height="800" viewBox="0 0 1280 400" xmlns="http://www.w3.org/2000/svg">
+  <!-- Colours match the app's warm-dark @theme (src/index.css): page #171311, warm-lavender accent
+       #AC8FC2 family, cream text #ECE5DA, soft-green #7FBFA0. Calm, low-saturation — NOT cold/bright. -->
   <defs>
     <radialGradient id="bgglow" cx="28%" cy="42%" r="62%">
-      <stop offset="0%" stop-color="#2a1a4a" stop-opacity="0.95"/>
-      <stop offset="55%" stop-color="#14101f" stop-opacity="0.45"/>
-      <stop offset="100%" stop-color="#0b0b12" stop-opacity="0"/>
+      <stop offset="0%" stop-color="#2D2240" stop-opacity="0.85"/>
+      <stop offset="55%" stop-color="#1c1720" stop-opacity="0.40"/>
+      <stop offset="100%" stop-color="#171311" stop-opacity="0"/>
     </radialGradient>
     <radialGradient id="orb" cx="36%" cy="30%" r="78%">
-      <stop offset="0%" stop-color="#f5d0fe"/>
-      <stop offset="52%" stop-color="#a855f7"/>
-      <stop offset="100%" stop-color="#5b21b6"/>
+      <stop offset="0%" stop-color="#E2D6EC"/>
+      <stop offset="52%" stop-color="#AC8FC2"/>
+      <stop offset="100%" stop-color="#6E5589"/>
     </radialGradient>
     <linearGradient id="wordmark" x1="0" y1="0" x2="0.3" y2="1">
-      <stop offset="0%" stop-color="#ffffff"/>
-      <stop offset="100%" stop-color="#e9d5ff"/>
+      <stop offset="0%" stop-color="#ECE5DA"/>
+      <stop offset="100%" stop-color="#E2D6EC"/>
     </linearGradient>
     <filter id="soft" x="-70%" y="-70%" width="240%" height="240%">
       <feGaussianBlur stdDeviation="30"/>
@@ -20,11 +22,11 @@
   </defs>
 
   <!-- backdrop -->
-  <rect width="1280" height="400" fill="#0b0b12"/>
+  <rect width="1280" height="400" fill="#171311"/>
   <rect width="1280" height="400" fill="url(#bgglow)"/>
 
   <!-- faint stars -->
-  <g fill="#a855f7">
+  <g fill="#AC8FC2">
     <circle cx="915" cy="70" r="1.6" opacity="0.5"/>
     <circle cx="1030" cy="130" r="1.2" opacity="0.35"/>
     <circle cx="1150" cy="90" r="1.8" opacity="0.4"/>
@@ -34,18 +36,18 @@
   </g>
 
   <!-- orb -->
-  <circle cx="245" cy="200" r="120" fill="#7c3aed" opacity="0.45" filter="url(#soft)"/>
-  <circle cx="245" cy="200" r="146" fill="none" stroke="#a855f7" stroke-opacity="0.16" stroke-width="2"/>
-  <circle cx="245" cy="200" r="176" fill="none" stroke="#a855f7" stroke-opacity="0.09" stroke-width="2"/>
+  <circle cx="245" cy="200" r="120" fill="#6E5589" opacity="0.45" filter="url(#soft)"/>
+  <circle cx="245" cy="200" r="146" fill="none" stroke="#AC8FC2" stroke-opacity="0.16" stroke-width="2"/>
+  <circle cx="245" cy="200" r="176" fill="none" stroke="#AC8FC2" stroke-opacity="0.09" stroke-width="2"/>
   <circle cx="245" cy="200" r="100" fill="url(#orb)"/>
-  <ellipse cx="214" cy="166" rx="33" ry="23" fill="#ffffff" opacity="0.26"/>
+  <ellipse cx="214" cy="166" rx="33" ry="23" fill="#FBF7FF" opacity="0.24"/>
 
   <!-- wordmark + copy -->
   <g font-family="Helvetica, Arial, sans-serif">
     <text x="430" y="182" font-size="84" font-weight="700" letter-spacing="-2.5" fill="url(#wordmark)">NilaMind</text>
-    <text x="434" y="232" font-size="27" font-weight="400" fill="#a7a7c0">Someone to talk to &#8212; that never leaves your phone.</text>
+    <text x="434" y="232" font-size="27" font-weight="400" fill="#A89D90">Someone to talk to &#8212; that never leaves your phone.</text>
     <text x="434" y="286" font-size="21" font-family="Helvetica, Arial, sans-serif">
-      <tspan fill="#34d399" font-weight="600">On-device AI</tspan><tspan fill="#8b7fb5">&#160;&#160;&#160;&#183;&#160;&#160;&#160;</tspan><tspan fill="#34d399" font-weight="600">No account</tspan><tspan fill="#8b7fb5">&#160;&#160;&#160;&#183;&#160;&#160;&#160;</tspan><tspan fill="#34d399" font-weight="600">Nothing leaves your phone</tspan>
+      <tspan fill="#7FBFA0" font-weight="600">On-device AI</tspan><tspan fill="#8F8678">&#160;&#160;&#160;&#183;&#160;&#160;&#160;</tspan><tspan fill="#7FBFA0" font-weight="600">No account</tspan><tspan fill="#8F8678">&#160;&#160;&#160;&#183;&#160;&#160;&#160;</tspan><tspan fill="#7FBFA0" font-weight="600">Nothing leaves your phone</tspan>
     </text>
   </g>
 </svg>
