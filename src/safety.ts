@@ -71,6 +71,11 @@ export const EUPHEMISM_PREP_CUES = [
   "said my goodbyes", "say my goodbyes", "saying my goodbyes", "said goodbye to everyone",
   "given away my", "giving away my", "gave away my",
   "written my will", "wrote my will", "updated my will",
+  // "settling final affairs" additions (2026-07-05 veiled-ideation probe): farewell letters/notes and making
+  // "arrangements". Ambiguous ALONE (wedding arrangements, a job goodbye letter), so — like the rest of this
+  // list — they only fire when an acceptance- OR finality-cue co-occurs.
+  "made all the arrangements", "made the arrangements", "made my arrangements", "final arrangements",
+  "goodbye letter", "goodbye letters", "goodbye note", "wrote letters to everyone", "written my note", "wrote my note",
 ];
 
 export const EUPHEMISM_ACCEPTANCE_CUES = [
@@ -79,6 +84,17 @@ export const EUPHEMISM_ACCEPTANCE_CUES = [
   "finally at peace", "finally feel at peace", "feel at peace with it",
   "ready to go now", "ready for it to be over", "ready for it all to be over",
   "it will all be over soon", "no more pain soon",
+];
+
+// Explicit FINALITY markers — "I am leaving / won't be here" phrasing (2026-07-05 veiled-ideation probe). TIGHT
+// on purpose: each stays high-precision even paired with a mundane prep cue, so bare farewell idioms ("last day
+// at the office", "gone this weekend") don't collide. Like the acceptance cues, these fire ONLY with a prep cue;
+// a finality marker alone ("this is my last message before I board the flight") must never trip.
+export const EUPHEMISM_FINALITY_CUES = [
+  "when i'm gone", "after i'm gone", "once i'm gone", "before i'm gone",
+  "won't be needing", "no longer need my", "won't be around much longer", "not be around much longer",
+  "this is my last message", "my last message to", "my final message to",
+  "won't have to worry about me anymore",
 ];
 
 // High-precision on their OWN — the model or user naming peace with death itself. Near-zero benign collision,
@@ -105,14 +121,17 @@ export const DISTORTION_AGREEMENTS = [
 /**
  * True if `normalized` (already lowercased, apostrophe- and whitespace-collapsed) is a pre-suicide euphemism:
  * either an unambiguous "peace with death" phrase, OR a "settling final affairs" cue CO-OCCURRING with an
- * "acceptance-of-an-ending" cue. The co-occurrence requirement is what keeps precision — "affairs in order
- * before vacation" (prep only) and "I'm at peace with it" about a lost game (acceptance only) both stay safe.
+ * "acceptance-of-an-ending" OR "finality" cue. The co-occurrence requirement is what keeps precision —
+ * "affairs in order before vacation" (prep only), "I'm at peace with it" about a lost game (acceptance only),
+ * and "this is my last message before the flight" (finality only) all stay safe.
  */
 function scanForEuphemism(normalized: string): boolean {
   if (EUPHEMISM_DEATH_PHRASES.some((p) => normalized.includes(p))) return true;
   const hasPrep = EUPHEMISM_PREP_CUES.some((p) => normalized.includes(p));
+  if (!hasPrep) return false;
   const hasAcceptance = EUPHEMISM_ACCEPTANCE_CUES.some((p) => normalized.includes(p));
-  return hasPrep && hasAcceptance;
+  const hasFinality = EUPHEMISM_FINALITY_CUES.some((p) => normalized.includes(p));
+  return hasAcceptance || hasFinality;
 }
 
 /**
