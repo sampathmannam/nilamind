@@ -1,5 +1,6 @@
-import { describe, it, expect } from "vitest";
-import { skillCardFromReply, skillCardFromMessage, cardsForReply, protocolCard } from "./nilaCards";
+import { describe, it, expect, afterEach } from "vitest";
+import { skillCardFromReply, skillCardFromMessage, cardsForReply, protocolCard, protocolResumeCard } from "./nilaCards";
+import { startProtocol, abandonProtocol } from "./protocolProgress";
 import { CheckInEntry } from "../types";
 
 describe("protocolCard — offer a structured program when a concern matches (Phase 1)", () => {
@@ -10,6 +11,22 @@ describe("protocolCard — offer a structured program when a concern matches (Ph
   });
   it("returns null on a benign message (never forces a program)", () => {
     expect(protocolCard("thanks so much, that really helped")).toBeNull();
+  });
+});
+
+describe("protocolResumeCard — 'continue where you left off' when a program is active", () => {
+  afterEach(() => abandonProtocol()); // keep the shared module state clean for other tests
+  it("returns null when nothing is active", () => {
+    abandonProtocol();
+    expect(protocolResumeCard()).toBeNull();
+  });
+  it("returns a 'continue' card for the active program's current step", () => {
+    startProtocol("behavioral-activation");
+    const c = protocolResumeCard();
+    expect(c?.kind).toBe("protocol");
+    expect(c?.protocolId).toBe("behavioral-activation");
+    expect(c?.label.toLowerCase()).toContain("continue");
+    expect(c?.label).toContain("step 1 of 5");
   });
 });
 

@@ -7,7 +7,7 @@
 import { cardsForCheckin, type NilaCard } from "./nilaOrchestration";
 import { findSkillInText } from "./skillsLibrary";
 import { bestSkill } from "./skillRetrieval";
-import { protocolOffer } from "./protocolProgress";
+import { protocolOffer, getActiveProgress } from "./protocolProgress";
 import { CheckInEntry } from "../types";
 
 /**
@@ -18,6 +18,22 @@ import { CheckInEntry } from "../types";
 export function protocolCard(userText: string): NilaCard | null {
   const p = protocolOffer(userText);
   return p ? { kind: "protocol", protocolId: p.id, label: `Try ${p.title} with me` } : null;
+}
+
+/**
+ * A gentle "continue where you left off" card, shown on reopen when a structured program is mid-way — the
+ * between-sessions presence for protocols. Returns null when nothing is active. The card carries the same
+ * kind:"protocol"; the screen handler distinguishes resume from start by checking the active state at tap time
+ * (active → continue at the current step; none → start from step 0), so no separate action type is needed.
+ */
+export function protocolResumeCard(): NilaCard | null {
+  const active = getActiveProgress();
+  if (!active) return null;
+  return {
+    kind: "protocol",
+    protocolId: active.protocol.id,
+    label: `Continue ${active.protocol.title} — step ${active.stepIndex + 1} of ${active.total}`,
+  };
 }
 
 /** A skill card for the skill Nila named in a reply, or null when none was named. */
