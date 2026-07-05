@@ -1,6 +1,6 @@
 NilaMind is a calm, private space to talk through anxiety, low mood, and the hard days — with a companion called Nila that runs entirely on your phone.
 
-There is no account, no backend, and no analytics. Your conversations never leave the device: the AI model runs locally, and everything you write is stored only in encrypted on-device storage that you can view and delete at any time.
+There is no account, no backend, and no analytics. Everything you type stays on your device: the AI model runs locally, and what you write is stored only in encrypted on-device storage that you can view and delete at any time. (If you use voice, speech-to-text is handled by your phone's system speech service — often cloud-based — so typing is the fully-private path.)
 
 What's inside:
 

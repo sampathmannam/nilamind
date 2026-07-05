@@ -2,7 +2,7 @@
 
 **A privacy-first, fully on-device mental-health companion.**
 
-NilaMind is an Android app built around *Nila* — a companion you can talk to, by voice or text, for everyday emotional support. Everything runs **on your phone**: the language model that generates Nila's replies, the crisis-safety checks, speech-to-text, and text-to-speech. There is **no account, no backend, and no analytics**. Your conversations, check-ins, mood, and notes never leave the device.
+NilaMind is an Android app built around *Nila* — a companion you can talk to, by voice or text, for everyday emotional support. The **language model that generates Nila's replies, the crisis-safety checks, and all your data run on your phone**. There is **no account, no backend, and no analytics** — your text conversations, check-ins, mood, and notes never leave the device. *(One honest caveat: speech-to-text uses your device's built-in speech service — on Android, usually Google's — so when you **speak**, that audio may be processed by that service, like any dictation on your phone. Type instead and nothing leaves the device at all. Fully on-device voice transcription is on the roadmap.)*
 
 > ⚠️ **Read [Crisis Safety (§9)](Crisis-Safety.md) and the disclaimers below before using or forking.**
 > NilaMind is an **experimental self-help tool — not a medical device, not therapy, and not a crisis service.** If you may be in danger, contact local emergency services. If you fork it, **keep the crisis-safety layer intact.**

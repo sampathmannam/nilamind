@@ -1,6 +1,6 @@
 # Privacy & Data
 
-NilaMind's core commitment is simple: **it helps without harvesting.** Personal content never leaves the device. There is no account, no backend, and no analytics, and the AI needs no network to generate replies.
+NilaMind's core commitment is simple: **it helps without harvesting.** Everything you type, and everything the app stores, stays on the device — there is no account, no backend, and no analytics, and the AI needs no network to generate replies. **One exception:** if you use *voice*, speech-to-text is handled by your device's system speech service (on Android, often cloud-based), so spoken audio may be processed by that service before it reaches the app. Typing keeps everything fully on-device. (Making voice transcription on-device too is on the roadmap.)
 
 ## What's stored, and where
 

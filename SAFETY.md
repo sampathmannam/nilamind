@@ -68,8 +68,11 @@ harm, and is contrary to the spirit in which this project is shared.
 
 ## Privacy
 
-NilaMind is designed so that **personal content never leaves the device**: no
-account, no backend, no analytics. Chats, check-ins, mood, memories, and the
+NilaMind is designed so that **your text conversations and stored content never
+leave the device**: no account, no backend, no analytics. (**One exception:** voice
+input is transcribed by the device's system speech service — on Android, often
+cloud-based — so spoken audio may be processed by that service; typing avoids it
+entirely.) Chats, check-ins, mood, memories, and the
 "letter to my unwell self" are stored locally (encrypted at rest via the app's
 `secureLocal`). If you modify the app, **do not add data collection** — the
 project's core commitment is that it helps without harvesting.
