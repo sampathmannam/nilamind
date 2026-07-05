@@ -85,6 +85,11 @@ the programs end to end:
   resumed at the exact step (2 of 5)**. This is the between-sessions presence, live.
 - Fixed + verified: no immediate re-offer of a just-completed program on its own completion turn (self-lifts on the
   next user message; a fresh session can still re-offer).
+- **Program-aware free-text** (`a686356`): `buildNilaSystem` now injects `activeProtocolContextBlock()` — a
+  deterministic grounding block (program + current step + "meet them where they are, don't restart/race ahead")
+  so a mid-program message that *isn't* a card tap still gets a program-aware reply. Vetted from `getActiveProgress`
+  (no model → can't hallucinate the program's shape); "" when nothing is active. Wiring unit-verified (632 tests);
+  how well the 4B *weaves it in* is model-quality-dependent (the small-model caveat — see `NILA_SPEED_PLAN.md`).
 
 **Then:** the async **between-sessions brain** (overnight reflection + memory update) — the other half of Phase 1.
 
