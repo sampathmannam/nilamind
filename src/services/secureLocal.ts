@@ -55,6 +55,8 @@ export const SENSITIVE_KEYS = [
   "nilamind_feedback",
   // Consented donation queue — scrubbed reply+suggestion the person chose to contribute (encrypted at rest).
   "nilamind_donations",
+  // Active Nila conversation — persisted so the chat survives leaving the app (encrypted at rest, see sessionChat.ts).
+  "nilamind_session_chat",
 ];
 const MIGRATION_VERSION = 1;
 
