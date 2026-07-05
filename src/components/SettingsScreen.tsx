@@ -308,6 +308,25 @@ function VoiceSection() {
         </p>
       </div>
 
+      <div className="border border-slate-800 rounded-xl p-3 flex items-center justify-between bg-page" id="settings-ondevice-stt">
+        <div className="space-y-0.5 pr-3">
+          <div className="text-sm font-medium text-slate-200">On-device voice (private)</div>
+          <div className="text-[10px] text-slate-500 leading-relaxed">
+            Turn your speech into text right on the phone, so your voice never leaves it. Turn off to use your device's system voice typing — often more accurate, but it may send your audio to the cloud.
+          </div>
+        </div>
+        <button
+          onClick={() => update({ onDeviceStt: prefs.onDeviceStt === false })}
+          id="settings-ondevice-stt-toggle"
+          className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors ${prefs.onDeviceStt !== false ? "bg-blue-500" : "bg-slate-700"}`}
+          role="switch"
+          aria-checked={prefs.onDeviceStt !== false}
+          aria-label="On-device voice"
+        >
+          <span aria-hidden="true" className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200 ease-in-out ${prefs.onDeviceStt !== false ? "translate-x-2.5" : "-translate-x-2.5"}`} />
+        </button>
+      </div>
+
       {prefs.enabled && (
         <>
           {/* Voice picker — tap any voice to hear it and choose it */}

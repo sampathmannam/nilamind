@@ -9,6 +9,7 @@ import { Capacitor } from "@capacitor/core";
 import { TextToSpeech } from "@capacitor-community/text-to-speech";
 import { SpeechRecognition } from "@capacitor-community/speech-recognition";
 import { speakAfHeart, stopAfHeart, AF_HEART_ID } from "./afHeartVoice";
+import { voskListenOnce, voskListenForCall, stopVosk, voskSttAvailable } from "./voskStt";
 
 const VOICE_KEY = "nilamind_voice"; // non-sensitive UI pref → plain localStorage (sync, pre-gate safe)
 
@@ -16,8 +17,9 @@ export interface VoicePrefs {
   enabled: boolean; // auto-read Nila replies + show read-aloud controls
   rate: number; // 0.6–1.2; calm default 0.9
   voiceId?: string; // chosen device voice (voiceURI/name); undefined = the device default
+  onDeviceStt?: boolean; // transcribe speech ON-DEVICE (Vosk) so audio never leaves the phone; default true
 }
-const DEFAULTS: VoicePrefs = { enabled: false, rate: 0.9 };
+const DEFAULTS: VoicePrefs = { enabled: false, rate: 0.9, onDeviceStt: true };
 
 export interface TtsVoice {
   id: string;
@@ -202,8 +204,14 @@ export function createSpeechQueue() {
 }
 
 // ── Speech-to-text ──
+/** On-device (private) STT is the default; users can switch to the system recognizer in Settings. */
+export function isOnDeviceStt(): boolean {
+  return getVoicePrefs().onDeviceStt !== false;
+}
+
 export async function sttAvailable(): Promise<boolean> {
   if (Capacitor.isNativePlatform()) {
+    if (voskSttAvailable()) return true; // on-device Vosk is always bundled on the phone
     try { return !!(await SpeechRecognition.available()).available; } catch { return false; }
   }
   return typeof (window as any).webkitSpeechRecognition !== "undefined" || typeof (window as any).SpeechRecognition !== "undefined";
@@ -212,6 +220,16 @@ export async function sttAvailable(): Promise<boolean> {
 /** Listen once and resolve with the recognised text (or '' if nothing heard). Requests mic permission. */
 export async function listenOnce(): Promise<string> {
   if (Capacitor.isNativePlatform()) {
+    // Private path first: on-device Vosk — nothing spoken leaves the phone. Falls back to the system
+    // recognizer only if the user turned it off or Vosk fails to load (never on a plain mic denial).
+    if (isOnDeviceStt() && voskSttAvailable()) {
+      try {
+        return await voskListenOnce();
+      } catch (e) {
+        if (/permission/i.test(String((e as Error)?.message))) throw e;
+        console.warn("[stt] on-device unavailable, using system recognizer:", e);
+      }
+    }
     const perm = await SpeechRecognition.checkPermissions();
     if (perm.speechRecognition !== "granted") {
       const req = await SpeechRecognition.requestPermissions();
@@ -243,6 +261,7 @@ let activeWebRec: any = null;
 /** Stop any in-progress recognition (native or web). Safe to call when nothing is listening. */
 export async function stopListening(): Promise<void> {
   if (Capacitor.isNativePlatform()) {
+    await stopVosk(); // end any on-device capture (barge-in / end call)
     try { await SpeechRecognition.stop(); } catch { /* ignore */ }
   } else if (activeWebRec) {
     try { activeWebRec.abort(); } catch { /* ignore */ }
@@ -254,6 +273,14 @@ export async function stopListening(): Promise<void> {
  *  never rejects, so the hands-free loop is robust. Cancel via stopListening(). */
 export async function listenForCall(): Promise<string> {
   if (Capacitor.isNativePlatform()) {
+    // Private path first: on-device Vosk. Any failure falls through to the system recognizer.
+    if (isOnDeviceStt() && voskSttAvailable()) {
+      try {
+        return await voskListenForCall();
+      } catch (e) {
+        console.warn("[stt] on-device call listen failed, using system recognizer:", e);
+      }
+    }
     try {
       const perm = await SpeechRecognition.checkPermissions();
       if (perm.speechRecognition !== "granted") {
