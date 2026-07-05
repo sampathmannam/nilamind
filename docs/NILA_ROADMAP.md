@@ -92,6 +92,12 @@ the programs end to end:
   so a mid-program message that *isn't* a card tap still gets a program-aware reply. Vetted from `getActiveProgress`
   (no model → can't hallucinate the program's shape); "" when nothing is active. Wiring unit-verified (632 tests);
   how well the 4B *weaves it in* is model-quality-dependent (the small-model caveat — see `NILA_SPEED_PLAN.md`).
+- **Instant help while the model cold-loads** (`4f32ed8`, DEVICE-VERIFIED): while the first reply is loading (the
+  multi-minute 2.5 GB page-fault), the chat surfaces `waitingCards(lastUserMsg)` — the skill + structured program
+  matched from the person's OWN words — as tappable cards that work with no model. §9-gated. Verified on device:
+  during "Nila is thinking…", STOP + "Try Worry Postponement with me" appeared instantly and tapping the offer
+  injected step wp-1 mid-load. Softens the felt impact of the cold-start (real fix is still V3) and makes the
+  "tools always work" promise actionable at the exact moment it matters.
 
 **Then:** the async **between-sessions brain** (overnight reflection + memory update) — the other half of Phase 1.
 
