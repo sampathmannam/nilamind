@@ -123,6 +123,10 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
   // Live handle on crisis state for the unmount cleanup (which captures its closure once).
   const crisisRef = useRef(isCrisisState);
   crisisRef.current = isCrisisState;
+  // A program we JUST finished, tagged with the user message in play at the time — so we don't immediately
+  // re-offer the very same program on its own completion turn (it self-lifts once the user says something new,
+  // i.e. lastUserMsg changes). No extra state: the completion injects a message, which recomputes the card memo.
+  const justCompletedRef = useRef<{ id: string; userMsg: string } | null>(null);
 
   // In-chat cards apply ONLY to the latest assistant turn, so compute them once and memoize on that
   // turn's content instead of re-running cardsForReply on every render (feedback taps, opener state, etc).
@@ -141,8 +145,15 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
       if (isCrisisState) return base;
       // Mid-program → a "continue / next step" card; otherwise a gentle offer when the concern matches a module.
       const active = getActiveProgress();
-      const pCard = active ? protocolResumeCard() : protocolCard(lastUserMsg);
-      return pCard ? [...base, pCard] : base;
+      if (active) {
+        const resume = protocolResumeCard();
+        return resume ? [...base, resume] : base;
+      }
+      const offer = protocolCard(lastUserMsg);
+      // Don't re-offer the program we just finished on its own completion turn (same message still in play).
+      const jc = justCompletedRef.current;
+      if (offer && jc && jc.id === offer.protocolId && jc.userMsg === lastUserMsg) return base;
+      return offer ? [...base, offer] : base;
     },
     [lastMessage?.role, lastMessage?.content, lastUserMsg, isCrisisState],
   );
@@ -479,6 +490,7 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
     if (isCrisisState) return;
     const active = getActiveProgress();
     if (!active) {
+      justCompletedRef.current = null; // starting fresh — clear any just-completed suppression
       const started = startProtocol(protocolId);
       if (started) deliverProtocolStep(started.step.prompt);
       return;
@@ -486,6 +498,7 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
     const r = advanceProtocol();
     if (!r) return;
     if ("done" in r) {
+      justCompletedRef.current = { id: r.protocol.id, userMsg: lastUserMsg }; // suppress an immediate re-offer
       deliverProtocolStep(
         `That's the whole ${r.protocol.title} program — you actually went through it, and that counts. What we ` +
           `practised is yours to keep; we can pick it up again, or try something else, whenever you like.`,
