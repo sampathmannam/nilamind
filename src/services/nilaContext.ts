@@ -13,6 +13,7 @@
 import { secureLocal } from "./secureLocal";
 import { computeCompassionateStreak } from "./streaks";
 import { recentMemoryLines } from "./nilaMemory";
+import { getActiveProgress } from "./protocolProgress";
 import { insightsContextBlock } from "./nilaInsights";
 import { profileContextBlock } from "./nilaProfile";
 import { INSTRUMENTS } from "./assessments";
@@ -173,6 +174,27 @@ export function buildPersonalContext(): string {
     out.push(...lines);
   }
   return out.join("\n");
+}
+
+/**
+ * Grounding for a structured program the person is PARTWAY through (see protocols.ts / protocolProgress.ts), so a
+ * free-text message mid-program gets a program-aware reply — not a generic one — even when they don't tap the
+ * "Continue" card. Deterministic + vetted (reads getActiveProgress): Nila is told which program, which step, and
+ * to meet them where they are without restarting or racing ahead. Empty when nothing is active. Safety is
+ * unchanged — §9 and the output gates wrap every turn regardless of this context.
+ */
+export function activeProtocolContextBlock(): string {
+  const active = getActiveProgress();
+  if (!active) return "";
+  const { protocol, step, stepIndex, total } = active;
+  return [
+    "A PROGRAM YOU'RE PARTWAY THROUGH TOGETHER",
+    `They're working through "${protocol.title}" with you — a structured, evidence-based program ` +
+      `(step ${stepIndex + 1} of ${total}). This step is about: ${step.title}.`,
+    "If they bring it up or seem ready, gently help them with THIS step, where they are — don't restart the " +
+      "program from the beginning, and don't race ahead to later steps. If they'd rather talk about something " +
+      'else, follow them there; the program will keep. (They can also tap "Continue" to step through it with you.)',
+  ].join("\n");
 }
 
 /**

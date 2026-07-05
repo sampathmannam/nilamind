@@ -15,7 +15,7 @@
 import { crisisLinesInline } from "./crisisResources";
 import { skillsPromptBlock } from "./skillsLibrary";
 import { relevantSkillsBlock } from "./skillRetrieval";
-import { buildPersonalContext } from "./nilaContext";
+import { buildPersonalContext, activeProtocolContextBlock } from "./nilaContext";
 
 export interface NilaMessage {
   role: "user" | "assistant";
@@ -94,11 +94,14 @@ export function buildNilaSystem(query?: string): string {
   const base = USE_SHORT_PERSONA ? NILA_SYSTEM_PROMPT_SHORT : NILA_SYSTEM_PROMPT;
   const persona = base.replace("[REGION_CRISIS_LINES]", crisisLinesInline());
   const context = buildPersonalContext();
+  // A structured program the person is partway through — grounds a free-text mid-program turn so Nila answers
+  // with the program in mind, not generically (deterministic; "" when nothing is active). See nilaContext.ts.
+  const activeProtocol = activeProtocolContextBlock();
   const relevant = query ? relevantSkillsBlock(query) : "";
   // Top-3 RAG block when we have a usable query with matches; otherwise the full library as the default.
   // (A query that ranks nothing → relevant is "" → fall back to the full list so Nila still has skills.)
   const skills = relevant || skillsPromptBlock();
-  return [persona, context, skills].filter(Boolean).join("\n\n");
+  return [persona, context, activeProtocol, skills].filter(Boolean).join("\n\n");
 }
 
 /** A first message that sounds like a friend opening the door — not a clinical intake. */
