@@ -79,3 +79,19 @@ describe("protocolProgress — encrypted persistence across app restart", () => 
     expect(m.getActiveProgress()).toBeNull();
   });
 });
+
+describe("protocolOffer — offer only when nothing active + a concern matches", () => {
+  it("offers a matched protocol when nothing is active", async () => {
+    const m = await load();
+    expect(m.protocolOffer("i can't stop worrying about everything")?.id).toBe("worry-postponement");
+  });
+  it("does NOT offer while a program is active (never interrupt one with another)", async () => {
+    const m = await load();
+    m.startProtocol("behavioral-activation");
+    expect(m.protocolOffer("i can't stop worrying")).toBeNull();
+  });
+  it("does NOT offer on a benign message", async () => {
+    const m = await load();
+    expect(m.protocolOffer("thanks, that really helped")).toBeNull();
+  });
+});

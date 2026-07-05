@@ -3,7 +3,7 @@
 // encrypted at rest via secureLocal (key registered in SENSITIVE_KEYS), exactly like the diary / session chat.
 // Deliberately tiny: just {which protocol, which step}. Nila reads this to continue where the person left off.
 import { secureLocal } from "./secureLocal";
-import { getProtocol, type Protocol, type ProtocolStep } from "./protocols";
+import { getProtocol, routeToProtocol, type Protocol, type ProtocolStep } from "./protocols";
 
 const KEY = "nilamind_protocol_progress";
 
@@ -94,4 +94,15 @@ export function advanceProtocol(): ActiveStep | { done: true; protocol: Protocol
 export function abandonProtocol(): void {
   active = null;
   persist();
+}
+
+/**
+ * Should Nila OFFER a structured protocol on this turn? Returns the matched protocol, or null. Offers ONLY when
+ * nothing is already active (never interrupt an in-progress program) AND the concern matches a module (never
+ * force a protocol onto a benign message — the research says only *matched* routing helps). The caller must
+ * still gate on §9/crisis (never offer during a crisis turn) and on offer frequency (don't re-offer every turn).
+ */
+export function protocolOffer(userMessage: string): Protocol | null {
+  if (getActiveProgress()) return null;
+  return routeToProtocol(userMessage);
 }
