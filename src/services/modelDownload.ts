@@ -251,52 +251,80 @@ export async function findInstalledModel(): Promise<CatalogModel | null> {
   return null;
 }
 
-/** Stream-download a model to a temp path, verify it, then atomically move it into place. */
+/** Verify a fully-downloaded `.part` (exact size, GGUF magic, and SHA-256 if the catalog carries one),
+ *  then atomically rename it into place as the real model. Throws (leaving the caller to clean up the
+ *  partial) if any check fails. Shared by the normal download path AND the recovery path in downloadModel.
+ *
+ *  This step is the slow one: verifySha256 streams the whole 2.5 GB back over the bridge in bounded chunks
+ *  and hashes it in JS, taking minutes. If the app is killed/backgrounded mid-verify the rename never runs
+ *  and the complete `.part` is left on disk — which downloadModel now RECOVERS instead of re-downloading. */
+async function finalizePart(model: CatalogModel, part: string): Promise<void> {
+  if (!(await isComplete(model, part))) {
+    throw new Error("Downloaded file is incomplete (size mismatch).");
+  }
+  if (!(await hasValidHeader(model, part))) {
+    throw new Error("Downloaded file is not a valid model.");
+  }
+  // Cryptographic integrity: if the catalog carries a real SHA-256, verify the .part against it before it
+  // can become the brain (defends a same-size poisoned GGUF). No-op while the digest is the placeholder.
+  // Reads the 2.5 GB file in bounded chunks — never all at once (WebView OOM).
+  await verifySha256(model, part);
+  await tryDelete(model.filename); // remove any old/partial final, then move the verified file into place
+  await Filesystem.rename({ from: part, to: model.filename, directory: Directory.External });
+}
+
+/** Stream-download a model to a temp path, verify it, then atomically move it into place.
+ *
+ *  RECOVERY: finalizePart (verify + rename) takes minutes on a 2.5 GB file, and if the app is killed or
+ *  backgrounded in that window the transfer finishes but the rename never runs — leaving a COMPLETE `.part`
+ *  behind. Re-downloading 2.5 GB in that case is wasteful and, on a flaky/throttled link, may never
+ *  succeed (it can loop forever). So a complete `.part` is finalized in place with NO re-transfer; only a
+ *  genuinely half-finished partial is cleared before a fresh download. */
 export async function downloadModel(
   model: CatalogModel,
   onProgress?: (p: DownloadProgress) => void,
 ): Promise<void> {
   const part = `${model.filename}.part`;
-  await tryDelete(part); // clear any stale partial from a previous failed attempt
+  const pre = await sizeState(model, part);
+
+  // A CONFIRMED wrong-size partial is a stale/half-finished attempt → clear it so the transfer restarts
+  // clean. "complete" is recovered below (not re-downloaded). "unknown" (no `.part` — the normal first-run
+  // case) falls through to a fresh download.
+  if (pre === "mismatch") await tryDelete(part);
 
   let sub: { remove: () => Promise<void> } | null = null;
-  if (onProgress) {
-    const total = model.sizeBytes; // catalog size: the native `contentLength` overflows Int for >2.1GB
-    sub = await Filesystem.addListener("progress", (e) => {
-      // NOTE: do NOT filter on `e.url === model.url`. The HuggingFace `resolve/main` URL 302-redirects to
-      // a CDN host, so the progress events carry the (different) CDN URL and an exact match suppressed
-      // EVERY event → a frozen 0% bar for the whole multi-GB download. Only one download runs at a time
-      // (downloadModel is not re-entrant and the setup UI gates it), so there's nothing to disambiguate.
-      // Native emits `bytes` as a 32-bit Int; for a >2.1GB file it wraps negative — recover unsigned.
-      let received = e.bytes;
-      if (received < 0) received += 0x100000000;
-      onProgress({
-        receivedMB: received / 1e6,
-        totalMB: total / 1e6,
-        pct: total ? Math.min(100, Math.max(0, (received / total) * 100)) : 0,
-      });
-    });
-  }
-
   try {
-    await Filesystem.downloadFile({
-      url: model.url,
-      path: part,
-      directory: Directory.External,
-      progress: true,
-    });
-    if (!(await isComplete(model, part))) {
-      throw new Error("Downloaded file is incomplete (size mismatch).");
+    if (pre === "complete") {
+      // The bytes are already on disk from a prior (interrupted) attempt — skip the multi-GB transfer and
+      // go straight to verify + install. Report 100% so the UI doesn't sit at a stale percentage.
+      onProgress?.({ receivedMB: model.sizeBytes / 1e6, totalMB: model.sizeBytes / 1e6, pct: 100 });
+    } else {
+      if (onProgress) {
+        const total = model.sizeBytes; // catalog size: the native `contentLength` overflows Int for >2.1GB
+        sub = await Filesystem.addListener("progress", (e) => {
+          // NOTE: do NOT filter on `e.url === model.url`. The HuggingFace `resolve/main` URL 302-redirects
+          // to a CDN host, so the progress events carry the (different) CDN URL and an exact match
+          // suppressed EVERY event → a frozen 0% bar for the whole multi-GB download. Only one download
+          // runs at a time (downloadModel is not re-entrant and the setup UI gates it), so there's nothing
+          // to disambiguate. Native emits `bytes` as a 32-bit Int; for a >2.1GB file it wraps negative —
+          // recover unsigned.
+          let received = e.bytes;
+          if (received < 0) received += 0x100000000;
+          onProgress({
+            receivedMB: received / 1e6,
+            totalMB: total / 1e6,
+            pct: total ? Math.min(100, Math.max(0, (received / total) * 100)) : 0,
+          });
+        });
+      }
+      await Filesystem.downloadFile({
+        url: model.url,
+        path: part,
+        directory: Directory.External,
+        progress: true,
+      });
     }
-    if (!(await hasValidHeader(model, part))) {
-      throw new Error("Downloaded file is not a valid model.");
-    }
-    // Cryptographic integrity: if the catalog carries a real SHA-256, verify the .part against it before
-    // it can become the brain (defends a same-size poisoned GGUF). No-op while the digest is the
-    // placeholder. Reads the 2.5 GB file in bounded chunks — never all at once (WebView OOM).
-    await verifySha256(model, part);
-    await tryDelete(model.filename); // remove any old/partial final, then move the verified file into place
-    await Filesystem.rename({ from: part, to: model.filename, directory: Directory.External });
+    await finalizePart(model, part);
   } catch (e) {
     await tryDelete(part); // never leave a partial at a path findInstalledModel might later trust
     throw e;
