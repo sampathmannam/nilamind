@@ -259,6 +259,78 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
   const speakReply = (t: string) => { if (voiceMode) void speak(t); else void speakIfEnabled(t); };
   const [typingMode, setTypingMode] = useState<boolean>(false); // voice-first: typing is opt-in
 
+  // The on-device generation core: takes a transcript ENDING IN a user turn, runs the crisis-gated send,
+  // and appends Nila's reply (streaming, offline-aware, §9 crisis short-circuit). Shared by handleSendMessage
+  // (a fresh send) and the auto-resume effect (an unanswered turn restored after the app was left mid-reply).
+  // §9 lives INSIDE sendToNila (crisis scan before the model + output-safety gate), so this single path never
+  // duplicates safety logic. Callers own the sendingRef guard and the setLoading(false) in their finally.
+  const runGeneration = async (transcript: Message[]) => {
+    setLoading(true);
+    let started = false;
+    let streamed = "";
+    const result = await sendToNila(transcript, mode, {
+      onDelta: (t) => {
+        if (!mountedRef.current) return; // don't paint a stream into an unmounted tree
+        streamed += t;
+        if (!started) {
+          started = true;
+          setLoading(false);
+          setMessages((prev) => [...prev, { role: "assistant", content: streamed }]);
+        } else {
+          setMessages((prev) => {
+            const copy = prev.slice();
+            copy[copy.length - 1] = { role: "assistant", content: streamed };
+            return copy;
+          });
+        }
+      },
+    });
+
+    if (!mountedRef.current) return; // user left during the (possibly minutes-long) cold reply
+
+    // Crisis short-circuit — text never left the device; show the deterministic crisis reply.
+    if (result.blocked) {
+      setIsCrisisState(true);
+      setShowOfflineNav(false);
+      setMessages((prev) => [...prev, { role: "assistant", content: result.reply }]);
+      return;
+    }
+
+    let coachReply = "";
+    if (result.reachedAI) {
+      coachReply = result.reply || streamed || "Okay — done.";
+      setActiveTier("OnDevice");
+      setShowOfflineNav(false);
+    } else {
+      setActiveTier("Offline mode");
+      setShowOfflineNav(true); // drives the inline grounding/breathing/safety-plan nav (real flag, not copy)
+      coachReply = "Nila's on-device model isn't ready yet — it may still be loading. Your safety and grounding tools are pre-loaded and always work. Tap below to navigate:";
+    }
+
+    setMessages((prev) => {
+      const copy = prev.slice();
+      if (started && copy.length && copy[copy.length - 1].role === "assistant") {
+        copy[copy.length - 1] = { role: "assistant", content: coachReply };
+        return copy;
+      }
+      return [...copy, { role: "assistant", content: coachReply }];
+    });
+    speakReply(coachReply);
+
+    // passive→active: if the reply landed while the app was BACKGROUNDED (the person sent, then left without
+    // waiting), ping them to come back. Content-free + only when notifications are already enabled. Only for a
+    // real on-device reply — crisis returned above, offline is reachedAI:false.
+    if (result.reachedAI && typeof document !== "undefined" && document.hidden) void notifyReplyReady();
+
+    if (result.reachedAI && result.openSkillId && onOpenSkill) {
+      const id = result.openSkillId;
+      setTimeout(() => onOpenSkill(id), 700);
+    } else if (result.reachedAI && result.navigate && onAgentNavigate) {
+      const view = result.navigate;
+      setTimeout(() => onAgentNavigate(view), 700);
+    }
+  };
+
   const handleSendMessage = async (e?: React.FormEvent, override?: string) => {
     if (e) e.preventDefault();
     // Synchronous re-entrancy guard: blocks a double-tap or a voice-send fired while a prior send is still
@@ -316,73 +388,9 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
         }
       }
 
-      setLoading(true);
-
-      // 2. Unified, crisis-gated send. sendToNila scans for crisis BEFORE any network call (both modes),
-      //    strips synthetic turns, runs the output-safety gate, and streams via onDelta.
-      let started = false;
-      let streamed = "";
-      const result = await sendToNila(newMessages, mode, {
-        onDelta: (t) => {
-          if (!mountedRef.current) return; // don't paint a stream into an unmounted tree
-          streamed += t;
-          if (!started) {
-            started = true;
-            setLoading(false);
-            setMessages((prev) => [...prev, { role: "assistant", content: streamed }]);
-          } else {
-            setMessages((prev) => {
-              const copy = prev.slice();
-              copy[copy.length - 1] = { role: "assistant", content: streamed };
-              return copy;
-            });
-          }
-        },
-      });
-
-      if (!mountedRef.current) return; // user left during the (possibly minutes-long) cold reply
-
-      // Crisis short-circuit — text never left the device; show the deterministic crisis reply.
-      if (result.blocked) {
-        setIsCrisisState(true);
-        setShowOfflineNav(false);
-        setMessages((prev) => [...prev, { role: "assistant", content: result.reply }]);
-        return;
-      }
-
-      let coachReply = "";
-      if (result.reachedAI) {
-        coachReply = result.reply || streamed || "Okay — done.";
-        setActiveTier("OnDevice");
-        setShowOfflineNav(false);
-      } else {
-        setActiveTier("Offline mode");
-        setShowOfflineNav(true); // drives the inline grounding/breathing/safety-plan nav (real flag, not copy)
-        coachReply = "Nila's on-device model isn't ready yet — it may still be loading. Your safety and grounding tools are pre-loaded and always work. Tap below to navigate:";
-      }
-
-      setMessages((prev) => {
-        const copy = prev.slice();
-        if (started && copy.length && copy[copy.length - 1].role === "assistant") {
-          copy[copy.length - 1] = { role: "assistant", content: coachReply };
-          return copy;
-        }
-        return [...copy, { role: "assistant", content: coachReply }];
-      });
-      speakReply(coachReply);
-
-      // passive→active: if the reply landed while the app was BACKGROUNDED (the person sent, then left
-      // without waiting), ping them so they know to come back. Content-free + only when notifications are
-      // already enabled. Only for a real on-device reply — crisis returned above, offline is reachedAI:false.
-      if (result.reachedAI && typeof document !== "undefined" && document.hidden) void notifyReplyReady();
-
-      if (result.reachedAI && result.openSkillId && onOpenSkill) {
-        const id = result.openSkillId;
-        setTimeout(() => onOpenSkill(id), 700);
-      } else if (result.reachedAI && result.navigate && onAgentNavigate) {
-        const view = result.navigate;
-        setTimeout(() => onAgentNavigate(view), 700);
-      }
+      // Generate + append Nila's reply. Shared with the auto-resume effect (below) so the §9-gated send,
+      // streaming, crisis short-circuit and offline handling live in ONE place — never duplicated.
+      await runGeneration(newMessages);
     } finally {
       // ALWAYS runs — a throw anywhere above (agent, send, gate) can no longer leave the UI stuck
       // "thinking" forever or the send guard latched.
@@ -390,6 +398,31 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
       sendingRef.current = false;
     }
   };
+
+  // Auto-resume (passive→active): if the RESTORED conversation ends with a user turn that never got a reply
+  // — the app was left mid-generation, which pauses the on-device model so the reply never finished in the
+  // background — pick it up on reopen and answer it, so the session continues instead of leaving the person
+  // hanging on their own last message. Runs ONCE on mount, guarded so it can't double-fire or run over a
+  // crisis/loading state. Safe: §9 is enforced inside runGeneration→sendToNila, and a persisted transcript
+  // can't end in a crisis turn (§9 clears the session store on crisis).
+  useEffect(() => {
+    if (!restored.current || isCrisisState) return;
+    const t = messagesRef.current;
+    const last = t[t.length - 1];
+    if (!last || last.role !== "user" || loading || sendingRef.current) return;
+    sendingRef.current = true;
+    void (async () => {
+      try {
+        await runGeneration(t);
+      } catch (err) {
+        console.warn("Nila auto-resume error:", err);
+      } finally {
+        if (mountedRef.current) setLoading(false);
+        sendingRef.current = false;
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Voice input: listen once and drop the transcript into the input box.
   const handleMic = async () => {
