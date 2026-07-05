@@ -1,43 +1,63 @@
 import { secureLocal, onPersistError, isPassthrough } from "./services/secureLocal";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { Sparkles, Wrench, User, ChevronLeft } from "lucide-react";
 import { App as CapApp } from "@capacitor/app";
 
+// EAGER (welded into the boot bundle) — every screen on the first-paint or crisis path. These must render
+// synchronously with NO chunk fetch: the default Nila tab, the two hubs you reach in one tap, the voice
+// call, and — critically for §9 — the crisis overlay and the Plan tab it routes to (grounding + safety
+// plan). A distressed person tapping "grounding" must never wait on (or hit a failed) lazy chunk load.
 import CrisisOverlay from "./components/CrisisOverlay";
 import CallNilaScreen from "./components/CallNilaScreen";
 import SafetyPlanScreen from "./components/SafetyPlanScreen";
 import GroundingLibraryScreen from "./components/GroundingLibraryScreen";
-import CheckInScreen from "./components/CheckInScreen";
-import DiaryCardScreen from "./components/DiaryCardScreen";
 import AiCoachScreen from "./components/AiCoachScreen";
-import ThoughtRecordScreen from "./components/ThoughtRecordScreen";
-import SelfCompassionScreen from "./components/SelfCompassionScreen";
-import BehaviourDashboardScreen from "./components/BehaviourDashboardScreen";
-import AssessmentScreen from "./components/AssessmentScreen";
-import SkillsLibraryScreen from "./components/SkillsLibraryScreen";
-import WindDownScreen from "./components/WindDownScreen";
-import PsychoedScreen from "./components/PsychoedScreen";
-import ReachOutScreen from "./components/ReachOutScreen";
-import ValuesToActionScreen from "./components/ValuesToActionScreen";
-import DashboardScreen from "./components/DashboardScreen";
-import AgentConsoleScreen from "./components/AgentConsoleScreen";
-import PactScreen from "./components/PactScreen";
-import YourDataScreen from "./components/YourDataScreen";
-import NilaMemoryScreen from "./components/NilaMemoryScreen";
-import { AuxView, TabView, resolveNavTarget } from "./services/nav";
-import WhyScreen from "./components/WhyScreen";
 import ToolsScreen from "./components/ToolsScreen";
 import YouScreen from "./components/YouScreen";
+
+// LAZY (own chunk, fetched on first navigation) — screens reached only by a deliberate, non-emergency tap.
+// This lifts ~17 screen components out of the eager boot bundle so a cold open parses/evals less at first
+// paint. On native the chunks are bundled on-disk, so the first open of one is a fast local read (no
+// network), covered by the calm <Suspense> fallback below. NONE of these is a crisis-entry surface.
+const CheckInScreen = lazy(() => import("./components/CheckInScreen"));
+const DiaryCardScreen = lazy(() => import("./components/DiaryCardScreen"));
+const ThoughtRecordScreen = lazy(() => import("./components/ThoughtRecordScreen"));
+const SelfCompassionScreen = lazy(() => import("./components/SelfCompassionScreen"));
+const BehaviourDashboardScreen = lazy(() => import("./components/BehaviourDashboardScreen"));
+const AssessmentScreen = lazy(() => import("./components/AssessmentScreen"));
+const SkillsLibraryScreen = lazy(() => import("./components/SkillsLibraryScreen"));
+const WindDownScreen = lazy(() => import("./components/WindDownScreen"));
+const PsychoedScreen = lazy(() => import("./components/PsychoedScreen"));
+const ReachOutScreen = lazy(() => import("./components/ReachOutScreen"));
+const ValuesToActionScreen = lazy(() => import("./components/ValuesToActionScreen"));
+const DashboardScreen = lazy(() => import("./components/DashboardScreen"));
+const AgentConsoleScreen = lazy(() => import("./components/AgentConsoleScreen"));
+const PactScreen = lazy(() => import("./components/PactScreen"));
+const YourDataScreen = lazy(() => import("./components/YourDataScreen"));
+const NilaMemoryScreen = lazy(() => import("./components/NilaMemoryScreen"));
+const WhyScreen = lazy(() => import("./components/WhyScreen"));
+const SettingsScreen = lazy(() => import("./components/SettingsScreen"));
+
+import { AuxView, TabView, resolveNavTarget } from "./services/nav";
 import { PHONE_FEATURES_ENABLED } from "./services/buildFlags";
 import { syncDailyReminders } from "./services/notifications";
 import { buildReflectionDigest } from "./services/nilaContext";
 import { runReflection } from "./services/nilaInsights";
 import { syncWidget } from "./services/widgetSync";
 
-import SettingsScreen from "./components/SettingsScreen";
 import ListeningIndicator from "./components/ListeningIndicator";
 import BiometricGateHost from "./components/BiometricGateHost";
 import ModelSetupGate from "./components/ModelSetupGate";
+
+// Calm fallback shown while a lazy screen's chunk loads (a soft pulsing dot, no jarring spinner). On native
+// this is a brief local-disk read; on web a small network fetch. Kept quiet on purpose for a MH app.
+function ScreenFallback() {
+  return (
+    <div className="flex items-center justify-center py-24" role="status" aria-label="Loading">
+      <span className="w-2.5 h-2.5 rounded-full bg-slate-500/70 animate-ping" />
+    </div>
+  );
+}
 
 import { onSummon, setCallOpen, summonNila } from "./services/nilaActivation";
 import { wakeWord } from "./services/wakeWord";
@@ -339,7 +359,11 @@ export default function App() {
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        
+
+        {/* Suspense boundary for the lazy screens above. Eager screens (Nila, the hubs, and the crisis-path
+            Plan tab) render synchronously through it; only a lazy screen's first open shows ScreenFallback. */}
+        <Suspense fallback={<ScreenFallback />}>
+
         {/* RENDER AUXILIARY FOCUS VIEWS PRE-EMPTIVELY */}
         {auxView === "behaviour" && PHONE_FEATURES_ENABLED ? (
           <div className="space-y-4">
@@ -586,6 +610,7 @@ export default function App() {
 
           </div>
         )}
+        </Suspense>
       </div>
 
       {/* CORE PERSISTENT FIXED FOOTER NAVIGATION TABS */}
