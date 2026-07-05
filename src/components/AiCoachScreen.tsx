@@ -15,7 +15,8 @@ import { runAgent, AgentView } from "../services/agent";
 import { hasCheckinToday, getSkipFlag, setSkipFlag } from "../services/checkin";
 import { secureLocal } from "../services/secureLocal";
 import { cardsForCheckin, NilaCard } from "../services/nilaOrchestration";
-import { cardsForReply } from "../services/nilaCards";
+import { cardsForReply, protocolCard, protocolResumeCard } from "../services/nilaCards";
+import { startProtocol, advanceProtocol, getActiveProgress } from "../services/protocolProgress";
 import { getInflectionEnabled } from "../services/inflectionPrefs";
 import { recordDetectionPass, surfaceOpener, acknowledgeInflection, type InflectionSignal } from "../services/nilaInflection";
 import { actionForCard } from "../services/nilaCardDispatch";
@@ -133,8 +134,17 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
     [messages],
   );
   const lastReplyCards = useMemo(
-    () => (lastMessage && lastMessage.role === "assistant" ? cardsForReply(lastMessage.content, null, [], lastUserMsg) : []),
-    [lastMessage?.role, lastMessage?.content, lastUserMsg],
+    () => {
+      if (!lastMessage || lastMessage.role !== "assistant") return [];
+      const base = cardsForReply(lastMessage.content, null, [], lastUserMsg);
+      // §9: never surface a structured program on a crisis turn — crisis handling owns the screen.
+      if (isCrisisState) return base;
+      // Mid-program → a "continue / next step" card; otherwise a gentle offer when the concern matches a module.
+      const active = getActiveProgress();
+      const pCard = active ? protocolResumeCard() : protocolCard(lastUserMsg);
+      return pCard ? [...base, pCard] : base;
+    },
+    [lastMessage?.role, lastMessage?.content, lastUserMsg, isCrisisState],
   );
 
   // Inflection opener (Phase 2): pick at most once per mount; gated by the off-by-default toggle,
@@ -454,6 +464,37 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
     if (spoken.trim()) await handleSendMessage(undefined, spoken.trim());
   };
 
+  // Deliver ONE protocol step as a Nila message. The prompt text is VETTED (from protocols.ts) — never model
+  // output — so it's injected directly, never re-scanned: on-rails by construction (no model → no hallucination).
+  // It's a normal assistant message, so the existing sessionChat persistence carries it across leaving/reopening.
+  const deliverProtocolStep = (content: string) => {
+    setMessages((prev) => [...prev, { role: "assistant", content }]);
+    speakReply(content);
+  };
+
+  // Tap on a protocol card: start the program (none active) or advance it (mid-program). On completion Nila
+  // closes it warmly and the store self-clears. Guarded on §9 as belt-and-suspenders (the card is already
+  // suppressed during a crisis turn), so a program can never run over a crisis.
+  const runProtocolCard = (protocolId: string) => {
+    if (isCrisisState) return;
+    const active = getActiveProgress();
+    if (!active) {
+      const started = startProtocol(protocolId);
+      if (started) deliverProtocolStep(started.step.prompt);
+      return;
+    }
+    const r = advanceProtocol();
+    if (!r) return;
+    if ("done" in r) {
+      deliverProtocolStep(
+        `That's the whole ${r.protocol.title} program — you actually went through it, and that counts. What we ` +
+          `practised is yours to keep; we can pick it up again, or try something else, whenever you like.`,
+      );
+    } else {
+      deliverProtocolStep(r.step.prompt);
+    }
+  };
+
   const dispatchCard = (card: NilaCard) => {
     const a = actionForCard(card);
     if (!a) return;
@@ -461,6 +502,7 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
     else if (a.type === "episode") onEnterEpisode();
     else if (a.type === "skill") onOpenSkill?.(a.skillId);
     else if (a.type === "screening") onLaunchScreening(a.instrument);
+    else if (a.type === "protocol") runProtocolCard(a.protocolId);
   };
 
   // (Tier label/icon removed with the top toolbar; the offline state still surfaces via the banner below.)
