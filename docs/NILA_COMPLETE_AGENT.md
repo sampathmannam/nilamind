@@ -83,6 +83,60 @@ Tags: `[I]` interactive · `[A]` async · `⭐` high value · **Rail** = what st
   comes after the async spine + structure exist. Needs a tool allow-list + the §9 pre-pass proven at scale.
 - **Cross-cutting, ongoing:** UNDERSTAND (A) improvements land inside whichever phase touches that surface.
 
+## FRONTIER tier — state-of-the-art capabilities (novel, defensible, higher-risk)
+
+The reframe that makes these "advanced" instead of reckless: **sophistication lives in the harness, not in an
+unleashed model.** Every item is "the 4B as a reasoning / simulation / personalization ENGINE, wrapped in
+deterministic safety + evidence rails so it never claims clinical authority." Two extra filters: **latency**
+(a 2-min/turn 4B can't do live simulation → tag async vs needs-faster-model) and **mixed-states** (bipolar/BPD:
+the hardest safety case — the elevation guard stays model-independent underneath all of these).
+
+### F1 — the real SOTA (differentiated, hard for anyone else to ship)
+- ⭐ **JITAI — Just-In-Time Adaptive Intervention** `[I + sensor]`. Model reasons over **sensor + context +
+  language together** (Health Connect sleep/HR/steps + conversation) to deliver the right micro-intervention at
+  the right moment. THE digital-MH research frontier; on-device + LLM + wearable is a combination cloud apps
+  can't do without being creepy. *Rail:* suggestions only, user-armed; §9/elevation deterministic. Own phase
+  (needs sensor integration — the COROS/Health-Connect thread).
+  > Test case: 4h sleep + tense text thread + rising resting HR → *before* the user opens the app, an armed Nila
+  > offers one 90-sec grounding tuned to "wired + under-slept," not a generic nudge.
+- ⭐ **Longitudinal self-model → collaborative case formulation** `[A]`. The async brain builds a private,
+  structured model of the person (recurring thought-loops, the inner-critic's actual voice, triggers, what
+  works FOR THEM) and co-drafts a **5-P formulation** (predisposing/precipitating/perpetuating/protective/
+  presenting). Depth no 1-hr/week clinician can hold. **Rail (critical):** DRAFT + shared + editable + provisional
+  — "a pattern I *might* be seeing — does this fit?"; NEVER a verdict/diagnosis; user owns + edits. Extends Phase 1.
+- ⭐ **Adaptive multi-week protocol runner** `[A + I]`. Runs an evidence-based program over weeks (behavioral
+  activation, CBT-for-worry, self-compassion course): assigns + reviews homework, tracks progress, adapts the
+  plan. A therapist-guided protocol, self-paced, on-device.
+
+### F2 — simulation (what rules can NEVER do)
+- **Rehearsal / role-play engine** `[I — needs a FASTER model, gates on V3]`. The model *becomes* the other
+  person in a safe sandbox: difficult-conversation rehearsal (assertiveness + exposure), empty-chair / IFS
+  parts-work (voice the "inner critic"/a part to dialogue with), behavioral experiments (design→predict→
+  rehearse→debrief). *Rail:* explicit consent + an exit + §9 live underneath; live turns need the small fast
+  model, so this is gated on the V3 speed track.
+- **Bespoke generated-for-you interventions** `[A]`. Not templates — the model *composes* in the user's own
+  language + values: custom coping card, a "compassionate friend" reply tuned to what soothes THIS person, a
+  values-based activity menu, a personalized relapse-prevention plan.
+
+### F3 — deep insight (async mirror-that-reasons)
+- **Pattern archaeology** `[A]` — patterns a human couldn't hold ("hardest on yourself the day *after* you
+  rest"). Rail: detection deterministic; model only narrates confirmed signals.
+- **Narrative re-authoring** `[A]` (narrative therapy) — reflect the life-story arc, offer alternative framings.
+- **Values-drift radar** `[A]` — notice actions drifting from stated values, surface gently.
+
+### Hold-the-line (defer or heavily-rail — being sophisticated ≠ removing guardrails)
+- **Case formulation** can pathologize / plant a false self-narrative → collaborative + editable + provisional only.
+- **Role-play as a real person** can retraumatize → consent + exit + §9 always live.
+- **Diagnosis or any clinical-fact claim** → hard no (the reliability gate).
+- **Autonomous outreach** → still user-armed pull only.
+
+### How the frontier phases in
+- **Async-frontier (self-model, formulation, bespoke interventions, pattern archaeology) folds INTO Phase 1** —
+  it's the deep end of the between-sessions brain; ships incrementally as the self-model matures.
+- **JITAI = its own phase** after Phase 1 (needs sensor/Health-Connect integration).
+- **Simulation = gated on the V3 faster model** (live turns); design now, build when speed lands.
+- **Protocol runner** after structure (Phase 2) exists to hang homework on.
+
 ## Non-negotiables (carried from the vision)
 - Zero garbage / zero hallucination is a BLOCKING gate — a capability ships only when its rail is proven.
 - Safety is model-independent; personalization is on-device memory retrieval, not weight adaptation.
