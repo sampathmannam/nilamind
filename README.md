@@ -1,12 +1,12 @@
 # NilaMind
 
-**A privacy-first, fully on-device mental-health companion.**
+**A privacy-first, fully on-device mental-health companion.** *(v1.2)*
 
-NilaMind is a mobile app built around *Nila* — a companion you can talk to
-(by voice or text) for everyday emotional support. Everything runs **on your
-phone**: the language model, the crisis-safety checks, speech-to-text and
-text-to-speech. There is **no account, no backend, and no analytics** — your
-conversations, check-ins, mood, and notes never leave the device.
+NilaMind is a mobile app built around *Nila* — someone you can talk to (by voice
+or text) for everyday emotional support. Everything runs **on your phone**: the
+language model, the crisis-safety checks, speech-to-text and text-to-speech.
+There is **no account, no backend, and no analytics** — your conversations,
+check-ins, mood, and notes never leave the device.
 
 > ⚠️ **Please read [`SAFETY.md`](SAFETY.md) first.** NilaMind is an experimental
 > self-help tool — **not a medical device, not therapy, and not a crisis
@@ -39,6 +39,25 @@ The design is grounded in research, not vibes. The reasoning, with citations,
 is in [`docs/NILA_AGENT_DESIGN.md`](docs/NILA_AGENT_DESIGN.md) and
 [`docs/UX_RESEARCH.md`](docs/UX_RESEARCH.md).
 
+## How Nila actually works
+
+A small model that runs on a phone is **not** a good free-form therapist, and
+NilaMind doesn't pretend otherwise. Instead the roles are split so the app leans
+on what each part does *reliably*:
+
+- **Nila (the model) does the listening** — a brief, warm reflection of what you
+  said. Short, human, in her own words. That's the one thing a small on-device
+  model does well.
+- **The app carries the "what to do"** — after each reply, NilaMind surfaces the
+  right **evidence-based tool** (a DBT/CBT/ACT/self-compassion skill, a grounding
+  or breathing exercise, a wind-down flow) chosen *deterministically from your own
+  words*, one tap away. The reliable help doesn't depend on the model's phrasing.
+- **Crisis is never the model's job** — a deterministic, model-independent safety
+  layer (below) owns that.
+
+This is deliberate: the model stays fixed and small; the *app's* strengths —
+research-grounded tools, guided flows, private memory — do the heavy lifting.
+
 ## What's inside
 
 - **On-device LLM** via [`llama-cpp-capacitor`](https://www.npmjs.com/package/llama-cpp-capacitor)
@@ -47,12 +66,17 @@ is in [`docs/NILA_AGENT_DESIGN.md`](docs/NILA_AGENT_DESIGN.md) and
   available. On-device STT/TTS (`@capacitor-community/speech-recognition`,
   `text-to-speech`) plus a Vosk wake-word path.
 - **A model-independent crisis-safety layer ("§9")** — a deterministic keyword
-  scanner plus a small on-device MiniLM classifier (ONNX Runtime Web) that
-  surfaces support and routes toward a human. Additive, soft, fail-closed.
-  See [`SAFETY.md`](SAFETY.md).
+  scanner plus a small on-device MiniLM classifier (ONNX Runtime Web) that catches
+  euphemistic disclosures the keywords miss, surfaces support, and routes toward a
+  human. Additive, soft, fail-closed — it wraps every input and every reply, and
+  the model can never influence it. See [`SAFETY.md`](SAFETY.md).
+- **Evidence-based tools, surfaced when they fit** — a research-grounded skills
+  library (DBT/CBT/ACT/CFT), grounding & breathing, a sleep wind-down, an
+  "understand" psychoeducation library, and a trusted-person reach-out bridge.
 - **Local-only memory & tools** — durable profile/insights, daily reflection,
   mood tracking, a "letter to my unwell self" pact, and a dependency guard that
-  nudges you toward real people. All stored encrypted on-device (`secureLocal`).
+  nudges you toward real people. All stored **encrypted on-device** (AES-256-GCM
+  via `secureLocal`; optional zero-knowledge PIN).
 - **No data collection by design.**
 
 **Stack:** React 19 · Vite 6 · Tailwind 4 · Capacitor 8 (Android) ·
@@ -75,13 +99,23 @@ over Wi-Fi); developers can side-load any GGUF instead:
 **Reference model (⚠️ research preview):** the project's own therapy-tuned Gemma-3-4B — the exact GGUF
 this app loads — is published at
 [`sampathmannam/nilamind-gemma-3-4b-GGUF`](https://huggingface.co/sampathmannam/nilamind-gemma-3-4b-GGUF).
-Its main practical limitation is **repetitive/formulaic phrasing**, and it has **no built-in
-crisis-safety layer** — read its model card, keep the app's §9 layer in front of it, and don't treat
-it as a usable therapist. (An earlier "role-confusion" concern turned out to be a single-turn
-eval-harness artifact — in the app's real prompt shape the model stays in Nila's voice.)
+Its main practical limitation is **repetitive/formulaic phrasing** (which is exactly why the app splits
+the roles above — the tools carry the help), and it has **no built-in crisis-safety layer**. Read its
+model card, keep the app's §9 layer in front of it, and don't treat it as a usable therapist. (An earlier
+"role-confusion" concern turned out to be a single-turn eval-harness artifact — in the app's real prompt
+shape the model stays in Nila's voice.)
 
 Reply quality, latency, and failure modes depend entirely on the model you
 choose. Re-test the safety layer against your model before any real use.
+
+## A note on speed
+
+Because the model runs **entirely on your phone**, the **first reply after a fresh
+start** can take a couple of minutes on a slower device — it's reading a ~2.5 GB
+model off storage, not "thinking." NilaMind keeps the model resident once loaded
+(a foreground service) so **every reply after that stays fast** until the phone
+reboots. On a phone with fast storage the wait is only a few seconds. Details and
+the engineering trade-offs are in [`docs/NILA_SPEED_PLAN.md`](docs/NILA_SPEED_PLAN.md).
 
 ## Build & run
 
@@ -107,19 +141,22 @@ npx cap open android   # then Run on a device from Android Studio
 
 Then side-load your GGUF onto the device so the on-device model can load.
 
-**Useful scripts:** `npm run lint` (type-check) · `npm test` (Vitest).
-`VITE_STORE_BUILD=1` toggles the Play-Store build profile (optional).
+**Useful scripts:** `npm run lint` (type-check) · `npm test` (Vitest — ~500 tests,
+incl. the §9 safety invariants). `VITE_STORE_BUILD=1` toggles the Play-Store build
+profile (optional).
 
-## Privacy
+## Privacy & security
 
-Personal content is stored **only on the device**, encrypted at rest. There is
-no server, no account, and no telemetry. If you modify NilaMind, **please don't
-add data collection** — that's the line the project won't cross.
+Personal content is stored **only on the device, encrypted at rest** (AES-256-GCM;
+the key is non-extractable, or PIN-derived in optional zero-knowledge mode). There
+is no server, no account, and no telemetry; the only network call is the one-time,
+integrity-verified model download. If you modify NilaMind, **please don't add data
+collection** — that's the line the project won't cross.
 
 ## Status
 
-Experimental and personal. Not clinically validated, not a product, no support
-guarantees. Shared in the hope it's useful — use at your own risk.
+Experimental and personal (**v1.2**). Not clinically validated, not a product, no
+support guarantees. Shared in the hope it's useful — use at your own risk.
 
 ## License
 
