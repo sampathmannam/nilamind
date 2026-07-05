@@ -68,7 +68,9 @@ Shipped this run (all TDD'd, committed + pushed; 541 tests green):
   hopelessness, or deserving-suffering. Runs on every reply via `applyOutputSafety`. (`src/safety.ts`)
 - **Phase 1 — structured-protocol LOGIC spine (deterministic, on-rails):**
   - `protocols.ts` — `Protocol`/`ProtocolStep` model + `routeToProtocol` (modular matching, returns null on benign
-    input), seeded with **Behavioral Activation** + **Worry-Postponement** (the two best-evidenced cards).
+    input). **4 evidence-based programs:** Behavioral Activation (depression), Worry-Postponement (GAD/worry),
+    Self-Compassion (self-criticism/shame), Sleep Wind-Down (insomnia — population-SAFE CBT-I subset: stimulus
+    control + consistent wake-time + wind-down, NO sleep restriction, since acute sleep loss can destabilise bipolar).
   - `protocolProgress.ts` — encrypted-persistent `{protocolId, stepIndex}` (start/getActive/advance→done/abandon,
     resumes across app restart) + `protocolOffer` (offer only when nothing active + a concern matches).
   - **Deterministic UI bridge** — `NilaCard` kind `"protocol"`, `protocolCard(userText)` offer helper, `actionForCard`
