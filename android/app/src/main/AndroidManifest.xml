@@ -37,6 +37,18 @@
             </intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/streak_widget_info" />
         </receiver>
+
+        <!-- Keep-resident foreground service: holds the process so the ~2.3GB model + its warmed page cache
+             aren't evicted between sessions (docs/NILA_SPEED_PLAN.md keep-resident lever). specialUse because no
+             standard FGS type fits "keep an on-device model in memory"; honest subtype declared below. -->
+        <service
+            android:name=".ModelResidentService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Keeps the on-device AI model resident in memory so replies stay fast on slow-storage devices" />
+        </service>
     </application>
 
     <!-- Permissions -->
@@ -52,6 +64,12 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <!-- Required by Chromium WebView media stack for getUserMedia (WebRTC audio). -->
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+
+    <!-- Keep-resident foreground service (docs/NILA_SPEED_PLAN.md): hold the process so the model isn't evicted. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <!-- Android 13+: for the gentle, low-priority foreground-service notification to be visible. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <queries>
         <intent>
             <action android:name="android.speech.RecognitionService" />

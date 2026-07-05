@@ -1,5 +1,7 @@
 package com.nilamind.app;
 
+import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Process;
 import android.util.Log;
@@ -20,6 +22,22 @@ public class MainActivity extends BridgeActivity {
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     precacheModelWeights();
+    startResidentServiceIfModelPresent();
+  }
+
+  // Keep-resident: once a model is on disk, hold the process at foreground priority (ModelResidentService)
+  // so Android doesn't evict it + its warmed page cache between sessions → replies stay fast after the first
+  // per reboot. Gated on the model existing, so first-run (no model yet) never shows the notification.
+  private void startResidentServiceIfModelPresent() {
+    try {
+      final File model = new File(getExternalFilesDir(null), MODEL_FILE);
+      if (!model.exists() || model.length() == 0) return;
+      Intent svc = new Intent(this, ModelResidentService.class);
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(svc);
+      else startService(svc);
+    } catch (Throwable t) {
+      Log.w("NilaResident", "resident service not started: " + t.getMessage());
+    }
   }
 
   // ── Cold-start mitigation ───────────────────────────────────────────────────
