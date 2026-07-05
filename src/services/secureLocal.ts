@@ -57,6 +57,8 @@ export const SENSITIVE_KEYS = [
   "nilamind_donations",
   // Active Nila conversation — persisted so the chat survives leaving the app (encrypted at rest, see sessionChat.ts).
   "nilamind_session_chat",
+  // Active structured-protocol position — {protocolId, stepIndex}, persisted so a program resumes (see protocolProgress.ts).
+  "nilamind_protocol_progress",
 ];
 const MIGRATION_VERSION = 1;
 
