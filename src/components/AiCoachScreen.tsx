@@ -24,6 +24,7 @@ import type { CheckInEntry } from "../types";
 import { sendToNila } from "../services/sendToNila";
 import { NilaMode, NilaUiMessage } from "../services/nilaSend";
 import { getSessionChat, setSessionChat, clearSessionChat } from "../services/sessionChat";
+import { notifyReplyReady } from "../services/notifications";
 import EpisodeSupportScreen from "./EpisodeSupportScreen";
 import NilaOrb from "./NilaOrb";
 import { Send, AlertTriangle, Shield, Volume2, VolumeX, Mic, Sparkles, BookOpen, ChevronRight, Phone, Zap, Brain, ClipboardList, LifeBuoy, ThumbsUp, ThumbsDown, Keyboard } from "lucide-react";
@@ -369,6 +370,11 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
         return [...copy, { role: "assistant", content: coachReply }];
       });
       speakReply(coachReply);
+
+      // passive→active: if the reply landed while the app was BACKGROUNDED (the person sent, then left
+      // without waiting), ping them so they know to come back. Content-free + only when notifications are
+      // already enabled. Only for a real on-device reply — crisis returned above, offline is reachedAI:false.
+      if (result.reachedAI && typeof document !== "undefined" && document.hidden) void notifyReplyReady();
 
       if (result.reachedAI && result.openSkillId && onOpenSkill) {
         const id = result.openSkillId;

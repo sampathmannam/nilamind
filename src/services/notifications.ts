@@ -74,6 +74,35 @@ export async function scheduleReminderAt(when: Date, body: string, title = "Nila
   }
 }
 
+// Stable id for the "Nila replied" ping so a new one replaces (not stacks) the last.
+const REPLY_READY_ID = 1002;
+
+/**
+ * Fire an immediate, gentle ping that Nila's reply is ready — the passive→active "reaches out" piece.
+ * Called when a reply finishes while the app is BACKGROUNDED (the person left mid-generation), so they
+ * know to come back. Deliberately CONTENT-FREE: just "Nila replied", never the message text (privacy —
+ * a lock-screen must not leak a mental-health conversation). Best-effort and NON-prompting: it only fires
+ * if notification permission is ALREADY granted (prompting from a background completion would be jarring
+ * and usually impossible); otherwise it's a silent no-op. Never called for crisis or offline replies.
+ */
+export async function notifyReplyReady(): Promise<void> {
+  try {
+    const granted = (await LocalNotifications.checkPermissions()).display === "granted";
+    if (!granted) return; // never prompt here; silently skip if notifications aren't already enabled
+    await LocalNotifications.schedule({
+      notifications: [{
+        id: REPLY_READY_ID,
+        title: "NilaMind",
+        body: "Nila replied — she's here whenever you're ready. 💙",
+        schedule: { at: new Date(Date.now() + 200), allowWhileIdle: true }, // ~immediate, fires even in doze
+        smallIcon: "ic_stat_icon_config_sample",
+      }],
+    });
+  } catch {
+    /* web / plugin missing / permission race — best-effort, never throws into the reply path */
+  }
+}
+
 /** Convenience used by Phase 7 reminders — schedule only if outside the user's quiet hours. */
 export async function scheduleIfAllowed(when: Date, body: string, title = "NilaMind"): Promise<ScheduleResult> {
   if (withinQuietHours(when)) return { ok: false, reason: "unavailable", at: when };
