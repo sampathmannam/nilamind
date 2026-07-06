@@ -67,6 +67,18 @@ if (Capacitor.isNativePlatform()) {
     const { setBrainStatus } = await import("./services/brainSetup");
     setBrainStatus("needs-setup");
   }).catch(() => {});
+} else if (!(import.meta as any).env?.DEV) {
+  // WEB front door (rung 0): there is no llama.cpp brain in a browser, so register the deterministic,
+  // LLM-free reflection backend. isLocalLlmReady() then becomes true and sendToNila routes to it instead
+  // of returning the silent-offline empty reply — Nila "listens" (warmth from scripts) while the app's
+  // deterministic tools + §9 still carry the actual help. No model, no network. See nilaReflect.ts.
+  // (DEV is excluded so desktop dev still points at the Ollama backend registered above.)
+  Promise.all([
+    import("./services/localLlm"),
+    import("./services/nilaReflect"),
+  ]).then(([{ registerLocalLlmBackend }, { createReflectBackend }]) => {
+    registerLocalLlmBackend(createReflectBackend());
+  }).catch(() => { /* stays silent-offline on failure — no regression */ });
 }
 
 // Service-worker policy. WEB keeps the PWA (offline). The native Capacitor WebView must NOT run a

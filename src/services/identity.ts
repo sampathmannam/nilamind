@@ -72,6 +72,29 @@ export async function createIdentity(mnemonic: string): Promise<Identity> {
   return id;
 }
 
+/**
+ * Return the existing identity, or SILENTLY create one from a fresh phrase if none exists yet.
+ *
+ * Powers the WEB "talk-first" front door: a first-time visitor in distress is dropped straight into chat
+ * instead of being blocked by the 12-word recovery-phrase ceremony before they can say a word. The phrase
+ * is still generated and stored (viewable/saveable later in Settings → Your data), so nothing about the
+ * no-account, phrase-recoverable privacy model changes — only WHEN the ceremony is asked of them. Idempotent:
+ * a returning user's existing identity (and therefore their data key) is never overwritten.
+ */
+let anonInFlight: Promise<Identity> | null = null;
+
+export function ensureAnonymousIdentity(): Promise<Identity> {
+  const existing = loadIdentity();
+  if (existing) return Promise.resolve(existing);
+  // Single-flight: React StrictMode / a double render can call this twice in the same tick. The
+  // check-and-set below is synchronous (no await before the assignment), so the second caller sees the
+  // in-flight promise and shares it — one identity is created, never two racing ones.
+  if (!anonInFlight) {
+    anonInFlight = createIdentity(newMnemonic()).finally(() => { anonInFlight = null; });
+  }
+  return anonInFlight;
+}
+
 // ── Optional encrypted backup (user-controlled, no cloud) ───────────────────────────────────────
 // The backup blob is encrypted with a key derived from the phrase (PBKDF2 over the seed), so it can
 // be restored on any device by entering the same phrase. Independent of the device-bound DEK.
