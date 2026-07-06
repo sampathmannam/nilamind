@@ -151,15 +151,26 @@ async function migrate(): Promise<void> {
 
 /** Boot the secure store and hydrate the in-memory cache. Call once before rendering data screens.
  *  Returns the mode so the UI can decide whether to show a PIN unlock screen. */
-export async function bootSecure(): Promise<{ mode: "device" | "pin"; unlocked: boolean }> {
+export async function bootSecure(): Promise<{ mode: "device" | "pin"; unlocked: boolean; error?: "encrypted_unavailable" }> {
   try {
     const res = await initSecure();
     if (res.mode === "pin" && !res.unlocked) return res; // caller must unlock first
     await hydrate();
     return res;
   } catch (e) {
-    console.error("secureLocal boot failed — falling back to plaintext localStorage:", e);
-    hydrateFromPlaintext(); // recover existing data so screens don't render empty
+    console.error("secureLocal boot failed:", e);
+    // If the user ALREADY migrated to the encrypted store, their real data is in IndexedDB and UNREADABLE
+    // without the key — and migration removed the plaintext copies, so localStorage is empty for those keys.
+    // Silently entering passthrough would then (a) show an empty app and (b) shadow-write sensitive data into
+    // plaintext. Recovery is impossible without the key, so signal locked-out — the UI shows an honest
+    // "couldn't open your data — retry" screen (SecureGate) instead of a blank safety plan. If NOT migrated,
+    // plaintext still holds the data, so passthrough is genuinely safe (recover it as before).
+    let migrated = false;
+    try { migrated = migratedVersion() >= MIGRATION_VERSION; } catch { migrated = false; }
+    if (migrated) {
+      return { mode: "device", unlocked: false, error: "encrypted_unavailable" };
+    }
+    hydrateFromPlaintext(); // not-migrated path: recover existing plaintext so screens don't render empty
     enablePassthrough();
     return { mode: "device", unlocked: true };
   }
