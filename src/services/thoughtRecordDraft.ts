@@ -60,6 +60,25 @@ export function parseDraft(raw: string): ThoughtRecordDraft {
   };
 }
 
+export interface WizardState {
+  situation: string;
+  feeling: string;
+  initialIntensity: number;
+  automaticThought: string;
+}
+
+/** Map a ThoughtRecordDraft (from the on-device model) to ThoughtRecordScreen wizard state. */
+export function mapDraftToWizard(draft: ThoughtRecordDraft): WizardState {
+  const intensityMatch = draft.emotion.match(/(\d{1,3})/);
+  const intensity = intensityMatch ? Math.min(100, Math.max(1, parseInt(intensityMatch[1], 10))) : 50;
+  return {
+    situation: draft.situation,
+    feeling: draft.emotion,
+    initialIntensity: intensity,
+    automaticThought: draft.automaticThought,
+  };
+}
+
 export function saveThoughtRecord(record: ThoughtRecordDraft): void {
   const entry = {
     ...record,

@@ -2,6 +2,7 @@ import { secureLocal, onPersistError, isPassthrough } from "./services/secureLoc
 import React, { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { Sparkles, Wrench, User, ChevronLeft, Shield } from "lucide-react";
 import { App as CapApp } from "@capacitor/app";
+import type { ThoughtRecordDraft } from "./services/thoughtRecordDraft";
 
 // EAGER (welded into the boot bundle) — every screen on the first-paint or crisis path. These must render
 // synchronously with NO chunk fetch: the default Nila tab, the two hubs you reach in one tap, the voice
@@ -222,6 +223,7 @@ export default function App() {
   // overlay so the hubs don't each need to know the tab-vs-auxView distinction (redesign R3).
   // When Nila's inline "Practice this" card opens the Skills Library, focus that skill (AP3).
   const [focusSkillId, setFocusSkillId] = useState<string | undefined>(undefined);
+  const [thoughtDraft, setThoughtDraft] = useState<ThoughtRecordDraft | undefined>(undefined);
 
   const go = (target: string) => {
     setFocusSkillId(undefined); // any general navigation clears a prior Nila skill focus
@@ -467,13 +469,13 @@ export default function App() {
         ) : auxView === "thought_record" ? (
           <div className="space-y-4">
             <button
-               onClick={() => setAuxView(null)}
+               onClick={() => { setAuxView(null); setThoughtDraft(undefined); }}
                className="flex items-center gap-1.5 text-slate-300 hover:text-white font-semibold py-3 px-1 -ml-1 mb-2 focus:outline-none cursor-pointer active:opacity-70"
                aria-label="Back"
             >
               <ChevronLeft className="w-5 h-5" /> Back
             </button>
-            <ThoughtRecordScreen />
+            <ThoughtRecordScreen draft={thoughtDraft} />
           </div>
         ) : auxView === "self_compassion" ? (
           <div className="space-y-4">
@@ -579,6 +581,7 @@ export default function App() {
                   onNavigateToBreathing={() => setActiveTab("plan")}
                   onAgentNavigate={(view) => go(view)}
                   onOpenSkill={(id) => { setFocusSkillId(id); setAuxView("skills"); }}
+                  onOpenThoughtRecord={(d) => { setThoughtDraft(d); setAuxView("thought_record"); }}
                   onStartCall={() => setIsCallOpen(true)}
                   onEnterEpisode={enterEpisode}
                   onLaunchScreening={(instrument) => { setScreeningInstrument(instrument); setAuxView("assessment"); }}

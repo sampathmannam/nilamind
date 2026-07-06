@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseDraft } from "./thoughtRecordDraft";
+import { parseDraft, mapDraftToWizard } from "./thoughtRecordDraft";
 
 describe("parseDraft", () => {
   it("extracts all fields from valid model output", () => {
@@ -48,5 +48,36 @@ EVIDENCE AGAINST:
     expect(d.evidenceFor).toContain("typo");
     expect(d.evidenceAgainst).toContain("everyone");
     expect(d.situation).toContain("email");
+  });
+});
+
+describe("mapDraftToWizard", () => {
+  it("maps draft fields to wizard state", () => {
+    const draft = {
+      situation: "Argued with friend about dinner",
+      automaticThought: "They hate me",
+      emotion: "Anxious, intensity 7",
+      evidenceFor: "They raised their voice",
+      evidenceAgainst: "They said it's fine",
+    };
+    const w = mapDraftToWizard(draft);
+    expect(w.situation).toBe("Argued with friend about dinner");
+    expect(w.feeling).toBe("Anxious, intensity 7");
+    expect(w.automaticThought).toBe("They hate me");
+  });
+  it("extracts intensity number from emotion string", () => {
+    const w = mapDraftToWizard({ situation: "x", automaticThought: "y", emotion: "Sad, intensity 80", evidenceFor: "", evidenceAgainst: "" });
+    expect(w.initialIntensity).toBe(80);
+  });
+  it("defaults intensity to 50 when no number found", () => {
+    const w = mapDraftToWizard({ situation: "x", automaticThought: "y", emotion: "Sad", evidenceFor: "", evidenceAgainst: "" });
+    expect(w.initialIntensity).toBe(50);
+  });
+  it("empty draft yields empty wizard state with default intensity", () => {
+    const w = mapDraftToWizard({ situation: "", automaticThought: "", emotion: "", evidenceFor: "", evidenceAgainst: "" });
+    expect(w.situation).toBe("");
+    expect(w.feeling).toBe("");
+    expect(w.automaticThought).toBe("");
+    expect(w.initialIntensity).toBe(50);
   });
 });

@@ -24,6 +24,7 @@ import { hasCheckinToday, getSkipFlag, setSkipFlag } from "../services/checkin";
 import { secureLocal } from "../services/secureLocal";
 import { cardsForCheckin, NilaCard } from "../services/nilaOrchestration";
 import { cardsForReply, protocolCard, protocolResumeCard, waitingCards, runWeeklySynthesis, thoughtRecordCard, runThoughtRecordDraft } from "../services/nilaCards";
+import { draftThoughtRecord } from "../services/thoughtRecordDraft";
 import { startProtocol, advanceProtocol, getActiveProgress } from "../services/protocolProgress";
 import { getInflectionEnabled } from "../services/inflectionPrefs";
 import { recordDetectionPass, surfaceOpener, acknowledgeInflection, type InflectionSignal } from "../services/nilaInflection";
@@ -50,6 +51,7 @@ interface AiCoachScreenProps {
   onNavigateToBreathing: () => void;
   onAgentNavigate?: (view: AgentView) => void;
   onOpenSkill?: (skillId: string) => void;
+  onOpenThoughtRecord?: (draft: import("../services/thoughtRecordDraft").ThoughtRecordDraft) => void;
   onStartCall?: () => void;
   onEnterEpisode: () => void;
   onLaunchScreening: (instrument: "PHQ-9" | "GAD-7") => void;
@@ -74,7 +76,7 @@ function readRecentCheckins(): CheckInEntry[] {
   }
 }
 
-export default function AiCoachScreen({ mode, onModeChange, onNavigateToGrounding, onNavigateToBreathing, onAgentNavigate, onOpenSkill, onStartCall, onEnterEpisode, onLaunchScreening, onActivateCrisis }: AiCoachScreenProps) {
+export default function AiCoachScreen({ mode, onModeChange, onNavigateToGrounding, onNavigateToBreathing, onAgentNavigate, onOpenSkill, onOpenThoughtRecord, onStartCall, onEnterEpisode, onLaunchScreening, onActivateCrisis }: AiCoachScreenProps) {
   // Check-in gate: computed ONCE at component init, shared by showCheckin + messages initializer.
   // Using a ref-based init pattern to avoid calling shouldShowCheckin() twice.
   const initCheckin = useRef<boolean>(shouldShowCheckin());
@@ -564,9 +566,14 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
       if (a.skillId === "thought_record") {
         void (async () => {
           setLoading(true);
-          const draft = await runThoughtRecordDraft(lastUserMsg);
+          const draft = await draftThoughtRecord(lastUserMsg);
           setLoading(false);
-          if (draft) setMessages((prev) => [...prev, { role: "assistant", content: draft }]);
+          if (draft && onOpenThoughtRecord) {
+            onOpenThoughtRecord(draft);
+          } else if (draft) {
+            // Fallback: post as message if no navigation callback
+            setMessages((prev) => [...prev, { role: "assistant", content: `Here's what I heard:\n\n**Situation:** ${draft.situation}\n\n**Automatic thought:** ${draft.automaticThought}\n\n**Emotion:** ${draft.emotion}` }]);
+          }
         })();
       } else {
         onOpenSkill?.(a.skillId);
