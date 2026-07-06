@@ -1,0 +1,126 @@
+type DistortionId =
+  | "all_or_nothing" | "catastrophizing" | "mind_reading"
+  | "overgeneralization" | "personalization" | "emotional_reasoning"
+  | "should_statements" | "labeling" | "mental_filter" | "disqualifying_positive";
+
+export interface DistortionMatch {
+  id: DistortionId;
+  label: string;
+  phrase: string;
+  question: string;
+}
+
+interface DistortionDef {
+  id: DistortionId;
+  label: string;
+  question: string;
+  patterns: RegExp[];
+}
+
+const DISTORTIONS: DistortionDef[] = [
+  {
+    id: "all_or_nothing",
+    label: "All-or-nothing thinking",
+    question: "Is it truly black and white, or is there a middle ground?",
+    patterns: [
+      /\b(everything (is|goes) (wrong|bad|terrible)|i (always|never) (mess|screw|fail|ruin)|nothing (ever )?goes (right|well)|i can('t)?(not)? (do anything|ever).*(right|well|good))\b/i,
+    ],
+  },
+  {
+    id: "catastrophizing",
+    label: "Catastrophizing",
+    question: "What's the most likely outcome here, not the worst?",
+    patterns: [
+      /\b(it('?s| is) going to be (a disaster|terrible|the worst|horrible)|my life is (over|ruined)|i('?ll| will) never recover|this will ruin everything|worst case scenario)\b/i,
+    ],
+  },
+  {
+    id: "mind_reading",
+    label: "Mind reading",
+    question: "We can't know what they're thinking for sure — want to check the facts?",
+    patterns: [
+      /\b(they (all )?think i('?m| am) (stupid|incompetent|a failure|useless|annoying|pathetic)|everyone (is judging|thinks|hates|knows)|she thinks i('?m)|he thinks i('?m)|they must think)\b/i,
+    ],
+  },
+  {
+    id: "overgeneralization",
+    label: "Overgeneralization",
+    question: "Is this a pattern or a single event?",
+    patterns: [
+      /\b(this (always|never) happens|nothing (ever|always) (goes right|works out)|it never (changes|gets better|works)|no one (ever )?cares)\b/i,
+    ],
+  },
+  {
+    id: "personalization",
+    label: "Taking things personally",
+    question: "Could there be other reasons this happened that aren't about you?",
+    patterns: [
+      /\b(it('?s)? (all )?my fault|i('?m| am) the reason|because of me|i ruined (it|everything|their day)|i should have (known|stopped|prevented))\b/i,
+    ],
+  },
+  {
+    id: "emotional_reasoning",
+    label: "Emotional reasoning",
+    question: "Feelings are real but they aren't facts — what would the evidence say?",
+    patterns: [
+      /\b(i feel (like|so) (stupid|worthless|ugly|unlovable|hopeless|a failure|pathetic|useless)|therefore i must be|if i feel.*then it must be)\b/i,
+    ],
+  },
+  {
+    id: "should_statements",
+    label: "Should statements",
+    question: "Would you tell a friend they 'should' have been different?",
+    patterns: [
+      /\b(i should (have|be|know)|i shouldn('t| not) (have|be|feel)|i('?m| am) supposed to|they should have|he should|she should)\b/i,
+    ],
+  },
+  {
+    id: "labeling",
+    label: "Labeling",
+    question: "Would it be more accurate to describe the action instead of labeling yourself?",
+    patterns: [
+      /\b(i('?m| am) (stupid|worthless|a failure|an idiot|ugly|pathetic|useless|a loser|broken|a burden|incompetent|weak|a mess))\b/i,
+    ],
+  },
+  {
+    id: "mental_filter",
+    label: "Mental filter",
+    question: "Were there any positives too?",
+    patterns: [
+      /\b(the one (bad|wrong|negative) thing|only thing that (went wrong|mattered)|nothing good happened|i can('t)?(not)? think of (a single|one|any) (good|positive))\b/i,
+    ],
+  },
+  {
+    id: "disqualifying_positive",
+    label: "Disqualifying the positive",
+    question: "That good thing still happened — what if it does count?",
+    patterns: [
+      /\b(that doesn('t| not) (count|matter|mean anything)|it was just (luck|a fluke|nothing)|anyone could have done that|they were just being nice|i got lucky)\b/i,
+    ],
+  },
+];
+
+function normalize(text: string): string {
+  return text.toLowerCase().replace(/['\u2019]/g, "'").replace(/\s+/g, " ").trim();
+}
+
+export function spotDistortions(text: string): DistortionMatch[] {
+  const n = normalize(text);
+  const matches: DistortionMatch[] = [];
+  for (const dist of DISTORTIONS) {
+    for (const re of dist.patterns) {
+      const m = n.match(re);
+      if (m) {
+        matches.push({ id: dist.id, label: dist.label, phrase: m[0], question: dist.question });
+        break;
+      }
+    }
+  }
+  return matches;
+}
+
+export function distortionSteer(matches: DistortionMatch[]): string {
+  if (matches.length === 0) return "";
+  const suggestions = matches.map((m) => `- ${m.label}: "${m.phrase}" → ${m.question}`);
+  return ["GENTLE NOTICE — you spotted some thinking patterns (hold lightly, never as a verdict):", ...suggestions].join("\n");
+}
