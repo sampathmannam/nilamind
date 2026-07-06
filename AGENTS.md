@@ -1,0 +1,72 @@
+# NilaMind — Agent Build Guide
+
+Read this before changing anything. It's for any coding agent (OpenCode, Claude Code, Cursor, …).
+
+## What this is
+A **privacy-first, ON-DEVICE mental-health WELLNESS companion.** Ionic/React/Capacitor app with a
+fine-tuned **Gemma-3-4B** brain running locally via a llama.cpp seam. India-first, **manic-first** (bipolar-aware).
+Core promise: **nothing leaves your phone.**
+
+## Golden rules — DO NOT VIOLATE
+1. **Wellness, never therapy.** Never ship copy or claims using "therapy / therapist / treat / diagnose / cure"
+   (legal: Illinois WOPR Act, Nevada AB 406, FDA general-wellness line). Say "not therapy, not a crisis service."
+2. **§9 crisis safety is DETERMINISTIC and model-independent.** `safety.ts` (`scanForCrisis`, `checkResponse`
+   Rules 1–6) + `crisisClassifier.ts` (on-device MiniLM). Never route crisis *judgment* through the LLM
+   (a 4B is ~15% worse at suicide-risk). Fail closed. Every reply passes the output gate.
+3. **Nothing leaves the device.** No third-party network calls, analytics, ad SDKs/pixels, or external fonts
+   (fonts are self-hosted via `@fontsource`). A privacy claim must be literally true on every code path.
+4. **Personalization = memory-into-context**, model stays fixed. No on-device weight adaptation (RAM-impossible).
+5. **Structure beats free chat.** Wrap evidence-based protocols; a free-form LLM is where harm (sycophancy,
+   delusion/mania validation, method disclosure) enters. Anti-sycophancy is a hard gate, not a hope.
+
+## Build / test / verify
+- **Tests (keep green):** `npx vitest run` — currently **683 tests**. One file: `npx vitest run src/services/X.test.ts`.
+- **Typecheck (must be exit 0):** `npx tsc --noEmit`
+- **Build:** `npm run build` (vite)
+- **TDD is mandatory.** RED (write a failing test, *watch it fail for the right reason*) → GREEN (minimal code) →
+  REFACTOR. No production code without a failing test first. Match the codebase style: pure, deterministic,
+  research-cited functions; every safety keyword list has PAIRED benign-control tests (precision matters — a
+  false crisis fire on a calm chat is itself harmful).
+- **Device-only:** Gemma inference, sensors (Health Connect), and Vosk voice can't run in node/web. Anything
+  touching them must be **device-verified on the phone** (adb) — tests cover the logic seams only.
+
+## Architecture map
+- **Safety:** `safety.ts` (keyword floor + `checkResponse` output gate Rules 1–6), `crisisClassifier.ts` (MiniLM),
+  `elevationGuard.ts` (mania *input* detection), `dependencyGuard.ts`, `safetyPlan.ts`.
+- **Brain path:** `agent.ts` (regex intents) → `sendToNila` → `localNila` → **`nilaContext.ts`
+  (`buildPersonalContext` = the ONLY state fed to the model)** → `localLlm.ts` seam → `llamaCppLlmAdapter`.
+- **Insight engines (research-cited, on-device):** `patternInsights.ts`, `nilaInflection.ts`, `sleepInsight.ts`,
+  `moodHistory.ts`, `nilaInsights.ts` (compounding memory).
+- **Protocols:** `protocols.ts`, `behaviouralActivation.ts`, `protocolProgress.ts`, `values.ts`.
+- **Persistence:** `secureLocal.ts` (encrypted; IndexedDB + in-memory cache; passthrough fallback), `secureStore.ts`.
+- **IA:** 3 tabs (Nila / Tools / You) in `App.tsx`; `nav.ts` router; `toolsRows.ts` / `youRows.ts` hubs.
+
+## Strategy thesis (2026-07-06 audit)
+A 4-agent audit found NilaMind is **feature-complete and well-engineered**; the real problems are **dead wiring**
+(analytics never reached the chat) and **fragmentation** (duplicate entry points), **NOT the model**. So:
+**do NOT add a cloud/Tier-2 model layer** until the wiring + fragmentation are fixed and re-evaluated — it reverses
+the deliberate on-device decision and costs money, and the audit shows it wouldn't fix the felt quality gap.
+
+## Current work — branch `feat/vision-p0-reality-guard`
+Shipped (TDD, 683 green, tsc clean): anti-sycophancy **Rule 6** (manic grandiosity/impulsivity/paranoia
+validation), `elevationGuard` **racing-thoughts**, and **sleep + inflection signals fed into `nilaContext`**.
+
+## Remaining prioritized fixes (pick these up; keep the golden rules)
+- **#2** Unify the **episode** voice with the companion persona and feed `buildPersonalContext` into it
+  (`EpisodeSupportScreen.tsx` runs a rigid 6-step script that fights the fine-tune). _[device-verify]_
+- **#3** Warm the **offline/cold-start fallback** via the existing `nilaReflect` backend (`AiCoachScreen.tsx`
+  ships one static robotic sentence that many first messages hit during the ~min cold load). _[TDD-able]_
+- **#4** Surface the **sleep prodrome signal** on a default-on, pact-independent UI (today it reaches most
+  users nowhere). _[device-verify]_
+- **#5** Fix **passthrough-invisibility**: on crypto/IndexedDB init failure the safety plan/diary render empty;
+  hydrate/decrypt before declaring passthrough and show an honest message (`secureLocal.ts`). _[TDD-able]_
+- **#6** Make the **daily nudge insight-aware** (not a static rotation, `notifications.ts`); sane inflection default. _[TDD-able]_
+- **#7** Data-integrity P2s: safety-plan `setTimeout` cleanup (`SafetyPlanScreen.tsx`), append-race primitive for
+  shared arrays (`nilamind_checkins`/`_episodes`). _[TDD-able]_
+- **#8** De-fragment: 3 reading libraries → 1, 2 check-ins → 1 (`CheckInScreen` is orphaned), 3 dashboards → 1
+  (`AgentConsoleScreen` is dev-facing, remove from product), hubs **defer to** the agent, BA/self-compassion →
+  the in-chat protocol path. _[device-verify]_
+
+## Commit style
+Conventional commits; end messages with `Co-Authored-By:` your agent line. Gate every commit on `vitest` +
+`tsc --noEmit` green. Branch off `main`; do not push without the owner's OK.
