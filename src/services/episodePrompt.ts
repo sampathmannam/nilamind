@@ -5,9 +5,12 @@
 // into the unified Nila sendToNila(). Crisis-line substitution happens here (invariant #4); the
 // EPISODE prompt is always the base (invariant #5).
 
-import { EPISODE_SYSTEM_PROMPT } from "../components/EpisodeSupportScreen";
+import { EPISODE_STEER_PROMPT } from "../components/EpisodeSupportScreen";
 import { crisisLinesInline } from "./crisisResources";
 import { skillsPromptBlock } from "./skillsLibrary";
+import { relevantSkillsBlock } from "./skillRetrieval";
+import { buildPersonalContext, activeProtocolContextBlock } from "./nilaContext";
+import { USE_SHORT_PERSONA, NILA_SYSTEM_PROMPT, NILA_SYSTEM_PROMPT_SHORT } from "./nila";
 import { EpisodeRecord } from "../types";
 
 // PRIVACY — deliberate divergence from buildReflectionDigest (nilaContext.ts), documented on purpose:
@@ -42,9 +45,17 @@ export function buildEpisodeContextBlock(episodes: EpisodeRecord[]): string {
   return block;
 }
 
-/** Full episode-mode system instruction: prompt (crisis lines substituted) + context + skills. */
-export function buildEpisodeSystem(episodes: EpisodeRecord[]): string {
-  const prompt = EPISODE_SYSTEM_PROMPT.replace("[REGION_CRISIS_LINES]", crisisLinesInline());
-  const context = buildEpisodeContextBlock(episodes);
-  return prompt + "\n" + context + "\n\n" + skillsPromptBlock();
+/** Full episode-mode system instruction: unified companion persona + personal context + episode steer +
+ *  episode history + relevant skills. The companion voice now carries episode support instead of a
+ *  parallel robotic script (audit fix #2). */
+export function buildEpisodeSystem(episodes: EpisodeRecord[], query?: string): string {
+  const base = USE_SHORT_PERSONA ? NILA_SYSTEM_PROMPT_SHORT : NILA_SYSTEM_PROMPT;
+  const persona = base.replace("[REGION_CRISIS_LINES]", crisisLinesInline());
+  const context = buildPersonalContext();
+  const activeProtocol = activeProtocolContextBlock();
+  const steer = EPISODE_STEER_PROMPT;
+  const episodeHistory = buildEpisodeContextBlock(episodes);
+  const relevant = query ? relevantSkillsBlock(query) : "";
+  const skills = relevant || skillsPromptBlock();
+  return [persona, context, activeProtocol, steer, episodeHistory, skills].filter(Boolean).join("\n\n");
 }
