@@ -159,6 +159,7 @@ export async function bootSecure(): Promise<{ mode: "device" | "pin"; unlocked: 
     return res;
   } catch (e) {
     console.error("secureLocal boot failed — falling back to plaintext localStorage:", e);
+    hydrateFromPlaintext(); // recover existing data so screens don't render empty
     enablePassthrough();
     return { mode: "device", unlocked: true };
   }
@@ -178,6 +179,23 @@ export async function hydrate(): Promise<void> {
   }
   await migrate();
   hydrated = true;
+}
+
+/** When crypto/IndexedDB init fails, the app must still show the user's existing data — otherwise the
+ *  safety plan, diary, etc. render empty. Read any plaintext sensitive keys already in localStorage into
+ *  the in-memory cache before we declare passthrough mode. Per-key try/catch so one corrupt key can't
+ *  hide the rest. */
+function hydrateFromPlaintext(): void {
+  const store = ls();
+  if (!store) return;
+  for (const key of SENSITIVE_KEYS) {
+    try {
+      const plain = store.getItem(key);
+      if (plain !== null && !cache.has(key)) cache.set(key, plain);
+    } catch {
+      /* ignore per-key read failures */
+    }
+  }
 }
 
 function enablePassthrough() {
