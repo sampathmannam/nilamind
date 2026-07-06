@@ -6,6 +6,8 @@
 import { describe, it, expect } from "vitest";
 import { scanForCrisis, checkResponse, isBenignHyperbole } from "./safety";
 import { detectCrisis, setCrisisClassifierEnabled } from "./services/crisisClassifier";
+import { registerLocalLlmBackend, localLlmLoadState } from "./services/localLlm";
+import type { LocalLlmBackend } from "./services/localLlm";
 
 describe("§9 audit: modern self-harm slang (unalive / kms)", () => {
   it("fires on 'unalive' euphemism", () => {
@@ -90,6 +92,32 @@ describe("§9 audit: benign-hyperbole guard suppresses classifier false-fires (n
   });
   it("does not fire on ordinary non-hyperbole text (returns false, i.e. no opinion)", () => {
     expect(isBenignHyperbole("i had a really hard day today")).toBe(false);
+  });
+});
+
+describe("audit #10: on-device model load state is observable (not silently degraded)", () => {
+  const mk = (over: Partial<LocalLlmBackend>): LocalLlmBackend => ({
+    id: "test", isReady: () => false, generate: async () => "", ...over,
+  });
+  it("reports 'none' when no backend is registered", () => {
+    registerLocalLlmBackend(null);
+    expect(localLlmLoadState()).toBe("none");
+  });
+  it("distinguishes a load ERROR from still-loading and from ready", () => {
+    registerLocalLlmBackend(mk({ isReady: () => false, loadState: () => "error" }));
+    expect(localLlmLoadState()).toBe("error"); // model present but failed to load (e.g. low-RAM OOM)
+    registerLocalLlmBackend(mk({ isReady: () => false, loadState: () => "loading" }));
+    expect(localLlmLoadState()).toBe("loading");
+    registerLocalLlmBackend(mk({ isReady: () => true, loadState: () => "ready" }));
+    expect(localLlmLoadState()).toBe("ready");
+    registerLocalLlmBackend(null);
+  });
+  it("falls back to ready/loading for a backend without loadState()", () => {
+    registerLocalLlmBackend(mk({ isReady: () => true }));
+    expect(localLlmLoadState()).toBe("ready");
+    registerLocalLlmBackend(mk({ isReady: () => false }));
+    expect(localLlmLoadState()).toBe("loading");
+    registerLocalLlmBackend(null);
   });
 });
 
