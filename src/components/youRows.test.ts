@@ -6,7 +6,7 @@ describe("You hub rows (redesign §2)", () => {
     for (const id of ["dashboard", "your_data", "settings"]) expect(YOU_ROW_IDS).toContain(id);
   });
   it("includes the Resources group rows", () => {
-    for (const id of ["thought_record", "self_compassion", "values_to_action", "learn"]) {
+    for (const id of ["thought_record", "values_to_action", "learn"]) {
       expect(YOU_ROW_IDS).toContain(id);
     }
   });
@@ -22,7 +22,7 @@ describe("You hub rows (redesign §2)", () => {
     const rendered = buildYouGroups().flatMap((g) => g.rows.map((r) => r.id));
     expect(rendered).toEqual([
       "dashboard", "your_data", "nila_memory", "settings",
-      "thought_record", "self_compassion", "values_to_action", "learn",
+      "thought_record", "values_to_action", "learn",
     ]);
     expect(YOU_ROW_IDS).toEqual(rendered);
   });
