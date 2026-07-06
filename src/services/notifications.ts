@@ -6,6 +6,9 @@
 
 import { LocalNotifications } from "@capacitor/local-notifications";
 import { withinQuietHours, getReminderPrefs } from "./reminders";
+import { selfReportSleepSignal } from "./sleepInsight";
+import { topFireableSignal } from "./nilaInflection";
+import { getInflectionEnabled } from "./inflectionPrefs";
 
 // Warm, low-pressure nudges (Phase 7). Never demanding, never guilt-laden — each is an invitation.
 export const WARM_NUDGES = [
@@ -17,15 +20,39 @@ export const WARM_NUDGES = [
   "🌙 Whenever it feels right — a soft check-in is here.",
 ];
 
+// Signal-adapted nudges (2026-07-06 audit — the daily nudge was a static rotation blind to every signal).
+// Kept SOFT and DATALESS: JITAI research says mistimed/irrelevant prompts backfire, and a notification must
+// never state the data (no "you slept 3h") or alarm.
+export const SLEEP_NUDGES = [
+  "🌙 How's rest been treating you? I'm here if you'd like to wind down together.",
+  "🌙 A gentle thought — how are you resting? We can wind down whenever you like.",
+];
+export const CARE_NUDGES = [
+  "💙 Just thinking of you. However today is landing, I'm here.",
+  "💙 Checking in gently — I'm here for you today if you'd like to talk.",
+];
+
+/** Choose the daily nudge from the person's current SOFT signals — sleep prodrome first (manic-first), then a
+ *  flagged downward trend — else the warm rotation. Pure + deterministic (varies by dayIndex); dataless by
+ *  design. The call site gates the inputs (inflection only when the user opted in). */
+export function chooseNudge(ctx: { dayIndex: number; sleepFiring?: boolean; inflection?: "deterioration" | "improvement" | null }): string {
+  if (ctx.sleepFiring) return SLEEP_NUDGES[ctx.dayIndex % SLEEP_NUDGES.length];
+  if (ctx.inflection === "deterioration") return CARE_NUDGES[ctx.dayIndex % CARE_NUDGES.length];
+  return WARM_NUDGES[ctx.dayIndex % WARM_NUDGES.length];
+}
+
 // A single, stable id for the recurring daily nudge so re-syncing replaces (not stacks) it.
 const DAILY_REMINDER_ID = 1001;
 
 const pad = (n: number) => String(n).padStart(2, "0");
 const timeToday = (h: number, m: number): Date => { const d = new Date(); d.setHours(h, m, 0, 0); return d; };
-/** Pick a nudge that varies by day without needing stored state or randomness. */
+/** Pick a nudge that varies by day and gently adapts to the person's current on-device signals (read here,
+ *  never sent anywhere). Inflection is consulted only when the user has opted into inflection awareness. */
 function nudgeForToday(): string {
-  const day = Math.floor(timeToday(0, 0).getTime() / 86400000);
-  return WARM_NUDGES[day % WARM_NUDGES.length];
+  const dayIndex = Math.floor(timeToday(0, 0).getTime() / 86400000);
+  const sleepFiring = !!selfReportSleepSignal()?.firing;
+  const inflection = getInflectionEnabled() ? (topFireableSignal()?.direction ?? null) : null;
+  return chooseNudge({ dayIndex, sleepFiring, inflection });
 }
 
 export interface ScheduleResult {
