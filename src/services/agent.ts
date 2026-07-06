@@ -8,7 +8,7 @@
 // Design: `classify()` is PURE (no side effects) so it's unit-testable; `runAgent()` is the thin
 // async executor that performs the side effect (save / schedule) and returns a spoken confirmation.
 
-import { secureLocal } from "./secureLocal";
+import { secureLocal, appendToSecureArray } from "./secureLocal";
 import { computeCompassionateStreak } from "./streaks";
 import { scheduleReminderAt, formatTime } from "./notifications";
 import { mapEmotion, parseIntensity } from "./emotionParse";
@@ -175,10 +175,7 @@ function saveMood(emotion: string, intensity: number | null): void {
     intensity: intensity ?? 5,
     context: "Logged via Nila agent",
   };
-  let list: CheckInEntry[] = [];
-  try { const raw = secureLocal.getItem("nilamind_checkins"); if (raw) list = JSON.parse(raw); } catch { /* */ }
-  list.push(entry);
-  secureLocal.setItem("nilamind_checkins", JSON.stringify(list));
+  appendToSecureArray<CheckInEntry>("nilamind_checkins", entry);
 }
 
 function dashboardSummary(): string {

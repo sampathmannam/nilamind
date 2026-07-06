@@ -1,4 +1,4 @@
-import { secureLocal } from "../services/secureLocal";
+import { secureLocal, appendToSecureArray } from "../services/secureLocal";
 import React, { useState } from "react";
 import { CheckInEntry } from "../types";
 import { 
@@ -51,14 +51,7 @@ export default function CheckInScreen({ onCheckInSaved, onNavigateToCoach }: Che
       context: "Quick check-in"
     };
 
-    const saved = secureLocal.getItem("nilamind_checkins");
-    let checkins: CheckInEntry[] = [];
-    if (saved) {
-      // Static message only — never log the error object: it can echo a snippet of decrypted check-in content to logcat.
-      try { checkins = JSON.parse(saved); } catch { console.error("Failed to parse stored check-ins"); }
-    }
-    checkins.push(newEntry);
-    secureLocal.setItem("nilamind_checkins", JSON.stringify(checkins));
+    appendToSecureArray<CheckInEntry>("nilamind_checkins", newEntry);
 
     setOneTapLogged(label);
     onCheckInSaved();
@@ -87,14 +80,7 @@ export default function CheckInScreen({ onCheckInSaved, onNavigateToCoach }: Che
       socialInteraction: socialInteraction
     };
 
-    const saved = secureLocal.getItem("nilamind_checkins");
-    let checkins: CheckInEntry[] = [];
-    if (saved) {
-      // Static message only — never log the error object: it can echo a snippet of decrypted check-in content to logcat.
-      try { checkins = JSON.parse(saved); } catch { console.error("Failed to parse stored check-ins"); }
-    }
-    checkins.push(newEntry);
-    secureLocal.setItem("nilamind_checkins", JSON.stringify(checkins));
+    appendToSecureArray<CheckInEntry>("nilamind_checkins", newEntry);
 
     setStep(2); // Progress to neuropsych explanation card
     onCheckInSaved();

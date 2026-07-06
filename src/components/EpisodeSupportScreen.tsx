@@ -1,4 +1,4 @@
-import { secureLocal } from "../services/secureLocal";
+import { secureLocal, appendToSecureArray } from "../services/secureLocal";
 import React, { useState, useEffect, useRef } from "react";
 import { getCrisisReply } from "../safety";
 import { detectCrisis } from "../services/crisisClassifier";
@@ -304,14 +304,7 @@ export default function EpisodeSupportScreen({
       crisisLineShown: isCrisisMode,
     };
 
-    const saved = secureLocal.getItem("nilamind_episodes");
-    let list: EpisodeRecord[] = [];
-    if (saved) {
-      // Log a STATIC string — never the SyntaxError, which would leak a snippet of decrypted content to logcat.
-      try { list = JSON.parse(saved); } catch { console.error("Failed to parse stored episode records"); }
-    }
-    list.push(epEntry);
-    secureLocal.setItem("nilamind_episodes", JSON.stringify(list));
+    appendToSecureArray<EpisodeRecord>("nilamind_episodes", epEntry);
 
     setStage("saved");
   };

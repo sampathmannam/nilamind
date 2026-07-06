@@ -1,5 +1,5 @@
 import { secureLocal } from "../services/secureLocal";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { SafetyPlan } from "../types";
 import { INITIAL_SAFETY_PLAN } from "../data";
 import { parseSafetyPlan } from "../services/safetyPlan";
@@ -9,6 +9,7 @@ import { CheckCircle2, Save } from "lucide-react";
 export default function SafetyPlanScreen() {
   const [safetyPlan, setSafetyPlan] = useState<SafetyPlan>(INITIAL_SAFETY_PLAN);
   const [savedStatus, setSavedStatus] = useState<boolean>(false);
+  const savedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const saved = secureLocal.getItem("nilamind_safetyplan");
@@ -19,6 +20,15 @@ export default function SafetyPlanScreen() {
       const lines = getCrisisLines().map((l) => `${l.name}: ${l.display}`).join("\n");
       setSafetyPlan((p) => ({ ...p, professionals: lines }));
     }
+
+    // Audit 2026-07-06 #7: the autosaved-status timeout was created inside an event handler and its cleanup
+    // function was never wired up, so the timeout could fire after unmount and leak. Clear it on unmount.
+    return () => {
+      if (savedTimeoutRef.current) {
+        clearTimeout(savedTimeoutRef.current);
+        savedTimeoutRef.current = null;
+      }
+    };
   }, []);
 
   const updateSection = (field: keyof SafetyPlan, value: string) => {
@@ -26,8 +36,11 @@ export default function SafetyPlanScreen() {
     setSafetyPlan(updated);
     secureLocal.setItem("nilamind_safetyplan", JSON.stringify(updated));
     setSavedStatus(true);
-    const timeout = setTimeout(() => setSavedStatus(false), 1200);
-    return () => clearTimeout(timeout);
+    if (savedTimeoutRef.current) clearTimeout(savedTimeoutRef.current);
+    savedTimeoutRef.current = setTimeout(() => {
+      savedTimeoutRef.current = null;
+      setSavedStatus(false);
+    }, 1200);
   };
 
   return (
