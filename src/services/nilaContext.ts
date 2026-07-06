@@ -18,6 +18,8 @@ import { insightsContextBlock } from "./nilaInsights";
 import { profileContextBlock } from "./nilaProfile";
 import { selfReportSleepSignal } from "./sleepInsight";
 import type { SleepSignal } from "./healthConnect";
+import { topFireableSignal, type InflectionSignal } from "./nilaInflection";
+import { getInflectionEnabled } from "./inflectionPrefs";
 import { INSTRUMENTS } from "./assessments";
 
 function readArray(key: string): any[] {
@@ -98,6 +100,26 @@ export function trajectoryContextBlock(sleep: SleepSignal | null): string {
 }
 
 /**
+ * Feed a detected trajectory SHIFT (nilaInflection — a reliable-change / valence-aware trend in the person's
+ * OWN check-in + screening history) into Nila's awareness. PURE (signal passed in). Before this the shift was
+ * only a UI opener bubble, so the model reply that followed had no idea a deterioration was flagged (audit
+ * 2026-07-06). Held gently: never lead with it, never quote it as fact. The call site gates on the user's
+ * inflection opt-in, so enabling inflection makes Nila attuned — not just adds a bubble.
+ */
+export function inflectionContextBlock(sig: InflectionSignal | null): string {
+  if (!sig) return "";
+  const header = "A SHIFT IN THEIR OWN TRAJECTORY (hold gently)";
+  if (sig.direction === "improvement") {
+    return [header,
+      `Their own recent data shows things easing a little (${sig.detail}). If it feels true to them you can ` +
+      "gently notice it with them — warmly, without overclaiming or making them perform being okay."].join("\n");
+  }
+  return [header,
+    `Their own recent data shows a downward shift (${sig.detail}). Hold this gently — don't lead with it or quote ` +
+    "it as a fact; let it make you a little more attentive, and only if the moment fits, ask softly how they've been."].join("\n");
+}
+
+/**
  * Build a compact, warm briefing of what Nila knows about this person, from their on-device history.
  * Returns "" when there's essentially nothing yet — Nila is told (in its prompt) to simply be present
  * and not pretend to know someone it doesn't.
@@ -174,8 +196,10 @@ export function buildPersonalContext(): string {
   const profile = profileContextBlock();
   // Current trajectory (the short-sleep manic-prodrome) — the earliest warning a manic-first app has.
   const trajectory = trajectoryContextBlock(selfReportSleepSignal());
+  // A detected trend shift — only when the user has opted into inflection awareness.
+  const inflection = getInflectionEnabled() ? inflectionContextBlock(topFireableSignal()) : "";
 
-  if (lines.length === 0 && !memory && !insights && !profile && !trajectory) return "";
+  if (lines.length === 0 && !memory && !insights && !profile && !trajectory && !inflection) return "";
 
   const out: string[] = [
     "WHAT YOU ALREADY KNOW ABOUT THEM",
@@ -184,6 +208,7 @@ export function buildPersonalContext(): string {
     "claim to know more than this. If something seems stale, trust what they tell you now.",
   ];
   if (trajectory) out.push(trajectory);
+  if (inflection) out.push(inflection);
   if (profile) out.push(profile);
   if (insights) {
     out.push("Over time (longer-term things you've come to understand about them — hold gently, may be out of date):");
