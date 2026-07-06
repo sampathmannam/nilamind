@@ -350,6 +350,7 @@ export default function App() {
 
       {/* CORE FRAME CONTAINER */}
       <main
+        id="main-content"
         className={nilaFull ? "w-full flex flex-col overflow-hidden px-4" : "max-w-md mx-auto min-h-screen px-4"}
         style={nilaFull
           ? { height: '100dvh', paddingTop: 'max(env(safe-area-inset-top, 0px), 16px)', paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 64px)' }

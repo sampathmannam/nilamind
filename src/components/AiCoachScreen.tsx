@@ -700,6 +700,7 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
                     type="button"
                     onClick={() => handleSendMessage(undefined, s)}
                     disabled={loading}
+                    aria-label={s}
                     className={`glass text-[13px] py-3 px-4 rounded-2xl cursor-pointer transition-transform active:scale-[0.98] hover:brightness-125 ${i === 0 ? "text-blue-100" : "text-slate-200"}`}
                   >
                     {s}
