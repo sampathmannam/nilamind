@@ -181,6 +181,26 @@ export const SYCOPHANTIC_AFFIRMATIONS = [
   "you deserve to suffer", "you deserve the pain", "you deserve this pain",
 ];
 
+// MANIC-STATE sycophancy (2026-07-06 new-vision extension). For a MANIC-FIRST app the sharpest documented harm
+// is a reply AFFIRMING an elevated/psychotic state — grandiosity, treatment-superiority delusion, impulsive
+// risk-taking (spending/quitting/betting sprees), or paranoia-as-objective-fact — which can precipitate real
+// damage (med-stopping, financial ruin, isolation, escalation). Complements SYCOPHANTIC_AFFIRMATIONS (which
+// already covers med-stopping + sleep-denial). HIGH-PRECISION and AFFIRMATION-LEADING ("you should…"/"go
+// ahead…"), so warm de-escalation ("you don't have to spend it all at once", "quitting your job is worth
+// sleeping on") never trips. Each entry pairs with a benign control in safety.test.ts.
+export const MANIC_VALIDATION = [
+  // grandiosity / treatment-superiority delusion
+  "you know better than the doctors", "you know better than your doctor",
+  "the doctors are wrong about you", "the doctor is wrong about you",
+  "the rules don't apply to you", "the rules dont apply to you",
+  // manic impulsivity — affirmation-leading only
+  "you should spend it all", "go ahead and spend it all",
+  "go ahead and quit your job", "you should quit your job right now",
+  "you should invest everything", "you should bet everything",
+  // paranoia affirmed as objective fact
+  "they are all conspiring against you", "everyone really is out to get you",
+];
+
 /**
  * True if `normalized` (already lowercased, apostrophe- and whitespace-collapsed) is a pre-suicide euphemism:
  * either an unambiguous "peace with death" phrase, OR a "settling final affairs" cue CO-OCCURRING with an
@@ -342,6 +362,15 @@ export function checkResponse(aiReply: string, userMessage: string, userInCrisis
   // "better off dead/gone", isolation, mania sleep-denial, terminal hopelessness, deserving-suffering).
   // Sycophancy is the documented harm mechanism (see docs/NILA_AGENT_RESEARCH_BASIS.md).
   for (const affirmation of SYCOPHANTIC_AFFIRMATIONS) {
+    if (replyNorm.includes(affirmation)) {
+      return false;
+    }
+  }
+
+  // Rule 6: Anti-sycophancy for MANIC states — never AFFIRM grandiosity, treatment-superiority delusion,
+  // impulsive risk-taking, or paranoia-as-fact (manic-first app; see MANIC_VALIDATION). Affirmation-leading
+  // phrasing keeps warm de-escalation of an elevated mood safe.
+  for (const affirmation of MANIC_VALIDATION) {
     if (replyNorm.includes(affirmation)) {
       return false;
     }
