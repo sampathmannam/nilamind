@@ -22,6 +22,16 @@ const MED_STOP = [
 const SLEEP_DISMISS = ["don't need sleep", "do not need sleep", "don't need to sleep", "who needs sleep", "sleep is for", "too wired to sleep"];
 const SPENDING = ["spending spree", "maxed out my card", "maxed out my credit", "emptied my savings", "emptied my account", "spent all my money", "spent everything", "can't stop spending"];
 const GRANDIOSITY = ["i'm a genius", "i am a genius", "figured it all out", "figured everything out", "chosen one", "special mission", "i'm unstoppable", "i am unstoppable", "i'm invincible", "destined for greatness", "smarter than everyone", "i can change the world tonight"];
+// RACING / pressured thoughts — a core DSM hypomania/mania criterion the guard previously missed. Kept
+// high-precision by REQUIRING a mind/thoughts/brain subject, so anxiety's "heart is racing" and literal
+// "racing to catch the bus" stay none (an ELEVATED steer = slow down + protect sleep, which is low-harm even
+// if the person is anxious, but firing on bare "racing" would over-fire and invalidate).
+const RACING = [
+  "mind is racing", "thoughts are racing", "racing thoughts",
+  "mind won't stop", "mind wont stop", "thoughts won't stop", "thoughts wont stop",
+  "brain won't shut off", "brain wont shut off", "brain won't turn off", "brain wont turn off",
+  "can't turn my brain off", "cant turn my brain off", "can't slow my thoughts", "cant slow my thoughts",
+];
 
 function normalize(text: string): string {
   return text.toLowerCase().replace(/['’]/g, "'").replace(/\s+/g, " ").trim();
@@ -34,7 +44,7 @@ export function detectElevationRisk(text: string): { level: ElevationLevel; mark
   const markers: string[] = [];
   let high = false;
   for (const kw of MED_STOP) if (n.includes(kw)) { markers.push(kw); high = true; }
-  for (const list of [SLEEP_DISMISS, SPENDING, GRANDIOSITY]) for (const kw of list) if (n.includes(kw)) markers.push(kw);
+  for (const list of [SLEEP_DISMISS, SPENDING, GRANDIOSITY, RACING]) for (const kw of list) if (n.includes(kw)) markers.push(kw);
   if (high) return { level: "high", markers };
   if (markers.length) return { level: "elevated", markers };
   return { level: "none", markers: [] };

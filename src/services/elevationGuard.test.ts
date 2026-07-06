@@ -23,6 +23,18 @@ describe("detectElevationRisk — high-precision mania-risk detection", () => {
   it("does NOT fire on insomnia — 'haven't slept' ≠ 'don't need sleep'", () => {
     expect(detectElevationRisk("i haven't slept well in days, i'm exhausted").level).toBe("none");
   });
+
+  it("elevated for racing / pressured thoughts (DSM hypomania criterion)", () => {
+    for (const t of ["my mind is racing and I can't slow down", "my thoughts are racing tonight", "my brain won't shut off"]) {
+      expect(detectElevationRisk(t).level).toBe("elevated");
+    }
+  });
+
+  it("does NOT fire on anxiety 'heart racing' or rumination (precision boundary)", () => {
+    expect(detectElevationRisk("my heart is racing before the interview").level).toBe("none");
+    expect(detectElevationRisk("i've been overthinking everything and feel anxious").level).toBe("none");
+    expect(detectElevationRisk("i was racing to catch the bus").level).toBe("none");
+  });
 });
 
 describe("guard notes", () => {
