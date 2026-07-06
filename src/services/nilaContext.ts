@@ -194,6 +194,26 @@ export function buildPersonalContext(): string {
     /* streak is best-effort */
   }
 
+  // ── Behavioural Activation (recent activity log) ─────────────────────────
+  try {
+    const { computeInsight, loadActivities } = require("./behaviouralActivation");
+    const baActs = loadActivities();
+    const twoWeeksAgo = new Date(Date.now() - 14 * 86400000).toISOString().split("T")[0];
+    const recent = baActs.filter((a: any) => a.date >= twoWeeksAgo);
+    if (recent.length > 0) {
+      const done = recent.filter((a: any) => a.status === "done");
+      if (done.length > 0) {
+        let baLine = `- In the last two weeks they logged ${done.length} activit${done.length === 1 ? "y" : "ies"} they did.`;
+        const insight = computeInsight(recent);
+        if (insight.topCategory) baLine += ` ${insight.topCategory.label} activities seem to lift them most.`;
+        if (insight.avgMastery != null) baLine += ` Avg mastery: ${Math.round(insight.avgMastery)}/10.`;
+        lines.push(baLine);
+      }
+    }
+  } catch {
+    /* BA data is best-effort */
+  }
+
   // ── Latest screening band (descriptive, NOT a diagnosis) ──────────────────
   const band = latestScreeningBand();
   if (band) lines.push(`- ${band} (from a self-screening they took — context only, never to be quoted back as a label).`);
