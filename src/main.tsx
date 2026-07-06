@@ -68,6 +68,27 @@ if (Capacitor.isNativePlatform()) {
     const { setBrainStatus } = await import("./services/brainSetup");
     setBrainStatus("needs-setup");
   }).catch(() => {});
+
+  // Async between-sessions brain: run the overnight reflection when the app is idle
+  // (opened in the 2am-6am window) or after 5 minutes of idle. Fire-and-forget —
+  // never blocks the UI. §9-gated inside runAsyncReflection; skips silently if the
+  // model isn't ready, no user turns exist, or the session was a crisis.
+  const scheduleReflection = () => {
+    const now = new Date();
+    const hour = now.getHours();
+    // In the overnight window: run after a short idle delay
+    if (hour >= 2 && hour <= 6) {
+      setTimeout(() => {
+        import("./services/asyncReflection").then(({ runAsyncReflection }) => {
+          void runAsyncReflection().catch(() => {});
+        }).catch(() => {});
+      }, 30_000); // 30s after boot, enough for the model to warm
+    }
+  };
+  // Defer off the critical path so first paint is never delayed by this import
+  const ric = (globalThis as any).requestIdleCallback as undefined | ((cb: () => void, o?: any) => number);
+  if (ric) ric(scheduleReflection, { timeout: 30_000 });
+  else setTimeout(scheduleReflection, 15_000);
 } else if (!(import.meta as any).env?.DEV) {
   // WEB front door (rung 0): there is no llama.cpp brain in a browser, so register the deterministic,
   // LLM-free reflection backend. isLocalLlmReady() then becomes true and sendToNila routes to it instead

@@ -17,6 +17,7 @@ import { skillsPromptBlock } from "./skillsLibrary";
 import { relevantSkillsBlock } from "./skillRetrieval";
 import { buildPersonalContext, activeProtocolContextBlock } from "./nilaContext";
 import { getLatestReflection } from "./asyncReflection";
+import { spotDistortions, distortionSteer } from "./distortionSpotter";
 
 export interface NilaMessage {
   role: "user" | "assistant";
@@ -102,7 +103,10 @@ export function buildNilaSystem(query?: string): string {
   // Top-3 RAG block when we have a usable query with matches; otherwise the full library as the default.
   // (A query that ranks nothing → relevant is "" → fall back to the full list so Nila still has skills.)
   const skills = relevant || skillsPromptBlock();
-  return [persona, context, activeProtocol, skills].filter(Boolean).join("\n\n");
+  // Deterministic distortion spotting: if the user's message contains cognitive distortions,
+  // inject a gentle steer into the system prompt so Nila can name them conversationally.
+  const distortions = query ? distortionSteer(spotDistortions(query)) : "";
+  return [persona, distortions, context, activeProtocol, skills].filter(Boolean).join("\n\n");
 }
 
 /** A first message that sounds like a friend opening the door — not a clinical intake. */

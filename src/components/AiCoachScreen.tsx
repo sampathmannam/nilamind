@@ -23,7 +23,7 @@ import { runAgent, AgentView } from "../services/agent";
 import { hasCheckinToday, getSkipFlag, setSkipFlag } from "../services/checkin";
 import { secureLocal } from "../services/secureLocal";
 import { cardsForCheckin, NilaCard } from "../services/nilaOrchestration";
-import { cardsForReply, protocolCard, protocolResumeCard, waitingCards, runWeeklySynthesis } from "../services/nilaCards";
+import { cardsForReply, protocolCard, protocolResumeCard, waitingCards, runWeeklySynthesis, thoughtRecordCard, runThoughtRecordDraft } from "../services/nilaCards";
 import { startProtocol, advanceProtocol, getActiveProgress } from "../services/protocolProgress";
 import { getInflectionEnabled } from "../services/inflectionPrefs";
 import { recordDetectionPass, surfaceOpener, acknowledgeInflection, type InflectionSignal } from "../services/nilaInflection";
@@ -34,6 +34,7 @@ import { sendToNila } from "../services/sendToNila";
 import { NilaMode, NilaUiMessage } from "../services/nilaSend";
 import { getSessionChat, setSessionChat, clearSessionChat } from "../services/sessionChat";
 import { notifyReplyReady } from "../services/notifications";
+import { getArmedCheckin, armedCheckinPrompt, markCheckinFired } from "../services/armedCheckin";
 import EpisodeSupportScreen from "./EpisodeSupportScreen";
 import NilaOrb from "./NilaOrb";
 import { Send, AlertTriangle, Shield, Volume2, VolumeX, Mic, Sparkles, BookOpen, ChevronRight, Phone, Zap, Brain, ClipboardList, LifeBuoy, ThumbsUp, ThumbsDown, Keyboard } from "lucide-react";
@@ -162,7 +163,9 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
       // Don't re-offer the program we just finished on its own completion turn (same message still in play).
       const jc = justCompletedRef.current;
       if (offer && jc && jc.id === offer.protocolId && jc.userMsg === lastUserMsg) return base;
-      return offer ? [...base, offer] : base;
+      const out = offer ? [...base, offer] : base;
+      const trCard = thoughtRecordCard(lastUserMsg);
+      return trCard ? [...out, trCard] : out;
     },
     [lastMessage?.role, lastMessage?.content, lastUserMsg, isCrisisState],
   );
@@ -219,6 +222,12 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
     setPactNotice(activePactNotice()); // surface the user's pact if a real shift is noticed (read-only, dismissible)
     setSleepBannerOpen(!!selfReportSleepSignal()?.firing); // default-on sleep-prodrome surface (audit fix #4)
     setDependencyNudge(activeDependencyNudge()); // nudge toward a human if Nila use is heavy + escalating
+    // Armed check-in: if the user asked Nila to check on them, surface the context-aware prompt
+    const armed = getArmedCheckin();
+    if (armed && !initCheckin.current && !restored.current) {
+      setMessages([{ role: "assistant", content: armedCheckinPrompt(armed) }]);
+      markCheckinFired();
+    }
     return () => {
       const cancelIdle = (globalThis as any).cancelIdleCallback as undefined | ((h: number) => void);
       if (idle && cancelIdle) cancelIdle(t); else clearTimeout(t);
@@ -551,7 +560,18 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
     if (!a) return;
     if (a.type === "grounding") onNavigateToGrounding();
     else if (a.type === "episode") onEnterEpisode();
-    else if (a.type === "skill") onOpenSkill?.(a.skillId);
+    else if (a.type === "skill") {
+      if (a.skillId === "thought_record") {
+        void (async () => {
+          setLoading(true);
+          const draft = await runThoughtRecordDraft(lastUserMsg);
+          setLoading(false);
+          if (draft) setMessages((prev) => [...prev, { role: "assistant", content: draft }]);
+        })();
+      } else {
+        onOpenSkill?.(a.skillId);
+      }
+    }
     else if (a.type === "screening") onLaunchScreening(a.instrument);
     else if (a.type === "protocol") runProtocolCard(a.protocolId);
     else if (a.type === "weekly_synthesis") void runSynthesisCard();
