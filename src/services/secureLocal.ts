@@ -212,6 +212,25 @@ export const secureLocal = {
   },
 };
 
+/** Atomic append to a JSON-array-valued key: read → corrupt-safe parse → push → write, all SYNCHRONOUSLY
+ *  (no await inside), so two callers from different async contexts can't interleave a stale read-modify-write
+ *  and drop an entry (the last-writer-wins race, 2026-07-06 audit). Optional `cap` keeps only the most recent N.
+ *  Returns the new array. Use this instead of hand-rolling getItem→JSON.parse→push→setItem at each call site. */
+export function appendToSecureArray<T>(key: string, item: T, cap?: number): T[] {
+  let arr: T[];
+  try {
+    const raw = secureLocal.getItem(key);
+    const parsed = raw ? JSON.parse(raw) : [];
+    arr = Array.isArray(parsed) ? parsed : [];
+  } catch {
+    arr = [];
+  }
+  arr.push(item);
+  if (cap && arr.length > cap) arr = arr.slice(arr.length - cap);
+  secureLocal.setItem(key, JSON.stringify(arr));
+  return arr;
+}
+
 /** Await all queued encrypted writes (used on pagehide and in tests). Also RETRIES any writes that previously
  *  failed — a failure may have been transient (IDB busy) or resolved (store re-unlocked), so a flush is our
  *  chance to get the data to disk before the app closes. */

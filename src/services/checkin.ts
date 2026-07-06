@@ -2,7 +2,7 @@
 // to the shared nilamind_checkins array via secureLocal (read-modify-write, byte-identical to every
 // existing writer), and manages the non-sensitive per-day skip flag in plain localStorage.
 
-import { secureLocal } from "./secureLocal";
+import { secureLocal, appendToSecureArray } from "./secureLocal";
 import type { CheckInEntry } from "../types";
 
 const CHECKINS_KEY = "nilamind_checkins";       // SENSITIVE_KEY — encrypted via secureLocal
@@ -21,18 +21,10 @@ export function buildCheckinEntry(label: string, intensity: number, contextTag: 
   };
 }
 
-/** Read the shared array, push the entry, write once. Mirrors every existing writer exactly. */
+/** Append the entry via the atomic shared primitive (2026-07-06 audit — closes the last-writer-wins race
+ *  vs the other check-in writers that each hand-rolled read-modify-write). */
 export function appendCheckin(entry: CheckInEntry): void {
-  let list: CheckInEntry[] = [];
-  try {
-    const raw = secureLocal.getItem(CHECKINS_KEY);
-    if (raw) list = JSON.parse(raw);
-    if (!Array.isArray(list)) list = [];
-  } catch {
-    list = [];
-  }
-  list.push(entry);
-  secureLocal.setItem(CHECKINS_KEY, JSON.stringify(list));
+  appendToSecureArray<CheckInEntry>(CHECKINS_KEY, entry);
 }
 
 /** True when any stored CheckInEntry has date === today (local YYYY-MM-DD). Any same-day check-in
