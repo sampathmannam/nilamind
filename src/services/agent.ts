@@ -17,7 +17,7 @@ import { CheckInEntry } from "../types";
 export type AgentView =
   | "dashboard" | "your_data" | "settings" | "skills" | "assessment"
   | "values_to_action" | "nila"
-  | "grounding" | "breathing" | "checkin" | "diary" | "winddown";
+  | "grounding" | "breathing" | "diary" | "winddown";
 
 export interface AgentResult {
   /** true when the message was an actionable command we handled (don't send to the on-device model). */
@@ -110,7 +110,7 @@ const NAV: { re: RegExp; view: AgentView; label: string }[] = [
   { re: /\bground(ing)?\b/, view: "grounding", label: "grounding" },
   { re: /\bbreath(e|ing)\b/, view: "breathing", label: "breathing" },
   { re: /\b(diary|journal)\b/, view: "diary", label: "your diary" },
-  { re: /\bcheck-?in\b/, view: "checkin", label: "a check-in" },
+  { re: /\bcheck-?in\b/, view: "nila", label: "Nila" },
 ];
 
 /**
@@ -223,7 +223,7 @@ export async function runAgent(text: string): Promise<AgentResult> {
     }
     case "log_mood": {
       if (!intent.emotion) {
-        return { handled: true, reply: "Sure — what would you like to log? For example, “log that I'm anxious.”", navigate: "checkin" };
+        return { handled: true, reply: "Sure — what would you like to log? For example, “log that I'm anxious.”", navigate: "nila" };
       }
       saveMood(intent.emotion, intent.intensity);
       const lvl = intent.intensity ?? 5;

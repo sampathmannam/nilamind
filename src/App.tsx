@@ -19,7 +19,6 @@ import YouScreen from "./components/YouScreen";
 // This lifts ~17 screen components out of the eager boot bundle so a cold open parses/evals less at first
 // paint. On native the chunks are bundled on-disk, so the first open of one is a fast local read (no
 // network), covered by the calm <Suspense> fallback below. NONE of these is a crisis-entry surface.
-const CheckInScreen = lazy(() => import("./components/CheckInScreen"));
 const DiaryCardScreen = lazy(() => import("./components/DiaryCardScreen"));
 const ThoughtRecordScreen = lazy(() => import("./components/ThoughtRecordScreen"));
 const SelfCompassionScreen = lazy(() => import("./components/SelfCompassionScreen"));
@@ -31,7 +30,6 @@ const PsychoedScreen = lazy(() => import("./components/PsychoedScreen"));
 const ReachOutScreen = lazy(() => import("./components/ReachOutScreen"));
 const ValuesToActionScreen = lazy(() => import("./components/ValuesToActionScreen"));
 const DashboardScreen = lazy(() => import("./components/DashboardScreen"));
-const AgentConsoleScreen = lazy(() => import("./components/AgentConsoleScreen"));
 const PactScreen = lazy(() => import("./components/PactScreen"));
 const YourDataScreen = lazy(() => import("./components/YourDataScreen"));
 const NilaMemoryScreen = lazy(() => import("./components/NilaMemoryScreen"));
@@ -211,7 +209,7 @@ export default function App() {
       if (s.isCrisisOverlayOpen) { setIsCrisisOverlayOpen(false); return; }
       if (s.isCallOpen) { setIsCallOpen(false); return; }
       if (s.auxView) { setAuxView(s.auxView === "your_data" ? "dashboard" : null); return; }
-      if (s.activeTab === "checkin" || s.activeTab === "diary" || s.activeTab === "plan") { setActiveTab("tools"); return; }
+      if (s.activeTab === "diary" || s.activeTab === "plan") { setActiveTab("tools"); return; }
       if (s.activeTab !== "nila") { setActiveTab("nila"); return; }
       void CapApp.exitApp();
     }).then((h) => { handle = h; if (removed) h.remove(); }); // …remove it the moment it registers (no dup/stale listener)
@@ -409,17 +407,6 @@ export default function App() {
             </button>
             <ValuesToActionScreen />
           </div>
-        ) : auxView === "console" ? (
-          <div className="space-y-4">
-            <button
-               onClick={() => setAuxView(null)}
-               className="flex items-center gap-1.5 text-slate-300 hover:text-white font-semibold py-3 px-1 -ml-1 mb-2 focus:outline-none cursor-pointer active:opacity-70"
-               aria-label="Back"
-            >
-              <ChevronLeft className="w-5 h-5" /> Back
-            </button>
-            <AgentConsoleScreen onOpenDashboard={() => setAuxView("dashboard")} onOpenMemory={() => setAuxView("nila_memory")} onOpenPact={() => setAuxView("pact")} />
-          </div>
         ) : auxView === "pact" ? (
           <div className="space-y-4">
             <button
@@ -440,7 +427,7 @@ export default function App() {
             >
               <ChevronLeft className="w-5 h-5" /> Back
             </button>
-            <DashboardScreen onManageData={() => setAuxView("your_data")} onOpenConsole={() => setAuxView("console")} />
+            <DashboardScreen onManageData={() => setAuxView("your_data")} />
           </div>
         ) : auxView === "your_data" ? (
           <div className="space-y-4">
@@ -551,17 +538,6 @@ export default function App() {
           /* STANDARD TAB NAVIGATION ROUTING */
           <div className={nilaFull ? "flex-1 flex flex-col min-h-0" : undefined}>
 
-            {/* FULL EMOTION CHECK-IN SCREEN */}
-            {activeTab === "checkin" && (
-              <div>
-                {dashBack}
-                <CheckInScreen
-                  onCheckInSaved={checkRecentLogs}
-                  onNavigateToCoach={() => setActiveTab("nila")}
-                />
-              </div>
-            )}
-
             {/* DBT DIARY CARD DAILY SCREEN */}
             {activeTab === "diary" && (
               <div>
@@ -622,7 +598,7 @@ export default function App() {
               indicator bar; inactive tabs stay medium-weight and muted. Labels raised 10px → 11px. */}
           {([
             { tab: "nila", label: "Nila", Icon: Sparkles, active: activeTab === "nila" && !auxView },
-            { tab: "tools", label: "Tools", Icon: Wrench, active: ["tools", "checkin", "diary", "plan"].includes(activeTab) && !auxView },
+            { tab: "tools", label: "Tools", Icon: Wrench, active: ["tools", "diary", "plan"].includes(activeTab) && !auxView },
             { tab: "you", label: "You", Icon: User, active: activeTab === "you" && !auxView },
           ] as const).map(({ tab, label, Icon, active }) => (
             <button

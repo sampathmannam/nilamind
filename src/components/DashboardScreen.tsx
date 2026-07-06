@@ -41,7 +41,7 @@ function readArr<T>(key: string): T[] {
 
 // The USER's own private analytics. Local sections never leave the device. The single off-device
 // feature — Nila's Deep Evaluation — is user-initiated and explicitly disclosed.
-export default function DashboardScreen({ onManageData, onOpenConsole }: { onManageData?: () => void; onOpenConsole?: () => void }) {
+export default function DashboardScreen({ onManageData }: { onManageData?: () => void }) {
   const [timeRange, setTimeRange] = useState<"7d" | "30d">("30d");
   const [chartTab, setChartTab] = useState<"emotion" | "context">("emotion");
   const [isAssessing, setIsAssessing] = useState(false);
@@ -344,11 +344,6 @@ export default function DashboardScreen({ onManageData, onOpenConsole }: { onMan
         )}
       </div>
 
-      {onOpenConsole && (
-        <button onClick={onOpenConsole} id="dashboard-open-console" className="w-full bg-card border border-purple-500/20 hover:bg-raised text-purple-300 text-xs font-semibold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5">
-          <BrainCircuit className="w-3.5 h-3.5" /> Agent Console — everything at a glance
-        </button>
-      )}
       {onManageData && (
         <button onClick={onManageData} id="dashboard-manage-data" className="w-full glass hover:bg-raised text-slate-300 text-xs font-semibold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5">
           <Database className="w-3.5 h-3.5" /> Manage, export or delete your data

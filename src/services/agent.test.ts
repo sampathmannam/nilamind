@@ -44,9 +44,9 @@ describe("talk-to over-match regression guard", () => {
     expect(i?.kind === "navigate" && i.view === "breathing").toBe(false);
   });
 
-  it("generic 'talk to a friend about check-in' does NOT navigate to checkin", () => {
-    const i = classify("I need to talk to a friend about my check-in");
-    expect(i?.kind === "navigate" && i.view === "checkin").toBe(false);
+  it("check-in navigation routes to Nila (the orphaned CheckInScreen was removed)", () => {
+    const i = classify("open check-in");
+    expect(i).toEqual({ kind: "navigate", view: "nila", label: expect.any(String) });
   });
 
   it("nila check-in phrases still route to nila", () => {
