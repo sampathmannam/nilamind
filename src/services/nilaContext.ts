@@ -16,6 +16,8 @@ import { recentMemoryLines } from "./nilaMemory";
 import { getActiveProgress } from "./protocolProgress";
 import { insightsContextBlock } from "./nilaInsights";
 import { profileContextBlock } from "./nilaProfile";
+import { selfReportSleepSignal } from "./sleepInsight";
+import type { SleepSignal } from "./healthConnect";
 import { INSTRUMENTS } from "./assessments";
 
 function readArray(key: string): any[] {
@@ -74,6 +76,25 @@ function joinNatural(items: string[]): string {
   if (xs.length === 1) return xs[0];
   if (xs.length === 2) return `${xs[0]} and ${xs[1]}`;
   return `${xs.slice(0, -1).join(", ")}, and ${xs[xs.length - 1]}`;
+}
+
+/**
+ * Surface the current TRAJECTORY signal — today the short-sleep manic-prodrome (healthConnect.shortSleepSignal,
+ * Lim 2024 / Lewis 2017) — as a gentle heads-up for Nila. PURE (the signal is passed in), so it's unit-testable
+ * and the live wiring stays a one-liner. Empty unless firing. Framed sense→ask→confirm: hold it gently and,
+ * only if it fits, ask about rest — never alarm, never diagnose. For a manic-first app this is the earliest
+ * warning the app has; before this it reached the user AND the chat nowhere (2026-07-06 audit).
+ */
+export function trajectoryContextBlock(sleep: SleepSignal | null): string {
+  if (!sleep?.firing) return "";
+  const base = sleep.baselineHours ? ` (~${sleep.baselineHours}h)` : "";
+  return [
+    "SOMETHING TO HOLD GENTLY (from their own logs)",
+    `Their self-logged sleep has been short lately — ${sleep.nightsBelow} night${sleep.nightsBelow === 1 ? "" : "s"} ` +
+      `below their usual${base}. For them, short sleep can come before feeling wired or speeding up, so hold this ` +
+      "gently and — only if it fits the moment — ask softly how rest has been. Never alarm them, never diagnose, " +
+      "never quote this back as a fact.",
+  ].join("\n");
 }
 
 /**
@@ -151,8 +172,10 @@ export function buildPersonalContext(): string {
   const insights = insightsContextBlock();
   // User-owned profile — Core facts + Active focus, captured only with their say-so (services/nilaProfile.ts).
   const profile = profileContextBlock();
+  // Current trajectory (the short-sleep manic-prodrome) — the earliest warning a manic-first app has.
+  const trajectory = trajectoryContextBlock(selfReportSleepSignal());
 
-  if (lines.length === 0 && !memory && !insights && !profile) return "";
+  if (lines.length === 0 && !memory && !insights && !profile && !trajectory) return "";
 
   const out: string[] = [
     "WHAT YOU ALREADY KNOW ABOUT THEM",
@@ -160,6 +183,7 @@ export function buildPersonalContext(): string {
     "way a friend recalls things — never read them back like a report, never lead with them, and never",
     "claim to know more than this. If something seems stale, trust what they tell you now.",
   ];
+  if (trajectory) out.push(trajectory);
   if (profile) out.push(profile);
   if (insights) {
     out.push("Over time (longer-term things you've come to understand about them — hold gently, may be out of date):");
