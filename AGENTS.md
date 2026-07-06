@@ -73,9 +73,12 @@ Shipped (TDD, 699 green, tsc clean):
 - unified **episode voice** with companion persona + personal context (#2)
 - partial **de-fragmentation**: AgentConsoleScreen removed from product, orphaned CheckInScreen removed (#8)
 
-## Remaining prioritized fixes
-- **#8 (continued)** Finish de-fragmentation: 3 reading libraries → 1, BA/self-compassion → in-chat protocol
-  path. _[device-verify]_
+## The build queue → `docs/PLAN_OF_ACTION.md`
+**Read `docs/PLAN_OF_ACTION.md` — it is the authoritative, tagged queue of everything left to build.** Work
+items top-down. Respect the autonomy tags: 🟢 build autonomously (guard-gated), 🟡 build but FLAG the diff for
+human review before merge (safety-critical), 🔴 do NOT build (human/strategic/dropped). The cardinal rule from
+that doc: **WIRE WHAT YOU BUILD — no engine ships without a user surface in the same change** (three of the last
+batch of features were left as dead code; don't repeat it). `npm run guard` must be green before every commit.
 
 ## Commit style
 Conventional commits; end messages with `Co-Authored-By:` your agent line. Gate every commit on `vitest` +
