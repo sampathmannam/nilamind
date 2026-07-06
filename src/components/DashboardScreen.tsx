@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend,
@@ -6,12 +6,12 @@ import {
 import {
   Flame, TrendingUp as TrendUpIcon, TrendingDown, Minus, Activity, MessageSquare,
   CalendarCheck, ClipboardCheck, Database, Sparkles, ShieldAlert, Clock, BrainCircuit,
-  Loader2, Tag,
+  Loader2, Tag, Lightbulb,
 } from "lucide-react";
 import Markdown from "react-markdown";
 import { loadMoodHistory } from "../services/moodHistory";
 import { loadAssessments, latestFor, INSTRUMENTS, type InstrumentId } from "../services/assessments";
-import { assessmentInsights } from "../services/patternInsights";
+import { assessmentInsights, generateInsights, daysOfData, type Insight } from "../services/patternInsights";
 import { computeStreak } from "../services/streaks";
 import { nilaStats } from "../services/nilaSessions";
 import { secureLocal } from "../services/secureLocal";
@@ -22,6 +22,7 @@ import {
   emotionDistribution, derivedObservations, episodePatterns, quickNoteTags,
   moodTrend, contextTrend,
 } from "../services/dashboardInsights";
+import { getRecentSnapshots } from "../db/behaviourDb";
 import type { CheckInEntry, DiaryCardEntry, EpisodeRecord } from "../types";
 import { DAY_MS } from "../services/storageUtils";
 
@@ -47,6 +48,8 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
   const [isAssessing, setIsAssessing] = useState(false);
   const [assessmentResult, setAssessmentResult] = useState<string | null>(null);
   const [assessmentCrisis, setAssessmentCrisis] = useState(false);
+  const [behaviourInsights, setBehaviourInsights] = useState<Insight[]>([]);
+  const [behaviourDays, setBehaviourDays] = useState(0);
 
   const data = useMemo(() => {
     const mood = loadMoodHistory().sort((a, b) => a.date.localeCompare(b.date));
@@ -83,6 +86,20 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
   }, []);
 
   const { mood, streak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes } = data;
+
+  // Load behaviour snapshots async and compute daily-behaviour insights
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const snaps = await getRecentSnapshots(30);
+        if (cancelled) return;
+        setBehaviourInsights(generateInsights(snaps, mood));
+        setBehaviourDays(daysOfData(snaps, mood));
+      } catch { /* fresh db or no permission */ }
+    })();
+    return () => { cancelled = true; };
+  }, [mood]);
 
   const emoBars = useMemo(() => emotionDistribution(checkins, stripProvenance), [checkins]);
   const observations = useMemo(() => derivedObservations(checkins, diaryEntries), [checkins, diaryEntries]);
@@ -257,6 +274,26 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
             {observations.map((ins, i) => (
               <li key={i} className="text-xs text-slate-300 leading-relaxed flex items-start gap-2 bg-page p-3 rounded-xl border border-slate-850">
                 <span className="text-emerald-400 font-bold">●</span><span>{ins}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Daily-behaviour insights (sleep, screen time, steps, etc.) */}
+      {behaviourInsights.length > 0 && (
+        <div className="glass p-5 rounded-2xl space-y-3">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400 font-mono flex items-center gap-1.5">
+            <Lightbulb className="w-3.5 h-3.5 text-amber-400" /> Behaviour insights
+            {behaviourDays > 0 && <span className="text-[10px] text-slate-600 normal-case tracking-normal ml-1">({behaviourDays} days of paired data)</span>}
+          </h2>
+          <ul className="space-y-3">
+            {behaviourInsights.map((ins) => (
+              <li key={ins.id} className={`text-xs leading-relaxed flex items-start gap-2 bg-page p-3 rounded-xl border ${
+                ins.direction === "risk" ? "border-amber-500/30" : ins.direction === "protective" ? "border-emerald-500/30" : "border-slate-850"
+              }`}>
+                <span className={`font-bold ${ins.direction === "risk" ? "text-amber-400" : ins.direction === "protective" ? "text-emerald-400" : "text-slate-400"}`}>●</span>
+                <span className="text-slate-300">{ins.finding}</span>
               </li>
             ))}
           </ul>
