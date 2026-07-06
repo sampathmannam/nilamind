@@ -79,7 +79,7 @@ export function saveValues(snapshot: ValuesSnapshot): void {
   try {
     secureLocal.setItem(SNAPSHOT_KEY, JSON.stringify(snapshot));
   } catch (e) {
-    console.error("Failed to persist values snapshot:", e);
+    console.error("Failed to persist values snapshot");
   }
 }
 
@@ -98,7 +98,7 @@ export function saveActions(all: CommittedAction[]): void {
   try {
     secureLocal.setItem(ACTIONS_KEY, JSON.stringify(all));
   } catch (e) {
-    console.error("Failed to persist committed actions:", e);
+    console.error("Failed to persist committed actions");
   }
 }
 

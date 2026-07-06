@@ -9,6 +9,7 @@ import { secureLocal } from "./secureLocal";
 import { ymd } from "./streaks";
 
 const HEAVY_7D = 28; // ~4 chats/day for a week — the heavy-use floor the dependency literature flags
+const TURN_BINGE = 20; // single-session turn count the literature flags as emotional-dependence binging
 const DISMISS_KEY = "nilamind_dependency_dismissed";
 
 export interface DependencySignal { firing: boolean; recent7: number; prior7: number }
@@ -46,4 +47,16 @@ function dismissedRecently(today: string): boolean {
 export function activeDependencyNudge(today = ymd(new Date())): boolean {
   if (dismissedRecently(today)) return false;
   return dependencySignal(loadNilaTurns(), today).firing;
+}
+
+/** Single-session binge guard: returns true when today's turn count exceeds ~20, indicating
+ *  emotional-dependence binging within one session. Fires as an in-chat gentle nudge (separate from the
+ *  home-screen dependency nudge). PURE — takes turns + today explicitly so it's testable. */
+export function activeHighTurnNudge(turns: NilaTurn[], today: string): boolean {
+  if (!turns || !today) return false;
+  let todayTurns = 0;
+  for (const t of turns) {
+    if (t?.date === today) todayTurns++;
+  }
+  return todayTurns >= TURN_BINGE;
 }

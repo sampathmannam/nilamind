@@ -21,6 +21,10 @@ export const SUICIDAL_KEYWORDS = [
 export const SLANG_IDEATION = [
   "unalive", // covers "unalive myself", "gonna unalive", "want to unalive"
   "want to kms", "wanna kms", "gonna kms", "going to kms", "gonna kill myself",
+  // Gen-Z / internet slang for suicide ideation (2026-07-06 audit). High-precision multi-word / coined
+  // euphemisms with near-zero benign collision. "sewerslide"/"sewer slide" is a deliberate corruption of
+  // "suicide" to evade content filters; "log out/off of life" and "exit the game" are gamified metaphors.
+  "sewerslide", "sewer slide", "log out of life", "log off permanently", "logging off permanently", "exit the game",
 ];
 
 // Romanized Hindi/Tamil crisis phrasing (2026-07-06 audit). India-first app; MiniLM is English-only and the
@@ -32,8 +36,13 @@ export const ROMANIZED_IDEATION = [
   "marna hai", "mar jana chahta", "mar jaana hai", "mar jaunga", "mar jaungi",
   "zindagi khatam", "khatam kar lunga", "khatam kar dunga",
   "khudkushi", "aatmahatya",
+  // Hindi: active suicidal ideation / death-wish / refusal-to-rise phrasing (2026-07-06 audit).
+  "marne ka mann", "marne ki ichha", "mar raha hoon", "mar rahi hoon",
+  "jeena nahi chahiye", "jeena mushkil ho raha hai", "aaj uthna nahi chahta",
   // Tamil (romanized)
   "saaganum", "saga poren", "saaga poren", "uyir vaazha maaten",
+  // Tamil: additional crisis-ideation phrasing (2026-07-06 audit)
+  "vaazha vendaam", "saavukku poyida poren", "saaganum da",
 ];
 
 export const SELF_HARM_KEYWORDS = [
@@ -333,9 +342,12 @@ export function checkResponse(aiReply: string, userMessage: string, userInCrisis
     return false;
   }
 
-  // Rule 2: Contains potential method/means instructions
+  // Rule 2: Contains potential method/means instructions. Narrowed to "how to" only — "try" and
+  // "instruction" were too broad and false-cut warm therapeutic replies ("you're at the end of your rope,
+  // let's try one small step"). The live guard (isStreamingHarm) made the same narrowing for the same
+  // reason. Malicious instruction-only replies are caught by Rules 3-6 and the deterministic input gate.
   for (const method of UNSAFE_METHOD_KEYWORDS) {
-    if (replyNorm.includes(method) && (replyNorm.includes("how to") || replyNorm.includes("instruction") || replyNorm.includes("try"))) {
+    if (replyNorm.includes(method) && replyNorm.includes("how to")) {
       return false;
     }
   }

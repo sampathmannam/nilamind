@@ -12,9 +12,9 @@ export interface ReminderPrefs {
   quietStart: string; // "HH:MM" — quiet hours begin (no nudges)
   quietEnd: string; // "HH:MM" — quiet hours end
 }
-const DEFAULTS: ReminderPrefs = { enabled: false, windowStart: "10:00", windowEnd: "20:00", quietStart: "22:00", quietEnd: "08:00" };
+import { ls } from "./storageUtils";
 
-const ls = (): Storage | null => { try { return (globalThis as any).localStorage ?? null; } catch { return null; } };
+const DEFAULTS: ReminderPrefs = { enabled: false, windowStart: "10:00", windowEnd: "20:00", quietStart: "22:00", quietEnd: "08:00" };
 
 export function getReminderPrefs(): ReminderPrefs {
   try { const raw = ls()?.getItem(KEY); return raw ? { ...DEFAULTS, ...JSON.parse(raw) } : DEFAULTS; } catch { return DEFAULTS; }

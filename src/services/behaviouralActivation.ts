@@ -138,7 +138,7 @@ export function saveActivities(all: BAActivityLog[]): void {
   try {
     secureLocal.setItem(STORAGE_KEY, JSON.stringify(all));
   } catch (e) {
-    console.error("Failed to persist BA activities:", e);
+    console.error("Failed to persist BA activities");
   }
 }
 

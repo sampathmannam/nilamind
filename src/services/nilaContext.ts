@@ -21,6 +21,7 @@ import type { SleepSignal } from "./healthConnect";
 import { topFireableSignal, type InflectionSignal } from "./nilaInflection";
 import { getInflectionEnabled } from "./inflectionPrefs";
 import { INSTRUMENTS } from "./assessments";
+import { DAY_MS } from "./storageUtils";
 
 function readArray(key: string): any[] {
   try {
@@ -54,7 +55,7 @@ function relativeDay(dateStr: string): string {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   d.setHours(0, 0, 0, 0);
-  const diff = Math.round((today.getTime() - d.getTime()) / 86400000);
+  const diff = Math.round((today.getTime() - d.getTime()) / DAY_MS);
   if (diff <= 0) return "today";
   if (diff === 1) return "yesterday";
   if (diff <= 6) return "earlier this week";

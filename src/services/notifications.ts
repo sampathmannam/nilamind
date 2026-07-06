@@ -9,6 +9,7 @@ import { withinQuietHours, getReminderPrefs } from "./reminders";
 import { selfReportSleepSignal } from "./sleepInsight";
 import { topFireableSignal } from "./nilaInflection";
 import { getInflectionEnabled } from "./inflectionPrefs";
+import { DAY_MS } from "./storageUtils";
 
 // Warm, low-pressure nudges (Phase 7). Never demanding, never guilt-laden — each is an invitation.
 export const WARM_NUDGES = [
@@ -49,7 +50,7 @@ const timeToday = (h: number, m: number): Date => { const d = new Date(); d.setH
 /** Pick a nudge that varies by day and gently adapts to the person's current on-device signals (read here,
  *  never sent anywhere). Inflection is consulted only when the user has opted into inflection awareness. */
 function nudgeForToday(): string {
-  const dayIndex = Math.floor(timeToday(0, 0).getTime() / 86400000);
+  const dayIndex = Math.floor(timeToday(0, 0).getTime() / DAY_MS);
   const sleepFiring = !!selfReportSleepSignal()?.firing;
   const inflection = getInflectionEnabled() ? (topFireableSignal()?.direction ?? null) : null;
   return chooseNudge({ dayIndex, sleepFiring, inflection });

@@ -6,6 +6,7 @@
 import { stripProvenance } from "./emotionParse";
 import { skillForEmotion } from "./skillsLibrary";
 import { latestFor, daysSince } from "./assessments";
+import { DAY_MS } from "./storageUtils";
 import type { CheckInEntry } from "../types";
 
 export type NilaCard = {
@@ -31,7 +32,7 @@ function sustainedMood(recent: CheckInEntry[], re: RegExp): boolean {
     if (!c) continue;
     const then = new Date(c.date + "T00:00:00").getTime();
     if (Number.isNaN(then)) continue;
-    const days = Math.floor((today - then) / 86400000);
+    const days = Math.floor((today - then) / DAY_MS);
     if (days > 14) continue;
     if ((c.intensity ?? 0) >= 5 && re.test(stripProvenance(c.emotion || ""))) n++;
   }

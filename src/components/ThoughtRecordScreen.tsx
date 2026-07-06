@@ -69,7 +69,7 @@ export default function ThoughtRecordScreen() {
         setCrisis(true); // §9: surface crisis help here; do not show a reframe
       }
     } catch (err: any) {
-      console.error(err);
+      console.error("Failed to generate balanced thought");
       setAiError("I couldn't reach Nila right now. Please draft your own balanced thought or retry.");
     } finally {
       setAiLoading(false);

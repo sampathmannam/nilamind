@@ -4,6 +4,7 @@
 // Encrypted at rest via secureLocal. Capped so it can't grow unbounded.
 
 import { secureLocal } from "./secureLocal";
+import { DAY_MS } from "./storageUtils";
 
 export interface NilaTurn {
   id: string;
@@ -42,7 +43,7 @@ export function logNilaTurn(surface: NilaTurn["surface"], userText: string): voi
   try {
     secureLocal.setItem(KEY, JSON.stringify(trimmed));
   } catch (e) {
-    console.error("Failed to log Nila turn:", e);
+    console.error("Failed to log Nila turn");
   }
 }
 
@@ -54,7 +55,7 @@ export interface NilaStats {
 
 export function nilaStats(): NilaStats {
   const all = loadNilaTurns();
-  const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().split("T")[0];
+  const weekAgo = new Date(Date.now() - 7 * DAY_MS).toISOString().split("T")[0];
   return {
     total: all.length,
     last7: all.filter((t) => t.date >= weekAgo).length,

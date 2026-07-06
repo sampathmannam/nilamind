@@ -620,10 +620,13 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
         </div>
       )}
 
-      {/* Messages block */}
+      {/* Messages block — aria-live ensures new replies are announced to screen readers */}
       <div
         className={`flex-1 overflow-y-auto p-4 space-y-4 flex flex-col ${showCheckin || messages.length <= 1 ? "justify-center" : ""}`}
         id="chat-scroller"
+        role="log"
+        aria-live="polite"
+        aria-label="Chat with Nila"
       >
 
         {/* ── Opening check-in: shown as Nila's first turn when due (once per day). ──
@@ -1049,7 +1052,7 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
                   aria-label="Dictate instead of typing"
                   title="Dictate"
                   id="coach-mic-btn"
-                  className={`w-9 h-9 rounded-full shrink-0 flex items-center justify-center cursor-pointer transition-all ${
+                  className={`w-11 h-11 rounded-full shrink-0 flex items-center justify-center cursor-pointer transition-all ${
                     listening ? "bg-rose-600 text-white animate-pulse" : "text-slate-400 hover:text-slate-200"
                   }`}
                 >
@@ -1059,7 +1062,7 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
                   type="submit"
                   disabled={!inputText.trim() || loading}
                   aria-label="Send message"
-                  className={`w-9 h-9 rounded-full transition-all shrink-0 flex items-center justify-center ${
+                  className={`w-11 h-11 rounded-full transition-all shrink-0 flex items-center justify-center ${
                     inputText.trim() && !loading
                       ? "sun-cta bg-purple-600 hover:bg-purple-550 text-white cursor-pointer"
                       : "bg-slate-800 text-slate-500 cursor-not-allowed"

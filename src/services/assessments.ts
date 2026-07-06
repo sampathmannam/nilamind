@@ -1,4 +1,5 @@
 import { secureLocal } from "./secureLocal";
+import { DAY_MS } from "./storageUtils";
 // Validated symptom-screening instruments (PHQ-9, GAD-7).
 //
 // These are the field-standard, research-validated self-report measures. Everything here —
@@ -280,7 +281,7 @@ export function saveAssessment(entry: AssessmentEntry): AssessmentEntry[] {
   try {
     secureLocal.setItem(STORAGE_KEY, JSON.stringify(all));
   } catch (e) {
-    console.error("Failed to persist assessment:", e);
+    console.error("Failed to persist assessment");
   }
   return all;
 }
@@ -303,5 +304,5 @@ export function daysSince(entry: AssessmentEntry | null): number | null {
   const then = new Date(entry.date + "T00:00:00").getTime();
   const now = new Date(new Date().toISOString().split("T")[0] + "T00:00:00").getTime();
   if (Number.isNaN(then)) return null;
-  return Math.max(0, Math.floor((now - then) / 86400000));
+  return Math.max(0, Math.floor((now - then) / DAY_MS));
 }

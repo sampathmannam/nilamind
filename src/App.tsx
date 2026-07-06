@@ -1,6 +1,6 @@
 import { secureLocal, onPersistError, isPassthrough } from "./services/secureLocal";
 import React, { useState, useEffect, useCallback, lazy, Suspense } from "react";
-import { Sparkles, Wrench, User, ChevronLeft } from "lucide-react";
+import { Sparkles, Wrench, User, ChevronLeft, Shield } from "lucide-react";
 import { App as CapApp } from "@capacitor/app";
 
 // EAGER (welded into the boot bundle) — every screen on the first-paint or crisis path. These must render
@@ -151,7 +151,7 @@ export default function App() {
         const parsed: CheckInEntry[] = JSON.parse(saved);
         setHasRecentLogs(parsed.length > 0);
       } catch (e) {
-        console.error(e);
+        console.error("Failed to parse stored check-in data");
       }
     }
     // Refresh the home-screen widget mirror after any check-in / on load (Phase 7). Best-effort.
@@ -349,7 +349,7 @@ export default function App() {
       />
 
       {/* CORE FRAME CONTAINER */}
-      <div
+      <main
         className={nilaFull ? "w-full flex flex-col overflow-hidden px-4" : "max-w-md mx-auto min-h-screen px-4"}
         style={nilaFull
           ? { height: '100dvh', paddingTop: 'max(env(safe-area-inset-top, 0px), 16px)', paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 64px)' }
@@ -587,11 +587,11 @@ export default function App() {
           </div>
         )}
         </Suspense>
-      </div>
+      </main>
 
       {/* CORE PERSISTENT FIXED FOOTER NAVIGATION TABS */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 bg-card border-t border-slate-800 py-2 px-1 text-center shadow-lg" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 8px)' }} id="app-footer-tabs">
-        <div className="max-w-md mx-auto grid grid-cols-3 gap-1">
+      <nav aria-label="Main navigation" className="fixed bottom-0 left-0 right-0 z-30 bg-card border-t border-slate-800 py-2 px-1 text-center shadow-lg" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 8px)' }} id="app-footer-tabs">
+        <div className="max-w-md mx-auto grid grid-cols-4 gap-1">
 
           {/* Active tab is cued by MORE than colour (accessibility: colour-only state fails for low-vision /
               colour-blind users): the active tab gets a filled pill background, bold weight, and a top
@@ -614,8 +614,18 @@ export default function App() {
               <span>{label}</span>
             </button>
           ))}
+          {/* Persistent crisis access (§9): always reachable from any tab. The floating crisis
+              anchor was removed (it overlapped content); this bottom-bar button is the replacement. */}
+          <button
+            onClick={() => setIsCrisisOverlayOpen(true)}
+            aria-label="Crisis support and safety plan"
+            className="relative flex flex-col items-center justify-center gap-1 text-[11px] py-2 min-h-[48px] rounded-lg active:scale-95 transition-all cursor-pointer text-rose-400 font-medium"
+          >
+            <Shield className="w-5 h-5" />
+            <span>Crisis</span>
+          </button>
         </div>
-      </div>
+      </nav>
 
     </div>
   );

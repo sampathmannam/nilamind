@@ -60,7 +60,7 @@ function save(list: Donation[]): void {
   try {
     secureLocal.setItem(KEY, JSON.stringify(list.slice(-CAP)));
   } catch (e) {
-    console.error("nilaContributions save failed:", e);
+    console.error("nilaContributions save failed");
   }
 }
 

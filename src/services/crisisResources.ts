@@ -11,6 +11,8 @@
 //  - The International fallback points to directories that cover every country.
 //  - If you edit a number, double-check it — this is the one place wrong data can cause real harm.
 
+import { ls } from "./storageUtils";
+
 export type RegionCode = "IN" | "US" | "GB" | "CA" | "AU" | "international";
 
 export interface CrisisLine {
@@ -84,10 +86,6 @@ const REGIONS: Record<RegionCode, RegionResources> = {
 
 const STORAGE_KEY = "nilamind_region"; // non-sensitive UI/safety setting → plain localStorage (sync, pre-gate safe)
 
-function localStorageSafe(): Storage | null {
-  try { return (globalThis as any).localStorage ?? null; } catch { return null; }
-}
-
 /** Guess a region from the device locale; falls back to International. */
 function guessRegion(): RegionCode {
   try {
@@ -102,17 +100,17 @@ function guessRegion(): RegionCode {
 
 /** Whether the user has explicitly chosen a region (vs. running on the locale guess). */
 export function regionIsExplicit(): boolean {
-  return !!localStorageSafe()?.getItem(STORAGE_KEY);
+  return !!ls()?.getItem(STORAGE_KEY);
 }
 
 export function getRegionCode(): RegionCode {
-  const stored = localStorageSafe()?.getItem(STORAGE_KEY) as RegionCode | null;
+  const stored = ls()?.getItem(STORAGE_KEY) as RegionCode | null;
   if (stored && stored in REGIONS) return stored;
   return guessRegion();
 }
 
 export function setRegionCode(code: RegionCode): void {
-  try { localStorageSafe()?.setItem(STORAGE_KEY, code); } catch { /* ignore */ }
+  try { ls()?.setItem(STORAGE_KEY, code); } catch { /* ignore */ }
 }
 
 export function getRegion(): RegionResources {

@@ -17,6 +17,7 @@
 // Privacy invariant holds: data is read on-device from Health Connect and never leaves the phone.
 
 import { registerPlugin, Capacitor } from "@capacitor/core";
+import { ls } from "./storageUtils";
 
 export interface SleepNight {
   date: string; // local YYYY-MM-DD of the night (keyed to wake day)
@@ -35,7 +36,7 @@ const HC = registerPlugin<HealthConnectPlugin>("HealthConnect");
 
 // ── off-by-default feature flag (mirrors inflectionPrefs) ──
 const KEY = "nilamind_healthconnect";
-const ls = (): Storage | null => { try { return (globalThis as any).localStorage ?? null; } catch { return null; } };
+
 export function isHealthConnectEnabled(): boolean { try { return ls()?.getItem(KEY) === "1"; } catch { return false; } }
 export function setHealthConnectEnabled(v: boolean): void { try { ls()?.setItem(KEY, v ? "1" : "0"); } catch { /* ignore */ } }
 

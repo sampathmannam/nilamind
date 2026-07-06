@@ -7,6 +7,7 @@ import { stripProvenance } from "./emotionParse";
 import type { CheckInEntry } from "../types";
 import { secureLocal } from "./secureLocal";
 import { ymd } from "./streaks";
+import { DAY_MS } from "./storageUtils";
 
 export type InflectionKind = "screening_change" | "mood_trend";
 export type InflectionDirection = "deterioration" | "improvement";
@@ -51,7 +52,7 @@ export function emotionDistress(emotion: string, intensity: number): number {
 }
 
 function diffDays(a: string, b: string): number {
-  return Math.round((Date.parse(b + "T00:00:00") - Date.parse(a + "T00:00:00")) / 86400000);
+  return Math.round((Date.parse(b + "T00:00:00") - Date.parse(a + "T00:00:00")) / DAY_MS);
 }
 function prettyDate(d: string): string {
   return new Date(d + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" });
@@ -61,7 +62,7 @@ function isoWeek(date: string): string {
   const day = (d.getDay() + 6) % 7;        // Mon=0
   d.setDate(d.getDate() - day + 3);        // Thursday of this week
   const firstThu = new Date(d.getFullYear(), 0, 4);
-  const week = 1 + Math.round((d.getTime() - firstThu.getTime()) / 86400000 / 7);
+  const week = 1 + Math.round((d.getTime() - firstThu.getTime()) / DAY_MS / 7);
   return `${d.getFullYear()}-W${String(week).padStart(2, "0")}`;
 }
 
@@ -170,7 +171,7 @@ function loadStore(): InflectionStore {
 }
 function saveStore(s: InflectionStore): void {
   try { s.log = s.log.slice(-LOG_CAP); secureLocal.setItem(STORE_KEY, JSON.stringify(s)); }
-  catch (e) { console.error("Failed to save inflection store:", e); }
+  catch (e) { console.error("Failed to save inflection store"); }
 }
 function readCheckins(): CheckInEntry[] {
   try { const raw = secureLocal.getItem("nilamind_checkins"); const p = raw ? JSON.parse(raw) : []; return Array.isArray(p) ? p : []; }

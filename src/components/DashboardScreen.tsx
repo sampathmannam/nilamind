@@ -23,8 +23,8 @@ import {
   moodTrend, contextTrend,
 } from "../services/dashboardInsights";
 import type { CheckInEntry, DiaryCardEntry, EpisodeRecord } from "../types";
+import { DAY_MS } from "../services/storageUtils";
 
-const DAY = 86400000;
 const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 const r1 = (n: number) => Math.round(n * 10) / 10;
 const avg = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null);
@@ -67,7 +67,7 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
     const wk = (start: number, end: number) =>
       mood.filter((m) => {
         const t = new Date(m.date + "T00:00:00").getTime();
-        const lo = today.getTime() - end * DAY, hi = today.getTime() - start * DAY;
+        const lo = today.getTime() - end * DAY_MS, hi = today.getTime() - start * DAY_MS;
         return t >= lo && t < hi && m.intensity != null;
       }).map((m) => m.intensity as number);
     const thisWk = wk(0, 7), lastWk = wk(7, 14);
@@ -75,7 +75,7 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
 
     const activeSet = new Set(mood.filter((m) => m.intensity != null || m.shame != null).map((m) => m.date));
     let freq14 = 0;
-    for (let i = 0; i < 14; i++) if (activeSet.has(ymd(new Date(today.getTime() - i * DAY)))) freq14++;
+    for (let i = 0; i < 14; i++) if (activeSet.has(ymd(new Date(today.getTime() - i * DAY_MS)))) freq14++;
 
     const trajectories = assessmentInsights(assessments, mood);
 
@@ -157,7 +157,7 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
         <div className="glass rounded-2xl p-4 space-y-4">
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 font-mono flex items-center gap-1.5"><TrendUpIcon className="w-3.5 h-3.5" /> Trend</h3>
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500 font-mono flex items-center gap-1.5"><TrendUpIcon className="w-3.5 h-3.5" /> Trend</h2>
               <div className="flex bg-page border border-slate-800 rounded-lg overflow-hidden p-0.5">
                 {(["7d", "30d"] as const).map((r) => (
                   <button key={r} onClick={() => setTimeRange(r)}
@@ -207,7 +207,7 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
       {/* Emotion distribution (suffix-stripped counts) */}
       {emoBars.length > 0 && (
         <div className="glass rounded-2xl p-4 space-y-3">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 font-mono">Emotion log frequency</h3>
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500 font-mono">Emotion log frequency</h2>
           <div className="w-full h-44">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={emoBars}>
@@ -250,9 +250,9 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
       {/* Derived observations */}
       {observations.length > 0 && (
         <div className="glass p-5 rounded-2xl space-y-3">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 font-mono flex items-center gap-1.5">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400 font-mono flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5 text-emerald-400" /> Patterns from your data
-          </h3>
+          </h2>
           <ul className="space-y-3">
             {observations.map((ins, i) => (
               <li key={i} className="text-xs text-slate-300 leading-relaxed flex items-start gap-2 bg-page p-3 rounded-xl border border-slate-850">
@@ -266,9 +266,9 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
       {/* Quick-note tag cloud */}
       {topTags.length > 0 && (
         <div className="glass p-5 rounded-2xl space-y-3">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 font-mono flex items-center gap-1.5">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400 font-mono flex items-center gap-1.5">
             <Tag className="w-3.5 h-3.5 text-blue-400" /> Frequent quick-note subjects
-          </h3>
+          </h2>
           <div className="flex flex-wrap gap-2">
             {topTags.map(([tag, count]) => (
               <div key={tag} className="flex items-center bg-page border border-blue-900/50 rounded-lg px-2.5 py-1.5 overflow-hidden">
@@ -283,9 +283,9 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
       {/* Episode analytics (real stats only — NO fabricated correlations) */}
       {epPatterns && (
         <div className="bg-card border-y border-r border-slate-800 border-l-4 border-l-amber-500 p-5 rounded-r-2xl space-y-4">
-          <h3 className="text-xs font-semibold text-slate-100 flex items-center gap-1.5 uppercase tracking-wider font-mono">
+          <h2 className="text-xs font-semibold text-slate-100 flex items-center gap-1.5 uppercase tracking-wider font-mono">
             <ShieldAlert className="w-4 h-4 text-amber-500" /> Episode insights
-          </h3>
+          </h2>
           <div className="grid grid-cols-2 gap-3" id="episode-stat-cards">
             <div className="bg-page p-3 rounded-xl border border-slate-850 text-center space-y-1">
               <span className="text-[9px] uppercase font-mono tracking-widest text-slate-500">Peak spikes</span>
@@ -318,14 +318,15 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
         </div>
       )}
 
-      {/* Nila's Deep Evaluation — the ONLY off-device call, user-initiated + disclosed */}
+      {/* Nila's Deep Evaluation — runs fully on-device via the same local AI that powers your conversations.
+          User-initiated + disclosed. */}
       <div className="bg-card border border-purple-500/20 p-5 rounded-2xl space-y-4 shadow-[0_0_15px_rgba(168,85,247,0.05)]">
         <div>
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-purple-400 font-mono flex items-center gap-1.5 mb-1">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-purple-400 font-mono flex items-center gap-1.5 mb-1">
             <BrainCircuit className="w-4 h-4" /> Nila's Deep Evaluation ✨
-          </h3>
+          </h2>
           <p className="text-[11px] text-slate-400 leading-relaxed">
-            This sends your recent check-ins, diary cards (including any notes you've written), and episode records to Nila's AI for a deeper read — the only feature that sends anything off your device. Everything else stays on your device.
+            This asks Nila to analyze your recent check-ins, diary notes, and episode records — all on your device, using the same local AI that powers your conversations. Nothing leaves your phone.
           </p>
         </div>
         <button onClick={runDeepAssessment} disabled={isAssessing}

@@ -22,6 +22,7 @@ import {
   migratedVersion,
   setMigratedVersion,
 } from "./secureStore";
+import { ls } from "./storageUtils";
 
 // Sensitive keys that must be encrypted + migrated out of plaintext localStorage.
 // NOTE: "nilamind_disable_pulse" is intentionally NOT here — it's a non-sensitive UI preference
@@ -86,17 +87,9 @@ export function pendingWriteFailures(): string[] {
 function notifyPersistListeners(): void {
   const keys = [...pendingFailures.keys()];
   for (const cb of [...persistListeners]) { // snapshot: a listener may unsubscribe (mutate the Set) mid-notify
-    try { cb(keys); } catch (e) { console.error("secureLocal persist listener threw:", e); }
+    try { cb(keys); } catch (e) { console.error("secureLocal persist listener threw"); }
   }
 }
-
-const ls = (): Storage | null => {
-  try {
-    return (globalThis as any).localStorage ?? null;
-  } catch {
-    return null;
-  }
-};
 
 /** Queue an encrypted write without blocking the synchronous caller. */
 function queuePersist(key: string, value: string) {
@@ -107,13 +100,13 @@ function queuePersist(key: string, value: string) {
       if (pendingFailures.delete(key)) notifyPersistListeners(); // reached disk — clear any prior failure
     })
     .catch((e) => {
-      console.error("secureLocal persist failed:", key, e);
+      console.error("secureLocal persist failed");
       pendingFailures.set(key, value); // NOT silent: record it (data is still safe in cache) so flush can retry
       notifyPersistListeners();
     });
 }
 function queueDelete(key: string) {
-  persistChain = persistChain.then(() => kvDel(key)).catch((e) => console.error("secureLocal delete failed:", key, e));
+  persistChain = persistChain.then(() => kvDel(key)).catch((e) => console.error("secureLocal delete failed"));
 }
 
 /** Move any plaintext sensitive keys into the encrypted store, verifying each round-trip BEFORE
@@ -139,10 +132,10 @@ async function migrate(): Promise<void> {
           cache.set(key, plain);
           store.removeItem(key); // only drop plaintext after a verified encrypted round-trip
         } else {
-          console.error("secureLocal migration verify mismatch, keeping plaintext:", key);
+          console.error("secureLocal migration verify mismatch, keeping plaintext");
         }
       } catch (e) {
-        console.error("secureLocal migration failed, keeping plaintext:", key, e);
+        console.error("secureLocal migration failed, keeping plaintext");
       }
     }
   }
@@ -158,7 +151,7 @@ export async function bootSecure(): Promise<{ mode: "device" | "pin"; unlocked: 
     await hydrate();
     return res;
   } catch (e) {
-    console.error("secureLocal boot failed:", e);
+    console.error("secureLocal boot failed");
     // If the user ALREADY migrated to the encrypted store, their real data is in IndexedDB and UNREADABLE
     // without the key — and migration removed the plaintext copies, so localStorage is empty for those keys.
     // Silently entering passthrough would then (a) show an empty app and (b) shadow-write sensitive data into
@@ -185,7 +178,7 @@ export async function hydrate(): Promise<void> {
     try {
       cache.set(key, await decryptValue(blob));
     } catch (e) {
-      console.error("secureLocal failed to decrypt key:", key, e);
+      console.error("secureLocal failed to decrypt a stored key");
     }
   }
   await migrate();

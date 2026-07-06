@@ -23,6 +23,7 @@
 
 import type { BehaviourSnapshot, AppCategory } from './phoneBehaviour';
 import { INSTRUMENTS, type AssessmentEntry, type InstrumentId } from './assessments';
+import { DAY_MS } from './storageUtils';
 
 /** Mood/lifestyle signal for a given day, joined to behaviour by date. */
 export interface MoodPoint {
@@ -302,7 +303,7 @@ export const ASSESSMENT_MCID: Partial<Record<InstrumentId, number>> = { 'PHQ-9':
 const prettyDate = (d: string): string =>
   new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 const daysBetween = (a: string, b: string): number =>
-  Math.max(1, Math.round((new Date(b + 'T00:00:00').getTime() - new Date(a + 'T00:00:00').getTime()) / 86400000));
+  Math.max(1, Math.round((new Date(b + 'T00:00:00').getTime() - new Date(a + 'T00:00:00').getTime()) / DAY_MS));
 
 /** Turn validated assessment history into trajectory insights (one per instrument with ≥2 scores). */
 export function assessmentInsights(assessments: AssessmentEntry[], mood: MoodPoint[]): Insight[] {
