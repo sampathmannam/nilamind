@@ -34,6 +34,7 @@ const PactScreen = lazy(() => import("./components/PactScreen"));
 const YourDataScreen = lazy(() => import("./components/YourDataScreen"));
 const NilaMemoryScreen = lazy(() => import("./components/NilaMemoryScreen"));
 const WhyScreen = lazy(() => import("./components/WhyScreen"));
+const LearnScreen = lazy(() => import("./components/LearnScreen"));
 const SettingsScreen = lazy(() => import("./components/SettingsScreen"));
 
 import { AuxView, TabView, resolveNavTarget } from "./services/nav";
@@ -534,6 +535,17 @@ export default function App() {
                 localStorage.setItem("nilamind_disable_pulse", val ? "true" : "false");
               }}
             />
+          </div>
+        ) : auxView === "learn" ? (
+          <div className="space-y-4">
+            <button
+               onClick={() => setAuxView(null)}
+               className="flex items-center gap-1.5 text-slate-300 hover:text-white font-semibold py-3 px-1 -ml-1 mb-2 focus:outline-none cursor-pointer active:opacity-70"
+               aria-label="Back"
+            >
+              <ChevronLeft className="w-5 h-5" /> Back
+            </button>
+            <LearnScreen />
           </div>
         ) : (
           /* STANDARD TAB NAVIGATION ROUTING */

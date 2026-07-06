@@ -74,6 +74,15 @@ describe("nav — understand aux view", () => {
   });
 });
 
+describe("nav — learn aux view", () => {
+  it("resolves learn to an aux view", () => {
+    expect(resolveNavTarget("learn")).toEqual({ kind: "aux", view: "learn" });
+  });
+  it("lists learn in the allowlist", () => {
+    expect(KNOWN_AUX_VIEWS).toContain("learn");
+  });
+});
+
 describe("nav — reach_out aux view", () => {
   it("resolves reach_out to an aux view", () => {
     expect(resolveNavTarget("reach_out")).toEqual({ kind: "aux", view: "reach_out" });

@@ -20,7 +20,8 @@ export type AuxView =
   | "winddown"
   | "understand"
   | "reach_out"
-  | "pact";
+  | "pact"
+  | "learn";
 
 export const TAB_TARGETS: readonly TabView[] = [
   "diary", "plan", "nila", "tools", "you",
@@ -29,6 +30,7 @@ export const TAB_TARGETS: readonly TabView[] = [
 export const KNOWN_AUX_VIEWS: readonly AuxView[] = [
   "thought_record", "self_compassion", "settings", "behaviour", "assessment",
   "values_to_action", "skills", "dashboard", "your_data", "why", "nila_memory", "winddown", "understand", "reach_out", "pact",
+  "learn",
 ];
 
 export type NavResolution =
