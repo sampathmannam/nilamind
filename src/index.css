@@ -1,4 +1,19 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap');
+/* Fonts self-hosted via @fontsource (2026-07-06 audit): the previous Google Fonts @import contacted
+   fonts.googleapis.com on EVERY launch — leaking the user's IP to a third party, on both Android and the
+   web front door, contradicting "nothing leaves your phone / no third-party". These are bundled locally, so
+   nothing is fetched at runtime. Weights match the old request (Inter 400/500/600/700, Lora 400/500/600 +
+   400 italic, JetBrains Mono 400/500/700). */
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/inter/700.css";
+@import "@fontsource/lora/400.css";
+@import "@fontsource/lora/500.css";
+@import "@fontsource/lora/600.css";
+@import "@fontsource/lora/400-italic.css";
+@import "@fontsource/jetbrains-mono/400.css";
+@import "@fontsource/jetbrains-mono/500.css";
+@import "@fontsource/jetbrains-mono/700.css";
 @import "tailwindcss";
 
 @theme {
