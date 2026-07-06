@@ -342,13 +342,18 @@ export function checkResponse(aiReply: string, userMessage: string, userInCrisis
     return false;
   }
 
-  // Rule 2: Contains potential method/means instructions. Narrowed to "how to" only — "try" and
-  // "instruction" were too broad and false-cut warm therapeutic replies ("you're at the end of your rope,
-  // let's try one small step"). The live guard (isStreamingHarm) made the same narrowing for the same
-  // reason. Malicious instruction-only replies are caught by Rules 3-6 and the deterministic input gate.
-  for (const method of UNSAFE_METHOD_KEYWORDS) {
-    if (replyNorm.includes(method) && replyNorm.includes("how to")) {
-      return false;
+  // Rule 2: method/means INSTRUCTIONS — an instruction cue ("how to" / "instruction" / "try") FOLLOWED by a
+  // method word within a short window (the method is the OBJECT of the instruction). DIRECTIONAL on purpose:
+  // narrowing to "how to" only (2026-07-06) fixed warm-reply false-cuts but LOOSENED the gate — "try taking a
+  // whole bottle of pills" and "instructions for an overdose" slipped through. Requiring the method to FOLLOW
+  // the cue keeps "let's try one small step" / "end of your rope, let's try" safe (the method idiom sits BEFORE
+  // the cue, or there's no method) while re-closing that gap. isStreamingHarm stays "how to"-only — it cuts
+  // LIVE mid-stream so it must not over-fire; this broad FINAL gate can afford the directional cue set.
+  const INSTRUCTION_CUES = ["how to", "instruction", "try"];
+  for (const cue of INSTRUCTION_CUES) {
+    for (let i = replyNorm.indexOf(cue); i !== -1; i = replyNorm.indexOf(cue, i + 1)) {
+      const after = replyNorm.slice(i, i + cue.length + 40); // cue + ~40 chars: the method as the cue's object
+      if (UNSAFE_METHOD_KEYWORDS.some((m) => after.includes(m))) return false;
     }
   }
 
