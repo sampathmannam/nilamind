@@ -1,6 +1,7 @@
 import {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
+import AgeGate from './components/AgeGate.tsx';
 import SecureGate from './components/SecureGate.tsx';
 import IdentityGate from './components/IdentityGate.tsx';
 import { Capacitor } from '@capacitor/core';
@@ -96,10 +97,12 @@ if ("serviceWorker" in navigator) {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <SecureGate>
-      <IdentityGate>
-        <App />
-      </IdentityGate>
-    </SecureGate>
+    <AgeGate>
+      <SecureGate>
+        <IdentityGate>
+          <App />
+        </IdentityGate>
+      </SecureGate>
+    </AgeGate>
   </StrictMode>,
 );
