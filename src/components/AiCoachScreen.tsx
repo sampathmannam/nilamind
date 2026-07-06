@@ -2,7 +2,12 @@ import React, { useState, useEffect, useRef, useMemo } from "react";
 import { logNilaTurn } from "../services/nilaSessions";
 import { nilaWelcome } from "../services/nila";
 import { detectCrisis } from "../services/crisisClassifier";
+import { localLlmId } from "../services/localLlm";
 import { getCrisisReply } from "../safety";
+
+// The web front door's Tier-0 backend is deterministic reflective-listening templates, NOT a language model.
+// Its id (nilaReflect.ts) — used so the UI can be HONEST that these are structured reflections, not "the AI".
+const REFLECT_BACKEND_ID = "nila-reflect-template";
 import CrisisLines from "./CrisisLines";
 import { useSettlingNote } from "./useSettlingNote";
 import PactNoticeBanner from "./PactNoticeBanner";
@@ -84,7 +89,7 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
   const [inputText, setInputText] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const thinkingNote = useSettlingNote(loading, "Nila is thinking..."); // calm copy that escalates if the on-device reply runs long
-  const [activeTier, setActiveTier] = useState<"OnDevice" | "Offline mode">("OnDevice");
+  const [activeTier, setActiveTier] = useState<"OnDevice" | "Offline mode" | "Reflect">("OnDevice");
   // Real flag for the inline offline-fallback nav (grounding/breathing/safety-plan) instead of matching a
   // brittle copy substring in the reply text. True only for the latest turn when the model wasn't reached.
   const [showOfflineNav, setShowOfflineNav] = useState<boolean>(false);
@@ -299,7 +304,10 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
     let coachReply = "";
     if (result.reachedAI) {
       coachReply = result.reply || streamed || "Okay — done.";
-      setActiveTier("OnDevice");
+      // HONESTY (2026-07-06 audit #13): the web Tier-0 backend answers with deterministic reflection templates,
+      // not a language model — but it reports reachedAI:true (it did produce a real, safe reply). Mark that
+      // reply as the "Reflect" tier (not "OnDevice") so the UI never presents templates as an on-device AI.
+      setActiveTier(localLlmId() === REFLECT_BACKEND_ID ? "Reflect" : "OnDevice");
       setShowOfflineNav(false);
     } else {
       setActiveTier("Offline mode");
@@ -490,6 +498,16 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
         >
           <LifeBuoy className="w-5 h-5" />
         </button>
+      )}
+
+      {/* Reflect banner (web Tier-0) — honest that these are built-in reflections, not a conversational AI. */}
+      {activeTier === "Reflect" && (
+        <div className="bg-purple-500/10 border-b border-purple-500/25 px-4 py-2.5 flex items-start gap-2 shrink-0" id="coach-reflect-banner">
+          <AlertTriangle className="w-3.5 h-3.5 text-purple-300 shrink-0 mt-0.5" />
+          <p className="text-[11px] text-purple-200/90 leading-relaxed">
+            <span className="font-semibold text-purple-200">Nila is listening with built-in reflections.</span> Not a chatbot — the full on-device AI (and voice) is in the Android app. Your safety &amp; grounding tools always work.
+          </p>
+        </div>
       )}
 
       {/* Offline banner — honest, unmistakable signal that replies are built-in, not the on-device AI */}

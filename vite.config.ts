@@ -49,6 +49,25 @@ export default defineConfig(({ mode }) => {
           // 12-26 MB). NEVER precache these — they're served directly from the bundle (native WebView)
           // or fetched on demand (web). Globbing them makes vite-plugin-pwa hard-error on the size limit.
           globIgnores: ['**/*.wasm', '**/*.onnx', 'models/**', 'ort/**'],
+          // OFFLINE §9 PARITY (2026-07-06 audit #12): precache-excluding the classifier assets meant a
+          // returning PWA user OFFLINE dropped to the keyword-only crisis floor — the semantic tier (which
+          // catches the euphemistic disclosures the keyword list misses) silently failed to load. Runtime-
+          // cache them CacheFirst so the FIRST online crisis-check populates the cache and every subsequent
+          // (incl. offline) check keeps the semantic tier. CacheFirst (not precache) avoids a ~46 MB
+          // download for every visitor who never triggers §9. The deterministic keyword floor (statically
+          // bundled) still works offline regardless — this only restores the ADDITIVE semantic layer.
+          runtimeCaching: [
+            {
+              urlPattern: ({ url }) => url.pathname.startsWith('/models/') || url.pathname.startsWith('/ort/'),
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'nila-crisis-model-v1',
+                expiration: { maxEntries: 32, maxAgeSeconds: 60 * 60 * 24 * 90 },
+                cacheableResponse: { statuses: [0, 200] },
+                rangeRequests: true,
+              },
+            },
+          ],
         },
         devOptions: {
           enabled: true
