@@ -12,6 +12,7 @@
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
     "test": "vitest run",
+    "guard": "bash scripts/guard.sh",
     "postinstall": "patch-package; bash scripts/strip-native-libs.sh || true",
     "strip-native": "bash scripts/strip-native-libs.sh"
   },
