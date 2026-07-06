@@ -36,6 +36,13 @@ export interface LocalLlmBackend {
    * for backends that don't cache a prefix. Safe to call repeatedly; failures are swallowed.
    */
   warm?(system: string): Promise<void>;
+  /**
+   * Optional: distinguishes WHY the model isn't ready. "loading" = still initialising; "ready" = loaded;
+   * "error" = a load failure (e.g. a low-RAM OOM initialising a 2.5 GB model). Without this, a load failure
+   * is indistinguishable from "not downloaded" / "still loading" and the app silently degrades to the offline
+   * companion with no explanation (2026-07-06 audit #10). Backends that never fail to load may omit it.
+   */
+  loadState?(): "loading" | "ready" | "error";
 }
 
 let backend: LocalLlmBackend | null = null;
@@ -57,6 +64,20 @@ export function getLocalLlmBackend(): LocalLlmBackend | null {
 /** True only when an on-device model is registered AND ready — the gate sendToNila uses to route. */
 export function isLocalLlmReady(): boolean {
   return !!backend && backend.isReady();
+}
+
+/**
+ * The on-device model load state, for a UI that must tell the user WHY Nila's brain isn't answering:
+ *  - "none"    → no backend registered (web, or model not downloaded) — the calm offline companion is expected
+ *  - "loading" → a backend is registered and still initialising (first cold load can take minutes)
+ *  - "ready"   → loaded and answering
+ *  - "error"   → a backend is registered but FAILED to load (e.g. low-RAM OOM on a 2.5 GB model)
+ * Without "error" surfaced, a failed load looks identical to "not downloaded" and the user gets the offline
+ * companion forever with no explanation (2026-07-06 audit #10).
+ */
+export function localLlmLoadState(): "none" | "loading" | "ready" | "error" {
+  if (!backend) return "none";
+  return backend.loadState?.() ?? (backend.isReady() ? "ready" : "loading");
 }
 
 /** The active model id, or null when no on-device backend is ready. */

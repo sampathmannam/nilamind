@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from "react";
 import { logNilaTurn } from "../services/nilaSessions";
 import { nilaWelcome } from "../services/nila";
 import { detectCrisis } from "../services/crisisClassifier";
+import { localLlmLoadState } from "../services/localLlm";
 import { getCrisisReply } from "../safety";
 import CrisisLines from "./CrisisLines";
 import { useSettlingNote } from "./useSettlingNote";
@@ -332,7 +333,13 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
     } else {
       setActiveTier("Offline mode");
       setShowOfflineNav(true); // drives the inline grounding/breathing/safety-plan nav (real flag, not copy)
-      coachReply = "Nila's on-device model isn't ready yet — it may still be loading. Your safety and grounding tools are pre-loaded and always work. Tap below to navigate:";
+      // Distinguish a genuine LOAD FAILURE from "still loading" (2026-07-06 audit #10): if the backend is
+      // registered but reported an error (commonly a low-RAM OOM on the 2.5 GB model), say so honestly instead
+      // of "it may still be loading" forever — otherwise the user waits indefinitely for a load that failed.
+      coachReply =
+        localLlmLoadState() === "error"
+          ? "Nila's on-device model couldn't finish loading — your device may be low on memory. Your safety and grounding tools are pre-loaded and always work. Tap below to navigate:"
+          : "Nila's on-device model isn't ready yet — it may still be loading. Your safety and grounding tools are pre-loaded and always work. Tap below to navigate:";
     }
 
     setMessages((prev) => {

@@ -30,6 +30,7 @@ export function createLlamaCppBackend(
 ): LocalLlmBackend {
   let ctx: LlamaContext | null = null;
   let ready = false;
+  let loadFailed = false; // set if initLlama throws (e.g. a low-RAM OOM) — surfaced via loadState() (#10)
   let warmedSystem = ""; // skip redundant warms of an unchanged system prefix
   // The native context allows only ONE completion at a time, so warm() and generate() must never
   // overlap on it (else they collide -> the generate throws -> the caller shows the calm "model not
@@ -54,6 +55,11 @@ export function createLlamaCppBackend(
       });
       ready = true;
     } catch (e) {
+      // A load failure (commonly a low-RAM OOM initialising the 2.5 GB model) previously only logged here and
+      // left isReady() false forever — indistinguishable from "not downloaded", so the app silently degraded to
+      // the offline companion with no explanation. Record it so loadState() can surface a distinct "error" the
+      // UI can explain ("model couldn't load — your device may be low on memory"). (2026-07-06 audit #10.)
+      loadFailed = true;
       console.warn("[llamaCpp] model load failed:", e);
     }
   })();
@@ -61,6 +67,7 @@ export function createLlamaCppBackend(
   return {
     id: `gemma3-4b-llamacpp/${label}`,
     isReady: () => ready && !!ctx,
+    loadState: () => (ready && ctx ? "ready" : loadFailed ? "error" : "loading"),
 
     // Prefill the system prompt into the KV cache so the first real message reuses it (the native
     // common_part() prefix-reuse). n_predict:1 -> we just want the prefill, not generation.
