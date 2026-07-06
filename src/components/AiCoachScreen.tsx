@@ -23,7 +23,7 @@ import { runAgent, AgentView } from "../services/agent";
 import { hasCheckinToday, getSkipFlag, setSkipFlag } from "../services/checkin";
 import { secureLocal } from "../services/secureLocal";
 import { cardsForCheckin, NilaCard } from "../services/nilaOrchestration";
-import { cardsForReply, protocolCard, protocolResumeCard, waitingCards } from "../services/nilaCards";
+import { cardsForReply, protocolCard, protocolResumeCard, waitingCards, runWeeklySynthesis } from "../services/nilaCards";
 import { startProtocol, advanceProtocol, getActiveProgress } from "../services/protocolProgress";
 import { getInflectionEnabled } from "../services/inflectionPrefs";
 import { recordDetectionPass, surfaceOpener, acknowledgeInflection, type InflectionSignal } from "../services/nilaInflection";
@@ -537,6 +537,15 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
     }
   };
 
+  const runSynthesisCard = async () => {
+    setLoading(true);
+    const synthesis = await runWeeklySynthesis();
+    setLoading(false);
+    if (synthesis) {
+      setMessages((prev) => [...prev, { role: "assistant", content: synthesis }]);
+    }
+  };
+
   const dispatchCard = (card: NilaCard) => {
     const a = actionForCard(card);
     if (!a) return;
@@ -545,6 +554,7 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
     else if (a.type === "skill") onOpenSkill?.(a.skillId);
     else if (a.type === "screening") onLaunchScreening(a.instrument);
     else if (a.type === "protocol") runProtocolCard(a.protocolId);
+    else if (a.type === "weekly_synthesis") void runSynthesisCard();
   };
 
   // (Tier label/icon removed with the top toolbar; the offline state still surfaces via the banner below.)

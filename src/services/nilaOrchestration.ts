@@ -7,12 +7,13 @@ import { stripProvenance } from "./emotionParse";
 import { skillForEmotion } from "./skillsLibrary";
 import { latestFor, daysSince } from "./assessments";
 import { DAY_MS } from "./storageUtils";
+import { shouldRunSynthesis, extractWeeklyFacts } from "./weeklySynthesis";
 import type { CheckInEntry } from "../types";
 
 export type NilaCard = {
-  kind: "grounding" | "episode" | "skill" | "screening" | "protocol";
+  kind: "grounding" | "episode" | "skill" | "screening" | "protocol" | "weekly_synthesis";
   skillId?: string;
-  protocolId?: string; // for kind:"protocol" — the structured program this card offers to start
+  protocolId?: string;
   instrument?: "PHQ-9" | "GAD-7";
   label: string;
 };
@@ -66,6 +67,13 @@ export function cardsForCheckin(entry: CheckInEntry, recent: CheckInEntry[]): Ni
   }
   if (screeningDue(recent, ANX_MOOD, "GAD-7")) {
     cards.push({ kind: "screening", instrument: "GAD-7", label: "Take the GAD-7" });
+  }
+
+  if (shouldRunSynthesis()) {
+    const facts = extractWeeklyFacts();
+    if (facts.checkinCount > 0) {
+      cards.push({ kind: "weekly_synthesis", label: "See how your week went" });
+    }
   }
 
   return cards;

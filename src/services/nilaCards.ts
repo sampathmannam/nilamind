@@ -9,7 +9,10 @@ import { findSkillInText } from "./skillsLibrary";
 import { bestSkill } from "./skillRetrieval";
 import { protocolOffer, getActiveProgress } from "./protocolProgress";
 import { scanForCrisis } from "../safety";
-import { CheckInEntry } from "../types";
+import { shouldRunSynthesis, extractWeeklyFacts, weeklySynthesisPrompt, recordSynthesisTimestamp } from "./weeklySynthesis";
+import { generateOnDevice, isLocalLlmReady } from "./localLlm";
+import { applyOutputSafety } from "./nilaSafetyGate";
+import type { CheckInEntry } from "../types";
 
 /**
  * A gentle "start a structured program" offer card, shown when the person's message matches an evidence-based
@@ -93,4 +96,25 @@ export function cardsForReply(
   if (!skillCard) return base;
   const already = base.some((c) => c.kind === "skill" && c.skillId === skillCard.skillId);
   return already ? base : [...base, skillCard];
+}
+
+export function weeklySynthesisCard(): NilaCard | null {
+  if (!shouldRunSynthesis()) return null;
+  const facts = extractWeeklyFacts();
+  if (facts.checkinCount === 0) return null;
+  return { kind: "weekly_synthesis", label: "See how your week went" };
+}
+
+export async function runWeeklySynthesis(): Promise<string | null> {
+  if (!isLocalLlmReady()) return null;
+  const facts = extractWeeklyFacts();
+  const prompt = weeklySynthesisPrompt(facts);
+  const reply = await generateOnDevice(
+    "You are Nila. In 3-4 warm, plain sentences, reflect back the week's data the way a friend who remembers would. Never quote stats like a dashboard; weave them naturally.",
+    [{ role: "user", content: prompt }],
+  );
+  if (!reply) return null;
+  const safe = applyOutputSafety(reply, "weekly synthesis", true);
+  recordSynthesisTimestamp();
+  return safe;
 }
