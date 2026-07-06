@@ -10,6 +10,7 @@ import { getCrisisReply } from "../safety";
 const REFLECT_BACKEND_ID = "nila-reflect-template";
 import CrisisLines from "./CrisisLines";
 import { useSettlingNote } from "./useSettlingNote";
+import { offlineFallbackReply } from "../services/nilaReflect";
 import PactNoticeBanner from "./PactNoticeBanner";
 import { activePactNotice, type PactNotice } from "../services/pactNotice";
 import DependencyNudge from "./DependencyNudge";
@@ -343,10 +344,13 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
       // Distinguish a genuine LOAD FAILURE from "still loading" (2026-07-06 audit #10): if the backend is
       // registered but reported an error (commonly a low-RAM OOM on the 2.5 GB model), say so honestly instead
       // of "it may still be loading" forever — otherwise the user waits indefinitely for a load that failed.
+      // Genuine LOAD FAILURE stays an honest, un-warmed message (never mask a real failure). The common
+      // "still loading" case now routes through the LLM-free reflector (offlineFallbackReply) so a first
+      // message during the minutes-long cold load gets Nila *listening*, not a static wall (2026-07-06 audit).
       coachReply =
         localLlmLoadState() === "error"
           ? "Nila's on-device model couldn't finish loading — your device may be low on memory. Your safety and grounding tools are pre-loaded and always work. Tap below to navigate:"
-          : "Nila's on-device model isn't ready yet — it may still be loading. Your safety and grounding tools are pre-loaded and always work. Tap below to navigate:";
+          : offlineFallbackReply([...transcript].reverse().find((m) => m.role === "user")?.content ?? "");
     }
 
     setMessages((prev) => {
