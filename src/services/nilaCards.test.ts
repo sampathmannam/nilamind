@@ -17,6 +17,15 @@ describe("waitingCards — deterministic help to offer WHILE Nila's model cold-l
     expect(waitingCards("hi how are you today")).toEqual([]);
     expect(waitingCards("")).toEqual([]);
   });
+
+  // §9 FLOOR (safety-critical): the cards render during the load window BEFORE the async crisis state flips, so
+  // waitingCards must itself refuse a crisis message — even one that contains a protocol/skill cue — so a person
+  // in crisis is NEVER offered a self-help program instead of crisis support.
+  it("returns nothing for a crisis message, even when it also matches a protocol cue (§9 takes precedence)", () => {
+    // "can't stop thinking" routes to Worry-Postponement, but this is a suicidal disclosure → deterministic §9 wins.
+    expect(waitingCards("i can't stop thinking about killing myself")).toEqual([]);
+    expect(waitingCards("i just want to end it all, i can't do this anymore")).toEqual([]);
+  });
 });
 
 describe("protocolCard — offer a structured program when a concern matches (Phase 1)", () => {

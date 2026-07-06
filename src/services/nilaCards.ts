@@ -8,6 +8,7 @@ import { cardsForCheckin, type NilaCard } from "./nilaOrchestration";
 import { findSkillInText } from "./skillsLibrary";
 import { bestSkill } from "./skillRetrieval";
 import { protocolOffer, getActiveProgress } from "./protocolProgress";
+import { scanForCrisis } from "../safety";
 import { CheckInEntry } from "../types";
 
 /**
@@ -64,6 +65,10 @@ export function skillCardFromMessage(userText: string): NilaCard | null {
  * cards, so it can never surface a wrong tool.
  */
 export function waitingCards(userText: string): NilaCard[] {
+  // §9 FLOOR (deterministic, synchronous): these cards render during the load window BEFORE the async crisis
+  // state flips, so we re-apply the crisis scan here — a person in crisis must NEVER be offered a self-help
+  // program/skill instead of crisis support, even if their words also match a protocol cue.
+  if (scanForCrisis(userText)) return [];
   const out: NilaCard[] = [];
   const skill = skillCardFromMessage(userText);
   if (skill) out.push(skill);
