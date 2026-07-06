@@ -16,6 +16,7 @@ import { crisisLinesInline } from "./crisisResources";
 import { skillsPromptBlock } from "./skillsLibrary";
 import { relevantSkillsBlock } from "./skillRetrieval";
 import { buildPersonalContext, activeProtocolContextBlock } from "./nilaContext";
+import { getLatestReflection } from "./asyncReflection";
 
 export interface NilaMessage {
   role: "user" | "assistant";
@@ -134,6 +135,11 @@ export function composeWelcome(ctx: { returning: boolean; part: PartOfDay }): st
 /** Live welcome: warm and varying — knows whether Nila has met this person before (any on-device history)
  *  and the time of day. Falls back to the first-time intro when there's nothing yet. */
 export function nilaWelcome(): string {
+  try {
+    const reflection = getLatestReflection();
+    if (reflection?.text) return reflection.text;
+  } catch { /* reflection module may not be available on web */ }
+
   let returning = false;
   try { returning = buildPersonalContext().trim() !== ""; } catch { returning = false; }
   return composeWelcome({ returning, part: partOfDay(new Date().getHours()) });
