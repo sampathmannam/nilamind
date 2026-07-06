@@ -14,6 +14,7 @@ import IdentityOnboarding from "./IdentityOnboarding";
 //    WHEN the ceremony is asked of them moves. See ensureAnonymousIdentity in services/identity.ts.
 export default function IdentityGate({ children }: { children: React.ReactNode }) {
   const [hasIdentity, setHasIdentity] = useState<boolean>(() => !!loadIdentity());
+  const [webCreateFailed, setWebCreateFailed] = useState<boolean>(false);
   const isNative = Capacitor.isNativePlatform();
 
   useEffect(() => {
@@ -21,13 +22,16 @@ export default function IdentityGate({ children }: { children: React.ReactNode }
     let cancelled = false;
     void ensureAnonymousIdentity()
       .then(() => { if (!cancelled) setHasIdentity(true); })
-      .catch(() => { /* fall through to onboarding if silent create somehow fails */ });
+      .catch(() => { if (!cancelled) setWebCreateFailed(true); }); // fall back to the ceremony, not a blank screen
     return () => { cancelled = true; };
   }, [hasIdentity, isNative]);
 
   if (!hasIdentity) {
-    // Native: show the ceremony. Web: render nothing for the brief moment the local identity is created.
-    return isNative ? <IdentityOnboarding onDone={() => setHasIdentity(true)} /> : null;
+    // Native always shows the ceremony. Web silently creates and renders nothing for that brief moment; if
+    // the silent create fails, fall back to the manual create/restore ceremony rather than trapping the user
+    // on a permanent blank screen.
+    if (isNative || webCreateFailed) return <IdentityOnboarding onDone={() => setHasIdentity(true)} />;
+    return null;
   }
   return <>{children}</>;
 }

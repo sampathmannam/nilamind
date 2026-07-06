@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { makeReflector, sanitizeEcho, createReflectBackend } from "./nilaReflect";
+import { makeReflector, createReflectBackend } from "./nilaReflect";
 
 // nilaReflect is the deterministic, LLM-free "Nila listens" backend for the WEB front door (rung 0):
 // a small model doesn't exist in the browser, so warmth comes from reflective-listening scripts while
@@ -71,22 +71,6 @@ describe("makeReflector", () => {
     const reply = reflect("   ");
     expect(reply.length).toBeGreaterThan(0);
     expect(reply.trim().endsWith("?")).toBe(true);
-  });
-});
-
-describe("sanitizeEcho — data-fence the user's own words before echoing them", () => {
-  it("collapses newlines so a multi-line injection can't restructure the reply", () => {
-    expect(sanitizeEcho("line one\nline two\r\nthree")).not.toContain("\n");
-  });
-
-  it("strips URLs so an echoed link can never become a live target", () => {
-    const out = sanitizeEcho("check https://evil.example.com/x now");
-    expect(out.toLowerCase()).not.toContain("http");
-  });
-
-  it("caps length so a huge paste can't dominate the reflection", () => {
-    const out = sanitizeEcho("a".repeat(500));
-    expect(out.length).toBeLessThanOrEqual(120);
   });
 });
 

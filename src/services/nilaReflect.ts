@@ -98,17 +98,6 @@ function pickRotating(pool: string[], used: Set<string>): string {
   return choice;
 }
 
-/** Data-fence a fragment of the user's own words before it can appear in a reply: one line, no links,
- *  length-capped. Same discipline as the §9 in-band-injection fix — replayed user text is DATA. */
-export function sanitizeEcho(s: string): string {
-  return (s || "")
-    .replace(/https?:\/\/\S+/gi, "")      // no live/echoed links
-    .replace(/www\.\S+/gi, "")
-    .replace(/\s+/g, " ")                  // collapse newlines/whitespace to one line
-    .trim()
-    .slice(0, 120);                        // a huge paste can't dominate the reflection
-}
-
 /** Create a stateful reflector: successive calls rotate stems so a session never hears the same opener
  *  twice while options remain. One instance per page session (held by the backend below). */
 export function makeReflector(): (text: string) => string {

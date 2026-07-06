@@ -34,4 +34,14 @@ describe("ensureAnonymousIdentity", () => {
     expect(second.userId).toBe(first.userId);
     expect(second.mnemonic).toBe(first.mnemonic);
   });
+
+  it("is single-flight: CONCURRENT first-run calls create ONE identity, not two racing ones", async () => {
+    // React StrictMode / a double render fires IdentityGate's effect twice in the same tick. Without a
+    // guard, both calls see no identity and each create a DIFFERENT one (last write wins, first orphaned).
+    expect(loadIdentity()).toBeNull();
+    const [a, b] = await Promise.all([ensureAnonymousIdentity(), ensureAnonymousIdentity()]);
+    expect(a.mnemonic).toBe(b.mnemonic); // same identity from both — no double-create
+    expect(a.userId).toBe(b.userId);
+    expect(loadIdentity()?.userId).toBe(a.userId);
+  });
 });

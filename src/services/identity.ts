@@ -81,10 +81,18 @@ export async function createIdentity(mnemonic: string): Promise<Identity> {
  * no-account, phrase-recoverable privacy model changes — only WHEN the ceremony is asked of them. Idempotent:
  * a returning user's existing identity (and therefore their data key) is never overwritten.
  */
-export async function ensureAnonymousIdentity(): Promise<Identity> {
+let anonInFlight: Promise<Identity> | null = null;
+
+export function ensureAnonymousIdentity(): Promise<Identity> {
   const existing = loadIdentity();
-  if (existing) return existing;
-  return createIdentity(newMnemonic());
+  if (existing) return Promise.resolve(existing);
+  // Single-flight: React StrictMode / a double render can call this twice in the same tick. The
+  // check-and-set below is synchronous (no await before the assignment), so the second caller sees the
+  // in-flight promise and shares it — one identity is created, never two racing ones.
+  if (!anonInFlight) {
+    anonInFlight = createIdentity(newMnemonic()).finally(() => { anonInFlight = null; });
+  }
+  return anonInFlight;
 }
 
 // ── Optional encrypted backup (user-controlled, no cloud) ───────────────────────────────────────
