@@ -17,7 +17,7 @@ import { CheckInEntry } from "../types";
 export type AgentView =
   | "dashboard" | "your_data" | "settings" | "skills" | "assessment"
   | "values_to_action" | "nila"
-  | "grounding" | "breathing" | "checkin" | "diary";
+  | "grounding" | "breathing" | "checkin" | "diary" | "winddown";
 
 export interface AgentResult {
   /** true when the message was an actionable command we handled (don't send to the on-device model). */

@@ -13,6 +13,8 @@ import { useSettlingNote } from "./useSettlingNote";
 import { offlineFallbackReply } from "../services/nilaReflect";
 import PactNoticeBanner from "./PactNoticeBanner";
 import { activePactNotice, type PactNotice } from "../services/pactNotice";
+import SleepSignalBanner from "./SleepSignalBanner";
+import { selfReportSleepSignal } from "../services/sleepInsight";
 import DependencyNudge from "./DependencyNudge";
 import { activeDependencyNudge } from "../services/dependencyGuard";
 import { rememberSession } from "../services/nilaMemory";
@@ -97,6 +99,7 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
   const [showOfflineNav, setShowOfflineNav] = useState<boolean>(false);
   const [isCrisisState, setIsCrisisState] = useState<boolean>(false);
   const [pactNotice, setPactNotice] = useState<PactNotice | null>(null);
+  const [sleepBannerOpen, setSleepBannerOpen] = useState<boolean>(false);
   const [dependencyNudge, setDependencyNudge] = useState<boolean>(false);
   // On-device feedback on Nila's replies — the privacy-preserving improvement signal. All idx-keyed,
   // all stored locally (services/nilaFeedback); nothing uploads.
@@ -214,6 +217,7 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
     const warm = () => { void detectCrisis("hello").catch(() => {}); };
     const t = idle ? idle(warm, { timeout: 4000 }) : (setTimeout(warm, 2500) as unknown as number);
     setPactNotice(activePactNotice()); // surface the user's pact if a real shift is noticed (read-only, dismissible)
+    setSleepBannerOpen(!!selfReportSleepSignal()?.firing); // default-on sleep-prodrome surface (audit fix #4)
     setDependencyNudge(activeDependencyNudge()); // nudge toward a human if Nila use is heavy + escalating
     return () => {
       const cancelIdle = (globalThis as any).cancelIdleCallback as undefined | ((h: number) => void);
@@ -599,7 +603,18 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
           <PactNoticeBanner notice={pactNotice} onDismiss={() => setPactNotice(null)} />
         </div>
       )}
-      {!pactNotice && dependencyNudge && !isCrisisState && (
+      {/* Sleep-prodrome surface (audit fix #4): default-on, pact-independent, dataless, gentle. Hidden during
+          crisis so §9 owns the screen. Shows when the user's self-reported sleep is short — the app's earliest
+          manic warning — and offers the wind-down flow. */}
+      {!pactNotice && sleepBannerOpen && !isCrisisState && (
+        <div className="px-4 pt-3 shrink-0">
+          <SleepSignalBanner
+            onDismiss={() => setSleepBannerOpen(false)}
+            onWindDown={() => onAgentNavigate?.("winddown")}
+          />
+        </div>
+      )}
+      {!pactNotice && !sleepBannerOpen && dependencyNudge && !isCrisisState && (
         <div className="px-4 pt-3 shrink-0">
           <DependencyNudge onDismiss={() => setDependencyNudge(false)} />
         </div>
