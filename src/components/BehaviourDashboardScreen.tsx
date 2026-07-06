@@ -180,16 +180,18 @@ export default function BehaviourDashboardScreen() {
       <div className="flex items-center gap-1.5 text-[10px] uppercase font-mono tracking-widest text-slate-500">
         <TrendingUp className="w-3.5 h-3.5" /> Last 7 days · minutes by category
       </div>
-      <ResponsiveContainer width="100%" height={170}>
-        <BarChart data={chartData} margin={{ top: 8, right: 4, bottom: 0, left: -18 }}>
-          <XAxis dataKey="day" tick={{ fontSize: 10, fill: "#948A7E" }} axisLine={false} tickLine={false} />
-          <YAxis tick={{ fontSize: 10, fill: "#948A7E" }} axisLine={false} tickLine={false} />
-          <Tooltip contentStyle={{ background: "#171311", border: "1px solid #2E2922", borderRadius: 8, fontSize: 11 }} labelStyle={{ color: "#e2e8f0" }} />
-          {CATS.map((c) => (
-            <Bar key={c} dataKey={c} stackId="a" fill={CAT_COLORS[c]} radius={c === "other" ? [3, 3, 0, 0] : undefined} />
-          ))}
-        </BarChart>
-      </ResponsiveContainer>
+      <div role="img" aria-label="Stacked bar chart showing minutes by app category over the last 7 days. Categories: social, entertainment, communication, productivity, other.">
+        <ResponsiveContainer width="100%" height={170}>
+          <BarChart data={chartData} margin={{ top: 8, right: 4, bottom: 0, left: -18 }}>
+            <XAxis dataKey="day" tick={{ fontSize: 10, fill: "#948A7E" }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fontSize: 10, fill: "#948A7E" }} axisLine={false} tickLine={false} />
+            <Tooltip contentStyle={{ background: "#171311", border: "1px solid #2E2922", borderRadius: 8, fontSize: 11 }} labelStyle={{ color: "#e2e8f0" }} />
+            {CATS.map((c) => (
+              <Bar key={c} dataKey={c} stackId="a" fill={CAT_COLORS[c]} radius={c === "other" ? [3, 3, 0, 0] : undefined} />
+            ))}
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
       <div className="flex flex-wrap gap-x-3 gap-y-1">
         {CATS.map((c) => (
           <span key={c} className="flex items-center gap-1 text-[9px] text-slate-500 capitalize">

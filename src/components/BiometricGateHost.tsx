@@ -13,10 +13,17 @@ export default function BiometricGateHost() {
   }, []);
 
   useEffect(() => {
-    if (!req) return;
+    if (!req) {
+      document.body.style.overflow = "";
+      return;
+    }
+    document.body.style.overflow = "hidden";
     const handler = (e: KeyboardEvent) => { if (e.key === "Escape") close(false); };
     document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
+    return () => {
+      document.body.style.overflow = "";
+      document.removeEventListener("keydown", handler);
+    };
   }, [req]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!req) return null;
