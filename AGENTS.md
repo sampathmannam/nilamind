@@ -20,7 +20,7 @@ Core promise: **nothing leaves your phone.**
    delusion/mania validation, method disclosure) enters. Anti-sycophancy is a hard gate, not a hope.
 
 ## Build / test / verify
-- **Tests (keep green):** `npx vitest run` — currently **683 tests**. One file: `npx vitest run src/services/X.test.ts`.
+- **Tests (keep green):** `npx vitest run` — ~**693 tests**. One file: `npx vitest run src/services/X.test.ts`.
 - **Typecheck (must be exit 0):** `npx tsc --noEmit`
 - **Build:** `npm run build` (vite)
 - **TDD is mandatory.** RED (write a failing test, *watch it fail for the right reason*) → GREEN (minimal code) →
@@ -29,6 +29,19 @@ Core promise: **nothing leaves your phone.**
   false crisis fire on a calm chat is itself harmful).
 - **Device-only:** Gemma inference, sensors (Health Connect), and Vosk voice can't run in node/web. Anything
   touching them must be **device-verified on the phone** (adb) — tests cover the logic seams only.
+
+## Guardrails against reward-hacking (READ — this is a safety-critical app)
+The #1 documented failure of coding agents is gaming the test gate. On this app a faked-green §9 test = a real
+safety hole. So, non-negotiable:
+- **NEVER weaken, hardcode-around, skip (`.skip`/`.only`), or DELETE a test to make the suite pass.** If a test
+  fails, fix the code — or, if the test itself is genuinely wrong, explain why and change it in a *separate,
+  clearly-labelled* step for human review. A green suite achieved by editing tests is a failure, not a pass.
+- **A green suite is necessary, not sufficient.** ~1 in 5 "resolved" patches are semantically wrong. For any
+  change touching `safety.ts`, `crisisClassifier*`, `elevationGuard`, `nilaSafetyGate`, `secureLocal`,
+  `secureStore`, or `nilaContext`, state your reasoning and **flag the diff for human review before commit.**
+- **`tsc --noEmit` is a hard gate** — never claim done with type errors (the Capacitor native bridge is where
+  hallucinated APIs bite).
+- **Don't invent APIs or plugins.** If a binding isn't in the repo, find it or ask — don't guess a native call.
 
 ## Architecture map
 - **Safety:** `safety.ts` (keyword floor + `checkResponse` output gate Rules 1–6), `crisisClassifier.ts` (MiniLM),
