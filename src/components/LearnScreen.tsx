@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { BookOpen, Search, X, ChevronDown, LifeBuoy, AlertTriangle, FlaskConical, Heart } from "lucide-react";
 import { searchLearn, type LearnResult, type LearnSource } from "../services/learnLibrary";
 import { checkPsychoedQuery } from "../services/psychoed";
@@ -48,8 +48,16 @@ export default function LearnScreen() {
   const [crisis, setCrisis] = useState(false);
   const [sourceFilter, setSourceFilter] = useState<LearnSource | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [allResults, setAllResults] = useState<LearnResult[]>([]);
 
-  const allResults = useMemo(() => searchLearn(query), [query]);
+  // Async search — embedding-RAG for psychoeducation (B4)
+  useEffect(() => {
+    let cancelled = false;
+    searchLearn(query).then((results) => {
+      if (!cancelled) setAllResults(results);
+    });
+    return () => { cancelled = true; };
+  }, [query]);
   const results = useMemo(
     () => (sourceFilter ? allResults.filter((r) => r.source === sourceFilter) : allResults),
     [allResults, sourceFilter],

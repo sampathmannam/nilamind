@@ -6,6 +6,7 @@
 
 import { filterSkills } from "./skillsLibrary";
 import { searchPsychoed, checkPsychoedQuery } from "./psychoed";
+import { embeddingSearchPsychoed } from "./psychoedRetrieval";
 import { WHY_WE_BUILT_THIS, type FeatureArticle } from "../data/whyWeBuiltThis";
 
 export type LearnSource = "skill" | "understand" | "why";
@@ -31,15 +32,26 @@ function matchWhy(query: string): FeatureArticle[] {
  * One search across all three reading sources. §9-gated FIRST: if the query reads as a crisis disclosure,
  * return nothing so the screen can surface help instead of reference text (checkPsychoedQuery === scanForCrisis;
  * true = crisis). Empty query returns the full merged library (browse mode). Never persists the query.
+ *
+ * Psychoeducation retrieval is embedding-augmented when the MiniLM embedder is available (RAG grounding
+ * on clinical facts — kills hallucination). Falls back to lexical search on cold start or embedder error.
  */
-export function searchLearn(query: string): LearnResult[] {
+export async function searchLearn(query: string): Promise<LearnResult[]> {
   if (checkPsychoedQuery(query)) return []; // crisis → help, not library content
   const q = query.trim();
   const out: LearnResult[] = [];
   for (const s of filterSkills(q, null)) {
     out.push({ id: `skill:${s.id}`, title: s.name, snippet: s.purpose, source: "skill", basis: s.basis });
   }
-  for (const t of searchPsychoed(q)) {
+  // Embedding-RAG for psychoeducation (B4): try embedding retrieval, fall back to lexical
+  let psychoedResults: { id: string; title: string; summary: string; basis: string }[];
+  try {
+    const ranked = await embeddingSearchPsychoed(q, { limit: 10 });
+    psychoedResults = ranked.map((r) => r.topic);
+  } catch {
+    psychoedResults = searchPsychoed(q);
+  }
+  for (const t of psychoedResults) {
     out.push({ id: `understand:${t.id}`, title: t.title, snippet: t.summary, source: "understand", basis: t.basis });
   }
   for (const a of matchWhy(q)) {
