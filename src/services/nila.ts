@@ -105,8 +105,38 @@ export function buildNilaSystem(query?: string): string {
 }
 
 /** A first message that sounds like a friend opening the door — not a clinical intake. */
+export type PartOfDay = "morning" | "afternoon" | "evening" | "night";
+
+/** Map a 24h hour to a part of day (pure). */
+export function partOfDay(hour: number): PartOfDay {
+  if (hour < 5) return "night";
+  if (hour < 12) return "morning";
+  if (hour < 17) return "afternoon";
+  if (hour < 22) return "evening";
+  return "night";
+}
+
+const WELCOME_GREETING: Record<PartOfDay, string> = {
+  morning: "Good morning", afternoon: "Hey", evening: "Good evening", night: "Hey",
+};
+
+/** PURE welcome composer (audit P2 #10). Returning users get a warm, shorter "good to see you again";
+ *  first-timers get the full intro that names Nila. BOTH always disclose Nila is an AI, not a therapist —
+ *  that honesty rail is non-negotiable (§9 / bot-disclosure law) and is never dropped for warmth. */
+export function composeWelcome(ctx: { returning: boolean; part: PartOfDay }): string {
+  const g = WELCOME_GREETING[ctx.part];
+  if (ctx.returning) {
+    return `${g} — really good to see you again. I'm still right here (an AI, not a therapist, but in your corner). How are you doing right now?`;
+  }
+  return `${g} — I'm really glad you're here. I'm Nila. Think of me as a friend in your corner who gets this stuff (I'm an AI, not a therapist, but I'm here alongside you). No agenda — how are you doing right now?`;
+}
+
+/** Live welcome: warm and varying — knows whether Nila has met this person before (any on-device history)
+ *  and the time of day. Falls back to the first-time intro when there's nothing yet. */
 export function nilaWelcome(): string {
-  return "Hey — I'm really glad you're here. I'm Nila. Think of me as a friend in your corner who gets this stuff (I'm an AI, not a therapist, but I'm here alongside you). No agenda — how are you doing right now?";
+  let returning = false;
+  try { returning = buildPersonalContext().trim() !== ""; } catch { returning = false; }
+  return composeWelcome({ returning, part: partOfDay(new Date().getHours()) });
 }
 
 // Nila's brain is fully on-device now: there is no cloud chat endpoint. The streaming generation
