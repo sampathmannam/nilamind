@@ -160,7 +160,7 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
               <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500 font-mono flex items-center gap-1.5"><TrendUpIcon className="w-3.5 h-3.5" /> Trend</h2>
               <div className="flex bg-page border border-slate-800 rounded-lg overflow-hidden p-0.5">
                 {(["7d", "30d"] as const).map((r) => (
-                  <button key={r} onClick={() => setTimeRange(r)}
+                  <button key={r} onClick={() => setTimeRange(r)} aria-label={`Show ${r === "7d" ? "7 day" : "30 day"} trend`} aria-pressed={timeRange === r}
                     className={`text-[10px] px-2 py-1 rounded-md font-medium transition-colors ${timeRange === r ? "bg-slate-800 text-slate-200" : "text-slate-500 hover:text-slate-300"}`}>
                     {r.toUpperCase()}
                   </button>
@@ -168,13 +168,13 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
               </div>
             </div>
             <div className="flex bg-page border border-slate-800 rounded-lg overflow-hidden p-0.5 self-start">
-              <button onClick={() => setChartTab("emotion")}
+              <button onClick={() => setChartTab("emotion")} aria-label="Show emotion trend" aria-pressed={chartTab === "emotion"}
                 className={`text-[10px] px-2 py-1 rounded-md font-medium transition-colors ${chartTab === "emotion" ? "bg-purple-500/20 text-purple-400" : "text-slate-500 hover:text-slate-300"}`}>Emotion</button>
-              <button onClick={() => setChartTab("context")}
+              <button onClick={() => setChartTab("context")} aria-label="Show sleep and social context" aria-pressed={chartTab === "context"}
                 className={`text-[10px] px-2 py-1 rounded-md font-medium transition-colors ${chartTab === "context" ? "bg-blue-500/20 text-blue-400" : "text-slate-500 hover:text-slate-300"}`}>Context</button>
             </div>
           </div>
-          <div className="w-full h-48">
+          <div className="w-full h-48" role="img" aria-label={chartTab === "emotion" ? "Line chart showing emotional intensity trend over time. Lower values indicate calmer states." : "Line chart showing sleep hours and social connection over time."}>
             <ResponsiveContainer width="100%" height="100%">
               {chartTab === "emotion" ? (
                 <LineChart data={emotionTrend}>
@@ -208,7 +208,7 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
       {emoBars.length > 0 && (
         <div className="glass rounded-2xl p-4 space-y-3">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500 font-mono">Emotion log frequency</h2>
-          <div className="w-full h-44">
+          <div className="w-full h-44" role="img" aria-label="Bar chart showing frequency of each emotion logged. Taller bars indicate more frequent emotions.">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={emoBars}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#2E2922" vertical={false} />
