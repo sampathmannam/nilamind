@@ -29,16 +29,23 @@ people who are suffering; the only metric is *help*.** Focus population includes
 | [`NILA_AGENT_DESIGN.md`](NILA_AGENT_DESIGN.md) | Existing agent design (tools / runAgent) |
 | [`QA_REPORT_v1.1.md`](QA_REPORT_v1.1.md), [`UX_RESEARCH.md`](UX_RESEARCH.md) | QA audit trail, UX research |
 
-## Current state — SHIPPED (v1.3)
+## Current state — SHIPPED (v1.6)
 
 - **On-device brain:** fine-tuned 4B via llama.cpp; §9 deterministic; on-device crisis classifier; skills-RAG
   (DBT/CBT/ACT); compounding memory + daily reflection; inflection detection; episode support.
 - **Voice on-device by default** (Vosk STT) — "nothing you say leaves the phone" now literally true.
-- **Continuous chat (passive→active, this session):** conversation **persists encrypted** and survives leaving the
-  app (device-verified); the in-flight user message is preserved on a mid-reply kill; **auto-resume** answers an
-  unanswered turn on reopen (built, §9-safe, 514 tests — on-device flow pending one clean verify); "Nila replied"
-  notification scaffolding.
-- **Edge-to-edge Nila view;** boot lazy-loaded; released as **v1.3** (versionCode 4), pushed to `origin/main`.
+- **Continuous chat:** conversation persists encrypted across app restart; auto-resume; "Nila replied" notification.
+- **Structured protocols:** Behavioral Activation, Worry Postponement, Self-Compassion, Sleep Wind-Down — vetted step
+  prompts, deterministic, resume across restarts, program-aware free-text replies.
+- **Mania-first elevation guard:** med-stop detection, grandiosity, impulsive spending, racing thoughts, pressured
+  speech, hypersexuality, sleep-denial euphoria. Anti-sycophancy Rule 6 blocks manic-validation.
+- **Emotion granularity:** 4-step check-in with 72 fine-grained emotions across 6 families (Barrett 2004, Lieberman 2007).
+- **Weekly synthesis:** 7-day data extraction + model-narrated warm reflection (Lambert 2018, Shimokawa 2010).
+- **Async between-sessions brain:** overnight reflection → morning greeting (Fluckiger 2018, Wampold 2015).
+- **Smart context-aware check-ins:** "check on me tonight" remembers conversation context (von Lutzow 2025, JITAI).
+- **CBT thought records:** auto-drafts from venting text; user edits before saving (Beck 2021, Kazantzis 2018).
+- **Distortion spotting:** deterministic detection of 10 cognitive distortions with gentle steer (Beck 1979, Burns 1999).
+- **822 tests**, tsc clean, APK on device. Pushed to `feat/vision-p0-reality-guard`.
 
 ## The research-grounded build plan (phased — from the research basis)
 
