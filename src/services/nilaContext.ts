@@ -137,7 +137,7 @@ export function buildPersonalContext(): string {
     })
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-  if (checkins.length) {
+    if (checkins.length) {
     const intensities = checkins.map((e) => Number(e.intensity)).filter((n) => !isNaN(n));
     const avg = intensities.length
       ? Math.round((intensities.reduce((a, n) => a + n, 0) / intensities.length) * 10) / 10
@@ -152,6 +152,15 @@ export function buildPersonalContext(): string {
     l += ".";
     lines.push(l);
     if (lastEmotion) lines.push(`- Their most recent check-in: "${lastEmotion}", ${relativeDay(last.date)}.`);
+
+    // Granular emotions — rich feeling words they used beyond just "Low"/"Anxious"
+    const granular = checkins
+      .filter((e) => typeof e?.granularEmotion === "string" && (e.granularEmotion as string).length > 0)
+      .map((e) => e.granularEmotion as string);
+    if (granular.length >= 2) {
+      const distinct = [...new Set(granular)].slice(0, 4);
+      lines.push(`- When they named their feelings precisely, they used words like: ${joinNatural(distinct)}.`);
+    }
   }
 
   // ── What has helped (episodes + diary) ────────────────────────────────────

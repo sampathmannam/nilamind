@@ -7,6 +7,7 @@ export interface CheckInEntry {
   context: string;
   sleepHours?: number; // External factor: 0-24
   socialInteraction?: number; // External factor: 1-10 (1: isolated, 10: highly connected)
+  granularEmotion?: string; // Fine-grained emotion label (e.g. "Betrayed" vs just "Angry")
 }
 
 export interface DiaryCardEntry {

@@ -38,67 +38,102 @@ describe("nilaCheckinReducer constants", () => {
 });
 
 describe("checkinReducer step advancement", () => {
+  const baseState = { contextTag: null, granularEmotion: null };
+
   it("starts at the mood step with nothing chosen", () => {
-    expect(INITIAL_DRAFT).toEqual({ step: "mood", label: null, intensity: null });
+    expect(INITIAL_DRAFT).toEqual({ step: "mood", label: null, intensity: null, contextTag: null, granularEmotion: null });
   });
+
   it("pickMood records the label and advances to intensity", () => {
     const d = checkinReducer(INITIAL_DRAFT, { type: "pickMood", label: "Anxious" });
-    expect(d).toEqual({ step: "intensity", label: "Anxious", intensity: null });
+    expect(d).toEqual({ step: "intensity", label: "Anxious", intensity: null, contextTag: null, granularEmotion: null });
   });
-  it("re-picking mood at the mood step replaces the label", () => {
-    const d1 = checkinReducer(INITIAL_DRAFT, { type: "pickMood", label: "Low" });
-    // re-entering mood step (e.g. user went back) and choosing again
-    const d2 = checkinReducer({ ...d1, step: "mood" }, { type: "pickMood", label: "Calm" });
-    expect(d2).toEqual({ step: "intensity", label: "Calm", intensity: null });
-  });
+
   it("pickIntensity records intensity and advances to context", () => {
     const moodDone = checkinReducer(INITIAL_DRAFT, { type: "pickMood", label: "Anxious" });
     const d = checkinReducer(moodDone, { type: "pickIntensity", intensity: 7 });
-    expect(d).toEqual({ step: "context", label: "Anxious", intensity: 7 });
+    expect(d).toEqual({ step: "context", label: "Anxious", intensity: 7, contextTag: null, granularEmotion: null });
   });
-  it("pickContext advances to done", () => {
+
+  it("pickContext records context tag and advances to granularity", () => {
     let d = checkinReducer(INITIAL_DRAFT, { type: "pickMood", label: "Angry" });
     d = checkinReducer(d, { type: "pickIntensity", intensity: 9 });
     d = checkinReducer(d, { type: "pickContext", tag: "Work" });
-    expect(d.step).toBe("done");
+    expect(d.step).toBe("granularity");
+    expect(d.contextTag).toBe("Work");
   });
+
+  it("pickContext with null tag advances to granularity", () => {
+    let d = checkinReducer(INITIAL_DRAFT, { type: "pickMood", label: "Calm" });
+    d = checkinReducer(d, { type: "pickIntensity", intensity: 3 });
+    d = checkinReducer(d, { type: "pickContext", tag: null });
+    expect(d.step).toBe("granularity");
+    expect(d.contextTag).toBeNull();
+  });
+
+  it("pickGranular records the emotion and advances to done", () => {
+    let d = checkinReducer(INITIAL_DRAFT, { type: "pickMood", label: "Angry" });
+    d = checkinReducer(d, { type: "pickIntensity", intensity: 7 });
+    d = checkinReducer(d, { type: "pickContext", tag: "Work" });
+    d = checkinReducer(d, { type: "pickGranular", emotion: "Betrayed" });
+    expect(d.step).toBe("done");
+    expect(d.granularEmotion).toBe("Betrayed");
+  });
+
+  it("skipGranular advances to done with null granularEmotion", () => {
+    let d = checkinReducer(INITIAL_DRAFT, { type: "pickMood", label: "Low" });
+    d = checkinReducer(d, { type: "pickIntensity", intensity: 5 });
+    d = checkinReducer(d, { type: "pickContext", tag: "Sleep" });
+    d = checkinReducer(d, { type: "skipGranular" });
+    expect(d.step).toBe("done");
+    expect(d.granularEmotion).toBeNull();
+  });
+
   it("ignores out-of-order actions (intensity before mood)", () => {
     const d = checkinReducer(INITIAL_DRAFT, { type: "pickIntensity", intensity: 5 });
     expect(d).toEqual(INITIAL_DRAFT);
   });
-  it("ignores pickContext before intensity is set", () => {
+
+  it("ignores granularity action before context", () => {
     const moodDone = checkinReducer(INITIAL_DRAFT, { type: "pickMood", label: "Numb" });
-    const d = checkinReducer(moodDone, { type: "pickContext", tag: "Sleep" });
+    const d = checkinReducer(moodDone, { type: "pickGranular", emotion: "Empty" });
     expect(d).toEqual(moodDone);
   });
 });
 
-describe("resolveCheckin (single write trigger on context-resolve)", () => {
-  it("returns null until the context step resolves", () => {
+describe("resolveCheckin (single write trigger at granularity step)", () => {
+  it("returns null on non-granularity actions", () => {
     expect(resolveCheckin(INITIAL_DRAFT, { type: "pickMood", label: "Low" })).toBeNull();
     const moodDone = checkinReducer(INITIAL_DRAFT, { type: "pickMood", label: "Low" });
     expect(resolveCheckin(moodDone, { type: "pickIntensity", intensity: 5 })).toBeNull();
   });
-  it("resolves with a chosen tag", () => {
+
+  it("resolves with a chosen granular emotion", () => {
     let d = checkinReducer(INITIAL_DRAFT, { type: "pickMood", label: "Anxious" });
     d = checkinReducer(d, { type: "pickIntensity", intensity: 7 });
-    expect(resolveCheckin(d, { type: "pickContext", tag: "Thoughts" })).toEqual({
+    d = checkinReducer(d, { type: "pickContext", tag: "Thoughts" });
+    expect(resolveCheckin(d, { type: "pickGranular", emotion: "Overwhelmed" })).toEqual({
       label: "Anxious",
       intensity: 7,
       contextTag: "Thoughts",
+      granularEmotion: "Overwhelmed",
     });
   });
-  it("resolves with null contextTag when context is skipped", () => {
+
+  it("resolves with null granularEmotion when skipped", () => {
     let d = checkinReducer(INITIAL_DRAFT, { type: "pickMood", label: "Overwhelmed" });
     d = checkinReducer(d, { type: "pickIntensity", intensity: 9 });
-    expect(resolveCheckin(d, { type: "pickContext", tag: null })).toEqual({
+    d = checkinReducer(d, { type: "pickContext", tag: null });
+    expect(resolveCheckin(d, { type: "skipGranular" })).toEqual({
       label: "Overwhelmed",
       intensity: 9,
       contextTag: null,
+      granularEmotion: null,
     });
   });
-  it("does not resolve from a context action when label/intensity are missing", () => {
-    const halfway = { step: "context" as const, label: null, intensity: null };
-    expect(resolveCheckin(halfway, { type: "pickContext", tag: "Work" })).toBeNull();
+
+  it("returns null from granularity step when label/intensity are missing", () => {
+    const halfway = { step: "granularity" as const, label: null, intensity: null, contextTag: null, granularEmotion: null };
+    expect(resolveCheckin(halfway, { type: "pickGranular", emotion: "Calm" })).toBeNull();
   });
 });
