@@ -208,3 +208,52 @@ describe("downloadModel — SHA-256 content verification", () => {
     expect(h.files.has(model.filename)).toBe(false); // never installed
   });
 });
+
+// ── Startup self-heal (2026-07-06 audit, Finding #7) ────────────────────────────────────────────────
+// A download can finish (byte-perfect .part) but be KILLED during the multi-minute in-JS SHA-256 verify,
+// before the rename. Previously findInstalledModel only stat'd the final name → the complete .part was
+// invisible at boot and the user was re-shown "Set up Nila" (recovery only ran on a manual re-tap). It now
+// promotes a complete + GGUF-magic-valid .part in place — no re-download, no user action.
+describe("findInstalledModel — startup .part self-heal", () => {
+  it("promotes a COMPLETE, valid-magic orphaned .part to the final model and returns it", async () => {
+    h.files.set(PART, { size: model.sizeBytes, magic: "GGUF" });
+    expect(h.files.has(model.filename)).toBe(false);
+    expect(await findInstalledModel()).toEqual(model);
+    expect(h.files.has(model.filename)).toBe(true); // promoted in place
+    expect(h.files.has(PART)).toBe(false); // renamed, not left behind
+  });
+
+  it("does NOT promote a WRONG-SIZE .part (a genuinely half-finished download)", async () => {
+    h.files.set(PART, { size: 12345, magic: "GGUF" });
+    expect(await findInstalledModel()).toBeNull();
+    expect(h.files.has(model.filename)).toBe(false);
+  });
+
+  it("does NOT promote a complete-size .part whose magic is NOT GGUF (an error body)", async () => {
+    h.files.set(PART, { size: model.sizeBytes, magic: "<!DO" }); // e.g. an HTML/401 body of the exact size
+    expect(await findInstalledModel()).toBeNull();
+    expect(h.files.has(model.filename)).toBe(false);
+  });
+});
+
+// ── Rename-failure must not destroy a verified model (2026-07-06 audit, Finding #9) ─────────────────
+describe("downloadModel — a rename failure AFTER verification keeps the verified .part", () => {
+  const content = new Uint8Array([...Array.from("GGUF").map((c) => c.charCodeAt(0)), ...Array(2044).fill(0x41)]);
+  const goodHash = createHash("sha256").update(content).digest("hex");
+
+  it("keeps the byte-perfect .part (recoverable) instead of deleting it when only the rename throws", async () => {
+    writeContentOnDownload(content);
+    const m = { ...model, sizeBytes: content.length, sha256: goodHash };
+    vi.mocked(Filesystem.rename).mockRejectedValueOnce(new Error("transient FS error"));
+    await expect(downloadModel(m)).rejects.toThrow(/transient FS error/);
+    expect(h.files.has(PART)).toBe(true); // verified bytes preserved — NOT deleted
+    expect(h.files.has(model.filename)).toBe(false);
+  });
+
+  it("still deletes a partial that fails verification (pre-rename)", async () => {
+    writeContentOnDownload(content);
+    const m = { ...model, sizeBytes: content.length, sha256: "f".repeat(64) }; // SHA mismatch → pre-rename fail
+    await expect(downloadModel(m)).rejects.toThrow(/SHA-256|hash/i);
+    expect(h.files.has(PART)).toBe(false); // bad partial reclaimed
+  });
+});

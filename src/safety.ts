@@ -15,6 +15,27 @@ export const SUICIDAL_KEYWORDS = [
   "ending things", "wont be around", "won't be around", "goodbye forever"
 ];
 
+// Modern/coined self-harm slang (2026-07-06 audit). "unalive" is a coined euphemism with ~zero benign
+// collision → safe as a bare substring. "kms" ("kill myself") is NOT safe bare (collides with "kilometres":
+// "5 kms away"), so it is carried ONLY in first-person intent phrasings, which have ~zero benign collision.
+export const SLANG_IDEATION = [
+  "unalive", // covers "unalive myself", "gonna unalive", "want to unalive"
+  "want to kms", "wanna kms", "gonna kms", "going to kms", "gonna kill myself",
+];
+
+// Romanized Hindi/Tamil crisis phrasing (2026-07-06 audit). India-first app; MiniLM is English-only and the
+// keyword floor had zero non-English coverage → a whole population's disclosures bypassed. Phrases are chosen
+// to be high-precision multi-word units (near-zero benign collision) — e.g. bare "marna"/"mann nahi" are NOT
+// used; only "marna hai" / "jeene ka mann nahi" (= "don't feel like living").
+export const ROMANIZED_IDEATION = [
+  "jeene ka mann nahi", "jeena nahi chahta", "jeena nahi chahti", "ab jeena nahi",
+  "marna hai", "mar jana chahta", "mar jaana hai", "mar jaunga", "mar jaungi",
+  "zindagi khatam", "khatam kar lunga", "khatam kar dunga",
+  "khudkushi", "aatmahatya",
+  // Tamil (romanized)
+  "saaganum", "saga poren", "saaga poren", "uyir vaazha maaten",
+];
+
 export const SELF_HARM_KEYWORDS = [
   "hurt myself", "cut myself", "harm myself", "cutting", "self harm", "self-harm",
   "burn myself", "hit myself", "punish myself", "deserve pain", "want to bleed",
@@ -42,6 +63,20 @@ export const OVERDOSE_PHRASES = [
   // Ingestion self-harm beyond pills. Near-zero benign collision (unlike firearm phrasings, which are
   // idiom-heavy — "shoot myself in the foot", "gun to my head" — and are left to the semantic classifier).
   "drink bleach", "drinking bleach", "swallowed bleach", "drank bleach"
+];
+
+// Method STOCKPILING / planning (2026-07-06 audit): "enough tablets saved up to make sure it works" (0.10),
+// "saving up pills" — accumulating a lethal means is a strong, imminent-risk signal the keyword floor missed
+// and MiniLM scored near-zero. Kept high-precision by requiring the means noun and the stockpiling verb to be
+// ADJACENT (as a single phrase), so "saved up money for the trip" (no means) and "saved up to afford my pills"
+// (means and verb non-adjacent → a financial statement) both stay safe.
+export const STOCKPILE_MEANS = [
+  "pills saved up", "tablets saved up", "meds saved up", "medication saved up",
+  "saved up pills", "saved up tablets", "saved up meds", "saved up enough pills", "saved up enough tablets",
+  "saving up pills", "saving up tablets", "saving up meds", "saving up my pills", "saving up my meds",
+  "stockpiled pills", "stockpiling pills", "stockpiling my meds", "stockpiling meds", "stockpiled my meds",
+  "hoarding pills", "hoarding my meds", "been collecting pills",
+  "enough pills to make sure", "enough tablets to make sure", "enough pills to end", "enough tablets to end",
 ];
 
 export const DISSOCIATION_KEYWORDS = [
@@ -155,11 +190,30 @@ export const SYCOPHANTIC_AFFIRMATIONS = [
  */
 function scanForEuphemism(normalized: string): boolean {
   if (EUPHEMISM_DEATH_PHRASES.some((p) => normalized.includes(p))) return true;
+  if (scanForDivestmentReadiness(normalized)) return true;
   const hasPrep = EUPHEMISM_PREP_CUES.some((p) => normalized.includes(p));
   if (!hasPrep) return false;
   const hasAcceptance = EUPHEMISM_ACCEPTANCE_CUES.some((p) => normalized.includes(p));
   const hasFinality = EUPHEMISM_FINALITY_CUES.some((p) => normalized.includes(p));
   return hasAcceptance || hasFinality;
+}
+
+// Divestment + readiness (2026-07-06 audit): "I've given away most of my things, I feel ready now" bypassed
+// both deterministic layers and scored 0.34 on MiniLM. GIVING AWAY POSSESSIONS is a much stronger pre-suicide
+// signal than "affairs in order" (which benignly precedes vacations), so pairing it with a readiness cue is
+// high-precision — kept SEPARATE from the general prep×acceptance gate precisely so "affairs in order + feel
+// ready now for the trip" stays safe (no divestment verb+possession). Requires a giving-away VERB AND a
+// POSSESSION object AND a readiness cue; none of the three alone (nor verb+possession without readiness — a
+// genuine declutter/donation) fires.
+const DIVESTMENT_VERBS = ["given away", "giving away", "gave away", "gave all", "donated all", "getting rid of all"];
+const DIVESTMENT_OBJECTS = ["my things", "my stuff", "my belongings", "my possessions", "everything i own", "most of my", "all my things"];
+const READINESS_CUES = ["feel ready now", "i feel ready", "i'm ready now", "im ready now", "ready now", "ready to go now"];
+function scanForDivestmentReadiness(normalized: string): boolean {
+  const hasVerb = DIVESTMENT_VERBS.some((v) => normalized.includes(v));
+  if (!hasVerb) return false;
+  const hasObject = DIVESTMENT_OBJECTS.some((o) => normalized.includes(o));
+  if (!hasObject) return false;
+  return READINESS_CUES.some((r) => normalized.includes(r));
 }
 
 /**
@@ -174,7 +228,7 @@ export function scanForCrisis(message: string): boolean {
   const normalized = message.toLowerCase().replace(/['’]/g, "'").replace(/\s+/g, " ").trim();
 
   // Check categories
-  for (const list of [SUICIDAL_KEYWORDS, SELF_HARM_KEYWORDS, INDIRECT_METAPHORS, DISSOCIATION_KEYWORDS, METHOD_INTENT_PHRASES, OVERDOSE_PHRASES]) {
+  for (const list of [SUICIDAL_KEYWORDS, SLANG_IDEATION, ROMANIZED_IDEATION, SELF_HARM_KEYWORDS, INDIRECT_METAPHORS, DISSOCIATION_KEYWORDS, METHOD_INTENT_PHRASES, OVERDOSE_PHRASES, STOCKPILE_MEANS]) {
     for (const kw of list) {
       if (normalized.includes(kw)) {
         return true;
@@ -225,16 +279,36 @@ export function isBenignMedicationAdherence(message: string): boolean {
   return MEDICATION_NOUN.test(t) && ADHERENCE_MARKER.test(t) && !LETHAL_COSIGNAL.test(t);
 }
 
+// Common HYPERBOLE / idiom that the MiniLM classifier over-fires on (2026-07-06 audit #8): "I could sleep for
+// a week" (0.85), "I could murder a plate of biryani" (0.73), "I'm dying to see it". A false crisis surface on
+// a calm chat is itself harmful (erodes trust), so — exactly like isBenignMedicationAdherence — this suppresses
+// ONLY the SOFT classifier upgrade AFTER the deterministic keyword floor has already missed. It can never
+// suppress a keyword hit, and the same LETHAL_COSIGNAL veto keeps it from ever masking a real disclosure that
+// merely happens to contain an idiom (e.g. "sleep for a week and never wake up" → vetoed).
+const HYPERBOLE_PATTERNS =
+  /\bsleep (for )?(a|an|the|another|a whole|an entire) (week|month|year|century|decade|weekend|day)\b|\bcould (murder|kill for|kill|die for) (a|an|some|the|this|that)\b|\bdying (to|for)\b|\bdying of (laughter|boredom|embarrassment|thirst|hunger)\b|\b(dead tired|dead serious|scared to death|bored to death|worked to death)\b/;
+export function isBenignHyperbole(message: string): boolean {
+  if (!message) return false;
+  const t = message.toLowerCase().replace(/['’]/g, "'").replace(/\s+/g, " ").trim();
+  return HYPERBOLE_PATTERNS.test(t) && !LETHAL_COSIGNAL.test(t);
+}
+
 /**
  * Validates whether the AI's reply is safe to display.
  */
-export function checkResponse(aiReply: string, userMessage: string): boolean {
+export function checkResponse(aiReply: string, userMessage: string, userInCrisis?: boolean): boolean {
   if (!aiReply) return false;
   const replyNorm = aiReply.toLowerCase();
-  
+
   // Rule 1: If user was in a crisis, the AI reply MUST surface a crisis resource (region's number or
   // recognisable crisis-line language). If it doesn't, flag as unsafe.
-  const userIsInCrisis = scanForCrisis(userMessage);
+  //
+  // AUDIT 2026-07-06 (P0 structural hole): this previously ALWAYS re-derived crisis from scanForCrisis — the
+  // KEYWORD-only floor. For a euphemistic input the classifier caught but the floor missed, userIsInCrisis was
+  // false, so a warm resource-free reply passed the backstop → the send-path classifier verdict was ignored at
+  // the output gate. The send path now threads its already-computed detectCrisis verdict in as `userInCrisis`;
+  // absent that (legacy callers / tests) we fall back to the keyword floor, so behaviour is never weakened.
+  const userIsInCrisis = userInCrisis ?? scanForCrisis(userMessage);
   if (userIsInCrisis && !replyMentionsCrisisResource(aiReply)) {
     return false;
   }

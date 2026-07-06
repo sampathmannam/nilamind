@@ -239,4 +239,12 @@ if (typeof window !== "undefined") {
   window.addEventListener("pagehide", () => {
     void flush();
   });
+  // AUDIT 2026-07-06 #11: `pagehide` is NOT reliably fired by the Android WebView when the OS kills a
+  // backgrounded process — so a queued encrypted write (the newest chat turn / safety-plan edit) could be lost
+  // on a hard kill. `visibilitychange → hidden` DOES fire the moment the app is backgrounded (the window before
+  // a kill), so flushing there gets the latest write to disk while the process is still alive. Idempotent with
+  // the pagehide flush (flush() awaits the same chain).
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") void flush();
+  });
 }

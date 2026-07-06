@@ -244,6 +244,27 @@ export async function findInstalledModel(): Promise<CatalogModel | null> {
     if (!m) continue;
     const state = await sizeState(m, m.filename);
     if (state === "complete") return m;
+
+    // STARTUP SELF-HEAL (2026-07-06 audit #7): a download can finish byte-perfect but be killed during the
+    // multi-minute in-JS SHA-256 verify, before the rename — orphaning a COMPLETE `.part`. Previously that was
+    // invisible here, so the user was re-shown "Set up Nila" and the 2.5 GB sat unused (recovery only ran on a
+    // manual re-tap). Promote a complete + GGUF-magic-valid `.part` in place, with NO user action and NO
+    // re-download. We intentionally do NOT re-run the full SHA-256 here (it would hang app boot for minutes —
+    // the very step that got interrupted): size-equality + GGUF magic already reject the realistic failures (a
+    // truncated transfer and the ~137-byte HTML/401 error-body both have the wrong size/magic). The residual
+    // gap — a same-size, valid-magic but content-different GGUF — needs an HTTPS MITM or a compromised pinned HF
+    // repo, and only on this rare recovery path; that trade beats a silent multi-minute boot hang.
+    const part = `${m.filename}.part`;
+    if ((await sizeState(m, part)) === "complete" && (await hasValidHeader(m, part))) {
+      try {
+        await tryDelete(m.filename); // clear any stale/wrong-size final, then move the recovered file into place
+        await Filesystem.rename({ from: part, to: m.filename, directory: Directory.External });
+        return m;
+      } catch {
+        /* rename hiccup — leave the .part intact and fall through; a manual download can still recover it */
+      }
+    }
+
     // Only a CONFIRMED wrong size is corrupt/partial → reclaim the space so a re-download starts clean.
     // "unknown" (stat threw) is left untouched: don't delete a possibly-real model on a storage hiccup.
     if (state === "mismatch") await tryDelete(m.filename);
@@ -258,7 +279,7 @@ export async function findInstalledModel(): Promise<CatalogModel | null> {
  *  This step is the slow one: verifySha256 streams the whole 2.5 GB back over the bridge in bounded chunks
  *  and hashes it in JS, taking minutes. If the app is killed/backgrounded mid-verify the rename never runs
  *  and the complete `.part` is left on disk — which downloadModel now RECOVERS instead of re-downloading. */
-async function finalizePart(model: CatalogModel, part: string): Promise<void> {
+async function verifyPart(model: CatalogModel, part: string): Promise<void> {
   if (!(await isComplete(model, part))) {
     throw new Error("Downloaded file is incomplete (size mismatch).");
   }
@@ -269,8 +290,6 @@ async function finalizePart(model: CatalogModel, part: string): Promise<void> {
   // can become the brain (defends a same-size poisoned GGUF). No-op while the digest is the placeholder.
   // Reads the 2.5 GB file in bounded chunks — never all at once (WebView OOM).
   await verifySha256(model, part);
-  await tryDelete(model.filename); // remove any old/partial final, then move the verified file into place
-  await Filesystem.rename({ from: part, to: model.filename, directory: Directory.External });
 }
 
 /** Stream-download a model to a temp path, verify it, then atomically move it into place.
@@ -293,6 +312,7 @@ export async function downloadModel(
   if (pre === "mismatch") await tryDelete(part);
 
   let sub: { remove: () => Promise<void> } | null = null;
+  let verified = false; // once true, the .part is SHA-verified — a later rename failure must not delete it
   try {
     if (pre === "complete") {
       // The bytes are already on disk from a prior (interrupted) attempt — skip the multi-GB transfer and
@@ -324,9 +344,17 @@ export async function downloadModel(
         progress: true,
       });
     }
-    await finalizePart(model, part);
+    await verifyPart(model, part); // size + magic + SHA — throws (→ catch deletes) if the .part is bad
+    // From here the .part is VERIFIED-GOOD. A failure in the rename below must NOT delete it (2026-07-06
+    // audit #9): a transient rename hiccup would otherwise destroy a byte-perfect, SHA-matched 2.5 GB model
+    // and force a full re-download. A verified .part is recoverable by findInstalledModel's startup self-heal,
+    // so we leave it in place and only surface the error.
+    verified = true;
+    await tryDelete(model.filename); // remove any old/partial final, then move the verified file into place
+    await Filesystem.rename({ from: part, to: model.filename, directory: Directory.External });
   } catch (e) {
-    await tryDelete(part); // never leave a partial at a path findInstalledModel might later trust
+    // Only reclaim a NOT-yet-verified partial. A verified .part (rename-phase failure) is kept for recovery.
+    if (!verified) await tryDelete(part);
     throw e;
   } finally {
     await sub?.remove();
