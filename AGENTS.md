@@ -61,24 +61,21 @@ A 4-agent audit found NilaMind is **feature-complete and well-engineered**; the 
 the deliberate on-device decision and costs money, and the audit shows it wouldn't fix the felt quality gap.
 
 ## Current work — branch `feat/vision-p0-reality-guard`
-Shipped (TDD, 683 green, tsc clean): anti-sycophancy **Rule 6** (manic grandiosity/impulsivity/paranoia
-validation), `elevationGuard` **racing-thoughts**, and **sleep + inflection signals fed into `nilaContext`**.
+Shipped (TDD, 699 green, tsc clean):
+- anti-sycophancy **Rule 6** (manic grandiosity/impulsivity/paranoia validation)
+- `elevationGuard` **racing-thoughts**
+- **sleep + inflection signals fed into `nilaContext`** (#1a/#1b)
+- warm **offline/cold-start fallback** via `nilaReflect` (#3)
+- **sleep prodrome signal** surfaced in Nila tab (#4)
+- **passthrough hydration** before declaring failure (#5)
+- **insight-aware daily nudge** (#6)
+- **safety-plan timeout cleanup + atomic append primitive** for shared arrays (#7)
+- unified **episode voice** with companion persona + personal context (#2)
+- partial **de-fragmentation**: AgentConsoleScreen removed from product, orphaned CheckInScreen removed (#8)
 
-## Remaining prioritized fixes (pick these up; keep the golden rules)
-- **#2** Unify the **episode** voice with the companion persona and feed `buildPersonalContext` into it
-  (`EpisodeSupportScreen.tsx` runs a rigid 6-step script that fights the fine-tune). _[device-verify]_
-- **#3** Warm the **offline/cold-start fallback** via the existing `nilaReflect` backend (`AiCoachScreen.tsx`
-  ships one static robotic sentence that many first messages hit during the ~min cold load). _[TDD-able]_
-- **#4** Surface the **sleep prodrome signal** on a default-on, pact-independent UI (today it reaches most
-  users nowhere). _[device-verify]_
-- **#5** Fix **passthrough-invisibility**: on crypto/IndexedDB init failure the safety plan/diary render empty;
-  hydrate/decrypt before declaring passthrough and show an honest message (`secureLocal.ts`). _[TDD-able]_
-- **#6** Make the **daily nudge insight-aware** (not a static rotation, `notifications.ts`); sane inflection default. _[TDD-able]_
-- **#7** Data-integrity P2s: safety-plan `setTimeout` cleanup (`SafetyPlanScreen.tsx`), append-race primitive for
-  shared arrays (`nilamind_checkins`/`_episodes`). _[TDD-able]_
-- **#8** De-fragment: 3 reading libraries → 1, 2 check-ins → 1 (`CheckInScreen` is orphaned), 3 dashboards → 1
-  (`AgentConsoleScreen` is dev-facing, remove from product), hubs **defer to** the agent, BA/self-compassion →
-  the in-chat protocol path. _[device-verify]_
+## Remaining prioritized fixes
+- **#8 (continued)** Finish de-fragmentation: 3 reading libraries → 1, BA/self-compassion → in-chat protocol
+  path. _[device-verify]_
 
 ## Commit style
 Conventional commits; end messages with `Co-Authored-By:` your agent line. Gate every commit on `vitest` +
