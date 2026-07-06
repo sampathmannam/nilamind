@@ -4,7 +4,7 @@
  * can't buy recall by sacrificing the precision the input gate depends on.
  */
 import { describe, it, expect } from "vitest";
-import { scanForCrisis, checkResponse } from "./safety";
+import { scanForCrisis, checkResponse, isBenignHyperbole } from "./safety";
 import { detectCrisis, setCrisisClassifierEnabled } from "./services/crisisClassifier";
 
 describe("§9 audit: modern self-harm slang (unalive / kms)", () => {
@@ -73,6 +73,23 @@ describe("§9 audit: output backstop honors the classifier verdict, not just key
   it("still passes a genuinely safe reply and preserves the no-arg default", () => {
     const safeReply = "That sounds really heavy. I'm here with you — want to try a grounding step?";
     expect(checkResponse(safeReply, "i had a rough day at work")).toBe(true);
+  });
+});
+
+describe("§9 audit: benign-hyperbole guard suppresses classifier false-fires (never masks real disclosure)", () => {
+  it("recognizes common hyperbole/idiom the MiniLM classifier over-fires on", () => {
+    expect(isBenignHyperbole("i'm so exhausted i could sleep for a week")).toBe(true);
+    expect(isBenignHyperbole("i could murder a plate of biryani right now")).toBe(true);
+    expect(isBenignHyperbole("i'm dying to see the new movie")).toBe(true);
+    expect(isBenignHyperbole("i could kill for a coffee")).toBe(true);
+  });
+  it("does NOT treat a real disclosure as hyperbole (lethal co-signal veto)", () => {
+    expect(isBenignHyperbole("i could sleep for a week and never wake up")).toBe(false);
+    expect(isBenignHyperbole("i want to die")).toBe(false);
+    expect(isBenignHyperbole("i just want the pain to be over")).toBe(false);
+  });
+  it("does not fire on ordinary non-hyperbole text (returns false, i.e. no opinion)", () => {
+    expect(isBenignHyperbole("i had a really hard day today")).toBe(false);
   });
 });
 

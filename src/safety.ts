@@ -279,6 +279,20 @@ export function isBenignMedicationAdherence(message: string): boolean {
   return MEDICATION_NOUN.test(t) && ADHERENCE_MARKER.test(t) && !LETHAL_COSIGNAL.test(t);
 }
 
+// Common HYPERBOLE / idiom that the MiniLM classifier over-fires on (2026-07-06 audit #8): "I could sleep for
+// a week" (0.85), "I could murder a plate of biryani" (0.73), "I'm dying to see it". A false crisis surface on
+// a calm chat is itself harmful (erodes trust), so — exactly like isBenignMedicationAdherence — this suppresses
+// ONLY the SOFT classifier upgrade AFTER the deterministic keyword floor has already missed. It can never
+// suppress a keyword hit, and the same LETHAL_COSIGNAL veto keeps it from ever masking a real disclosure that
+// merely happens to contain an idiom (e.g. "sleep for a week and never wake up" → vetoed).
+const HYPERBOLE_PATTERNS =
+  /\bsleep (for )?(a|an|the|another|a whole|an entire) (week|month|year|century|decade|weekend|day)\b|\bcould (murder|kill for|kill|die for) (a|an|some|the|this|that)\b|\bdying (to|for)\b|\bdying of (laughter|boredom|embarrassment|thirst|hunger)\b|\b(dead tired|dead serious|scared to death|bored to death|worked to death)\b/;
+export function isBenignHyperbole(message: string): boolean {
+  if (!message) return false;
+  const t = message.toLowerCase().replace(/['’]/g, "'").replace(/\s+/g, " ").trim();
+  return HYPERBOLE_PATTERNS.test(t) && !LETHAL_COSIGNAL.test(t);
+}
+
 /**
  * Validates whether the AI's reply is safe to display.
  */

@@ -23,7 +23,7 @@
  * device-verified — see crisisEmbedder.example.ts.
  */
 import weights from "./crisisClassifier.weights.json";
-import { scanForCrisis, isBenignMedicationAdherence } from "../safety";
+import { scanForCrisis, isBenignMedicationAdherence, isBenignHyperbole } from "../safety";
 
 /** Returns a NORMALIZED (L2) sentence embedding of `dim` floats. The head was trained on normalized MiniLM
  *  mean-pooled embeddings, so the embedder MUST mean-pool + L2-normalize (Transformers.js:
@@ -88,6 +88,9 @@ export async function detectCrisis(text: string): Promise<boolean> {
   // classifier upgrade for unambiguous adherence phrasing (never a keyword hit — those already returned
   // above; never a medication+lethal-intent disclosure — the guard vetoes those). See safety.ts.
   if (isBenignMedicationAdherence(text)) return false;
+  // Same posture for common hyperbole/idiom the classifier over-fires on ("could sleep for a week", "could
+  // murder a biryani") — only after the keyword floor missed, and vetoed by any lethal co-signal (2026-07-06 #8).
+  if (isBenignHyperbole(text)) return false;
   const p = await scoreCrisis(text);
   return p !== null && p >= CRISIS_THRESHOLD;
 }
