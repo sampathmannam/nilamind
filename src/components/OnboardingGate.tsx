@@ -6,6 +6,7 @@ import {
   setOnboardingRegion,
 } from "../services/onboarding";
 import { allRegions, type RegionCode, getCrisisLines } from "../services/crisisResources";
+import { t } from "../services/i18n";
 
 interface OnboardingGateProps {
   onComplete: () => void;
@@ -61,7 +62,7 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
           onClick={onOpenCrisis}
           className="flex items-center gap-1.5 text-xs font-semibold text-rose-300 hover:text-rose-200 px-3 py-1.5 rounded-full border border-rose-500/30 hover:bg-rose-500/10 transition-colors cursor-pointer"
         >
-          <LifeBuoy className="w-3.5 h-3.5" /> Need help now
+          <LifeBuoy className="w-3.5 h-3.5" /> {t("needHelpNow")}
         </button>
       </div>
 
@@ -109,14 +110,14 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
               onClick={() => setStep((s) => s - 1)}
               className="flex-1 py-3 rounded-xl border border-slate-700 text-slate-300 text-sm font-semibold hover:bg-slate-800 transition-colors cursor-pointer flex items-center justify-center gap-1"
             >
-              <ChevronLeft className="w-4 h-4" /> Back
+              <ChevronLeft className="w-4 h-4" /> {t("back")}
             </button>
           ) : (
             <button
               onClick={finish}
               className="flex-1 py-3 rounded-xl border border-slate-700 text-slate-400 text-sm font-semibold hover:bg-slate-800 transition-colors cursor-pointer"
             >
-              Skip
+              {t("skip")}
             </button>
           )}
 
@@ -125,14 +126,14 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
               onClick={finish}
               className="flex-[2] py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold transition-colors cursor-pointer flex items-center justify-center gap-1"
             >
-              Start using Nila <ChevronRight className="w-4 h-4" />
+              {t("start")} <ChevronRight className="w-4 h-4" />
             </button>
           ) : (
             <button
               onClick={() => setStep((s) => s + 1)}
               className="flex-[2] py-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm font-bold transition-colors cursor-pointer flex items-center justify-center gap-1"
             >
-              Next <ChevronRight className="w-4 h-4" />
+              {t("next")} <ChevronRight className="w-4 h-4" />
             </button>
           )}
         </div>

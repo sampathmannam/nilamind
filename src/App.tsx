@@ -25,6 +25,7 @@ function ScreenFallback() {
 }
 
 import { syncDailyReminders } from "./services/notifications";
+import { t } from "./services/i18n";
 import ListeningIndicator from "./components/ListeningIndicator";
 import BiometricGateHost from "./components/BiometricGateHost";
 import ModelSetupGate from "./components/ModelSetupGate";
@@ -144,7 +145,7 @@ export default function App() {
       {isSettingsOpen && (
         <div className="fixed inset-0 z-50 bg-page" id="settings-sheet">
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
-            <span className="text-sm font-semibold text-slate-100">Settings</span>
+            <span className="text-sm font-semibold text-slate-100">{t("settings")}</span>
             <button
               onClick={() => setIsSettingsOpen(false)}
               className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer"
@@ -167,7 +168,7 @@ export default function App() {
       {isDashboardOpen && (
         <div className="fixed inset-0 z-50 bg-page" id="dashboard-sheet">
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
-            <span className="text-sm font-semibold text-slate-100">Your Dashboard</span>
+            <span className="text-sm font-semibold text-slate-100">{t("dashboard")}</span>
             <button
               onClick={() => setIsDashboardOpen(false)}
               className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer"
@@ -187,7 +188,7 @@ export default function App() {
       {isMedicationOpen && (
         <div className="fixed inset-0 z-50 bg-page" id="medication-sheet">
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
-            <span className="text-sm font-semibold text-slate-100">Medications</span>
+            <span className="text-sm font-semibold text-slate-100">{t("medications")}</span>
             <button
               onClick={() => setIsMedicationOpen(false)}
               className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer"

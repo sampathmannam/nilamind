@@ -10,6 +10,7 @@ import {
   getNilaQuestion,
 } from "../services/modeEngine";
 import { hasCheckinToday, getSkipFlag } from "../services/checkin";
+import { t } from "../services/i18n";
 import NilaCheckIn from "./NilaCheckIn";
 import type { CheckInEntry } from "../types";
 import { secureLocal } from "../services/secureLocal";
@@ -277,7 +278,13 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
     }
   };
 
-  const greeting = getGreeting(mode.timeMode);
+  const greetingMap: Record<string, string> = {
+    morning: t("greeting_morning"),
+    day: t("greeting_day"),
+    evening: t("greeting_evening"),
+    night: t("greeting_night"),
+  };
+  const greeting = greetingMap[mode.timeMode] ?? getGreeting(mode.timeMode);
   const question = getNilaQuestion(mode.timeMode, mode.userState, mode.hasCheckedIn);
 
   return (
@@ -291,14 +298,14 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           <button
             onClick={onOpenSettings}
             className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
-            aria-label="Settings"
+            aria-label={t("settings")}
           >
             <Settings className="w-4 h-4" />
           </button>
           <button
             onClick={() => setShowCrisis(true)}
             className="p-2 rounded-full hover:bg-rose-500/10 text-rose-400 hover:text-rose-300 transition-colors cursor-pointer"
-            aria-label="Crisis support"
+            aria-label={t("crisisButton")}
           >
             <LifeBuoy className="w-4 h-4" />
           </button>

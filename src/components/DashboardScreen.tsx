@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import Markdown from "react-markdown";
 import { loadMoodHistory } from "../services/moodHistory";
+import { t } from "../services/i18n";
 import { loadAssessments, latestFor, INSTRUMENTS, type InstrumentId } from "../services/assessments";
 import { assessmentInsights, generateInsights, daysOfData, type Insight } from "../services/patternInsights";
 import { computeStreak } from "../services/streaks";
@@ -150,7 +151,7 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
     <div className="space-y-5 max-w-md mx-auto" id="dashboard-screen">
       <header className="space-y-1">
         <h1 className="text-xl font-semibold text-slate-100 flex items-center gap-2">
-          <Activity className="w-5 h-5 text-blue-400" /> Your Dashboard
+          <Activity className="w-5 h-5 text-blue-400" /> {t("dashboard")}
         </h1>
         <p className="text-xs text-slate-400 leading-relaxed">Your local sections stay only on your device. A picture of how you're doing over time.</p>
       </header>

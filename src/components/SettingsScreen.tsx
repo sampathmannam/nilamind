@@ -9,6 +9,7 @@ import OnDeviceSection from "./settings/OnDeviceSection";
 import IdentitySection from "./settings/IdentitySection";
 import PrivacyLockSection from "./settings/PrivacyLockSection";
 import FeedbackSection from "./settings/FeedbackSection";
+import LanguageSection from "./settings/LanguageSection";
 
 interface SettingsScreenProps {
   disableAnchorPulse: boolean;
@@ -26,6 +27,7 @@ export default function SettingsScreen({ disableAnchorPulse, onTogglePulse }: Se
       </div>
 
       <AppearanceSection />
+      <LanguageSection />
 
       {/* Sensory Overload — lives in the container because it's driven by app-level props. */}
       <div className="glass p-5 rounded-2xl space-y-4 shadow-lg">
