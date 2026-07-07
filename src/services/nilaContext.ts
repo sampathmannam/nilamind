@@ -23,7 +23,6 @@ import { topFireableSignal, type InflectionSignal } from "./nilaInflection";
 import { getInflectionEnabled } from "./inflectionPrefs";
 import { INSTRUMENTS } from "./assessments";
 import { DAY_MS } from "./storageUtils";
-import { computeStateDigest, stateDigestContextBlock } from "./stateDigest";
 import { parseSafetyPlan } from "./safetyPlan";
 import { safetyPlanFollowUpContextBlock } from "./safetyPlanFollowUp";
 import { sleepHoursVariability, variabilityContextBlock } from "./sleepHoursVariability";
@@ -287,16 +286,6 @@ export function buildPersonalContext(): string {
     out.push("From their check-ins (recently):");
     out.push(...lines);
   }
-
-  // Unified state digest — consolidates check-ins, BA, sleep, inflection, screening into one block
-  try {
-    const digest = computeStateDigest();
-    const digestBlock = stateDigestContextBlock(digest);
-    if (digestBlock) {
-      out.push("Current state summary:");
-      out.push(digestBlock);
-    }
-  } catch { /* best-effort */ }
 
   if (safetyPlanFollowUp) {
     out.push("Safety-plan follow-up (gentle invitation, never a push):");
