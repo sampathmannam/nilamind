@@ -26,6 +26,7 @@ import { cardsForCheckin, NilaCard } from "../services/nilaOrchestration";
 import { cardsForReply, protocolCard, protocolResumeCard, waitingCards, runWeeklySynthesis, thoughtRecordCard, runThoughtRecordDraft } from "../services/nilaCards";
 import { draftThoughtRecord } from "../services/thoughtRecordDraft";
 import { startProtocol, advanceProtocol, getActiveProgress } from "../services/protocolProgress";
+import { recordProtocolCompletion } from "../services/nOf1";
 import { getInflectionEnabled } from "../services/inflectionPrefs";
 import { recordDetectionPass, surfaceOpener, acknowledgeInflection, type InflectionSignal } from "../services/nilaInflection";
 import { actionForCard } from "../services/nilaCardDispatch";
@@ -563,6 +564,7 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
     if (!r) return;
     if ("done" in r) {
       justCompletedRef.current = { id: r.protocol.id, userMsg: lastUserMsg }; // suppress an immediate re-offer
+      recordProtocolCompletion(r.protocol.id);
       deliverProtocolStep(
         `That's the whole ${r.protocol.title} program — you actually went through it, and that counts. What we ` +
           `practised is yours to keep; we can pick it up again, or try something else, whenever you like.`,

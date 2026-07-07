@@ -18,6 +18,8 @@ import { nilaStats } from "../services/nilaSessions";
 import { adherenceSummary } from "../services/medicationAdherence";
 import { getRecentMetrics, detectMoodSignal } from "../services/typingPatterns";
 import { computeCircadianInsight } from "../services/circadian";
+import { computeNof1Ranking } from "../services/nOf1";
+import { PROTOCOLS } from "../services/protocols";
 import { secureLocal } from "../services/secureLocal";
 import { runDeepAssessment as runDeepAssessmentRequest } from "../services/coachAssist";
 import CrisisCard from "./CrisisCard";
@@ -87,11 +89,12 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
     const trajectories = assessmentInsights(assessments, mood);
     const medSummary = adherenceSummary();
     const circadian = computeCircadianInsight(mood);
+    const nOf1 = computeNof1Ranking();
 
-    return { mood, streak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian };
+    return { mood, streak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian, nOf1 };
   }, []);
 
-  const { mood, streak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian } = data;
+  const { mood, streak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian, nOf1 } = data;
 
   // Load behaviour snapshots async and compute daily-behaviour insights
   useEffect(() => {
@@ -240,6 +243,27 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
             <p className="text-[11px] text-slate-400 leading-relaxed mt-1">{circadian.note}</p>
             <p className="text-[10px] text-slate-500 mt-1">From {circadian.nights} nights of self-reported sleep. Avg {circadian.avgSleep}h.</p>
           </div>
+        </div>
+      )}
+
+      {/* N-of-1: what helps THIS person */}
+      {nOf1.length > 0 && (
+        <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 space-y-2">
+          <p className="text-sm font-semibold text-slate-100 flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-amber-400" /> What's been helping you
+          </p>
+          {nOf1.slice(0, 3).map((r) => {
+            const title = PROTOCOLS.find((p) => p.id === r.protocolId)?.title ?? r.protocolId;
+            return (
+              <div key={r.protocolId} className="flex items-center justify-between text-[11px]">
+                <span className="text-slate-300">{title}</span>
+                <span className={r.avgDelta < 0 ? "text-emerald-300" : "text-slate-400"}>
+                  {r.avgDelta < 0 ? "↘ steadier after" : "↗ more distress after"} · {r.completions}×
+                </span>
+              </div>
+            );
+          })}
+          <p className="text-[10px] text-slate-500">Your own pattern, from completed programs. Not a diagnosis.</p>
         </div>
       )}
 
