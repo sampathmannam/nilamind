@@ -16,7 +16,7 @@ import { recentMemoryLines } from "./nilaMemory";
 import { getActiveProgress } from "./protocolProgress";
 import { insightsContextBlock } from "./nilaInsights";
 import { profileContextBlock } from "./nilaProfile";
-import { selfReportSleepSignal } from "./sleepInsight";
+import { selfReportSleepSignal, selfReportedSleepNights } from "./sleepInsight";
 import type { SleepSignal } from "./healthConnect";
 import { topFireableSignal, type InflectionSignal } from "./nilaInflection";
 import { getInflectionEnabled } from "./inflectionPrefs";
@@ -25,6 +25,8 @@ import { DAY_MS } from "./storageUtils";
 import { computeStateDigest, stateDigestContextBlock } from "./stateDigest";
 import { parseSafetyPlan } from "./safetyPlan";
 import { safetyPlanFollowUpContextBlock } from "./safetyPlanFollowUp";
+import { sleepHoursVariability, variabilityContextBlock } from "./sleepHoursVariability";
+import type { VariabilitySignal } from "./sleepHoursVariability";
 
 function readArray(key: string): any[] {
   try {
@@ -229,6 +231,8 @@ export function buildPersonalContext(): string {
   const profile = profileContextBlock();
   // Current trajectory (the short-sleep manic-prodrome) — the earliest warning a manic-first app has.
   const trajectory = trajectoryContextBlock(selfReportSleepSignal());
+  // Sleep hours variability — circadian regularity signal (C1). Soft-signal nudge only.
+  const sleepVariability = variabilityContextBlock(sleepHoursVariability(selfReportedSleepNights()));
   // A detected trend shift — only when the user has opted into inflection awareness.
   const inflection = getInflectionEnabled() ? inflectionContextBlock(topFireableSignal()) : "";
 
@@ -242,7 +246,7 @@ export function buildPersonalContext(): string {
     }
   } catch { /* best-effort, never block context assembly */ }
 
-  if (lines.length === 0 && !memory && !insights && !profile && !trajectory && !inflection && !safetyPlanFollowUp) return "";
+  if (lines.length === 0 && !memory && !insights && !profile && !trajectory && !inflection && !safetyPlanFollowUp && !sleepVariability) return "";
 
   const out: string[] = [
     "WHAT YOU ALREADY KNOW ABOUT THEM",
@@ -251,6 +255,7 @@ export function buildPersonalContext(): string {
     "claim to know more than this. If something seems stale, trust what they tell you now.",
   ];
   if (trajectory) out.push(trajectory);
+  if (sleepVariability) out.push(sleepVariability);
   if (inflection) out.push(inflection);
   if (profile) out.push(profile);
   if (insights) {
