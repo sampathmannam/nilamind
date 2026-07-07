@@ -102,12 +102,20 @@ export default defineConfig(({ mode }) => {
           // into the ~7.5 MB eager boot bundle. Each is only pulled when the screen that uses it mounts
           // (charts/insights → recharts, PDF export → jspdf, markdown rendering → react-markdown, the
           // encrypted local store → dexie). Shrinks first-paint parse/eval on a cold app open.
-          manualChunks: {
-            recharts: ['recharts'],
-            jspdf: ['jspdf'],
-            'react-markdown': ['react-markdown'],
-            dexie: ['dexie'],
-          },
+    // C2 bundle-size cleanup — deterministic chunk names for every heavy dependency
+    // so cache keys are stable across builds. Libraries not listed here auto-chunk with
+    // content-hash names that change every build, defeating browser caching.
+    manualChunks: {
+      recharts: ['recharts'],
+      jspdf: ['jspdf'],
+      'react-markdown': ['react-markdown'],
+      dexie: ['dexie'],
+      // C2 additions — previously auto-chunked with unstable names
+      transformers: ['@huggingface/transformers'],    // 544 KB, MiniLM embedder (dynamic import)
+      vosk: ['vosk-browser'],                         // 5.5 MB, on-device STT (dynamic import)
+      html2canvas: ['html2canvas'],                   // 198 KB, jspdf transitive dep
+      dompurify: ['dompurify'],                       // 27 KB, jspdf transitive dep
+    },
         },
       },
     },
