@@ -48,6 +48,7 @@ const REGIONS: Record<RegionCode, RegionResources> = {
       { name: "iCall", display: "9152987821", tel: "9152987821", kind: "call", note: "Mon–Sat, 8am–10pm" },
       { name: "Vandrevala Foundation", display: "1860-2662-345", tel: "18602662345", kind: "call", note: "24/7" },
       { name: "KIRAN (Govt. of India)", display: "1800-599-0019", tel: "18005990019", kind: "call", note: "24/7, multi-language" },
+      { name: "AASRA", display: "+91-9820466726", tel: "919820466726", kind: "call", note: "24/7" },
     ],
   },
   US: {
