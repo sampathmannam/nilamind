@@ -5,6 +5,7 @@ import { ALL_DIARY_DBT_SKILLS } from "../data";
 import { Check, Clipboard, Calendar, MessageSquare, Sparkles, Loader2 } from "lucide-react";
 import Markdown from "react-markdown";
 import { analyzeQuickNote } from "../services/coachAssist";
+import { useTypingSession } from "../hooks/useTypingSession";
 import CrisisCard from "./CrisisCard";
 
 export default function DiaryCardScreen() {
@@ -28,6 +29,8 @@ export default function DiaryCardScreen() {
   const [isSaved, setIsSaved] = useState<boolean>(false);
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
+
+  const diaryTyping = useTypingSession("diary");
   const [crisis, setCrisis] = useState<boolean>(false);
 
   // Load entry for date
@@ -262,6 +265,10 @@ export default function DiaryCardScreen() {
               setQuickNotes(e.target.value);
               setIsSaved(false);
             }}
+            onKeyDown={diaryTyping.onKeyDown}
+            onKeyUp={diaryTyping.onKeyUp}
+            onFocus={diaryTyping.start}
+            onBlur={() => diaryTyping.onBlur(quickNotes.length)}
             placeholder="e.g., Felt a bit annoyed this morning before my meeting, but then practiced deep breathing. After lunch, I felt much more grounded."
             aria-label="Quick Notes"
             className="w-full bg-page border border-slate-800 rounded-xl p-3 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-blue-500/50 min-h-[100px] resize-y"

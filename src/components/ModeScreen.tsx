@@ -11,6 +11,7 @@ import {
 } from "../services/modeEngine";
 import { hasCheckinToday, getSkipFlag } from "../services/checkin";
 import { t } from "../services/i18n";
+import { useTypingSession } from "../hooks/useTypingSession";
 import NilaCheckIn from "./NilaCheckIn";
 import type { CheckInEntry } from "../types";
 import { secureLocal } from "../services/secureLocal";
@@ -90,6 +91,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
     const msg = text || inputText.trim();
     if (!msg || loading) return;
 
+    chatTyping.stop(msg.length);
     setInputText("");
     const userMsg: NilaUiMessage = { role: "user", content: msg };
     setMessages((prev) => [...prev, userMsg]);
@@ -285,6 +287,8 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
     night: t("greeting_night"),
   };
   const greeting = greetingMap[mode.timeMode] ?? getGreeting(mode.timeMode);
+
+  const chatTyping = useTypingSession("chat");
   const question = getNilaQuestion(mode.timeMode, mode.userState, mode.hasCheckedIn);
 
   return (
@@ -426,7 +430,13 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
               type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+              onKeyDown={(e) => {
+                chatTyping.onKeyDown(e);
+                if (e.key === "Enter") handleSendMessage();
+              }}
+              onKeyUp={chatTyping.onKeyUp}
+              onBlur={() => chatTyping.onBlur(inputText.length)}
+              onFocus={chatTyping.start}
               placeholder="Type a message..."
               className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500"
             />

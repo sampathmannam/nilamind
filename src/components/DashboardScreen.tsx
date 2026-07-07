@@ -16,6 +16,7 @@ import { assessmentInsights, generateInsights, daysOfData, type Insight } from "
 import { computeStreak } from "../services/streaks";
 import { nilaStats } from "../services/nilaSessions";
 import { adherenceSummary } from "../services/medicationAdherence";
+import { getRecentMetrics, detectMoodSignal } from "../services/typingPatterns";
 import { secureLocal } from "../services/secureLocal";
 import { runDeepAssessment as runDeepAssessmentRequest } from "../services/coachAssist";
 import CrisisCard from "./CrisisCard";
@@ -106,6 +107,18 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
 
   const emoBars = useMemo(() => emotionDistribution(checkins, stripProvenance), [checkins]);
   const observations = useMemo(() => derivedObservations(checkins, diaryEntries), [checkins, diaryEntries]);
+  const typingSignal = useMemo(() => {
+    const metrics = getRecentMetrics("chat", 7);
+    if (metrics.length < 3) return null;
+    const avgSpeed = metrics.reduce((s, m) => s + m.typingSpeed, 0) / metrics.length;
+    const avgPauses = metrics.reduce((s, m) => s + m.pauseCount, 0) / metrics.length;
+    const combined = {
+      ...metrics[metrics.length - 1],
+      typingSpeed: avgSpeed,
+      pauseCount: avgPauses,
+    };
+    return detectMoodSignal(combined);
+  }, []);
   const epPatterns = useMemo(() => episodePatterns(episodes), [episodes]);
   const topTags = useMemo(() => quickNoteTags(diaryEntries), [diaryEntries]);
   const emotionTrend = useMemo(() => moodTrend(mood, timeRange), [mood, timeRange]);
@@ -187,6 +200,24 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
           <div className="text-right">
             <p className="text-xl font-bold text-slate-100">{medSummary.avgAdherence}%</p>
             <p className="text-[10px] text-slate-500">last 7 days</p>
+          </div>
+        </div>
+      )}
+
+      {/* Typing pattern signal */}
+      {typingSignal && (
+        <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 flex items-start gap-3">
+          <div className="p-2 rounded-xl bg-violet-500/10 text-violet-400">
+            <BrainCircuit className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-slate-100">Typing pattern note</p>
+            <p className="text-[11px] text-slate-400 leading-relaxed">
+              {typingSignal === "mania" && "Your recent typing has been unusually fast and bursty — sometimes a sign of elevated energy. A quick check-in might help."}
+              {typingSignal === "depression" && "Your recent typing has been slower with more pauses — a gentle check-in could be worth it."}
+              {typingSignal === "anxiety" && "Your recent typing shows a lot of starts and stops — maybe take a slow breath when you're ready."}
+            </p>
+            <p className="text-[10px] text-slate-500 mt-1">Private: only timing is stored, never what you typed.</p>
           </div>
         </div>
       )}
