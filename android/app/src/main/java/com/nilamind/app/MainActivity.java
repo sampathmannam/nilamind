@@ -16,7 +16,7 @@ public class MainActivity extends BridgeActivity {
 
   // The on-device model file warmed at launch — must match the llama.cpp adapter's path
   // (llamaCppLlmAdapter.ts DEFAULT_MODEL_PATH).
-  private static final String MODEL_FILE = "v2-4b-Q4_K_M.gguf";
+  private static final String MODEL_FILE = "gemma-3-1b-it-Q4_K_M.gguf";
 
   @Override
   public void onCreate(Bundle savedInstanceState) {

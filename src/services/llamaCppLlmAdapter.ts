@@ -22,11 +22,11 @@ import { toGemmaPrompt, windowMessages } from "./gemmaPrompt";
 // Side-loaded GGUF in the app's own external files dir (adb push, mirrors the capgo .task path). The
 // PRODUCTION path is downloadModel() on first run — deferred; side-load validates the end-to-end brain.
 const DEFAULT_MODEL_PATH =
-  "/sdcard/Android/data/com.nilamind.app/files/v2-4b-Q4_K_M.gguf";
+  "/sdcard/Android/data/com.nilamind.app/files/gemma-3-1b-it-Q4_K_M.gguf";
 
 export function createLlamaCppBackend(
   modelPath: string = DEFAULT_MODEL_PATH,
-  label = "nila-v2-4b-q4km",
+  label = "nila-gemma-3-1b-q4km",
 ): LocalLlmBackend {
   let ctx: LlamaContext | null = null;
   let ready = false;

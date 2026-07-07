@@ -11,31 +11,31 @@ interface NilaFaceProps {
   size?: number;
 }
 
-const STATE_STYLES: Record<string, { glow: string; pulse: string; bg: string }> = {
+const STATE_STYLES: Record<string, { glow: string; bg: string; label: string }> = {
   warm: {
     glow: "shadow-amber-400/30",
-    pulse: "animate-pulse",
     bg: "from-amber-400/20 to-orange-400/20",
+    label: "",
   },
   blue: {
     glow: "shadow-blue-400/30",
-    pulse: "animate-pulse",
     bg: "from-blue-400/20 to-cyan-400/20",
+    label: "breathing with you",
   },
   purple: {
     glow: "shadow-purple-400/30",
-    pulse: "animate-pulse",
     bg: "from-purple-400/20 to-pink-400/20",
+    label: "here for you",
   },
   green: {
     glow: "shadow-emerald-400/30",
-    pulse: "animate-pulse",
     bg: "from-emerald-400/20 to-teal-400/20",
+    label: "let's ground",
   },
   red: {
     glow: "shadow-rose-400/40",
-    pulse: "animate-pulse",
     bg: "from-rose-400/30 to-red-400/30",
+    label: "need help?",
   },
 };
 
@@ -72,7 +72,7 @@ export default function NilaFace({ state, onClick, onLongPress, size = 120 }: Ni
       onClick={onClick}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
-      className={`relative rounded-full flex items-center justify-center transition-all active:scale-95 cursor-pointer ${style.glow} ${style.pulse}`}
+      className={`relative rounded-full flex items-center justify-center transition-all active:scale-95 cursor-pointer ${style.glow} animate-pulse`}
       style={{ width: size, height: size }}
       aria-label="Talk to Nila"
     >
@@ -89,12 +89,9 @@ export default function NilaFace({ state, onClick, onLongPress, size = 120 }: Ni
       </div>
 
       {/* State indicator */}
-      {state && state !== "calm" && (
+      {style.label && (
         <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-slate-800/90 border border-slate-700/50 text-[10px] text-slate-300 whitespace-nowrap">
-          {state === "anxious" && "breathing with you"}
-          {state === "low" && "here for you"}
-          {state === "elevated" && "let's ground"}
-          {state === "crisis" && "need help?"}
+          {style.label}
         </div>
       )}
     </button>

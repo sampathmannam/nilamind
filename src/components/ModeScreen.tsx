@@ -19,6 +19,7 @@ import { getSessionChat, setSessionChat, clearSessionChat } from "../services/se
 import { localLlmLoadState } from "../services/localLlm";
 import { speakIfEnabled, speak, listenOnce, stopSpeaking } from "../services/voice";
 import CrisisOverlay from "./CrisisOverlay";
+import { Settings, LifeBuoy, Mic, Send, MicOff } from "lucide-react";
 
 interface ModeScreenProps {
   onOpenSettings?: () => void;
@@ -46,8 +47,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis }: ModeScreenP
 
   const handleCheckinLogged = (entry: CheckInEntry) => {
     setShowCheckin(false);
-    setMode(getCurrentMode()); // Refresh state
-    // Add Nila's response
+    setMode(getCurrentMode());
     setMessages((prev) => [
       ...prev,
       { role: "assistant", content: `Thank you. I'll keep that in mind.` },
@@ -70,9 +70,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis }: ModeScreenP
     try {
       const allMessages = [...messages, userMsg];
       const result = await sendToNila(allMessages, "companion", {
-        onDelta: (t: string) => {
-          // Streaming delta — could update UI in real-time
-        },
+        onDelta: (t: string) => {},
       });
       if (result.reply) {
         setMessages((prev) => [...prev, { role: "assistant", content: result.reply }]);
@@ -111,10 +109,8 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis }: ModeScreenP
   };
 
   const handleQuickAction = (action: string) => {
-    // Route to the appropriate tool
     switch (action) {
       case "grounding":
-        // Start 5-4-3-2-1 inline
         setMessages((prev) => [
           ...prev,
           { role: "assistant", content: "Let's do a quick grounding exercise. Name 5 things you can see." },
@@ -165,14 +161,14 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis }: ModeScreenP
             className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
             aria-label="Settings"
           >
-            ⚙️
+            <Settings className="w-4 h-4" />
           </button>
           <button
             onClick={() => setShowCrisis(true)}
             className="p-2 rounded-full hover:bg-rose-500/10 text-rose-400 hover:text-rose-300 transition-colors cursor-pointer"
             aria-label="Crisis support"
           >
-            🆘
+            <LifeBuoy className="w-4 h-4" />
           </button>
         </div>
       </div>
@@ -248,7 +244,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis }: ModeScreenP
               }`}
               aria-label={listening ? "Stop listening" : "Tap to talk"}
             >
-              🎤
+              {listening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
             </button>
             <input
               type="text"
@@ -268,7 +264,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis }: ModeScreenP
               }`}
               aria-label="Send"
             >
-              ➤
+              <Send className="w-5 h-5" />
             </button>
           </div>
         </div>

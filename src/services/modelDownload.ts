@@ -23,7 +23,9 @@ export interface DownloadProgress {
 
 const PREF_KEY = "nilamind_model_pref";
 // If several models are ever on disk with no explicit choice saved, prefer the richest present.
-const FALLBACK_ORDER = ["best-4b"];
+// Derive from the catalog so a stored preference for a since-removed id (e.g. an old "best-4b") can't
+// strand a freshly-swapped model: every catalog id is always reachable here.
+const FALLBACK_ORDER = MODELS.map((m) => m.id);
 
 export function getPreferredModelId(): string | null {
   try {
