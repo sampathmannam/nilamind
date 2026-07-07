@@ -9,7 +9,6 @@ import android.webkit.PermissionRequest;
 import android.webkit.WebChromeClient;
 import com.getcapacitor.Bridge;
 import com.getcapacitor.BridgeActivity;
-import com.nilamind.app.llamagpu.LlamaGpuPlugin;
 import java.io.File;
 import java.io.FileInputStream;
 
@@ -21,9 +20,6 @@ public class MainActivity extends BridgeActivity {
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
-    // Register BEFORE super.onCreate() — BridgeActivity.create() finalises the plugin list
-    // inside super.onCreate(); registerPlugin() after that only touches the builder, not the bridge.
-    initialPlugins.add(LlamaGpuPlugin.class);
     super.onCreate(savedInstanceState);
     precacheModelWeights();
     startResidentServiceIfModelPresent();

@@ -362,11 +362,13 @@ export async function downloadModel(
 }
 
 /** Register the native backend for a model that's on disk. Uses the CPU llama-cpp-capacitor adapter
- *  (llama.cpp over the GGUF, CPU-only). The Vulkan GPU path (vulkanLlmAdapter / libllama-gpu-jni.so) is
- *  SHELVED: on Adreno it fails to compile the compute shaders → VK_ERROR_DEVICE_LOST → an uncaught
- *  vk::DeviceLostError aborts the whole process on the first completion (a native SIGABRT no JS/Kotlin
- *  try/catch can trap). Re-enabling it needs DeviceLost handling in the native JNI source (not in-repo)
- *  plus on-device validation. Until then the CPU path is the reliable, no-crash transport. */
+ *  (llama.cpp over the GGUF, CPU-only) — the reliable, no-crash transport.
+ *
+ *  A Vulkan GPU path was tried and REMOVED: on the target Adreno GPU it failed to compile the compute
+ *  shaders → VK_ERROR_DEVICE_LOST → an uncaught vk::DeviceLostError aborted the whole process on the first
+ *  completion (a native SIGABRT no JS/Kotlin try/catch can trap). It also shipped ~97 MB of prebuilt .so
+ *  with no in-repo build source. If GPU acceleration is revisited, it needs DeviceLost handling in the
+ *  native JNI layer plus on-device validation on real target hardware before it goes anywhere near users. */
 export async function registerDownloadedBackend(model: CatalogModel): Promise<void> {
   const path = `${FILES_DIR}/${model.filename}`;
   if (model.runtime !== "gguf") {
