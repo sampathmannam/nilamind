@@ -10,6 +10,7 @@ import { selfReportSleepSignal } from "./sleepInsight";
 import { topFireableSignal } from "./nilaInflection";
 import { getInflectionEnabled } from "./inflectionPrefs";
 import { DAY_MS } from "./storageUtils";
+import type { Medication } from "./medicationAdherence";
 
 // Warm, low-pressure nudges (Phase 7). Never demanding, never guilt-laden — each is an invitation.
 export const WARM_NUDGES = [
@@ -194,4 +195,60 @@ export async function syncDailyReminders(opts: { request?: boolean } = { request
 /** Turn reminders off and clear the scheduled nudge. */
 export async function clearDailyReminders(): Promise<void> {
   try { await LocalNotifications.cancel({ notifications: [{ id: DAILY_REMINDER_ID }] }); } catch { /* */ }
+}
+
+// Medication reminders use a distinct id space so they don't collide with the daily nudge.
+const MED_REMINDER_ID_BASE = 200_000;
+
+/** Convert a stable string id to a 32-bit numeric notification id (deterministic). */
+function medNotificationId(medId: string, offset = 0): number {
+  let hash = 0;
+  for (let i = 0; i < medId.length; i++) {
+    hash = (hash << 5) - hash + medId.charCodeAt(i);
+    hash |= 0;
+  }
+  return MED_REMINDER_ID_BASE + ((Math.abs(hash) + offset) % 100_000);
+}
+
+/** Parse "HH:MM" into [hour, minute], clamped to valid ranges. */
+function parseTime(time: string): [number, number] {
+  const [h, m] = time.split(":").map((x) => parseInt(x, 10));
+  return [Math.min(23, Math.max(0, Number.isNaN(h) ? 0 : h)), Math.min(59, Math.max(0, Number.isNaN(m) ? 0 : m))];
+}
+
+/**
+ * Sync recurring local notifications for active daily/twice-daily medications. Idempotent: clears prior
+ * med reminders first, then re-schedules from the current list. Never prompts for permission — callers
+ * should request permission when the user opts in.
+ */
+export async function syncMedicationReminders(meds: Medication[]): Promise<void> {
+  // Always clear previous med reminders so deletions/changes don't leave stale pings.
+  try {
+    const cancelIds: number[] = [];
+    for (const med of meds) {
+      cancelIds.push(medNotificationId(med.id));
+      if (med.schedule === "twice_daily") cancelIds.push(medNotificationId(med.id, 1));
+    }
+    // Also clear any prior med ids by covering the known id range once — cheap and safe.
+    await LocalNotifications.cancel({ notifications: cancelIds.map((id) => ({ id })) });
+  } catch { /* plugin may be unavailable */ }
+
+  let granted = false;
+  try { granted = (await LocalNotifications.checkPermissions()).display === "granted"; } catch { return; }
+  if (!granted) return;
+
+  const notifications: { id: number; title: string; body: string; schedule: { on: { hour: number; minute: number }; allowWhileIdle: true }; smallIcon: string }[] = [];
+  for (const med of meds) {
+    if (!med.active) continue;
+    const [h, m] = parseTime(med.time);
+    const body = `Time for ${med.name} ${med.dose}`.trim();
+    notifications.push({ id: medNotificationId(med.id), title: "NilaMind", body, schedule: { on: { hour: h, minute: m }, allowWhileIdle: true }, smallIcon: "ic_stat_icon_config_sample" });
+    if (med.schedule === "twice_daily") {
+      // Space second dose 12 hours later, wrapping around midnight.
+      const h2 = (h + 12) % 24;
+      notifications.push({ id: medNotificationId(med.id, 1), title: "NilaMind", body, schedule: { on: { hour: h2, minute: m }, allowWhileIdle: true }, smallIcon: "ic_stat_icon_config_sample" });
+    }
+  }
+  if (notifications.length === 0) return;
+  try { await LocalNotifications.schedule({ notifications }); } catch { /* */ }
 }

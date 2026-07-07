@@ -13,6 +13,7 @@ import ModeScreen from "./components/ModeScreen";
 // LAZY — detail screens only when explicitly opened
 const SettingsScreen = lazy(() => import("./components/SettingsScreen"));
 const DashboardScreen = lazy(() => import("./components/DashboardScreen"));
+const MedicationAdherenceScreen = lazy(() => import("./components/MedicationAdherenceScreen"));
 
 // Calm fallback while lazy chunks load
 function ScreenFallback() {
@@ -35,6 +36,7 @@ export default function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isDashboardOpen, setIsDashboardOpen] = useState(false);
   const [isGroundingOpen, setIsGroundingOpen] = useState(false);
+  const [isMedicationOpen, setIsMedicationOpen] = useState(false);
   const [disableAnchorPulse, setDisableAnchorPulse] = useState(false);
   const [saveWarning, setSaveWarning] = useState(false);
   const [onboardingDone, setOnboardingDone] = useState(hasCompletedOnboarding());
@@ -63,10 +65,11 @@ export default function App() {
       if (isSettingsOpen) { setIsSettingsOpen(false); return; }
       if (isDashboardOpen) { setIsDashboardOpen(false); return; }
       if (isGroundingOpen) { setIsGroundingOpen(false); return; }
+      if (isMedicationOpen) { setIsMedicationOpen(false); return; }
       void CapApp.exitApp();
     }).then((h) => { handle = h; if (removed) h.remove(); });
     return () => { removed = true; handle?.remove(); };
-  }, [isCrisisOpen, isSettingsOpen, isDashboardOpen, isGroundingOpen]);
+  }, [isCrisisOpen, isSettingsOpen, isDashboardOpen, isGroundingOpen, isMedicationOpen]);
 
   return (
     <div className="relative isolate min-h-screen bg-page text-slate-300 font-sans antialiased overflow-x-hidden">
@@ -105,6 +108,7 @@ export default function App() {
           onOpenSettings={() => setIsSettingsOpen(true)}
           onOpenCrisis={() => setIsCrisisOpen(true)}
           onOpenDashboard={() => setIsDashboardOpen(true)}
+          onOpenMedication={() => setIsMedicationOpen(true)}
         />
       </main>
 
@@ -174,6 +178,26 @@ export default function App() {
           <div className="overflow-y-auto">
             <Suspense fallback={<ScreenFallback />}>
               <DashboardScreen />
+            </Suspense>
+          </div>
+        </div>
+      )}
+
+      {/* Medication adherence sheet */}
+      {isMedicationOpen && (
+        <div className="fixed inset-0 z-50 bg-page" id="medication-sheet">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
+            <span className="text-sm font-semibold text-slate-100">Medications</span>
+            <button
+              onClick={() => setIsMedicationOpen(false)}
+              className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer"
+            >
+              ✕
+            </button>
+          </div>
+          <div className="overflow-y-auto p-4">
+            <Suspense fallback={<ScreenFallback />}>
+              <MedicationAdherenceScreen />
             </Suspense>
           </div>
         </div>

@@ -34,9 +34,10 @@ interface ModeScreenProps {
   onOpenSettings?: () => void;
   onOpenCrisis?: () => void;
   onOpenDashboard?: () => void;
+  onOpenMedication?: () => void;
 }
 
-export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboard }: ModeScreenProps) {
+export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboard, onOpenMedication }: ModeScreenProps) {
   const [mode, setMode] = useState(getCurrentMode());
   const [showCheckin, setShowCheckin] = useState(() => {
     return !mode.hasCheckedIn;
@@ -236,10 +237,14 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
         ]);
         break;
       case "medication":
-        setMessages((prev) => [
-          ...prev,
-          { role: "assistant", content: "Did you take your medication today?" },
-        ]);
+        if (onOpenMedication) {
+          onOpenMedication();
+        } else {
+          setMessages((prev) => [
+            ...prev,
+            { role: "assistant", content: "Did you take your medication today?" },
+          ]);
+        }
         break;
       case "dashboard":
         onOpenDashboard?.();
