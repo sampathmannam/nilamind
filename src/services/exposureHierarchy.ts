@@ -1,4 +1,5 @@
 import { secureLocal } from "./secureLocal";
+import { scanForCrisis } from "../safety";
 
 const HIERARCHY_KEY = "nilamind_exposure_hierarchy";
 
@@ -34,6 +35,9 @@ export function createHierarchy(title: string): ExposureHierarchy {
 let _stepCounter = 0;
 
 export function addStep(hierarchy: ExposureHierarchy, description: string, suds: number): ExposureHierarchy {
+  // §9 defense-in-depth: a crisis disclosure must never be persisted as an exposure step. The screen
+  // gates the input and surfaces help; this is the data-layer backstop so it can't slip through.
+  if (scanForCrisis(description)) return hierarchy;
   _stepCounter++;
   const step: ExposureStep = {
     id: "es_" + Date.now() + "_" + _stepCounter,

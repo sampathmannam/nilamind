@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Mountain, Plus, X } from "lucide-react";
 import { createHierarchy, addStep, removeStep, completeStep, loadHierarchy, saveHierarchy, completionRate, averageSudReduction, type ExposureHierarchy } from "../services/exposureHierarchy";
+import { scanForCrisis } from "../safety";
+import CrisisLines from "./CrisisLines";
 
 export default function ExposureHierarchyScreen() {
   const [hierarchy, setHierarchy] = useState<ExposureHierarchy | null>(loadHierarchy);
@@ -10,12 +12,17 @@ export default function ExposureHierarchyScreen() {
   const [completingStep, setCompletingStep] = useState<string | null>(null);
   const [postSuds, setPostSuds] = useState(50);
   const [learning, setLearning] = useState("");
+  // §9: a free-text field is a crisis-disclosure surface. If the input reads as crisis, we surface help
+  // instead of treating it as an exposure — the deterministic gate, matching ReachOut/Psychoed.
+  const [crisisShown, setCrisisShown] = useState(false);
 
   function refresh() { setHierarchy(loadHierarchy()); }
 
   function handleCreate() {
-    if (!title.trim()) return;
-    const h = createHierarchy(title.trim());
+    const t = title.trim();
+    if (!t) return;
+    if (scanForCrisis(t)) { setCrisisShown(true); return; }
+    const h = createHierarchy(t);
     saveHierarchy(h);
     refresh();
     setTitle("");
@@ -23,6 +30,7 @@ export default function ExposureHierarchyScreen() {
 
   function handleAddStep() {
     if (!hierarchy || !stepText.trim()) return;
+    if (scanForCrisis(stepText.trim())) { setCrisisShown(true); return; }
     const updated = addStep(hierarchy, stepText.trim(), suds);
     saveHierarchy(updated);
     refresh();
@@ -44,6 +52,24 @@ export default function ExposureHierarchyScreen() {
     saveHierarchy(updated);
     refresh();
     setCompletingStep(null); setPostSuds(50); setLearning("");
+  }
+
+  if (crisisShown) {
+    return (
+      <div className="space-y-4 max-w-md mx-auto" id="exposure-screen">
+        <div className="bg-card border border-rose-500/40 p-5 rounded-2xl space-y-3" id="exposure-crisis">
+          <h3 className="text-sm font-semibold text-rose-200">You matter — support is here right now</h3>
+          <p className="text-xs text-slate-300 leading-relaxed">
+            What you just wrote sounds like more than an exposure step. This is a moment for a person, not an exercise —
+            please reach out right now. You're not alone.
+          </p>
+          <CrisisLines tone="rose" />
+        </div>
+        <button onClick={() => setCrisisShown(false)} className="w-full glass rounded-xl py-2 text-xs text-slate-400 cursor-pointer">
+          Back to the exercise
+        </button>
+      </div>
+    );
   }
 
   if (hierarchy) {

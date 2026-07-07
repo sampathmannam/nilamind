@@ -80,4 +80,21 @@ describe("exposureHierarchy", () => {
   it("inhibitoryLearningPrompts returns 5 prompts", () => {
     expect(inhibitoryLearningPrompts()).toHaveLength(5);
   });
+
+  // §9 defense-in-depth: a free-text field is a crisis-disclosure surface. Even though the screen gates
+  // the input, the data layer must NEVER persist a crisis disclosure as an exposure "step" — that would
+  // both miss the moment AND leave the disclosure sitting in the ladder. The screen surfaces help instead.
+  it("§9: addStep refuses a crisis disclosure — it never lands in the ladder", () => {
+    let h = createHierarchy("Social anxiety");
+    h = addStep(h, "i want to kill myself", 5);
+    expect(h.steps).toHaveLength(0);
+  });
+
+  // Paired benign control — a real exposure step (which can name a scary situation) must NOT false-fire.
+  it("§9: a genuine exposure step is still added (no false positive)", () => {
+    let h = createHierarchy("Social anxiety");
+    h = addStep(h, "Make a phone call to a stranger", 5);
+    h = addStep(h, "Ask someone for directions", 3);
+    expect(h.steps).toHaveLength(2);
+  });
 });
