@@ -10,6 +10,7 @@
 import { buildNilaSystem, type NilaMessage } from "./nila";
 import { generateGuarded, isLocalLlmReady } from "./localLlm";
 import { detectElevationRisk, elevationGuardNote, elevationOutputNote } from "./elevationGuard";
+import { currentStateEstimate, stateEstimateContextBlock } from "./stateEngine";
 import type { AgentView } from "./agent";
 
 export interface LocalNilaResult {
@@ -34,7 +35,16 @@ export async function askNilaLocalStream(
   // it here and, for the stopping-meds case, append a reliable scripted line below.
   const lastUser = [...messages].reverse().find((m) => m.role === "user")?.content ?? "";
   const elevation = detectElevationRisk(lastUser);
-  const system = buildNilaSystem(lastUser) + elevationGuardNote(elevation.level);
+  let system = buildNilaSystem(lastUser) + elevationGuardNote(elevation.level);
+
+  // B2: feed a consolidated state estimate into the model's awareness. Best-effort: if the store read
+  // fails (e.g. locked IndexedDB), continue without the block rather than break the chat.
+  try {
+    const stateBlock = stateEstimateContextBlock(await currentStateEstimate());
+    if (stateBlock) system += "\n\n" + stateBlock;
+  } catch {
+    /* state estimate is best-effort context, never a hard dependency */
+  }
 
   try {
     // generateGuarded races a hang-timeout (Gate 6) so a true native deadlock still falls back to the
