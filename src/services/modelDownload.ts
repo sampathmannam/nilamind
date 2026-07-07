@@ -361,15 +361,22 @@ export async function downloadModel(
   }
 }
 
-/** Register the native backend for a model that's on disk. Only the llama.cpp GGUF runtime ships today —
- *  the MediaPipe/.task path was removed with @capgo/capacitor-llm (dead weight: pulled ~tens of MB of
- *  mediapipe-tasks-genai + executorch native libs). A non-gguf model would be a catalog authoring error,
- *  so fail loud rather than silently mis-route it to the GGUF adapter. */
+/** Register the native backend for a model that's on disk. Uses upstream llama.cpp with Vulkan GPU
+ *  for Android native builds, falling back to the CPU-only llama-cpp-capacitor binding if unavailable. */
 export async function registerDownloadedBackend(model: CatalogModel): Promise<void> {
   const path = `${FILES_DIR}/${model.filename}`;
   if (model.runtime !== "gguf") {
     throw new Error(`Unsupported model runtime "${model.runtime}" — only "gguf" (llama.cpp) ships today.`);
   }
+  // Try Vulkan GPU backend first (upstream llama.cpp with Vulkan)
+  try {
+    const { createVulkanLlmBackend } = await import("./vulkanLlmAdapter");
+    registerLocalLlmBackend(createVulkanLlmBackend(path));
+    return;
+  } catch {
+    // Vulkan adapter not available — fall through to CPU-only
+  }
+  // Fallback: CPU-only llama.cpp binding
   const { createLlamaCppBackend } = await import("./llamaCppLlmAdapter");
   registerLocalLlmBackend(createLlamaCppBackend(path));
 }

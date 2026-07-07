@@ -9,6 +9,7 @@ import android.webkit.PermissionRequest;
 import android.webkit.WebChromeClient;
 import com.getcapacitor.Bridge;
 import com.getcapacitor.BridgeActivity;
+import com.nilamind.app.llamagpu.LlamaGpuPlugin;
 import java.io.File;
 import java.io.FileInputStream;
 
@@ -20,6 +21,8 @@ public class MainActivity extends BridgeActivity {
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
+    // Register the Vulkan GPU llama.cpp plugin before super.onCreate() initializes the bridge
+    registerPlugin(LlamaGpuPlugin.class);
     super.onCreate(savedInstanceState);
     precacheModelWeights();
     startResidentServiceIfModelPresent();

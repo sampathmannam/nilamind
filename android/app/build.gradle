@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
 
 // Release signing — loaded from android/key.properties (gitignored) ONLY if present, so default
 // debug builds and CI work untouched. The user supplies their own keystore. See DISTRIBUTION.md.
@@ -12,6 +13,7 @@ if (hasReleaseKeystore) {
 android {
     namespace = "com.nilamind.app"
     compileSdk = rootProject.ext.compileSdkVersion
+    ndkVersion "29.0.13113456"
     defaultConfig {
         applicationId "com.nilamind.app"
         minSdkVersion rootProject.ext.minSdkVersion
@@ -24,9 +26,13 @@ android {
              // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
-        // TEMP (Piece 4a spike): MediaPipe LLM native libs are large — package only arm64-v8a so the
-        // debug APK stays sane. Revisit ABI coverage for production (most modern phones are arm64-v8a).
         ndk { abiFilters 'arm64-v8a' }
+        externalNativeBuild {
+            cmake {
+                cppFlags "-std=c++17 -O3"
+                arguments "-DANDROID_STL=c++_shared"
+            }
+        }
     }
     signingConfigs {
         release {
@@ -46,6 +52,12 @@ android {
             }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    externalNativeBuild {
+        cmake {
+            path "src/main/cpp/CMakeLists.txt"
+            version "3.22.1"
         }
     }
 }
