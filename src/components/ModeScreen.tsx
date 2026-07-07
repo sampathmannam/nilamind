@@ -39,9 +39,10 @@ interface ModeScreenProps {
   onOpenCrisis?: () => void;
   onOpenDashboard?: () => void;
   onOpenMedication?: () => void;
+  onOpenGrounding?: () => void;
 }
 
-export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboard, onOpenMedication }: ModeScreenProps) {
+export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboard, onOpenMedication, onOpenGrounding }: ModeScreenProps) {
   const [mode, setMode] = useState(getCurrentMode());
   const [showCheckin, setShowCheckin] = useState(() => {
     return !mode.hasCheckedIn;
@@ -226,16 +227,10 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   const handleQuickAction = (action: string) => {
     switch (action) {
       case "grounding":
-        setMessages((prev) => [
-          ...prev,
-          { role: "assistant", content: "Let's do a quick grounding exercise. Name 5 things you can see." },
-        ]);
+        onOpenGrounding?.();
         break;
       case "breathing":
-        setMessages((prev) => [
-          ...prev,
-          { role: "assistant", content: "Let's breathe together. Breathe in for 4 seconds..." },
-        ]);
+        onOpenGrounding?.();
         break;
       case "diary":
         setMessages((prev) => [

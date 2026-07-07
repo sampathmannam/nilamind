@@ -113,6 +113,7 @@ export default function App() {
           onOpenCrisis={() => setIsCrisisOpen(true)}
           onOpenDashboard={() => setIsDashboardOpen(true)}
           onOpenMedication={() => setIsMedicationOpen(true)}
+          onOpenGrounding={() => setIsGroundingOpen(true)}
         />
       </main>
 
