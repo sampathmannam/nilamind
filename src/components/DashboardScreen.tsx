@@ -6,7 +6,7 @@ import {
 import {
   Flame, TrendingUp as TrendUpIcon, TrendingDown, Minus, Activity, MessageSquare,
   CalendarCheck, ClipboardCheck, Database, Sparkles, ShieldAlert, Clock, BrainCircuit,
-  Loader2, Tag, Lightbulb,
+  Loader2, Tag, Lightbulb, Pill,
 } from "lucide-react";
 import Markdown from "react-markdown";
 import { loadMoodHistory } from "../services/moodHistory";
@@ -14,6 +14,7 @@ import { loadAssessments, latestFor, INSTRUMENTS, type InstrumentId } from "../s
 import { assessmentInsights, generateInsights, daysOfData, type Insight } from "../services/patternInsights";
 import { computeStreak } from "../services/streaks";
 import { nilaStats } from "../services/nilaSessions";
+import { adherenceSummary } from "../services/medicationAdherence";
 import { secureLocal } from "../services/secureLocal";
 import { runDeepAssessment as runDeepAssessmentRequest } from "../services/coachAssist";
 import CrisisCard from "./CrisisCard";
@@ -81,11 +82,12 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
     for (let i = 0; i < 14; i++) if (activeSet.has(ymd(new Date(today.getTime() - i * DAY_MS)))) freq14++;
 
     const trajectories = assessmentInsights(assessments, mood);
+    const medSummary = adherenceSummary();
 
-    return { mood, streak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes };
+    return { mood, streak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary };
   }, []);
 
-  const { mood, streak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes } = data;
+  const { mood, streak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary } = data;
 
   // Load behaviour snapshots async and compute daily-behaviour insights
   useEffect(() => {
@@ -167,6 +169,25 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
       </div>
       {streak.longest > 0 && (
         <p className="text-[11px] text-slate-500 -mt-2 text-center">Longest streak: {streak.longest} days · {streak.totalActiveDays} active days all-time</p>
+      )}
+
+      {/* Medication adherence summary */}
+      {medSummary.activeMeds > 0 && (
+        <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-blue-500/10 text-blue-400">
+              <Pill className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-slate-100">Medication adherence</p>
+              <p className="text-[11px] text-slate-400">{medSummary.activeMeds} active medication{medSummary.activeMeds === 1 ? "" : "s"}</p>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="text-xl font-bold text-slate-100">{medSummary.avgAdherence}%</p>
+            <p className="text-[10px] text-slate-500">last 7 days</p>
+          </div>
+        </div>
       )}
 
       {/* ONE trend chart (7D/30D + Emotion/Context), fed by loadMoodHistory() */}

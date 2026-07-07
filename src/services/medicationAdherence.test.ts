@@ -14,7 +14,7 @@ vi.mock("./secureLocal", () => ({
   }),
 }));
 
-import { createMedication, loadMedications, saveMedications, logMedication, loadMedicationLogs, adherenceRate, commonSideEffects } from "./medicationAdherence";
+import { createMedication, loadMedications, saveMedications, logMedication, loadMedicationLogs, adherenceRate, commonSideEffects, adherenceSummary } from "./medicationAdherence";
 
 describe("medicationAdherence", () => {
   beforeEach(() => { store.clear(); });
@@ -62,5 +62,25 @@ describe("medicationAdherence", () => {
     expect(se[0].symptom).toBe("Nausea");
     expect(se[0].count).toBe(2);
     expect(se[0].avgSeverity).toBe(4);
+  });
+
+  it("adherenceSummary returns zero counts with no medications", () => {
+    expect(adherenceSummary()).toEqual({ activeMeds: 0, avgAdherence: 0 });
+  });
+
+  it("adherenceSummary averages adherence across active meds only", () => {
+    const m1 = createMedication("A", "10mg", "08:00", "daily");
+    const m2 = createMedication("B", "20mg", "20:00", "daily");
+    const inactive = createMedication("C", "5mg", "12:00", "daily");
+    inactive.active = false;
+    saveMedications([m1, m2, inactive]);
+    const today = new Date().toISOString().split("T")[0];
+    store.set("nilamind_med_logs", JSON.stringify([
+      { id: "1", medId: m1.id, date: today, taken: true, takenAt: "08:00", sideEffects: [] },
+      { id: "2", medId: m2.id, date: today, taken: false, takenAt: "", sideEffects: [] },
+    ]));
+    const summary = adherenceSummary();
+    expect(summary.activeMeds).toBe(2);
+    expect(summary.avgAdherence).toBe(50);
   });
 });

@@ -99,3 +99,16 @@ export function missedDays(medId: string, days = 7): number {
   const rate = adherenceRate(medId, days);
   return Math.round((1 - rate / 100) * days);
 }
+
+export interface AdherenceSummary {
+  activeMeds: number;
+  avgAdherence: number; // 0–100 across active meds
+}
+
+/** Dashboard-facing summary: number of active medications and average 7-day adherence. */
+export function adherenceSummary(): AdherenceSummary {
+  const meds = loadMedications().filter((m) => m.active);
+  if (meds.length === 0) return { activeMeds: 0, avgAdherence: 0 };
+  const total = meds.reduce((sum, m) => sum + adherenceRate(m.id, 7), 0);
+  return { activeMeds: meds.length, avgAdherence: Math.round(total / meds.length) };
+}
