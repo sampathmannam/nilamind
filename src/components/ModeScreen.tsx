@@ -20,12 +20,15 @@ import { localLlmLoadState } from "../services/localLlm";
 import { safeDraftThoughtRecord, type ThoughtRecordDraft } from "../services/thoughtRecordDraft";
 import ThoughtRecordScreen from "./ThoughtRecordScreen";
 import ValuesToActionScreen from "./ValuesToActionScreen";
+import SafetyPlanScreen from "./SafetyPlanScreen";
 import { looksLikeArmRequest, requestArmedCheckin } from "../services/armedCheckin";
 import { protocolOfferCard, startProtocolChat, continueProtocolChat, type ProtocolCard } from "../services/protocolChat";
 import { speakIfEnabled, speak, listenOnce, stopSpeaking } from "../services/voice";
 import CrisisOverlay from "./CrisisOverlay";
 import LearnScreen from "./LearnScreen";
-import { Settings, LifeBuoy, Mic, Send, MicOff, X } from "lucide-react";
+import { parseSafetyPlan } from "../services/safetyPlan";
+import { shouldPromptReview, markSafetyPlanReviewed } from "../services/safetyPlanFollowUp";
+import { Settings, LifeBuoy, Mic, Send, MicOff, X, ShieldCheck } from "lucide-react";
 
 interface ModeScreenProps {
   onOpenSettings?: () => void;
@@ -43,9 +46,10 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   const [loading, setLoading] = useState(false);
   const [listening, setListening] = useState(false);
   const [showCrisis, setShowCrisis] = useState(false);
-  const [auxView, setAuxView] = useState<"learn" | "thought_record" | "values_to_action" | null>(null);
+  const [auxView, setAuxView] = useState<"learn" | "thought_record" | "values_to_action" | "safety_plan" | null>(null);
   const [thoughtRecordDraft, setThoughtRecordDraft] = useState<ThoughtRecordDraft | undefined>();
   const [protocolCard, setProtocolCard] = useState<ProtocolCard | null>(() => protocolOfferCard(""));
+  const [showSafetyPlanReview, setShowSafetyPlanReview] = useState(false);
 
   // Refresh mode every 5 minutes
   useEffect(() => {
@@ -54,6 +58,18 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
     }, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
+
+  // B3: surface a gentle safety-plan follow-up card when the plan is stale.
+  // Re-check when an aux sheet closes so editing the plan immediately clears the card.
+  useEffect(() => {
+    try {
+      const raw = secureLocal.getItem("nilamind_safetyplan");
+      const plan = parseSafetyPlan(raw);
+      setShowSafetyPlanReview(shouldPromptReview(plan));
+    } catch {
+      setShowSafetyPlanReview(false);
+    }
+  }, [auxView]);
 
   const handleCheckinLogged = (entry: CheckInEntry) => {
     setShowCheckin(false);
@@ -165,6 +181,15 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
       setThoughtRecordDraft(result.draft);
     }
     setAuxView("thought_record");
+  };
+
+  const handleOpenSafetyPlan = () => {
+    setAuxView("safety_plan");
+  };
+
+  const handleMarkSafetyPlanReviewed = () => {
+    markSafetyPlanReviewed();
+    setShowSafetyPlanReview(false);
   };
 
   const handleProtocolTap = () => {
@@ -336,6 +361,34 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
       {/* Input bar */}
       {!showCheckin && (
         <div className="px-4 py-3 border-t border-slate-800/50 space-y-2">
+          {showSafetyPlanReview && (
+            <div
+              className="w-full px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs"
+              id="safety-plan-review-card"
+            >
+              <div className="flex items-start gap-2">
+                <ShieldCheck className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
+                <div className="flex-1">
+                  <p className="font-medium">Your safety plan could use a quick look</p>
+                  <p className="text-amber-200/70 mt-0.5">No pressure — a fast review helps keep it useful.</p>
+                  <div className="flex gap-2 mt-2">
+                    <button
+                      onClick={handleOpenSafetyPlan}
+                      className="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 font-medium transition-colors cursor-pointer"
+                    >
+                      Review plan
+                    </button>
+                    <button
+                      onClick={handleMarkSafetyPlanReviewed}
+                      className="px-2.5 py-1 rounded-lg hover:bg-amber-500/15 text-amber-200/80 transition-colors cursor-pointer"
+                    >
+                      Looks good
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
           {protocolCard && (
             <button
               onClick={handleProtocolTap}
@@ -448,6 +501,24 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           </div>
           <div className="overflow-y-auto p-4">
             <ValuesToActionScreen />
+          </div>
+        </div>
+      )}
+
+      {auxView === "safety_plan" && (
+        <div className="fixed inset-0 z-50 bg-page" id="safety-plan-sheet">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
+            <span className="text-sm font-semibold text-slate-100">My Safety Plan</span>
+            <button
+              onClick={() => setAuxView(null)}
+              className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer"
+              aria-label="Close"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="overflow-y-auto p-4">
+            <SafetyPlanScreen />
           </div>
         </div>
       )}

@@ -11,6 +11,8 @@
  * 🟡 FLAG: safety-critical — review the diff before merge (AGENTS.md rule).
  */
 import type { SafetyPlan } from "../types";
+import { secureLocal } from "./secureLocal";
+import { parseSafetyPlan } from "./safetyPlan";
 
 /** Stanley-Brown evidence: first follow-up within 48h, then every 14 days. */
 const DEFAULT_STALE_THRESHOLD_DAYS = 14;
@@ -55,4 +57,20 @@ export function safetyPlanFollowUpContextBlock(plan: SafetyPlan): string {
     `those can feel evaluative. Keep it light: a reminder that the plan exists and`,
     `they can update it whenever they want.`,
   ].join(" ");
+}
+
+/**
+ * Mark the safety plan as reviewed now (e.g. user tapped "Looks good" on a follow-up prompt).
+ * Updates only the timestamp without changing the plan's content. Returns true on success.
+ */
+export function markSafetyPlanReviewed(): boolean {
+  try {
+    const raw = secureLocal.getItem("nilamind_safetyplan");
+    const plan = parseSafetyPlan(raw);
+    plan.lastUpdatedAt = Date.now();
+    secureLocal.setItem("nilamind_safetyplan", JSON.stringify(plan));
+    return true;
+  } catch {
+    return false;
+  }
 }
