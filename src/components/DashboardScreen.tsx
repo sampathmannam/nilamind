@@ -6,7 +6,7 @@ import {
 import {
   Flame, TrendingUp as TrendUpIcon, TrendingDown, Minus, Activity, MessageSquare,
   CalendarCheck, ClipboardCheck, Database, Sparkles, ShieldAlert, Clock, BrainCircuit,
-  Loader2, Tag, Lightbulb, Pill,
+  Loader2, Tag, Lightbulb, Pill, Moon,
 } from "lucide-react";
 import Markdown from "react-markdown";
 import { loadMoodHistory } from "../services/moodHistory";
@@ -17,6 +17,7 @@ import { computeStreak } from "../services/streaks";
 import { nilaStats } from "../services/nilaSessions";
 import { adherenceSummary } from "../services/medicationAdherence";
 import { getRecentMetrics, detectMoodSignal } from "../services/typingPatterns";
+import { computeCircadianInsight } from "../services/circadian";
 import { secureLocal } from "../services/secureLocal";
 import { runDeepAssessment as runDeepAssessmentRequest } from "../services/coachAssist";
 import CrisisCard from "./CrisisCard";
@@ -85,11 +86,12 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
 
     const trajectories = assessmentInsights(assessments, mood);
     const medSummary = adherenceSummary();
+    const circadian = computeCircadianInsight(mood);
 
-    return { mood, streak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary };
+    return { mood, streak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian };
   }, []);
 
-  const { mood, streak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary } = data;
+  const { mood, streak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian } = data;
 
   // Load behaviour snapshots async and compute daily-behaviour insights
   useEffect(() => {
@@ -218,6 +220,25 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
               {typingSignal === "anxiety" && "Your recent typing shows a lot of starts and stops — maybe take a slow breath when you're ready."}
             </p>
             <p className="text-[10px] text-slate-500 mt-1">Private: only timing is stored, never what you typed.</p>
+          </div>
+        </div>
+      )}
+
+      {/* Circadian rhythm regularity */}
+      {circadian && (
+        <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 flex items-start gap-3">
+          <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-400">
+            <Moon className="w-5 h-5" />
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-slate-100">Sleep regularity</p>
+              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${circadian.irregular ? "bg-amber-500/20 text-amber-300" : "bg-emerald-500/20 text-emerald-300"}`}>
+                {circadian.regularityScore}/100
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-400 leading-relaxed mt-1">{circadian.note}</p>
+            <p className="text-[10px] text-slate-500 mt-1">From {circadian.nights} nights of self-reported sleep. Avg {circadian.avgSleep}h.</p>
           </div>
         </div>
       )}
