@@ -1,7 +1,7 @@
 // ModeScreen — the living interface that adapts to time + user state.
 // Replaces the static stream with a mode-based UI.
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import NilaFace from "./NilaFace";
 import QuickActions from "./QuickActions";
 import {
@@ -12,6 +12,7 @@ import {
 import { hasCheckinToday, getSkipFlag } from "../services/checkin";
 import { t } from "../services/i18n";
 import { useTypingSession } from "../hooks/useTypingSession";
+import { getSuggestions, timeSlot } from "../services/chatSuggestions";
 import NilaCheckIn from "./NilaCheckIn";
 import type { CheckInEntry } from "../types";
 import { secureLocal } from "../services/secureLocal";
@@ -291,6 +292,10 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   };
   const greeting = greetingMap[mode.timeMode] ?? getGreeting(mode.timeMode);
 
+  const slot = timeSlot();
+  const recentMood = messages.length > 0 ? { intensity: 5, emotion: "" } : null; // simplified — use actual mood if available
+  const suggestions = useMemo(() => getSuggestions(slot, recentMood), [slot, messages.length]);
+
   const chatTyping = useTypingSession("chat");
   const question = getNilaQuestion(mode.timeMode, mode.userState, mode.hasCheckedIn);
 
@@ -417,6 +422,22 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
               {protocolCard.label}
             </button>
           )}
+
+          {/* Quick suggestion chips — tap to send */}
+          {messages.length <= 1 && !inputText && (
+            <div className="flex flex-wrap gap-2" id="chat-suggestions">
+              {suggestions.map((chip) => (
+                <button
+                  key={chip.id}
+                  onClick={() => handleSendMessage(chip.text)}
+                  className="px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700 text-xs text-slate-300 hover:bg-slate-700 hover:text-slate-100 transition-colors cursor-pointer"
+                >
+                  {chip.emoji} {chip.text}
+                </button>
+              ))}
+            </div>
+          )}
+
           <div className="flex items-center gap-2">
             <button
               onClick={handleVoice}
