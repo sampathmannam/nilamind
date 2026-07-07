@@ -26,6 +26,7 @@ import SafetyPlanScreen from "./SafetyPlanScreen";
 import { looksLikeArmRequest, requestArmedCheckin } from "../services/armedCheckin";
 import { protocolOfferCard, startProtocolChat, continueProtocolChat, type ProtocolCard } from "../services/protocolChat";
 import { speakIfEnabled, speak, listenOnce, stopSpeaking } from "../services/voice";
+import { startVoiceSession, endVoiceSession } from "../services/voicePatterns";
 import CrisisOverlay from "./CrisisOverlay";
 import LearnScreen from "./LearnScreen";
 import { parseSafetyPlan } from "../services/safetyPlan";
@@ -158,13 +159,15 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
     }
 
     setListening(true);
+    const vsId = startVoiceSession("chat");
     try {
       const text = await listenOnce();
+      endVoiceSession(vsId, text);
       if (text) {
         handleSendMessage(text);
       }
     } catch {
-      // Voice failed silently
+      endVoiceSession(vsId, "");
     } finally {
       setListening(false);
     }

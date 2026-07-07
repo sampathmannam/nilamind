@@ -19,6 +19,7 @@ import DependencyNudge from "./DependencyNudge";
 import { activeDependencyNudge } from "../services/dependencyGuard";
 import { rememberSession } from "../services/nilaMemory";
 import { speakIfEnabled, speak, listenOnce, stopSpeaking } from "../services/voice";
+import { startVoiceSession, endVoiceSession } from "../services/voicePatterns";
 import { runAgent, AgentView } from "../services/agent";
 import { hasCheckinToday, getSkipFlag, setSkipFlag } from "../services/checkin";
 import { secureLocal } from "../services/secureLocal";
@@ -530,9 +531,12 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
     if (listening || loading) return;
     setListening(true);
     let spoken = "";
+    const vsId = startVoiceSession("chat");
     try {
       spoken = (await listenOnce()) || "";
+      endVoiceSession(vsId, spoken);
     } catch (e) {
+      endVoiceSession(vsId, "");
       console.warn("Speech input unavailable:", e);
     } finally {
       setListening(false);

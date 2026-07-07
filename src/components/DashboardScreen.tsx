@@ -6,7 +6,7 @@ import {
 import {
   Flame, TrendingUp as TrendUpIcon, TrendingDown, Minus, Activity, MessageSquare,
   CalendarCheck, ClipboardCheck, Database, Sparkles, ShieldAlert, Clock, BrainCircuit,
-  Loader2, Tag, Lightbulb, Pill, Moon,
+  Loader2, Tag, Lightbulb, Pill, Moon, Mic,
 } from "lucide-react";
 import Markdown from "react-markdown";
 import { loadMoodHistory } from "../services/moodHistory";
@@ -17,6 +17,7 @@ import { computeStreak } from "../services/streaks";
 import { nilaStats } from "../services/nilaSessions";
 import { adherenceSummary } from "../services/medicationAdherence";
 import { getRecentMetrics, detectMoodSignal } from "../services/typingPatterns";
+import { voiceMoodSignal } from "../services/voicePatterns";
 import { computeCircadianInsight } from "../services/circadian";
 import { computeNof1Ranking } from "../services/nOf1";
 import { PROTOCOLS } from "../services/protocols";
@@ -124,6 +125,7 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
     };
     return detectMoodSignal(combined);
   }, []);
+  const voiceSignal = useMemo(() => voiceMoodSignal(), []);
   const epPatterns = useMemo(() => episodePatterns(episodes), [episodes]);
   const topTags = useMemo(() => quickNoteTags(diaryEntries), [diaryEntries]);
   const emotionTrend = useMemo(() => moodTrend(mood, timeRange), [mood, timeRange]);
@@ -223,6 +225,24 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
               {typingSignal === "anxiety" && "Your recent typing shows a lot of starts and stops — maybe take a slow breath when you're ready."}
             </p>
             <p className="text-[10px] text-slate-500 mt-1">Private: only timing is stored, never what you typed.</p>
+          </div>
+        </div>
+      )}
+
+      {/* Voice pattern signal */}
+      {voiceSignal && (
+        <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 flex items-start gap-3">
+          <div className="p-2 rounded-xl bg-rose-500/10 text-rose-400">
+            <Mic className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-slate-100">Voice pattern note</p>
+            <p className="text-[11px] text-slate-400 leading-relaxed">
+              {voiceSignal === "mania" && "Your recent speech patterns have been faster than usual — sometimes a sign of elevated energy. A quick check-in might help."}
+              {voiceSignal === "depression" && "Your recent speech has been slower with shorter responses — a gentle check-in could be worth it."}
+              {voiceSignal === "anxiety" && "Your recent speech pattern shows some variability — maybe take a slow breath when you're ready."}
+            </p>
+            <p className="text-[10px] text-slate-500 mt-1">Opt-in: only speaking rate is stored locally, never what you said.</p>
           </div>
         </div>
       )}
