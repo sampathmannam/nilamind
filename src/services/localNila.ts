@@ -11,6 +11,7 @@ import { buildNilaSystem, type NilaMessage } from "./nila";
 import { generateGuarded, isLocalLlmReady } from "./localLlm";
 import { detectElevationRisk, elevationGuardNote, elevationOutputNote } from "./elevationGuard";
 import { currentStateEstimate, stateEstimateContextBlock } from "./stateEngine";
+import { retrievePsychoedForQuery, psychoedContextBlock } from "./psychoedRetrieval";
 import type { AgentView } from "./agent";
 
 export interface LocalNilaResult {
@@ -37,13 +38,20 @@ export async function askNilaLocalStream(
   const elevation = detectElevationRisk(lastUser);
   let system = buildNilaSystem(lastUser) + elevationGuardNote(elevation.level);
 
-  // B2: feed a consolidated state estimate into the model's awareness. Best-effort: if the store read
-  // fails (e.g. locked IndexedDB), continue without the block rather than break the chat.
+  // B2 + B4: feed a consolidated state estimate and, if the user's words match a vetted psychoeducation
+  // topic, a grounded snippet into the model's awareness. Best-effort: if any store/embedder read fails,
+  // continue without the block rather than break the chat.
   try {
-    const stateBlock = stateEstimateContextBlock(await currentStateEstimate());
+    const [stateEstimate, psychoedSnippet] = await Promise.all([
+      currentStateEstimate(),
+      retrievePsychoedForQuery(lastUser),
+    ]);
+    const stateBlock = stateEstimateContextBlock(stateEstimate);
+    const psychoedBlock = psychoedContextBlock(psychoedSnippet);
     if (stateBlock) system += "\n\n" + stateBlock;
+    if (psychoedBlock) system += "\n\n" + psychoedBlock;
   } catch {
-    /* state estimate is best-effort context, never a hard dependency */
+    /* context blocks are best-effort, never a hard dependency */
   }
 
   try {

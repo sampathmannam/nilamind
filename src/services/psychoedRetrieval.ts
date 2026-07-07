@@ -6,7 +6,7 @@
  * at search time and ranked by cosine similarity (dot product on L2-normalized vectors).
  */
 import type { Embedder } from "./crisisClassifier";
-import { PSYCHOED_TOPICS, type PsychoedTopic } from "./psychoed";
+import { PSYCHOED_TOPICS, type PsychoedTopic, searchPsychoed } from "./psychoed";
 
 export interface PsychoedResult {
   topic: PsychoedTopic;
@@ -59,6 +59,14 @@ export interface SearchOptions {
   minScore?: number;
 }
 
+export interface PsychoedSnippet {
+  title: string;
+  summary: string;
+  basis: string;
+}
+
+const RAG_MIN_SCORE = 0.25;
+
 /**
  * Embedding-based search over the psychoeducation corpus.
  * Returns topics ranked by cosine similarity to the query.
@@ -98,4 +106,44 @@ export async function embeddingSearchPsychoed(
     .filter((r) => r.score >= minScore)
     .sort((a, b) => b.score - a.score)
     .slice(0, limit);
+}
+
+/** Retrieve the single best-matching psychoeducation snippet for a query. Tries embedding RAG first,
+ *  falls back to lexical search if the embedder is missing or errors, and returns null for empty/no-match
+ *  queries so the model only sees grounded content when it honestly fits. */
+export async function retrievePsychoedForQuery(query: string): Promise<PsychoedSnippet | null> {
+  const trimmed = query.trim();
+  if (!trimmed) return null;
+
+  // Try embedding RAG first (MiniLM retriever).
+  try {
+    const ranked = await embeddingSearchPsychoed(trimmed, { limit: 1, minScore: RAG_MIN_SCORE });
+    if (ranked.length > 0) {
+      const t = ranked[0].topic;
+      return { title: t.title, summary: t.summary, basis: t.basis };
+    }
+  } catch {
+    /* fall through to lexical search */
+  }
+
+  // Lexical fallback: deterministic, no model required.
+  const lex = searchPsychoed(trimmed);
+  if (lex.length > 0) {
+    const t = lex[0];
+    return { title: t.title, summary: t.summary, basis: t.basis };
+  }
+
+  return null;
+}
+
+/** Format a retrieved snippet as a system-prompt grounding block. Empty when there is nothing to say. */
+export function psychoedContextBlock(snippet: PsychoedSnippet | null): string {
+  if (!snippet) return "";
+  return [
+    "GROUNDED INFORMATION (vetted psychoeducation — only use if it fits what they're asking; never override their own experience):",
+    `Topic: ${snippet.title}`,
+    `Summary: ${snippet.summary}`,
+    `Research basis: ${snippet.basis}`,
+    "If this matches their question, you may draw on it briefly and in plain language. If it doesn't match, ignore it.",
+  ].join("\n");
 }
