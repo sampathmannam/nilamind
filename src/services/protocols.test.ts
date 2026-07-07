@@ -55,4 +55,24 @@ describe("routeToProtocol — modular matching (concern → the right evidence-b
     const p = routeToProtocol("i'm so anxious and worried, overthinking everything, can't switch off");
     expect(p?.id).toBe("worry-postponement");
   });
+
+  it("routes social anxiety cues → Social Confidence", () => {
+    const p = routeToProtocol("i'm terrified people will judge me, i avoid parties and meetings");
+    expect(p?.id).toBe("social-confidence");
+  });
+
+  it("routes panic sensations → Panic Skills", () => {
+    const p = routeToProtocol("my heart races, i can't breathe, it feels like i'm dying");
+    expect(p?.id).toBe("panic-skills");
+  });
+
+  it("routes anger / irritability → Cooling Anger", () => {
+    const p = routeToProtocol("i keep snapping at everyone, i feel furious over small things");
+    expect(p?.id).toBe("cooling-anger");
+  });
+
+  it("routes flashbacks / dissociation → Grounding & Anchor", () => {
+    const p = routeToProtocol("i had a flashback, i felt like i was back there, nothing feels real");
+    expect(p?.id).toBe("grounding-anchor");
+  });
 });

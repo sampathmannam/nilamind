@@ -135,6 +135,102 @@ export const PROTOCOLS: Protocol[] = [
         prompt: "If your mind races the moment your head hits the pillow, park it BEFORE bed: jot tomorrow's worries and to-dos on paper, so your brain knows they're held and doesn't have to keep rehearsing them. Want to try a two-minute brain-dump tonight?" },
     ],
   },
+  {
+    id: "social-confidence",
+    title: "Social Confidence",
+    basis:
+      "Cognitive-behavioural models of social anxiety (Clark & Wells, 1995; Rapee & Heimberg, 1997) show the core trap is 'self-focused attention + assumed negative evaluation.' " +
+      "Brief CBT protocols reduce social anxiety symptoms with moderate-to-large effects.",
+    forConcerns: [
+      "social anxiety", "social anxious", "shy", "shyness", "people judge me", "judged", "embarrassing", "embarrassed",
+      "avoid people", "avoid social", "avoid parties", "avoid meetings", "nervous around people", "anxious around people",
+      "what will they think", "think of me", "making a fool", "look stupid", "talk to people", "speaking up",
+    ],
+    steps: [
+      { id: "soc-1", kind: "psychoed", title: "How social anxiety works",
+        prompt: "Social anxiety often comes from a loud inner guess that other people are judging us negatively — and then we watch ourselves through that lens. The irony is that other people are usually far less focused on us than we fear. Want to look at this together?" },
+      { id: "soc-2", kind: "reflect", title: "Spot the inner prediction",
+        prompt: "When you think about a social situation, what do you imagine other people will think? Say it in one sentence — we're not agreeing with it, just naming it." },
+      { id: "soc-3", kind: "reflect", title: "Shift attention outward",
+        prompt: "One small move that helps is gently turning attention outward — to what you can see, hear, or ask — rather than monitoring yourself. In your next interaction, what's one tiny thing you could notice about the other person or the room?" },
+      { id: "soc-4", kind: "plan", title: "Pick a small experiment",
+        prompt: "Let's choose one small, low-stakes social step — small enough that it's almost doable even with the anxiety. What comes to mind?" },
+      { id: "soc-5", kind: "reflect", title: "Check the prediction",
+        prompt: "After you try it: what actually happened? Often the feared outcome doesn't show up, or if it does, we handle it. What did you notice?" },
+    ],
+  },
+  {
+    id: "panic-skills",
+    title: "Panic Skills",
+    basis:
+      "Panic-specific CBT, including interoceptive exposure and cognitive re-interpretation of body sensations, has large effect sizes and durable results (Clark, 1986; Craske et al., 2014). " +
+      "The key shift is interpreting alarm sensations as uncomfortable but not dangerous.",
+    forConcerns: [
+      "panic", "panic attack", "panicking", "heart racing", "racing heart", "can't breathe", "cant breathe",
+      "breathless", "chest tight", "tight chest", "feels like i'm dying", "going to die", "unreal", "derealization",
+      "losing control", "out of control", "overwhelming fear", "sudden terror", "adrenaline", "can't catch breath",
+    ],
+    steps: [
+      { id: "pa-1", kind: "psychoed", title: "What panic is",
+        prompt: "Panic is the body's alarm system firing hard — it feels dangerous, but it's not harmful. The peak usually passes in a few minutes. Naming it ('this is panic') can take some of its power away. Does that fit with what you've felt?" },
+      { id: "pa-2", kind: "exercise", title: "Slow the exhale",
+        prompt: "A longer out-breath gently tells the alarm it can stand down. Try breathing in for 4 and out for 6 — not forcing it, just leaning into the exhale. How does that feel after a few rounds?" },
+      { id: "pa-3", kind: "reflect", title: "Name the feared catastrophe",
+        prompt: "In a panic moment, what is your mind afraid is about to happen? ('I'll collapse,' 'I'll go crazy,' 'I'll die.') Say it out — we're going to hold it lightly." },
+      { id: "pa-4", kind: "exercise", title: "Invite the sensation",
+        prompt: "This sounds backwards: instead of fighting the racing heart or dizziness, try allowing it to be there for 30 seconds. Fighting the alarm keeps it loud; allowing it lets it pass. Are you willing to try that next time?" },
+      { id: "pa-5", kind: "reflect", title: "Notice the drop",
+        prompt: "After the wave passes: how long did it actually last? What did you do that helped, even a little? We're building a map of what works for you." },
+    ],
+  },
+  {
+    id: "cooling-anger",
+    title: "Cooling Anger",
+    basis:
+      "Anger regulation interventions draw on cognitive-behavioural and dialectical-behavioural approaches (Deffenbacher, 1996; Linehan, DBT). " +
+      "They focus on early warning signs, slowing the escalation, and choosing a response aligned with values rather than impulse.",
+    forConcerns: [
+      "angry", "anger", "rage", "furious", "snapping", "irritable", "irritated", "short fuse", "lose my temper",
+      "blow up", "explode", "pissed off", "resentful", "frustrated", "can't stand them", "want to yell",
+      "so mad", "seeing red", "agitated", "provoked",
+    ],
+    steps: [
+      { id: "ag-1", kind: "psychoed", title: "Anger as a signal",
+        prompt: "Anger is usually a signal that something matters to us — a boundary, a value, a need. The trouble is when the heat drives the response. We can learn to feel the signal and still choose the next move. Sound useful?" },
+      { id: "ag-2", kind: "reflect", title: "Find the early warning",
+        prompt: "Before you snap, what shows up first? Tight jaw, raised voice, fast breathing, clenched fists, a hot thought? Noticing earlier gives you more choice." },
+      { id: "ag-3", kind: "exercise", title: "Cool the body first",
+        prompt: "The body escalates before the words do. Try one cooling move: a slow exhale, cold water on wrists, or stepping away for 60 seconds. Which feels doable right now?" },
+      { id: "ag-4", kind: "reflect", title: "What do you actually want here?",
+        prompt: "Under the anger, what's the outcome you actually want? To be heard? To protect someone? To be fair? Naming it helps pick a response that gets you closer instead of further away." },
+      { id: "ag-5", kind: "plan", title: "Choose the next sentence",
+        prompt: "If a similar moment comes again, what's one sentence you could say that matches what you want — instead of what the heat wants you to say? Keep it short and real." },
+    ],
+  },
+  {
+    id: "grounding-anchor",
+    title: "Grounding & Anchor",
+    basis:
+      "Grounding techniques are a core component of trauma-focused CBT and DBT. They reduce dissociation and flashback intensity by orienting attention to the present moment (Najavits, 2002; Linehan, 1993). " +
+      "They are a coping skill, not a standalone trauma treatment.",
+    forConcerns: [
+      "flashback", "flashbacks", "nightmare", "nightmares", "dissociated", "dissociation", "feel unreal", "not real",
+      "far away", "zoned out", "numb and distant", "triggered", "back there", "reliving", "frozen", "shut down",
+      "overwhelmed and frozen", "can't ground", "ground me", "anchor", "bring me back",
+    ],
+    steps: [
+      { id: "gr-1", kind: "psychoed", title: "Grounding as a reset",
+        prompt: "When the past barges in or things feel unreal, grounding is a way to remind the nervous system: right now, in this moment, you are here. It doesn't erase what happened; it just brings you back to now. Want to try it?" },
+      { id: "gr-2", kind: "exercise", title: "5-4-3-2-1 senses",
+        prompt: "Name 5 things you can see, 4 you can touch, 3 you can hear, 2 you can smell, 1 you can taste. Take your time. This isn't a distraction — it's an anchor to the present. How did that land?" },
+      { id: "gr-3", kind: "exercise", title: "Find one anchor object",
+        prompt: "Pick something near you — a stone, a key, fabric — and focus on its texture, weight, temperature. Let it be a physical reminder: 'I am here, right now.' What did you choose?" },
+      { id: "gr-4", kind: "plan", title: "Make a grounding plan",
+        prompt: "When you feel yourself drifting, what's the first grounding step you'll take? A breath? A touch? A phrase? Write it down so you don't have to decide in the moment." },
+      { id: "gr-5", kind: "reflect", title: "Notice the shift",
+        prompt: "After grounding: did anything shift, even slightly? More here? Less flooded? There's no wrong answer — noticing is the skill." },
+    ],
+  },
 ];
 
 /**
