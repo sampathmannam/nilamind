@@ -96,6 +96,48 @@ export interface SleepSignal {
   detail: string;
 }
 
+export interface HealthConnectStatus {
+  available: boolean;
+  enabled: boolean;
+  /** Permission state is unknown until a request is attempted. */
+  granted: boolean;
+}
+
+export interface HealthConnectAccessResult {
+  ok: boolean;
+  reason?: "not-native" | "unavailable" | "denied" | "error";
+}
+
+/** Best-effort status check. On web/non-native this is always unavailable. */
+export async function getHealthConnectStatus(): Promise<HealthConnectStatus> {
+  if (!Capacitor.isNativePlatform()) return { available: false, enabled: false, granted: false };
+  try {
+    const enabled = isHealthConnectEnabled();
+    const avail = await HC.isAvailable();
+    return { available: !!avail?.available, enabled, granted: false };
+  } catch {
+    return { available: false, enabled: false, granted: false };
+  }
+}
+
+/**
+ * Ask for Health Connect read access. Idempotent: enabling the flag + requesting permissions.
+ * Returns structured result so the UI can explain what happened. Never throws.
+ */
+export async function requestHealthConnectAccess(): Promise<HealthConnectAccessResult> {
+  if (!Capacitor.isNativePlatform()) return { ok: false, reason: "not-native" };
+  setHealthConnectEnabled(true);
+  try {
+    const avail = await HC.isAvailable();
+    if (!avail?.available) return { ok: false, reason: "unavailable" };
+    const perm = await HC.requestPermissions({ read: ["SleepSession", "RestingHeartRate"] });
+    if (!perm?.granted) return { ok: false, reason: "denied" };
+    return { ok: true };
+  } catch {
+    return { ok: false, reason: "error" };
+  }
+}
+
 /** PURE. Detect a manic-prodrome short-sleep run from the person's own nights. null = not enough data.
  *  This is a SIGNAL to gently ask, never an alarm — consistent with the doc's sense→ask→confirm rule. */
 export function shortSleepSignal(nights: SleepNight[]): SleepSignal | null {

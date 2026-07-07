@@ -4,6 +4,7 @@ import AppearanceSection from "./settings/AppearanceSection";
 import VoiceSection from "./settings/VoiceSection";
 import RemindersSection from "./settings/RemindersSection";
 import InflectionSection from "./settings/InflectionSection";
+import HealthConnectSection from "./settings/HealthConnectSection";
 import OnDeviceSection from "./settings/OnDeviceSection";
 import IdentitySection from "./settings/IdentitySection";
 import PrivacyLockSection from "./settings/PrivacyLockSection";
@@ -65,6 +66,7 @@ export default function SettingsScreen({ disableAnchorPulse, onTogglePulse }: Se
       <VoiceSection />
       <RemindersSection />
       <InflectionSection />
+      <HealthConnectSection />
       <OnDeviceSection />
       <IdentitySection />
       <PrivacyLockSection />
