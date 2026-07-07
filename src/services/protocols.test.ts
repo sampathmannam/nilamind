@@ -80,4 +80,9 @@ describe("routeToProtocol — modular matching (concern → the right evidence-b
     const p = routeToProtocol("my sleep schedule is all over the place, i wake up at different times every day");
     expect(p?.id).toBe("sleep-rhythm");
   });
+
+  it("routes loneliness / isolation → Social Connection", () => {
+    const p = routeToProtocol("i feel so alone, nobody understands me, i haven't talked to anyone in days");
+    expect(p?.id).toBe("social-connection");
+  });
 });
