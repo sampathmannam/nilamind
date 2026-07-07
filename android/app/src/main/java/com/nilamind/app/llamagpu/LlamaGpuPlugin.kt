@@ -18,9 +18,10 @@ class LlamaGpuPlugin : Plugin() {
             System.loadLibrary("ggml-cpu")
             System.loadLibrary("ggml-vulkan")
             System.loadLibrary("llama")
-            Log.i(TAG, "Vulkan llama.cpp libraries loaded")
+            System.loadLibrary("llama-gpu-jni")
+            Log.i(TAG, "Vulkan llama.cpp libraries loaded (including JNI bridge)")
         } catch (e: UnsatisfiedLinkError) {
-            Log.e(TAG, "Failed to load llama.cpp libs: ${e.message}")
+            Log.e(TAG, "Failed to load llama.cpp libs: ${e.message}", e)
         }
     }
 
@@ -37,7 +38,8 @@ class LlamaGpuPlugin : Plugin() {
             ret.put("ok", result == 0)
             if (result != 0) ret.put("error", "nativeInit returned $result")
             call.resolve(ret)
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
+            Log.e(TAG, "init failed", e)
             call.reject("init failed: ${e.message}")
         }
     }
@@ -61,9 +63,10 @@ class LlamaGpuPlugin : Plugin() {
             val result = nativeCompletion(prompt, nPredict, temperature.toFloat(), topK, topP.toFloat(), stop)
             val ret = JSObject()
             ret.put("text", result ?: "")
-            ret.put("tokens", 0) // counted internally
+            ret.put("tokens", 0)
             call.resolve(ret)
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
+            Log.e(TAG, "completion failed", e)
             call.reject("completion failed: ${e.message}")
         }
     }
@@ -78,7 +81,8 @@ class LlamaGpuPlugin : Plugin() {
             tokens?.forEach { arr.put(it) }
             ret.put("tokens", arr)
             call.resolve(ret)
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
+            Log.e(TAG, "tokenize failed", e)
             call.reject("tokenize failed: ${e.message}")
         }
     }

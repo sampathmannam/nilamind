@@ -6,6 +6,7 @@
 // Same pattern as llamaCppLlmAdapter: registers behind §9 gates, no network, no bypass.
 import LlamaGpu from "../plugins/llama-gpu/definitions";
 import type { LocalLlmBackend, LocalGenParams } from "./localLlm";
+import { toGemmaPrompt, windowMessages } from "./gemmaPrompt";
 
 const DEFAULT_MODEL_PATH =
   "/sdcard/Android/data/com.nilamind.app/files/v2-4b-Q4_K_M.gguf";
@@ -17,7 +18,6 @@ export function createVulkanLlmBackend(
   modelPath: string = DEFAULT_MODEL_PATH,
   label = "nila-v2-4b-vulkan",
 ): LocalLlmBackend {
-  // Load the model with Vulkan GPU offload
   void (async () => {
     try {
       loadStateVal = "loading";
@@ -25,18 +25,16 @@ export function createVulkanLlmBackend(
         model: modelPath,
         n_ctx: 2048,
         n_threads: 6,
-        n_gpu_layers: 99,   // offload all layers to Vulkan GPU
+        n_gpu_layers: 99,
       });
       if (result.ok) {
         modelReady = true;
         loadStateVal = "ready";
       } else {
         loadStateVal = "error";
-        console.warn("[vulkanLlm] model init failed:", result.error);
       }
-    } catch (e) {
+    } catch {
       loadStateVal = "error";
-      console.warn("[vulkanLlm] model load error:", e);
     }
   })();
 
@@ -45,38 +43,36 @@ export function createVulkanLlmBackend(
     isReady: () => modelReady,
     loadState: () => loadStateVal,
 
-    warm: async (_system: string): Promise<void> => {
-      // Vulkan backend handles KV cache internally
-    },
+    warm: async (_system: string): Promise<void> => {},
 
     generate: async ({ system, messages, onToken, signal }: LocalGenParams): Promise<string> => {
       if (!modelReady) throw new Error("Vulkan llama model not loaded");
 
-      // Build prompt with system instruction
-      // The upstream llama.cpp handles the chat template via tokenize
-      const fullPrompt = `${system}\n\n${messages.map((m) =>
-        m.role === "user" ? `User: ${m.content}` : `Nila: ${m.content}`
-      ).join("\n")}\nNila:`;
-
+      const prompt = toGemmaPrompt(system, windowMessages(messages, undefined, system));
+      let full = "";
+      let aborted = false;
+      const onAbort = () => { aborted = true; };
+      signal?.addEventListener("abort", onAbort, { once: true });
       try {
         const result = await LlamaGpu.completion({
-          prompt: fullPrompt,
+          prompt,
           n_predict: 80,
           temperature: 0.4,
           top_k: 40,
           top_p: 0.95,
-          stop: ["<end_of_turn>", "<start_of_turn>", "\nUser:"],
+          stop: ["<end_of_turn>", "<start_of_turn>"],
         });
 
-        // Feed the complete result through onToken for streaming consumers
-        if (result.text && onToken) {
-          onToken(result.text);
-        }
-
-        return result.text;
+        let text = (result.text || full).trim();
+        const cut = text.search(/<(?:end|start)_of_turn>/);
+        if (cut !== -1) text = text.slice(0, cut).trim();
+        if (!full && text) onToken(text);
+        return text;
       } catch (e) {
-        if (signal?.aborted) throw new Error("aborted");
+        if (aborted || signal?.aborted) throw new Error("aborted");
         throw e;
+      } finally {
+        signal?.removeEventListener("abort", onAbort);
       }
     },
   };

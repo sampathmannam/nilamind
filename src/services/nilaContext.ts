@@ -308,6 +308,18 @@ export function buildPersonalContext(): string {
     out.push(jitaiNudge);
   }
 
+  // Proactive moment — what the app offered on this session open.
+  // The UI already shows the card; this tells Nila about it so she can reference it naturally.
+  let proactiveBlock = "";
+  try {
+    const { computeProactiveMoment, proactiveContextBlock } = require("./proactiveEngine");
+    const moment = computeProactiveMoment();
+    proactiveBlock = proactiveContextBlock(moment);
+  } catch { /* best-effort */ }
+  if (proactiveBlock) {
+    out.push(proactiveBlock);
+  }
+
   return out.join("\n");
 }
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo, Suspense } from "react";
 import { logNilaTurn } from "../services/nilaSessions";
 import { nilaWelcome } from "../services/nila";
 import { detectCrisis } from "../services/crisisClassifier";
@@ -38,6 +38,17 @@ import { notifyReplyReady } from "../services/notifications";
 import { getArmedCheckin, armedCheckinPrompt, markCheckinFired } from "../services/armedCheckin";
 import EpisodeSupportScreen from "./EpisodeSupportScreen";
 import NilaOrb from "./NilaOrb";
+// Inline card components (lazy-loaded for code splitting)
+const GroundingInlineCard = React.lazy(() => import("./cards/GroundingInlineCard"));
+const BreathingInlineCard = React.lazy(() => import("./cards/BreathingInlineCard"));
+const DiaryQuickCard = React.lazy(() => import("./cards/DiaryQuickCard"));
+const MedicationCheckCard = React.lazy(() => import("./cards/MedicationCheckCard"));
+const ThoughtRecordInlineCard = React.lazy(() => import("./cards/ThoughtRecordInlineCard"));
+const AssessmentInlineCard = React.lazy(() => import("./cards/AssessmentInlineCard"));
+const SkillInlineCard = React.lazy(() => import("./cards/SkillInlineCard"));
+const ReachOutInlineCard = React.lazy(() => import("./cards/ReachOutInlineCard"));
+const WindDownInlineCard = React.lazy(() => import("./cards/WindDownInlineCard"));
+import { computeProactiveMoment, dismissProactive, recordProactiveShown, type ProactiveMoment } from "../services/proactiveEngine";
 import { Send, AlertTriangle, Shield, Volume2, VolumeX, Mic, Sparkles, BookOpen, ChevronRight, Phone, Zap, Brain, ClipboardList, LifeBuoy, ThumbsUp, ThumbsDown, Keyboard } from "lucide-react";
 import { recordFeedback, attachSuggestion, type Rating, type ReplyFeedback } from "../services/nilaFeedback";
 import { buildDonationPreview, confirmDonation, revokeDonation } from "../services/nilaContributions";
@@ -87,6 +98,9 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
   const [showCheckin, setShowCheckin] = useState<boolean>(initCheckin.current && !restored.current);
   // Cards surfaced by cardsForCheckin after a completed check-in; empty until onLogged fires.
   const [nilaCards, setNilaCards] = useState<NilaCard[]>([]);
+  // Proactive moment: computed on mount, shown once per session, dismissible.
+  const [proactiveMoment, setProactiveMoment] = useState<ProactiveMoment | null>(null);
+  const [proactiveDismissed, setProactiveDismissed] = useState<boolean>(false);
 
   // Restore an in-progress conversation across a tab-switch (in-memory only, never persisted); otherwise seed
   // the welcome once the check-in is dismissed (logged or skipped).
@@ -207,6 +221,16 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
       void rememberSession(messagesRef.current);
     };
   }, []);
+
+  // Proactive moment: compute on mount (once), show if not dismissed and not in crisis.
+  useEffect(() => {
+    if (isCrisisState || restored.current) return; // never during crisis or mid-conversation
+    const moment = computeProactiveMoment();
+    if (moment) {
+      setProactiveMoment(moment);
+      recordProactiveShown();
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Pre-load the §9 crisis embedder off the hot path so it isn't competing for CPU with the first reply.
   // (We deliberately do NOT pre-warm the LLM: on the llama-cpp binding completion() runs synchronously on
@@ -729,6 +753,46 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
           </div>
         )}
 
+        {/* ── Proactive moment: shown once per session when a signal fires (sleep, mood, inactivity).
+            Dismissible; never during crisis; max 1 per open. Renders as an interactive card in-stream. */}
+        {proactiveMoment && !proactiveDismissed && !isCrisisState && messages.length <= 1 && !showCheckin && (
+          <div className="flex justify-start" id="proactive-moment">
+            <div className="w-full max-w-[92%] space-y-2">
+              <div className="flex items-center gap-2 text-[10px] text-slate-500 px-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+                <span>Nila noticed something</span>
+              </div>
+              <div className="bg-page border border-blue-500/25 rounded-2xl p-3">
+                <p className="text-sm text-slate-200 mb-2">{proactiveMoment.card.label}</p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      // Activate the card inline by adding it to nilaCards
+                      setNilaCards([proactiveMoment.card]);
+                      setProactiveDismissed(true);
+                    }}
+                    className="flex-1 py-2 rounded-xl text-xs font-semibold bg-blue-500/20 text-blue-200 hover:bg-blue-500/30 border border-blue-500/30 cursor-pointer transition-colors"
+                  >
+                    {proactiveMoment.card.kind === "diary_quick" ? "Log now" :
+                     proactiveMoment.card.kind === "wind_down_inline" ? "Start wind-down" :
+                     proactiveMoment.card.kind === "grounding" ? "Try grounding" :
+                     proactiveMoment.card.kind === "breathing" ? "Do breathing" : "Sure"}
+                  </button>
+                  <button
+                    onClick={() => {
+                      dismissProactive(proactiveMoment.dismissKey);
+                      setProactiveDismissed(true);
+                    }}
+                    className="px-3 py-2 rounded-xl text-xs text-slate-500 hover:text-slate-300 border border-slate-700 hover:border-slate-600 cursor-pointer transition-colors"
+                  >
+                    Not now
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {messages.map((m, idx) => {
           const isUser = m.role === "user";
           return (
@@ -935,6 +999,73 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
               {nilaCards.map((card) => {
                 // During crisis, skip episode and screening — they are navigation tangents.
                 if (isCrisisState && (card.kind === "episode" || card.kind === "screening")) return null;
+
+                // Inline cards: render interactive components in-stream instead of navigating
+                if (card.inline && card.kind === "grounding") {
+                  return (
+                    <Suspense key="inline-grounding" fallback={<div className="p-3 text-xs text-slate-400">Loading grounding...</div>}>
+                      <GroundingInlineCard onComplete={() => {}} />
+                    </Suspense>
+                  );
+                }
+                if (card.inline && card.kind === "breathing") {
+                  return (
+                    <Suspense key="inline-breathing" fallback={<div className="p-3 text-xs text-slate-400">Loading breathing...</div>}>
+                      <BreathingInlineCard onComplete={() => {}} />
+                    </Suspense>
+                  );
+                }
+                if (card.inline && card.kind === "diary_quick") {
+                  return (
+                    <Suspense key="inline-diary" fallback={<div className="p-3 text-xs text-slate-400">Loading diary...</div>}>
+                      <DiaryQuickCard onComplete={() => {}} />
+                    </Suspense>
+                  );
+                }
+                if (card.inline && card.kind === "medication_check") {
+                  return (
+                    <Suspense key="inline-med" fallback={<div className="p-3 text-xs text-slate-400">Loading...</div>}>
+                      <MedicationCheckCard onComplete={() => {}} />
+                    </Suspense>
+                  );
+                }
+                if (card.inline && card.kind === "thought_record_inline") {
+                  return (
+                    <Suspense key="inline-thought-record" fallback={<div className="p-3 text-xs text-slate-400">Loading thought record...</div>}>
+                      <ThoughtRecordInlineCard onComplete={() => {}} />
+                    </Suspense>
+                  );
+                }
+                if (card.inline && card.kind === "assessment_inline") {
+                  return (
+                    <Suspense key="inline-assessment" fallback={<div className="p-3 text-xs text-slate-400">Loading assessment...</div>}>
+                      <AssessmentInlineCard instrument={card.instrument as "PHQ-9" | "GAD-7"} onComplete={() => {}} />
+                    </Suspense>
+                  );
+                }
+                if (card.inline && card.kind === "skill" && card.skillId) {
+                  return (
+                    <Suspense key={`inline-skill-${card.skillId}`} fallback={<div className="p-3 text-xs text-slate-400">Loading skill...</div>}>
+                      <SkillInlineCard skillId={card.skillId} onComplete={() => {}} />
+                    </Suspense>
+                  );
+                }
+                if (card.inline && card.kind === "reach_out_inline") {
+                  return (
+                    <Suspense key="inline-reach-out" fallback={<div className="p-3 text-xs text-slate-400">Loading...</div>}>
+                      <ReachOutInlineCard onComplete={() => {}} />
+                    </Suspense>
+                  );
+                }
+                if (card.inline && card.kind === "wind_down_inline") {
+                  return (
+                    <Suspense key="inline-wind-down" fallback={<div className="p-3 text-xs text-slate-400">Loading wind-down...</div>}>
+                      <WindDownInlineCard onComplete={() => {}} />
+                    </Suspense>
+                  );
+                }
+
+                // Existing card buttons (non-inline)
                 if (card.kind === "grounding") {
                   return (
                     <button

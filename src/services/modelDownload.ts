@@ -361,22 +361,17 @@ export async function downloadModel(
   }
 }
 
-/** Register the native backend for a model that's on disk. Uses upstream llama.cpp with Vulkan GPU
- *  for Android native builds, falling back to the CPU-only llama-cpp-capacitor binding if unavailable. */
+/** Register the native backend for a model that's on disk. Uses the CPU llama-cpp-capacitor adapter
+ *  (llama.cpp over the GGUF, CPU-only). The Vulkan GPU path (vulkanLlmAdapter / libllama-gpu-jni.so) is
+ *  SHELVED: on Adreno it fails to compile the compute shaders → VK_ERROR_DEVICE_LOST → an uncaught
+ *  vk::DeviceLostError aborts the whole process on the first completion (a native SIGABRT no JS/Kotlin
+ *  try/catch can trap). Re-enabling it needs DeviceLost handling in the native JNI source (not in-repo)
+ *  plus on-device validation. Until then the CPU path is the reliable, no-crash transport. */
 export async function registerDownloadedBackend(model: CatalogModel): Promise<void> {
   const path = `${FILES_DIR}/${model.filename}`;
   if (model.runtime !== "gguf") {
     throw new Error(`Unsupported model runtime "${model.runtime}" — only "gguf" (llama.cpp) ships today.`);
   }
-  // Try Vulkan GPU backend first (upstream llama.cpp with Vulkan)
-  try {
-    const { createVulkanLlmBackend } = await import("./vulkanLlmAdapter");
-    registerLocalLlmBackend(createVulkanLlmBackend(path));
-    return;
-  } catch {
-    // Vulkan adapter not available — fall through to CPU-only
-  }
-  // Fallback: CPU-only llama.cpp binding
   const { createLlamaCppBackend } = await import("./llamaCppLlmAdapter");
   registerLocalLlmBackend(createLlamaCppBackend(path));
 }

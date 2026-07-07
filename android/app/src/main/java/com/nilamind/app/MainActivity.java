@@ -21,8 +21,9 @@ public class MainActivity extends BridgeActivity {
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
-    // Register the Vulkan GPU llama.cpp plugin before super.onCreate() initializes the bridge
-    registerPlugin(LlamaGpuPlugin.class);
+    // Register BEFORE super.onCreate() — BridgeActivity.create() finalises the plugin list
+    // inside super.onCreate(); registerPlugin() after that only touches the builder, not the bridge.
+    initialPlugins.add(LlamaGpuPlugin.class);
     super.onCreate(savedInstanceState);
     precacheModelWeights();
     startResidentServiceIfModelPresent();

@@ -1,6 +1,6 @@
 import { secureLocal, onPersistError, isPassthrough } from "./services/secureLocal";
 import React, { useState, useEffect, useCallback, lazy, Suspense } from "react";
-import { Sparkles, Wrench, User, ChevronLeft, Shield } from "lucide-react";
+import { Sparkles, Wrench, User, ChevronLeft, Shield, Settings, LifeBuoy } from "lucide-react";
 import { App as CapApp } from "@capacitor/app";
 import type { ThoughtRecordDraft } from "./services/thoughtRecordDraft";
 
@@ -15,6 +15,7 @@ import GroundingLibraryScreen from "./components/GroundingLibraryScreen";
 import AiCoachScreen from "./components/AiCoachScreen";
 import ToolsScreen from "./components/ToolsScreen";
 import YouScreen from "./components/YouScreen";
+import DetailSheet from "./components/DetailSheet";
 
 // LAZY (own chunk, fetched on first navigation) — screens reached only by a deliberate, non-emergency tap.
 // This lifts ~17 screen components out of the eager boot bundle so a cold open parses/evals less at first
@@ -85,6 +86,8 @@ export default function App() {
   const enterEpisode = () => { setAuxView(null); setActiveTab("nila"); setNilaMode("episode"); };
   const [auxView, setAuxView] = useState<AuxView | null>(null);
   const [isCrisisOverlayOpen, setIsCrisisOverlayOpen] = useState<boolean>(false);
+  // Detail sheets: slide-up overlays for settings, dashboard, etc. (Phase 4)
+  const [detailSheet, setDetailSheet] = useState<string | null>(null);
 
   const [isCallOpen, setIsCallOpen] = useState<boolean>(false);
   const [wakeOn, setWakeOn] = useState<boolean>(false);
@@ -239,7 +242,14 @@ export default function App() {
       case "crisis": setIsCrisisOverlayOpen(true); return;
       case "plan": setAuxView(null); setActiveTab("plan"); return; // grounding/breathing — crisis overlay depends on this
       case "tab": setAuxView(null); setActiveTab(r.tab); return;
-      case "aux": setAuxView(r.view); return;
+      case "aux":
+        // Phase 4: some screens open as detail sheets instead of full auxViews
+        if (r.view === "settings" || r.view === "dashboard" || r.view === "nila_memory") {
+          setDetailSheet(r.view);
+          return;
+        }
+        setAuxView(r.view);
+        return;
       case "unknown":
         if ((import.meta as any).env?.DEV) console.warn(`[nav] ignored unknown target: ${r.target}`);
         return;
@@ -630,6 +640,29 @@ export default function App() {
             {/* NILA — the AI coach (calm, chat-first; skills reachable from Tools) */}
             {activeTab === "nila" && (
               <div className="flex-1 flex flex-col min-h-0">
+                {/* Stream header: settings gear + crisis lifebuoy */}
+                <div className="flex items-center justify-between px-4 py-2 border-b border-slate-800/50 shrink-0">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-blue-400" />
+                    <span className="text-sm font-semibold text-slate-100">Nila</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setDetailSheet("settings")}
+                      className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+                      aria-label="Settings"
+                    >
+                      <Settings className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => setIsCrisisOverlayOpen(true)}
+                      className="p-2 rounded-full hover:bg-rose-500/10 text-rose-400 hover:text-rose-300 transition-colors cursor-pointer"
+                      aria-label="Crisis support"
+                    >
+                      <LifeBuoy className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
                 <AiCoachScreen
                   mode={nilaMode}
                   onModeChange={setNilaMode}
@@ -661,33 +694,24 @@ export default function App() {
         </Suspense>
       </main>
 
-      {/* CORE PERSISTENT FIXED FOOTER NAVIGATION TABS */}
+      {/* CORE PERSISTENT FIXED FOOTER NAVIGATION TABS — simplified: Nila stream + Crisis only */}
       <nav aria-label="Main navigation" className="fixed bottom-0 left-0 right-0 z-30 bg-card border-t border-slate-800 py-2 px-1 text-center shadow-lg" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 8px)' }} id="app-footer-tabs">
-        <div className="max-w-md mx-auto grid grid-cols-4 gap-1">
+        <div className="max-w-md mx-auto grid grid-cols-2 gap-1">
 
-          {/* Active tab is cued by MORE than colour (accessibility: colour-only state fails for low-vision /
-              colour-blind users): the active tab gets a filled pill background, bold weight, and a top
-              indicator bar; inactive tabs stay medium-weight and muted. Labels raised 10px → 11px. */}
-          {([
-            { tab: "nila", label: "Nila", Icon: Sparkles, active: activeTab === "nila" && !auxView },
-            { tab: "tools", label: "Tools", Icon: Wrench, active: ["tools", "diary", "plan"].includes(activeTab) && !auxView },
-            { tab: "you", label: "You", Icon: User, active: activeTab === "you" && !auxView },
-          ] as const).map(({ tab, label, Icon, active }) => (
-            <button
-              key={tab}
-              onClick={() => { setAuxView(null); setActiveTab(tab); setNilaMode("companion"); }}
-              aria-current={active ? "page" : undefined}
-              className={`relative flex flex-col items-center justify-center gap-1 text-[11px] py-2 min-h-[48px] rounded-lg active:scale-95 transition-all cursor-pointer ${
-                active ? "text-blue-400 font-bold bg-blue-400/10" : "text-slate-500 font-medium"
-              }`}
-            >
-              {active && <span aria-hidden="true" className="absolute top-0 h-0.5 w-6 rounded-full bg-blue-400" />}
-              <Icon className={`w-5 h-5 ${active ? "stroke-[2.5]" : ""}`} />
-              <span>{label}</span>
-            </button>
-          ))}
-          {/* Persistent crisis access (§9): always reachable from any tab. The floating crisis
-              anchor was removed (it overlapped content); this bottom-bar button is the replacement. */}
+          {/* Nila stream — always the home */}
+          <button
+            onClick={() => { setAuxView(null); setActiveTab("nila"); setNilaMode("companion"); }}
+            aria-current={activeTab === "nila" && !auxView ? "page" : undefined}
+            className={`relative flex flex-col items-center justify-center gap-1 text-[11px] py-2 min-h-[48px] rounded-lg active:scale-95 transition-all cursor-pointer ${
+              activeTab === "nila" && !auxView ? "text-blue-400 font-bold bg-blue-400/10" : "text-slate-500 font-medium"
+            }`}
+          >
+            {activeTab === "nila" && !auxView && <span aria-hidden="true" className="absolute top-0 h-0.5 w-6 rounded-full bg-blue-400" />}
+            <Sparkles className={`w-5 h-5 ${activeTab === "nila" && !auxView ? "stroke-[2.5]" : ""}`} />
+            <span>Nila</span>
+          </button>
+
+          {/* Persistent crisis access (§9): always reachable from any screen. */}
           <button
             onClick={() => setIsCrisisOverlayOpen(true)}
             aria-label="Crisis support and safety plan"
@@ -698,6 +722,40 @@ export default function App() {
           </button>
         </div>
       </nav>
+
+      {/* ── Detail Sheets (Phase 4): slide-up overlays for settings, dashboard, memory ── */}
+      <DetailSheet
+        open={detailSheet === "settings"}
+        onClose={() => setDetailSheet(null)}
+        title="Settings"
+      >
+        <Suspense fallback={<ScreenFallback />}>
+          <SettingsScreen
+            disableAnchorPulse={disableAnchorPulse}
+            onTogglePulse={(val) => setDisableAnchorPulse(val)}
+          />
+        </Suspense>
+      </DetailSheet>
+
+      <DetailSheet
+        open={detailSheet === "dashboard"}
+        onClose={() => setDetailSheet(null)}
+        title="Your Dashboard"
+      >
+        <Suspense fallback={<ScreenFallback />}>
+          <DashboardScreen />
+        </Suspense>
+      </DetailSheet>
+
+      <DetailSheet
+        open={detailSheet === "nila_memory"}
+        onClose={() => setDetailSheet(null)}
+        title="What Nila Remembers"
+      >
+        <Suspense fallback={<ScreenFallback />}>
+          <NilaMemoryScreen />
+        </Suspense>
+      </DetailSheet>
 
     </div>
   );

@@ -11,11 +11,28 @@ import { shouldRunSynthesis, extractWeeklyFacts } from "./weeklySynthesis";
 import type { CheckInEntry } from "../types";
 
 export type NilaCard = {
-  kind: "grounding" | "episode" | "skill" | "screening" | "protocol" | "weekly_synthesis";
+  kind:
+    | "grounding"
+    | "episode"
+    | "skill"
+    | "screening"
+    | "protocol"
+    | "weekly_synthesis"
+    | "breathing"
+    | "diary_quick"
+    | "assessment_inline"
+    | "thought_record_inline"
+    | "reach_out_inline"
+    | "wind_down_inline"
+    | "medication_check"
+    | "values_action"
+    | "exposure_step";
   skillId?: string;
   protocolId?: string;
   instrument?: "PHQ-9" | "GAD-7";
   label: string;
+  /** Inline cards render as interactive components in-stream instead of navigating away. */
+  inline?: boolean;
 };
 
 const LOW_MOOD = /low|sad|down|empty|hopeless/i;
