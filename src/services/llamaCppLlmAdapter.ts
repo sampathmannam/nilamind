@@ -48,10 +48,11 @@ export function createLlamaCppBackend(
     try {
       ctx = await initLlama({
         model: modelPath,
-        n_ctx: 4096,
-        n_threads: 8, // SM8845: 2 prime + 6 perf, no efficiency cores -> use all 8
-        n_gpu_layers: 0, // CPU-only on Android (GPU offload is iOS-only in this binding)
-        flash_attn: false, // measured: fa hurts prefill on this CPU (50->24 tok/s)
+        n_ctx: 2048,        // halved from 4096 — less KV memory = less pressure on tight RAM
+        n_threads: 6,       // leave 2 cores free for Android system + UI thread
+        n_gpu_layers: 0,    // CPU-only on Android (GPU offload is iOS-only in this binding)
+        flash_attn: false,  // measured: fa hurts prefill on this CPU (50->24 tok/s)
+        use_mlock: true,    // pin model pages in RAM — stops the 2.5 GB GGUF from paging to flash
       });
       ready = true;
     } catch (e) {
@@ -109,9 +110,9 @@ export function createLlamaCppBackend(
           {
             prompt,
             // Cap reply length — decode is the per-token cost on CPU. The model is fine-tuned for ~50-word
-            // replies and the Gemma turn-boundary stops end most replies well before this, so 140 just
+            // replies and the Gemma turn-boundary stops end most replies well before this, so 80 just
             // bounds the worst-case decode time without truncating a normal reply.
-            n_predict: 140,
+            n_predict: 80,
             // Low temp tracks the validated greedy behaviour (briefer, more in-distribution) — the model
             // was fine-tuned for ~50-word replies; high temp drifts longer + slower to decode.
             temperature: 0.4,
