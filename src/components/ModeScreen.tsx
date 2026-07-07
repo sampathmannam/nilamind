@@ -20,6 +20,7 @@ import { localLlmLoadState } from "../services/localLlm";
 import { safeDraftThoughtRecord, type ThoughtRecordDraft } from "../services/thoughtRecordDraft";
 import ThoughtRecordScreen from "./ThoughtRecordScreen";
 import { looksLikeArmRequest, requestArmedCheckin } from "../services/armedCheckin";
+import { protocolOfferCard, startProtocolChat, continueProtocolChat, type ProtocolCard } from "../services/protocolChat";
 import { speakIfEnabled, speak, listenOnce, stopSpeaking } from "../services/voice";
 import CrisisOverlay from "./CrisisOverlay";
 import LearnScreen from "./LearnScreen";
@@ -43,6 +44,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   const [showCrisis, setShowCrisis] = useState(false);
   const [auxView, setAuxView] = useState<"learn" | "thought_record" | null>(null);
   const [thoughtRecordDraft, setThoughtRecordDraft] = useState<ThoughtRecordDraft | undefined>();
+  const [protocolCard, setProtocolCard] = useState<ProtocolCard | null>(() => protocolOfferCard(""));
 
   // Refresh mode every 5 minutes
   useEffect(() => {
@@ -99,6 +101,9 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
       return;
     }
 
+    // Surface a protocol offer/continue card (§9-gated inside protocolOfferCard).
+    setProtocolCard(protocolOfferCard(msg));
+
     setLoading(true);
 
     try {
@@ -112,6 +117,8 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           speakIfEnabled(result.reply);
         }
       }
+      // After Nila replies, refresh the protocol card (continue if active, else re-offer).
+      setProtocolCard(protocolOfferCard(msg));
     } catch {
       setMessages((prev) => [
         ...prev,
@@ -159,6 +166,29 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
     setAuxView("thought_record");
   };
 
+  const handleProtocolTap = () => {
+    if (!protocolCard) return;
+    if (protocolCard.active) {
+      const result = continueProtocolChat();
+      if (result.kind === "done") {
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", content: `You've completed ${result.title}. Nice work — small steps add up.` },
+        ]);
+        setProtocolCard(null);
+      } else if (result.kind === "advanced") {
+        setMessages((prev) => [...prev, { role: "assistant", content: result.prompt }]);
+        setProtocolCard(protocolOfferCard(""));
+      }
+    } else {
+      const result = startProtocolChat(protocolCard.protocolId);
+      if (result.kind === "started") {
+        setMessages((prev) => [...prev, { role: "assistant", content: result.prompt }]);
+        setProtocolCard(protocolOfferCard(""));
+      }
+    }
+  };
+
   const handleQuickAction = (action: string) => {
     switch (action) {
       case "grounding":
@@ -197,6 +227,14 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
       case "thought_record":
         void openThoughtRecord();
         break;
+      case "self_compassion": {
+        const result = startProtocolChat("self-compassion");
+        if (result.kind === "started") {
+          setMessages((prev) => [...prev, { role: "assistant", content: result.prompt }]);
+          setProtocolCard(protocolOfferCard(""));
+        }
+        break;
+      }
       default:
         setMessages((prev) => [
           ...prev,
@@ -293,7 +331,16 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
 
       {/* Input bar */}
       {!showCheckin && (
-        <div className="px-4 py-3 border-t border-slate-800/50">
+        <div className="px-4 py-3 border-t border-slate-800/50 space-y-2">
+          {protocolCard && (
+            <button
+              onClick={handleProtocolTap}
+              className="w-full text-left px-3 py-2 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-300 text-xs font-medium hover:bg-blue-500/20 transition-colors cursor-pointer"
+              id="protocol-card"
+            >
+              {protocolCard.label}
+            </button>
+          )}
           <div className="flex items-center gap-2">
             <button
               onClick={handleVoice}
