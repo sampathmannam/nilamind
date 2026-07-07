@@ -27,7 +27,7 @@
  *   6. No double-writes: rapidly tapping context writes exactly one entry (doneRef guard).
  */
 
-import React, { useReducer, useRef } from "react";
+import React, { useReducer, useRef, useMemo } from "react";
 import type { CheckInEntry } from "../types";
 import {
   INITIAL_DRAFT,
@@ -38,6 +38,7 @@ import {
   resolveCheckin,
 } from "../services/nilaCheckinReducer";
 import { buildCheckinEntry, appendCheckin } from "../services/checkin";
+import { suggestGranularEmotions } from "../services/emotionGranularity";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -51,40 +52,49 @@ export interface NilaCheckInProps {
 
 // ─── Step labels for display ─────────────────────────────────────────────────
 
-const STEP_LABELS = { mood: "How are you feeling?", intensity: "How strong is that?", context: "What's on your mind?", done: "" } as const;
+const STEP_LABELS = { mood: "How are you feeling?", intensity: "How strong is that?", context: "What's on your mind?", granularity: "Name it more precisely", done: "" } as const;
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function NilaCheckIn({ onLogged, onSkip }: NilaCheckInProps) {
   const [draft, dispatch] = useReducer(checkinReducer, INITIAL_DRAFT);
-  // Guard: once we write, ignore any second tap (e.g. double-tap on context chip).
   const doneRef = useRef(false);
 
-  // ── Chip handlers ──────────────────────────────────────────────────────────
+  const suggestions = useMemo(
+    () => (draft.step === "granularity" && draft.label ? suggestGranularEmotions(draft.label) : []),
+    [draft.step, draft.label],
+  );
 
-  const handleMood = (label: string) => {
-    dispatch({ type: "pickMood", label });
-  };
-
-  const handleIntensity = (value: number) => {
-    dispatch({ type: "pickIntensity", intensity: value });
-  };
+  const handleMood = (label: string) => { dispatch({ type: "pickMood", label }); };
+  const handleIntensity = (value: number) => { dispatch({ type: "pickIntensity", intensity: value }); };
 
   const handleContext = (tag: string | null) => {
-    if (doneRef.current) return;
-    const action = { type: "pickContext" as const, tag };
-    const resolved = resolveCheckin(draft, action);
-    if (!resolved) return; // guard: shouldn't happen in normal flow
+    dispatch({ type: "pickContext", tag });
+  };
+
+  const resolveAndPersist = (resolved: ReturnType<typeof resolveCheckin>) => {
+    if (!resolved || doneRef.current) return;
     doneRef.current = true;
-    const entry = buildCheckinEntry(resolved.label, resolved.intensity, resolved.contextTag);
+    const entry = buildCheckinEntry(resolved.label, resolved.intensity, resolved.contextTag, resolved.granularEmotion);
     appendCheckin(entry);
-    dispatch(action);
     onLogged(entry);
   };
 
-  // ── Progress indicator ─────────────────────────────────────────────────────
+  const handleGranular = (emotion: string) => {
+    const action = { type: "pickGranular" as const, emotion };
+    const resolved = resolveCheckin(draft, action);
+    resolveAndPersist(resolved);
+    dispatch(action);
+  };
 
-  const steps = ["mood", "intensity", "context"] as const;
+  const handleSkipGranular = () => {
+    const action = { type: "skipGranular" as const };
+    const resolved = resolveCheckin(draft, action);
+    resolveAndPersist(resolved);
+    dispatch(action);
+  };
+
+  const steps = ["mood", "intensity", "context", "granularity"] as const;
   const stepIdx = steps.indexOf(draft.step as (typeof steps)[number]);
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -192,6 +202,33 @@ export default function NilaCheckIn({ onLogged, onSkip }: NilaCheckInProps) {
               className="w-full py-2.5 rounded-xl text-sm font-medium border border-slate-800 bg-card text-slate-400 hover:text-slate-200 cursor-pointer transition-all"
             >
               Skip context
+            </button>
+          </div>
+        )}
+
+        {/* ── Step 4: Granularity — precise emotion naming ── */}
+        {draft.step === "granularity" && suggestions.length > 0 && (
+          <div className="space-y-3">
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Research shows that naming feelings more precisely helps us process them better. Which word fits best?
+            </p>
+            <div className="grid grid-cols-1 gap-2" id="nila-granularity-grid">
+              {suggestions.map((word) => (
+                <button
+                  key={word}
+                  onClick={() => handleGranular(word)}
+                  className="py-3 rounded-xl text-sm font-medium border border-slate-800 bg-page text-slate-300 hover:border-violet-500/50 hover:text-violet-200 cursor-pointer transition-all active:scale-95"
+                >
+                  {word}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={handleSkipGranular}
+              id="nila-checkin-skip-granular"
+              className="w-full py-2.5 rounded-xl text-sm font-medium border border-slate-800 bg-card text-slate-400 hover:text-slate-200 cursor-pointer transition-all"
+            >
+              Skip — &ldquo;{draft.label}&rdquo; is fine
             </button>
           </div>
         )}

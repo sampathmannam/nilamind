@@ -9,7 +9,8 @@ export type NilaCardAction =
   | { type: "episode" }
   | { type: "skill"; skillId: string }
   | { type: "screening"; instrument: "PHQ-9" | "GAD-7" }
-  | { type: "protocol"; protocolId: string };
+  | { type: "protocol"; protocolId: string }
+  | { type: "weekly_synthesis" };
 
 export function actionForCard(card: NilaCard): NilaCardAction | null {
   switch (card.kind) {
@@ -23,6 +24,8 @@ export function actionForCard(card: NilaCard): NilaCardAction | null {
       return card.instrument ? { type: "screening", instrument: card.instrument } : null;
     case "protocol":
       return card.protocolId ? { type: "protocol", protocolId: card.protocolId } : null;
+    case "weekly_synthesis":
+      return { type: "weekly_synthesis" };
     default:
       return null;
   }

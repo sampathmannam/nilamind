@@ -115,6 +115,15 @@ export function makeReflector(): (text: string) => string {
   };
 }
 
+/** Warm offline/cold-start fallback (2026-07-06 audit). When the on-device model isn't ready — native cold
+ *  load (can take minutes), OOM, or web — reflect the user's feeling via the LLM-free reflector instead of a
+ *  single static "model isn't ready" sentence, then gently note the tools are here. A large fraction of FIRST
+ *  messages hit this, so it must feel like Nila listening, not an error wall. §9's output gate still runs. */
+export function offlineFallbackReply(userText: string): string {
+  const reflection = makeReflector()(userText);
+  return `${reflection}\n\nMy on-device voice is still waking up — but I'm here, and your grounding and safety tools are ready any time, just below.`;
+}
+
 /** The web LLM-seam backend. Registered from main.tsx on web so isLocalLlmReady() becomes true and
  *  sendToNila routes here instead of returning the silent-offline empty reply. */
 export function createReflectBackend(): LocalLlmBackend {

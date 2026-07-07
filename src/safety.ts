@@ -21,6 +21,10 @@ export const SUICIDAL_KEYWORDS = [
 export const SLANG_IDEATION = [
   "unalive", // covers "unalive myself", "gonna unalive", "want to unalive"
   "want to kms", "wanna kms", "gonna kms", "going to kms", "gonna kill myself",
+  // Gen-Z / internet slang for suicide ideation (2026-07-06 audit). High-precision multi-word / coined
+  // euphemisms with near-zero benign collision. "sewerslide"/"sewer slide" is a deliberate corruption of
+  // "suicide" to evade content filters; "log out/off of life" and "exit the game" are gamified metaphors.
+  "sewerslide", "sewer slide", "log out of life", "log off permanently", "logging off permanently", "exit the game",
 ];
 
 // Romanized Hindi/Tamil crisis phrasing (2026-07-06 audit). India-first app; MiniLM is English-only and the
@@ -32,8 +36,13 @@ export const ROMANIZED_IDEATION = [
   "marna hai", "mar jana chahta", "mar jaana hai", "mar jaunga", "mar jaungi",
   "zindagi khatam", "khatam kar lunga", "khatam kar dunga",
   "khudkushi", "aatmahatya",
+  // Hindi: active suicidal ideation / death-wish / refusal-to-rise phrasing (2026-07-06 audit).
+  "marne ka mann", "marne ki ichha", "mar raha hoon", "mar rahi hoon",
+  "jeena nahi chahiye", "jeena mushkil ho raha hai", "aaj uthna nahi chahta",
   // Tamil (romanized)
   "saaganum", "saga poren", "saaga poren", "uyir vaazha maaten",
+  // Tamil: additional crisis-ideation phrasing (2026-07-06 audit)
+  "vaazha vendaam", "saavukku poyida poren", "saaganum da",
 ];
 
 export const SELF_HARM_KEYWORDS = [
@@ -181,6 +190,26 @@ export const SYCOPHANTIC_AFFIRMATIONS = [
   "you deserve to suffer", "you deserve the pain", "you deserve this pain",
 ];
 
+// MANIC-STATE sycophancy (2026-07-06 new-vision extension). For a MANIC-FIRST app the sharpest documented harm
+// is a reply AFFIRMING an elevated/psychotic state — grandiosity, treatment-superiority delusion, impulsive
+// risk-taking (spending/quitting/betting sprees), or paranoia-as-objective-fact — which can precipitate real
+// damage (med-stopping, financial ruin, isolation, escalation). Complements SYCOPHANTIC_AFFIRMATIONS (which
+// already covers med-stopping + sleep-denial). HIGH-PRECISION and AFFIRMATION-LEADING ("you should…"/"go
+// ahead…"), so warm de-escalation ("you don't have to spend it all at once", "quitting your job is worth
+// sleeping on") never trips. Each entry pairs with a benign control in safety.test.ts.
+export const MANIC_VALIDATION = [
+  // grandiosity / treatment-superiority delusion
+  "you know better than the doctors", "you know better than your doctor",
+  "the doctors are wrong about you", "the doctor is wrong about you",
+  "the rules don't apply to you", "the rules dont apply to you",
+  // manic impulsivity — affirmation-leading only
+  "you should spend it all", "go ahead and spend it all",
+  "go ahead and quit your job", "you should quit your job right now",
+  "you should invest everything", "you should bet everything",
+  // paranoia affirmed as objective fact
+  "they are all conspiring against you", "everyone really is out to get you",
+];
+
 /**
  * True if `normalized` (already lowercased, apostrophe- and whitespace-collapsed) is a pre-suicide euphemism:
  * either an unambiguous "peace with death" phrase, OR a "settling final affairs" cue CO-OCCURRING with an
@@ -313,10 +342,18 @@ export function checkResponse(aiReply: string, userMessage: string, userInCrisis
     return false;
   }
 
-  // Rule 2: Contains potential method/means instructions
-  for (const method of UNSAFE_METHOD_KEYWORDS) {
-    if (replyNorm.includes(method) && (replyNorm.includes("how to") || replyNorm.includes("instruction") || replyNorm.includes("try"))) {
-      return false;
+  // Rule 2: method/means INSTRUCTIONS — an instruction cue ("how to" / "instruction" / "try") FOLLOWED by a
+  // method word within a short window (the method is the OBJECT of the instruction). DIRECTIONAL on purpose:
+  // narrowing to "how to" only (2026-07-06) fixed warm-reply false-cuts but LOOSENED the gate — "try taking a
+  // whole bottle of pills" and "instructions for an overdose" slipped through. Requiring the method to FOLLOW
+  // the cue keeps "let's try one small step" / "end of your rope, let's try" safe (the method idiom sits BEFORE
+  // the cue, or there's no method) while re-closing that gap. isStreamingHarm stays "how to"-only — it cuts
+  // LIVE mid-stream so it must not over-fire; this broad FINAL gate can afford the directional cue set.
+  const INSTRUCTION_CUES = ["how to", "instruction", "try"];
+  for (const cue of INSTRUCTION_CUES) {
+    for (let i = replyNorm.indexOf(cue); i !== -1; i = replyNorm.indexOf(cue, i + 1)) {
+      const after = replyNorm.slice(i, i + cue.length + 40); // cue + ~40 chars: the method as the cue's object
+      if (UNSAFE_METHOD_KEYWORDS.some((m) => after.includes(m))) return false;
     }
   }
 
@@ -342,6 +379,15 @@ export function checkResponse(aiReply: string, userMessage: string, userInCrisis
   // "better off dead/gone", isolation, mania sleep-denial, terminal hopelessness, deserving-suffering).
   // Sycophancy is the documented harm mechanism (see docs/NILA_AGENT_RESEARCH_BASIS.md).
   for (const affirmation of SYCOPHANTIC_AFFIRMATIONS) {
+    if (replyNorm.includes(affirmation)) {
+      return false;
+    }
+  }
+
+  // Rule 6: Anti-sycophancy for MANIC states — never AFFIRM grandiosity, treatment-superiority delusion,
+  // impulsive risk-taking, or paranoia-as-fact (manic-first app; see MANIC_VALIDATION). Affirmation-leading
+  // phrasing keeps warm de-escalation of an elevated mood safe.
+  for (const affirmation of MANIC_VALIDATION) {
     if (replyNorm.includes(affirmation)) {
       return false;
     }

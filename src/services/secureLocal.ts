@@ -22,6 +22,7 @@ import {
   migratedVersion,
   setMigratedVersion,
 } from "./secureStore";
+import { ls } from "./storageUtils";
 
 // Sensitive keys that must be encrypted + migrated out of plaintext localStorage.
 // NOTE: "nilamind_disable_pulse" is intentionally NOT here — it's a non-sensitive UI preference
@@ -86,17 +87,9 @@ export function pendingWriteFailures(): string[] {
 function notifyPersistListeners(): void {
   const keys = [...pendingFailures.keys()];
   for (const cb of [...persistListeners]) { // snapshot: a listener may unsubscribe (mutate the Set) mid-notify
-    try { cb(keys); } catch (e) { console.error("secureLocal persist listener threw:", e); }
+    try { cb(keys); } catch (e) { console.error("secureLocal persist listener threw"); }
   }
 }
-
-const ls = (): Storage | null => {
-  try {
-    return (globalThis as any).localStorage ?? null;
-  } catch {
-    return null;
-  }
-};
 
 /** Queue an encrypted write without blocking the synchronous caller. */
 function queuePersist(key: string, value: string) {
@@ -107,13 +100,13 @@ function queuePersist(key: string, value: string) {
       if (pendingFailures.delete(key)) notifyPersistListeners(); // reached disk — clear any prior failure
     })
     .catch((e) => {
-      console.error("secureLocal persist failed:", key, e);
+      console.error("secureLocal persist failed");
       pendingFailures.set(key, value); // NOT silent: record it (data is still safe in cache) so flush can retry
       notifyPersistListeners();
     });
 }
 function queueDelete(key: string) {
-  persistChain = persistChain.then(() => kvDel(key)).catch((e) => console.error("secureLocal delete failed:", key, e));
+  persistChain = persistChain.then(() => kvDel(key)).catch((e) => console.error("secureLocal delete failed"));
 }
 
 /** Move any plaintext sensitive keys into the encrypted store, verifying each round-trip BEFORE
@@ -139,10 +132,10 @@ async function migrate(): Promise<void> {
           cache.set(key, plain);
           store.removeItem(key); // only drop plaintext after a verified encrypted round-trip
         } else {
-          console.error("secureLocal migration verify mismatch, keeping plaintext:", key);
+          console.error("secureLocal migration verify mismatch, keeping plaintext");
         }
       } catch (e) {
-        console.error("secureLocal migration failed, keeping plaintext:", key, e);
+        console.error("secureLocal migration failed, keeping plaintext");
       }
     }
   }
@@ -151,14 +144,26 @@ async function migrate(): Promise<void> {
 
 /** Boot the secure store and hydrate the in-memory cache. Call once before rendering data screens.
  *  Returns the mode so the UI can decide whether to show a PIN unlock screen. */
-export async function bootSecure(): Promise<{ mode: "device" | "pin"; unlocked: boolean }> {
+export async function bootSecure(): Promise<{ mode: "device" | "pin"; unlocked: boolean; error?: "encrypted_unavailable" }> {
   try {
     const res = await initSecure();
     if (res.mode === "pin" && !res.unlocked) return res; // caller must unlock first
     await hydrate();
     return res;
   } catch (e) {
-    console.error("secureLocal boot failed — falling back to plaintext localStorage:", e);
+    console.error("secureLocal boot failed");
+    // If the user ALREADY migrated to the encrypted store, their real data is in IndexedDB and UNREADABLE
+    // without the key — and migration removed the plaintext copies, so localStorage is empty for those keys.
+    // Silently entering passthrough would then (a) show an empty app and (b) shadow-write sensitive data into
+    // plaintext. Recovery is impossible without the key, so signal locked-out — the UI shows an honest
+    // "couldn't open your data — retry" screen (SecureGate) instead of a blank safety plan. If NOT migrated,
+    // plaintext still holds the data, so passthrough is genuinely safe (recover it as before).
+    let migrated = false;
+    try { migrated = migratedVersion() >= MIGRATION_VERSION; } catch { migrated = false; }
+    if (migrated) {
+      return { mode: "device", unlocked: false, error: "encrypted_unavailable" };
+    }
+    hydrateFromPlaintext(); // not-migrated path: recover existing plaintext so screens don't render empty
     enablePassthrough();
     return { mode: "device", unlocked: true };
   }
@@ -173,11 +178,28 @@ export async function hydrate(): Promise<void> {
     try {
       cache.set(key, await decryptValue(blob));
     } catch (e) {
-      console.error("secureLocal failed to decrypt key:", key, e);
+      console.error("secureLocal failed to decrypt a stored key");
     }
   }
   await migrate();
   hydrated = true;
+}
+
+/** When crypto/IndexedDB init fails, the app must still show the user's existing data — otherwise the
+ *  safety plan, diary, etc. render empty. Read any plaintext sensitive keys already in localStorage into
+ *  the in-memory cache before we declare passthrough mode. Per-key try/catch so one corrupt key can't
+ *  hide the rest. */
+function hydrateFromPlaintext(): void {
+  const store = ls();
+  if (!store) return;
+  for (const key of SENSITIVE_KEYS) {
+    try {
+      const plain = store.getItem(key);
+      if (plain !== null && !cache.has(key)) cache.set(key, plain);
+    } catch {
+      /* ignore per-key read failures */
+    }
+  }
 }
 
 function enablePassthrough() {
@@ -211,6 +233,25 @@ export const secureLocal = {
     queueDelete(key);
   },
 };
+
+/** Atomic append to a JSON-array-valued key: read → corrupt-safe parse → push → write, all SYNCHRONOUSLY
+ *  (no await inside), so two callers from different async contexts can't interleave a stale read-modify-write
+ *  and drop an entry (the last-writer-wins race, 2026-07-06 audit). Optional `cap` keeps only the most recent N.
+ *  Returns the new array. Use this instead of hand-rolling getItem→JSON.parse→push→setItem at each call site. */
+export function appendToSecureArray<T>(key: string, item: T, cap?: number): T[] {
+  let arr: T[];
+  try {
+    const raw = secureLocal.getItem(key);
+    const parsed = raw ? JSON.parse(raw) : [];
+    arr = Array.isArray(parsed) ? parsed : [];
+  } catch {
+    arr = [];
+  }
+  arr.push(item);
+  if (cap && arr.length > cap) arr = arr.slice(arr.length - cap);
+  secureLocal.setItem(key, JSON.stringify(arr));
+  return arr;
+}
 
 /** Await all queued encrypted writes (used on pagehide and in tests). Also RETRIES any writes that previously
  *  failed — a failure may have been transient (IDB busy) or resolved (store re-unlocked), so a flush is our

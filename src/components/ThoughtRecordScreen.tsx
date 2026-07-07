@@ -1,9 +1,10 @@
 import { secureLocal } from "../services/secureLocal";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ThoughtRecord } from "../types";
 import { ChevronLeft, ChevronRight, BrainCircuit, RefreshCw, Check } from "lucide-react";
 import { fetchBalancedThought } from "../services/coachAssist";
 import CrisisCard from "./CrisisCard";
+import { type ThoughtRecordDraft, mapDraftToWizard } from "../services/thoughtRecordDraft";
 
 const THINKING_TRAPS = [
   { name: "All-or-Nothing", desc: '"If it\'s not perfect, it\'s a complete failure"' },
@@ -18,11 +19,11 @@ const THINKING_TRAPS = [
   { name: "Magnification", desc: '"Blowing everything out of proportion"' }
 ];
 
-export default function ThoughtRecordScreen() {
+export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDraft } = {}) {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [savedStatus, setSavedStatus] = useState<boolean>(false);
   
-  // Form fields
+  // Form fields — pre-filled from draft when provided
   const [situation, setSituation] = useState<string>("");
   const [feeling, setFeeling] = useState<string>("");
   const [initialIntensity, setInitialIntensity] = useState<number>(50);
@@ -35,6 +36,16 @@ export default function ThoughtRecordScreen() {
   const [aiLoading, setAiLoading] = useState<boolean>(false);
   const [aiError, setAiError] = useState<string | null>(null);
   const [crisis, setCrisis] = useState<boolean>(false);
+
+  // Pre-fill from draft on first mount when draft is provided
+  useEffect(() => {
+    if (!draft) return;
+    const w = mapDraftToWizard(draft);
+    setSituation(w.situation);
+    setFeeling(w.feeling);
+    setInitialIntensity(w.initialIntensity);
+    setAutomaticThought(w.automaticThought);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const toggleTrap = (trapName: string) => {
     setSelectedTraps((prev) =>
@@ -69,7 +80,7 @@ export default function ThoughtRecordScreen() {
         setCrisis(true); // §9: surface crisis help here; do not show a reframe
       }
     } catch (err: any) {
-      console.error(err);
+      console.error("Failed to generate balanced thought");
       setAiError("I couldn't reach Nila right now. Please draft your own balanced thought or retry.");
     } finally {
       setAiLoading(false);

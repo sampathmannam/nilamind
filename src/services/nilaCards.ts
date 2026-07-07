@@ -9,7 +9,11 @@ import { findSkillInText } from "./skillsLibrary";
 import { bestSkill } from "./skillRetrieval";
 import { protocolOffer, getActiveProgress } from "./protocolProgress";
 import { scanForCrisis } from "../safety";
-import { CheckInEntry } from "../types";
+import { shouldRunSynthesis, extractWeeklyFacts, weeklySynthesisPrompt, recordSynthesisTimestamp } from "./weeklySynthesis";
+import { generateOnDevice, isLocalLlmReady } from "./localLlm";
+import { applyOutputSafety } from "./nilaSafetyGate";
+import { draftThoughtRecord } from "./thoughtRecordDraft";
+import type { CheckInEntry } from "../types";
 
 /**
  * A gentle "start a structured program" offer card, shown when the person's message matches an evidence-based
@@ -93,4 +97,39 @@ export function cardsForReply(
   if (!skillCard) return base;
   const already = base.some((c) => c.kind === "skill" && c.skillId === skillCard.skillId);
   return already ? base : [...base, skillCard];
+}
+
+export function weeklySynthesisCard(): NilaCard | null {
+  if (!shouldRunSynthesis()) return null;
+  const facts = extractWeeklyFacts();
+  if (facts.checkinCount === 0) return null;
+  return { kind: "weekly_synthesis", label: "See how your week went" };
+}
+
+export async function runWeeklySynthesis(): Promise<string | null> {
+  if (!isLocalLlmReady()) return null;
+  const facts = extractWeeklyFacts();
+  const prompt = weeklySynthesisPrompt(facts);
+  const reply = await generateOnDevice(
+    "You are Nila. In 3-4 warm, plain sentences, reflect back the week's data the way a friend who remembers would. Never quote stats like a dashboard; weave them naturally.",
+    [{ role: "user", content: prompt }],
+  );
+  if (!reply) return null;
+  const safe = applyOutputSafety(reply, "weekly synthesis", true);
+  recordSynthesisTimestamp();
+  return safe;
+}
+
+/** Card to offer a thought record draft when the user's message is long enough + emotional. */
+export function thoughtRecordCard(userText: string): NilaCard | null {
+  if (!userText || userText.length < 50) return null;
+  const emotional = /\b(feel|felt|hurt|upset|angry|sad|anxious|overwhelm|worried|ashamed|guilty|failure|ruined|messed up|can't|hate|awful)\b/i;
+  if (!emotional.test(userText)) return null;
+  return { kind: "skill", skillId: "thought_record", label: "Work through this as a thought record" };
+}
+
+export async function runThoughtRecordDraft(ventText: string): Promise<string | null> {
+  const draft = await draftThoughtRecord(ventText);
+  if (!draft) return null;
+  return `Here's what I heard — you can edit any of this before saving:\n\n**Situation:** ${draft.situation}\n\n**Automatic thought:** ${draft.automaticThought}\n\n**Emotion:** ${draft.emotion}\n\n**Evidence for:** ${draft.evidenceFor}\n\n**Evidence against:** ${draft.evidenceAgainst}`;
 }

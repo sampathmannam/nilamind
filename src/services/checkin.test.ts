@@ -2,13 +2,27 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 
 // In-memory secureLocal mock (vi.mock is hoisted; the store map is referenced inside the factory).
 const store = new Map<string, string>();
-vi.mock("./secureLocal", () => ({
-  secureLocal: {
+vi.mock("./secureLocal", () => {
+  const secureLocal = {
     getItem: (k: string) => (store.has(k) ? (store.get(k) as string) : null),
     setItem: (k: string, v: string) => { store.set(k, v); },
     removeItem: (k: string) => { store.delete(k); },
-  },
-}));
+  };
+  // Faithful stand-in for the real atomic primitive (its own logic is covered in secureLocal.append.test.ts).
+  const appendToSecureArray = <T>(key: string, item: T, cap?: number): T[] => {
+    let arr: T[];
+    try {
+      const raw = secureLocal.getItem(key);
+      const parsed = raw ? JSON.parse(raw) : [];
+      arr = Array.isArray(parsed) ? parsed : [];
+    } catch { arr = []; }
+    arr.push(item);
+    if (cap && arr.length > cap) arr = arr.slice(arr.length - cap);
+    secureLocal.setItem(key, JSON.stringify(arr));
+    return arr;
+  };
+  return { secureLocal, appendToSecureArray };
+});
 
 import { buildCheckinEntry, appendCheckin, hasCheckinToday, getSkipFlag, setSkipFlag } from "./checkin";
 import type { CheckInEntry } from "../types";

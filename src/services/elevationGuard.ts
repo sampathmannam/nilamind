@@ -22,6 +22,43 @@ const MED_STOP = [
 const SLEEP_DISMISS = ["don't need sleep", "do not need sleep", "don't need to sleep", "who needs sleep", "sleep is for", "too wired to sleep"];
 const SPENDING = ["spending spree", "maxed out my card", "maxed out my credit", "emptied my savings", "emptied my account", "spent all my money", "spent everything", "can't stop spending"];
 const GRANDIOSITY = ["i'm a genius", "i am a genius", "figured it all out", "figured everything out", "chosen one", "special mission", "i'm unstoppable", "i am unstoppable", "i'm invincible", "destined for greatness", "smarter than everyone", "i can change the world tonight"];
+// RACING / pressured thoughts — a core DSM hypomania/mania criterion the guard previously missed. Kept
+// high-precision by REQUIRING a mind/thoughts/brain subject, so anxiety's "heart is racing" and literal
+// "racing to catch the bus" stay none (an ELEVATED steer = slow down + protect sleep, which is low-harm even
+// if the person is anxious, but firing on bare "racing" would over-fire and invalidate).
+const RACING = [
+  "mind is racing", "thoughts are racing", "racing thoughts",
+  "mind won't stop", "mind wont stop", "thoughts won't stop", "thoughts wont stop",
+  "brain won't shut off", "brain wont shut off", "brain won't turn off", "brain wont turn off",
+  "can't turn my brain off", "cant turn my brain off", "can't slow my thoughts", "cant slow my thoughts",
+];
+// HYPERSEXUALITY — hypersexuality is a classic manic prodrome signal (DSM-5 criterion B7: increase in
+// goal-directed activity involving a high risk of painful consequences, including sexual indiscretions).
+// ELEVATED tier: these are unambiguous hypersexuality markers with near-zero benign collision.
+const HYPERSEXUALITY = [
+  "hypersexual", "sex drive is through the roof", "can't stop thinking about sex",
+  "sleeping with everyone", "risky sexual",
+];
+// RELIGIOUS grandiosity — grandiose religious ideation is a well-documented manic prodrome (Goodwin & Jamison
+// 2007). ELEVATED tier: unambiguous divine-mission / messianic phrasing with near-zero benign collision.
+const RELIGIOUS_GRANDIOSITY = [
+  "god is speaking to me", "i am a prophet", "chosen by god", "divine mission",
+  "i am the messiah", "god has chosen me",
+];
+// SLEEP_AMAZING — passive euphoric sleep-denial: "haven't slept and I feel amazing" is the manic opposite
+// of insomnia, a classic elevation marker. ELEVATED tier.
+const SLEEP_AMAZING = [
+  "haven't slept and i feel amazing", "barely sleeping and i feel incredible",
+  "sleep barely matters anymore", "running on 2 hours and i feel amazing",
+];
+// PRESSURED — behavioral markers of pressured speech, a core DSM criterion. ELEVATED tier: these are
+// self-aware metacognitive disclosures ("everyone says i'm talking too fast"), not the bare "talking" benign
+// collisions (a chat app has "talking" everywhere).
+const PRESSURED = [
+  "can't stop talking", "thoughts pouring out", "thoughts are pouring",
+  "everyone says i'm talking too fast",
+  "talking too fast", "i'm talking too fast",
+];
 
 function normalize(text: string): string {
   return text.toLowerCase().replace(/['’]/g, "'").replace(/\s+/g, " ").trim();
@@ -34,7 +71,7 @@ export function detectElevationRisk(text: string): { level: ElevationLevel; mark
   const markers: string[] = [];
   let high = false;
   for (const kw of MED_STOP) if (n.includes(kw)) { markers.push(kw); high = true; }
-  for (const list of [SLEEP_DISMISS, SPENDING, GRANDIOSITY]) for (const kw of list) if (n.includes(kw)) markers.push(kw);
+  for (const list of [SLEEP_DISMISS, SPENDING, GRANDIOSITY, RACING, HYPERSEXUALITY, RELIGIOUS_GRANDIOSITY, SLEEP_AMAZING, PRESSURED]) for (const kw of list) if (n.includes(kw)) markers.push(kw);
   if (high) return { level: "high", markers };
   if (markers.length) return { level: "elevated", markers };
   return { level: "none", markers: [] };

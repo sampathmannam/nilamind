@@ -86,9 +86,9 @@ export async function sendToNila(
     return { reply: r.reply, reachedAI: false, navigate: r.navigate, openSkillId: r.openSkillId };
   }
 
-  // episode — ON-DEVICE, EPISODE prompt, no tools (=> INVARIANT 5). Streams behind the §9 guard; with
-  // no model loaded it returns the offline experience, never the network.
-  const systemInstruction = buildEpisodeSystem(loadRecentEpisodes()); // INVARIANT 4 substitution inside
+  // episode — ON-DEVICE, unified companion persona + episode steer, no tools (=> INVARIANT 5).
+  // Streams behind the §9 guard; with no model loaded it returns the offline experience, never the network.
+  const systemInstruction = buildEpisodeSystem(loadRecentEpisodes(), userText); // INVARIANT 4 substitution inside
   const guard = createStreamGuard(opts.onDelta);
   // wait:true — episode is a PRIMARY user conversation, so it waits its turn on the model lock instead of
   // skipping-if-busy (which would drop a user mid-episode to the offline walkthrough).

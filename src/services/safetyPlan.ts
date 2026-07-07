@@ -16,8 +16,12 @@ export function parseSafetyPlan(raw: string | null | undefined): SafetyPlan {
   }
   if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return plan;
   const obj = parsed as Record<string, unknown>;
-  for (const k of Object.keys(INITIAL_SAFETY_PLAN) as (keyof SafetyPlan)[]) {
-    if (typeof obj[k] === "string") plan[k] = obj[k] as string;
+  for (const k of Object.keys(INITIAL_SAFETY_PLAN)) {
+    if (typeof obj[k] === "string") (plan as unknown as Record<string, unknown>)[k] = obj[k];
+  }
+  // Preserve lastUpdatedAt from persisted data (B3: follow-up loop needs the timestamp)
+  if (typeof obj.lastUpdatedAt === "number" && Number.isFinite(obj.lastUpdatedAt)) {
+    plan.lastUpdatedAt = obj.lastUpdatedAt;
   }
   return plan;
 }

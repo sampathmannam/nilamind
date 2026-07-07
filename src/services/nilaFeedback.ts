@@ -38,7 +38,7 @@ function save(list: ReplyFeedback[]): void {
   try {
     secureLocal.setItem(KEY, JSON.stringify(list.slice(-CAP)));
   } catch (e) {
-    console.error("nilaFeedback save failed:", e);
+    console.error("nilaFeedback save failed");
   }
 }
 

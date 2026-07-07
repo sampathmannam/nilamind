@@ -33,9 +33,9 @@ export default function SettingsScreen({ disableAnchorPulse, onTogglePulse }: Se
 
       <div className="glass p-5 rounded-2xl space-y-4 shadow-lg">
         <div>
-          <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
             <EyeOff className="w-4 h-4 text-emerald-400" /> Sensory Overload
-          </h3>
+          </h2>
           <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
             Adjust visual pacing or limit distractions if animations are overstimulating.
           </p>
@@ -82,9 +82,9 @@ function FeedbackSection() {
   return (
     <div className="glass p-5 rounded-2xl space-y-3 shadow-lg" id="settings-feedback">
       <div>
-        <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
           <MessageSquare className="w-4 h-4 text-purple-400" /> Feedback &amp; about
-        </h3>
+        </h2>
         <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
           NilaMind is an open-source research preview, and your feedback shapes it. Nothing is sent
           automatically — these open in your browser, and you choose what to share.
@@ -133,9 +133,9 @@ function AppearanceSection() {
   return (
     <div className="glass p-5 rounded-2xl space-y-3 shadow-lg" id="settings-appearance">
       <div>
-        <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
           <Sun className="w-4 h-4 text-amber-400" /> Appearance
-        </h3>
+        </h2>
         <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
           Choose what's easiest on your eyes — there's no right answer, just what feels calmest for you.
         </p>
@@ -183,9 +183,9 @@ function RemindersSection() {
   return (
     <div className="glass p-5 rounded-2xl space-y-4 shadow-lg" id="settings-reminders">
       <div>
-        <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
           <Bell className="w-4 h-4 text-blue-400" /> Gentle Reminders
-        </h3>
+        </h2>
         <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
           One gentle nudge a day — inside your window, never during quiet hours. No streak guilt, ever.
           {status && <span className="block text-blue-300 mt-1" id="settings-reminders-status">{status}</span>}
@@ -245,9 +245,9 @@ function VoiceSection() {
   return (
     <div className="glass p-5 rounded-2xl space-y-4 shadow-lg" id="settings-voice">
       <div>
-        <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
           <Volume2 className="w-4 h-4 text-blue-400" /> Soothing Voice
-        </h3>
+        </h2>
         <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
           A calm voice can read Nila and your check-ins aloud, so you don't have to read — and you can speak instead of type.
         </p>
@@ -402,9 +402,9 @@ function InflectionSection() {
   return (
     <div className="glass p-5 rounded-2xl space-y-4 shadow-lg" id="settings-inflection">
       <div>
-        <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
           <Activity className="w-4 h-4 text-blue-400" /> Gentle Nudges from Nila
-        </h3>
+        </h2>
         <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
           If you turn this on, Nila may gently mention when she notices a real, lasting shift in how you've been —
           only when you open her, never a notification, always something you can wave off. Off by default.
@@ -444,9 +444,9 @@ function OnDeviceSection() {
   return (
     <div className="glass p-5 rounded-2xl space-y-4 shadow-lg" id="settings-ondevice">
       <div>
-        <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
           <Cpu className="w-4 h-4 text-violet-400" /> Nila Runs On Your Device
-        </h3>
+        </h2>
         <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
           Nila's mind runs entirely on your phone — your conversations never leave the device and no
           internet is needed to talk. On desktop (dev) this uses Ollama (<span className="font-mono">ollama serve</span> first);
@@ -507,9 +507,9 @@ function IdentitySection() {
   return (
     <div className="glass p-5 rounded-2xl space-y-4 shadow-lg" id="settings-identity">
       <div>
-        <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
           <KeyRound className="w-4 h-4 text-blue-400" /> Account & Recovery
-        </h3>
+        </h2>
         <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
           No email or password — your space is recovered with a 12-word phrase only you hold.
           <span className="block mt-1">ID: <span className="font-mono text-slate-300">{id.userId}</span></span>
@@ -607,9 +607,9 @@ function PrivacyLockSection() {
   return (
     <div className="glass p-5 rounded-2xl space-y-4 shadow-lg" id="settings-privacy">
       <div>
-        <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
           <Lock className="w-4 h-4 text-blue-400" /> Privacy Lock
-        </h3>
+        </h2>
         <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
           Your entries — check-ins, diary, episodes, assessments — are always encrypted on this
           device. Add a PIN for an extra layer: it'll be asked each time you open the app, and only
@@ -649,7 +649,7 @@ function PrivacyLockSection() {
             <input
               type="password" inputMode="numeric" autoFocus value={pin}
               onChange={(e) => setPin(e.target.value)} placeholder="New PIN (min 4 digits)"
-              aria-label="New PIN"
+              aria-label="New PIN" aria-describedby="pin-warning"
               id="settings-pin-input"
               className="w-full glass rounded-lg px-3 py-2.5 text-sm text-slate-100 tracking-widest placeholder:tracking-normal placeholder:text-slate-600 focus:outline-none focus:border-blue-500/50"
             />
@@ -657,11 +657,11 @@ function PrivacyLockSection() {
               type="password" inputMode="numeric" value={confirm}
               onChange={(e) => setConfirm(e.target.value)} placeholder="Confirm PIN"
               onKeyDown={(e) => e.key === "Enter" && doSetPin()}
-              aria-label="Confirm PIN"
+              aria-label="Confirm PIN" aria-describedby="pin-warning"
               id="settings-pin-confirm"
               className="w-full glass rounded-lg px-3 py-2.5 text-sm text-slate-100 tracking-widest placeholder:tracking-normal placeholder:text-slate-600 focus:outline-none focus:border-blue-500/50"
             />
-            <p className="text-[10px] text-amber-300/80 leading-relaxed flex items-start gap-1">
+            <p id="pin-warning" className="text-[10px] text-amber-300/80 leading-relaxed flex items-start gap-1">
               <AlertTriangle className="w-3 h-3 shrink-0 mt-0.5" /> If you forget this PIN, your encrypted entries cannot be recovered. There's no reset.
             </p>
             {error && <p className="text-[11px] text-rose-400">{error}</p>}

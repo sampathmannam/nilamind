@@ -10,8 +10,11 @@ import { getCrisisReply } from "../safety";
 const REFLECT_BACKEND_ID = "nila-reflect-template";
 import CrisisLines from "./CrisisLines";
 import { useSettlingNote } from "./useSettlingNote";
+import { offlineFallbackReply } from "../services/nilaReflect";
 import PactNoticeBanner from "./PactNoticeBanner";
 import { activePactNotice, type PactNotice } from "../services/pactNotice";
+import SleepSignalBanner from "./SleepSignalBanner";
+import { selfReportSleepSignal } from "../services/sleepInsight";
 import DependencyNudge from "./DependencyNudge";
 import { activeDependencyNudge } from "../services/dependencyGuard";
 import { rememberSession } from "../services/nilaMemory";
@@ -20,7 +23,8 @@ import { runAgent, AgentView } from "../services/agent";
 import { hasCheckinToday, getSkipFlag, setSkipFlag } from "../services/checkin";
 import { secureLocal } from "../services/secureLocal";
 import { cardsForCheckin, NilaCard } from "../services/nilaOrchestration";
-import { cardsForReply, protocolCard, protocolResumeCard, waitingCards } from "../services/nilaCards";
+import { cardsForReply, protocolCard, protocolResumeCard, waitingCards, runWeeklySynthesis, thoughtRecordCard, runThoughtRecordDraft } from "../services/nilaCards";
+import { draftThoughtRecord } from "../services/thoughtRecordDraft";
 import { startProtocol, advanceProtocol, getActiveProgress } from "../services/protocolProgress";
 import { getInflectionEnabled } from "../services/inflectionPrefs";
 import { recordDetectionPass, surfaceOpener, acknowledgeInflection, type InflectionSignal } from "../services/nilaInflection";
@@ -31,6 +35,7 @@ import { sendToNila } from "../services/sendToNila";
 import { NilaMode, NilaUiMessage } from "../services/nilaSend";
 import { getSessionChat, setSessionChat, clearSessionChat } from "../services/sessionChat";
 import { notifyReplyReady } from "../services/notifications";
+import { getArmedCheckin, armedCheckinPrompt, markCheckinFired } from "../services/armedCheckin";
 import EpisodeSupportScreen from "./EpisodeSupportScreen";
 import NilaOrb from "./NilaOrb";
 import { Send, AlertTriangle, Shield, Volume2, VolumeX, Mic, Sparkles, BookOpen, ChevronRight, Phone, Zap, Brain, ClipboardList, LifeBuoy, ThumbsUp, ThumbsDown, Keyboard } from "lucide-react";
@@ -46,6 +51,7 @@ interface AiCoachScreenProps {
   onNavigateToBreathing: () => void;
   onAgentNavigate?: (view: AgentView) => void;
   onOpenSkill?: (skillId: string) => void;
+  onOpenThoughtRecord?: (draft: import("../services/thoughtRecordDraft").ThoughtRecordDraft) => void;
   onStartCall?: () => void;
   onEnterEpisode: () => void;
   onLaunchScreening: (instrument: "PHQ-9" | "GAD-7") => void;
@@ -70,7 +76,7 @@ function readRecentCheckins(): CheckInEntry[] {
   }
 }
 
-export default function AiCoachScreen({ mode, onModeChange, onNavigateToGrounding, onNavigateToBreathing, onAgentNavigate, onOpenSkill, onStartCall, onEnterEpisode, onLaunchScreening, onActivateCrisis }: AiCoachScreenProps) {
+export default function AiCoachScreen({ mode, onModeChange, onNavigateToGrounding, onNavigateToBreathing, onAgentNavigate, onOpenSkill, onOpenThoughtRecord, onStartCall, onEnterEpisode, onLaunchScreening, onActivateCrisis }: AiCoachScreenProps) {
   // Check-in gate: computed ONCE at component init, shared by showCheckin + messages initializer.
   // Using a ref-based init pattern to avoid calling shouldShowCheckin() twice.
   const initCheckin = useRef<boolean>(shouldShowCheckin());
@@ -96,6 +102,7 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
   const [showOfflineNav, setShowOfflineNav] = useState<boolean>(false);
   const [isCrisisState, setIsCrisisState] = useState<boolean>(false);
   const [pactNotice, setPactNotice] = useState<PactNotice | null>(null);
+  const [sleepBannerOpen, setSleepBannerOpen] = useState<boolean>(false);
   const [dependencyNudge, setDependencyNudge] = useState<boolean>(false);
   // On-device feedback on Nila's replies — the privacy-preserving improvement signal. All idx-keyed,
   // all stored locally (services/nilaFeedback); nothing uploads.
@@ -158,7 +165,9 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
       // Don't re-offer the program we just finished on its own completion turn (same message still in play).
       const jc = justCompletedRef.current;
       if (offer && jc && jc.id === offer.protocolId && jc.userMsg === lastUserMsg) return base;
-      return offer ? [...base, offer] : base;
+      const out = offer ? [...base, offer] : base;
+      const trCard = thoughtRecordCard(lastUserMsg);
+      return trCard ? [...out, trCard] : out;
     },
     [lastMessage?.role, lastMessage?.content, lastUserMsg, isCrisisState],
   );
@@ -213,7 +222,14 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
     const warm = () => { void detectCrisis("hello").catch(() => {}); };
     const t = idle ? idle(warm, { timeout: 4000 }) : (setTimeout(warm, 2500) as unknown as number);
     setPactNotice(activePactNotice()); // surface the user's pact if a real shift is noticed (read-only, dismissible)
+    setSleepBannerOpen(!!selfReportSleepSignal()?.firing); // default-on sleep-prodrome surface (audit fix #4)
     setDependencyNudge(activeDependencyNudge()); // nudge toward a human if Nila use is heavy + escalating
+    // Armed check-in: if the user asked Nila to check on them, surface the context-aware prompt
+    const armed = getArmedCheckin();
+    if (armed && !initCheckin.current && !restored.current) {
+      setMessages([{ role: "assistant", content: armedCheckinPrompt(armed) }]);
+      markCheckinFired();
+    }
     return () => {
       const cancelIdle = (globalThis as any).cancelIdleCallback as undefined | ((h: number) => void);
       if (idle && cancelIdle) cancelIdle(t); else clearTimeout(t);
@@ -343,10 +359,13 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
       // Distinguish a genuine LOAD FAILURE from "still loading" (2026-07-06 audit #10): if the backend is
       // registered but reported an error (commonly a low-RAM OOM on the 2.5 GB model), say so honestly instead
       // of "it may still be loading" forever — otherwise the user waits indefinitely for a load that failed.
+      // Genuine LOAD FAILURE stays an honest, un-warmed message (never mask a real failure). The common
+      // "still loading" case now routes through the LLM-free reflector (offlineFallbackReply) so a first
+      // message during the minutes-long cold load gets Nila *listening*, not a static wall (2026-07-06 audit).
       coachReply =
         localLlmLoadState() === "error"
           ? "Nila's on-device model couldn't finish loading — your device may be low on memory. Your safety and grounding tools are pre-loaded and always work. Tap below to navigate:"
-          : "Nila's on-device model isn't ready yet — it may still be loading. Your safety and grounding tools are pre-loaded and always work. Tap below to navigate:";
+          : offlineFallbackReply([...transcript].reverse().find((m) => m.role === "user")?.content ?? "");
     }
 
     setMessages((prev) => {
@@ -529,14 +548,40 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
     }
   };
 
+  const runSynthesisCard = async () => {
+    setLoading(true);
+    const synthesis = await runWeeklySynthesis();
+    setLoading(false);
+    if (synthesis) {
+      setMessages((prev) => [...prev, { role: "assistant", content: synthesis }]);
+    }
+  };
+
   const dispatchCard = (card: NilaCard) => {
     const a = actionForCard(card);
     if (!a) return;
     if (a.type === "grounding") onNavigateToGrounding();
     else if (a.type === "episode") onEnterEpisode();
-    else if (a.type === "skill") onOpenSkill?.(a.skillId);
+    else if (a.type === "skill") {
+      if (a.skillId === "thought_record") {
+        void (async () => {
+          setLoading(true);
+          const draft = await draftThoughtRecord(lastUserMsg);
+          setLoading(false);
+          if (draft && onOpenThoughtRecord) {
+            onOpenThoughtRecord(draft);
+          } else if (draft) {
+            // Fallback: post as message if no navigation callback
+            setMessages((prev) => [...prev, { role: "assistant", content: `Here's what I heard:\n\n**Situation:** ${draft.situation}\n\n**Automatic thought:** ${draft.automaticThought}\n\n**Emotion:** ${draft.emotion}` }]);
+          }
+        })();
+      } else {
+        onOpenSkill?.(a.skillId);
+      }
+    }
     else if (a.type === "screening") onLaunchScreening(a.instrument);
     else if (a.type === "protocol") runProtocolCard(a.protocolId);
+    else if (a.type === "weekly_synthesis") void runSynthesisCard();
   };
 
   // (Tier label/icon removed with the top toolbar; the offline state still surfaces via the banner below.)
@@ -595,16 +640,30 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
           <PactNoticeBanner notice={pactNotice} onDismiss={() => setPactNotice(null)} />
         </div>
       )}
-      {!pactNotice && dependencyNudge && !isCrisisState && (
+      {/* Sleep-prodrome surface (audit fix #4): default-on, pact-independent, dataless, gentle. Hidden during
+          crisis so §9 owns the screen. Shows when the user's self-reported sleep is short — the app's earliest
+          manic warning — and offers the wind-down flow. */}
+      {!pactNotice && sleepBannerOpen && !isCrisisState && (
+        <div className="px-4 pt-3 shrink-0">
+          <SleepSignalBanner
+            onDismiss={() => setSleepBannerOpen(false)}
+            onWindDown={() => onAgentNavigate?.("winddown")}
+          />
+        </div>
+      )}
+      {!pactNotice && !sleepBannerOpen && dependencyNudge && !isCrisisState && (
         <div className="px-4 pt-3 shrink-0">
           <DependencyNudge onDismiss={() => setDependencyNudge(false)} />
         </div>
       )}
 
-      {/* Messages block */}
+      {/* Messages block — aria-live ensures new replies are announced to screen readers */}
       <div
         className={`flex-1 overflow-y-auto p-4 space-y-4 flex flex-col ${showCheckin || messages.length <= 1 ? "justify-center" : ""}`}
         id="chat-scroller"
+        role="log"
+        aria-live="polite"
+        aria-label="Chat with Nila"
       >
 
         {/* ── Opening check-in: shown as Nila's first turn when due (once per day). ──
@@ -648,6 +707,7 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
                     type="button"
                     onClick={() => handleSendMessage(undefined, s)}
                     disabled={loading}
+                    aria-label={s}
                     className={`glass text-[13px] py-3 px-4 rounded-2xl cursor-pointer transition-transform active:scale-[0.98] hover:brightness-125 ${i === 0 ? "text-blue-100" : "text-slate-200"}`}
                   >
                     {s}
@@ -1030,7 +1090,7 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
                   aria-label="Dictate instead of typing"
                   title="Dictate"
                   id="coach-mic-btn"
-                  className={`w-9 h-9 rounded-full shrink-0 flex items-center justify-center cursor-pointer transition-all ${
+                  className={`w-11 h-11 rounded-full shrink-0 flex items-center justify-center cursor-pointer transition-all ${
                     listening ? "bg-rose-600 text-white animate-pulse" : "text-slate-400 hover:text-slate-200"
                   }`}
                 >
@@ -1040,7 +1100,7 @@ export default function AiCoachScreen({ mode, onModeChange, onNavigateToGroundin
                   type="submit"
                   disabled={!inputText.trim() || loading}
                   aria-label="Send message"
-                  className={`w-9 h-9 rounded-full transition-all shrink-0 flex items-center justify-center ${
+                  className={`w-11 h-11 rounded-full transition-all shrink-0 flex items-center justify-center ${
                     inputText.trim() && !loading
                       ? "sun-cta bg-purple-600 hover:bg-purple-550 text-white cursor-pointer"
                       : "bg-slate-800 text-slate-500 cursor-not-allowed"

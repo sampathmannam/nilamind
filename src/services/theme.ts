@@ -3,10 +3,10 @@
 // user control). Warm-dark is the default character; light is a warm-cream alternative. The choice
 // is a non-sensitive UI preference → plain localStorage (sync, safe before the secure gate).
 
+import { ls } from "./storageUtils";
+
 export type ThemeChoice = "system" | "light" | "dark";
 const KEY = "nilamind_theme";
-
-const ls = (): Storage | null => { try { return (globalThis as any).localStorage ?? null; } catch { return null; } };
 
 export function getThemeChoice(): ThemeChoice {
   const v = ls()?.getItem(KEY);

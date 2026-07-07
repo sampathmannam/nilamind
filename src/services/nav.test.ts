@@ -13,9 +13,13 @@ describe("resolveNavTarget", () => {
     expect(resolveNavTarget("nila")).toEqual({ kind: "tab", tab: "nila" });
     expect(resolveNavTarget("tools")).toEqual({ kind: "tab", tab: "tools" });
     expect(resolveNavTarget("you")).toEqual({ kind: "tab", tab: "you" });
-    expect(resolveNavTarget("checkin")).toEqual({ kind: "tab", tab: "checkin" });
     expect(resolveNavTarget("diary")).toEqual({ kind: "tab", tab: "diary" });
     expect(resolveNavTarget("plan")).toEqual({ kind: "tab", tab: "plan" });
+  });
+  it("treats removed product views as unknown", () => {
+    // checkin screen is orphaned (replaced by in-chat NilaCheckIn); console is dev-facing only.
+    expect(resolveNavTarget("checkin")).toEqual({ kind: "unknown", target: "checkin" });
+    expect(resolveNavTarget("console")).toEqual({ kind: "unknown", target: "console" });
   });
   it("does NOT treat removed 'today' as a tab", () => {
     expect(resolveNavTarget("today")).toEqual({ kind: "unknown", target: "today" });
@@ -67,6 +71,15 @@ describe("nav — understand aux view", () => {
   });
   it("lists understand in the allowlist", () => {
     expect(KNOWN_AUX_VIEWS).toContain("understand");
+  });
+});
+
+describe("nav — learn aux view", () => {
+  it("resolves learn to an aux view", () => {
+    expect(resolveNavTarget("learn")).toEqual({ kind: "aux", view: "learn" });
+  });
+  it("lists learn in the allowlist", () => {
+    expect(KNOWN_AUX_VIEWS).toContain("learn");
   });
 });
 

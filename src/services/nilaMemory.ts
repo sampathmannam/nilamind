@@ -40,7 +40,7 @@ function remember(note: string): void {
   try {
     secureLocal.setItem(KEY, JSON.stringify(trimmed));
   } catch (e) {
-    console.error("Failed to save Nila memory:", e);
+    console.error("Failed to save Nila memory");
   }
 }
 

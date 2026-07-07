@@ -48,7 +48,7 @@ function writeArr<T>(key: string, arr: T[]): void {
   try {
     secureLocal.setItem(key, JSON.stringify(arr));
   } catch (e) {
-    console.error("nilaProfile save failed:", e);
+    console.error("nilaProfile save failed");
   }
 }
 

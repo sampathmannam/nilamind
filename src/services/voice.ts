@@ -10,6 +10,7 @@ import { TextToSpeech } from "@capacitor-community/text-to-speech";
 import { SpeechRecognition } from "@capacitor-community/speech-recognition";
 import { speakAfHeart, stopAfHeart, AF_HEART_ID } from "./afHeartVoice";
 import { voskListenOnce, voskListenForCall, stopVosk, voskSttAvailable } from "./voskStt";
+import { ls } from "./storageUtils";
 
 const VOICE_KEY = "nilamind_voice"; // non-sensitive UI pref → plain localStorage (sync, pre-gate safe)
 
@@ -63,9 +64,6 @@ async function resolveVoice(voiceId?: string): Promise<{ index: number; lang: st
   return { index, lang: String(all[index]?.lang || "en-US") };
 }
 
-const ls = (): Storage | null => {
-  try { return (globalThis as any).localStorage ?? null; } catch { return null; }
-};
 
 export function getVoicePrefs(): VoicePrefs {
   try {

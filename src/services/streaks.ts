@@ -5,8 +5,7 @@
 // Pure + local; reads the encrypted-at-rest data via secureLocal.
 
 import { secureLocal } from "./secureLocal";
-
-const DAY = 86400000;
+import { DAY_MS } from "./storageUtils";
 export const ymd = (d: Date): string =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
@@ -39,10 +38,10 @@ export function computeStreak(): StreakInfo {
   // Current: count back consecutive active days, starting today (or yesterday if today's not logged).
   let current = 0;
   let cursor = new Date(today);
-  if (!dates.has(ymd(cursor))) cursor = new Date(today.getTime() - DAY);
+  if (!dates.has(ymd(cursor))) cursor = new Date(today.getTime() - DAY_MS);
   while (dates.has(ymd(cursor))) {
     current++;
-    cursor = new Date(cursor.getTime() - DAY);
+    cursor = new Date(cursor.getTime() - DAY_MS);
   }
 
   // Longest: scan the sorted dates for the longest run of consecutive days.
@@ -50,7 +49,7 @@ export function computeStreak(): StreakInfo {
   let longest = 0, run = 0, prev: number | null = null;
   for (const ds of sorted) {
     const t = new Date(ds + "T00:00:00").getTime();
-    run = prev !== null && Math.round((t - prev) / DAY) === 1 ? run + 1 : 1;
+    run = prev !== null && Math.round((t - prev) / DAY_MS) === 1 ? run + 1 : 1;
     if (run > longest) longest = run;
     prev = t;
   }
@@ -91,7 +90,7 @@ export function computeCompassionateStreak(today: Date = new Date()): Compassion
 
   // Days since the most recent active day (capped to keep it bounded).
   let daysSinceLast = -1;
-  for (let k = 0, c = new Date(today); k <= 400; k++, c = new Date(c.getTime() - DAY)) {
+  for (let k = 0, c = new Date(today); k <= 400; k++, c = new Date(c.getTime() - DAY_MS)) {
     if (dates.has(ymd(c))) { daysSinceLast = k; break; }
   }
 
@@ -99,10 +98,10 @@ export function computeCompassionateStreak(today: Date = new Date()): Compassion
   let current = 0;
   let freezesUsed = 0;
   let cursor = new Date(today);
-  if (!dates.has(ymd(cursor))) cursor = new Date(cursor.getTime() - DAY); // today-grace
+  if (!dates.has(ymd(cursor))) cursor = new Date(cursor.getTime() - DAY_MS); // today-grace
   while (true) {
-    if (dates.has(ymd(cursor))) { current++; cursor = new Date(cursor.getTime() - DAY); continue; }
-    const prevDay = new Date(cursor.getTime() - DAY);
+    if (dates.has(ymd(cursor))) { current++; cursor = new Date(cursor.getTime() - DAY_MS); continue; }
+    const prevDay = new Date(cursor.getTime() - DAY_MS);
     if (freezesUsed < FREEZE_BUDGET && dates.has(ymd(prevDay))) {
       freezesUsed++; cursor = prevDay; continue; // forgive one missed day
     }

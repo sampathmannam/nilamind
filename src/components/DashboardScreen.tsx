@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend,
@@ -6,12 +6,12 @@ import {
 import {
   Flame, TrendingUp as TrendUpIcon, TrendingDown, Minus, Activity, MessageSquare,
   CalendarCheck, ClipboardCheck, Database, Sparkles, ShieldAlert, Clock, BrainCircuit,
-  Loader2, Tag,
+  Loader2, Tag, Lightbulb,
 } from "lucide-react";
 import Markdown from "react-markdown";
 import { loadMoodHistory } from "../services/moodHistory";
 import { loadAssessments, latestFor, INSTRUMENTS, type InstrumentId } from "../services/assessments";
-import { assessmentInsights } from "../services/patternInsights";
+import { assessmentInsights, generateInsights, daysOfData, type Insight } from "../services/patternInsights";
 import { computeStreak } from "../services/streaks";
 import { nilaStats } from "../services/nilaSessions";
 import { secureLocal } from "../services/secureLocal";
@@ -22,9 +22,10 @@ import {
   emotionDistribution, derivedObservations, episodePatterns, quickNoteTags,
   moodTrend, contextTrend,
 } from "../services/dashboardInsights";
+import { getRecentSnapshots } from "../db/behaviourDb";
 import type { CheckInEntry, DiaryCardEntry, EpisodeRecord } from "../types";
+import { DAY_MS } from "../services/storageUtils";
 
-const DAY = 86400000;
 const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 const r1 = (n: number) => Math.round(n * 10) / 10;
 const avg = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null);
@@ -41,12 +42,14 @@ function readArr<T>(key: string): T[] {
 
 // The USER's own private analytics. Local sections never leave the device. The single off-device
 // feature — Nila's Deep Evaluation — is user-initiated and explicitly disclosed.
-export default function DashboardScreen({ onManageData, onOpenConsole }: { onManageData?: () => void; onOpenConsole?: () => void }) {
+export default function DashboardScreen({ onManageData }: { onManageData?: () => void }) {
   const [timeRange, setTimeRange] = useState<"7d" | "30d">("30d");
   const [chartTab, setChartTab] = useState<"emotion" | "context">("emotion");
   const [isAssessing, setIsAssessing] = useState(false);
   const [assessmentResult, setAssessmentResult] = useState<string | null>(null);
   const [assessmentCrisis, setAssessmentCrisis] = useState(false);
+  const [behaviourInsights, setBehaviourInsights] = useState<Insight[]>([]);
+  const [behaviourDays, setBehaviourDays] = useState(0);
 
   const data = useMemo(() => {
     const mood = loadMoodHistory().sort((a, b) => a.date.localeCompare(b.date));
@@ -67,7 +70,7 @@ export default function DashboardScreen({ onManageData, onOpenConsole }: { onMan
     const wk = (start: number, end: number) =>
       mood.filter((m) => {
         const t = new Date(m.date + "T00:00:00").getTime();
-        const lo = today.getTime() - end * DAY, hi = today.getTime() - start * DAY;
+        const lo = today.getTime() - end * DAY_MS, hi = today.getTime() - start * DAY_MS;
         return t >= lo && t < hi && m.intensity != null;
       }).map((m) => m.intensity as number);
     const thisWk = wk(0, 7), lastWk = wk(7, 14);
@@ -75,7 +78,7 @@ export default function DashboardScreen({ onManageData, onOpenConsole }: { onMan
 
     const activeSet = new Set(mood.filter((m) => m.intensity != null || m.shame != null).map((m) => m.date));
     let freq14 = 0;
-    for (let i = 0; i < 14; i++) if (activeSet.has(ymd(new Date(today.getTime() - i * DAY)))) freq14++;
+    for (let i = 0; i < 14; i++) if (activeSet.has(ymd(new Date(today.getTime() - i * DAY_MS)))) freq14++;
 
     const trajectories = assessmentInsights(assessments, mood);
 
@@ -83,6 +86,20 @@ export default function DashboardScreen({ onManageData, onOpenConsole }: { onMan
   }, []);
 
   const { mood, streak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes } = data;
+
+  // Load behaviour snapshots async and compute daily-behaviour insights
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const snaps = await getRecentSnapshots(30);
+        if (cancelled) return;
+        setBehaviourInsights(generateInsights(snaps, mood));
+        setBehaviourDays(daysOfData(snaps, mood));
+      } catch { /* fresh db or no permission */ }
+    })();
+    return () => { cancelled = true; };
+  }, [mood]);
 
   const emoBars = useMemo(() => emotionDistribution(checkins, stripProvenance), [checkins]);
   const observations = useMemo(() => derivedObservations(checkins, diaryEntries), [checkins, diaryEntries]);
@@ -157,10 +174,10 @@ export default function DashboardScreen({ onManageData, onOpenConsole }: { onMan
         <div className="glass rounded-2xl p-4 space-y-4">
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 font-mono flex items-center gap-1.5"><TrendUpIcon className="w-3.5 h-3.5" /> Trend</h3>
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500 font-mono flex items-center gap-1.5"><TrendUpIcon className="w-3.5 h-3.5" /> Trend</h2>
               <div className="flex bg-page border border-slate-800 rounded-lg overflow-hidden p-0.5">
                 {(["7d", "30d"] as const).map((r) => (
-                  <button key={r} onClick={() => setTimeRange(r)}
+                  <button key={r} onClick={() => setTimeRange(r)} aria-label={`Show ${r === "7d" ? "7 day" : "30 day"} trend`} aria-pressed={timeRange === r}
                     className={`text-[10px] px-2 py-1 rounded-md font-medium transition-colors ${timeRange === r ? "bg-slate-800 text-slate-200" : "text-slate-500 hover:text-slate-300"}`}>
                     {r.toUpperCase()}
                   </button>
@@ -168,13 +185,13 @@ export default function DashboardScreen({ onManageData, onOpenConsole }: { onMan
               </div>
             </div>
             <div className="flex bg-page border border-slate-800 rounded-lg overflow-hidden p-0.5 self-start">
-              <button onClick={() => setChartTab("emotion")}
+              <button onClick={() => setChartTab("emotion")} aria-label="Show emotion trend" aria-pressed={chartTab === "emotion"}
                 className={`text-[10px] px-2 py-1 rounded-md font-medium transition-colors ${chartTab === "emotion" ? "bg-purple-500/20 text-purple-400" : "text-slate-500 hover:text-slate-300"}`}>Emotion</button>
-              <button onClick={() => setChartTab("context")}
+              <button onClick={() => setChartTab("context")} aria-label="Show sleep and social context" aria-pressed={chartTab === "context"}
                 className={`text-[10px] px-2 py-1 rounded-md font-medium transition-colors ${chartTab === "context" ? "bg-blue-500/20 text-blue-400" : "text-slate-500 hover:text-slate-300"}`}>Context</button>
             </div>
           </div>
-          <div className="w-full h-48">
+          <div className="w-full h-48" role="img" aria-label={chartTab === "emotion" ? "Line chart showing emotional intensity trend over time. Lower values indicate calmer states." : "Line chart showing sleep hours and social connection over time."}>
             <ResponsiveContainer width="100%" height="100%">
               {chartTab === "emotion" ? (
                 <LineChart data={emotionTrend}>
@@ -207,8 +224,8 @@ export default function DashboardScreen({ onManageData, onOpenConsole }: { onMan
       {/* Emotion distribution (suffix-stripped counts) */}
       {emoBars.length > 0 && (
         <div className="glass rounded-2xl p-4 space-y-3">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 font-mono">Emotion log frequency</h3>
-          <div className="w-full h-44">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500 font-mono">Emotion log frequency</h2>
+          <div className="w-full h-44" role="img" aria-label="Bar chart showing frequency of each emotion logged. Taller bars indicate more frequent emotions.">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={emoBars}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#2E2922" vertical={false} />
@@ -250,9 +267,9 @@ export default function DashboardScreen({ onManageData, onOpenConsole }: { onMan
       {/* Derived observations */}
       {observations.length > 0 && (
         <div className="glass p-5 rounded-2xl space-y-3">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 font-mono flex items-center gap-1.5">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400 font-mono flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5 text-emerald-400" /> Patterns from your data
-          </h3>
+          </h2>
           <ul className="space-y-3">
             {observations.map((ins, i) => (
               <li key={i} className="text-xs text-slate-300 leading-relaxed flex items-start gap-2 bg-page p-3 rounded-xl border border-slate-850">
@@ -263,12 +280,32 @@ export default function DashboardScreen({ onManageData, onOpenConsole }: { onMan
         </div>
       )}
 
+      {/* Daily-behaviour insights (sleep, screen time, steps, etc.) */}
+      {behaviourInsights.length > 0 && (
+        <div className="glass p-5 rounded-2xl space-y-3">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400 font-mono flex items-center gap-1.5">
+            <Lightbulb className="w-3.5 h-3.5 text-amber-400" /> Behaviour insights
+            {behaviourDays > 0 && <span className="text-[10px] text-slate-600 normal-case tracking-normal ml-1">({behaviourDays} days of paired data)</span>}
+          </h2>
+          <ul className="space-y-3">
+            {behaviourInsights.map((ins) => (
+              <li key={ins.id} className={`text-xs leading-relaxed flex items-start gap-2 bg-page p-3 rounded-xl border ${
+                ins.direction === "risk" ? "border-amber-500/30" : ins.direction === "protective" ? "border-emerald-500/30" : "border-slate-850"
+              }`}>
+                <span className={`font-bold ${ins.direction === "risk" ? "text-amber-400" : ins.direction === "protective" ? "text-emerald-400" : "text-slate-400"}`}>●</span>
+                <span className="text-slate-300">{ins.finding}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {/* Quick-note tag cloud */}
       {topTags.length > 0 && (
         <div className="glass p-5 rounded-2xl space-y-3">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 font-mono flex items-center gap-1.5">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400 font-mono flex items-center gap-1.5">
             <Tag className="w-3.5 h-3.5 text-blue-400" /> Frequent quick-note subjects
-          </h3>
+          </h2>
           <div className="flex flex-wrap gap-2">
             {topTags.map(([tag, count]) => (
               <div key={tag} className="flex items-center bg-page border border-blue-900/50 rounded-lg px-2.5 py-1.5 overflow-hidden">
@@ -283,9 +320,9 @@ export default function DashboardScreen({ onManageData, onOpenConsole }: { onMan
       {/* Episode analytics (real stats only — NO fabricated correlations) */}
       {epPatterns && (
         <div className="bg-card border-y border-r border-slate-800 border-l-4 border-l-amber-500 p-5 rounded-r-2xl space-y-4">
-          <h3 className="text-xs font-semibold text-slate-100 flex items-center gap-1.5 uppercase tracking-wider font-mono">
+          <h2 className="text-xs font-semibold text-slate-100 flex items-center gap-1.5 uppercase tracking-wider font-mono">
             <ShieldAlert className="w-4 h-4 text-amber-500" /> Episode insights
-          </h3>
+          </h2>
           <div className="grid grid-cols-2 gap-3" id="episode-stat-cards">
             <div className="bg-page p-3 rounded-xl border border-slate-850 text-center space-y-1">
               <span className="text-[9px] uppercase font-mono tracking-widest text-slate-500">Peak spikes</span>
@@ -318,14 +355,15 @@ export default function DashboardScreen({ onManageData, onOpenConsole }: { onMan
         </div>
       )}
 
-      {/* Nila's Deep Evaluation — the ONLY off-device call, user-initiated + disclosed */}
+      {/* Nila's Deep Evaluation — runs fully on-device via the same local AI that powers your conversations.
+          User-initiated + disclosed. */}
       <div className="bg-card border border-purple-500/20 p-5 rounded-2xl space-y-4 shadow-[0_0_15px_rgba(168,85,247,0.05)]">
         <div>
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-purple-400 font-mono flex items-center gap-1.5 mb-1">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-purple-400 font-mono flex items-center gap-1.5 mb-1">
             <BrainCircuit className="w-4 h-4" /> Nila's Deep Evaluation ✨
-          </h3>
+          </h2>
           <p className="text-[11px] text-slate-400 leading-relaxed">
-            This sends your recent check-ins, diary cards (including any notes you've written), and episode records to Nila's AI for a deeper read — the only feature that sends anything off your device. Everything else stays on your device.
+            This asks Nila to analyze your recent check-ins, diary notes, and episode records — all on your device, using the same local AI that powers your conversations. Nothing leaves your phone.
           </p>
         </div>
         <button onClick={runDeepAssessment} disabled={isAssessing}
@@ -344,11 +382,6 @@ export default function DashboardScreen({ onManageData, onOpenConsole }: { onMan
         )}
       </div>
 
-      {onOpenConsole && (
-        <button onClick={onOpenConsole} id="dashboard-open-console" className="w-full bg-card border border-purple-500/20 hover:bg-raised text-purple-300 text-xs font-semibold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5">
-          <BrainCircuit className="w-3.5 h-3.5" /> Agent Console — everything at a glance
-        </button>
-      )}
       {onManageData && (
         <button onClick={onManageData} id="dashboard-manage-data" className="w-full glass hover:bg-raised text-slate-300 text-xs font-semibold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5">
           <Database className="w-3.5 h-3.5" /> Manage, export or delete your data

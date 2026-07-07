@@ -12,7 +12,7 @@
 
 <h1 align="center">NilaMind</h1>
 
-<p align="center"><b>A privacy-first, fully on-device mental-health companion.</b> · <em>v1.5</em> · <a href="https://nilamind.netlify.app">try it in your browser →</a></p>
+<p align="center"><b>A privacy-first, fully on-device mental-health companion.</b> · <em>v1.6</em> · <a href="https://nilamind.netlify.app">try it in your browser →</a></p>
 
 NilaMind is a mobile app built around *Nila* — someone you can talk to (by voice
 or text) for everyday emotional support. The **language model, the crisis-safety
@@ -107,6 +107,22 @@ research-grounded tools, guided flows, private memory — do the heavy lifting.
 - **Evidence-based tools, surfaced when they fit** — a research-grounded skills
   library (DBT/CBT/ACT/CFT), grounding & breathing, a sleep wind-down, an
   "understand" psychoeducation library, and a trusted-person reach-out bridge.
+- **Structured programs** — evidence-based multi-step protocols for Behavioral
+  Activation (depression), Worry Postponement (GAD), Self-Compassion (shame), and
+  Sleep Wind-Down (insomnia-safe for bipolar). Deterministic step prompts, no model
+  hallucination. Resume across app restarts.
+- **Mania-first safeguards** — elevation guard detects med-stopping, grandiosity,
+  impulsive spending, racing thoughts, pressured speech, hypersexuality, and sleep-
+  denial euphoria. Anti-sycophancy Rule 6 blocks validation of manic delusions.
+- **Emotion granularity coaching** — 72 fine-grained emotions across 6 families
+  help name feelings precisely ("betrayed", not just "angry"). Built into the
+  4-step check-in.
+- **Between-sessions brain** — overnight reflection reads your day's conversation,
+  extracts what mattered, and seeds a warm morning greeting. Weekly synthesis
+  surfaces gentle patterns you might not notice yourself.
+- **CBT scaffolding** — auto-drafts thought records from venting text; spots 10
+  cognitive distortions (all-or-nothing, catastrophizing, labeling, etc.) and
+  gently names them. Deterministic detection, model only narrates.
 - **Local-only memory & tools** — durable profile/insights, daily reflection,
   mood tracking, a "letter to my unwell self" pact, and a dependency guard that
   nudges you toward real people. All stored **encrypted on-device** (AES-256-GCM
@@ -193,7 +209,7 @@ won't cross.
 
 ## Status
 
-Experimental and personal (**v1.5**). Not clinically validated, not a product, no
+Experimental and personal (**v1.6**). Not clinically validated, not a product, no
 support guarantees. Shared in the hope it's useful — use at your own risk.
 
 ## License

@@ -16,7 +16,17 @@ import { recentMemoryLines } from "./nilaMemory";
 import { getActiveProgress } from "./protocolProgress";
 import { insightsContextBlock } from "./nilaInsights";
 import { profileContextBlock } from "./nilaProfile";
+import { selfReportSleepSignal, selfReportedSleepNights } from "./sleepInsight";
+import type { SleepSignal } from "./healthConnect";
+import { topFireableSignal, type InflectionSignal } from "./nilaInflection";
+import { getInflectionEnabled } from "./inflectionPrefs";
 import { INSTRUMENTS } from "./assessments";
+import { DAY_MS } from "./storageUtils";
+import { computeStateDigest, stateDigestContextBlock } from "./stateDigest";
+import { parseSafetyPlan } from "./safetyPlan";
+import { safetyPlanFollowUpContextBlock } from "./safetyPlanFollowUp";
+import { sleepHoursVariability, variabilityContextBlock } from "./sleepHoursVariability";
+import type { VariabilitySignal } from "./sleepHoursVariability";
 
 function readArray(key: string): any[] {
   try {
@@ -50,7 +60,7 @@ function relativeDay(dateStr: string): string {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   d.setHours(0, 0, 0, 0);
-  const diff = Math.round((today.getTime() - d.getTime()) / 86400000);
+  const diff = Math.round((today.getTime() - d.getTime()) / DAY_MS);
   if (diff <= 0) return "today";
   if (diff === 1) return "yesterday";
   if (diff <= 6) return "earlier this week";
@@ -77,6 +87,45 @@ function joinNatural(items: string[]): string {
 }
 
 /**
+ * Surface the current TRAJECTORY signal — today the short-sleep manic-prodrome (healthConnect.shortSleepSignal,
+ * Lim 2024 / Lewis 2017) — as a gentle heads-up for Nila. PURE (the signal is passed in), so it's unit-testable
+ * and the live wiring stays a one-liner. Empty unless firing. Framed sense→ask→confirm: hold it gently and,
+ * only if it fits, ask about rest — never alarm, never diagnose. For a manic-first app this is the earliest
+ * warning the app has; before this it reached the user AND the chat nowhere (2026-07-06 audit).
+ */
+export function trajectoryContextBlock(sleep: SleepSignal | null): string {
+  if (!sleep?.firing) return "";
+  const base = sleep.baselineHours ? ` (~${sleep.baselineHours}h)` : "";
+  return [
+    "SOMETHING TO HOLD GENTLY (from their own logs)",
+    `Their self-logged sleep has been short lately — ${sleep.nightsBelow} night${sleep.nightsBelow === 1 ? "" : "s"} ` +
+      `below their usual${base}. For them, short sleep can come before feeling wired or speeding up, so hold this ` +
+      "gently and — only if it fits the moment — ask softly how rest has been. Never alarm them, never diagnose, " +
+      "never quote this back as a fact.",
+  ].join("\n");
+}
+
+/**
+ * Feed a detected trajectory SHIFT (nilaInflection — a reliable-change / valence-aware trend in the person's
+ * OWN check-in + screening history) into Nila's awareness. PURE (signal passed in). Before this the shift was
+ * only a UI opener bubble, so the model reply that followed had no idea a deterioration was flagged (audit
+ * 2026-07-06). Held gently: never lead with it, never quote it as fact. The call site gates on the user's
+ * inflection opt-in, so enabling inflection makes Nila attuned — not just adds a bubble.
+ */
+export function inflectionContextBlock(sig: InflectionSignal | null): string {
+  if (!sig) return "";
+  const header = "A SHIFT IN THEIR OWN TRAJECTORY (hold gently)";
+  if (sig.direction === "improvement") {
+    return [header,
+      `Their own recent data shows things easing a little (${sig.detail}). If it feels true to them you can ` +
+      "gently notice it with them — warmly, without overclaiming or making them perform being okay."].join("\n");
+  }
+  return [header,
+    `Their own recent data shows a downward shift (${sig.detail}). Hold this gently — don't lead with it or quote ` +
+    "it as a fact; let it make you a little more attentive, and only if the moment fits, ask softly how they've been."].join("\n");
+}
+
+/**
  * Build a compact, warm briefing of what Nila knows about this person, from their on-device history.
  * Returns "" when there's essentially nothing yet — Nila is told (in its prompt) to simply be present
  * and not pretend to know someone it doesn't.
@@ -93,7 +142,7 @@ export function buildPersonalContext(): string {
     })
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-  if (checkins.length) {
+    if (checkins.length) {
     const intensities = checkins.map((e) => Number(e.intensity)).filter((n) => !isNaN(n));
     const avg = intensities.length
       ? Math.round((intensities.reduce((a, n) => a + n, 0) / intensities.length) * 10) / 10
@@ -108,6 +157,15 @@ export function buildPersonalContext(): string {
     l += ".";
     lines.push(l);
     if (lastEmotion) lines.push(`- Their most recent check-in: "${lastEmotion}", ${relativeDay(last.date)}.`);
+
+    // Granular emotions — rich feeling words they used beyond just "Low"/"Anxious"
+    const granular = checkins
+      .filter((e) => typeof e?.granularEmotion === "string" && (e.granularEmotion as string).length > 0)
+      .map((e) => e.granularEmotion as string);
+    if (granular.length >= 2) {
+      const distinct = [...new Set(granular)].slice(0, 4);
+      lines.push(`- When they named their feelings precisely, they used words like: ${joinNatural(distinct)}.`);
+    }
   }
 
   // ── What has helped (episodes + diary) ────────────────────────────────────
@@ -141,6 +199,26 @@ export function buildPersonalContext(): string {
     /* streak is best-effort */
   }
 
+  // ── Behavioural Activation (recent activity log) ─────────────────────────
+  try {
+    const { computeInsight, loadActivities } = require("./behaviouralActivation");
+    const baActs = loadActivities();
+    const twoWeeksAgo = new Date(Date.now() - 14 * 86400000).toISOString().split("T")[0];
+    const recent = baActs.filter((a: any) => a.date >= twoWeeksAgo);
+    if (recent.length > 0) {
+      const done = recent.filter((a: any) => a.status === "done");
+      if (done.length > 0) {
+        let baLine = `- In the last two weeks they logged ${done.length} activit${done.length === 1 ? "y" : "ies"} they did.`;
+        const insight = computeInsight(recent);
+        if (insight.topCategory) baLine += ` ${insight.topCategory.label} activities seem to lift them most.`;
+        if (insight.avgMastery != null) baLine += ` Avg mastery: ${Math.round(insight.avgMastery)}/10.`;
+        lines.push(baLine);
+      }
+    }
+  } catch {
+    /* BA data is best-effort */
+  }
+
   // ── Latest screening band (descriptive, NOT a diagnosis) ──────────────────
   const band = latestScreeningBand();
   if (band) lines.push(`- ${band} (from a self-screening they took — context only, never to be quoted back as a label).`);
@@ -151,8 +229,24 @@ export function buildPersonalContext(): string {
   const insights = insightsContextBlock();
   // User-owned profile — Core facts + Active focus, captured only with their say-so (services/nilaProfile.ts).
   const profile = profileContextBlock();
+  // Current trajectory (the short-sleep manic-prodrome) — the earliest warning a manic-first app has.
+  const trajectory = trajectoryContextBlock(selfReportSleepSignal());
+  // Sleep hours variability — circadian regularity signal (C1). Soft-signal nudge only.
+  const sleepVariability = variabilityContextBlock(sleepHoursVariability(selfReportedSleepNights()));
+  // A detected trend shift — only when the user has opted into inflection awareness.
+  const inflection = getInflectionEnabled() ? inflectionContextBlock(topFireableSignal()) : "";
 
-  if (lines.length === 0 && !memory && !insights && !profile) return "";
+  // Safety-plan follow-up (B3 — Stanley-Brown loop). Only generates a block when the plan is stale.
+  // Gentle invitation, never a demand. Never surfaced without the user choosing to engage.
+  let safetyPlanFollowUp = "";
+  try {
+    const raw = secureLocal.getItem("nilamind_safetyplan");
+    if (raw) {
+      safetyPlanFollowUp = safetyPlanFollowUpContextBlock(parseSafetyPlan(raw));
+    }
+  } catch { /* best-effort, never block context assembly */ }
+
+  if (lines.length === 0 && !memory && !insights && !profile && !trajectory && !inflection && !safetyPlanFollowUp && !sleepVariability) return "";
 
   const out: string[] = [
     "WHAT YOU ALREADY KNOW ABOUT THEM",
@@ -160,6 +254,9 @@ export function buildPersonalContext(): string {
     "way a friend recalls things — never read them back like a report, never lead with them, and never",
     "claim to know more than this. If something seems stale, trust what they tell you now.",
   ];
+  if (trajectory) out.push(trajectory);
+  if (sleepVariability) out.push(sleepVariability);
+  if (inflection) out.push(inflection);
   if (profile) out.push(profile);
   if (insights) {
     out.push("Over time (longer-term things you've come to understand about them — hold gently, may be out of date):");
@@ -173,6 +270,22 @@ export function buildPersonalContext(): string {
     out.push("From their check-ins (recently):");
     out.push(...lines);
   }
+
+  // Unified state digest — consolidates check-ins, BA, sleep, inflection, screening into one block
+  try {
+    const digest = computeStateDigest();
+    const digestBlock = stateDigestContextBlock(digest);
+    if (digestBlock) {
+      out.push("Current state summary:");
+      out.push(digestBlock);
+    }
+  } catch { /* best-effort */ }
+
+  if (safetyPlanFollowUp) {
+    out.push("Safety-plan follow-up (gentle invitation, never a push):");
+    out.push(safetyPlanFollowUp);
+  }
+
   return out.join("\n");
 }
 

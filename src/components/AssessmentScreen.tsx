@@ -408,7 +408,7 @@ function TrendBlock({ instrumentId, history }: { instrumentId: InstrumentId; his
       <h4 className="text-[10px] uppercase font-mono tracking-widest text-slate-400">
         {inst.name} trend · last {data.length}
       </h4>
-      <div className="h-36 -ml-2">
+      <div className="h-36 -ml-2" role="img" aria-label={`${inst.name} trend chart over last ${data.length} assessments`}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
             <XAxis dataKey="date" tick={{ fontSize: 9, fill: "#948A7E" }} stroke="#2E2922" />

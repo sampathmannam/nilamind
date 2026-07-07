@@ -4,7 +4,7 @@ const store: Record<string, string> = {};
 vi.mock("./secureLocal", () => ({ secureLocal: { getItem: (k: string) => store[k] ?? null, setItem: (k: string, v: string) => { store[k] = v; } } }));
 vi.mock("./nilaSessions", () => ({ loadNilaTurns: vi.fn(() => []) }));
 
-import { dependencySignal, activeDependencyNudge, dismissDependencyNudge } from "./dependencyGuard";
+import { dependencySignal, activeDependencyNudge, dismissDependencyNudge, activeHighTurnNudge } from "./dependencyGuard";
 import { loadNilaTurns } from "./nilaSessions";
 
 const turnsOn = (date: string, n: number) =>
@@ -38,5 +38,35 @@ describe("activeDependencyNudge — week-long dismiss", () => {
     dismissDependencyNudge("2026-06-29");
     expect(activeDependencyNudge("2026-06-29")).toBe(false);
     expect(activeDependencyNudge("2026-07-02")).toBe(false); // 3 days later — still dismissed
+  });
+});
+
+describe("activeHighTurnNudge — single-session binge detection", () => {
+  it("fires when a single session exceeds ~20 turns on the same day", () => {
+    const turns = turnsOn("2026-06-29", 25);
+    expect(activeHighTurnNudge(turns, "2026-06-29")).toBe(true);
+  });
+
+  it("fires at exactly the threshold", () => {
+    const turns = turnsOn("2026-06-29", 20);
+    expect(activeHighTurnNudge(turns, "2026-06-29")).toBe(true);
+  });
+
+  it("does NOT fire below the threshold", () => {
+    const turns = turnsOn("2026-06-29", 15);
+    expect(activeHighTurnNudge(turns, "2026-06-29")).toBe(false);
+  });
+
+  it("does NOT fire when the binge is spread across days (not a single session)", () => {
+    const turns = [
+      ...turnsOn("2026-06-28", 15),
+      ...turnsOn("2026-06-29", 15),
+    ];
+    expect(activeHighTurnNudge(turns, "2026-06-29")).toBe(false);
+  });
+
+  it("does NOT fire with empty or falsy inputs", () => {
+    expect(activeHighTurnNudge([], "2026-06-29")).toBe(false);
+    expect(activeHighTurnNudge([], "")).toBe(false);
   });
 });

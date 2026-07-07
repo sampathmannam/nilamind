@@ -24,13 +24,16 @@ export default function CrisisOverlay({
 
   useEffect(() => {
     if (isOpen) {
-      // Reload safety plan when opened to make sure it is up to date (defensive parse — the crisis surface
-      // must never blank the user's plan on a corrupt/malformed blob).
       const saved = secureLocal.getItem("nilamind_safetyplan");
       if (saved) setSafetyPlan(parseSafetyPlan(saved));
-      // a11y: move focus INTO the dialog so a screen-reader / keyboard user lands here, not behind the overlay.
       headingRef.current?.focus();
+      // Lock background scroll while crisis overlay is open — a person in crisis
+      // should never accidentally scroll away from the safety surface.
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
     }
+    return () => { document.body.style.overflow = ""; };
   }, [isOpen]);
 
   if (!isOpen) return null;

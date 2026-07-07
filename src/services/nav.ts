@@ -3,7 +3,7 @@
 // unknown/typo'd target is a deliberate no-op (with a dev warning at the call site) instead of
 // silently rendering a blank screen (redesign §4).
 
-export type TabView = "checkin" | "diary" | "plan" | "nila" | "tools" | "you";
+export type TabView = "diary" | "plan" | "nila" | "tools" | "you";
 
 export type AuxView =
   | "thought_record"
@@ -20,16 +20,17 @@ export type AuxView =
   | "winddown"
   | "understand"
   | "reach_out"
-  | "console"
-  | "pact";
+  | "pact"
+  | "learn";
 
 export const TAB_TARGETS: readonly TabView[] = [
-  "checkin", "diary", "plan", "nila", "tools", "you",
+  "diary", "plan", "nila", "tools", "you",
 ];
 
 export const KNOWN_AUX_VIEWS: readonly AuxView[] = [
   "thought_record", "self_compassion", "settings", "behaviour", "assessment",
-  "values_to_action", "skills", "dashboard", "your_data", "why", "nila_memory", "winddown", "understand", "reach_out", "console", "pact",
+  "values_to_action", "skills", "dashboard", "your_data", "why", "nila_memory", "winddown", "understand", "reach_out", "pact",
+  "learn",
 ];
 
 export type NavResolution =

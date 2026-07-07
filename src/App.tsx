@@ -1,7 +1,8 @@
 import { secureLocal, onPersistError, isPassthrough } from "./services/secureLocal";
 import React, { useState, useEffect, useCallback, lazy, Suspense } from "react";
-import { Sparkles, Wrench, User, ChevronLeft } from "lucide-react";
+import { Sparkles, Wrench, User, ChevronLeft, Shield } from "lucide-react";
 import { App as CapApp } from "@capacitor/app";
+import type { ThoughtRecordDraft } from "./services/thoughtRecordDraft";
 
 // EAGER (welded into the boot bundle) — every screen on the first-paint or crisis path. These must render
 // synchronously with NO chunk fetch: the default Nila tab, the two hubs you reach in one tap, the voice
@@ -19,7 +20,6 @@ import YouScreen from "./components/YouScreen";
 // This lifts ~17 screen components out of the eager boot bundle so a cold open parses/evals less at first
 // paint. On native the chunks are bundled on-disk, so the first open of one is a fast local read (no
 // network), covered by the calm <Suspense> fallback below. NONE of these is a crisis-entry surface.
-const CheckInScreen = lazy(() => import("./components/CheckInScreen"));
 const DiaryCardScreen = lazy(() => import("./components/DiaryCardScreen"));
 const ThoughtRecordScreen = lazy(() => import("./components/ThoughtRecordScreen"));
 const SelfCompassionScreen = lazy(() => import("./components/SelfCompassionScreen"));
@@ -31,11 +31,11 @@ const PsychoedScreen = lazy(() => import("./components/PsychoedScreen"));
 const ReachOutScreen = lazy(() => import("./components/ReachOutScreen"));
 const ValuesToActionScreen = lazy(() => import("./components/ValuesToActionScreen"));
 const DashboardScreen = lazy(() => import("./components/DashboardScreen"));
-const AgentConsoleScreen = lazy(() => import("./components/AgentConsoleScreen"));
 const PactScreen = lazy(() => import("./components/PactScreen"));
 const YourDataScreen = lazy(() => import("./components/YourDataScreen"));
 const NilaMemoryScreen = lazy(() => import("./components/NilaMemoryScreen"));
 const WhyScreen = lazy(() => import("./components/WhyScreen"));
+const LearnScreen = lazy(() => import("./components/LearnScreen"));
 const SettingsScreen = lazy(() => import("./components/SettingsScreen"));
 
 import { AuxView, TabView, resolveNavTarget } from "./services/nav";
@@ -153,7 +153,7 @@ export default function App() {
         const parsed: CheckInEntry[] = JSON.parse(saved);
         setHasRecentLogs(parsed.length > 0);
       } catch (e) {
-        console.error(e);
+        console.error("Failed to parse stored check-in data");
       }
     }
     // Refresh the home-screen widget mirror after any check-in / on load (Phase 7). Best-effort.
@@ -211,7 +211,7 @@ export default function App() {
       if (s.isCrisisOverlayOpen) { setIsCrisisOverlayOpen(false); return; }
       if (s.isCallOpen) { setIsCallOpen(false); return; }
       if (s.auxView) { setAuxView(s.auxView === "your_data" ? "dashboard" : null); return; }
-      if (s.activeTab === "checkin" || s.activeTab === "diary" || s.activeTab === "plan") { setActiveTab("tools"); return; }
+      if (s.activeTab === "diary" || s.activeTab === "plan") { setActiveTab("tools"); return; }
       if (s.activeTab !== "nila") { setActiveTab("nila"); return; }
       void CapApp.exitApp();
     }).then((h) => { handle = h; if (removed) h.remove(); }); // …remove it the moment it registers (no dup/stale listener)
@@ -223,6 +223,7 @@ export default function App() {
   // overlay so the hubs don't each need to know the tab-vs-auxView distinction (redesign R3).
   // When Nila's inline "Practice this" card opens the Skills Library, focus that skill (AP3).
   const [focusSkillId, setFocusSkillId] = useState<string | undefined>(undefined);
+  const [thoughtDraft, setThoughtDraft] = useState<ThoughtRecordDraft | undefined>(undefined);
 
   const go = (target: string) => {
     setFocusSkillId(undefined); // any general navigation clears a prior Nila skill focus
@@ -351,7 +352,8 @@ export default function App() {
       />
 
       {/* CORE FRAME CONTAINER */}
-      <div
+      <main
+        id="main-content"
         className={nilaFull ? "w-full flex flex-col overflow-hidden px-4" : "max-w-md mx-auto min-h-screen px-4"}
         style={nilaFull
           ? { height: '100dvh', paddingTop: 'max(env(safe-area-inset-top, 0px), 16px)', paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 64px)' }
@@ -409,17 +411,6 @@ export default function App() {
             </button>
             <ValuesToActionScreen />
           </div>
-        ) : auxView === "console" ? (
-          <div className="space-y-4">
-            <button
-               onClick={() => setAuxView(null)}
-               className="flex items-center gap-1.5 text-slate-300 hover:text-white font-semibold py-3 px-1 -ml-1 mb-2 focus:outline-none cursor-pointer active:opacity-70"
-               aria-label="Back"
-            >
-              <ChevronLeft className="w-5 h-5" /> Back
-            </button>
-            <AgentConsoleScreen onOpenDashboard={() => setAuxView("dashboard")} onOpenMemory={() => setAuxView("nila_memory")} onOpenPact={() => setAuxView("pact")} />
-          </div>
         ) : auxView === "pact" ? (
           <div className="space-y-4">
             <button
@@ -440,7 +431,7 @@ export default function App() {
             >
               <ChevronLeft className="w-5 h-5" /> Back
             </button>
-            <DashboardScreen onManageData={() => setAuxView("your_data")} onOpenConsole={() => setAuxView("console")} />
+            <DashboardScreen onManageData={() => setAuxView("your_data")} />
           </div>
         ) : auxView === "your_data" ? (
           <div className="space-y-4">
@@ -478,13 +469,13 @@ export default function App() {
         ) : auxView === "thought_record" ? (
           <div className="space-y-4">
             <button
-               onClick={() => setAuxView(null)}
+               onClick={() => { setAuxView(null); setThoughtDraft(undefined); }}
                className="flex items-center gap-1.5 text-slate-300 hover:text-white font-semibold py-3 px-1 -ml-1 mb-2 focus:outline-none cursor-pointer active:opacity-70"
                aria-label="Back"
             >
               <ChevronLeft className="w-5 h-5" /> Back
             </button>
-            <ThoughtRecordScreen />
+            <ThoughtRecordScreen draft={thoughtDraft} />
           </div>
         ) : auxView === "self_compassion" ? (
           <div className="space-y-4">
@@ -547,20 +538,20 @@ export default function App() {
               }}
             />
           </div>
+        ) : auxView === "learn" ? (
+          <div className="space-y-4">
+            <button
+               onClick={() => setAuxView(null)}
+               className="flex items-center gap-1.5 text-slate-300 hover:text-white font-semibold py-3 px-1 -ml-1 mb-2 focus:outline-none cursor-pointer active:opacity-70"
+               aria-label="Back"
+            >
+              <ChevronLeft className="w-5 h-5" /> Back
+            </button>
+            <LearnScreen />
+          </div>
         ) : (
           /* STANDARD TAB NAVIGATION ROUTING */
           <div className={nilaFull ? "flex-1 flex flex-col min-h-0" : undefined}>
-
-            {/* FULL EMOTION CHECK-IN SCREEN */}
-            {activeTab === "checkin" && (
-              <div>
-                {dashBack}
-                <CheckInScreen
-                  onCheckInSaved={checkRecentLogs}
-                  onNavigateToCoach={() => setActiveTab("nila")}
-                />
-              </div>
-            )}
 
             {/* DBT DIARY CARD DAILY SCREEN */}
             {activeTab === "diary" && (
@@ -590,6 +581,7 @@ export default function App() {
                   onNavigateToBreathing={() => setActiveTab("plan")}
                   onAgentNavigate={(view) => go(view)}
                   onOpenSkill={(id) => { setFocusSkillId(id); setAuxView("skills"); }}
+                  onOpenThoughtRecord={(d) => { setThoughtDraft(d); setAuxView("thought_record"); }}
                   onStartCall={() => setIsCallOpen(true)}
                   onEnterEpisode={enterEpisode}
                   onLaunchScreening={(instrument) => { setScreeningInstrument(instrument); setAuxView("assessment"); }}
@@ -611,18 +603,18 @@ export default function App() {
           </div>
         )}
         </Suspense>
-      </div>
+      </main>
 
       {/* CORE PERSISTENT FIXED FOOTER NAVIGATION TABS */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 bg-card border-t border-slate-800 py-2 px-1 text-center shadow-lg" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 8px)' }} id="app-footer-tabs">
-        <div className="max-w-md mx-auto grid grid-cols-3 gap-1">
+      <nav aria-label="Main navigation" className="fixed bottom-0 left-0 right-0 z-30 bg-card border-t border-slate-800 py-2 px-1 text-center shadow-lg" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 8px)' }} id="app-footer-tabs">
+        <div className="max-w-md mx-auto grid grid-cols-4 gap-1">
 
           {/* Active tab is cued by MORE than colour (accessibility: colour-only state fails for low-vision /
               colour-blind users): the active tab gets a filled pill background, bold weight, and a top
               indicator bar; inactive tabs stay medium-weight and muted. Labels raised 10px → 11px. */}
           {([
             { tab: "nila", label: "Nila", Icon: Sparkles, active: activeTab === "nila" && !auxView },
-            { tab: "tools", label: "Tools", Icon: Wrench, active: ["tools", "checkin", "diary", "plan"].includes(activeTab) && !auxView },
+            { tab: "tools", label: "Tools", Icon: Wrench, active: ["tools", "diary", "plan"].includes(activeTab) && !auxView },
             { tab: "you", label: "You", Icon: User, active: activeTab === "you" && !auxView },
           ] as const).map(({ tab, label, Icon, active }) => (
             <button
@@ -638,8 +630,18 @@ export default function App() {
               <span>{label}</span>
             </button>
           ))}
+          {/* Persistent crisis access (§9): always reachable from any tab. The floating crisis
+              anchor was removed (it overlapped content); this bottom-bar button is the replacement. */}
+          <button
+            onClick={() => setIsCrisisOverlayOpen(true)}
+            aria-label="Crisis support and safety plan"
+            className="relative flex flex-col items-center justify-center gap-1 text-[11px] py-2 min-h-[48px] rounded-lg active:scale-95 transition-all cursor-pointer text-rose-400 font-medium"
+          >
+            <Shield className="w-5 h-5" />
+            <span>Crisis</span>
+          </button>
         </div>
-      </div>
+      </nav>
 
     </div>
   );

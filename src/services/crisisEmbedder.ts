@@ -21,9 +21,12 @@ async function getPipe(): Promise<unknown> {
       env.localModelPath = "/models/"; // public/models → served at the app root
       // onnxruntime-web: serve the wasm from the bundle, SINGLE-THREADED. The Capacitor WebView is not
       // cross-origin-isolated (no SharedArrayBuffer), so multi-threaded wasm would fail to start.
-      env.backends.onnx.wasm.wasmPaths = "/ort/";
-      env.backends.onnx.wasm.numThreads = 1;
-      env.backends.onnx.wasm.proxy = false;
+      const wasmBackend = env.backends.onnx.wasm;
+      if (wasmBackend) {
+        wasmBackend.wasmPaths = "/ort/";
+        wasmBackend.numThreads = 1;
+        wasmBackend.proxy = false;
+      }
       _pipe = await pipeline("feature-extraction", "Xenova/all-MiniLM-L6-v2", {
         dtype: "q8", // the bundled model_quantized.onnx
         device: "wasm",

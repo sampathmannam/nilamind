@@ -8,16 +8,17 @@
 // Design: `classify()` is PURE (no side effects) so it's unit-testable; `runAgent()` is the thin
 // async executor that performs the side effect (save / schedule) and returns a spoken confirmation.
 
-import { secureLocal } from "./secureLocal";
+import { secureLocal, appendToSecureArray } from "./secureLocal";
 import { computeCompassionateStreak } from "./streaks";
 import { scheduleReminderAt, formatTime } from "./notifications";
 import { mapEmotion, parseIntensity } from "./emotionParse";
 import { CheckInEntry } from "../types";
+import { armCheckin } from "./armedCheckin";
 
 export type AgentView =
   | "dashboard" | "your_data" | "settings" | "skills" | "assessment"
   | "values_to_action" | "nila"
-  | "grounding" | "breathing" | "checkin" | "diary";
+  | "grounding" | "breathing" | "diary" | "winddown";
 
 export interface AgentResult {
   /** true when the message was an actionable command we handled (don't send to the on-device model). */
@@ -32,7 +33,8 @@ export type Intent =
   | { kind: "reminder"; when: Date | null; task: string }
   | { kind: "log_mood"; emotion: string | null; intensity: number | null }
   | { kind: "read_dashboard" }
-  | { kind: "navigate"; view: AgentView; label: string };
+  | { kind: "navigate"; view: AgentView; label: string }
+  | { kind: "arm_checkin" };
 
 // Emotions we recognise directly (superset of the check-in chips + common synonyms). Used so we
 // never mistake a command word ("log") for a feeling.
@@ -110,7 +112,7 @@ const NAV: { re: RegExp; view: AgentView; label: string }[] = [
   { re: /\bground(ing)?\b/, view: "grounding", label: "grounding" },
   { re: /\bbreath(e|ing)\b/, view: "breathing", label: "breathing" },
   { re: /\b(diary|journal)\b/, view: "diary", label: "your diary" },
-  { re: /\bcheck-?in\b/, view: "checkin", label: "a check-in" },
+  { re: /\bcheck-?in\b/, view: "nila", label: "Nila" },
 ];
 
 /**
@@ -149,6 +151,11 @@ export function classify(text: string, now: Date = new Date()): Intent | null {
     return { kind: "read_dashboard" };
   }
 
+  // 3a. Arm a context-aware check-in ("check on me tonight", "ping me in the morning").
+  if (/\b(check on me|check in on me|ping me|check up on me|remind me to check in)\b/.test(lower)) {
+    return { kind: "arm_checkin" };
+  }
+
   // 4. Open a screen.
   // Early-return for the specific phrase "talk to nila" so that generic "talk to <anything>"
   // does NOT open the nav gate (e.g. "talk to my therapist about my diary" must NOT route to diary).
@@ -175,10 +182,7 @@ function saveMood(emotion: string, intensity: number | null): void {
     intensity: intensity ?? 5,
     context: "Logged via Nila agent",
   };
-  let list: CheckInEntry[] = [];
-  try { const raw = secureLocal.getItem("nilamind_checkins"); if (raw) list = JSON.parse(raw); } catch { /* */ }
-  list.push(entry);
-  secureLocal.setItem("nilamind_checkins", JSON.stringify(list));
+  appendToSecureArray<CheckInEntry>("nilamind_checkins", entry);
 }
 
 function dashboardSummary(): string {
@@ -226,7 +230,7 @@ export async function runAgent(text: string): Promise<AgentResult> {
     }
     case "log_mood": {
       if (!intent.emotion) {
-        return { handled: true, reply: "Sure — what would you like to log? For example, “log that I'm anxious.”", navigate: "checkin" };
+        return { handled: true, reply: "Sure — what would you like to log? For example, “log that I'm anxious.”", navigate: "nila" };
       }
       saveMood(intent.emotion, intent.intensity);
       const lvl = intent.intensity ?? 5;
@@ -236,6 +240,11 @@ export async function runAgent(text: string): Promise<AgentResult> {
     case "read_dashboard":
       // Read it back in the chat — don't yank the user away to another screen.
       return { handled: true, reply: dashboardSummary() };
+    case "arm_checkin": {
+      const entry = armCheckin(text);
+      const time = formatTime(new Date(entry.triggerAt));
+      return { handled: true, reply: `I'll check in on you around ${time}. I'll remember what we talked about.` };
+    }
     case "navigate":
       return { handled: true, reply: `Opening ${intent.label}.`, navigate: intent.view };
   }

@@ -7,14 +7,18 @@ import CrisisHelpButton from "./CrisisHelpButton";
 // Wraps the app: boots encryption-at-rest before any data screen mounts, and shows a PIN unlock
 // screen when the user has opted into PIN (zero-knowledge) mode. Device mode unlocks silently.
 export default function SecureGate({ children }: { children: React.ReactNode }) {
-  const [phase, setPhase] = useState<"loading" | "locked" | "ready">("loading");
+  const [phase, setPhase] = useState<"loading" | "locked" | "blocked" | "ready">("loading");
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       const res = await bootSecure();
       if (cancelled) return;
-      setPhase(res.mode === "pin" && !res.unlocked ? "locked" : "ready");
+      // Encrypted data exists but couldn't be opened this boot — show an honest retry screen, never a silent
+      // empty app (audit #5). Recovery isn't guaranteed, but the data isn't deleted and a retry often clears
+      // a transient IndexedDB/crypto init error.
+      if (res.error === "encrypted_unavailable") setPhase("blocked");
+      else setPhase(res.mode === "pin" && !res.unlocked ? "locked" : "ready");
     })();
     return () => {
       cancelled = true;
@@ -22,6 +26,35 @@ export default function SecureGate({ children }: { children: React.ReactNode }) 
   }, []);
 
   if (phase === "ready") return <>{children}</>;
+
+  if (phase === "blocked") {
+    return (
+      <div className="min-h-screen bg-page flex flex-col items-center justify-center px-6">
+        <div className="w-full max-w-xs space-y-6 text-center">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
+              <Lock className="w-6 h-6 text-amber-400" />
+            </div>
+            <div className="space-y-1">
+              <h1 className="text-lg font-bold text-slate-100">We couldn't open your data this time</h1>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Your encrypted entries are still saved on this device — something just stopped us opening them
+                right now. Nothing has been deleted. This is often temporary, so please try again.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => window.location.reload()}
+            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl text-sm cursor-pointer transition-colors"
+          >
+            Try again
+          </button>
+          {/* Crisis help stays reachable even when data can't be opened — it needs no decryption. */}
+          <CrisisHelpButton />
+        </div>
+      </div>
+    );
+  }
 
   if (phase === "loading") {
     return (

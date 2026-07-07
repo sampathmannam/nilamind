@@ -1,7 +1,12 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { buildEpisodeContextBlock, buildEpisodeSystem } from "./episodePrompt";
-import { EPISODE_SYSTEM_PROMPT } from "../components/EpisodeSupportScreen";
+import { EPISODE_STEER_PROMPT } from "../components/EpisodeSupportScreen";
 import { EpisodeRecord } from "../types";
+
+vi.mock("./nilaContext", () => ({
+  buildPersonalContext: vi.fn(() => "WHAT YOU ALREADY KNOW ABOUT THEM\n- They like evenings."),
+  activeProtocolContextBlock: vi.fn(() => ""),
+}));
 
 function ep(date: string, trigger: string, skills: string[], dur: number, start: number): EpisodeRecord {
   return {
@@ -25,15 +30,19 @@ describe("buildEpisodeContextBlock", () => {
   });
 });
 
-describe("buildEpisodeSystem (invariants #4 + #5)", () => {
-  it("uses the EPISODE prompt, not the companion prompt", () => {
+describe("buildEpisodeSystem (invariants #4 + #5, audit fix #2)", () => {
+  it("uses the unified companion persona plus an episode steer, not a standalone robotic script", () => {
     const sys = buildEpisodeSystem([]);
-    expect(sys).toContain("EPISODE SUPPORT");
-    expect(sys).toContain("THE EXACT SEQUENCE");
+    expect(sys).toContain("You are Nila"); // companion persona base
+    expect(sys).toContain("EPISODE SUPPORT STEER"); // episode addendum
+    expect(sys).toContain(EPISODE_STEER_PROMPT); // steer is present
+    expect(sys).not.toContain("THE EXACT SEQUENCE"); // rigid 6-step script removed
+  });
+  it("feeds buildPersonalContext into episode mode", () => {
+    const sys = buildEpisodeSystem([]);
+    expect(sys).toContain("WHAT YOU ALREADY KNOW ABOUT THEM");
   });
   it("leaves no [REGION_CRISIS_LINES] substring in the outgoing systemInstruction", () => {
-    // sanity: the raw prompt DOES contain the placeholder before substitution
-    expect(EPISODE_SYSTEM_PROMPT).toContain("[REGION_CRISIS_LINES]");
     const sys = buildEpisodeSystem([ep("2026-06-19", "rejection", ["TIPP"], 12, 8)]);
     expect(sys).not.toContain("[REGION_CRISIS_LINES]");
   });
@@ -41,5 +50,10 @@ describe("buildEpisodeSystem (invariants #4 + #5)", () => {
     const sys = buildEpisodeSystem([ep("2026-06-19", "rejection", ["TIPP"], 12, 8)]);
     expect(sys).toContain("CONTEXT — YOUR EPISODE HISTORY:");
     expect(sys).toContain("Trigger: rejection");
+  });
+  it("uses relevant skills when a query is provided", () => {
+    const sys = buildEpisodeSystem([], "I can't sleep and my mind is racing");
+    // relevantSkillsBlock returns a non-empty block for a recognizable concern
+    expect(sys).toMatch(/SKILL|skill/i);
   });
 });

@@ -68,7 +68,7 @@ export function saveInsights(all: Insight[]): void {
   try {
     secureLocal.setItem(INSIGHTS_KEY, JSON.stringify(capInsights(all)));
   } catch (e) {
-    console.error("Failed to save Nila insights:", e);
+    console.error("Failed to save Nila insights");
   }
 }
 
@@ -91,7 +91,7 @@ export function addTombstone(fp: string): void {
   try {
     secureLocal.setItem(TOMBSTONES_KEY, JSON.stringify(arr));
   } catch (e) {
-    console.error("Failed to save Nila tombstones:", e);
+    console.error("Failed to save Nila tombstones");
   }
 }
 
