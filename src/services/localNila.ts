@@ -10,7 +10,6 @@
 import { buildNilaSystem, type NilaMessage } from "./nila";
 import { generateGuarded, isLocalLlmReady } from "./localLlm";
 import { detectElevationRisk, elevationGuardNote, elevationOutputNote } from "./elevationGuard";
-import { currentStateEstimate, stateEstimateContextBlock } from "./stateEngine";
 import { retrievePsychoedForQuery, psychoedContextBlock } from "./psychoedRetrieval";
 import type { AgentView } from "./agent";
 
@@ -38,20 +37,21 @@ export async function askNilaLocalStream(
   const elevation = detectElevationRisk(lastUser);
   let system = buildNilaSystem(lastUser) + elevationGuardNote(elevation.level);
 
-  // B2 + B4: feed a consolidated state estimate and, if the user's words match a vetted psychoeducation
-  // topic, a grounded snippet into the model's awareness. Best-effort: if any store/embedder read fails,
-  // continue without the block rather than break the chat.
+  // B4: if the user's words match a vetted psychoeducation topic, feed a grounded snippet into the
+  // model's awareness (RAG grounding — kills hallucination on clinical facts). Best-effort: if the
+  // store/embedder read fails, continue without the block rather than break the chat.
+  //
+  // NOTE: we deliberately do NOT also append stateEngine's stateEstimate block here. buildNilaSystem()
+  // already feeds buildPersonalContext() (sleep-prodrome, inflection, check-ins, BA — with the careful
+  // manic-first §9 framing), so a second state summary fed the model the SAME signals twice — prompt
+  // bloat that matters more on the smaller 1B, and risks over-weighting. stateEngine remains a typed
+  // estimate for screens/future use; the warm, safety-framed context stays the single model-facing source.
   try {
-    const [stateEstimate, psychoedSnippet] = await Promise.all([
-      currentStateEstimate(),
-      retrievePsychoedForQuery(lastUser),
-    ]);
-    const stateBlock = stateEstimateContextBlock(stateEstimate);
+    const psychoedSnippet = await retrievePsychoedForQuery(lastUser);
     const psychoedBlock = psychoedContextBlock(psychoedSnippet);
-    if (stateBlock) system += "\n\n" + stateBlock;
     if (psychoedBlock) system += "\n\n" + psychoedBlock;
   } catch {
-    /* context blocks are best-effort, never a hard dependency */
+    /* psychoed grounding is best-effort, never a hard dependency */
   }
 
   try {
