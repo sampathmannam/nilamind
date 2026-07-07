@@ -85,4 +85,9 @@ describe("routeToProtocol — modular matching (concern → the right evidence-b
     const p = routeToProtocol("i feel so alone, nobody understands me, i haven't talked to anyone in days");
     expect(p?.id).toBe("social-connection");
   });
+
+  it("routes gratitude / positive focus → Gratitude Practice", () => {
+    const p = routeToProtocol("i want to notice the good things, i feel like i only see the bad stuff");
+    expect(p?.id).toBe("gratitude");
+  });
 });

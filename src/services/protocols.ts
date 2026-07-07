@@ -279,6 +279,31 @@ export const PROTOCOLS: Protocol[] = [
         prompt: "After the micro-action, however it went: what was that like? Scary? Relief? Mixed? Noticing is part of rebuilding trust in connection." },
     ],
   },
+  {
+    id: "gratitude",
+    title: "Gratitude Practice",
+    basis:
+      "Gratitude journaling and active appreciation exercises consistently improve subjective wellbeing " +
+      "with moderate effect sizes (Emmons & McCullough, 2003; Wood et al., 2010). The key mechanism is " +
+      "shifting attentional bias away from negative information, not toxic positivity — genuine noticing, not forced cheerfulness.",
+    forConcerns: [
+      "gratitude", "grateful", "good things", "notice the good", "only see the bad", "negative lens",
+      "focus on bad", "what went well", "positive focus", "silver lining", "blessing", "blessed",
+      "thankful", "appreciate", "appreciation", "counting blessings", "what I'm grateful for",
+    ],
+    steps: [
+      { id: "gt-1", kind: "psychoed", title: "Why gratitude helps",
+        prompt: "Gratitude isn't about pretending everything's fine. It's about training your brain to notice what's also here — a small kindness, a warm cup, a moment of quiet. Even one genuine notice per day shifts the lens. Want to try it together?" },
+      { id: "gt-2", kind: "reflect", title: "Find one small thing",
+        prompt: "Right now, in this moment — what's one thing you can genuinely appreciate? It doesn't need to be big. A roof, a text from someone, your favourite song. Just name it for yourself." },
+      { id: "gt-3", kind: "plan", title: "Three good things tonight",
+        prompt: "Before bed, can you try the 'three good things' exercise? Think of three things that went even slightly well today — and for each, notice why it happened or what your role was in it. Want to give it a go?" },
+      { id: "gt-4", kind: "plan", title: "A gratitude letter (unsent)",
+        prompt: "Think of someone you're grateful to — not someone you need to impress. Write a short note to them in your mind or on paper. You don't have to send it. The effect is in the writing." },
+      { id: "gt-5", kind: "reflect", title: "Notice the shift",
+        prompt: "After a few days of noticing small positives: has anything softened? Not forcing happiness — just noticing whether a little more light gets through." },
+    ],
+  },
 ];
 
 /**
