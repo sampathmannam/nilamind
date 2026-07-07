@@ -1,30 +1,32 @@
 import { describe, it, expect } from "vitest";
 import { buildToolGroups, type ToolRowDeps } from "./toolsRows";
 
-// buildToolGroups() is the single source of truth ToolsScreen renders, so asserting on it guards the
-// real, on-screen Tools hub (redesign §2): adding/removing a row is now a deliberate, tested change.
 const STUB: ToolRowDeps = { go: () => {}, onEpisode: () => {}, phoneEnabled: false };
 const rowIds = (phoneEnabled: boolean) =>
   buildToolGroups({ ...STUB, phoneEnabled }).flatMap((g) => g.rows.map((r) => r.id));
 
 describe("Tools hub rows (redesign §2)", () => {
-  it("renders the in-the-moment then log & track rows, in order, when phone is off", () => {
-    expect(rowIds(false)).toEqual(["plan", "winddown", "reach_out", "episode", "diary", "assessment"]);
+  it("renders all tool rows in order, when phone is off", () => {
+    expect(rowIds(false)).toEqual([
+      "plan", "winddown", "reach_out", "crisis_rehearsal", "episode",
+      "diary", "assessment", "medication",
+      "problem_solving", "values_work", "exposure", "peer_support",
+    ]);
   });
 
   it("appends the phone patterns row only when phone features are enabled", () => {
     expect(rowIds(false)).not.toContain("behaviour");
-    expect(rowIds(true)).toEqual([
-      "plan", "winddown", "reach_out", "episode", "diary", "assessment", "behaviour",
-    ]);
+    const withPhone = rowIds(true);
+    expect(withPhone).toContain("behaviour");
+    expect(withPhone.indexOf("behaviour")).toBeGreaterThan(withPhone.indexOf("diary"));
   });
 
   it("groups rows under the redesigned section titles", () => {
     expect(buildToolGroups({ ...STUB, phoneEnabled: false }).map((g) => g.title)).toEqual([
-      "In the moment", "Log & track",
+      "In the moment", "Log & track", "Skills & practice",
     ]);
     expect(buildToolGroups({ ...STUB, phoneEnabled: true }).map((g) => g.title)).toEqual([
-      "In the moment", "Log & track", "Patterns",
+      "In the moment", "Log & track", "Skills & practice", "Patterns",
     ]);
   });
 

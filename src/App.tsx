@@ -37,6 +37,12 @@ const NilaMemoryScreen = lazy(() => import("./components/NilaMemoryScreen"));
 const WhyScreen = lazy(() => import("./components/WhyScreen"));
 const LearnScreen = lazy(() => import("./components/LearnScreen"));
 const SettingsScreen = lazy(() => import("./components/SettingsScreen"));
+const CrisisRehearsalScreen = lazy(() => import("./components/CrisisRehearsalScreen"));
+const PeerSupportScreen = lazy(() => import("./components/PeerSupportScreen"));
+const MedicationAdherenceScreen = lazy(() => import("./components/MedicationAdherenceScreen"));
+const ProblemSolvingScreen = lazy(() => import("./components/ProblemSolvingScreen"));
+const ValuesWorkScreen = lazy(() => import("./components/ValuesWorkScreen"));
+const ExposureHierarchyScreen = lazy(() => import("./components/ExposureHierarchyScreen"));
 
 import { AuxView, TabView, resolveNavTarget } from "./services/nav";
 import { PHONE_FEATURES_ENABLED } from "./services/buildFlags";
@@ -548,6 +554,48 @@ export default function App() {
               <ChevronLeft className="w-5 h-5" /> Back
             </button>
             <LearnScreen />
+          </div>
+        ) : auxView === "crisis_rehearsal" ? (
+          <div className="space-y-4">
+            <button onClick={() => setAuxView(null)} className="flex items-center gap-1.5 text-slate-300 hover:text-white font-semibold py-3 px-1 -ml-1 mb-2 focus:outline-none cursor-pointer active:opacity-70" aria-label="Back">
+              <ChevronLeft className="w-5 h-5" /> Back
+            </button>
+            <CrisisRehearsalScreen />
+          </div>
+        ) : auxView === "peer_support" ? (
+          <div className="space-y-4">
+            <button onClick={() => setAuxView(null)} className="flex items-center gap-1.5 text-slate-300 hover:text-white font-semibold py-3 px-1 -ml-1 mb-2 focus:outline-none cursor-pointer active:opacity-70" aria-label="Back">
+              <ChevronLeft className="w-5 h-5" /> Back
+            </button>
+            <PeerSupportScreen />
+          </div>
+        ) : auxView === "medication" ? (
+          <div className="space-y-4">
+            <button onClick={() => setAuxView(null)} className="flex items-center gap-1.5 text-slate-300 hover:text-white font-semibold py-3 px-1 -ml-1 mb-2 focus:outline-none cursor-pointer active:opacity-70" aria-label="Back">
+              <ChevronLeft className="w-5 h-5" /> Back
+            </button>
+            <MedicationAdherenceScreen />
+          </div>
+        ) : auxView === "problem_solving" ? (
+          <div className="space-y-4">
+            <button onClick={() => setAuxView(null)} className="flex items-center gap-1.5 text-slate-300 hover:text-white font-semibold py-3 px-1 -ml-1 mb-2 focus:outline-none cursor-pointer active:opacity-70" aria-label="Back">
+              <ChevronLeft className="w-5 h-5" /> Back
+            </button>
+            <ProblemSolvingScreen />
+          </div>
+        ) : auxView === "values_work" ? (
+          <div className="space-y-4">
+            <button onClick={() => setAuxView(null)} className="flex items-center gap-1.5 text-slate-300 hover:text-white font-semibold py-3 px-1 -ml-1 mb-2 focus:outline-none cursor-pointer active:opacity-70" aria-label="Back">
+              <ChevronLeft className="w-5 h-5" /> Back
+            </button>
+            <ValuesWorkScreen />
+          </div>
+        ) : auxView === "exposure" ? (
+          <div className="space-y-4">
+            <button onClick={() => setAuxView(null)} className="flex items-center gap-1.5 text-slate-300 hover:text-white font-semibold py-3 px-1 -ml-1 mb-2 focus:outline-none cursor-pointer active:opacity-70" aria-label="Back">
+              <ChevronLeft className="w-5 h-5" /> Back
+            </button>
+            <ExposureHierarchyScreen />
           </div>
         ) : (
           /* STANDARD TAB NAVIGATION ROUTING */
