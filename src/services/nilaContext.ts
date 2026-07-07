@@ -17,6 +17,7 @@ import { getActiveProgress } from "./protocolProgress";
 import { insightsContextBlock } from "./nilaInsights";
 import { profileContextBlock } from "./nilaProfile";
 import { selfReportSleepSignal, selfReportedSleepNights } from "./sleepInsight";
+import { loadMoodHistory } from "./moodHistory";
 import type { SleepSignal } from "./healthConnect";
 import { topFireableSignal, type InflectionSignal } from "./nilaInflection";
 import { getInflectionEnabled } from "./inflectionPrefs";
@@ -27,6 +28,7 @@ import { parseSafetyPlan } from "./safetyPlan";
 import { safetyPlanFollowUpContextBlock } from "./safetyPlanFollowUp";
 import { sleepHoursVariability, variabilityContextBlock } from "./sleepHoursVariability";
 import type { VariabilitySignal } from "./sleepHoursVariability";
+import { assessJitai } from "./jitaiEngine";
 
 function readArray(key: string): any[] {
   try {
@@ -246,7 +248,22 @@ export function buildPersonalContext(): string {
     }
   } catch { /* best-effort, never block context assembly */ }
 
-  if (lines.length === 0 && !memory && !insights && !profile && !trajectory && !inflection && !safetyPlanFollowUp && !sleepVariability) return "";
+  // JITAI nudge — just-in-time adaptive intervention. Only surfaces when signals indicate a tool would help.
+  let jitaiNudge = "";
+  try {
+    const moodHist = loadMoodHistory();
+    if (moodHist.length > 0) {
+      const lastCheckin = moodHist[moodHist.length - 1];
+      const daysSinceLastCheckin = Math.max(0, Math.floor((Date.now() - new Date(lastCheckin.date).getTime()) / 86400000));
+      const jitai = assessJitai({ sleep: selfReportSleepSignal(), moodHistory: moodHist, daysSinceLastCheckin });
+      if (jitai.shouldNudge) {
+        jitaiNudge = `JUST-IN-TIME NUDGE (${jitai.severity}): ${jitai.nudgeText}`;
+        if (jitai.suggestedTool) jitaiNudge += ` Suggested tool: ${jitai.suggestedTool}.`;
+      }
+    }
+  } catch { /* best-effort */ }
+
+  if (lines.length === 0 && !memory && !insights && !profile && !trajectory && !inflection && !safetyPlanFollowUp && !sleepVariability && !jitaiNudge) return "";
 
   const out: string[] = [
     "WHAT YOU ALREADY KNOW ABOUT THEM",
@@ -284,6 +301,11 @@ export function buildPersonalContext(): string {
   if (safetyPlanFollowUp) {
     out.push("Safety-plan follow-up (gentle invitation, never a push):");
     out.push(safetyPlanFollowUp);
+  }
+
+  if (jitaiNudge) {
+    out.push("Just-in-time nudge (use if it fits naturally — never force it):");
+    out.push(jitaiNudge);
   }
 
   return out.join("\n");

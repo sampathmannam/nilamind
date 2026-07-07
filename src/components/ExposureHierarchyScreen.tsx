@@ -1,12 +1,15 @@
 import React, { useState } from "react";
 import { Mountain, Plus, X } from "lucide-react";
-import { createHierarchy, addStep, removeStep, loadHierarchy, saveHierarchy, type ExposureHierarchy, type ExposureStep } from "../services/exposureHierarchy";
+import { createHierarchy, addStep, removeStep, completeStep, loadHierarchy, saveHierarchy, completionRate, averageSudReduction, type ExposureHierarchy } from "../services/exposureHierarchy";
 
 export default function ExposureHierarchyScreen() {
   const [hierarchy, setHierarchy] = useState<ExposureHierarchy | null>(loadHierarchy);
   const [stepText, setStepText] = useState("");
   const [suds, setSuds] = useState(50);
   const [title, setTitle] = useState("");
+  const [completingStep, setCompletingStep] = useState<string | null>(null);
+  const [postSuds, setPostSuds] = useState(50);
+  const [learning, setLearning] = useState("");
 
   function refresh() { setHierarchy(loadHierarchy()); }
 
@@ -33,8 +36,21 @@ export default function ExposureHierarchyScreen() {
     refresh();
   }
 
+  function handleCompleteStep(stepId: string) {
+    if (!hierarchy) return;
+    const step = hierarchy.steps.find((s) => s.id === stepId);
+    if (!step) return;
+    const updated = completeStep(hierarchy, stepId, step.suds, postSuds, learning);
+    saveHierarchy(updated);
+    refresh();
+    setCompletingStep(null); setPostSuds(50); setLearning("");
+  }
+
   if (hierarchy) {
     const sorted = [...hierarchy.steps].sort((a, b) => a.suds - b.suds);
+    const rate = Math.round(completionRate(hierarchy) * 100);
+    const sudReduction = averageSudReduction(hierarchy);
+
     return (
       <div className="space-y-4 max-w-md mx-auto" id="exposure-screen">
         <button onClick={() => { setHierarchy(null); }} className="flex items-center gap-1.5 text-slate-300 hover:text-white font-semibold py-3 px-1 -ml-1 cursor-pointer" aria-label="Back">
@@ -43,30 +59,66 @@ export default function ExposureHierarchyScreen() {
         <h2 className="text-lg font-semibold text-slate-100">{hierarchy.title}</h2>
         <p className="text-xs text-slate-400">Steps ranked by SUDS (0–100). Work from bottom up — start with the easiest.</p>
 
-        <div className="space-y-2">
-          {sorted.map((step, i) => (
-            <div key={step.id} className="glass rounded-xl p-3 flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-400 shrink-0">
-                {i + 1}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs text-slate-200">{step.description}</p>
-                <p className="text-[10px] text-slate-500">SUDS: {step.suds}{step.completed ? " ✓ completed" : ""}</p>
-              </div>
-              {!step.completed && <button onClick={() => handleRemoveStep(step.id)} className="text-slate-600 hover:text-slate-400 cursor-pointer shrink-0"><X className="w-3 h-3" /></button>}
+        <div className="flex gap-4 text-center">
+          <div className="glass rounded-xl p-3 flex-1">
+            <div className="text-lg font-bold text-orange-300">{rate}%</div>
+            <div className="text-[10px] text-slate-500">Completed</div>
+          </div>
+          {sudReduction != null && (
+            <div className="glass rounded-xl p-3 flex-1">
+              <div className="text-lg font-bold text-blue-300">-{Math.round(sudReduction)}</div>
+              <div className="text-[10px] text-slate-500">Avg SUDS drop</div>
             </div>
-          ))}
-          {sorted.length === 0 && <p className="text-xs text-slate-500 text-center py-6">No steps yet. Add your first one below.</p>}
+          )}
         </div>
 
-        <div className="glass rounded-2xl p-3 space-y-2">
-          <input value={stepText} onChange={(e) => setStepText(e.target.value)} placeholder="Exposure step..." className="w-full glass rounded-xl px-3 py-2 text-xs text-slate-200 placeholder-slate-500" />
-          <div className="flex items-center gap-2">
-            <label className="text-[10px] text-slate-500 shrink-0">SUDS: {suds}</label>
-            <input type="range" min={0} max={100} value={suds} onChange={(e) => setSuds(+e.target.value)} className="flex-1" />
+        {completingStep ? (
+          <div className="glass rounded-2xl p-4 space-y-3 border-l-4 border-l-emerald-500">
+            <div className="text-[10px] uppercase font-mono tracking-widest text-slate-500">Complete this step</div>
+            <div className="space-y-1">
+              <label className="text-[10px] text-slate-500">SUDS after exposure: {postSuds}</label>
+              <input type="range" min={0} max={100} value={postSuds} onChange={(e) => setPostSuds(+e.target.value)} className="w-full" />
+            </div>
+            <textarea value={learning} onChange={(e) => setLearning(e.target.value)} placeholder="What did you learn? (optional)" rows={2} className="w-full glass rounded-xl px-3 py-2 text-xs text-slate-200 placeholder-slate-600" />
+            <div className="flex gap-2">
+              <button onClick={() => handleCompleteStep(completingStep)} className="flex-1 glass rounded-xl py-2 text-xs text-emerald-300 cursor-pointer">Save</button>
+              <button onClick={() => setCompletingStep(null)} className="glass rounded-xl px-3 py-2 text-xs text-slate-400 cursor-pointer">Cancel</button>
+            </div>
           </div>
-          <button onClick={handleAddStep} className="w-full glass rounded-xl py-2 text-xs text-blue-300 cursor-pointer">Add step</button>
-        </div>
+        ) : (
+          <div className="space-y-2">
+            {sorted.map((step, i) => (
+              <div key={step.id} className={`glass rounded-xl p-3 flex items-center gap-3 ${step.completed ? "opacity-60" : ""}`}>
+                <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-400 shrink-0">
+                  {i + 1}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-slate-200">{step.description}</p>
+                  <p className="text-[10px] text-slate-500">
+                    SUDS: {step.suds}
+                    {step.completed && ` → ${step.postSuds} (completed)`}
+                  </p>
+                </div>
+                {!step.completed && (
+                  <button onClick={() => setCompletingStep(step.id)} className="text-[10px] text-emerald-400 cursor-pointer shrink-0">Complete</button>
+                )}
+                {!step.completed && <button onClick={() => handleRemoveStep(step.id)} className="text-slate-600 hover:text-slate-400 cursor-pointer shrink-0"><X className="w-3 h-3" /></button>}
+              </div>
+            ))}
+            {sorted.length === 0 && <p className="text-xs text-slate-500 text-center py-6">No steps yet. Add your first one below.</p>}
+          </div>
+        )}
+
+        {!completingStep && (
+          <div className="glass rounded-2xl p-3 space-y-2">
+            <input value={stepText} onChange={(e) => setStepText(e.target.value)} placeholder="Exposure step..." className="w-full glass rounded-xl px-3 py-2 text-xs text-slate-200 placeholder-slate-500" />
+            <div className="flex items-center gap-2">
+              <label className="text-[10px] text-slate-500 shrink-0">SUDS: {suds}</label>
+              <input type="range" min={0} max={100} value={suds} onChange={(e) => setSuds(+e.target.value)} className="flex-1" />
+            </div>
+            <button onClick={handleAddStep} className="w-full glass rounded-xl py-2 text-xs text-blue-300 cursor-pointer">Add step</button>
+          </div>
+        )}
       </div>
     );
   }

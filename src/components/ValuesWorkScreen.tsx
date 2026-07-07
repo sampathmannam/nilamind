@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Compass, Plus } from "lucide-react";
-import { loadValuesWork, saveValuesWork, setValueImportance, topValues, alignmentGap, type ValueDomain } from "../services/valuesWork";
+import { loadValuesWork, saveValuesWork, setValueImportance, setValueAlignment, topValues, alignmentGap, type ValueDomain } from "../services/valuesWork";
 
 const PRESET_VALUES = ["Connection", "Learning", "Creativity", "Health", "Purpose", "Freedom", "Compassion", "Growth"];
 
@@ -19,6 +19,12 @@ export default function ValuesWorkScreen() {
 
   function handleImportance(id: string, val: number) {
     const updated = setValueImportance(domains, id, val);
+    saveValuesWork(updated);
+    setDomains(updated);
+  }
+
+  function handleAlignment(id: string, val: number) {
+    const updated = setValueAlignment(domains, id, val);
     saveValuesWork(updated);
     setDomains(updated);
   }
@@ -62,7 +68,7 @@ export default function ValuesWorkScreen() {
         {domains.map((v) => {
           const alignPct = Math.round((v.currentAlignment / 10) * 100);
           return (
-            <div key={v.id} className="glass rounded-2xl p-4 space-y-2">
+            <div key={v.id} className="glass rounded-2xl p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold text-slate-100">{v.name}</span>
                 <span className="text-[10px] font-mono text-violet-300">{alignPct}%</span>
@@ -73,6 +79,10 @@ export default function ValuesWorkScreen() {
               <div className="space-y-1">
                 <label className="text-[10px] text-slate-500">Importance: {v.importance}/10</label>
                 <input type="range" min={1} max={10} value={v.importance} onChange={(e) => handleImportance(v.id, +e.target.value)} className="w-full" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] text-slate-500">Current alignment: {v.currentAlignment}/10</label>
+                <input type="range" min={0} max={10} value={v.currentAlignment} onChange={(e) => handleAlignment(v.id, +e.target.value)} className="w-full" />
               </div>
             </div>
           );

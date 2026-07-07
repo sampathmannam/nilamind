@@ -1,6 +1,6 @@
 import {
   Wind, NotebookPen, Activity, LifeBuoy, TrendingUp, Moon, MessageCircle,
-  Shield, Users, Pill, Lightbulb, Compass, Mountain,
+  Shield, Users, Pill, Lightbulb, Compass, Mountain, AlertTriangle,
   type LucideIcon,
 } from "lucide-react";
 
@@ -42,6 +42,7 @@ export function buildToolGroups({ go, onEpisode, phoneEnabled }: ToolRowDeps): T
         { id: "winddown", label: "Wind down for sleep", sub: "A calm bedtime routine — park the day & settle", Icon: Moon, iconClass: "w-5 h-5 text-indigo-400", onTap: () => go("winddown") },
         { id: "reach_out", label: "Reach out to someone", sub: "A gentle, ready-to-send message to a person you trust", Icon: MessageCircle, iconClass: "w-5 h-5 text-emerald-400", onTap: () => go("reach_out") },
         { id: "crisis_rehearsal", label: "Crisis rehearsal", sub: "Practice your plan before you need it", Icon: Shield, iconClass: "w-5 h-5 text-rose-400", onTap: () => go("crisis_rehearsal") },
+        { id: "relapse_plan", label: "Relapse prevention plan", sub: "Plan ahead for each phase — green, orange, red", Icon: AlertTriangle, iconClass: "w-5 h-5 text-amber-400", onTap: () => go("relapse_plan") },
         { id: "episode", label: "I'm in an episode", sub: "Guided, step-by-step support right now", Icon: LifeBuoy, iconClass: "w-5 h-5 text-rose-400", onTap: onEpisode },
       ],
     },

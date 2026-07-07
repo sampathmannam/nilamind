@@ -8,7 +8,7 @@ const rowIds = (phoneEnabled: boolean) =>
 describe("Tools hub rows (redesign §2)", () => {
   it("renders all tool rows in order, when phone is off", () => {
     expect(rowIds(false)).toEqual([
-      "plan", "winddown", "reach_out", "crisis_rehearsal", "episode",
+      "plan", "winddown", "reach_out", "crisis_rehearsal", "relapse_plan", "episode",
       "diary", "assessment", "medication",
       "problem_solving", "values_work", "exposure", "peer_support",
     ]);

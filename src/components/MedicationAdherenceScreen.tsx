@@ -52,7 +52,7 @@ export default function MedicationAdherenceScreen() {
                 <span className="text-sm font-semibold text-slate-100">{m.name}</span>
                 {m.dose && <span className="text-xs text-slate-500 ml-2">{m.dose}</span>}
               </div>
-              <span className="text-[10px] font-mono text-slate-500">{Math.round(adherenceRate(m.id) * 100)}%</span>
+              <span className="text-[10px] font-mono text-slate-500">{Math.round(adherenceRate(m.id))}%</span>
             </div>
             <button onClick={() => handleToggle(m)} className="w-full glass rounded-xl py-2 text-xs text-slate-400 hover:text-slate-200 cursor-pointer transition-colors">
               Log as taken today

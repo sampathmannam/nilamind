@@ -43,6 +43,7 @@ const MedicationAdherenceScreen = lazy(() => import("./components/MedicationAdhe
 const ProblemSolvingScreen = lazy(() => import("./components/ProblemSolvingScreen"));
 const ValuesWorkScreen = lazy(() => import("./components/ValuesWorkScreen"));
 const ExposureHierarchyScreen = lazy(() => import("./components/ExposureHierarchyScreen"));
+const RelapsePlanScreen = lazy(() => import("./components/RelapsePlanScreen"));
 
 import { AuxView, TabView, resolveNavTarget } from "./services/nav";
 import { PHONE_FEATURES_ENABLED } from "./services/buildFlags";
@@ -596,6 +597,13 @@ export default function App() {
               <ChevronLeft className="w-5 h-5" /> Back
             </button>
             <ExposureHierarchyScreen />
+          </div>
+        ) : auxView === "relapse_plan" ? (
+          <div className="space-y-4">
+            <button onClick={() => setAuxView(null)} className="flex items-center gap-1.5 text-slate-300 hover:text-white font-semibold py-3 px-1 -ml-1 mb-2 focus:outline-none cursor-pointer active:opacity-70" aria-label="Back">
+              <ChevronLeft className="w-5 h-5" /> Back
+            </button>
+            <RelapsePlanScreen />
           </div>
         ) : (
           /* STANDARD TAB NAVIGATION ROUTING */
