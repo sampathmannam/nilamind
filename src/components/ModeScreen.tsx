@@ -19,6 +19,7 @@ import { getSessionChat, setSessionChat, clearSessionChat } from "../services/se
 import { localLlmLoadState } from "../services/localLlm";
 import { safeDraftThoughtRecord, type ThoughtRecordDraft } from "../services/thoughtRecordDraft";
 import ThoughtRecordScreen from "./ThoughtRecordScreen";
+import ValuesToActionScreen from "./ValuesToActionScreen";
 import { looksLikeArmRequest, requestArmedCheckin } from "../services/armedCheckin";
 import { protocolOfferCard, startProtocolChat, continueProtocolChat, type ProtocolCard } from "../services/protocolChat";
 import { speakIfEnabled, speak, listenOnce, stopSpeaking } from "../services/voice";
@@ -42,7 +43,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   const [loading, setLoading] = useState(false);
   const [listening, setListening] = useState(false);
   const [showCrisis, setShowCrisis] = useState(false);
-  const [auxView, setAuxView] = useState<"learn" | "thought_record" | null>(null);
+  const [auxView, setAuxView] = useState<"learn" | "thought_record" | "values_to_action" | null>(null);
   const [thoughtRecordDraft, setThoughtRecordDraft] = useState<ThoughtRecordDraft | undefined>();
   const [protocolCard, setProtocolCard] = useState<ProtocolCard | null>(() => protocolOfferCard(""));
 
@@ -235,6 +236,9 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
         }
         break;
       }
+      case "values_to_action":
+        setAuxView("values_to_action");
+        break;
       default:
         setMessages((prev) => [
           ...prev,
@@ -426,6 +430,24 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           </div>
           <div className="overflow-y-auto p-4">
             <ThoughtRecordScreen draft={thoughtRecordDraft} />
+          </div>
+        </div>
+      )}
+
+      {auxView === "values_to_action" && (
+        <div className="fixed inset-0 z-50 bg-page" id="values-to-action-sheet">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
+            <span className="text-sm font-semibold text-slate-100">Do one thing</span>
+            <button
+              onClick={() => setAuxView(null)}
+              className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer"
+              aria-label="Close"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="overflow-y-auto p-4">
+            <ValuesToActionScreen />
           </div>
         </div>
       )}

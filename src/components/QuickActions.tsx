@@ -4,7 +4,7 @@
 import React from "react";
 import {
   Wind, Cloud, BookOpen, Phone, Pill, Moon,
-  AlertTriangle, Brain, Heart, Smile, Activity
+  AlertTriangle, Brain, Heart, Smile, Activity, Compass
 } from "lucide-react";
 
 interface QuickActionsProps {
@@ -30,6 +30,7 @@ export const ACTIONS: ActionDef[] = [
   { id: "wind_down", label: "Wind down", icon: <Moon className="w-5 h-5" />, color: "text-indigo-400", modes: ["evening", "night"] },
   { id: "learn", label: "Learn", icon: <BookOpen className="w-5 h-5" />, color: "text-amber-400", modes: ["morning", "day", "evening", "night"] },
   { id: "thought_record", label: "Thought record", icon: <Brain className="w-5 h-5" />, color: "text-rose-400", modes: ["day", "evening"] },
+  { id: "values_to_action", label: "Do one thing", icon: <Compass className="w-5 h-5" />, color: "text-violet-400", modes: ["morning", "day", "evening", "night"] },
   { id: "self_compassion", label: "Self-compassion", icon: <Heart className="w-5 h-5" />, color: "text-pink-400", modes: ["day", "evening", "night"] },
   { id: "crisis", label: "Need help now", icon: <AlertTriangle className="w-5 h-5" />, color: "text-rose-400", modes: ["morning", "day", "evening", "night"] },
 ];
@@ -38,8 +39,8 @@ export default function QuickActions({ onAction, timeMode }: QuickActionsProps) 
   // Filter actions relevant to current time mode
   const relevantActions = ACTIONS.filter((a) => a.modes.includes(timeMode));
 
-  // Show max 6 actions (2 rows of 3)
-  const displayActions = relevantActions.slice(0, 6);
+  // Show up to 9 actions (3 rows of 3) so critical tools stay reachable.
+  const displayActions = relevantActions.slice(0, 9);
 
   return (
     <div className="w-full" id="quick-actions">

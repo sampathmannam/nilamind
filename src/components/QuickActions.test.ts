@@ -13,10 +13,15 @@ describe("QuickActions action list", () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it("keeps thought-record, self-compassion, medication, and dashboard reachable from quick actions", () => {
+  it("keeps thought-record, self-compassion, medication, dashboard, and values-to-action reachable from quick actions", () => {
     const ids = ACTIONS.map((a) => a.id);
-    for (const required of ["thought_record", "self_compassion", "medication", "dashboard"]) {
+    for (const required of ["thought_record", "self_compassion", "medication", "dashboard", "values_to_action"]) {
       expect(ids).toContain(required);
     }
+  });
+
+  it("shows at least the values-to-action action in day mode", () => {
+    const ids = ACTIONS.filter((a) => a.modes.includes("day")).map((a) => a.id);
+    expect(ids).toContain("values_to_action");
   });
 });
