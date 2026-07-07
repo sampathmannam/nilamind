@@ -10,6 +10,7 @@ import { selfReportSleepSignal } from "./sleepInsight";
 import { topFireableSignal } from "./nilaInflection";
 import { getInflectionEnabled } from "./inflectionPrefs";
 import { DAY_MS } from "./storageUtils";
+import { computeCompassionateStreak } from "./streaks";
 import type { Medication } from "./medicationAdherence";
 
 // Warm, low-pressure nudges (Phase 7). Never demanding, never guilt-laden — each is an invitation.
@@ -34,12 +35,41 @@ export const CARE_NUDGES = [
   "💙 Checking in gently — I'm here for you today if you'd like to talk.",
 ];
 
+export const LAPSE_NUDGES = [
+  "💙 Welcome back — no pressure. We pick up right where you are.",
+  "🌱 Starting again is its own kind of strength. I'm here when you're ready.",
+];
+
+export const MILESTONE_NUDGES: Record<number, string> = {
+  3: "🌟 3 days of showing up for yourself. That matters.",
+  7: "🌟 7 days of checking in. That matters.",
+  14: "🌟 Two weeks of showing up. You're building something steady.",
+  30: "🌟 30 days. Not perfect — just present. That counts.",
+};
+
+export const STREAK_NUDGES = [
+  "💙 Your streak is glowing. A quick check-in keeps it warm — only if it feels right.",
+  "🌱 You're on a roll. No pressure; just wanted you to know it counts.",
+];
+
 /** Choose the daily nudge from the person's current SOFT signals — sleep prodrome first (manic-first), then a
- *  flagged downward trend — else the warm rotation. Pure + deterministic (varies by dayIndex); dataless by
- *  design. The call site gates the inputs (inflection only when the user opted in). */
-export function chooseNudge(ctx: { dayIndex: number; sleepFiring?: boolean; inflection?: "deterioration" | "improvement" | null }): string {
+ *  flagged downward trend, then compassionate streak state — else the warm rotation. Pure + deterministic
+ *  (varies by dayIndex); dataless by design. The call site gates the inputs (inflection only when the user
+ *  opted in). */
+export function chooseNudge(ctx: {
+  dayIndex: number;
+  sleepFiring?: boolean;
+  inflection?: "deterioration" | "improvement" | null;
+  lapsed?: boolean;
+  streak?: number;
+  milestone?: number | null;
+  activeToday?: boolean;
+}): string {
   if (ctx.sleepFiring) return SLEEP_NUDGES[ctx.dayIndex % SLEEP_NUDGES.length];
   if (ctx.inflection === "deterioration") return CARE_NUDGES[ctx.dayIndex % CARE_NUDGES.length];
+  if (ctx.lapsed) return LAPSE_NUDGES[ctx.dayIndex % LAPSE_NUDGES.length];
+  if (ctx.milestone) return MILESTONE_NUDGES[ctx.milestone] ?? STREAK_NUDGES[ctx.dayIndex % STREAK_NUDGES.length];
+  if ((ctx.streak ?? 0) >= 3 && ctx.activeToday) return STREAK_NUDGES[ctx.dayIndex % STREAK_NUDGES.length];
   return WARM_NUDGES[ctx.dayIndex % WARM_NUDGES.length];
 }
 
@@ -54,7 +84,16 @@ function nudgeForToday(): string {
   const dayIndex = Math.floor(timeToday(0, 0).getTime() / DAY_MS);
   const sleepFiring = !!selfReportSleepSignal()?.firing;
   const inflection = getInflectionEnabled() ? (topFireableSignal()?.direction ?? null) : null;
-  return chooseNudge({ dayIndex, sleepFiring, inflection });
+  const streak = computeCompassionateStreak();
+  return chooseNudge({
+    dayIndex,
+    sleepFiring,
+    inflection,
+    lapsed: streak.lapsed,
+    streak: streak.current,
+    milestone: streak.milestone,
+    activeToday: streak.activeToday,
+  });
 }
 
 export interface ScheduleResult {

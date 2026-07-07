@@ -21,4 +21,22 @@ describe("chooseNudge — gently adapts the daily nudge to current signals (soft
     const n = chooseNudge({ dayIndex: 1, sleepFiring: true, inflection: "deterioration" });
     expect(n.toLowerCase()).toMatch(/rest|sleep|wind down/);
   });
+
+  it("welcomes back gently after a lapse — zero guilt", () => {
+    const n = chooseNudge({ dayIndex: 2, lapsed: true });
+    expect(n.toLowerCase()).toMatch(/welcome back|pick up|here|no pressure/);
+    expect(n.toLowerCase()).not.toMatch(/streak|broken|lost/);
+  });
+
+  it("celebrates a streak milestone without comparison or pressure", () => {
+    const n = chooseNudge({ dayIndex: 2, streak: 7, milestone: 7 });
+    expect(n.toLowerCase()).toMatch(/7|seven/);
+    expect(n.toLowerCase()).toMatch(/showing up|matters|celebrate|well done/);
+    expect(n.toLowerCase()).not.toMatch(/keep it up|don't break/);
+  });
+
+  it("encourages continuing an active streak warmly", () => {
+    const n = chooseNudge({ dayIndex: 2, streak: 4, activeToday: true });
+    expect(n.toLowerCase()).toMatch(/streak|days|showing up|counts/);
+  });
 });
