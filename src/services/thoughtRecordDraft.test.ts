@@ -1,5 +1,31 @@
-import { describe, it, expect } from "vitest";
-import { parseDraft, mapDraftToWizard } from "./thoughtRecordDraft";
+import { describe, it, expect, vi, beforeAll, beforeEach } from "vitest";
+import { parseDraft, mapDraftToWizard, safeDraftThoughtRecord } from "./thoughtRecordDraft";
+import { registerLocalLlmBackend, type LocalLlmBackend } from "./localLlm";
+
+beforeAll(() => {
+  vi.stubGlobal("localStorage", { getItem: () => null, setItem: () => {}, removeItem: () => {} });
+});
+
+beforeEach(() => {
+  const scriptedReply = `SITUATION: Argument with a friend at lunch
+AUTOMATIC THOUGHT: They hate me now
+EMOTION: Anxious, intensity 70
+EVIDENCE FOR:
+- They walked away quickly
+- They didn't text back
+EVIDENCE AGAINST:
+- They said "talk later"
+- We've been friends for years`;
+  const backend: LocalLlmBackend = {
+    id: "fake",
+    isReady: () => true,
+    generate: async ({ onToken }) => {
+      for (const t of scriptedReply.split("")) onToken(t);
+      return scriptedReply;
+    },
+  };
+  registerLocalLlmBackend(backend);
+});
 
 describe("parseDraft", () => {
   it("extracts all fields from valid model output", () => {
@@ -79,5 +105,28 @@ describe("mapDraftToWizard", () => {
     expect(w.feeling).toBe("");
     expect(w.automaticThought).toBe("");
     expect(w.initialIntensity).toBe(50);
+  });
+});
+
+describe("safeDraftThoughtRecord — §9 gate", () => {
+  it("returns crisis, not a draft, for self-harm text", async () => {
+    const r = await safeDraftThoughtRecord("I want to end my life");
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.reason).toBe("crisis");
+  });
+
+  it("returns empty for blank vent text", async () => {
+    const r = await safeDraftThoughtRecord("   ");
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.reason).toBe("empty");
+  });
+
+  it("returns a parsed draft for ordinary venting", async () => {
+    const r = await safeDraftThoughtRecord("I had a fight with my friend and now I'm sure they hate me");
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.draft.situation).toContain("friend");
+      expect(r.draft.automaticThought).toContain("hate");
+    }
   });
 });

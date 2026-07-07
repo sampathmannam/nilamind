@@ -1,5 +1,9 @@
-import { describe, it, expect } from "vitest";
-import { spotDistortions, distortionSteer } from "./distortionSpotter";
+import { describe, it, expect, vi, beforeAll } from "vitest";
+import { spotDistortions, distortionSteer, safeSpotDistortions } from "./distortionSpotter";
+
+beforeAll(() => {
+  vi.stubGlobal("localStorage", { getItem: () => null, setItem: () => {}, removeItem: () => {} });
+});
 
 describe("spotDistortions", () => {
   describe("detects each distortion type", () => {
@@ -79,5 +83,25 @@ describe("distortionSteer", () => {
     const steer = distortionSteer(matches);
     expect(steer).toContain("GENTLE NOTICE");
     expect(steer).toContain("Labeling");
+  });
+});
+
+describe("safeSpotDistortions — §9 gate", () => {
+  it("spots a distortion on ordinary negative thoughts", () => {
+    const r = safeSpotDistortions("I always mess everything up");
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.matches.some((m) => m.id === "all_or_nothing")).toBe(true);
+  });
+
+  it("returns crisis, not a distortion, when text discloses self-harm", () => {
+    const r = safeSpotDistortions("I want to hurt myself and everyone hates me");
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.reason).toBe("crisis");
+  });
+
+  it("returns empty matches on benign text", () => {
+    const r = safeSpotDistortions("I had a nice day today");
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.matches).toEqual([]);
   });
 });

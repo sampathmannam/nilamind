@@ -1,5 +1,8 @@
 import { secureLocal } from "./secureLocal";
 import { getSessionChat } from "./sessionChat";
+import { scanForCrisis } from "../safety";
+import { detectElevationRisk } from "./elevationGuard";
+import type { NilaUiMessage } from "./nilaSend";
 
 const ARMED_KEY = "nilamind_armed_checkin";
 
@@ -72,4 +75,50 @@ export function markCheckinFired(): void {
     entry.fired = true;
     secureLocal.setItem(ARMED_KEY, JSON.stringify(entry));
   }
+}
+
+const ARM_REQUEST_RE = /\bcheck\s*(?:in|on)\s*(?:me|with\s*me)|nudge\s*me|remind\s*me\s+later\b/i;
+const QUIET_RE = /\b(?:quiet|do\s*not\s*disturb|dnd|leave\s*me\s*alone|stop\s*checking)\b/i;
+
+export type ArmRequestResult =
+  | { ok: true; entry: ArmedCheckin; triggerLabel: string }
+  | { ok: false; reason: "not-requested" | "crisis" | "elevation" | "quiet" | "frequency" };
+
+/** True when the user is explicitly asking to be checked-in on later (opt-in). */
+export function looksLikeArmRequest(text: string): boolean {
+  return ARM_REQUEST_RE.test(text);
+}
+
+function formatTrigger(ts: number): string {
+  const d = new Date(ts);
+  const h = d.getHours();
+  const m = String(d.getMinutes()).padStart(2, "0");
+  const ampm = h >= 12 ? "pm" : "am";
+  const hour12 = h % 12 === 0 ? 12 : h % 12;
+  const time = `${hour12}:${m}${ampm}`;
+  if (h === 8) return `tomorrow morning at ${time}`;
+  if (h === 20) return `tonight at ${time}`;
+  return `at ${time}`;
+}
+
+/**
+ * Gate an armed check-in request. §9 + elevation + quiet + frequency-capped. Only arms when the user
+ * explicitly opts in and all safety gates pass. Returns the armed entry and a friendly trigger label.
+ */
+export function requestArmedCheckin(
+  userMessage: string,
+  _chat?: NilaUiMessage[],
+): ArmRequestResult {
+  if (!looksLikeArmRequest(userMessage)) return { ok: false, reason: "not-requested" };
+  if (scanForCrisis(userMessage)) return { ok: false, reason: "crisis" };
+  if (detectElevationRisk(userMessage).level !== "none") return { ok: false, reason: "elevation" };
+  if (QUIET_RE.test(userMessage.toLowerCase())) return { ok: false, reason: "quiet" };
+
+  const existing = getArmedCheckin();
+  if (existing && Date.now() - existing.armedAt < 24 * 60 * 60 * 1000) {
+    return { ok: false, reason: "frequency" };
+  }
+
+  const entry = armCheckin(userMessage);
+  return { ok: true, entry, triggerLabel: formatTrigger(entry.triggerAt) };
 }

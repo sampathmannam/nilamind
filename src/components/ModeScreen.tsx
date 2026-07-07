@@ -17,16 +17,21 @@ import { sendToNila } from "../services/sendToNila";
 import { NilaMode, NilaUiMessage } from "../services/nilaSend";
 import { getSessionChat, setSessionChat, clearSessionChat } from "../services/sessionChat";
 import { localLlmLoadState } from "../services/localLlm";
+import { safeDraftThoughtRecord, type ThoughtRecordDraft } from "../services/thoughtRecordDraft";
+import ThoughtRecordScreen from "./ThoughtRecordScreen";
+import { looksLikeArmRequest, requestArmedCheckin } from "../services/armedCheckin";
 import { speakIfEnabled, speak, listenOnce, stopSpeaking } from "../services/voice";
 import CrisisOverlay from "./CrisisOverlay";
-import { Settings, LifeBuoy, Mic, Send, MicOff } from "lucide-react";
+import LearnScreen from "./LearnScreen";
+import { Settings, LifeBuoy, Mic, Send, MicOff, X } from "lucide-react";
 
 interface ModeScreenProps {
   onOpenSettings?: () => void;
   onOpenCrisis?: () => void;
+  onOpenDashboard?: () => void;
 }
 
-export default function ModeScreen({ onOpenSettings, onOpenCrisis }: ModeScreenProps) {
+export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboard }: ModeScreenProps) {
   const [mode, setMode] = useState(getCurrentMode());
   const [showCheckin, setShowCheckin] = useState(() => {
     return !mode.hasCheckedIn;
@@ -36,6 +41,8 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis }: ModeScreenP
   const [loading, setLoading] = useState(false);
   const [listening, setListening] = useState(false);
   const [showCrisis, setShowCrisis] = useState(false);
+  const [auxView, setAuxView] = useState<"learn" | "thought_record" | null>(null);
+  const [thoughtRecordDraft, setThoughtRecordDraft] = useState<ThoughtRecordDraft | undefined>();
 
   // Refresh mode every 5 minutes
   useEffect(() => {
@@ -65,6 +72,33 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis }: ModeScreenP
     setInputText("");
     const userMsg: NilaUiMessage = { role: "user", content: msg };
     setMessages((prev) => [...prev, userMsg]);
+
+    // Armed check-in is a deterministic, opt-in command — handle it before the model.
+    if (looksLikeArmRequest(msg)) {
+      const armResult = requestArmedCheckin(msg, [...messages, userMsg]);
+      if (armResult.ok) {
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", content: `Got it — I'll check in with you ${armResult.triggerLabel}.` },
+        ]);
+      } else if (armResult.reason === "crisis") {
+        setShowCrisis(true);
+      } else {
+        const reply =
+          armResult.reason === "elevation"
+            ? "Let's slow down a little before I set a check-in — what you're describing sounds elevated, and I don't want to nudge you at the wrong moment."
+            : armResult.reason === "quiet"
+            ? "I'll stay quiet — no check-ins unless you ask again."
+            : armResult.reason === "frequency"
+            ? "You already have a check-in set. I'll keep that one."
+            : null;
+        if (reply) {
+          setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
+        }
+      }
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -108,6 +142,23 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis }: ModeScreenP
     }
   };
 
+  const openThoughtRecord = async () => {
+    const lastUserMsg = messages.filter((m) => m.role === "user").pop()?.content || "";
+    setLoading(true);
+    const result = await safeDraftThoughtRecord(lastUserMsg);
+    setLoading(false);
+    if (!result.ok) {
+      if (result.reason === "crisis") {
+        setShowCrisis(true);
+        return;
+      }
+      // empty → open blank
+    } else {
+      setThoughtRecordDraft(result.draft);
+    }
+    setAuxView("thought_record");
+  };
+
   const handleQuickAction = (action: string) => {
     switch (action) {
       case "grounding":
@@ -134,8 +185,17 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis }: ModeScreenP
           { role: "assistant", content: "Did you take your medication today?" },
         ]);
         break;
+      case "dashboard":
+        onOpenDashboard?.();
+        break;
       case "crisis":
         setShowCrisis(true);
+        break;
+      case "learn":
+        setAuxView("learn");
+        break;
+      case "thought_record":
+        void openThoughtRecord();
         break;
       default:
         setMessages((prev) => [
@@ -284,6 +344,43 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis }: ModeScreenP
             handleQuickAction("breathing");
           }}
         />
+      )}
+
+      {/* Aux view sheets */}
+      {auxView === "learn" && (
+        <div className="fixed inset-0 z-50 bg-page" id="learn-sheet">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
+            <span className="text-sm font-semibold text-slate-100">Learn</span>
+            <button
+              onClick={() => setAuxView(null)}
+              className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer"
+              aria-label="Close"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="overflow-y-auto p-4">
+            <LearnScreen />
+          </div>
+        </div>
+      )}
+
+      {auxView === "thought_record" && (
+        <div className="fixed inset-0 z-50 bg-page" id="thought-record-sheet">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
+            <span className="text-sm font-semibold text-slate-100">Thought Record</span>
+            <button
+              onClick={() => { setAuxView(null); setThoughtRecordDraft(undefined); }}
+              className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer"
+              aria-label="Close"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="overflow-y-auto p-4">
+            <ThoughtRecordScreen draft={thoughtRecordDraft} />
+          </div>
+        </div>
       )}
     </div>
   );

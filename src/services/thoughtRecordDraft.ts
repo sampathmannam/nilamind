@@ -1,6 +1,7 @@
 import { generateOnDevice } from "./localLlm";
 import { applyOutputSafety } from "./nilaSafetyGate";
 import { appendToSecureArray } from "./secureLocal";
+import { scanForCrisis } from "../safety";
 
 export interface ThoughtRecordDraft {
   situation: string;
@@ -87,4 +88,21 @@ export function saveThoughtRecord(record: ThoughtRecordDraft): void {
     timestamp: new Date().toLocaleTimeString(),
   };
   appendToSecureArray("nilamind_thought_records", entry);
+}
+
+export type SafeDraftResult =
+  | { ok: true; draft: ThoughtRecordDraft }
+  | { ok: false; reason: "crisis" | "empty" };
+
+/**
+ * §9-gated auto-draft from venting text. A crisis disclosure never reaches the on-device model; we surface
+ * crisis help instead. Returns the parsed draft, an empty reason, or a crisis flag.
+ */
+export async function safeDraftThoughtRecord(ventText: string): Promise<SafeDraftResult> {
+  const v = ventText.trim();
+  if (!v) return { ok: false, reason: "empty" };
+  if (scanForCrisis(v)) return { ok: false, reason: "crisis" };
+  const draft = await draftThoughtRecord(v);
+  if (!draft) return { ok: false, reason: "empty" };
+  return { ok: true, draft };
 }

@@ -15,7 +15,7 @@ vi.mock("./sessionChat", () => ({
   ]),
 }));
 
-import { armCheckin, getArmedCheckin, armedCheckinBody, armedCheckinPrompt, markCheckinFired } from "./armedCheckin";
+import { armCheckin, getArmedCheckin, armedCheckinBody, armedCheckinPrompt, markCheckinFired, requestArmedCheckin, looksLikeArmRequest } from "./armedCheckin";
 
 describe("armedCheckin", () => {
   beforeEach(() => { store.clear(); });
@@ -65,5 +65,53 @@ describe("armedCheckin", () => {
     const entry = armCheckin("check on me tonight");
     const prompt = armedCheckinPrompt(entry);
     expect(prompt).toContain("nervous");
+  });
+});
+
+describe("requestArmedCheckin — safety-gated opt-in", () => {
+  beforeEach(() => { store.clear(); });
+
+  it("arms on an explicit request", () => {
+    const r = requestArmedCheckin("Can you check on me later?");
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.triggerLabel).toContain("8:00pm");
+  });
+
+  it("does not arm when the user did not ask", () => {
+    const r = requestArmedCheckin("I'm going to bed now");
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.reason).toBe("not-requested");
+  });
+
+  it("blocks arming on crisis text", () => {
+    const r = requestArmedCheckin("Check on me, I want to die");
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.reason).toBe("crisis");
+  });
+
+  it("blocks arming on elevation markers", () => {
+    const r = requestArmedCheckin("Check on me, I don't need sleep and I can change the world tonight");
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.reason).toBe("elevation");
+  });
+
+  it("blocks arming when the user asked for quiet", () => {
+    const r = requestArmedCheckin("Check on me later but keep it quiet and do not disturb");
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.reason).toBe("quiet");
+  });
+
+  it("frequency-caps to one armed check-in per 24h", () => {
+    expect(requestArmedCheckin("Check on me tonight").ok).toBe(true);
+    const second = requestArmedCheckin("Check on me in the morning too");
+    expect(second.ok).toBe(false);
+    if (!second.ok) expect(second.reason).toBe("frequency");
+  });
+
+  it("looksLikeArmRequest detects phrasing variants", () => {
+    expect(looksLikeArmRequest("check on me later")).toBe(true);
+    expect(looksLikeArmRequest("nudge me this evening")).toBe(true);
+    expect(looksLikeArmRequest("remind me later")).toBe(true);
+    expect(looksLikeArmRequest("I'm fine")).toBe(false);
   });
 });

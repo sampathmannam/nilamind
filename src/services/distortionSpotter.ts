@@ -1,3 +1,5 @@
+import { scanForCrisis } from "../safety";
+
 type DistortionId =
   | "all_or_nothing" | "catastrophizing" | "mind_reading"
   | "overgeneralization" | "personalization" | "emotional_reasoning"
@@ -123,4 +125,17 @@ export function distortionSteer(matches: DistortionMatch[]): string {
   if (matches.length === 0) return "";
   const suggestions = matches.map((m) => `- ${m.label}: "${m.phrase}" → ${m.question}`);
   return ["GENTLE NOTICE — you spotted some thinking patterns (hold lightly, never as a verdict):", ...suggestions].join("\n");
+}
+
+export type SafeSpotResult =
+  | { ok: true; matches: DistortionMatch[] }
+  | { ok: false; reason: "crisis" };
+
+/**
+ * §9-gated distortion spotting. If the text reads as a crisis disclosure, we surface crisis help instead
+ * of reframing — never "spot a distortion" on a suicidal disclosure. Hold lightly, never a verdict.
+ */
+export function safeSpotDistortions(text: string): SafeSpotResult {
+  if (scanForCrisis(text)) return { ok: false, reason: "crisis" };
+  return { ok: true, matches: spotDistortions(text) };
 }

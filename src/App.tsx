@@ -93,6 +93,7 @@ export default function App() {
         <ModeScreen
           onOpenSettings={() => setIsSettingsOpen(true)}
           onOpenCrisis={() => setIsCrisisOpen(true)}
+          onOpenDashboard={() => setIsDashboardOpen(true)}
         />
       </main>
 

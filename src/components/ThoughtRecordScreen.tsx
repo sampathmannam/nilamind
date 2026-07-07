@@ -1,10 +1,11 @@
 import { secureLocal } from "../services/secureLocal";
 import React, { useState, useEffect } from "react";
 import { ThoughtRecord } from "../types";
-import { ChevronLeft, ChevronRight, BrainCircuit, RefreshCw, Check } from "lucide-react";
+import { ChevronLeft, ChevronRight, BrainCircuit, RefreshCw, Check, Brain } from "lucide-react";
 import { fetchBalancedThought } from "../services/coachAssist";
 import CrisisCard from "./CrisisCard";
 import { type ThoughtRecordDraft, mapDraftToWizard } from "../services/thoughtRecordDraft";
+import { safeSpotDistortions, distortionSteer } from "../services/distortionSpotter";
 
 const THINKING_TRAPS = [
   { name: "All-or-Nothing", desc: '"If it\'s not perfect, it\'s a complete failure"' },
@@ -36,6 +37,8 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
   const [aiLoading, setAiLoading] = useState<boolean>(false);
   const [aiError, setAiError] = useState<string | null>(null);
   const [crisis, setCrisis] = useState<boolean>(false);
+  const [spotting, setSpotting] = useState<boolean>(false);
+  const [distortionNotice, setDistortionNotice] = useState<string | null>(null);
 
   // Pre-fill from draft on first mount when draft is provided
   useEffect(() => {
@@ -53,6 +56,22 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
         ? prev.filter((t) => t !== trapName)
         : [...prev, trapName]
     );
+  };
+
+  // §9-gated distortion spotting — never reframe a crisis disclosure.
+  const handleSpotDistortions = async () => {
+    if (!automaticThought.trim()) return;
+    setSpotting(true);
+    setDistortionNotice(null);
+    const result = safeSpotDistortions(automaticThought);
+    if (!result.ok) {
+      setCrisis(true);
+    } else if (result.matches.length === 0) {
+      setDistortionNotice("No obvious thinking traps spotted — that's okay, this isn't a verdict.");
+    } else {
+      setDistortionNotice(distortionSteer(result.matches));
+    }
+    setSpotting(false);
   };
 
   // §9-gated assist via coachAssist: crisis text never reaches the model (see coachAssist.ts).
@@ -217,9 +236,20 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
             </h3>
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-200 block">
-                  What automatic thoughts went through your mind?
-                </label>
+                <div className="flex justify-between items-center">
+                  <label className="text-sm font-semibold text-slate-200 block">
+                    What automatic thoughts went through your mind?
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleSpotDistortions}
+                    disabled={spotting || !automaticThought.trim()}
+                    className="text-xs bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 rounded-lg px-2.5 py-1.5 flex items-center gap-1 cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Brain className="w-3.5 h-3.5" />
+                    <span>{spotting ? "Looking..." : "Spot traps"}</span>
+                  </button>
+                </div>
                 <textarea
                   aria-label="What automatic thoughts went through your mind?"
                   value={automaticThought}
@@ -227,6 +257,11 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
                   className="w-full h-24 bg-page border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-300 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-all resize-none"
                   placeholder="e.g. 'They are leaving me because I am totally toxic and unlovable...'"
                 />
+                {distortionNotice && (
+                  <div className="bg-amber-500/5 border border-amber-500/20 rounded-lg px-3 py-2 text-[11px] text-amber-200/90 leading-relaxed whitespace-pre-line">
+                    {distortionNotice}
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2">
