@@ -23,6 +23,8 @@ import { getInflectionEnabled } from "./inflectionPrefs";
 import { INSTRUMENTS } from "./assessments";
 import { DAY_MS } from "./storageUtils";
 import { computeStateDigest, stateDigestContextBlock } from "./stateDigest";
+import { parseSafetyPlan } from "./safetyPlan";
+import { safetyPlanFollowUpContextBlock } from "./safetyPlanFollowUp";
 
 function readArray(key: string): any[] {
   try {
@@ -230,7 +232,17 @@ export function buildPersonalContext(): string {
   // A detected trend shift — only when the user has opted into inflection awareness.
   const inflection = getInflectionEnabled() ? inflectionContextBlock(topFireableSignal()) : "";
 
-  if (lines.length === 0 && !memory && !insights && !profile && !trajectory && !inflection) return "";
+  // Safety-plan follow-up (B3 — Stanley-Brown loop). Only generates a block when the plan is stale.
+  // Gentle invitation, never a demand. Never surfaced without the user choosing to engage.
+  let safetyPlanFollowUp = "";
+  try {
+    const raw = secureLocal.getItem("nilamind_safetyplan");
+    if (raw) {
+      safetyPlanFollowUp = safetyPlanFollowUpContextBlock(parseSafetyPlan(raw));
+    }
+  } catch { /* best-effort, never block context assembly */ }
+
+  if (lines.length === 0 && !memory && !insights && !profile && !trajectory && !inflection && !safetyPlanFollowUp) return "";
 
   const out: string[] = [
     "WHAT YOU ALREADY KNOW ABOUT THEM",
@@ -263,6 +275,11 @@ export function buildPersonalContext(): string {
       out.push(digestBlock);
     }
   } catch { /* best-effort */ }
+
+  if (safetyPlanFollowUp) {
+    out.push("Safety-plan follow-up (gentle invitation, never a push):");
+    out.push(safetyPlanFollowUp);
+  }
 
   return out.join("\n");
 }

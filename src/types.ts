@@ -33,6 +33,8 @@ export interface SafetyPlan {
   trustedPeople: string;
   professionals: string;
   safeEnvironment: string;
+  /** Epoch ms of last update. Omitted on legacy plans (no follow-up until the user saves once). */
+  lastUpdatedAt?: number;
 }
 
 export interface EpisodeRecord {

@@ -32,7 +32,7 @@ export default function SafetyPlanScreen() {
   }, []);
 
   const updateSection = (field: keyof SafetyPlan, value: string) => {
-    const updated = { ...safetyPlan, [field]: value };
+    const updated = { ...safetyPlan, [field]: value, lastUpdatedAt: Date.now() };
     setSafetyPlan(updated);
     secureLocal.setItem("nilamind_safetyplan", JSON.stringify(updated));
     setSavedStatus(true);
