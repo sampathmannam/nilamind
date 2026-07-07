@@ -231,6 +231,30 @@ export const PROTOCOLS: Protocol[] = [
         prompt: "After grounding: did anything shift, even slightly? More here? Less flooded? There's no wrong answer — noticing is the skill." },
     ],
   },
+  {
+    id: "sleep-rhythm",
+    title: "Sleep Rhythm",
+    basis:
+      "Circadian rhythm disruption is a well-documented precursor to mood episodes in bipolar spectrum conditions (Harvey, 2008; Gold & Bunney, 2018). " +
+      "Stabilising sleep-wake timing — without sleep restriction — is a core target of Interpersonal and Social Rhythm Therapy (IPSRT) and CBT-I.",
+    forConcerns: [
+      "sleep schedule", "irregular sleep", "sleep rhythm", "wake up at different times", "cant wake up same time",
+      "can't wake up same time", "circadian", "sleep pattern", "sleep all over the place", "staying up late",
+      "sleep timing", "bedtime varies", "wake time varies", "no sleep routine",
+    ],
+    steps: [
+      { id: "sr-1", kind: "psychoed", title: "Why rhythm matters",
+        prompt: "Sleep isn't just about hours — it's also about timing. A body clock that shifts a lot from day to day can leave us more vulnerable to mood shifts. The good news: small regularity changes help, and we won't cut your sleep to do it." },
+      { id: "sr-2", kind: "plan", title: "Anchor one wake-up time",
+        prompt: "The strongest anchor is the same wake-up time every day — yes, even after a rough night. What wake-up time feels realistic most days?" },
+      { id: "sr-3", kind: "plan", title: "Get morning light",
+        prompt: "Light soon after waking tells your brain it's day-time. Even a few minutes outside or near a bright window counts. Where could you get morning light after you wake?" },
+      { id: "sr-4", kind: "plan", title: "Wind-down buffer",
+        prompt: "A simple 30–60 minute wind-down — dim lights, quiet activity, one less scroll — helps the clock settle. What would a calm pre-bed routine look like for you?" },
+      { id: "sr-5", kind: "reflect", title: "Notice the rhythm",
+        prompt: "After a few days of anchoring wake-time and light: has anything shifted? Not forcing perfect sleep — just noticing whether your days feel a little steadier." },
+    ],
+  },
 ];
 
 /**

@@ -75,4 +75,9 @@ describe("routeToProtocol — modular matching (concern → the right evidence-b
     const p = routeToProtocol("i had a flashback, i felt like i was back there, nothing feels real");
     expect(p?.id).toBe("grounding-anchor");
   });
+
+  it("routes irregular sleep / schedule focus → Sleep Rhythm", () => {
+    const p = routeToProtocol("my sleep schedule is all over the place, i wake up at different times every day");
+    expect(p?.id).toBe("sleep-rhythm");
+  });
 });
