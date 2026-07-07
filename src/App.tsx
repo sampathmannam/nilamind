@@ -27,6 +27,8 @@ import { syncDailyReminders } from "./services/notifications";
 import ListeningIndicator from "./components/ListeningIndicator";
 import BiometricGateHost from "./components/BiometricGateHost";
 import ModelSetupGate from "./components/ModelSetupGate";
+import OnboardingGate from "./components/OnboardingGate";
+import { hasCompletedOnboarding } from "./services/onboarding";
 
 export default function App() {
   const [isCrisisOpen, setIsCrisisOpen] = useState(false);
@@ -35,6 +37,7 @@ export default function App() {
   const [isGroundingOpen, setIsGroundingOpen] = useState(false);
   const [disableAnchorPulse, setDisableAnchorPulse] = useState(false);
   const [saveWarning, setSaveWarning] = useState(false);
+  const [onboardingDone, setOnboardingDone] = useState(hasCompletedOnboarding());
 
   useEffect(() => onPersistError((failingKeys) => setSaveWarning(failingKeys.length > 0)), []);
 
@@ -75,6 +78,14 @@ export default function App() {
 
       {/* Model setup gate — standalone, renders itself */}
       <ModelSetupGate />
+
+      {/* First-run onboarding — skip available, crisis always reachable */}
+      {!onboardingDone && (
+        <OnboardingGate
+          onComplete={() => setOnboardingDone(true)}
+          onOpenCrisis={() => setIsCrisisOpen(true)}
+        />
+      )}
 
       {/* Confidentiality notice */}
       {saveWarning && (
