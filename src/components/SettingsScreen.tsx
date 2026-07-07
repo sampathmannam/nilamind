@@ -1,5 +1,5 @@
 import React from "react";
-import { Settings as SettingsIcon, EyeOff } from "lucide-react";
+import { Settings as SettingsIcon, EyeOff, Users } from "lucide-react";
 import AppearanceSection from "./settings/AppearanceSection";
 import VoiceSection from "./settings/VoiceSection";
 import RemindersSection from "./settings/RemindersSection";
@@ -14,9 +14,10 @@ import LanguageSection from "./settings/LanguageSection";
 interface SettingsScreenProps {
   disableAnchorPulse: boolean;
   onTogglePulse: (val: boolean) => void;
+  onOpenCaregiver?: () => void;
 }
 
-export default function SettingsScreen({ disableAnchorPulse, onTogglePulse }: SettingsScreenProps) {
+export default function SettingsScreen({ disableAnchorPulse, onTogglePulse, onOpenCaregiver }: SettingsScreenProps) {
   return (
     <div className="space-y-6 max-w-md mx-auto text-slate-100" id="settings-view">
       <div>
@@ -72,6 +73,19 @@ export default function SettingsScreen({ disableAnchorPulse, onTogglePulse }: Se
       <OnDeviceSection />
       <IdentitySection />
       <PrivacyLockSection />
+      {onOpenCaregiver && (
+        <button
+          onClick={onOpenCaregiver}
+          className="w-full flex items-center gap-3 glass hover:brightness-125 p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left"
+          id="open-caregiver"
+        >
+          <span className="shrink-0 text-emerald-400"><Users className="w-5 h-5" /></span>
+          <span className="flex-1 min-w-0">
+            <span className="block text-sm font-bold text-slate-100">Share with a trusted person</span>
+            <span className="block text-[11px] text-slate-400">Build a wellness snapshot for family support</span>
+          </span>
+        </button>
+      )}
       <FeedbackSection />
     </div>
   );

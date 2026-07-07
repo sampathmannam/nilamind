@@ -14,6 +14,7 @@ import ModeScreen from "./components/ModeScreen";
 const SettingsScreen = lazy(() => import("./components/SettingsScreen"));
 const DashboardScreen = lazy(() => import("./components/DashboardScreen"));
 const MedicationAdherenceScreen = lazy(() => import("./components/MedicationAdherenceScreen"));
+const CaregiverShareScreen = lazy(() => import("./components/CaregiverShareScreen"));
 
 // Calm fallback while lazy chunks load
 function ScreenFallback() {
@@ -38,6 +39,7 @@ export default function App() {
   const [isDashboardOpen, setIsDashboardOpen] = useState(false);
   const [isGroundingOpen, setIsGroundingOpen] = useState(false);
   const [isMedicationOpen, setIsMedicationOpen] = useState(false);
+  const [isCaregiverOpen, setIsCaregiverOpen] = useState(false);
   const [disableAnchorPulse, setDisableAnchorPulse] = useState(false);
   const [saveWarning, setSaveWarning] = useState(false);
   const [onboardingDone, setOnboardingDone] = useState(hasCompletedOnboarding());
@@ -67,6 +69,7 @@ export default function App() {
       if (isDashboardOpen) { setIsDashboardOpen(false); return; }
       if (isGroundingOpen) { setIsGroundingOpen(false); return; }
       if (isMedicationOpen) { setIsMedicationOpen(false); return; }
+      if (isCaregiverOpen) { setIsCaregiverOpen(false); return; }
       void CapApp.exitApp();
     }).then((h) => { handle = h; if (removed) h.remove(); });
     return () => { removed = true; handle?.remove(); };
@@ -155,10 +158,11 @@ export default function App() {
           </div>
           <div className="overflow-y-auto">
             <Suspense fallback={<ScreenFallback />}>
-              <SettingsScreen
-                disableAnchorPulse={disableAnchorPulse}
-                onTogglePulse={(val) => setDisableAnchorPulse(val)}
-              />
+            <SettingsScreen
+              disableAnchorPulse={disableAnchorPulse}
+              onTogglePulse={(val) => setDisableAnchorPulse(val)}
+              onOpenCaregiver={() => setIsCaregiverOpen(true)}
+            />
             </Suspense>
           </div>
         </div>
@@ -199,6 +203,26 @@ export default function App() {
           <div className="overflow-y-auto p-4">
             <Suspense fallback={<ScreenFallback />}>
               <MedicationAdherenceScreen />
+            </Suspense>
+          </div>
+        </div>
+      )}
+
+      {/* Caregiver share sheet */}
+      {isCaregiverOpen && (
+        <div className="fixed inset-0 z-50 bg-page" id="caregiver-sheet">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
+            <span className="text-sm font-semibold text-slate-100">Share with a trusted person</span>
+            <button
+              onClick={() => setIsCaregiverOpen(false)}
+              className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer"
+            >
+              ✕
+            </button>
+          </div>
+          <div className="overflow-y-auto p-4">
+            <Suspense fallback={<ScreenFallback />}>
+              <CaregiverShareScreen />
             </Suspense>
           </div>
         </div>

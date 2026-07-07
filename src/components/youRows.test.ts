@@ -3,7 +3,7 @@ import { YOU_ROW_IDS, buildYouGroups } from "./youRows";
 
 describe("You hub rows (redesign §2)", () => {
   it("includes the manage rows", () => {
-    for (const id of ["dashboard", "your_data", "settings"]) expect(YOU_ROW_IDS).toContain(id);
+    for (const id of ["dashboard", "your_data", "nila_memory", "settings", "caregiver"]) expect(YOU_ROW_IDS).toContain(id);
   });
   it("includes the Resources group rows", () => {
     for (const id of ["thought_record", "values_to_action", "learn"]) {
@@ -21,7 +21,7 @@ describe("You hub rows (redesign §2)", () => {
   it("renders exactly the expected hub rows in order (catches accidental add/remove/reorder)", () => {
     const rendered = buildYouGroups().flatMap((g) => g.rows.map((r) => r.id));
     expect(rendered).toEqual([
-      "dashboard", "your_data", "nila_memory", "settings",
+      "dashboard", "your_data", "nila_memory", "settings", "caregiver",
       "thought_record", "values_to_action", "learn",
     ]);
     expect(YOU_ROW_IDS).toEqual(rendered);
