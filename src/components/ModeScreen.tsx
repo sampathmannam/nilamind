@@ -271,11 +271,20 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
       case "values_to_action":
         setAuxView("values_to_action");
         break;
-      default:
+      case "reach_out":
         setMessages((prev) => [
           ...prev,
-          { role: "assistant", content: `Opening ${action}...` },
+          { role: "assistant", content: "Who could you reach out to today — even just a small message? Sometimes the smallest reach is the strongest one." },
         ]);
+        break;
+      case "wind_down":
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", content: "Let's wind down. Take a slow breath. Want to try a quick grounding exercise or talk through what's on your mind?" },
+        ]);
+        break;
+      default:
+        break;
     }
   };
 
@@ -297,7 +306,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   return (
     <div className="flex flex-col h-full bg-page">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800/50">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800/50" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold text-slate-100">{greeting}</span>
         </div>

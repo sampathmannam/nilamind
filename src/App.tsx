@@ -27,6 +27,8 @@ function ScreenFallback() {
 
 import { syncDailyReminders } from "./services/notifications";
 import { t } from "./services/i18n";
+import { wakeWord } from "./services/wakeWord";
+import { getWakeEnabled } from "./services/wakePrefs";
 import ListeningIndicator from "./components/ListeningIndicator";
 import BiometricGateHost from "./components/BiometricGateHost";
 import ModelSetupGate from "./components/ModelSetupGate";
@@ -43,6 +45,7 @@ export default function App() {
   const [disableAnchorPulse, setDisableAnchorPulse] = useState(false);
   const [saveWarning, setSaveWarning] = useState(false);
   const [onboardingDone, setOnboardingDone] = useState(hasCompletedOnboarding());
+  const [wakeListening, setWakeListening] = useState(false);
 
   useEffect(() => onPersistError((failingKeys) => setSaveWarning(failingKeys.length > 0)), []);
 
@@ -59,6 +62,31 @@ export default function App() {
     void syncDailyReminders();
   }, []);
 
+  // Wake word integration — start/stop on pref change, cleanup on unmount.
+  useEffect(() => {
+    const onWakeCb = () => {
+      // Wake word detected — could open listen mode. For now, a no-op.
+      // The wake word stops itself after one fire (wakeWord fires onWake once then stops).
+      setWakeListening(false);
+    };
+    const handler = () => {
+      if (getWakeEnabled()) {
+        wakeWord.start(onWakeCb).then((ok) => setWakeListening(ok)).catch(() => setWakeListening(false));
+      } else {
+        void wakeWord.stop().then(() => setWakeListening(false));
+      }
+    };
+    // Initialise on mount
+    if (getWakeEnabled()) {
+      wakeWord.start(onWakeCb).then((ok) => setWakeListening(ok)).catch(() => setWakeListening(false));
+    }
+    window.addEventListener("nilaWakePrefChanged", handler);
+    return () => {
+      window.removeEventListener("nilaWakePrefChanged", handler);
+      void wakeWord.stop();
+    };
+  }, []);
+
   // Android hardware back button
   useEffect(() => {
     let handle: { remove: () => void } | undefined;
@@ -73,7 +101,7 @@ export default function App() {
       void CapApp.exitApp();
     }).then((h) => { handle = h; if (removed) h.remove(); });
     return () => { removed = true; handle?.remove(); };
-  }, [isCrisisOpen, isSettingsOpen, isDashboardOpen, isGroundingOpen, isMedicationOpen]);
+  }, [isCrisisOpen, isSettingsOpen, isDashboardOpen, isGroundingOpen, isMedicationOpen, isCaregiverOpen]);
 
   return (
     <div className="relative isolate min-h-screen bg-page text-slate-300 font-sans antialiased overflow-x-hidden">
@@ -104,7 +132,7 @@ export default function App() {
       )}
 
       {/* Listening indicator (wake word) */}
-      <ListeningIndicator active={false} onClick={() => {}} />
+      <ListeningIndicator active={wakeListening} onClick={() => setIsSettingsOpen(true)} />
 
       {/* Main content — ModeScreen is the single home */}
       <main className="relative flex flex-col min-h-screen">
@@ -129,8 +157,8 @@ export default function App() {
 
       {/* Grounding library */}
       {isGroundingOpen && (
-        <div className="fixed inset-0 z-50 bg-page" id="grounding-sheet">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
+        <div className="fixed inset-0 z-50 bg-page flex flex-col" id="grounding-sheet">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
             <span className="text-sm font-semibold text-slate-100">Grounding</span>
             <button
               onClick={() => setIsGroundingOpen(false)}
@@ -139,7 +167,7 @@ export default function App() {
               ✕
             </button>
           </div>
-          <div className="overflow-y-auto">
+          <div className="flex-1 min-h-0 overflow-y-auto">
             <GroundingLibraryScreen />
           </div>
         </div>
@@ -147,8 +175,8 @@ export default function App() {
 
       {/* Settings sheet */}
       {isSettingsOpen && (
-        <div className="fixed inset-0 z-50 bg-page" id="settings-sheet">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
+        <div className="fixed inset-0 z-50 bg-page flex flex-col" id="settings-sheet">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
             <span className="text-sm font-semibold text-slate-100">{t("settings")}</span>
             <button
               onClick={() => setIsSettingsOpen(false)}
@@ -157,7 +185,7 @@ export default function App() {
               ✕
             </button>
           </div>
-          <div className="overflow-y-auto">
+          <div className="flex-1 min-h-0 overflow-y-auto">
             <Suspense fallback={<ScreenFallback />}>
             <SettingsScreen
               disableAnchorPulse={disableAnchorPulse}
@@ -171,8 +199,8 @@ export default function App() {
 
       {/* Dashboard sheet */}
       {isDashboardOpen && (
-        <div className="fixed inset-0 z-50 bg-page" id="dashboard-sheet">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
+        <div className="fixed inset-0 z-50 bg-page flex flex-col" id="dashboard-sheet">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
             <span className="text-sm font-semibold text-slate-100">{t("dashboard")}</span>
             <button
               onClick={() => setIsDashboardOpen(false)}
@@ -181,7 +209,7 @@ export default function App() {
               ✕
             </button>
           </div>
-          <div className="overflow-y-auto">
+          <div className="flex-1 min-h-0 overflow-y-auto">
             <Suspense fallback={<ScreenFallback />}>
               <DashboardScreen />
             </Suspense>
@@ -191,8 +219,8 @@ export default function App() {
 
       {/* Medication adherence sheet */}
       {isMedicationOpen && (
-        <div className="fixed inset-0 z-50 bg-page" id="medication-sheet">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
+        <div className="fixed inset-0 z-50 bg-page flex flex-col" id="medication-sheet">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
             <span className="text-sm font-semibold text-slate-100">{t("medications")}</span>
             <button
               onClick={() => setIsMedicationOpen(false)}
@@ -201,7 +229,7 @@ export default function App() {
               ✕
             </button>
           </div>
-          <div className="overflow-y-auto p-4">
+          <div className="flex-1 min-h-0 overflow-y-auto p-4">
             <Suspense fallback={<ScreenFallback />}>
               <MedicationAdherenceScreen />
             </Suspense>
@@ -211,8 +239,8 @@ export default function App() {
 
       {/* Caregiver share sheet */}
       {isCaregiverOpen && (
-        <div className="fixed inset-0 z-50 bg-page" id="caregiver-sheet">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
+        <div className="fixed inset-0 z-50 bg-page flex flex-col" id="caregiver-sheet">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
             <span className="text-sm font-semibold text-slate-100">Share with a trusted person</span>
             <button
               onClick={() => setIsCaregiverOpen(false)}
@@ -221,7 +249,7 @@ export default function App() {
               ✕
             </button>
           </div>
-          <div className="overflow-y-auto p-4">
+          <div className="flex-1 min-h-0 overflow-y-auto p-4">
             <Suspense fallback={<ScreenFallback />}>
               <CaregiverShareScreen />
             </Suspense>
