@@ -41,11 +41,11 @@ export async function askNilaLocalStream(
   // model's awareness (RAG grounding — kills hallucination on clinical facts). Best-effort: if the
   // store/embedder read fails, continue without the block rather than break the chat.
   //
-  // NOTE: we deliberately do NOT also append stateEngine's stateEstimate block here. buildNilaSystem()
-  // already feeds buildPersonalContext() (sleep-prodrome, inflection, check-ins, BA — with the careful
-  // manic-first §9 framing), so a second state summary fed the model the SAME signals twice — prompt
-  // bloat that matters more on the smaller 1B, and risks over-weighting. stateEngine remains a typed
-  // estimate for screens/future use; the warm, safety-framed context stays the single model-facing source.
+  // NOTE: the model is fed ONE state source — buildNilaSystem() -> buildPersonalContext() (sleep-prodrome,
+  // inflection, check-ins, BA — with the careful manic-first §9 framing). A parallel "stateEngine" that
+  // re-summarised the SAME signals into a second block was removed (deleted 2026-07-08): it double-fed the
+  // model, bloating the prompt on the smaller 1B and risking over-weighting. The warm, safety-framed context
+  // stays the single model-facing source.
   try {
     const psychoedSnippet = await retrievePsychoedForQuery(lastUser);
     const psychoedBlock = psychoedContextBlock(psychoedSnippet);
