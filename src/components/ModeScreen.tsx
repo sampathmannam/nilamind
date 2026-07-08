@@ -13,8 +13,11 @@ import { hasCheckinToday, getSkipFlag } from "../services/checkin";
 import { t } from "../services/i18n";
 import { useTypingSession } from "../hooks/useTypingSession";
 import { getSuggestions, timeSlot } from "../services/chatSuggestions";
+import { suggestSkill } from "../services/skillSuggest";
+import { filterSkills, type Skill } from "../services/skillsLibrary";
 import NilaCheckIn from "./NilaCheckIn";
 import ChatLoading from "./ChatLoading";
+import SkillOfferCard from "./SkillOfferCard";
 import type { CheckInEntry } from "../types";
 import { secureLocal } from "../services/secureLocal";
 import { sendToNila } from "../services/sendToNila";
@@ -62,6 +65,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   const [thoughtRecordDraft, setThoughtRecordDraft] = useState<ThoughtRecordDraft | undefined>();
   const [protocolCard, setProtocolCard] = useState<ProtocolCard | null>(() => protocolOfferCard(""));
   const [showSafetyPlanReview, setShowSafetyPlanReview] = useState(false);
+  const [skillOffer, setSkillOffer] = useState<Skill | null>(null);
 
   // Refresh mode every 5 minutes
   useEffect(() => {
@@ -176,6 +180,9 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
       }
       // After Nila replies, refresh the protocol card (continue if active, else re-offer).
       setProtocolCard(protocolOfferCard(msg));
+      // Suggest a relevant coping skill if the user expressed distress
+      const suggestion = suggestSkill(msg);
+      setSkillOffer(suggestion?.skill ?? null);
     } catch {
       setMessages((prev) => [
         ...prev,
@@ -260,6 +267,17 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
         setProtocolCard(protocolOfferCard(""));
       }
     }
+  };
+
+  const handleTrySkill = (skill: Skill) => {
+    const steps = skill.steps?.length
+      ? skill.steps.map((s, i) => `${i + 1}. ${s}`).join("\n")
+      : skill.purpose;
+    setMessages((prev) => [
+      ...prev,
+      { role: "assistant", content: `**${skill.name}** — ${skill.purpose}\n\n${steps}\n\nTake your time with this. Even a small try counts. 💙` },
+    ]);
+    setSkillOffer(null);
   };
 
   const handleQuickAction = (action: string) => {
@@ -458,6 +476,17 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
             >
               {protocolCard.label}
             </button>
+           )}
+
+          {/* Skill suggestion card — appears when Nila detects distress */}
+          {skillOffer && (
+            <SkillOfferCard
+              skill={skillOffer}
+              reason={suggestSkill(messages.filter(m => m.role === "user").pop()?.content || "")?.reason || "This might help"}
+              emoji={suggestSkill(messages.filter(m => m.role === "user").pop()?.content || "")?.emoji || "💡"}
+              onTry={handleTrySkill}
+              onDismiss={() => setSkillOffer(null)}
+            />
           )}
 
           {/* Quick suggestion chips — tap to send */}
