@@ -42,9 +42,10 @@ interface ModeScreenProps {
   onOpenDashboard?: () => void;
   onOpenMedication?: () => void;
   onOpenGrounding?: (expandIndex?: number) => void;
+  onOpenDiary?: () => void;
 }
 
-export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboard, onOpenMedication, onOpenGrounding }: ModeScreenProps) {
+export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboard, onOpenMedication, onOpenGrounding, onOpenDiary }: ModeScreenProps) {
   const [mode, setMode] = useState(getCurrentMode());
   const [showCheckin, setShowCheckin] = useState(() => {
     return !mode.hasCheckedIn;
@@ -78,6 +79,22 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
       setShowSafetyPlanReview(false);
     }
   }, [auxView]);
+
+  // audit 2.1 — CHAT PERSISTENCE (regressed in the rewrite: sessionChat was imported but never used).
+  // Restore an in-progress conversation on mount so it survives leaving/killing the app; a crisis session
+  // is intentionally never restored (it is cleared by the persist effect below).
+  useEffect(() => {
+    const saved = getSessionChat();
+    if (saved.length) setMessages(saved);
+  }, []);
+
+  // Persist the chat as it grows. INVARIANT: a §9 crisis turn is NEVER persisted — clear the store so a
+  // crisis transcript can't be restored later (mirrors the old AiCoachScreen rule). asyncReflection and
+  // armedCheckin read getSessionChat(), so this is also what makes those features see real conversations.
+  useEffect(() => {
+    if (showCrisis) { clearSessionChat(); return; }
+    if (messages.length) setSessionChat(messages);
+  }, [messages, showCrisis]);
 
   const handleCheckinLogged = (entry: CheckInEntry) => {
     setShowCheckin(false);
@@ -246,10 +263,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
         onOpenGrounding?.(1); // Auto-expand Box Breathing (index 1)
         break;
       case "diary":
-        setMessages((prev) => [
-          ...prev,
-          { role: "assistant", content: "How are you feeling right now? You can log your mood in the Tools tab under 'Diary' for a full DBT card." },
-        ]);
+        onOpenDiary?.();
         break;
       case "medication":
         if (onOpenMedication) {

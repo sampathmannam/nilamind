@@ -161,8 +161,13 @@ export function getLanguage(): SupportedLang {
   return "en";
 }
 
+export const LANGUAGE_CHANGED_EVENT = "nilaLanguageChanged";
+
 export function setLanguage(lang: SupportedLang): void {
   try { ls()?.setItem(STORAGE_KEY, lang); } catch { /* ignore */ }
+  // audit 2.23 — notify the app so t()-driven strings re-render immediately (previously nothing re-rendered
+  // on a language switch, so the change appeared to do nothing until an unrelated re-render).
+  try { if (typeof window !== "undefined") window.dispatchEvent(new Event(LANGUAGE_CHANGED_EVENT)); } catch { /* ignore */ }
 }
 
 /** Translate a key. Falls back to English, then to the key itself. */

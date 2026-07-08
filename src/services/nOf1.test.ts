@@ -72,4 +72,29 @@ describe("nOf1 protocol testing", () => {
     recordProtocolCompletion("behaviour", "2026-07-03");
     expect(bestProtocolForUser()).toBeNull();
   });
+
+  // audit 2.18: distressNextDay can't exist at completion time; it must be backfilled once tomorrow logs.
+  it("backfills distressNextDay once the following day's check-in exists", () => {
+    // Completions happen when only the SAME day's check-in exists (tomorrow hasn't happened).
+    (loadMoodHistory as any).mockReturnValue(mood([{ date: "2026-07-01", intensity: 8 }]));
+    const rec = recordProtocolCompletion("self-compassion", "2026-07-01");
+    expect(rec.distressNextDay).toBeNull(); // the bug was this staying null forever
+
+    (loadMoodHistory as any).mockReturnValue(mood([
+      { date: "2026-07-01", intensity: 8 }, { date: "2026-07-03", intensity: 8 },
+    ]));
+    recordProtocolCompletion("self-compassion", "2026-07-03");
+
+    // Ranking used to be permanently empty. Now, once the next-day check-ins are logged, it backfills.
+    expect(computeNof1Ranking()).toHaveLength(0); // still nothing — next days not logged yet
+
+    (loadMoodHistory as any).mockReturnValue(mood([
+      { date: "2026-07-01", intensity: 8 }, { date: "2026-07-02", intensity: 3 },
+      { date: "2026-07-03", intensity: 8 }, { date: "2026-07-04", intensity: 2 },
+    ]));
+    const rank = computeNof1Ranking();
+    expect(rank).toHaveLength(1);
+    expect(rank[0].protocolId).toBe("self-compassion");
+    expect(rank[0].avgDelta).toBeLessThan(0); // distress dropped the day after — real data at last
+  });
 });

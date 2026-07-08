@@ -259,6 +259,7 @@ export default function App() {
             onOpenDashboard={() => setIsDashboardOpen(true)}
             onOpenMedication={() => setIsMedicationOpen(true)}
             onOpenGrounding={(idx) => { setIsGroundingOpen(true); setGroundingExpandIndex(idx); }}
+            onOpenDiary={() => setActiveAuxView("diary" as AuxView)}
           />
         )}
         {activeTab === "tools" && (

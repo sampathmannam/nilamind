@@ -53,12 +53,34 @@ function localYmd(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
+/** Backfill distress values that couldn't exist at completion time. distressNextDay is looked up when the
+ *  protocol is completed — but "tomorrow's" check-in doesn't exist yet, so it was ALWAYS null and the whole
+ *  ranking stayed empty. This fills it (and any missing same-day value) from check-ins once those days have
+ *  been logged. Idempotent; persists only when something changed. Runs before every ranking. */
+export function backfillNof1(): ProtocolCompletion[] {
+  let list: ProtocolCompletion[];
+  try { const r = secureLocal.getItem(KEY); list = r ? JSON.parse(r) : []; } catch { return []; }
+  if (!Array.isArray(list) || list.length === 0) return list ?? [];
+  const byDate = new Map(loadMoodHistory().map((m) => [m.date, m]));
+  let changed = false;
+  for (const c of list) {
+    if (c.distressSameDay == null) {
+      const same = byDate.get(c.date);
+      if (same?.intensity != null) { c.distressSameDay = same.intensity; changed = true; }
+    }
+    if (c.distressNextDay == null) {
+      const next = byDate.get(nextDay(c.date));
+      if (next?.intensity != null) { c.distressNextDay = next.intensity; changed = true; }
+    }
+  }
+  if (changed) secureLocal.setItem(KEY, JSON.stringify(list));
+  return list;
+}
+
 /** Compute per-protocol effect: average change in distress from completion day to the following day.
  *  Negative delta = distress dropped (good). Returns ranked best-first. */
 export function computeNof1Ranking(): { protocolId: string; completions: number; avgDelta: number; avgNextDay: number }[] {
-  const raw = (() => {
-    try { const r = secureLocal.getItem(KEY); return r ? JSON.parse(r) as ProtocolCompletion[] : []; } catch { return []; }
-  })();
+  const raw = backfillNof1();
   const byProto = new Map<string, ProtocolCompletion[]>();
   for (const c of raw) {
     if (c.distressSameDay == null || c.distressNextDay == null) continue;
