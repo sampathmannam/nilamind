@@ -276,12 +276,12 @@ export default function App() {
           />
         )}
         {activeTab === "tools" && (
-          <div className="flex-1 min-h-0 overflow-y-auto">
+          <div className="flex-1 min-h-0 overflow-y-auto pt-[max(12px,env(safe-area-inset-top))] pb-6">
             <ToolsScreen go={go} phoneEnabled={phoneEnabled} onEpisode={onEpisode} />
           </div>
         )}
         {activeTab === "you" && (
-          <div className="flex-1 min-h-0 overflow-y-auto">
+          <div className="flex-1 min-h-0 overflow-y-auto pt-[max(12px,env(safe-area-inset-top))] pb-6">
             <YouScreen go={go} />
           </div>
         )}
