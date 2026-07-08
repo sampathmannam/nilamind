@@ -48,7 +48,7 @@ function ScreenFallback() {
 }
 
 import { syncDailyReminders } from "./services/notifications";
-import { t } from "./services/i18n";
+import { t, LANGUAGE_CHANGED_EVENT } from "./services/i18n";
 import { wakeWord } from "./services/wakeWord";
 import { getWakeEnabled } from "./services/wakePrefs";
 import ListeningIndicator from "./components/ListeningIndicator";
@@ -132,8 +132,16 @@ export default function App() {
   const [onboardingDone, setOnboardingDone] = useState(hasCompletedOnboarding());
   const [wakeListening, setWakeListening] = useState(false);
   const [phoneEnabled] = useState(false);
+  const [, setLangTick] = useState(0); // audit 2.23 — bump to re-render t()-driven copy on a language switch
 
   useEffect(() => onPersistError((failingKeys) => setSaveWarning(failingKeys.length > 0)), []);
+
+  // audit 2.23 — re-render the whole app when the language changes so translated strings update immediately.
+  useEffect(() => {
+    const h = () => setLangTick((n) => n + 1);
+    window.addEventListener(LANGUAGE_CHANGED_EVENT, h);
+    return () => window.removeEventListener(LANGUAGE_CHANGED_EVENT, h);
+  }, []);
 
   // Load saved animation preference
   useEffect(() => {
@@ -260,6 +268,8 @@ export default function App() {
             onOpenMedication={() => setIsMedicationOpen(true)}
             onOpenGrounding={(idx) => { setIsGroundingOpen(true); setGroundingExpandIndex(idx); }}
             onOpenDiary={() => setActiveAuxView("diary" as AuxView)}
+            onOpenReachOut={() => setActiveAuxView("reach_out" as AuxView)}
+            onOpenWindDown={() => setActiveAuxView("winddown" as AuxView)}
           />
         )}
         {activeTab === "tools" && (

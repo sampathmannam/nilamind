@@ -43,9 +43,11 @@ interface ModeScreenProps {
   onOpenMedication?: () => void;
   onOpenGrounding?: (expandIndex?: number) => void;
   onOpenDiary?: () => void;
+  onOpenReachOut?: () => void;
+  onOpenWindDown?: () => void;
 }
 
-export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboard, onOpenMedication, onOpenGrounding, onOpenDiary }: ModeScreenProps) {
+export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboard, onOpenMedication, onOpenGrounding, onOpenDiary, onOpenReachOut, onOpenWindDown }: ModeScreenProps) {
   const [mode, setMode] = useState(getCurrentMode());
   const [showCheckin, setShowCheckin] = useState(() => {
     return !mode.hasCheckedIn;
@@ -299,16 +301,10 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
         setAuxView("values_to_action");
         break;
       case "reach_out":
-        setMessages((prev) => [
-          ...prev,
-          { role: "assistant", content: "Who could you reach out to today — even just a small message? Sometimes the smallest reach is the strongest one." },
-        ]);
+        onOpenReachOut?.();
         break;
       case "wind_down":
-        setMessages((prev) => [
-          ...prev,
-          { role: "assistant", content: "Let's wind down. Take a slow breath. Want to try a quick grounding exercise or talk through what's on your mind?" },
-        ]);
+        onOpenWindDown?.();
         break;
       default:
         break;
