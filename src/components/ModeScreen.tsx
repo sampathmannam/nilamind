@@ -45,9 +45,10 @@ interface ModeScreenProps {
   onOpenDiary?: () => void;
   onOpenReachOut?: () => void;
   onOpenWindDown?: () => void;
+  onInternalSheetChange?: (open: boolean) => void;
 }
 
-export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboard, onOpenMedication, onOpenGrounding, onOpenDiary, onOpenReachOut, onOpenWindDown }: ModeScreenProps) {
+export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboard, onOpenMedication, onOpenGrounding, onOpenDiary, onOpenReachOut, onOpenWindDown, onInternalSheetChange }: ModeScreenProps) {
   const [mode, setMode] = useState(getCurrentMode());
   const [showCheckin, setShowCheckin] = useState(() => {
     return !mode.hasCheckedIn;
@@ -69,6 +70,11 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
     }, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
+
+  // Notify App when internal sheets open/close (for back-button handling)
+  useEffect(() => {
+    onInternalSheetChange?.(auxView !== null);
+  }, [auxView, onInternalSheetChange]);
 
   // B3: surface a gentle safety-plan follow-up card when the plan is stale.
   // Re-check when an aux sheet closes so editing the plan immediately clears the card.

@@ -132,6 +132,7 @@ export default function App() {
   const [onboardingDone, setOnboardingDone] = useState(hasCompletedOnboarding());
   const [wakeListening, setWakeListening] = useState(false);
   const [phoneEnabled] = useState(false);
+  const [modeScreenHasSheet, setModeScreenHasSheet] = useState(false);
   const [, setLangTick] = useState(0); // audit 2.23 — bump to re-render t()-driven copy on a language switch
 
   useEffect(() => onPersistError((failingKeys) => setSaveWarning(failingKeys.length > 0)), []);
@@ -221,11 +222,12 @@ export default function App() {
       if (isMedicationOpen) { setIsMedicationOpen(false); return; }
       if (isCaregiverOpen) { setIsCaregiverOpen(false); return; }
       if (activeAuxView) { setActiveAuxView(null); return; }
+      if (modeScreenHasSheet) { setModeScreenHasSheet(false); return; }
       if (activeTab !== "nila") { setActiveTab("nila"); return; }
       void CapApp.exitApp();
     }).then((h) => { handle = h; if (removed) h.remove(); });
     return () => { removed = true; handle?.remove(); };
-  }, [isCrisisOpen, isSettingsOpen, isDashboardOpen, isGroundingOpen, isMedicationOpen, isCaregiverOpen, activeAuxView, activeTab]);
+  }, [isCrisisOpen, isSettingsOpen, isDashboardOpen, isGroundingOpen, isMedicationOpen, isCaregiverOpen, activeAuxView, activeTab, modeScreenHasSheet]);
 
   return (
     <div className="relative isolate h-dvh bg-page text-slate-300 font-sans antialiased overflow-hidden flex flex-col">
@@ -270,6 +272,7 @@ export default function App() {
             onOpenDiary={() => setActiveAuxView("diary" as AuxView)}
             onOpenReachOut={() => setActiveAuxView("reach_out" as AuxView)}
             onOpenWindDown={() => setActiveAuxView("winddown" as AuxView)}
+            onInternalSheetChange={(open) => setModeScreenHasSheet(open)}
           />
         )}
         {activeTab === "tools" && (
