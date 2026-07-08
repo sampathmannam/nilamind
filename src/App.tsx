@@ -216,7 +216,7 @@ export default function App() {
   }, [isCrisisOpen, isSettingsOpen, isDashboardOpen, isGroundingOpen, isMedicationOpen, isCaregiverOpen, activeAuxView, activeTab]);
 
   return (
-    <div className="relative isolate min-h-screen bg-page text-slate-300 font-sans antialiased overflow-x-hidden flex flex-col">
+    <div className="relative isolate h-dvh bg-page text-slate-300 font-sans antialiased overflow-hidden flex flex-col">
       {/* Living aurora atmosphere */}
       <div className="aurora-field" aria-hidden="true" />
 
