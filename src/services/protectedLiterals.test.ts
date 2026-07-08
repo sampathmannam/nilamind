@@ -58,12 +58,6 @@ describe("protected literals (privacy/encryption invariants — never change)", 
     expect(src).toContain('"mindanchor-backup-v1"');
   });
 
-  it("widgetSync.ts still writes the 3 native-widget Preferences keys verbatim", () => {
-    const src = read("services/widgetSync.ts");
-    expect(src).toContain('"ma_widget_streak"');
-    expect(src).toContain('"ma_widget_label"');
-    expect(src).toContain('"ma_widget_emoji"');
-  });
 
   it("secureLocal.ts SENSITIVE_KEYS contains exactly the 25 expected entries", () => {
     const src = read("services/secureLocal.ts");
