@@ -2,7 +2,7 @@
 // BiometricGateHost and ModelSetupGate are standalone gates (no children).
 
 import { secureLocal, onPersistError } from "./services/secureLocal";
-import React, { useState, useEffect, lazy, Suspense } from "react";
+import React, { useState, useEffect, lazy, Suspense, useCallback, useMemo } from "react";
 import { App as CapApp } from "@capacitor/app";
 
 // Eager — crisis path must never lazy-load
@@ -17,6 +17,26 @@ const SettingsScreen = lazy(() => import("./components/SettingsScreen"));
 const DashboardScreen = lazy(() => import("./components/DashboardScreen"));
 const MedicationAdherenceScreen = lazy(() => import("./components/MedicationAdherenceScreen"));
 const CaregiverShareScreen = lazy(() => import("./components/CaregiverShareScreen"));
+
+// LAZY — aux view screens (module-scoped so lazy() runs once, not per render)
+const ThoughtRecordScreen = lazy(() => import("./components/ThoughtRecordScreen"));
+const AssessmentScreen = lazy(() => import("./components/AssessmentScreen"));
+const ValuesToActionScreen = lazy(() => import("./components/ValuesToActionScreen"));
+const SkillsLibraryScreen = lazy(() => import("./components/SkillsLibraryScreen"));
+const YourDataScreen = lazy(() => import("./components/YourDataScreen"));
+const WhyScreen = lazy(() => import("./components/WhyScreen"));
+const NilaMemoryScreen = lazy(() => import("./components/NilaMemoryScreen"));
+const WindDownScreen = lazy(() => import("./components/WindDownScreen"));
+const ReachOutScreen = lazy(() => import("./components/ReachOutScreen"));
+const PactScreen = lazy(() => import("./components/PactScreen"));
+const LearnScreen = lazy(() => import("./components/LearnScreen"));
+const CrisisRehearsalScreen = lazy(() => import("./components/CrisisRehearsalScreen"));
+const PeerSupportScreen = lazy(() => import("./components/PeerSupportScreen"));
+const ProblemSolvingScreen = lazy(() => import("./components/ProblemSolvingScreen"));
+const ValuesWorkScreen = lazy(() => import("./components/ValuesWorkScreen"));
+const ExposureHierarchyScreen = lazy(() => import("./components/ExposureHierarchyScreen"));
+const RelapsePlanScreen = lazy(() => import("./components/RelapsePlanScreen"));
+const EpisodeSupportScreen = lazy(() => import("./components/EpisodeSupportScreen"));
 
 // Calm fallback while lazy chunks load
 function ScreenFallback() {
@@ -68,28 +88,28 @@ function auxViewLabel(view: AuxView): string {
   return AUX_LABELS[view] ?? view;
 }
 
-// ── Aux view component renderers (lazy) ──
+// ── Aux view component renderers (module-scoped lazy imports — created once, not per render)
 function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () => void, onOpenGrounding: () => void) {
   switch (view) {
-    case "thought_record": { const C = lazy(() => import("./components/ThoughtRecordScreen")); return <C />; }
-    case "assessment": { const C = lazy(() => import("./components/AssessmentScreen")); return <C onActivateCrisis={onActivateCrisis} />; }
-    case "values_to_action": { const C = lazy(() => import("./components/ValuesToActionScreen")); return <C />; }
-    case "skills": { const C = lazy(() => import("./components/SkillsLibraryScreen")); return <C />; }
-    case "your_data": { const C = lazy(() => import("./components/YourDataScreen")); return <C />; }
-    case "why": { const C = lazy(() => import("./components/WhyScreen")); return <C />; }
-    case "nila_memory": { const C = lazy(() => import("./components/NilaMemoryScreen")); return <C />; }
-    case "winddown": { const C = lazy(() => import("./components/WindDownScreen")); return <C />; }
-    case "reach_out": { const C = lazy(() => import("./components/ReachOutScreen")); return <C />; }
-    case "pact": { const C = lazy(() => import("./components/PactScreen")); return <C />; }
-    case "learn": { const C = lazy(() => import("./components/LearnScreen")); return <C />; }
-    case "crisis_rehearsal": { const C = lazy(() => import("./components/CrisisRehearsalScreen")); return <C />; }
-    case "peer_support": { const C = lazy(() => import("./components/PeerSupportScreen")); return <C />; }
-    case "problem_solving": { const C = lazy(() => import("./components/ProblemSolvingScreen")); return <C />; }
-    case "values_work": { const C = lazy(() => import("./components/ValuesWorkScreen")); return <C />; }
-    case "exposure": { const C = lazy(() => import("./components/ExposureHierarchyScreen")); return <C />; }
-    case "relapse_plan": { const C = lazy(() => import("./components/RelapsePlanScreen")); return <C />; }
-    case "behaviour": { const C = lazy(() => import("./components/DashboardScreen")); return <C />; }
-    case "episode": { const C = lazy(() => import("./components/EpisodeSupportScreen")); return <C onSessionEnded={onClose} onNavigateToGrounding={() => { onClose(); onOpenGrounding(); }} onNavigateToBreathing={() => { onClose(); onOpenGrounding(); }} />; }
+    case "thought_record": return <ThoughtRecordScreen />;
+    case "assessment": return <AssessmentScreen onActivateCrisis={onActivateCrisis} />;
+    case "values_to_action": return <ValuesToActionScreen />;
+    case "skills": return <SkillsLibraryScreen />;
+    case "your_data": return <YourDataScreen />;
+    case "why": return <WhyScreen />;
+    case "nila_memory": return <NilaMemoryScreen />;
+    case "winddown": return <WindDownScreen />;
+    case "reach_out": return <ReachOutScreen />;
+    case "pact": return <PactScreen />;
+    case "learn": return <LearnScreen />;
+    case "crisis_rehearsal": return <CrisisRehearsalScreen />;
+    case "peer_support": return <PeerSupportScreen />;
+    case "problem_solving": return <ProblemSolvingScreen />;
+    case "values_work": return <ValuesWorkScreen />;
+    case "exposure": return <ExposureHierarchyScreen />;
+    case "relapse_plan": return <RelapsePlanScreen />;
+    case "behaviour": return <DashboardScreen />;
+    case "episode": return <EpisodeSupportScreen onSessionEnded={onClose} onNavigateToGrounding={() => { onClose(); onOpenGrounding(); }} onNavigateToBreathing={() => { onClose(); onOpenGrounding(); }} />;
     default: return <div className="p-6 text-slate-400 text-sm text-center">Not available</div>;
   }
 }
@@ -145,7 +165,7 @@ export default function App() {
   }, []);
 
   // ── Unified go() for Tools/You hub rows ──
-  const go = (target: string) => {
+  const go = useCallback((target: string) => {
     const res = resolveNavTarget(target);
     if (res.kind === "crisis") { setIsCrisisOpen(true); return; }
     if (res.kind === "plan") { setIsGroundingOpen(true); return; }
@@ -173,7 +193,9 @@ export default function App() {
       if (res.target === "caregiver") { setIsCaregiverOpen(true); return; }
       if (res.target === "grounding" || res.target === "breathing") { setIsGroundingOpen(true); return; }
     }
-  };
+  }, []);
+
+  const onEpisode = useCallback(() => go("episode"), [go]);
 
   // Android hardware back button
   useEffect(() => {
@@ -194,7 +216,7 @@ export default function App() {
   }, [isCrisisOpen, isSettingsOpen, isDashboardOpen, isGroundingOpen, isMedicationOpen, isCaregiverOpen, activeAuxView, activeTab]);
 
   return (
-    <div className="relative isolate h-dvh bg-page text-slate-300 font-sans antialiased overflow-x-hidden flex flex-col">
+    <div className="relative isolate min-h-screen bg-page text-slate-300 font-sans antialiased overflow-x-hidden flex flex-col">
       {/* Living aurora atmosphere */}
       <div className="aurora-field" aria-hidden="true" />
 
@@ -237,7 +259,7 @@ export default function App() {
         )}
         {activeTab === "tools" && (
           <div className="flex-1 min-h-0 overflow-y-auto">
-            <ToolsScreen go={go} phoneEnabled={phoneEnabled} onEpisode={() => go("episode")} />
+            <ToolsScreen go={go} phoneEnabled={phoneEnabled} onEpisode={onEpisode} />
           </div>
         )}
         {activeTab === "you" && (

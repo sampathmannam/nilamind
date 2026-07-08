@@ -28,16 +28,6 @@ public class MainActivity extends BridgeActivity {
   @Override
   public void onStart() {
     super.onStart();
-    // Disable WebView hardware acceleration to avoid a known SIGTRAP crash in
-    // libwebviewchromium.so on some devices (GPU compositor assertion failure).
-    try {
-      if (bridge != null && bridge.getWebView() != null) {
-        bridge.getWebView().setLayerType(android.view.View.LAYER_TYPE_SOFTWARE, null);
-        Log.i("NilaMind", "WebView layer set to software rendering");
-      }
-    } catch (Exception e) {
-      Log.w("NilaMind", "Could not set WebView layer type: " + e.getMessage());
-    }
   }
 
   // Keep-resident: once a model is on disk, hold the process at foreground priority (ModelResidentService)
