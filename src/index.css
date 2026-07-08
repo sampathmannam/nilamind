@@ -203,6 +203,18 @@ html, body { background-color: var(--color-page); color: var(--color-slate-100);
   *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
 }
 
+/* ── Sheet slide-in animation (200ms, ease-out) ── */
+@keyframes sheet-slide-in { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.animate-slide-in { animation: sheet-slide-in 200ms ease-out; }
+
+/* ── Tab crossfade ── */
+@keyframes tab-fade-in { from { opacity: 0; } to { opacity: 1; } }
+.animate-tab-fade { animation: tab-fade-in 150ms ease-out; }
+
+/* ── Touch-friendly tap targets + focus rings ── */
+.tap-target { min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center; }
+.focus-ring:focus-visible { outline: none; ring: 2px solid var(--color-blue-500); }
+
 /* ── Calm soft depth (redesign) ──────────────────────────────────────────────────────────────
    A gentle, low-contrast lift on cards + raised surfaces — the "soft UI" the design system
    recommends for wellness — kept subtle (tight negative-spread) so it never competes with content

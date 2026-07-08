@@ -313,7 +313,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
         <div className="flex items-center gap-2">
           <button
             onClick={onOpenSettings}
-            className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+            className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500"
             aria-label={t("settings")}
           >
             <Settings className="w-4 h-4" />
