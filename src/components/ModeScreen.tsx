@@ -564,36 +564,36 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
 
       {/* Aux view sheets */}
       {auxView === "learn" && (
-        <div className="fixed inset-0 z-50 bg-page" id="learn-sheet">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
+        <div className="fixed inset-0 z-50 bg-page flex flex-col animate-slide-in" id="learn-sheet">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
             <span className="text-sm font-semibold text-slate-100">Learn</span>
             <button
               onClick={() => setAuxView(null)}
-              className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer"
+              className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center"
               aria-label="Close"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
-          <div className="overflow-y-auto p-4">
+          <div className="flex-1 min-h-0 overflow-y-auto p-4">
             <LearnScreen />
           </div>
         </div>
       )}
 
       {auxView === "thought_record" && (
-        <div className="fixed inset-0 z-50 bg-page" id="thought-record-sheet">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
+        <div className="fixed inset-0 z-50 bg-page flex flex-col animate-slide-in" id="thought-record-sheet">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
             <span className="text-sm font-semibold text-slate-100">Thought Record</span>
             <button
               onClick={() => { setAuxView(null); setThoughtRecordDraft(undefined); }}
-              className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer"
+              className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center"
               aria-label="Close"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
-          <div className="overflow-y-auto p-4">
+          <div className="flex-1 min-h-0 overflow-y-auto p-4">
             <ThoughtRecordScreen draft={thoughtRecordDraft} />
           </div>
         </div>
