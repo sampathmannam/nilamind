@@ -23,6 +23,18 @@ function systemPrefersLight(): boolean {
 export function applyTheme(choice: ThemeChoice = getThemeChoice()): "light" | "dark" {
   const light = choice === "light" || (choice === "system" && systemPrefersLight());
   try { document.documentElement.classList.toggle("theme-light", light); } catch { /* */ }
+  // Sync the NATIVE status bar to the app's (JS-controlled) theme so its icons stay legible: dark icons on
+  // the light/cream theme, light icons on dark. The Android theme is DayNight (follows the SYSTEM), so the
+  // status bar would otherwise mismatch the app's own choice (light icons on cream = unreadable). Native-only,
+  // best-effort — a no-op on web / if the plugin isn't present.
+  void (async () => {
+    try {
+      const { StatusBar, Style } = await import("@capacitor/status-bar");
+      // Capacitor's Style naming is inverted: Style.Light = DARK icons (for light bgs), Style.Dark = LIGHT
+      // icons (for dark bgs). So light theme → Style.Light (dark icons on cream), dark theme → Style.Dark.
+      await StatusBar.setStyle({ style: light ? Style.Light : Style.Dark });
+    } catch { /* web or plugin unavailable */ }
+  })();
   return light ? "light" : "dark";
 }
 

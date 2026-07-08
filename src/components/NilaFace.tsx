@@ -71,6 +71,17 @@ function getPalette(state: UserState | null): OrbPalette {
 export default function NilaFace({ state, onClick, onLongPress, size = 160 }: NilaFaceProps) {
   const palette = useMemo(() => getPalette(state), [state]);
   const holdTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  // The orb's palette is tuned for a DARK background (low-opacity glows, a #0f172a fade-to-dark edge). On the
+  // light/cream theme those wash out to near-invisibility, so on light we give the body a more opaque colored
+  // gradient (no dark edge) and a stronger ring/shadow so the app's centrepiece actually reads. (audit: orb.)
+  const isLight = typeof document !== "undefined" && document.documentElement.classList.contains("theme-light");
+  const bodyBackground = isLight
+    ? `radial-gradient(circle at 35% 35%, ${palette.secondary}70, ${palette.primary}55 55%, ${palette.primary}22 100%)`
+    : `radial-gradient(circle at 35% 35%, ${palette.secondary}10, ${palette.primary}20 60%, #0f172a 100%)`;
+  const bodyBorder = isLight ? `1.5px solid ${palette.primary}66` : `1px solid ${palette.ring}`;
+  const bodyShadow = isLight
+    ? `0 6px ${size * 0.28}px ${palette.primary}33, inset 0 0 ${size * 0.15}px rgba(255,255,255,0.25)`
+    : `0 0 ${size * 0.3}px ${palette.glow}, inset 0 0 ${size * 0.15}px rgba(255,255,255,0.03)`;
 
   const handleTouchStart = () => {
     holdTimer.current = setTimeout(() => onLongPress?.(), 500);
@@ -145,9 +156,9 @@ export default function NilaFace({ state, onClick, onLongPress, size = 160 }: Ni
         style={{
           width: size,
           height: size,
-          background: `radial-gradient(circle at 35% 35%, ${palette.secondary}10, ${palette.primary}20 60%, #0f172a 100%)`,
-          border: `1px solid ${palette.ring}`,
-          boxShadow: `0 0 ${size * 0.3}px ${palette.glow}, inset 0 0 ${size * 0.15}px rgba(255,255,255,0.03)`,
+          background: bodyBackground,
+          border: bodyBorder,
+          boxShadow: bodyShadow,
         }}
       >
         {/* Inner gradient sphere */}

@@ -276,12 +276,12 @@ export default function App() {
           />
         )}
         {activeTab === "tools" && (
-          <div className="flex-1 min-h-0 overflow-y-auto pt-[max(12px,env(safe-area-inset-top))] pb-6">
+          <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-6" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
             <ToolsScreen go={go} phoneEnabled={phoneEnabled} onEpisode={onEpisode} />
           </div>
         )}
         {activeTab === "you" && (
-          <div className="flex-1 min-h-0 overflow-y-auto pt-[max(12px,env(safe-area-inset-top))] pb-6">
+          <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-6" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
             <YouScreen go={go} />
           </div>
         )}
