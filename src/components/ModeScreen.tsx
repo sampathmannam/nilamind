@@ -14,6 +14,7 @@ import { t } from "../services/i18n";
 import { useTypingSession } from "../hooks/useTypingSession";
 import { getSuggestions, timeSlot } from "../services/chatSuggestions";
 import NilaCheckIn from "./NilaCheckIn";
+import ChatLoading from "./ChatLoading";
 import type { CheckInEntry } from "../types";
 import { secureLocal } from "../services/secureLocal";
 import { sendToNila } from "../services/sendToNila";
@@ -382,6 +383,9 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                 ))}
               </div>
             )}
+
+            {/* Chat loading — skeleton shimmer + typing dots */}
+            {loading && <ChatLoading />}
           </>
         )}
       </div>

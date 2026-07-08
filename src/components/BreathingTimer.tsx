@@ -30,6 +30,10 @@ export default function BreathingTimer() {
   const [cycleIdx, setCycleIdx] = useState(0);
   const rafRef = useRef<number>(0);
   const startTimeRef = useRef(0);
+  const playingRef = useRef(false);
+
+  // Keep ref in sync so the animation loop never reads stale state.
+  useEffect(() => { playingRef.current = playing; }, [playing]);
 
   const state = breathState(pattern, elapsed, cycleIdx);
   const cycled = cycleProgress(elapsed, pattern);
@@ -42,12 +46,14 @@ export default function BreathingTimer() {
     const cyc = Math.floor(t / totalMs);
     setElapsed(t);
     setCycleIdx(cyc);
-    if (playing) rafRef.current = requestAnimationFrame(animate);
-  }, [pattern, playing]);
+    if (playingRef.current) rafRef.current = requestAnimationFrame(animate);
+  }, [pattern]);
 
   useEffect(() => {
     if (playing) {
       startTimeRef.current = 0;
+      setElapsed(0);
+      setCycleIdx(0);
       rafRef.current = requestAnimationFrame(animate);
     }
     return () => cancelAnimationFrame(rafRef.current);

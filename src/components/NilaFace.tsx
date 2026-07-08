@@ -167,8 +167,8 @@ export default function NilaFace({ state, onClick, onLongPress, size = 160 }: Ni
           style={{
             background: `linear-gradient(135deg, transparent 40%, ${palette.glow} 50%, transparent 60%)`,
             backgroundSize: "200% 200%",
-            animation: "nila-shimmer 4s ease-in-out infinite",
-            opacity: 0.5,
+            animation: "nila-shimmer 6s ease-in-out infinite",
+            opacity: 0.4,
           }}
         />
 
