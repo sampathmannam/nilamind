@@ -1,4 +1,4 @@
-// App.tsx — Simplified: ModeScreen is the single home interface.
+// App.tsx — 3-tab IA (Nila / Tools / You) with aux-view routing.
 // BiometricGateHost and ModelSetupGate are standalone gates (no children).
 
 import { secureLocal, onPersistError } from "./services/secureLocal";
@@ -9,6 +9,8 @@ import { App as CapApp } from "@capacitor/app";
 import CrisisOverlay from "./components/CrisisOverlay";
 import GroundingLibraryScreen from "./components/GroundingLibraryScreen";
 import ModeScreen from "./components/ModeScreen";
+import ToolsScreen from "./components/ToolsScreen";
+import YouScreen from "./components/YouScreen";
 
 // LAZY — detail screens only when explicitly opened
 const SettingsScreen = lazy(() => import("./components/SettingsScreen"));
@@ -34,6 +36,59 @@ import BiometricGateHost from "./components/BiometricGateHost";
 import ModelSetupGate from "./components/ModelSetupGate";
 import OnboardingGate from "./components/OnboardingGate";
 import { hasCompletedOnboarding } from "./services/onboarding";
+import { resolveNavTarget, type AuxView, type TabView } from "./services/nav";
+import { MessageSquare, LayoutGrid, User } from "lucide-react";
+
+type AppTab = "nila" | "tools" | "you";
+
+// ── Aux view label map for sheet headers ──
+const AUX_LABELS: Partial<Record<AuxView, string>> = {
+  thought_record: "Thought record",
+  assessment: "Screenings",
+  values_to_action: "Values to action",
+  skills: "Skills library",
+  your_data: "Your data",
+  why: "Why we built this",
+  nila_memory: "What Nila remembers",
+  winddown: "Wind down",
+  reach_out: "Reach out",
+  pact: "PACT plan",
+  learn: "Learn",
+  crisis_rehearsal: "Crisis rehearsal",
+  peer_support: "Peer support",
+  problem_solving: "Problem solving",
+  values_work: "Values work",
+  exposure: "Exposure hierarchy",
+  relapse_plan: "Relapse prevention",
+};
+
+function auxViewLabel(view: AuxView): string {
+  return AUX_LABELS[view] ?? view;
+}
+
+// ── Aux view component renderers (lazy) ──
+function renderAuxView(view: AuxView, onActivateCrisis: () => void) {
+  switch (view) {
+    case "thought_record": { const C = lazy(() => import("./components/ThoughtRecordScreen")); return <C />; }
+    case "assessment": { const C = lazy(() => import("./components/AssessmentScreen")); return <C onActivateCrisis={onActivateCrisis} />; }
+    case "values_to_action": { const C = lazy(() => import("./components/ValuesToActionScreen")); return <C />; }
+    case "skills": { const C = lazy(() => import("./components/SkillsLibraryScreen")); return <C />; }
+    case "your_data": { const C = lazy(() => import("./components/YourDataScreen")); return <C />; }
+    case "why": { const C = lazy(() => import("./components/WhyScreen")); return <C />; }
+    case "nila_memory": { const C = lazy(() => import("./components/NilaMemoryScreen")); return <C />; }
+    case "winddown": { const C = lazy(() => import("./components/WindDownScreen")); return <C />; }
+    case "reach_out": { const C = lazy(() => import("./components/ReachOutScreen")); return <C />; }
+    case "pact": { const C = lazy(() => import("./components/PactScreen")); return <C />; }
+    case "learn": { const C = lazy(() => import("./components/LearnScreen")); return <C />; }
+    case "crisis_rehearsal": { const C = lazy(() => import("./components/CrisisRehearsalScreen")); return <C />; }
+    case "peer_support": { const C = lazy(() => import("./components/PeerSupportScreen")); return <C />; }
+    case "problem_solving": { const C = lazy(() => import("./components/ProblemSolvingScreen")); return <C />; }
+    case "values_work": { const C = lazy(() => import("./components/ValuesWorkScreen")); return <C />; }
+    case "exposure": { const C = lazy(() => import("./components/ExposureHierarchyScreen")); return <C />; }
+    case "relapse_plan": { const C = lazy(() => import("./components/RelapsePlanScreen")); return <C />; }
+    default: return <div className="p-6 text-slate-400 text-sm text-center">Not available</div>;
+  }
+}
 
 export default function App() {
   const [isCrisisOpen, setIsCrisisOpen] = useState(false);
@@ -42,10 +97,13 @@ export default function App() {
   const [isGroundingOpen, setIsGroundingOpen] = useState(false);
   const [isMedicationOpen, setIsMedicationOpen] = useState(false);
   const [isCaregiverOpen, setIsCaregiverOpen] = useState(false);
+  const [activeAuxView, setActiveAuxView] = useState<AuxView | null>(null);
+  const [activeTab, setActiveTab] = useState<AppTab>("nila");
   const [disableAnchorPulse, setDisableAnchorPulse] = useState(false);
   const [saveWarning, setSaveWarning] = useState(false);
   const [onboardingDone, setOnboardingDone] = useState(hasCompletedOnboarding());
   const [wakeListening, setWakeListening] = useState(false);
+  const [phoneEnabled] = useState(false);
 
   useEffect(() => onPersistError((failingKeys) => setSaveWarning(failingKeys.length > 0)), []);
 
@@ -62,13 +120,9 @@ export default function App() {
     void syncDailyReminders();
   }, []);
 
-  // Wake word integration — start/stop on pref change, cleanup on unmount.
+  // Wake word integration
   useEffect(() => {
-    const onWakeCb = () => {
-      // Wake word detected — could open listen mode. For now, a no-op.
-      // The wake word stops itself after one fire (wakeWord fires onWake once then stops).
-      setWakeListening(false);
-    };
+    const onWakeCb = () => { setWakeListening(false); };
     const handler = () => {
       if (getWakeEnabled()) {
         wakeWord.start(onWakeCb).then((ok) => setWakeListening(ok)).catch(() => setWakeListening(false));
@@ -76,7 +130,6 @@ export default function App() {
         void wakeWord.stop().then(() => setWakeListening(false));
       }
     };
-    // Initialise on mount
     if (getWakeEnabled()) {
       wakeWord.start(onWakeCb).then((ok) => setWakeListening(ok)).catch(() => setWakeListening(false));
     }
@@ -86,6 +139,37 @@ export default function App() {
       void wakeWord.stop();
     };
   }, []);
+
+  // ── Unified go() for Tools/You hub rows ──
+  const go = (target: string) => {
+    const res = resolveNavTarget(target);
+    if (res.kind === "crisis") { setIsCrisisOpen(true); return; }
+    if (res.kind === "plan") { setIsGroundingOpen(true); return; }
+    if (res.kind === "tab") {
+      // "diary" and "plan" are logical tabs that map to Nila or sheets, not our 3-tab bar.
+      // Route them to Nila so the chat prompt handles them.
+      if (res.tab === "plan") { setIsGroundingOpen(true); return; }
+      if (res.tab === "nila" || res.tab === "tools" || res.tab === "you") {
+        setActiveTab(res.tab as AppTab);
+        return;
+      }
+      // diary → Nila tab (the check-in handles it)
+      setActiveTab("nila");
+      return;
+    }
+    if (res.kind === "aux") {
+      if (res.view === "settings") { setIsSettingsOpen(true); return; }
+      if (res.view === "dashboard") { setIsDashboardOpen(true); return; }
+      if (res.view === "medication") { setIsMedicationOpen(true); return; }
+      if (res.view === "caregiver") { setIsCaregiverOpen(true); return; }
+      setActiveAuxView(res.view);
+    }
+    // "caregiver" and other special targets — route to the right sheet
+    if (res.kind === "unknown") {
+      if (res.target === "caregiver") { setIsCaregiverOpen(true); return; }
+      if (res.target === "grounding" || res.target === "breathing") { setIsGroundingOpen(true); return; }
+    }
+  };
 
   // Android hardware back button
   useEffect(() => {
@@ -98,13 +182,15 @@ export default function App() {
       if (isGroundingOpen) { setIsGroundingOpen(false); return; }
       if (isMedicationOpen) { setIsMedicationOpen(false); return; }
       if (isCaregiverOpen) { setIsCaregiverOpen(false); return; }
+      if (activeAuxView) { setActiveAuxView(null); return; }
+      if (activeTab !== "nila") { setActiveTab("nila"); return; }
       void CapApp.exitApp();
     }).then((h) => { handle = h; if (removed) h.remove(); });
     return () => { removed = true; handle?.remove(); };
-  }, [isCrisisOpen, isSettingsOpen, isDashboardOpen, isGroundingOpen, isMedicationOpen, isCaregiverOpen]);
+  }, [isCrisisOpen, isSettingsOpen, isDashboardOpen, isGroundingOpen, isMedicationOpen, isCaregiverOpen, activeAuxView, activeTab]);
 
   return (
-    <div className="relative isolate min-h-screen bg-page text-slate-300 font-sans antialiased overflow-x-hidden">
+    <div className="relative isolate h-dvh bg-page text-slate-300 font-sans antialiased overflow-x-hidden flex flex-col">
       {/* Living aurora atmosphere */}
       <div className="aurora-field" aria-hidden="true" />
 
@@ -124,7 +210,7 @@ export default function App() {
 
       {/* Confidentiality notice */}
       {saveWarning && (
-        <div className="bg-amber-500/10 border-b border-amber-500/25 px-4 py-2.5 flex items-start gap-2 text-[11px] text-amber-200/90 z-40" id="save-warning">
+        <div className="bg-amber-500/10 border-b border-amber-500/25 px-4 py-2.5 flex items-start gap-2 text-[11px] text-amber-200/90 z-40 shrink-0" id="save-warning">
           <span className="font-semibold text-amber-300">Save issue:</span>
           <span>Some changes couldn't be saved.</span>
           <button onClick={() => setSaveWarning(false)} className="ml-auto text-amber-400 hover:text-amber-200 cursor-pointer">Dismiss</button>
@@ -134,16 +220,50 @@ export default function App() {
       {/* Listening indicator (wake word) */}
       <ListeningIndicator active={wakeListening} onClick={() => setIsSettingsOpen(true)} />
 
-      {/* Main content — ModeScreen is the single home */}
-      <main className="relative flex flex-col min-h-screen">
-        <ModeScreen
-          onOpenSettings={() => setIsSettingsOpen(true)}
-          onOpenCrisis={() => setIsCrisisOpen(true)}
-          onOpenDashboard={() => setIsDashboardOpen(true)}
-          onOpenMedication={() => setIsMedicationOpen(true)}
-          onOpenGrounding={() => setIsGroundingOpen(true)}
-        />
+      {/* Main content area */}
+      <main className="flex-1 min-h-0 relative flex flex-col">
+        {activeTab === "nila" && (
+          <ModeScreen
+            onOpenSettings={() => setIsSettingsOpen(true)}
+            onOpenCrisis={() => setIsCrisisOpen(true)}
+            onOpenDashboard={() => setIsDashboardOpen(true)}
+            onOpenMedication={() => setIsMedicationOpen(true)}
+            onOpenGrounding={() => setIsGroundingOpen(true)}
+          />
+        )}
+        {activeTab === "tools" && (
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            <ToolsScreen go={go} phoneEnabled={phoneEnabled} onEpisode={() => setActiveAuxView("winddown" as AuxView)} />
+          </div>
+        )}
+        {activeTab === "you" && (
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            <YouScreen go={go} />
+          </div>
+        )}
       </main>
+
+      {/* Bottom tab bar */}
+      <nav className="shrink-0 flex items-center justify-around border-t border-slate-800 bg-page/95 backdrop-blur pb-[max(8px,env(safe-area-inset-bottom))]" aria-label="Main navigation">
+        {([
+          { id: "nila" as AppTab, label: "Nila", Icon: MessageSquare },
+          { id: "tools" as AppTab, label: t("tools"), Icon: LayoutGrid },
+          { id: "you" as AppTab, label: t("you"), Icon: User },
+        ]).map(({ id, label, Icon }) => (
+          <button
+            key={id}
+            onClick={() => setActiveTab(id)}
+            className={`flex flex-col items-center gap-0.5 py-2 px-4 rounded-lg transition-colors cursor-pointer ${
+              activeTab === id ? "text-blue-400" : "text-slate-500 hover:text-slate-300"
+            }`}
+            aria-label={label}
+            aria-selected={activeTab === id}
+          >
+            <Icon className="w-5 h-5" />
+            <span className="text-[10px] font-medium">{label}</span>
+          </button>
+        ))}
+      </nav>
 
       {/* Crisis overlay */}
       {isCrisisOpen && (
@@ -160,12 +280,7 @@ export default function App() {
         <div className="fixed inset-0 z-50 bg-page flex flex-col" id="grounding-sheet">
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
             <span className="text-sm font-semibold text-slate-100">Grounding</span>
-            <button
-              onClick={() => setIsGroundingOpen(false)}
-              className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer"
-            >
-              ✕
-            </button>
+            <button onClick={() => setIsGroundingOpen(false)} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer">✕</button>
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto">
             <GroundingLibraryScreen />
@@ -178,20 +293,11 @@ export default function App() {
         <div className="fixed inset-0 z-50 bg-page flex flex-col" id="settings-sheet">
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
             <span className="text-sm font-semibold text-slate-100">{t("settings")}</span>
-            <button
-              onClick={() => setIsSettingsOpen(false)}
-              className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer"
-            >
-              ✕
-            </button>
+            <button onClick={() => setIsSettingsOpen(false)} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer">✕</button>
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto">
             <Suspense fallback={<ScreenFallback />}>
-            <SettingsScreen
-              disableAnchorPulse={disableAnchorPulse}
-              onTogglePulse={(val) => setDisableAnchorPulse(val)}
-              onOpenCaregiver={() => setIsCaregiverOpen(true)}
-            />
+              <SettingsScreen disableAnchorPulse={disableAnchorPulse} onTogglePulse={(val) => setDisableAnchorPulse(val)} onOpenCaregiver={() => setIsCaregiverOpen(true)} />
             </Suspense>
           </div>
         </div>
@@ -202,57 +308,49 @@ export default function App() {
         <div className="fixed inset-0 z-50 bg-page flex flex-col" id="dashboard-sheet">
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
             <span className="text-sm font-semibold text-slate-100">{t("dashboard")}</span>
-            <button
-              onClick={() => setIsDashboardOpen(false)}
-              className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer"
-            >
-              ✕
-            </button>
+            <button onClick={() => setIsDashboardOpen(false)} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer">✕</button>
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto">
-            <Suspense fallback={<ScreenFallback />}>
-              <DashboardScreen />
-            </Suspense>
+            <Suspense fallback={<ScreenFallback />}><DashboardScreen /></Suspense>
           </div>
         </div>
       )}
 
-      {/* Medication adherence sheet */}
+      {/* Medication sheet */}
       {isMedicationOpen && (
         <div className="fixed inset-0 z-50 bg-page flex flex-col" id="medication-sheet">
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
             <span className="text-sm font-semibold text-slate-100">{t("medications")}</span>
-            <button
-              onClick={() => setIsMedicationOpen(false)}
-              className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer"
-            >
-              ✕
-            </button>
+            <button onClick={() => setIsMedicationOpen(false)} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer">✕</button>
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto p-4">
-            <Suspense fallback={<ScreenFallback />}>
-              <MedicationAdherenceScreen />
-            </Suspense>
+            <Suspense fallback={<ScreenFallback />}><MedicationAdherenceScreen /></Suspense>
           </div>
         </div>
       )}
 
-      {/* Caregiver share sheet */}
+      {/* Caregiver sheet */}
       {isCaregiverOpen && (
         <div className="fixed inset-0 z-50 bg-page flex flex-col" id="caregiver-sheet">
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
             <span className="text-sm font-semibold text-slate-100">Share with a trusted person</span>
-            <button
-              onClick={() => setIsCaregiverOpen(false)}
-              className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer"
-            >
-              ✕
-            </button>
+            <button onClick={() => setIsCaregiverOpen(false)} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer">✕</button>
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto p-4">
-            <Suspense fallback={<ScreenFallback />}>
-              <CaregiverShareScreen />
-            </Suspense>
+            <Suspense fallback={<ScreenFallback />}><CaregiverShareScreen /></Suspense>
+          </div>
+        </div>
+      )}
+
+      {/* Generic aux view sheet — all other screens */}
+      {activeAuxView && (
+        <div className="fixed inset-0 z-50 bg-page flex flex-col" id="aux-view-sheet">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
+            <span className="text-sm font-semibold text-slate-100">{auxViewLabel(activeAuxView)}</span>
+            <button onClick={() => setActiveAuxView(null)} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer">✕</button>
+          </div>
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            <Suspense fallback={<ScreenFallback />}>{renderAuxView(activeAuxView, () => setIsCrisisOpen(true))}</Suspense>
           </div>
         </div>
       )}
