@@ -22,6 +22,7 @@ import {
   getRecentMetrics,
   classifyKey,
   recordKeystroke,
+  pruneOldSessions,
   type TypingSession,
 } from "./typingPatterns";
 
@@ -135,25 +136,31 @@ describe("typingPatterns", () => {
       expect(classifyKey("Enter")).toBe("enter");
     });
 
-    it("recordKeystroke never persists a raw typed character", () => {
+    it("recordKeystroke persists NOTHING to disk — not the character, not even timing (audit 1.A + 2.17)", () => {
       for (const ch of ["s", "e", "c", "r", "e", "t"]) {
         recordKeystroke({ ts: Date.now(), keyClass: classifyKey(ch), type: "down", targetId: "chat" });
       }
-      const raw = store.get("nilamind_typing_sessions_events") ?? "[]";
-      expect(raw).not.toMatch(/secret/);      // the typed word must not be reconstructable
-      expect(raw).not.toMatch(/"key"\s*:/);   // no raw-key field at all
-      for (const e of JSON.parse(raw)) {
-        expect(["backspace", "space", "enter", "char"]).toContain(e.keyClass);
-      }
+      // The events sink was write-only dead data (and re-encrypted on every keypress). It's now a no-op:
+      // no content, no key field, no array at all.
+      expect(store.get("nilamind_typing_sessions_events") ?? null).toBeNull();
     });
 
-    it("caps the timing buffer so it can't grow without bound", () => {
+    it("stays a no-op no matter how many keystrokes — no store can grow", () => {
       for (let i = 0; i < 2000; i++) {
         recordKeystroke({ ts: i, keyClass: "char", type: "down", targetId: "chat" });
       }
-      const events = JSON.parse(store.get("nilamind_typing_sessions_events") ?? "[]");
-      expect(events.length).toBeLessThanOrEqual(1000);
+      expect(store.get("nilamind_typing_sessions_events") ?? null).toBeNull();
     });
+  });
+
+  // audit 2.19: 30-day retention was implemented but never called (now called at boot in main.tsx).
+  it("pruneOldSessions drops sessions older than 30 days and keeps recent ones", () => {
+    const now = Date.now();
+    const old: TypingSession = { id: "old", startedAt: now - 40 * 86400000, endedAt: now - 40 * 86400000 + 1000, targetId: "chat", events: [], textLength: 0 };
+    const recent: TypingSession = { id: "new", startedAt: now - 2 * 86400000, endedAt: now - 2 * 86400000 + 1000, targetId: "chat", events: [], textLength: 0 };
+    store.set("nilamind_typing_sessions", JSON.stringify([old, recent]));
+    pruneOldSessions();
+    expect(JSON.parse(store.get("nilamind_typing_sessions")!).map((s: TypingSession) => s.id)).toEqual(["new"]);
   });
 });
 

@@ -42,10 +42,14 @@ export interface TypingMetrics {
   sessionDuration: number;
 }
 
-/** Record a keystroke event (called from input handlers). `event.keyClass` is a coarse class, never a
- * character. Capped so the timing buffer can't grow without bound. */
-export function recordKeystroke(event: KeystrokeEvent): void {
-  appendToSecureArray(TYPING_KEY + "_events", event, 1000);
+/** Record a keystroke event (called from input handlers). NO-OP by design (audit 2.17): the events were
+ * written to a "_events" store that nothing ever read (computeMetrics reads session.events, which is never
+ * populated) — so this was pure dead work that also re-encrypted the whole array on every keypress (input
+ * lag). We keep the coarse `keyClass` shape and this entry point so the timing feature can be revived
+ * PROPERLY (buffer per-session in memory, attach on endTypingSession) without re-introducing a keylog.
+ * Until then it persists nothing. */
+export function recordKeystroke(_event: KeystrokeEvent): void {
+  /* intentionally does nothing — see above */
 }
 
 /** Start a new typing session for a given target (e.g., "chat", "diary"). */

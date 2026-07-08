@@ -36,6 +36,20 @@ void (async () => {
   }
 })();
 
+// Prune old typing/voice session records at idle so the on-device stores can't grow without bound
+// (audit 2.19: the 30-day retention was implemented but never called). Best-effort, non-blocking.
+void (async () => {
+  try {
+    const [{ pruneOldSessions }, { pruneVoiceSessions }] = await Promise.all([
+      import("./services/typingPatterns"),
+      import("./services/voicePatterns"),
+    ]);
+    const prune = () => { try { pruneOldSessions(); pruneVoiceSessions(); } catch { /* best-effort */ } };
+    const ric = (globalThis as { requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => void }).requestIdleCallback;
+    if (ric) ric(prune, { timeout: 6000 }); else setTimeout(prune, 4000);
+  } catch { /* best-effort — pruning is not critical */ }
+})();
+
 // Dev-only: register the Ollama backend so the on-device path can be tested on desktop without
 // the phone. Vite tree-shakes this entire block out of production builds (import.meta.env.DEV
 // resolves to `false` at build time, so the dynamic import is never bundled).

@@ -14,7 +14,7 @@ vi.mock("./secureLocal", () => ({
   }),
 }));
 
-import { startVoiceSession, endVoiceSession, computeVoiceMetrics, voiceMoodSignal, type VoiceSession } from "./voicePatterns";
+import { startVoiceSession, endVoiceSession, computeVoiceMetrics, voiceMoodSignal, pruneVoiceSessions, type VoiceSession } from "./voicePatterns";
 
 describe("voicePatterns", () => {
   beforeEach(() => { store.clear(); });
@@ -68,5 +68,15 @@ describe("voicePatterns", () => {
     const dud2: VoiceSession = { id: "d2", startedAt: now - 6000, endedAt: now - 5000, wordCount: 0, target: "chat" };
     store.set("nilamind_voice_sessions", JSON.stringify([dud1, dud2]));
     expect(voiceMoodSignal()).toBeNull(); // only dud taps → not enough real speech → no signal
+  });
+
+  // audit 2.19: 30-day retention was implemented but never called (now called at boot in main.tsx).
+  it("pruneVoiceSessions drops sessions older than 30 days and keeps recent ones", () => {
+    const now = Date.now();
+    const old: VoiceSession = { id: "old", startedAt: now - 40 * 86400000, endedAt: now, wordCount: 5, target: "chat" };
+    const recent: VoiceSession = { id: "new", startedAt: now - 2 * 86400000, endedAt: now, wordCount: 5, target: "chat" };
+    store.set("nilamind_voice_sessions", JSON.stringify([old, recent]));
+    pruneVoiceSessions();
+    expect(JSON.parse(store.get("nilamind_voice_sessions")!).map((s: VoiceSession) => s.id)).toEqual(["new"]);
   });
 });
