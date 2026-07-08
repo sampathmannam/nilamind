@@ -1,5 +1,5 @@
 import React from "react";
-import { Settings as SettingsIcon, EyeOff, Users } from "lucide-react";
+import { Settings as SettingsIcon, EyeOff, Users, Shield, ExternalLink } from "lucide-react";
 import AppearanceSection from "./settings/AppearanceSection";
 import VoiceSection from "./settings/VoiceSection";
 import RemindersSection from "./settings/RemindersSection";
@@ -86,6 +86,23 @@ export default function SettingsScreen({ disableAnchorPulse, onTogglePulse, onOp
           </span>
         </button>
       )}
+
+      {/* Privacy Policy */}
+      <a
+        href="https://github.com/sampathmannam/nilamind/blob/main/PRIVACY_POLICY.md"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="w-full flex items-center gap-3 glass hover:brightness-125 p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left no-underline"
+        id="privacy-policy-link"
+      >
+        <span className="shrink-0 text-blue-400"><Shield className="w-5 h-5" /></span>
+        <span className="flex-1 min-w-0">
+          <span className="block text-sm font-bold text-slate-100">Privacy Policy</span>
+          <span className="block text-[11px] text-slate-400">How your data stays private — nothing leaves your device</span>
+        </span>
+        <ExternalLink className="w-4 h-4 text-slate-500 shrink-0" />
+      </a>
+
       <FeedbackSection />
     </div>
   );
