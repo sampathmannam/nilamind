@@ -27,6 +27,7 @@ import ValuesToActionScreen from "./ValuesToActionScreen";
 import SafetyPlanScreen from "./SafetyPlanScreen";
 import { looksLikeArmRequest, requestArmedCheckin } from "../services/armedCheckin";
 import { protocolOfferCard, startProtocolChat, continueProtocolChat, type ProtocolCard } from "../services/protocolChat";
+import { abandonProtocol } from "../services/protocolProgress";
 import { speakIfEnabled, speak, listenOnce, stopSpeaking } from "../services/voice";
 import { startVoiceSession, endVoiceSession } from "../services/voicePatterns";
 import CrisisOverlay from "./CrisisOverlay";
@@ -215,6 +216,11 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
       } else if (result.kind === "advanced") {
         setMessages((prev) => [...prev, { role: "assistant", content: result.prompt }]);
         setProtocolCard(protocolOfferCard(""));
+      } else {
+        // Protocol state is stale/corrupted — clear it and offer a fresh start
+        setProtocolCard(null);
+        abandonProtocol();
+        setMessages((prev) => [...prev, { role: "assistant", content: "Let's pick that up fresh — whenever you're ready." }]);
       }
     } else {
       const result = startProtocolChat(protocolCard.protocolId);
@@ -234,7 +240,10 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
         onOpenGrounding?.();
         break;
       case "diary":
-        // Route to DiaryCardScreen via aux view if available, else fallback to chat prompt
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", content: "How are you feeling right now? You can log your mood in the Tools tab under 'Diary' for a full DBT card." },
+        ]);
         break;
       case "medication":
         if (onOpenMedication) {
