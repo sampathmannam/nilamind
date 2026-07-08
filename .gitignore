@@ -50,3 +50,6 @@ __pycache__/
 # training but NOT published with the app. Includes pulled crisis datasets (Aegis/CounselChat/Mendeley)
 # that were cleared for training/eval but are NEVER committed (sensitive crisis text lives with the model).
 research/
+
+# Private audit report — documents §9/crisis-bypass details; never commit/push
+OPENCODE_FIX_REPORT.md
