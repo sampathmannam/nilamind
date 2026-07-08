@@ -442,3 +442,29 @@ describe("checkResponse Rule 2 — benign warm replies with 'try' + method-word 
     expect(checkResponse("here's how to hang yourself properly", benign)).toBe(false);
   });
 });
+
+// audit 1.B: the app now invites Hindi/Tamil/Telugu, so native-script disclosures MUST trip the §9 floor.
+describe("scanForCrisis — native-script (Devanagari/Tamil/Telugu) crisis phrasing", () => {
+  it("fires on native-script suicidal ideation", () => {
+    // Hindi (Devanagari)
+    expect(scanForCrisis("मैं मरना चाहता हूँ")).toBe(true);        // "I want to die"
+    expect(scanForCrisis("मुझे अब जीना नहीं चाहता")).toBe(true);    // "I don't want to live anymore"
+    expect(scanForCrisis("मैं आत्महत्या करना चाहता हूँ")).toBe(true); // "suicide"
+    // Tamil (script)
+    expect(scanForCrisis("நான் சாக வேண்டும்")).toBe(true);          // "I want to die"
+    expect(scanForCrisis("தற்கொலை செய்ய நினைக்கிறேன்")).toBe(true);  // "suicide"
+    // Telugu (script) — previously ZERO coverage
+    expect(scanForCrisis("నాకు చనిపోవాలని ఉంది")).toBe(true);        // "I want to die"
+    expect(scanForCrisis("ఆత్మహత్య చేసుకోవాలని అనిపిస్తోంది")).toBe(true); // "suicide"
+    // Telugu (romanized)
+    expect(scanForCrisis("naaku chanipovaalani undi")).toBe(true);
+  });
+
+  it("does NOT false-positive on benign native-script messages (precision controls)", () => {
+    expect(scanForCrisis("मैं ठीक हूँ, आज अच्छा दिन है")).toBe(false);    // Hindi: "I'm fine, good day"
+    expect(scanForCrisis("मुझे भूख लगी है")).toBe(false);                 // Hindi: "I'm hungry"
+    expect(scanForCrisis("நான் நலமாக இருக்கிறேன்")).toBe(false);          // Tamil: "I'm well"
+    expect(scanForCrisis("இன்று நல்ல நாள்")).toBe(false);                 // Tamil: "today is a good day"
+    expect(scanForCrisis("నేను బాగున్నాను, ఈరోజు మంచి రోజు")).toBe(false); // Telugu: "I'm fine, good day"
+  });
+});

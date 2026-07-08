@@ -45,6 +45,27 @@ export const ROMANIZED_IDEATION = [
   "vaazha vendaam", "saavukku poyida poren", "saaganum da",
 ];
 
+// NATIVE-SCRIPT crisis phrasing (2026-07-08 audit 1.B). The app now ships a hi/ta/te language switcher and
+// greets users in Devanagari/Tamil/Telugu script, so users WILL type in-script — but scanForCrisis is a
+// substring match and the MiniLM classifier is English-only, so native-script disclosures had ZERO
+// coverage (a Telugu user typing "చనిపోవాలని ఉంది" got an ungated reply). These mirror ROMANIZED_IDEATION:
+// high-precision multi-word ideation phrases + the unambiguous single-word nouns for "suicide"
+// (आत्महत्या / தற்கொலை / ఆత్మహత్య). Bare verbs (मर / சா / చావు) are intentionally NOT listed — only phrases
+// that cannot collide with benign text (see the paired benign-control tests in safety.test.ts).
+export const NATIVE_SCRIPT_IDEATION = [
+  // Hindi (Devanagari)
+  "मरना चाहता", "मरना चाहती", "मरना चाहूं", "मर जाना चाहता", "मर जाना चाहती",
+  "जीना नहीं चाहता", "जीना नहीं चाहती", "जीने का मन नहीं", "अब जीना नहीं",
+  "जान दे दूंगा", "जान दे दूँगी", "अपनी जान ले", "आत्महत्या", "खुदकुशी",
+  // Tamil (script)
+  "சாக விரும்பு", "சாக வேண்டும்", "சாகணும்", "வாழ விரும்பவில்லை",
+  "இறந்துவிட வேண்டும்", "தற்கொலை",
+  // Telugu (script)
+  "చనిపోవాలని", "చనిపోవాలి", "చావాలని ఉంది", "బతకాలని లేదు", "ఆత్మహత్య",
+  // Telugu (romanized) — Telugu had no coverage at all, even romanized
+  "chanipovaalani", "chanipovali", "chavaalani undi", "bathakalani ledu", "aatmahatya cheskovali",
+];
+
 export const SELF_HARM_KEYWORDS = [
   "hurt myself", "cut myself", "harm myself", "cutting", "self harm", "self-harm",
   "burn myself", "hit myself", "punish myself", "deserve pain", "want to bleed",
@@ -257,7 +278,7 @@ export function scanForCrisis(message: string): boolean {
   const normalized = message.toLowerCase().replace(/['’]/g, "'").replace(/\s+/g, " ").trim();
 
   // Check categories
-  for (const list of [SUICIDAL_KEYWORDS, SLANG_IDEATION, ROMANIZED_IDEATION, SELF_HARM_KEYWORDS, INDIRECT_METAPHORS, DISSOCIATION_KEYWORDS, METHOD_INTENT_PHRASES, OVERDOSE_PHRASES, STOCKPILE_MEANS]) {
+  for (const list of [SUICIDAL_KEYWORDS, SLANG_IDEATION, ROMANIZED_IDEATION, NATIVE_SCRIPT_IDEATION, SELF_HARM_KEYWORDS, INDIRECT_METAPHORS, DISSOCIATION_KEYWORDS, METHOD_INTENT_PHRASES, OVERDOSE_PHRASES, STOCKPILE_MEANS]) {
     for (const kw of list) {
       if (normalized.includes(kw)) {
         return true;

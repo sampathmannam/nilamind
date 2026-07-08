@@ -40,7 +40,7 @@ export default function CrisisOverlay({
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-page text-slate-300 overflow-y-auto"
+      className="fixed inset-0 z-[70] bg-page text-slate-300 overflow-y-auto"
       id="crisis-overlay-container"
       role="dialog"
       aria-modal="true"

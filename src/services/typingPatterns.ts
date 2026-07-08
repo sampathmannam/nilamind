@@ -2,11 +2,24 @@ import { secureLocal, appendToSecureArray } from "./secureLocal";
 
 const TYPING_KEY = "nilamind_typing_sessions";
 
+export type KeyClass = "backspace" | "space" | "enter" | "char";
+
 export interface KeystrokeEvent {
   ts: number;
-  key: string;
+  // PRIVACY: a COARSE class only — the literal typed character is NEVER stored. Typing-pattern analysis
+  // needs timing, not content; storing the character would be a keylog of everything typed into a
+  // mental-health app (and plaintext in secureLocal passthrough mode).
+  keyClass: KeyClass;
   type: "down" | "up";
   targetId: string;
+}
+
+/** Map a raw keyboard key to a coarse class so timing can be analysed without ever storing content. */
+export function classifyKey(key: string): KeyClass {
+  if (key === "Backspace" || key === "Delete") return "backspace";
+  if (key === " " || key === "Spacebar" || key === "Space") return "space";
+  if (key === "Enter") return "enter";
+  return "char";
 }
 
 export interface TypingSession {
@@ -29,9 +42,10 @@ export interface TypingMetrics {
   sessionDuration: number;
 }
 
-/** Record a keystroke event (called from input handlers). */
+/** Record a keystroke event (called from input handlers). `event.keyClass` is a coarse class, never a
+ * character. Capped so the timing buffer can't grow without bound. */
 export function recordKeystroke(event: KeystrokeEvent): void {
-  appendToSecureArray(TYPING_KEY + "_events", event);
+  appendToSecureArray(TYPING_KEY + "_events", event, 1000);
 }
 
 /** Start a new typing session for a given target (e.g., "chat", "diary"). */
@@ -86,16 +100,16 @@ export function computeMetrics(session: TypingSession): TypingMetrics {
   let inBurst = false;
   let lastUpTime = 0;
 
-  const keyMap = new Map<string, number>();
+  // FIFO pairing of down→up by order (no key identity needed → the raw character is never required).
+  const downQueue: number[] = [];
   for (const e of events) {
     if (e.type === "down") {
-      keyMap.set(e.key, e.ts);
+      downQueue.push(e.ts);
     } else if (e.type === "up") {
-      const downTime = keyMap.get(e.key);
-      if (downTime) {
+      const downTime = downQueue.shift();
+      if (downTime !== undefined) {
         holdSum += e.ts - downTime;
         holdCount++;
-        keyMap.delete(e.key);
       }
       if (lastUpTime > 0) {
         const flight = e.ts - lastUpTime;

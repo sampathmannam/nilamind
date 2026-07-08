@@ -137,6 +137,12 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
       const result = await sendToNila(allMessages, "companion", {
         onDelta: (t: string) => {},
       });
+      if (result.blocked) {
+        // §9 crisis: a text bubble with non-tappable helplines is not enough. Open the REAL crisis card
+        // (tappable crisis lines + safety-plan button) — the deterministic §9 surface the reply text
+        // promises. Covers both the typed path and the voice path (handleVoice → handleSendMessage).
+        setShowCrisis(true);
+      }
       if (result.reply) {
         setMessages((prev) => [...prev, { role: "assistant", content: result.reply }]);
         if (result.reachedAI) {

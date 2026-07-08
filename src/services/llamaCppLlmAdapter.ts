@@ -48,11 +48,14 @@ export function createLlamaCppBackend(
     try {
       ctx = await initLlama({
         model: modelPath,
-        n_ctx: 2048,        // halved from 4096 — less KV memory = less pressure on tight RAM
+        n_ctx: 4096,        // MUST match gemmaPrompt.ts N_CTX_TOKENS — the system prompt (persona+skills)
+                            // is ~2300 tokens, so 2048 overflowed the prompt on its own → context-shift
+                            // dropped the §9 prefix / empty replies. The 1B (~806 MB) has ample RAM
+                            // headroom for a 4096 KV cache (unlike the 2.5 GB 4B this was halved for).
         n_threads: 6,       // leave 2 cores free for Android system + UI thread
         n_gpu_layers: 0,    // CPU-only on Android (GPU offload is iOS-only in this binding)
         flash_attn: false,  // measured: fa hurts prefill on this CPU (50->24 tok/s)
-        use_mlock: true,    // pin model pages in RAM — stops the 2.5 GB GGUF from paging to flash
+        use_mlock: true,    // pin model pages in RAM — stops the GGUF from paging to flash
       });
       ready = true;
     } catch (e) {
@@ -109,10 +112,11 @@ export function createLlamaCppBackend(
         const res = await ctx.completion(
           {
             prompt,
-            // Cap reply length — decode is the per-token cost on CPU. The model is fine-tuned for ~50-word
-            // replies and the Gemma turn-boundary stops end most replies well before this, so 80 just
-            // bounds the worst-case decode time without truncating a normal reply.
-            n_predict: 80,
+            // Cap reply length — decode is the per-token cost on CPU. 80 was sized for the fine-tuned 4B's
+            // trained ~50-word brevity; the now-shipping STOCK Gemma-3-1B is NOT brevity-tuned and hit that
+            // cap mid-sentence. 220 matches gemmaPrompt.ts REPLY_RESERVE (n_ctx budget) and lets a normal
+            // reply finish; the Gemma <end_of_turn> stop still ends most replies well before this.
+            n_predict: 220,
             // Low temp tracks the validated greedy behaviour (briefer, more in-distribution) — the model
             // was fine-tuned for ~50-word replies; high temp drifts longer + slower to decode.
             temperature: 0.4,

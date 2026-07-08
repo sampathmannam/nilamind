@@ -7,10 +7,10 @@ vi.mock("./secureLocal", () => ({
     setItem: (k: string, v: string) => { store.set(k, v); },
     removeItem: (k: string) => { store.delete(k); },
   },
-  appendToSecureArray: vi.fn((key: string, item: any) => {
+  appendToSecureArray: vi.fn((key: string, item: any, cap?: number) => {
     const arr = store.get(key) ? JSON.parse(store.get(key)!) : [];
     arr.push(item);
-    store.set(key, JSON.stringify(arr));
+    store.set(key, JSON.stringify(cap ? arr.slice(-cap) : arr));
   }),
 }));
 
@@ -20,6 +20,8 @@ import {
   startTypingSession,
   endTypingSession,
   getRecentMetrics,
+  classifyKey,
+  recordKeystroke,
   type TypingSession,
 } from "./typingPatterns";
 
@@ -40,16 +42,16 @@ describe("typingPatterns", () => {
     const session: TypingSession = {
       id: "test", startedAt: now, endedAt: now + 10000, targetId: "chat", textLength: 100,
       events: [
-        { ts: now, key: "h", type: "down", targetId: "chat" },
-        { ts: now + 100, key: "h", type: "up", targetId: "chat" },
-        { ts: now + 200, key: "e", type: "down", targetId: "chat" },
-        { ts: now + 300, key: "e", type: "up", targetId: "chat" },
-        { ts: now + 400, key: "l", type: "down", targetId: "chat" },
-        { ts: now + 500, key: "l", type: "up", targetId: "chat" },
-        { ts: now + 600, key: "l", type: "down", targetId: "chat" },
-        { ts: now + 700, key: "l", type: "up", targetId: "chat" },
-        { ts: now + 800, key: "o", type: "down", targetId: "chat" },
-        { ts: now + 900, key: "o", type: "up", targetId: "chat" },
+        { ts: now, keyClass: "char", type: "down", targetId: "chat" },
+        { ts: now + 100, keyClass: "char", type: "up", targetId: "chat" },
+        { ts: now + 200, keyClass: "char", type: "down", targetId: "chat" },
+        { ts: now + 300, keyClass: "char", type: "up", targetId: "chat" },
+        { ts: now + 400, keyClass: "char", type: "down", targetId: "chat" },
+        { ts: now + 500, keyClass: "char", type: "up", targetId: "chat" },
+        { ts: now + 600, keyClass: "char", type: "down", targetId: "chat" },
+        { ts: now + 700, keyClass: "char", type: "up", targetId: "chat" },
+        { ts: now + 800, keyClass: "char", type: "down", targetId: "chat" },
+        { ts: now + 900, keyClass: "char", type: "up", targetId: "chat" },
       ],
     };
     const m = computeMetrics(session);
@@ -118,6 +120,40 @@ describe("typingPatterns", () => {
   it("getRecentMetrics filters by target and time", () => {
     const m = getRecentMetrics("chat", 7);
     expect(Array.isArray(m)).toBe(true);
+  });
+
+  // PRIVACY (audit 1.A): the literal character typed must NEVER be stored — only a coarse class.
+  describe("keystroke privacy", () => {
+    it("classifyKey maps to coarse classes, never the raw char", () => {
+      expect(classifyKey("a")).toBe("char");
+      expect(classifyKey("Z")).toBe("char");
+      expect(classifyKey("7")).toBe("char");
+      expect(classifyKey("!")).toBe("char");
+      expect(classifyKey(" ")).toBe("space");
+      expect(classifyKey("Backspace")).toBe("backspace");
+      expect(classifyKey("Delete")).toBe("backspace");
+      expect(classifyKey("Enter")).toBe("enter");
+    });
+
+    it("recordKeystroke never persists a raw typed character", () => {
+      for (const ch of ["s", "e", "c", "r", "e", "t"]) {
+        recordKeystroke({ ts: Date.now(), keyClass: classifyKey(ch), type: "down", targetId: "chat" });
+      }
+      const raw = store.get("nilamind_typing_sessions_events") ?? "[]";
+      expect(raw).not.toMatch(/secret/);      // the typed word must not be reconstructable
+      expect(raw).not.toMatch(/"key"\s*:/);   // no raw-key field at all
+      for (const e of JSON.parse(raw)) {
+        expect(["backspace", "space", "enter", "char"]).toContain(e.keyClass);
+      }
+    });
+
+    it("caps the timing buffer so it can't grow without bound", () => {
+      for (let i = 0; i < 2000; i++) {
+        recordKeystroke({ ts: i, keyClass: "char", type: "down", targetId: "chat" });
+      }
+      const events = JSON.parse(store.get("nilamind_typing_sessions_events") ?? "[]");
+      expect(events.length).toBeLessThanOrEqual(1000);
+    });
   });
 });
 
