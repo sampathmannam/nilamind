@@ -29,7 +29,9 @@ export type AuxView =
   | "values_work"
   | "exposure"
   | "relapse_plan"
-  | "caregiver";
+  | "caregiver"
+  | "episode"
+  | "behaviour";
 
 export const TAB_TARGETS: readonly TabView[] = [
   "diary", "plan", "nila", "tools", "you",
@@ -38,7 +40,7 @@ export const TAB_TARGETS: readonly TabView[] = [
 export const KNOWN_AUX_VIEWS: readonly AuxView[] = [
   "thought_record", "self_compassion", "settings", "behaviour", "assessment",
   "values_to_action", "skills", "dashboard", "your_data", "why", "nila_memory", "winddown", "understand", "reach_out", "pact",
-  "learn", "crisis_rehearsal", "peer_support", "medication", "problem_solving", "values_work", "exposure", "relapse_plan", "caregiver",
+  "learn", "crisis_rehearsal", "peer_support", "medication", "problem_solving", "values_work", "exposure", "relapse_plan", "caregiver", "episode", "behaviour",
 ];
 
 export type NavResolution =

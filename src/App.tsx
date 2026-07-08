@@ -60,6 +60,8 @@ const AUX_LABELS: Partial<Record<AuxView, string>> = {
   values_work: "Values work",
   exposure: "Exposure hierarchy",
   relapse_plan: "Relapse prevention",
+  behaviour: "Phone patterns",
+  episode: "Episode support",
 };
 
 function auxViewLabel(view: AuxView): string {
@@ -67,7 +69,7 @@ function auxViewLabel(view: AuxView): string {
 }
 
 // ── Aux view component renderers (lazy) ──
-function renderAuxView(view: AuxView, onActivateCrisis: () => void) {
+function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () => void, onOpenGrounding: () => void) {
   switch (view) {
     case "thought_record": { const C = lazy(() => import("./components/ThoughtRecordScreen")); return <C />; }
     case "assessment": { const C = lazy(() => import("./components/AssessmentScreen")); return <C onActivateCrisis={onActivateCrisis} />; }
@@ -86,6 +88,8 @@ function renderAuxView(view: AuxView, onActivateCrisis: () => void) {
     case "values_work": { const C = lazy(() => import("./components/ValuesWorkScreen")); return <C />; }
     case "exposure": { const C = lazy(() => import("./components/ExposureHierarchyScreen")); return <C />; }
     case "relapse_plan": { const C = lazy(() => import("./components/RelapsePlanScreen")); return <C />; }
+    case "behaviour": { const C = lazy(() => import("./components/DashboardScreen")); return <C />; }
+    case "episode": { const C = lazy(() => import("./components/EpisodeSupportScreen")); return <C onSessionEnded={onClose} onNavigateToGrounding={() => { onClose(); onOpenGrounding(); }} onNavigateToBreathing={() => { onClose(); onOpenGrounding(); }} />; }
     default: return <div className="p-6 text-slate-400 text-sm text-center">Not available</div>;
   }
 }
@@ -233,7 +237,7 @@ export default function App() {
         )}
         {activeTab === "tools" && (
           <div className="flex-1 min-h-0 overflow-y-auto">
-            <ToolsScreen go={go} phoneEnabled={phoneEnabled} onEpisode={() => setActiveAuxView("winddown" as AuxView)} />
+            <ToolsScreen go={go} phoneEnabled={phoneEnabled} onEpisode={() => go("episode")} />
           </div>
         )}
         {activeTab === "you" && (
@@ -350,7 +354,7 @@ export default function App() {
             <button onClick={() => setActiveAuxView(null)} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer">✕</button>
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto">
-            <Suspense fallback={<ScreenFallback />}>{renderAuxView(activeAuxView, () => setIsCrisisOpen(true))}</Suspense>
+            <Suspense fallback={<ScreenFallback />}>{renderAuxView(activeAuxView, () => setIsCrisisOpen(true), () => setActiveAuxView(null), () => setIsGroundingOpen(true))}</Suspense>
           </div>
         </div>
       )}
