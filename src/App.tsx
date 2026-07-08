@@ -82,6 +82,7 @@ const AUX_LABELS: Partial<Record<AuxView, string>> = {
   exposure: "Exposure hierarchy",
   relapse_plan: "Relapse prevention",
   behaviour: "Phone patterns",
+  diary: "Diary card",
   episode: "Episode support",
 };
 
@@ -110,6 +111,7 @@ function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () 
     case "exposure": return <ExposureHierarchyScreen />;
     case "relapse_plan": return <RelapsePlanScreen />;
     case "behaviour": return <DashboardScreen />;
+    case "diary": { const C = lazy(() => import("./components/DiaryCardScreen")); return <C />; }
     case "episode": return <EpisodeSupportScreen onSessionEnded={onClose} onNavigateToGrounding={() => { onClose(); onOpenGrounding(); }} onNavigateToBreathing={() => { onClose(); onOpenGrounding(); }} />;
     default: return <div className="p-6 text-slate-400 text-sm text-center">Not available</div>;
   }
@@ -178,8 +180,8 @@ export default function App() {
         setActiveTab(res.tab as AppTab);
         return;
       }
-      // diary → Nila tab (the check-in handles it)
-      setActiveTab("nila");
+      // diary → open diary card screen via aux view
+      if (res.tab === "diary") { setActiveAuxView("diary" as AuxView); return; }
       return;
     }
     if (res.kind === "aux") {

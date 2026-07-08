@@ -234,10 +234,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
         onOpenGrounding?.();
         break;
       case "diary":
-        setMessages((prev) => [
-          ...prev,
-          { role: "assistant", content: "How are you feeling right now? Tap the mood that fits." },
-        ]);
+        // Route to DiaryCardScreen via aux view if available, else fallback to chat prompt
         break;
       case "medication":
         if (onOpenMedication) {

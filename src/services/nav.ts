@@ -31,7 +31,8 @@ export type AuxView =
   | "relapse_plan"
   | "caregiver"
   | "episode"
-  | "behaviour";
+  | "behaviour"
+  | "diary";
 
 export const TAB_TARGETS: readonly TabView[] = [
   "diary", "plan", "nila", "tools", "you",
