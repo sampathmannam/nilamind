@@ -60,4 +60,13 @@ describe("voicePatterns", () => {
     store.set("nilamind_voice_sessions", JSON.stringify([s1, s2]));
     expect(voiceMoodSignal()).toBe("depression");
   });
+
+  // audit 2.16: silent/failed mic taps (0 words) must NOT count toward the mood average.
+  it("ignores dud (0-word) mic taps — two silent taps do NOT read as depression", () => {
+    const now = Date.now();
+    const dud1: VoiceSession = { id: "d1", startedAt: now - 4000, endedAt: now - 3000, wordCount: 0, target: "chat" };
+    const dud2: VoiceSession = { id: "d2", startedAt: now - 6000, endedAt: now - 5000, wordCount: 0, target: "chat" };
+    store.set("nilamind_voice_sessions", JSON.stringify([dud1, dud2]));
+    expect(voiceMoodSignal()).toBeNull(); // only dud taps → not enough real speech → no signal
+  });
 });

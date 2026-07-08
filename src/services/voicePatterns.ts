@@ -59,7 +59,9 @@ export function voiceMoodSignal(): "mania" | "depression" | "anxiety" | null {
     const raw = secureLocal.getItem(KEY);
     if (!raw) return null;
     const sessions: VoiceSession[] = JSON.parse(raw);
-    const recent = sessions.filter((s) => s.endedAt > 0 && Date.now() - s.endedAt < 7 * 86400000);
+    // Exclude DUD taps (0 words = silent/failed mic): they have wpm 0 and would drag the average down,
+    // making two accidental mic taps read as a "depression" speech-pattern signal. A signal needs real speech.
+    const recent = sessions.filter((s) => s.endedAt > 0 && s.wordCount > 0 && Date.now() - s.endedAt < 7 * 86400000);
     if (recent.length < 2) return null;
 
     const metrics = recent.map(computeVoiceMetrics);

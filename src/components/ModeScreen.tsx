@@ -41,7 +41,7 @@ interface ModeScreenProps {
   onOpenCrisis?: () => void;
   onOpenDashboard?: () => void;
   onOpenMedication?: () => void;
-  onOpenGrounding?: () => void;
+  onOpenGrounding?: (expandIndex?: number) => void;
 }
 
 export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboard, onOpenMedication, onOpenGrounding }: ModeScreenProps) {
@@ -243,7 +243,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
         onOpenGrounding?.();
         break;
       case "breathing":
-        onOpenGrounding?.();
+        onOpenGrounding?.(1); // Auto-expand Box Breathing (index 1)
         break;
       case "diary":
         setMessages((prev) => [

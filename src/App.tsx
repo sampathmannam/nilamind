@@ -122,6 +122,7 @@ export default function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isDashboardOpen, setIsDashboardOpen] = useState(false);
   const [isGroundingOpen, setIsGroundingOpen] = useState(false);
+  const [groundingExpandIndex, setGroundingExpandIndex] = useState<number | undefined>(undefined);
   const [isMedicationOpen, setIsMedicationOpen] = useState(false);
   const [isCaregiverOpen, setIsCaregiverOpen] = useState(false);
   const [activeAuxView, setActiveAuxView] = useState<AuxView | null>(null);
@@ -257,7 +258,7 @@ export default function App() {
             onOpenCrisis={() => setIsCrisisOpen(true)}
             onOpenDashboard={() => setIsDashboardOpen(true)}
             onOpenMedication={() => setIsMedicationOpen(true)}
-            onOpenGrounding={() => setIsGroundingOpen(true)}
+            onOpenGrounding={(idx) => { setIsGroundingOpen(true); setGroundingExpandIndex(idx); }}
           />
         )}
         {activeTab === "tools" && (
@@ -309,10 +310,10 @@ export default function App() {
         <div className="fixed inset-0 z-50 bg-page flex flex-col animate-slide-in" id="grounding-sheet">
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
             <span className="text-sm font-semibold text-slate-100">Grounding</span>
-            <button onClick={() => setIsGroundingOpen(false)} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center">✕</button>
+            <button onClick={() => { setIsGroundingOpen(false); setGroundingExpandIndex(undefined); }} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center">✕</button>
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto">
-            <GroundingLibraryScreen />
+            <GroundingLibraryScreen autoExpand={groundingExpandIndex} />
           </div>
         </div>
       )}

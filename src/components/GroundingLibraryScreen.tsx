@@ -1,9 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { GROUNDING_EXERCISES } from "../data";
 import BreathingTimer from "./BreathingTimer";
 
-export default function GroundingLibraryScreen() {
+interface Props {
+  /** 0-based index of the exercise to auto-expand on mount */
+  autoExpand?: number;
+}
+
+export default function GroundingLibraryScreen({ autoExpand }: Props) {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (autoExpand !== undefined) setExpandedIndex(autoExpand);
+  }, [autoExpand]);
 
   const toggleExercise = (index: number) => {
     setExpandedIndex(expandedIndex === index ? null : index);
