@@ -147,7 +147,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
     } catch {
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: "I'm having trouble responding right now. Try again in a moment." },
+        { role: "assistant", content: "I'm having a quiet moment — my model isn't responding right now. Your phone might be low on memory or the model needs a moment. Try typing again? 💙" },
       ]);
     } finally {
       setLoading(false);
