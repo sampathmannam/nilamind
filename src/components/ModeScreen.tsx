@@ -571,36 +571,36 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
       )}
 
       {auxView === "values_to_action" && (
-        <div className="fixed inset-0 z-50 bg-page" id="values-to-action-sheet">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
+        <div className="fixed inset-0 z-50 bg-page flex flex-col animate-slide-in" id="values-to-action-sheet">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
             <span className="text-sm font-semibold text-slate-100">Do one thing</span>
             <button
               onClick={() => setAuxView(null)}
-              className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer"
+              className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center"
               aria-label="Close"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
-          <div className="overflow-y-auto p-4">
+          <div className="flex-1 min-h-0 overflow-y-auto p-4">
             <ValuesToActionScreen />
           </div>
         </div>
       )}
 
       {auxView === "safety_plan" && (
-        <div className="fixed inset-0 z-50 bg-page" id="safety-plan-sheet">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
+        <div className="fixed inset-0 z-50 bg-page flex flex-col animate-slide-in" id="safety-plan-sheet">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
             <span className="text-sm font-semibold text-slate-100">My Safety Plan</span>
             <button
               onClick={() => setAuxView(null)}
-              className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer"
+              className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center"
               aria-label="Close"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
-          <div className="overflow-y-auto p-4">
+          <div className="flex-1 min-h-0 overflow-y-auto p-4">
             <SafetyPlanScreen />
           </div>
         </div>
