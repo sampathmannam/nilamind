@@ -51,12 +51,12 @@ export function toGemmaMessages(
 // llamaCppLlmAdapter.ts (initLlama n_ctx: 4096). Budget math below is in CHARACTERS using a conservative
 // ~3.5 chars/token so we UNDER-estimate the token count (safer to truncate a little early than to overflow
 // and have llama.cpp context-shift out the persona/§9 prefix).
-const N_CTX_TOKENS = 4096;
+const N_CTX_TOKENS = 3072;
 const CHARS_PER_TOKEN = 3.5;
 const N_CTX_CHARS = Math.floor(N_CTX_TOKENS * CHARS_PER_TOKEN); // ~14336
 const REPLY_RESERVE_CHARS = 220 * Math.ceil(CHARS_PER_TOKEN); // reserve the n_predict:220 decode budget
 // Fallback system size when the caller doesn't pass the actual prompt (buildNilaSystem ≈ 2300 tokens).
-const DEFAULT_SYSTEM_CHARS = 2300 * Math.ceil(CHARS_PER_TOKEN); // ~9200
+const DEFAULT_SYSTEM_CHARS = 800 * Math.ceil(CHARS_PER_TOKEN); // ~3200 (short persona ~800 tokens)
 const MIN_TRANSCRIPT_CHARS = 400; // never starve the transcript below the latest turn's essentials
 
 /**

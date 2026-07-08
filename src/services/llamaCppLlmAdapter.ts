@@ -48,11 +48,9 @@ export function createLlamaCppBackend(
     try {
       ctx = await initLlama({
         model: modelPath,
-        n_ctx: 4096,        // MUST match gemmaPrompt.ts N_CTX_TOKENS — the system prompt (persona+skills)
-                            // is ~2300 tokens, so 2048 overflowed the prompt on its own → context-shift
-                            // dropped the §9 prefix / empty replies. The 1B (~806 MB) has ample RAM
-                            // headroom for a 4096 KV cache (unlike the 2.5 GB 4B this was halved for).
-        n_threads: 6,       // leave 2 cores free for Android system + UI thread
+        n_ctx: 3072,        // short persona uses ~800 tokens; 3072 gives ample room for conversation
+                            // (was 4096 — the full persona was ~2300 tokens, now much smaller)
+        n_threads: 8,       // use all 8 cores on this device (was 6 — 2 spare cores aren't needed for UI)
         n_gpu_layers: 0,    // CPU-only on Android (GPU offload is iOS-only in this binding)
         flash_attn: false,  // measured: fa hurts prefill on this CPU (50->24 tok/s)
         use_mlock: true,    // pin model pages in RAM — stops the GGUF from paging to flash
