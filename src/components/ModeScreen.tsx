@@ -18,6 +18,8 @@ import { filterSkills, type Skill } from "../services/skillsLibrary";
 import NilaCheckIn from "./NilaCheckIn";
 import ChatLoading from "./ChatLoading";
 import SkillOfferCard from "./SkillOfferCard";
+import PactNoticeCard from "./PactNoticeCard";
+import { activePactNotice, dismissPactNoticeToday, type PactNotice } from "../services/pactNotice";
 import type { CheckInEntry } from "../types";
 import { secureLocal } from "../services/secureLocal";
 import { sendToNila } from "../services/sendToNila";
@@ -69,6 +71,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   const [protocolCard, setProtocolCard] = useState<ProtocolCard | null>(() => protocolOfferCard(""));
   const [showSafetyPlanReview, setShowSafetyPlanReview] = useState(false);
   const [skillOffer, setSkillOffer] = useState<Skill | null>(null);
+  const [pactNotice, setPactNotice] = useState<PactNotice | null>(null); // #30: surfaced pact (the human bridge)
   // #4 + #9 (audit): §9 crisis now routes through the App-level overlay (onOpenCrisis) so the Android hardware
   // back button closes it instead of exiting the app; a session that ever tripped §9 latches hadCrisisRef so
   // the transcript is never persisted/restored (keying the clear on a transient boolean re-persisted it on dismiss).
@@ -76,6 +79,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   const openCrisis = () => {
     hadCrisisRef.current = true;
     clearSessionChat(); // scrub anything already written this session
+    setPactNotice(null); // #30: §9 always takes precedence over the pact surface
     onOpenCrisis?.();
   };
   const bottomRef = useRef<HTMLDivElement>(null); // #23: scroll-to-newest anchor
@@ -119,6 +123,14 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   useEffect(() => {
     const saved = getSessionChat();
     if (saved.length) setMessages(saved);
+  }, []);
+
+  // #30 (audit): surface the user's pact when there's an active, undismissed reason (a short-sleep run or a
+  // mood-trajectory deterioration) and they wrote one. Was fully implemented but never rendered anywhere.
+  // §9 always takes precedence — openCrisis() clears it, and we skip it if this session already tripped crisis.
+  useEffect(() => {
+    if (hadCrisisRef.current) return;
+    try { setPactNotice(activePactNotice()); } catch { /* best-effort — pact surfacing is never a hard dependency */ }
   }, []);
 
   // Persist the chat as it grows. INVARIANT: a §9 crisis turn is NEVER persisted — clear the store so a
@@ -508,6 +520,15 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
               {protocolCard.label}
             </button>
            )}
+
+          {/* #30 (audit): pact surface — the user's own letter + a tap-to-text handoff, when a real shift
+              is noticed. §9 takes precedence (cleared in openCrisis). */}
+          {pactNotice && (
+            <PactNoticeCard
+              notice={pactNotice}
+              onDismiss={() => { dismissPactNoticeToday(); setPactNotice(null); }}
+            />
+          )}
 
           {/* Skill suggestion card — appears when Nila detects distress */}
           {skillOffer && (
