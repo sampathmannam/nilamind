@@ -44,7 +44,9 @@ export function derivedObservations(
   const dayScores: Record<string, { total: number; count: number }> = {};
   for (const c of checkins) {
     try {
-      const day = new Date(c.date).toLocaleDateString("en-US", { weekday: "long" });
+      // #17 (audit): parse the stored "YYYY-MM-DD" as LOCAL midnight (matching patternInsights/assessments),
+      // not bare new Date(c.date) which parses as UTC midnight and renders the previous weekday west of UTC.
+      const day = new Date(c.date + "T00:00:00").toLocaleDateString("en-US", { weekday: "long" });
       (dayScores[day] ||= { total: 0, count: 0 });
       dayScores[day].total += c.intensity;
       dayScores[day].count += 1;

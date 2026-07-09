@@ -6,8 +6,12 @@
 
 import { secureLocal } from "./secureLocal";
 import { DAY_MS } from "./storageUtils";
-export const ymd = (d: Date): string =>
-  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+// UTC calendar frame — MUST match how check-ins/diary are stored (new Date().toISOString().split("T")[0],
+// see checkin.ts / DiaryCardScreen). Using LOCAL date components here (the pre-2026-07-09 bug, audit #7) meant
+// a fresh check-in stored under the UTC date wasn't credited for part of every day in any non-UTC timezone
+// (the whole evening in the Americas, 00:00–05:30 in IST). UTC also has no DST, so the DAY_MS day-walk below
+// is exact (audit #25).
+export const ymd = (d: Date): string => d.toISOString().slice(0, 10);
 
 /** All dates (YYYY-MM-DD) on which the user did something — check-in or diary entry. */
 export function activeDates(): Set<string> {
