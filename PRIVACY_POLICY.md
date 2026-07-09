@@ -1,6 +1,6 @@
 # NilaMind — Privacy Policy
 
-_Last updated: 2026-06-29_
+_Last updated: 2026-07-09_
 
 NilaMind is built on one promise: **help is the only goal, never your data.** This policy explains,
 in plain language, exactly what happens to your information. If anything here ever stops being true,

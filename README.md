@@ -12,7 +12,7 @@
 
 <h1 align="center">NilaMind</h1>
 
-<p align="center"><b>A privacy-first, fully on-device mental-health companion.</b> · <em>v1.6</em> · <a href="https://nilamind.netlify.app">try it in your browser →</a></p>
+<p align="center"><b>A privacy-first, fully on-device mental-health companion.</b> · <em>v1.7</em> · <a href="https://nilamind.netlify.app">try it in your browser →</a></p>
 
 NilaMind is a mobile app built around *Nila* — someone you can talk to (by voice
 or text) for everyday emotional support. The **language model, the crisis-safety
