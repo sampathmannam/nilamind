@@ -7,6 +7,7 @@ import { getCrisisLines, crisisDigits } from "./services/crisisResources";
 
 export const SUICIDAL_KEYWORDS = [
   "kill myself", "killing myself", "killed myself", // gerund/past: "thinking about KILLING myself" must trip
+  "kill my self", // #14 (2026-07-09 audit): common split spelling of "myself" — no benign reading
   "end my life", "ending my life", "take my life", "taking my life",
   "want to die", "want to be dead", "wish i was dead", "wish i were dead",
   "dont want to be here", "don't want to be here",
@@ -121,7 +122,11 @@ export const DISSOCIATION_KEYWORDS = [
 export const METHOD_INTENT_PHRASES = [
   "slit my wrists", "cut my wrists", "hang myself",
   "jump off a bridge", "jump off a building", "jump off the roof",
-  "jump in front of a train", "jump in front of a car", "throw myself in front of"
+  "jump in front of a train", "jump in front of a car", "throw myself in front of",
+  // #12 (2026-07-09 audit): high-precision means+intent with ~zero idiom collision — the exact parallel of
+  // the listed "jump in front of a train", and noose phrasing (the means-preparation form of "hang myself").
+  // Idiom-heavy firearm phrasings ("shoot myself", "gun to my head") stay with the semantic classifier.
+  "step in front of a train", "tie a noose", "tied a noose", "put my head in a noose"
 ];
 
 // Pre-suicide EUPHEMISM gate (2026-07-05 live-test gap). "I've put my affairs in order and I finally feel at
@@ -255,11 +260,19 @@ function scanForEuphemism(normalized: string): boolean {
 // ready now for the trip" stays safe (no divestment verb+possession). Requires a giving-away VERB AND a
 // POSSESSION object AND a readiness cue; none of the three alone (nor verb+possession without readiness — a
 // genuine declutter/donation) fires.
-const DIVESTMENT_VERBS = ["given away", "giving away", "gave away", "gave all", "donated all", "getting rid of all"];
+// The giving-away phrasal verb is frequently SPLIT by its object in natural English ("given most of my
+// things away"), which a contiguous-substring list ("given away") misses — the 2026-07-09 audit (#1, P0)
+// showed this defeats the whole gate, and the classifier scores the split form ~0.34 (< threshold), so it
+// is not a backstop. DIVESTMENT_AWAY matches the giving verb and "away" non-adjacently within one clause
+// (letters/spaces/apostrophe/hyphen only, so it can't cross a comma/period or an unrelated clause), while
+// the contiguous non-"away" verbs stay as substrings. Precision is still carried by the AND of object +
+// readiness below — verb alone (a genuine declutter/donation) never fires.
+const DIVESTMENT_AWAY = /\b(gave|given|giving|give)\b[a-z '-]{0,40}\baway\b/;
+const DIVESTMENT_VERBS = ["gave all", "donated all", "getting rid of all"];
 const DIVESTMENT_OBJECTS = ["my things", "my stuff", "my belongings", "my possessions", "everything i own", "most of my", "all my things"];
 const READINESS_CUES = ["feel ready now", "i feel ready", "i'm ready now", "im ready now", "ready now", "ready to go now"];
 function scanForDivestmentReadiness(normalized: string): boolean {
-  const hasVerb = DIVESTMENT_VERBS.some((v) => normalized.includes(v));
+  const hasVerb = DIVESTMENT_AWAY.test(normalized) || DIVESTMENT_VERBS.some((v) => normalized.includes(v));
   if (!hasVerb) return false;
   const hasObject = DIVESTMENT_OBJECTS.some((o) => normalized.includes(o));
   if (!hasObject) return false;
@@ -275,7 +288,9 @@ export function scanForCrisis(message: string): boolean {
   // Collapse ALL internal whitespace (newlines/tabs/multi-space) to single spaces so a multi-word
   // keyword still matches when the user typed it across a line break or with extra spaces (textareas),
   // or when fields/records were concatenated. Keyword phrases below use single internal spaces.
-  const normalized = message.toLowerCase().replace(/['’]/g, "'").replace(/\s+/g, " ").trim();
+  // #14 (2026-07-09 audit): strip zero-width chars (U+200B–200D, U+FEFF) FIRST so an injected zero-width
+  // space (U+200B) can't split a keyword; stripping it first means an injected zero-width space cannot evade a match.
+  const normalized = message.toLowerCase().replace(/[\u200B-\u200D\uFEFF]/g, "").replace(/['’]/g, "'").replace(/\s+/g, " ").trim();
 
   // Check categories
   for (const list of [SUICIDAL_KEYWORDS, SLANG_IDEATION, ROMANIZED_IDEATION, NATIVE_SCRIPT_IDEATION, SELF_HARM_KEYWORDS, INDIRECT_METAPHORS, DISSOCIATION_KEYWORDS, METHOD_INTENT_PHRASES, OVERDOSE_PHRASES, STOCKPILE_MEANS]) {
@@ -306,8 +321,13 @@ const ADHERENCE_MARKER =
 // keyword floor. Deliberately does NOT include "all my pills": present-tense "take all my pills as
 // prescribed" is a documented benign control (only past-tense "took all my pills" is a crisis token in
 // OVERDOSE_PHRASES). If any of these co-occur, the text is NOT treated as benign adherence.
+// #2 (2026-07-09 audit): stockpiling/means-accumulation cues (saved up, saving up, stockpil*, hoard*, been
+// saving) are added so the benign-adherence guard can NEVER veto a means-accumulation disclosure — "I saved
+// up all my pills and take them as prescribed" (classifier ~0.78) is no longer masked. This only lifts the
+// SOFT-classifier suppression; the classifier still decides, so genuine "saved up money for my pills" is not
+// force-flagged (the guard just stops silencing the classifier, which scores such benign text low).
 const LETHAL_COSIGNAL =
-  /\b(never wake|don'?t wake|not wake|won'?t wake|end (it|my life|things|everything)|kill(ing)? myself|take my (own )?life|suicid|overdose|whole bottle|entire bottle|the bottle|at once|forever|better off (without|dead)|can'?t go on|no point|no reason to (live|go on)|goodbye|stop the pain|be done|end the pain|don'?t want to (be here|live|wake)|so i (don'?t|never|won'?t) wake)\b/;
+  /\b(never wake|don'?t wake|not wake|won'?t wake|end (it|my life|things|everything)|kill(ing)? myself|take my (own )?life|suicid|overdose|whole bottle|entire bottle|the bottle|at once|forever|better off (without|dead)|can'?t go on|no point|no reason to (live|go on)|goodbye|stop the pain|be done|end the pain|don'?t want to (be here|live|wake)|so i (don'?t|never|won'?t) wake|saved up|saving up|been saving|stockpil|hoard)\b/;
 
 /**
  * Narrow NEGATIVE GUARD for the semantic §9 gate (see detectCrisis in crisisClassifier.ts).
