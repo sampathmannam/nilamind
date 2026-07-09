@@ -27,7 +27,7 @@
  *   6. No double-writes: rapidly tapping context writes exactly one entry (doneRef guard).
  */
 
-import React, { useReducer, useRef, useMemo } from "react";
+import React, { useReducer, useRef, useMemo, useEffect } from "react";
 import type { CheckInEntry } from "../types";
 import {
   INITIAL_DRAFT,
@@ -93,6 +93,17 @@ export default function NilaCheckIn({ onLogged, onSkip }: NilaCheckInProps) {
     resolveAndPersist(resolved);
     dispatch(action);
   };
+
+  // #10 (audit): the granularity step (and its only Skip button) renders nothing when there are no
+  // suggestions, so a mood with no granular family would dead-end the mandatory opening check-in with a
+  // blank card. Belt-and-suspenders on top of the familyForBroad fix: auto-complete the check-in whenever
+  // we reach granularity with zero suggestions, so NO current or future mood can ever trap the user.
+  useEffect(() => {
+    if (draft.step === "granularity" && suggestions.length === 0) {
+      handleSkipGranular();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draft.step, suggestions.length]);
 
   const steps = ["mood", "intensity", "context", "granularity"] as const;
   const stepIdx = steps.indexOf(draft.step as (typeof steps)[number]);

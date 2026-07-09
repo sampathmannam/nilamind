@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { suggestGranularEmotions, granularityPrompt } from "./emotionGranularity";
+import { MOOD_CHIPS } from "./nilaCheckinReducer";
 
 describe("suggestGranularEmotions", () => {
   it("returns 3 suggestions for a known broad primary-emotion label", () => {
@@ -45,6 +46,14 @@ describe("suggestGranularEmotions", () => {
   it("handles Numb → Shame family", () => {
     const r = suggestGranularEmotions("Numb");
     expect(r).toHaveLength(3);
+  });
+
+  // audit #10: "Overwhelmed" returned [] → the granularity step (and its only Skip button) rendered nothing,
+  // dead-ending the mandatory opening check-in. EVERY mood chip must yield suggestions.
+  it("returns suggestions for EVERY opening check-in mood chip", () => {
+    for (const mood of MOOD_CHIPS) {
+      expect(suggestGranularEmotions(mood).length, `mood "${mood}" produced no granular suggestions`).toBeGreaterThan(0);
+    }
   });
 });
 
