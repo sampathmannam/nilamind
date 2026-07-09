@@ -10,8 +10,9 @@ this document is wrong and should be fixed — please hold us to it.
 
 - **No account.** No email, no password, no sign-up. Your space is identified only by a recovery
   phrase that you hold.
-- **Your entries stay on your device,** encrypted at rest. Check-ins, diary entries, screening
-  scores, and settings are stored locally and are not sent to us or anyone else.
+- **Your entries stay on your device,** encrypted at rest wherever your device supports a secure keystore
+  (see the fallback note below). Check-ins, diary entries, screening scores, and settings are stored locally
+  and are not sent to us or anyone else.
 - **We have no server.** There is no NilaMind backend and no account database.
 - **Even the AI companion (Nila) runs on your device** — see below.
 
@@ -21,6 +22,10 @@ Everything you create in the app — mood check-ins, diary cards, PHQ-9/GAD-7 sc
 preferences — is stored **only on your device**, in an encrypted store. It is decrypted only inside
 the app, using a key derived from your device or an optional PIN. If you uninstall the app or wipe
 your data, it is gone (so keep your recovery phrase if you want to restore).
+
+On the rare device or browser where a secure keystore (Web Crypto / IndexedDB) isn't available, the app
+falls back to storing your data **locally but unencrypted** — rather than locking you out of your safety
+plan. It still never leaves your device, and the in-app Privacy screen shows a clear warning when this happens.
 
 ## The AI companion (Nila) runs on your device
 

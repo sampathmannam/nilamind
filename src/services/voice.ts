@@ -50,7 +50,10 @@ export async function listEnglishVoices(): Promise<TtsVoice[]> {
   const en = all
     .filter((v) => /^en[-_]/i.test(v?.lang || ""))
     .map((v) => ({ id: voiceKey(v), name: String(v?.name || "Voice"), lang: String(v?.lang || ""), local: !!v?.localService }));
-  en.sort((a, b) => Number(a.local) - Number(b.local) || a.name.localeCompare(b.name)); // network (richer) first
+  // #15 (audit): ON-DEVICE (private) voices first — a privacy-first app must not steer users toward cloud
+  // TTS (which uploads Nila's reply text to the platform's servers). Network voices remain in the list
+  // (labelled "network" in the picker), just not at the top.
+  en.sort((a, b) => Number(b.local) - Number(a.local) || a.name.localeCompare(b.name)); // on-device (private) first
   const seen = new Set<string>();
   return en.filter((v) => (seen.has(v.id) ? false : (seen.add(v.id), true)));
 }
@@ -218,16 +221,23 @@ export async function sttAvailable(): Promise<boolean> {
 /** Listen once and resolve with the recognised text (or '' if nothing heard). Requests mic permission. */
 export async function listenOnce(): Promise<string> {
   if (Capacitor.isNativePlatform()) {
-    // Private path first: on-device Vosk — nothing spoken leaves the phone. Falls back to the system
-    // recognizer only if the user turned it off or Vosk fails to load (never on a plain mic denial).
-    if (isOnDeviceStt() && voskSttAvailable()) {
+    // #6 (audit): when the user has "On-device voice (private)" ON (the default), STT is on-device Vosk ONLY.
+    // If Vosk fails we FAIL CLOSED — we never silently route spoken audio to the OS/Google cloud recognizer,
+    // which would break the "your voice never leaves the phone" promise they opted into. Only when the user
+    // explicitly turned on-device OFF do we use the system recognizer (that is their informed consent).
+    if (isOnDeviceStt()) {
+      if (!voskSttAvailable()) {
+        throw new Error("On-device voice isn't available on this device. Switch to the system recognizer in Settings, or type instead.");
+      }
       try {
         return await voskListenOnce();
       } catch (e) {
         if (/permission/i.test(String((e as Error)?.message))) throw e;
-        console.warn("[stt] on-device unavailable, using system recognizer:", e);
+        console.warn("[stt] on-device recognizer failed (staying private, no cloud fallback):", e);
+        throw new Error("On-device voice couldn't start — nothing was sent anywhere. Try again, type instead, or switch to the system recognizer in Settings.");
       }
     }
+    // User explicitly chose the system recognizer (on-device OFF): audio goes to the OS/cloud recognizer.
     const perm = await SpeechRecognition.checkPermissions();
     if (perm.speechRecognition !== "granted") {
       const req = await SpeechRecognition.requestPermissions();
@@ -271,14 +281,18 @@ export async function stopListening(): Promise<void> {
  *  never rejects, so the hands-free loop is robust. Cancel via stopListening(). */
 export async function listenForCall(): Promise<string> {
   if (Capacitor.isNativePlatform()) {
-    // Private path first: on-device Vosk. Any failure falls through to the system recognizer.
-    if (isOnDeviceStt() && voskSttAvailable()) {
+    // #6 (audit): on-device ON → Vosk ONLY, fail CLOSED. A Vosk failure returns "" (the call loop keeps
+    // going with no transcript this turn) rather than routing call audio to the OS/cloud recognizer.
+    if (isOnDeviceStt()) {
+      if (!voskSttAvailable()) return "";
       try {
         return await voskListenForCall();
       } catch (e) {
-        console.warn("[stt] on-device call listen failed, using system recognizer:", e);
+        console.warn("[stt] on-device call listen failed (staying private, no cloud fallback):", e);
+        return "";
       }
     }
+    // User explicitly chose the system recognizer (on-device OFF).
     try {
       const perm = await SpeechRecognition.checkPermissions();
       if (perm.speechRecognition !== "granted") {
