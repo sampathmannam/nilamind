@@ -34,8 +34,11 @@ export const MODELS: CatalogModel[] = [
     filename: "gemma-3-1b-it-Q4_K_M.gguf",
     url: "https://huggingface.co/unsloth/gemma-3-1b-it-GGUF/resolve/main/gemma-3-1b-it-Q4_K_M.gguf",
     sizeBytes: 806058272,
-    // sha256 omitted for the A/B (the exact sizeBytes already rejects a truncated/401 body). The HF LFS
-    // oid is 8270790f3ab69fdfe860b7b64008d9a19986d8df7e407bb018184caa08798ebd; fill it in if this ships.
+    // #29 (audit): SHA-256 = the HF LFS oid, verified against the live LFS pointer
+    // (huggingface.co/unsloth/gemma-3-1b-it-GGUF/raw/main/gemma-3-1b-it-Q4_K_M.gguf) on 2026-07-09.
+    // modelDownload.verifyPart now checks the downloaded .part against this before it becomes the brain,
+    // defending a same-size poisoned GGUF that would otherwise slip past the byte-length + magic checks.
+    sha256: "8270790f3ab69fdfe860b7b64008d9a19986d8df7e407bb018184caa08798ebd",
     runtime: "gguf",
   },
   // --- Original fine-tuned 4B specialist (revert: move this above the 1B to restore) --------------------
