@@ -77,7 +77,7 @@ export function familyForBroad(label: string): EmotionFamily | undefined {
   if (l === "joy" || l === "trust" || l === "anticipation") return EMOTION_FAMILIES[5];
   if (l === "numb") return EMOTION_FAMILIES[3];
   if (l === "low") return EMOTION_FAMILIES[0];
-  if (l === "anxious") return EMOTION_FAMILIES[1];
+  if (l === "anxious" || l === "overwhelmed") return EMOTION_FAMILIES[1]; // #10: "Overwhelmed" is an Anxious-family word
   if (l === "angry") return EMOTION_FAMILIES[2];
   if (l === "ashamed" || l === "guilty" || l === "worthless") return EMOTION_FAMILIES[3];
   if (l === "okay" || l === "calm" || l === "good") return EMOTION_FAMILIES[5];

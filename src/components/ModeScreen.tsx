@@ -1,7 +1,7 @@
 // ModeScreen — the living interface that adapts to time + user state.
 // Replaces the static stream with a mode-based UI.
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import NilaFace from "./NilaFace";
 import QuickActions from "./QuickActions";
 import {
@@ -21,7 +21,7 @@ import SkillOfferCard from "./SkillOfferCard";
 import type { CheckInEntry } from "../types";
 import { secureLocal } from "../services/secureLocal";
 import { sendToNila } from "../services/sendToNila";
-import { NilaMode, NilaUiMessage } from "../services/nilaSend";
+import { NilaMode, NilaUiMessage, shouldBlockForCrisisAsync } from "../services/nilaSend";
 import { getSessionChat, setSessionChat, clearSessionChat } from "../services/sessionChat";
 import { localLlmLoadState } from "../services/localLlm";
 import { safeDraftThoughtRecord, type ThoughtRecordDraft } from "../services/thoughtRecordDraft";
@@ -33,7 +33,6 @@ import { protocolOfferCard, startProtocolChat, continueProtocolChat, type Protoc
 import { abandonProtocol } from "../services/protocolProgress";
 import { speakIfEnabled, speak, listenOnce, stopSpeaking } from "../services/voice";
 import { startVoiceSession, endVoiceSession } from "../services/voicePatterns";
-import CrisisOverlay from "./CrisisOverlay";
 import LearnScreen from "./LearnScreen";
 import { parseSafetyPlan } from "../services/safetyPlan";
 import { shouldPromptReview, markSafetyPlanReviewed } from "../services/safetyPlanFollowUp";
@@ -51,21 +50,43 @@ interface ModeScreenProps {
   onInternalSheetChange?: (open: boolean) => void;
 }
 
+// #22 (audit): App wraps <main> in key={activeTab}, so switching tabs fully remounts ModeScreen and its
+// useState resets — a half-typed message was lost on any tab round-trip. This module-level cache preserves the
+// in-progress draft across remounts (keeps the tab crossfade animation, unlike dropping the key).
+let modeDraftCache = "";
+
 export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboard, onOpenMedication, onOpenGrounding, onOpenDiary, onOpenReachOut, onOpenWindDown, onInternalSheetChange }: ModeScreenProps) {
   const [mode, setMode] = useState(getCurrentMode());
   const [showCheckin, setShowCheckin] = useState(() => {
     return !mode.hasCheckedIn;
   });
   const [messages, setMessages] = useState<NilaUiMessage[]>([]);
-  const [inputText, setInputText] = useState("");
+  const [inputText, setInputText] = useState(() => modeDraftCache); // #22: restore draft after a tab-switch remount
   const [loading, setLoading] = useState(false);
   const [listening, setListening] = useState(false);
-  const [showCrisis, setShowCrisis] = useState(false);
   const [auxView, setAuxView] = useState<"learn" | "thought_record" | "values_to_action" | "safety_plan" | null>(null);
   const [thoughtRecordDraft, setThoughtRecordDraft] = useState<ThoughtRecordDraft | undefined>();
   const [protocolCard, setProtocolCard] = useState<ProtocolCard | null>(() => protocolOfferCard(""));
   const [showSafetyPlanReview, setShowSafetyPlanReview] = useState(false);
   const [skillOffer, setSkillOffer] = useState<Skill | null>(null);
+  // #4 + #9 (audit): §9 crisis now routes through the App-level overlay (onOpenCrisis) so the Android hardware
+  // back button closes it instead of exiting the app; a session that ever tripped §9 latches hadCrisisRef so
+  // the transcript is never persisted/restored (keying the clear on a transient boolean re-persisted it on dismiss).
+  const hadCrisisRef = useRef(false);
+  const openCrisis = () => {
+    hadCrisisRef.current = true;
+    clearSessionChat(); // scrub anything already written this session
+    onOpenCrisis?.();
+  };
+  const bottomRef = useRef<HTMLDivElement>(null); // #23: scroll-to-newest anchor
+
+  // #23 (audit): keep the newest reply in view (ModeScreen had no scroll-to-bottom, unlike EpisodeSupportScreen).
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, loading]);
+
+  // #22 (audit): mirror the in-progress draft to the module cache so a tab-switch remount doesn't lose it.
+  useEffect(() => { modeDraftCache = inputText; }, [inputText]);
 
   // Refresh mode every 5 minutes
   useEffect(() => {
@@ -104,9 +125,11 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   // crisis transcript can't be restored later (mirrors the old AiCoachScreen rule). asyncReflection and
   // armedCheckin read getSessionChat(), so this is also what makes those features see real conversations.
   useEffect(() => {
-    if (showCrisis) { clearSessionChat(); return; }
+    // #4 (audit): once a session has EVER tripped §9, never persist it. The old code keyed the clear on the
+    // transient showCrisis boolean, so the crisis transcript was re-written the instant the overlay closed.
+    if (hadCrisisRef.current) { clearSessionChat(); return; }
     if (messages.length) setSessionChat(messages);
-  }, [messages, showCrisis]);
+  }, [messages]);
 
   const handleCheckinLogged = (entry: CheckInEntry) => {
     setShowCheckin(false);
@@ -132,6 +155,10 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
 
     // Armed check-in is a deterministic, opt-in command — handle it before the model.
     if (looksLikeArmRequest(msg)) {
+      // #3 (audit): the arm path gates with keyword-only scanForCrisis, so a euphemistic crisis that also
+      // matches the arm-request regex ("check on me… the world would feel lighter without me") would get a
+      // cheerful check-in confirmation. Run the full classifier-backed §9 gate here first.
+      if (await shouldBlockForCrisisAsync(msg)) { openCrisis(); return; }
       const armResult = requestArmedCheckin(msg, [...messages, userMsg]);
       if (armResult.ok) {
         setMessages((prev) => [
@@ -139,7 +166,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           { role: "assistant", content: `Got it — I'll check in with you ${armResult.triggerLabel}.` },
         ]);
       } else if (armResult.reason === "crisis") {
-        setShowCrisis(true);
+        openCrisis();
       } else {
         const reply =
           armResult.reason === "elevation"
@@ -170,7 +197,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
         // §9 crisis: a text bubble with non-tappable helplines is not enough. Open the REAL crisis card
         // (tappable crisis lines + safety-plan button) — the deterministic §9 surface the reply text
         // promises. Covers both the typed path and the voice path (handleVoice → handleSendMessage).
-        setShowCrisis(true);
+        openCrisis();
       }
       if (result.reply) {
         setMessages((prev) => [...prev, { role: "assistant", content: result.reply }]);
@@ -222,7 +249,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
     setLoading(false);
     if (!result.ok) {
       if (result.reason === "crisis") {
-        setShowCrisis(true);
+        openCrisis();
         return;
       }
       // empty → open blank
@@ -305,7 +332,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
         onOpenDashboard?.();
         break;
       case "crisis":
-        setShowCrisis(true);
+        openCrisis();
         break;
       case "learn":
         setAuxView("learn");
@@ -366,7 +393,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
             <Settings className="w-4 h-4" />
           </button>
           <button
-            onClick={() => setShowCrisis(true)}
+            onClick={() => openCrisis()}
             className="p-2 rounded-full hover:bg-rose-500/10 text-rose-400 hover:text-rose-300 transition-colors cursor-pointer"
             aria-label={t("crisisButton")}
           >
@@ -390,7 +417,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
             <NilaFace
               state={mode.userState}
               onClick={handleVoice}
-              onLongPress={() => setShowCrisis(true)}
+              onLongPress={() => openCrisis()}
               size={140}
             />
 
@@ -408,10 +435,11 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
             {/* Quick actions */}
             <QuickActions onAction={handleQuickAction} timeMode={mode.timeMode} />
 
-            {/* Messages */}
+            {/* Messages — #23 (audit): render the FULL conversation (was slice(-5), so earlier turns became
+                unreachable) and auto-scroll to the newest reply via bottomRef below. */}
             {messages.length > 0 && (
               <div className="w-full max-w-sm space-y-3 mt-4">
-                {messages.slice(-5).map((m, i) => (
+                {messages.map((m, i) => (
                   <div
                     key={i}
                     className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
@@ -433,6 +461,9 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
 
             {/* Chat loading — skeleton shimmer + typing dots */}
             {loading && <ChatLoading />}
+
+            {/* #23 (audit): scroll anchor so a new reply is always brought into view. */}
+            <div ref={bottomRef} />
           </>
         )}
       </div>
@@ -546,21 +577,9 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
         </div>
       )}
 
-      {/* Crisis overlay */}
-      {showCrisis && (
-        <CrisisOverlay
-          isOpen={showCrisis}
-          onClose={() => setShowCrisis(false)}
-          onNavigateToGrounding={() => {
-            setShowCrisis(false);
-            handleQuickAction("grounding");
-          }}
-          onNavigateToBreathing={() => {
-            setShowCrisis(false);
-            handleQuickAction("breathing");
-          }}
-        />
-      )}
+      {/* #9 (audit): the §9 crisis overlay is now rendered once at the App level (back-button aware) and
+          opened via onOpenCrisis() / openCrisis() above — no duplicate local overlay that the hardware back
+          button couldn't see (which previously exited the app during a crisis). */}
 
       {/* Aux view sheets */}
       {auxView === "learn" && (

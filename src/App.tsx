@@ -27,6 +27,9 @@ const YourDataScreen = lazy(() => import("./components/YourDataScreen"));
 const WhyScreen = lazy(() => import("./components/WhyScreen"));
 const NilaMemoryScreen = lazy(() => import("./components/NilaMemoryScreen"));
 const WindDownScreen = lazy(() => import("./components/WindDownScreen"));
+// #21 (audit): module-scoped so it isn't re-created on every App render (which remounted DiaryCardScreen,
+// flashed Suspense, and discarded the user's unsaved emotion sliders / notes on any parent state change).
+const DiaryCardScreen = lazy(() => import("./components/DiaryCardScreen"));
 const ReachOutScreen = lazy(() => import("./components/ReachOutScreen"));
 const PactScreen = lazy(() => import("./components/PactScreen"));
 const LearnScreen = lazy(() => import("./components/LearnScreen"));
@@ -111,7 +114,7 @@ function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () 
     case "exposure": return <ExposureHierarchyScreen />;
     case "relapse_plan": return <RelapsePlanScreen />;
     case "behaviour": return <DashboardScreen />;
-    case "diary": { const C = lazy(() => import("./components/DiaryCardScreen")); return <C />; }
+    case "diary": return <DiaryCardScreen />;
     case "episode": return <EpisodeSupportScreen onSessionEnded={onClose} onNavigateToGrounding={() => { onClose(); onOpenGrounding(); }} onNavigateToBreathing={() => { onClose(); onOpenGrounding(); }} />;
     default: return <div className="p-6 text-slate-400 text-sm text-center">Not available</div>;
   }

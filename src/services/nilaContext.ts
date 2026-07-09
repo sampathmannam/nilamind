@@ -28,6 +28,11 @@ import { safetyPlanFollowUpContextBlock } from "./safetyPlanFollowUp";
 import { sleepHoursVariability, variabilityContextBlock } from "./sleepHoursVariability";
 import type { VariabilitySignal } from "./sleepHoursVariability";
 import { assessJitai } from "./jitaiEngine";
+// #8 (audit): these were pulled via CommonJS require() below, which throws "require is not defined" in the
+// ESM Capacitor WebView bundle and was swallowed by try/catch — so BA + proactive context silently never
+// reached Nila in production. Static ESM imports (no import cycle: neither module imports nilaContext).
+import { computeInsight, loadActivities } from "./behaviouralActivation";
+import { computeProactiveMoment, proactiveContextBlock } from "./proactiveEngine";
 
 function readArray(key: string): any[] {
   try {
@@ -202,7 +207,6 @@ export function buildPersonalContext(): string {
 
   // ── Behavioural Activation (recent activity log) ─────────────────────────
   try {
-    const { computeInsight, loadActivities } = require("./behaviouralActivation");
     const baActs = loadActivities();
     const twoWeeksAgo = new Date(Date.now() - 14 * 86400000).toISOString().split("T")[0];
     const recent = baActs.filter((a: any) => a.date >= twoWeeksAgo);
@@ -292,21 +296,30 @@ export function buildPersonalContext(): string {
     out.push(safetyPlanFollowUp);
   }
 
-  if (jitaiNudge) {
+  // #20 (audit): cap the per-turn context. It is re-prefilled every turn (no cross-turn KV reuse on this
+  // binding) and, uncapped, a data-rich user's context grew large enough that windowMessages starved the
+  // transcript to MIN_TRANSCRIPT_CHARS (400), dropping conversation history. The lowest-priority, explicitly
+  // optional nudges (jitai, then proactive) yield FIRST — they are skipped once the core context (through the
+  // safety-plan follow-up, which is always kept) already fills the budget. Safety-relevant blocks never drop.
+  const CONTEXT_CHAR_BUDGET = 2800;
+  const overBudget = () => out.join("\n").length > CONTEXT_CHAR_BUDGET;
+
+  if (jitaiNudge && !overBudget()) {
     out.push("Just-in-time nudge (use if it fits naturally — never force it):");
     out.push(jitaiNudge);
   }
 
   // Proactive moment — what the app offered on this session open.
   // The UI already shows the card; this tells Nila about it so she can reference it naturally.
-  let proactiveBlock = "";
-  try {
-    const { computeProactiveMoment, proactiveContextBlock } = require("./proactiveEngine");
-    const moment = computeProactiveMoment();
-    proactiveBlock = proactiveContextBlock(moment);
-  } catch { /* best-effort */ }
-  if (proactiveBlock) {
-    out.push(proactiveBlock);
+  if (!overBudget()) {
+    let proactiveBlock = "";
+    try {
+      const moment = computeProactiveMoment();
+      proactiveBlock = proactiveContextBlock(moment);
+    } catch { /* best-effort */ }
+    if (proactiveBlock) {
+      out.push(proactiveBlock);
+    }
   }
 
   return out.join("\n");

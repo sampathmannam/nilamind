@@ -91,7 +91,6 @@ export default function EpisodeSupportScreen({
     if (!chatInput.trim()) return;
     const initialText = chatInput.trim();
     setChatInput("");
-    logNilaTurn("episode", initialText);
     setStage("chat");
     setConnectedLive(false); // re-confirm live connection each session
     setElapsedSeconds(0);
@@ -107,8 +106,10 @@ export default function EpisodeSupportScreen({
     if (isCrisis) {
       setIsCrisisMode(true);
       setMessages([...initialHistory, { role: "assistant", content: getCrisisReply() }]);
-      return;
+      return; // #5 (audit): return BEFORE logging — a crisis snippet must never be persisted or shown on the dashboard
     }
+    // #5 (audit): log only AFTER passing the §9 check (was logged before, storing crisis text at rest + on the dashboard).
+    logNilaTurn("episode", initialText);
 
     // Force first intensity lock before AI response.
     // Tagged synthetic:true so buildOutgoing strips it before any wire send.
@@ -178,7 +179,6 @@ export default function EpisodeSupportScreen({
 
     const userText = chatInput.trim();
     setChatInput("");
-    logNilaTurn("episode", userText);
 
     const updatedHistory: NilaUiMessage[] = [...messages, { role: "user", content: userText }];
     setMessages(updatedHistory);
@@ -189,8 +189,10 @@ export default function EpisodeSupportScreen({
     if (await detectCrisis(userText)) {
       setIsCrisisMode(true);
       setMessages([...updatedHistory, { role: "assistant", content: getCrisisReply() }]);
-      return;
+      return; // #5 (audit): return BEFORE logging so the crisis snippet is never persisted/shown
     }
+    // #5 (audit): log only after passing the §9 check.
+    logNilaTurn("episode", userText);
 
     // 20 Minute Escalation Check
     if (elapsedSeconds >= 1200 && !escalationShown) {

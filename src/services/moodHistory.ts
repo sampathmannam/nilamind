@@ -55,7 +55,11 @@ export function loadMoodHistory(): MoodPoint[] {
     /* ignore malformed */
   }
 
-  return Object.entries(byDate).map(([date, d]) => ({
+  // #18 (audit): sort chronologically. byDate is built check-ins-first then diary-dates appended, so its
+  // insertion order is NOT chronological — a diary-only past date lands last. Callers (nilaContext lastCheckin,
+  // jitaiEngine slice(-5)/slice(-10,-5)) treat the tail as "most recent", so unsorted output caused a false
+  // "haven't heard from you" nudge and scrambled deterioration windows. Date strings sort lexicographically.
+  return Object.entries(byDate).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)).map(([date, d]) => ({
     date,
     intensity: d.intensityN ? Math.round((d.intensitySum / d.intensityN) * 10) / 10 : null,
     shame: d.shame,

@@ -20,12 +20,16 @@ export function armCheckin(userMessage: string): ArmedCheckin {
 
   if (/\btonight\b/.test(userMessage)) {
     triggerDate.setHours(20, 0, 0, 0);
+    // #19 (audit): if 8pm has already passed (request made after 8pm), roll to tomorrow so the trigger is
+    // never in the past and the confirmation doesn't name a time earlier than "now". Mirrors the morning branch.
+    if (triggerDate.getTime() <= now) triggerDate.setDate(triggerDate.getDate() + 1);
   } else if (/\bmorning\b/.test(userMessage)) {
     triggerDate.setHours(8, 0, 0, 0);
     if (triggerDate.getTime() <= now) triggerDate.setDate(triggerDate.getDate() + 1);
   } else {
-    // default: tonight at 8pm
+    // default: tonight at 8pm (same past-8pm guard as the "tonight" branch)
     triggerDate.setHours(20, 0, 0, 0);
+    if (triggerDate.getTime() <= now) triggerDate.setDate(triggerDate.getDate() + 1);
   }
 
   // Capture last user message as context

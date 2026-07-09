@@ -115,3 +115,36 @@ describe("requestArmedCheckin — safety-gated opt-in", () => {
     expect(looksLikeArmRequest("I'm fine")).toBe(false);
   });
 });
+
+// audit #19: a "tonight" (or default) request made after 8pm must not arm a trigger in the past.
+describe("armCheckin — past-time guard", () => {
+  beforeEach(() => { store.clear(); vi.useRealTimers(); });
+
+  it("'tonight' requested after 8pm arms for the future (tomorrow 8pm), not the past", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 6, 9, 21, 30, 0)); // 9:30pm local
+    const e = armCheckin("check in on me tonight");
+    expect(e.triggerAt).toBeGreaterThan(Date.now());
+    expect(new Date(e.triggerAt).getHours()).toBe(20);
+    vi.useRealTimers();
+  });
+
+  it("default (no keyword) requested after 8pm also rolls to the future", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 6, 9, 23, 0, 0)); // 11pm local
+    const e = armCheckin("please look after me");
+    expect(e.triggerAt).toBeGreaterThan(Date.now());
+    vi.useRealTimers();
+  });
+
+  it("'tonight' requested before 8pm arms for tonight 8pm", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 6, 9, 15, 0, 0)); // 3pm local
+    const e = armCheckin("check in on me tonight");
+    expect(e.triggerAt).toBeGreaterThan(Date.now());
+    const d = new Date(e.triggerAt);
+    expect(d.getHours()).toBe(20);
+    expect(d.getDate()).toBe(9);
+    vi.useRealTimers();
+  });
+});

@@ -53,3 +53,6 @@ research/
 
 # Private audit report — documents §9/crisis-bypass details; never commit/push
 OPENCODE_FIX_REPORT.md
+
+# Local audit reports — contain §9 crisis-bypass detail, never commit/publish
+AUDIT_*.md

@@ -252,6 +252,8 @@ describe("scanForCrisis — pre-suicide euphemism recall (live-test regression)"
     "i've gotten my affairs in order and i'm ready to go now",
     "I said my goodbyes to everyone and I'm at peace with it now",
     "I've given away my things and I'm ready for it to be over",
+    "I've given most of my things away and I feel ready now",   // audit #1 (P0): phrasal-verb split "given…away" bypassed the gate
+    "I gave all my stuff away and I'm ready now",               // particle-shifted variant
     "I've made my peace with dying",
     "I'm finally at peace with death",
   ])("now trips on the pre-suicide euphemism: %j", (s) => {
@@ -266,8 +268,28 @@ describe("scanForCrisis — pre-suicide euphemism recall (live-test regression)"
     "I didn't get the job and I've made my peace with it",
     "I said my goodbyes at the airport",                  // farewell cue alone
     "it's a relief to finally be at peace after that argument",
+    "I gave my old clothes away to the charity shop",     // giving-away verb, no possession-match / no readiness
+    "I gave most of my things away when I moved house",   // divestment verb+object but NO readiness cue — genuine declutter
   ])("still does NOT trip on benign control: %j", (s) => {
     expect(scanForCrisis(s)).toBe(false);
+  });
+});
+
+// 2026-07-09 audit hardening: additive deterministic-floor fixes (#12 method+intent, #14 normalization,
+// #2 stockpiling guard). Each is model-independent and cannot suppress an existing detection.
+describe("§9 2026-07-09 audit hardening", () => {
+  it.each([
+    "I'm going to step in front of a train",     // #12: parallel to the listed "jump in front of a train", no idiom collision
+    "I tied a noose in the garage last night",   // #12: noose means+intent
+    "i want to kill my self",                    // #14: split-word "my self"
+    "i want to kill ​myself",               // #14: zero-width space injected mid-phrase
+  ])("deterministic floor now trips: %j", (s) => {
+    expect(scanForCrisis(s)).toBe(true);
+  });
+
+  it("stockpiling is no longer masked as benign adherence, but genuine adherence still is (#2)", () => {
+    expect(isBenignMedicationAdherence("I saved up all my pills and I take them as prescribed")).toBe(false);
+    expect(isBenignMedicationAdherence("I take my pills every morning as prescribed")).toBe(true);
   });
 });
 

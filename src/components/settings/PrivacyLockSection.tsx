@@ -53,9 +53,17 @@ export default function PrivacyLockSection() {
           <Lock className="w-4 h-4 text-blue-400" /> Privacy Lock
         </h2>
         <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
-          Your entries — check-ins, diary, episodes, assessments — are always encrypted on this
-          device. Add a PIN for an extra layer: it'll be asked each time you open the app, and only
-          you can unlock your data.
+          {/* #16 (audit): don't claim "always encrypted" in passthrough mode, where entries are stored in
+              plaintext because secure storage is unavailable — the claim must match the actual at-rest state. */}
+          {passthrough ? (
+            <>Your entries — check-ins, diary, episodes, assessments — are saved locally on this device.
+            They never leave your phone, but on this browser/session secure encryption isn't available, so they
+            are stored <span className="text-amber-300">unencrypted</span> here.</>
+          ) : (
+            <>Your entries — check-ins, diary, episodes, assessments — are always encrypted on this
+            device. Add a PIN for an extra layer: it'll be asked each time you open the app, and only
+            you can unlock your data.</>
+          )}
         </p>
       </div>
 
@@ -63,8 +71,8 @@ export default function PrivacyLockSection() {
         <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 flex gap-2">
           <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
           <p className="text-[11px] text-amber-200/90 leading-relaxed">
-            Secure storage isn't available in this browser/session, so a PIN can't be added right now.
-            Your data is still saved locally.
+            Secure storage isn't available in this browser/session, so a PIN can't be added and your data is
+            stored <span className="text-amber-300">unencrypted</span> on this device. It still never leaves your phone.
           </p>
         </div>
       )}

@@ -37,11 +37,22 @@ async function getPipe(): Promise<unknown> {
   return _loading;
 }
 
+// #31 (audit): 1-entry memo. Each companion turn embeds the SAME last-user message twice, serially, on the
+// pre-LLM critical path — once for the §9 crisis classifier and once for psychoed RAG. Returning the cached
+// vector for a repeated exact text skips a second single-threaded-wasm forward pass (~100–300ms) with no
+// behavioural change (the model is deterministic). Bounded to one entry, so it can never grow.
+let _lastText: string | null = null;
+let _lastVec: number[] | null = null;
+
 export const transformersEmbedder: Embedder = async (text: string) => {
+  if (text === _lastText && _lastVec) return _lastVec;
   const pipe = (await getPipe()) as (t: string, o: object) => Promise<{ data: Float32Array }>;
   // MUST match training: mean-pooled + L2-normalized (the head was trained on these).
   const out = await pipe(text, { pooling: "mean", normalize: true });
-  return Array.from(out.data);
+  const vec = Array.from(out.data);
+  _lastText = text;
+  _lastVec = vec;
+  return vec;
 };
 
 /** Eagerly warm the model (optional) so the first real crisis check isn't slowed by the cold load. */

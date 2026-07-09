@@ -3,8 +3,13 @@
 // are a conversational UI convention (WhatsApp/Facebook/iMessage).
 
 import React from "react";
+import { useSettlingNote } from "./useSettlingNote";
 
 export default function ChatLoading() {
+  // #24 (audit): ChatLoading only mounts while a reply is generating, so drive the escalating reassurance
+  // (base → "taking a moment" → "taking longer" → "the first reply can take a few minutes, nothing's stuck").
+  // This hook existed for exactly the documented multi-minute cold-load wait but was never wired to any screen.
+  const note = useSettlingNote(true, "Nila is thinking");
   return (
     <>
       <style>{`
@@ -35,7 +40,7 @@ export default function ChatLoading() {
       <div className="flex flex-col gap-3 w-full max-w-sm" id="chat-loading">
         {/* Typing indicator */}
         <div className="flex items-center gap-2 px-4 py-2">
-          <span className="text-[11px] text-slate-500">Nila is thinking</span>
+          <span className="text-[11px] text-slate-500">{note}</span>
           <div className="flex gap-1 items-center">
             <span className="typing-dot" />
             <span className="typing-dot" />
