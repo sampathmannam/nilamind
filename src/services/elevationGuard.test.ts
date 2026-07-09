@@ -102,6 +102,57 @@ describe("detectElevationRisk — high-precision mania-risk detection", () => {
     }
   });
 
+  it("ELEVATED for irritable / agitated mania markers (DSM-5 criterion A — audit gap)", () => {
+    for (const t of [
+      "i keep snapping at everyone today for no reason",
+      "everything is annoying me and i can't calm down",
+      "i'm so pissed off at everyone and i don't know why",
+      "i feel like screaming at the top of my lungs",
+    ]) {
+      expect(detectElevationRisk(t).level).toBe("elevated");
+    }
+  });
+
+  it("does NOT fire on ordinary irritability / stress (precision boundary)", () => {
+    expect(detectElevationRisk("i've been irritable all week because of work stress").level).toBe("none");
+    expect(detectElevationRisk("everything is annoying at the office today").level).toBe("none");
+    expect(detectElevationRisk("i'm just really pissed off about what happened").level).toBe("none");
+  });
+
+  it("ELEVATED for distractibility markers (DSM-5 criterion B6 — audit gap)", () => {
+    for (const t of [
+      "i'm jumping between a million things and can't settle",
+      "everything is grabbing my attention right now",
+      "i can't finish anything i start today",
+      "i started ten things today and finished none",
+    ]) {
+      expect(detectElevationRisk(t).level).toBe("elevated");
+    }
+  });
+
+  it("does NOT fire on ordinary concentration struggles (precision boundary)", () => {
+    expect(detectElevationRisk("i can't focus at work, kept getting distracted by Slack").level).toBe("none");
+    expect(detectElevationRisk("my ADHD is making it hard to finish anything today").level).toBe("none");
+    expect(detectElevationRisk("i keep picking up my phone instead of working").level).toBe("none");
+  });
+
+  it("ELEVATED for increased goal-directed activity markers (DSM-5 criterion B7 — audit gap)", () => {
+    for (const t of [
+      "i keep starting too many projects at the same time",
+      "i started a million projects this week",
+      "it feels like i have a new project every day",
+      "i have too many ideas to keep up with right now",
+    ]) {
+      expect(detectElevationRisk(t).level).toBe("elevated");
+    }
+  });
+
+  it("does NOT fire on ordinary productivity / ambition (precision boundary)", () => {
+    expect(detectElevationRisk("i've got a new project at work and i'm excited about it").level).toBe("none");
+    expect(detectElevationRisk("i started a new hobby this weekend — painting").level).toBe("none");
+    expect(detectElevationRisk("i have so many ideas for the business plan").level).toBe("none");
+  });
+
   it("does NOT fire on ordinary talking / nervous chatter (precision boundary)", () => {
     expect(detectElevationRisk("my friend says i talk too fast when i'm nervous but i feel fine").level).toBe("none");
     expect(detectElevationRisk("i talk a lot when i get excited about something new").level).toBe("none");

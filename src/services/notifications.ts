@@ -111,7 +111,8 @@ export async function ensureNotificationPermission(): Promise<boolean> {
     if (check.display === "granted") return true;
     const req = await LocalNotifications.requestPermissions();
     return req.display === "granted";
-  } catch {
+  } catch (e) {
+    console.error("[notifications] ensureNotificationPermission failed:", e);
     return false; // web / plugin missing
   }
 }
@@ -137,7 +138,8 @@ export async function scheduleReminderAt(when: Date, body: string, title = "Nila
       }],
     });
     return { ok: true, at: when };
-  } catch {
+  } catch (e) {
+    console.error("[notifications] scheduleReminderAt failed:", e);
     return { ok: false, reason: "unavailable", at: when };
   }
 }
@@ -166,8 +168,8 @@ export async function notifyReplyReady(): Promise<void> {
         smallIcon: "ic_stat_icon_config_sample",
       }],
     });
-  } catch {
-    /* web / plugin missing / permission race — best-effort, never throws into the reply path */
+  } catch (e) {
+    console.error("[notifications] notifyReplyReady failed:", e);
   }
 }
 
@@ -192,7 +194,7 @@ export interface SyncResult { scheduled: boolean; at?: string; reason?: "disable
  */
 export async function syncDailyReminders(opts: { request?: boolean } = { request: true }): Promise<SyncResult> {
   // Always clear the previous schedule so we never stack duplicates.
-  try { await LocalNotifications.cancel({ notifications: [{ id: DAILY_REMINDER_ID }] }); } catch { /* */ }
+  try { await LocalNotifications.cancel({ notifications: [{ id: DAILY_REMINDER_ID }] }); } catch (e) { console.error("[notifications] syncDailyReminders cancel failed:", e); }
 
   const prefs = getReminderPrefs();
   if (!prefs.enabled) return { scheduled: false, reason: "disabled" };
@@ -201,7 +203,7 @@ export async function syncDailyReminders(opts: { request?: boolean } = { request
   // out of the blue. From settings (request:true) we may ask, since the user just opted in.
   let granted = false;
   if (opts.request === false) {
-    try { granted = (await LocalNotifications.checkPermissions()).display === "granted"; } catch { granted = false; }
+    try { granted = (await LocalNotifications.checkPermissions()).display === "granted"; } catch (e) { console.error("[notifications] checkPermissions failed:", e); granted = false; }
   } else {
     granted = await ensureNotificationPermission();
   }
@@ -226,14 +228,15 @@ export async function syncDailyReminders(opts: { request?: boolean } = { request
       }],
     });
     return { scheduled: true, at: `${pad(h)}:${pad(m)}` };
-  } catch {
+  } catch (e) {
+    console.error("[notifications] syncDailyReminders schedule failed:", e);
     return { scheduled: false, reason: "unavailable" };
   }
 }
 
 /** Turn reminders off and clear the scheduled nudge. */
 export async function clearDailyReminders(): Promise<void> {
-  try { await LocalNotifications.cancel({ notifications: [{ id: DAILY_REMINDER_ID }] }); } catch { /* */ }
+  try { await LocalNotifications.cancel({ notifications: [{ id: DAILY_REMINDER_ID }] }); } catch (e) { console.error("[notifications] clearDailyReminders failed:", e); }
 }
 
 // Medication reminders use a distinct id space so they don't collide with the daily nudge.
@@ -270,10 +273,10 @@ export async function syncMedicationReminders(meds: Medication[]): Promise<void>
     }
     // Also clear any prior med ids by covering the known id range once — cheap and safe.
     await LocalNotifications.cancel({ notifications: cancelIds.map((id) => ({ id })) });
-  } catch { /* plugin may be unavailable */ }
+  } catch (e) { console.error("[notifications] syncMedicationReminders cancel failed:", e); }
 
   let granted = false;
-  try { granted = (await LocalNotifications.checkPermissions()).display === "granted"; } catch { return; }
+  try { granted = (await LocalNotifications.checkPermissions()).display === "granted"; } catch (e) { console.error("[notifications] syncMedicationReminders checkPermissions failed:", e); return; }
   if (!granted) return;
 
   const notifications: { id: number; title: string; body: string; schedule: { on: { hour: number; minute: number }; allowWhileIdle: true }; smallIcon: string }[] = [];
@@ -289,5 +292,5 @@ export async function syncMedicationReminders(meds: Medication[]): Promise<void>
     }
   }
   if (notifications.length === 0) return;
-  try { await LocalNotifications.schedule({ notifications }); } catch { /* */ }
+  try { await LocalNotifications.schedule({ notifications }); } catch (e) { console.error("[notifications] syncMedicationReminders schedule failed:", e); }
 }

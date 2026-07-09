@@ -300,7 +300,7 @@ export default function App() {
           <button
             key={id}
             onClick={() => setActiveTab(id)}
-            className={`flex flex-col items-center gap-0.5 py-2 px-4 rounded-lg transition-colors cursor-pointer ${
+            className={`flex flex-col items-center gap-0.5 py-2 px-4 rounded-lg transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] ${
               activeTab === id ? "text-blue-400" : "text-slate-500 hover:text-slate-300"
             }`}
             aria-label={label}
@@ -314,12 +314,14 @@ export default function App() {
 
       {/* Crisis overlay */}
       {isCrisisOpen && (
-        <CrisisOverlay
-          isOpen={isCrisisOpen}
-          onClose={() => setIsCrisisOpen(false)}
-          onNavigateToGrounding={() => { setIsCrisisOpen(false); setIsGroundingOpen(true); }}
-          onNavigateToBreathing={() => { setIsCrisisOpen(false); setIsGroundingOpen(true); }}
-        />
+        <div className="animate-slide-in">
+          <CrisisOverlay
+            isOpen={isCrisisOpen}
+            onClose={() => setIsCrisisOpen(false)}
+            onNavigateToGrounding={() => { setIsCrisisOpen(false); setIsGroundingOpen(true); }}
+            onNavigateToBreathing={() => { setIsCrisisOpen(false); setIsGroundingOpen(true); }}
+          />
+        </div>
       )}
 
        {/* Grounding library */}

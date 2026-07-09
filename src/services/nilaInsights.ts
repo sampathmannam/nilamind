@@ -49,7 +49,8 @@ export function loadInsights(): Insight[] {
     const raw = secureLocal.getItem(INSIGHTS_KEY);
     const arr = raw ? JSON.parse(raw) : [];
     return Array.isArray(arr) ? arr.filter(isValidInsight) : [];
-  } catch {
+  } catch (e) {
+    console.error("[nilaInsights] failed to load insights:", e);
     return [];
   }
 }
@@ -77,7 +78,8 @@ export function loadTombstones(): string[] {
     const raw = secureLocal.getItem(TOMBSTONES_KEY);
     const arr = raw ? JSON.parse(raw) : [];
     return Array.isArray(arr) ? arr.filter((s) => typeof s === "string") : [];
-  } catch {
+  } catch (e) {
+    console.error("[nilaInsights] failed to load tombstones:", e);
     return [];
   }
 }
@@ -238,7 +240,8 @@ async function fetchReflection(digest: string): Promise<ReflectResult> {
   let arr: any;
   try {
     arr = JSON.parse(text);
-  } catch {
+  } catch (e) {
+    console.error("[nilaInsights] fetchReflection JSON parse failed:", e);
     return { status: "empty" };
   }
   if (!Array.isArray(arr)) return { status: "empty" };
@@ -262,15 +265,16 @@ async function fetchReflection(digest: string): Promise<ReflectResult> {
 export function shouldReflectToday(today: string): boolean {
   try {
     return localStorage.getItem(LAST_REFLECTED_KEY) !== today;
-  } catch {
+  } catch (e) {
+    console.error("[nilaInsights] shouldReflectToday failed:", e);
     return false;
   }
 }
 function setLastReflected(today: string): void {
   try {
     localStorage.setItem(LAST_REFLECTED_KEY, today);
-  } catch {
-    /* ignore */
+  } catch (e) {
+    console.error("[nilaInsights] setLastReflected failed:", e);
   }
 }
 

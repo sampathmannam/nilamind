@@ -9,10 +9,10 @@ const KEY = "nilamind_age_confirmed";
 
 /** True once the user has attested to being 18+. Defaults false — a new user must attest. */
 export function isAgeConfirmed(): boolean {
-  try { return ls()?.getItem(KEY) === "1"; } catch { return false; }
+  try { return ls()?.getItem(KEY) === "1"; } catch (e) { console.error("[ageGate] isAgeConfirmed failed:", e); return false; }
 }
 
 /** Record the 18+ attestation (persists). */
 export function confirmAdult(): void {
-  try { ls()?.setItem(KEY, "1"); } catch { /* ignore — worst case re-prompts next launch */ }
+  try { ls()?.setItem(KEY, "1"); } catch (e) { console.error("[ageGate] confirmAdult failed:", e); }
 }

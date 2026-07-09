@@ -482,6 +482,53 @@ describe("scanForCrisis — native-script (Devanagari/Tamil/Telugu) crisis phras
     expect(scanForCrisis("naaku chanipovaalani undi")).toBe(true);
   });
 
+// 2026-07-09 audit: crisis phrases previously only in LETHAL_COSIGNAL (vetoes benign-classifier
+// suppression) but NOT in the deterministic keyword floor — add paired benign controls.
+describe("scanForCrisis — additional crisis phrases (2026-07-09 audit gap)", () => {
+  it.each([
+    "i just want to end my suffering",
+    "i can't stop the pain — it's too much",
+    "i just want to end the pain forever",
+    "i can't do this anymore",
+    "I can't do this any longer",
+    "no way out of this",
+    "i can't see a way out anymore",
+  ])("trips on crisis phrasing: %j", (s) => {
+    expect(scanForCrisis(s)).toBe(true);
+  });
+
+  it.each([
+    "i ended my subscription to the streaming service",
+    "i can't do this crossword puzzle — it's too hard",
+    "i take pain medication for my knee and the prescription ran out",
+    "the only way out of this traffic jam is to wait it out",
+  ])("does NOT false-positive on benign controls: %j", (s) => {
+    expect(scanForCrisis(s)).toBe(false);
+  });
+});
+
+// 2026-07-09 audit: expanded dissociation/depersonalization coverage.
+describe("scanForCrisis — expanded dissociation coverage (2026-07-09 audit)", () => {
+  it.each([
+    "i feel detached from everything around me",
+    "i feel unreal, like i'm in a dream",
+    "i've been feeling depersonalized all day",
+    "i feel disconnected from reality right now",
+    "i don't feel real at all anymore",
+  ])("trips on expanded dissociation phrasing: %j", (s) => {
+    expect(scanForCrisis(s)).toBe(true);
+  });
+
+  it.each([
+    "i try to stay detached from gossip at work — it's healthier",
+    "the painting looks so unreal, like a photograph",
+    "i disconnected from the wifi and reconnected",
+    "the special effects in that movie didn't feel real",
+  ])("does NOT false-positive on benign controls: %j", (s) => {
+    expect(scanForCrisis(s)).toBe(false);
+  });
+});
+
   it("does NOT false-positive on benign native-script messages (precision controls)", () => {
     expect(scanForCrisis("मैं ठीक हूँ, आज अच्छा दिन है")).toBe(false);    // Hindi: "I'm fine, good day"
     expect(scanForCrisis("मुझे भूख लगी है")).toBe(false);                 // Hindi: "I'm hungry"

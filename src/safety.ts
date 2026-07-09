@@ -13,7 +13,14 @@ export const SUICIDAL_KEYWORDS = [
   "dont want to be here", "don't want to be here",
   "dont want to live", "don't want to live", "better off dead", "no reason to live", "cant go on",
   "can't go on", "end it all", "not worth living", "suicide", "suicidal",
-  "ending things", "wont be around", "won't be around", "goodbye forever"
+  "ending things", "wont be around", "won't be around", "goodbye forever",
+  // 2026-07-09 audit: phrases with near-zero benign collision that were only in LETHAL_COSIGNAL
+  // (which only vetoes benign-classifier suppression), NOT in the deterministic keyword floor.
+  // "stop the pain" has rare benign physical-pain use but missing it is more harmful than over-firing.
+  "end my suffering",
+  "stop the pain", "end the pain",
+  "can't do this anymore", "cant do this anymore",
+  "can't do this any longer", "cant do this any longer",
 ];
 
 // Modern/coined self-harm slang (2026-07-06 audit). "unalive" is a coined euphemism with ~zero benign
@@ -81,7 +88,9 @@ export const INDIRECT_METAPHORS = [
   "want it all to end", "stop existing", "go to sleep and not wake up",
   "dont want to wake up anymore", "don't want to wake up anymore",
   "notice if i disappeared", "notice if i was gone", "notice if i wasnt here", "notice if i wasn't here",
-  "everyone better off without me", "be gone", "vanish"
+  "everyone better off without me", "be gone", "vanish",
+  // 2026-07-09 audit: "no way out" is a common hopelessness expression in crisis contexts.
+  "no way out", "cant see a way out", "can't see a way out",
 ];
 
 // First-person OVERDOSE/ingestion disclosures — past-tense ACTION phrasing only, so they catch a real
@@ -112,7 +121,14 @@ export const STOCKPILE_MEANS = [
 
 export const DISSOCIATION_KEYWORDS = [
   "not real", "watching myself", "outside my body", "voices telling me",
-  "cant tell whats real", "can't tell what's real", "nothing feels real"
+  "cant tell whats real", "can't tell what's real", "nothing feels real",
+  // 2026-07-09 audit: expanded dissociation coverage — depersonalization/derealization are common
+  // in trauma and anxiety populations and are strong distress signals the keyword floor should catch.
+  "feel detached", "feeling detached",
+  "feel unreal", "feeling unreal",
+  "depersonalized", "depersonalised",
+  "disconnected from reality", "feeling disconnected from reality",
+  "dont feel real", "don't feel real"
 ];
 
 // Unambiguous first-person method+intent phrases. High-precision ONLY — these gate the input before the

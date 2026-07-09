@@ -59,6 +59,33 @@ const PRESSURED = [
   "everyone says i'm talking too fast",
   "talking too fast", "i'm talking too fast",
 ];
+// IRRITABLE / agitated — DSM-5 mania criterion A includes irritable mood (not just euphoric). The guard
+// previously had zero coverage for irritable/agitated mania, which is a common and clinically dangerous
+// presentation. ELEVATED tier: unambiguous agitation markers with near-zero benign collision.
+// "snapping at everyone" and "everything is annoying me" are strong metacognitive disclosures of irritable
+// elevation; bare "irritable" alone is not listed (too broad — overlaps with low mood / PMS / stress).
+const IRRITABLE = [
+  "snapping at everyone", "snapping at people", "snapped at everyone",
+  "everything is annoying me", "everything is pissing me off", "everything is irritating me",
+  "pissed off at everyone", "angry at everyone for no reason",
+  "feel like screaming", "feel like punching something",
+];
+// DISTRACTIBLE — increased distractibility is a DSM-5 mania criterion (B6). The guard previously had zero
+// coverage. ELEVATED tier: self-aware metacognitive disclosures of manic distractibility. Ordinary
+// concentration complaints ("can't focus at work", "too distracted by my phone") are deliberately excluded —
+// they're far more common in depression/anxiety/adhd and would over-fire.
+const DISTRACTIBLE = [
+  "jumping between a million things", "jumping between everything",
+  "everything is grabbing my attention", "can't finish anything i start",
+  "starting too many things at once", "started ten things today",
+];
+// INCREASED_ACTIVITY — increased goal-directed activity is a DSM-5 mania criterion (B7). The guard
+// previously had zero coverage. ELEVATED tier: unambiguous behavioral markers of manic project-spawning.
+const INCREASED_ACTIVITY = [
+  "starting too many projects", "started a million projects", "new project every day",
+  "can't stop starting new things", "too many ideas to keep up",
+  "multiple projects at once", "on fire with new ideas", "too many plans all at once",
+];
 
 function normalize(text: string): string {
   return text.toLowerCase().replace(/['’]/g, "'").replace(/\s+/g, " ").trim();
@@ -71,7 +98,7 @@ export function detectElevationRisk(text: string): { level: ElevationLevel; mark
   const markers: string[] = [];
   let high = false;
   for (const kw of MED_STOP) if (n.includes(kw)) { markers.push(kw); high = true; }
-  for (const list of [SLEEP_DISMISS, SPENDING, GRANDIOSITY, RACING, HYPERSEXUALITY, RELIGIOUS_GRANDIOSITY, SLEEP_AMAZING, PRESSURED]) for (const kw of list) if (n.includes(kw)) markers.push(kw);
+  for (const list of [SLEEP_DISMISS, SPENDING, GRANDIOSITY, RACING, HYPERSEXUALITY, RELIGIOUS_GRANDIOSITY, SLEEP_AMAZING, PRESSURED, IRRITABLE, DISTRACTIBLE, INCREASED_ACTIVITY]) for (const kw of list) if (n.includes(kw)) markers.push(kw);
   if (high) return { level: "high", markers };
   if (markers.length) return { level: "elevated", markers };
   return { level: "none", markers: [] };

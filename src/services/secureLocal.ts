@@ -196,8 +196,8 @@ function hydrateFromPlaintext(): void {
     try {
       const plain = store.getItem(key);
       if (plain !== null && !cache.has(key)) cache.set(key, plain);
-    } catch {
-      /* ignore per-key read failures */
+    } catch (e) {
+      console.error("[secureLocal] hydrateFromPlaintext read failed:", e);
     }
   }
 }

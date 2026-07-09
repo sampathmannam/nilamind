@@ -19,17 +19,18 @@ export interface PactNotice { letter: string; person: TrustedPerson; reason: str
 const DISMISS_KEY = "nilamind_pact_notice_dismissed"; // YYYY-MM-DD last dismissed
 
 export function dismissPactNoticeToday(today = ymd(new Date())): void {
-  try { secureLocal.setItem(DISMISS_KEY, today); } catch { /* ignore */ }
+  try { secureLocal.setItem(DISMISS_KEY, today); } catch (e) { console.error("[pactNotice] dismissPactNoticeToday failed:", e); }
 }
 function dismissedToday(today: string): boolean {
-  try { return secureLocal.getItem(DISMISS_KEY) === today; } catch { return false; }
+  try { return secureLocal.getItem(DISMISS_KEY) === today; } catch (e) { console.error("[pactNotice] dismissedToday failed:", e); return false; }
 }
 function readCheckins(): CheckInEntry[] {
   try {
     const raw = secureLocal.getItem("nilamind_checkins");
     const p = raw ? JSON.parse(raw) : [];
     return Array.isArray(p) ? (p as CheckInEntry[]) : [];
-  } catch {
+  } catch (e) {
+    console.error("[pactNotice] failed to read checkins:", e);
     return [];
   }
 }
@@ -50,7 +51,7 @@ export function activePactNotice(today = ymd(new Date())): PactNotice | null {
       if (sigs.some((s) => s.direction === "deterioration")) {
         return { letter: pact.letter, person: pact.person, reason: "things have felt heavier than usual lately" };
       }
-    } catch { /* defensive */ }
+    } catch (e) { console.error("[pactNotice] detectInflections failed:", e); }
   }
   return null;
 }

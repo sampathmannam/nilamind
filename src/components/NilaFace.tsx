@@ -19,41 +19,44 @@ interface OrbPalette {
   core: string;
 }
 
+// Custom-theme palette — uses the app's warm lavender/terracotta/honey colors (defined in index.css
+// as --color-blue-*, --color-rose-*, --color-amber-*) instead of Tailwind-default indigo/blue/red.
+// These match the custom theme and respond correctly on both dark and light backgrounds.
 const PALETTES: Record<string, OrbPalette> = {
   calm: {
-    primary: "#818cf8",   // indigo-400
-    secondary: "#a78bfa", // violet-400
-    glow: "rgba(129,140,248,0.25)",
-    ring: "rgba(129,140,248,0.15)",
-    core: "#c4b5fd",      // violet-300
+    primary: "#BEA4D0",   // --color-blue-400 (warm lavender)
+    secondary: "#D1BFDF", // --color-purple-300 
+    glow: "rgba(190,164,208,0.25)",
+    ring: "rgba(190,164,208,0.15)",
+    core: "#E2D6EC",      // --color-blue-200
   },
   anxious: {
-    primary: "#60a5fa",   // blue-400
-    secondary: "#38bdf8", // sky-400
-    glow: "rgba(96,165,250,0.25)",
-    ring: "rgba(96,165,250,0.15)",
-    core: "#bae6fd",      // sky-200
+    primary: "#CE8470",   // --color-rose-400 (terracotta)
+    secondary: "#DDA593", // --color-rose-300
+    glow: "rgba(206,132,112,0.25)",
+    ring: "rgba(206,132,112,0.15)",
+    core: "#ECC2B6",      // --color-rose-200
   },
   low: {
-    primary: "#c084fc",   // purple-400
-    secondary: "#e879f9", // fuchsia-400
-    glow: "rgba(192,132,252,0.20)",
-    ring: "rgba(192,132,252,0.12)",
-    core: "#e9d5ff",      // purple-200
+    primary: "#BEA4D0",   // --color-purple-400 (warm lavender)
+    secondary: "#D1BFDF", // --color-purple-300
+    glow: "rgba(190,164,208,0.20)",
+    ring: "rgba(190,164,208,0.12)",
+    core: "#E2D6EC",      // --color-purple-200
   },
   elevated: {
-    primary: "#fbbf24",   // amber-400
-    secondary: "#f97316", // orange-500
-    glow: "rgba(251,191,36,0.28)",
-    ring: "rgba(251,191,36,0.18)",
-    core: "#fde68a",      // amber-200
+    primary: "#DDB463",   // --color-amber-400 (warm honey)
+    secondary: "#E8C98C", // --color-amber-300
+    glow: "rgba(221,180,99,0.28)",
+    ring: "rgba(221,180,99,0.18)",
+    core: "#ECCF94",      // --color-amber-200
   },
   crisis: {
-    primary: "#f87171",   // red-400
-    secondary: "#fb7185", // rose-400
-    glow: "rgba(248,113,113,0.35)",
-    ring: "rgba(248,113,113,0.20)",
-    core: "#fecaca",      // red-200
+    primary: "#CE8470",   // --color-rose-400 (terracotta crisis)
+    secondary: "#DDA593", // --color-rose-300
+    glow: "rgba(206,132,112,0.35)",
+    ring: "rgba(206,132,112,0.20)",
+    core: "#ECC2B6",      // --color-rose-200
   },
 };
 

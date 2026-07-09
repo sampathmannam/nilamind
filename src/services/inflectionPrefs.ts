@@ -3,5 +3,5 @@
 import { ls } from "./storageUtils";
 
 const KEY = "nilamind_inflection_enabled";
-export function getInflectionEnabled(): boolean { try { return ls()?.getItem(KEY) === "1"; } catch { return false; } }
-export function setInflectionEnabled(v: boolean): void { try { ls()?.setItem(KEY, v ? "1" : "0"); } catch { /* ignore */ } }
+export function getInflectionEnabled(): boolean { try { return ls()?.getItem(KEY) === "1"; } catch (e) { console.error("[inflectionPrefs] getInflectionEnabled failed:", e); return false; } }
+export function setInflectionEnabled(v: boolean): void { try { ls()?.setItem(KEY, v ? "1" : "0"); } catch (e) { console.error("[inflectionPrefs] setInflectionEnabled failed:", e); } }

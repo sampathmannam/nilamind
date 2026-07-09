@@ -129,7 +129,8 @@ export function loadActivities(): BAActivityLog[] {
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? (parsed as BAActivityLog[]) : [];
-  } catch {
+  } catch (e) {
+    console.error("[behaviouralActivation] failed to load activities:", e);
     return [];
   }
 }

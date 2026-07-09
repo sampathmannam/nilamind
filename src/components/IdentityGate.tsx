@@ -22,7 +22,7 @@ export default function IdentityGate({ children }: { children: React.ReactNode }
     let cancelled = false;
     void ensureAnonymousIdentity()
       .then(() => { if (!cancelled) setHasIdentity(true); })
-      .catch(() => { if (!cancelled) setWebCreateFailed(true); }); // fall back to the ceremony, not a blank screen
+      .catch((e) => { console.error("[IdentityGate] ensureAnonymousIdentity failed:", e); if (!cancelled) setWebCreateFailed(true); }); // fall back to the ceremony, not a blank screen
     return () => { cancelled = true; };
   }, [hasIdentity, isNative]);
 

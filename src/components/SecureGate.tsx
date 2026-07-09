@@ -83,7 +83,8 @@ function UnlockScreen({ onUnlocked }: { onUnlocked: () => void }) {
       await unlockWithPin(pin);
       await hydrate();
       onUnlocked();
-    } catch {
+    } catch (e) {
+      console.error("[SecureGate] PIN unlock failed:", e);
       setError("That PIN didn't work. Take your time — try again.");
       setPin("");
       setBusy(false);

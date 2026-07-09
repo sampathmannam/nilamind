@@ -27,7 +27,8 @@ export function loadPact(): Pact | null {
     return p && typeof p.letter === "string" && p.person && typeof p.person.name === "string" && p.letter.trim() && p.person.name.trim()
       ? p
       : null;
-  } catch {
+  } catch (e) {
+    console.error("[pact] failed to load pact:", e);
     return null;
   }
 }
@@ -43,7 +44,7 @@ export function savePact(letter: string, person: TrustedPerson, nowISO = new Dat
     writtenAt: existing?.writtenAt ?? nowISO,
     ratifiedAt: nowISO,
   };
-  try { secureLocal.setItem(KEY, JSON.stringify(pact)); } catch { /* ignore */ }
+  try { secureLocal.setItem(KEY, JSON.stringify(pact)); } catch (e) { console.error("[pact] failed to save pact:", e); }
   return pact;
 }
 
@@ -52,11 +53,11 @@ export function ratifyPact(nowISO = new Date().toISOString()): Pact | null {
   const p = loadPact();
   if (!p) return null;
   const next: Pact = { ...p, ratifiedAt: nowISO };
-  try { secureLocal.setItem(KEY, JSON.stringify(next)); } catch { /* ignore */ }
+  try { secureLocal.setItem(KEY, JSON.stringify(next)); } catch (e) { console.error("[pact] failed to ratify pact:", e); }
   return next;
 }
 
-export function clearPact(): void { try { secureLocal.setItem(KEY, ""); } catch { /* ignore */ } }
+export function clearPact(): void { try { secureLocal.setItem(KEY, ""); } catch (e) { console.error("[pact] failed to clear pact:", e); } }
 
 /** PURE. Has it been too long since the well-self last confirmed the pact? → prompt a gentle re-ratify. */
 export function isPactStale(p: Pact | null, nowISO = new Date().toISOString(), staleDays = STALE_DAYS): boolean {

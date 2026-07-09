@@ -70,7 +70,8 @@ export function loadValues(): ValuesSnapshot | null {
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     return parsed && typeof parsed === "object" && parsed.ratings ? (parsed as ValuesSnapshot) : null;
-  } catch {
+  } catch (e) {
+    console.error("[values] failed to load values:", e);
     return null;
   }
 }
@@ -89,7 +90,8 @@ export function loadActions(): CommittedAction[] {
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? (parsed as CommittedAction[]) : [];
-  } catch {
+  } catch (e) {
+    console.error("[values] failed to load actions:", e);
     return [];
   }
 }
