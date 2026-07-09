@@ -191,7 +191,7 @@ npx cap open android   # then Run on a device from Android Studio
 
 Then side-load your GGUF onto the device so the on-device model can load.
 
-**Useful scripts:** `npm run lint` (type-check) · `npm test` (Vitest — ~500 tests,
+**Useful scripts:** `npm run lint` (type-check) · `npm test` (Vitest — ~1,100 tests,
 incl. the §9 safety invariants). `VITE_STORE_BUILD=1` toggles the Play-Store build
 profile (optional).
 
@@ -209,7 +209,7 @@ won't cross.
 
 ## Status
 
-Experimental and personal (**v1.6**). Not clinically validated, not a product, no
+Experimental and personal (**v1.7**). Not clinically validated, not a product, no
 support guarantees. Shared in the hope it's useful — use at your own risk.
 
 ## License
