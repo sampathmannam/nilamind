@@ -22,7 +22,9 @@ else
 fi
 
 echo "── 3/4  Reward-hacking scan (ADDED .skip/.only/xit) ──────"
-hack=$(git diff "$range" -- '*.test.ts' 2>/dev/null | grep -E '^\+' | grep -Ei '\.(skip|only)\(|\b(xit|xdescribe|xtest)\(' || true)
+# audit #32: also catch it.todo / .skipIf / .runIf / .fails / fit / fdescribe (common disable vectors the
+# old `\.(skip|only)\(` regex missed — `.skipIf(` etc. don't match `skip(` with `(` immediately after).
+hack=$(git diff "$range" -- '*.test.ts' 2>/dev/null | grep -E '^\+' | grep -Ei '\.(skip|skipIf|runIf|only|todo|fails)\(|\b(xit|xdescribe|xtest|fit|fdescribe)\(' || true)
 if [ -n "$hack" ]; then
   echo -e "${RED}✗ test-gaming markers ADDED — a suite must never be greened by disabling tests:${NC}"
   echo "$hack"; fail=1
