@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isStreamingHarm, scanForCrisis, checkResponse, isBenignMedicationAdherence, METHOD_INTENT_PHRASES, SYCOPHANTIC_AFFIRMATIONS, ROMANIZED_IDEATION, SLANG_IDEATION } from "./safety";
+import { isStreamingHarm, scanForCrisis, checkResponse, isBenignMedicationAdherence, isBenignHyperbole, METHOD_INTENT_PHRASES, SYCOPHANTIC_AFFIRMATIONS, ROMANIZED_IDEATION, SLANG_IDEATION } from "./safety";
 
 // Phase 0 — anti-sycophancy / reality-testing gate. Research basis (docs/NILA_AGENT_RESEARCH_BASIS.md): sycophancy
 // — a model VALIDATING a harmful belief — is THE documented harm mechanism of LLM mental-health tools (OpenAI's
@@ -535,5 +535,48 @@ describe("scanForCrisis — expanded dissociation coverage (2026-07-09 audit)", 
     expect(scanForCrisis("நான் நலமாக இருக்கிறேன்")).toBe(false);          // Tamil: "I'm well"
     expect(scanForCrisis("இன்று நல்ல நாள்")).toBe(false);                 // Tamil: "today is a good day"
     expect(scanForCrisis("నేను బాగున్నాను, ఈరోజు మంచి రోజు")).toBe(false); // Telugu: "I'm fine, good day"
+  });
+});
+
+// 2026-07-10 SECOND audit — regression fixes for the 2026-07-09 fix pass.
+describe("§9 2026-07-10 re-audit regression fixes", () => {
+  // #1 (P1 regression): the bare "kill my self" substring must NOT fire on "kill my self-<compound>" —
+  // core wellness vocabulary (self-doubt / self-criticism / self-esteem / selfishness).
+  it("does NOT crisis-fire on 'kill my self-<compound>'", () => {
+    expect(scanForCrisis("That session helped — I finally want to kill my self-doubt")).toBe(false);
+    expect(scanForCrisis("help me kill my self-criticism")).toBe(false);
+    expect(scanForCrisis("I want to kill my self-esteem issues")).toBe(false);
+    expect(scanForCrisis("I want to kill my selfishness")).toBe(false);
+  });
+  it("still fires on the genuine standalone split-spelling 'kill my self'", () => {
+    expect(scanForCrisis("i want to kill my self")).toBe(true);
+    expect(scanForCrisis("i want to kill my self.")).toBe(true);
+    expect(scanForCrisis("honestly i think i'll kill my self tonight")).toBe(true);
+  });
+
+  // #3 (P2 regression): stockpiling cues in the med-adherence veto must NOT leak into the hyperbole guard.
+  it("hyperbole guard survives benign 'saving up' co-occurring with a fatigue idiom", () => {
+    expect(isBenignHyperbole("Between saving up for the trip and work, I could sleep for a week")).toBe(true);
+    expect(isBenignHyperbole("After saving up all year I could sleep for a month")).toBe(true);
+    expect(isBenignHyperbole("I could sleep for a week and never wake up")).toBe(false); // real lethal co-signal still vetoes
+  });
+  it("stockpiling still vetoes the medication-adherence guard (#2 preserved)", () => {
+    expect(isBenignMedicationAdherence("I saved up all my pills and I take them as prescribed")).toBe(false);
+    expect(isBenignMedicationAdherence("I take my pills every morning as prescribed")).toBe(true);
+  });
+
+  // #5 (P1): split-form divestment paired with an ACCEPTANCE/FINALITY cue (not just readiness) must trip §9.
+  it("split-form divestment + acceptance/finality now trips §9", () => {
+    expect(scanForCrisis("I've given most of my things away, and honestly I'm finally at peace with it.")).toBe(true);
+    expect(scanForCrisis("I gave most of my things away — you won't have to worry about me anymore")).toBe(true);
+  });
+  it("divestment with no readiness/acceptance/finality cue stays benign (declutter)", () => {
+    expect(scanForCrisis("I gave most of my things away when I moved house")).toBe(false);
+  });
+
+  // #4 (P3): present-continuous noose / means-preparation phrasings on the deterministic floor.
+  it("catches present-continuous noose phrasings", () => {
+    expect(scanForCrisis("I'm tying a noose right now")).toBe(true);
+    expect(scanForCrisis("I've been making a noose")).toBe(true);
   });
 });
