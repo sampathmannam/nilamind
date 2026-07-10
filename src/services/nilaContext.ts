@@ -269,10 +269,10 @@ export function buildPersonalContext(): string {
   if (lines.length === 0 && !memory && !insights && !profile && !trajectory && !inflection && !safetyPlanFollowUp && !sleepVariability && !jitaiNudge) return "";
 
   const out: string[] = [
-    "WHAT YOU ALREADY KNOW ABOUT THEM",
-    "These come from their own private history on this device. Reference them gently and naturally, the",
-    "way a friend recalls things — never read them back like a report, never lead with them, and never",
-    "claim to know more than this. If something seems stale, trust what they tell you now.",
+    // Terse header only. HOW to use memory (gently, never recite, don't over-claim, trust the present) already
+    // lives in the persona — repeating it here re-prefilled ~55 tokens every turn, and prefill is the dominant
+    // first-reply cost on this binding (no cross-turn KV reuse).
+    "WHAT YOU ALREADY KNOW ABOUT THEM (reference gently, never recite, never over-claim):",
   ];
   if (trajectory) out.push(trajectory);
   if (sleepVariability) out.push(sleepVariability);
@@ -301,7 +301,10 @@ export function buildPersonalContext(): string {
   // transcript to MIN_TRANSCRIPT_CHARS (400), dropping conversation history. The lowest-priority, explicitly
   // optional nudges (jitai, then proactive) yield FIRST — they are skipped once the core context (through the
   // safety-plan follow-up, which is always kept) already fills the budget. Safety-relevant blocks never drop.
-  const CONTEXT_CHAR_BUDGET = 2800;
+  const CONTEXT_CHAR_BUDGET = 1800; // was 2800 — this block is re-prefilled EVERY turn (no KV reuse) and is the
+                                     // dominant first-reply cost; tightened for speed. The priority order below
+                                     // still drops the lowest-value nudges (jitai, proactive) first and always
+                                     // keeps the core memory + safety-relevant blocks.
   const overBudget = () => out.join("\n").length > CONTEXT_CHAR_BUDGET;
 
   if (jitaiNudge && !overBudget()) {
