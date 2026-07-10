@@ -76,10 +76,18 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   // back button closes it instead of exiting the app; a session that ever tripped §9 latches hadCrisisRef so
   // the transcript is never persisted/restored (keying the clear on a transient boolean re-persisted it on dismiss).
   const hadCrisisRef = useRef(false);
-  const openCrisis = () => {
-    hadCrisisRef.current = true;
-    clearSessionChat(); // scrub anything already written this session
-    setPactNotice(null); // #30: §9 always takes precedence over the pact surface
+  const crisisPendingRef = useRef(false); // #5-out (re-audit): a sent turn whose async §9 verdict is still pending
+  // openCrisis(detected): `detected` = the model/gate FLAGGED a §9 crisis in the user's turn. Only then do we
+  // latch "never persist" + wipe the transcript + clear self-help cards (§9 precedence). A PROACTIVE open (the
+  // user tapping crisis resources) must NOT wipe their in-progress conversation (#6 re-audit) nor offer nothing.
+  const openCrisis = (detected = false) => {
+    if (detected) {
+      hadCrisisRef.current = true;
+      clearSessionChat();      // the flagged crisis turn must never persist/restore
+      setSkillOffer(null);     // #7 (re-audit): don't offer coping-skill/protocol self-help in reply to a crisis
+      setProtocolCard(null);
+    }
+    setPactNotice(null); // §9 takes precedence over the gentle pact surface either way
     onOpenCrisis?.();
   };
   const bottomRef = useRef<HTMLDivElement>(null); // #23: scroll-to-newest anchor
@@ -140,6 +148,10 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
     // #4 (audit): once a session has EVER tripped §9, never persist it. The old code keyed the clear on the
     // transient showCrisis boolean, so the crisis transcript was re-written the instant the overlay closed.
     if (hadCrisisRef.current) { clearSessionChat(); return; }
+    // #5-out (2026-07-10 re-audit): a just-sent turn whose §9 verdict is still pending (the classifier runs an
+    // async MiniLM pass) must NOT be written yet — otherwise a euphemistic crisis the keyword floor misses is
+    // persisted during the embedder window, and a kill there leaves it durable + restored next launch.
+    if (crisisPendingRef.current) return;
     if (messages.length) setSessionChat(messages);
   }, [messages]);
 
@@ -163,6 +175,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
     chatTyping.stop(msg.length);
     setInputText("");
     const userMsg: NilaUiMessage = { role: "user", content: msg };
+    crisisPendingRef.current = true; // #5-out: hold this turn out of sessionChat until its §9 verdict returns
     setMessages((prev) => [...prev, userMsg]);
 
     // Armed check-in is a deterministic, opt-in command — handle it before the model.
@@ -170,7 +183,8 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
       // #3 (audit): the arm path gates with keyword-only scanForCrisis, so a euphemistic crisis that also
       // matches the arm-request regex ("check on me… the world would feel lighter without me") would get a
       // cheerful check-in confirmation. Run the full classifier-backed §9 gate here first.
-      if (await shouldBlockForCrisisAsync(msg)) { openCrisis(); return; }
+      if (await shouldBlockForCrisisAsync(msg)) { openCrisis(true); return; }
+      crisisPendingRef.current = false; // arm request cleared the §9 gate — not a crisis, safe to persist
       const armResult = requestArmedCheckin(msg, [...messages, userMsg]);
       if (armResult.ok) {
         setMessages((prev) => [
@@ -178,7 +192,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           { role: "assistant", content: `Got it — I'll check in with you ${armResult.triggerLabel}.` },
         ]);
       } else if (armResult.reason === "crisis") {
-        openCrisis();
+        openCrisis(true);
       } else {
         const reply =
           armResult.reason === "elevation"
@@ -206,11 +220,15 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
         onDelta: (t: string) => {},
       });
       if (result.blocked) {
-        // §9 crisis: a text bubble with non-tappable helplines is not enough. Open the REAL crisis card
-        // (tappable crisis lines + safety-plan button) — the deterministic §9 surface the reply text
-        // promises. Covers both the typed path and the voice path (handleVoice → handleSendMessage).
-        openCrisis();
+        // §9 crisis: open the REAL crisis card (tappable lines + safety plan). #7 (re-audit): RETURN so we
+        // never fall through to the coping-skill / protocol self-help cards below — offering "this might help"
+        // in reply to a suicidal disclosure softens the §9 stop-everything posture. openCrisis(true) also
+        // latches "never persist" for this euphemistic (classifier-caught) turn.
+        openCrisis(true);
+        if (result.reply) setMessages((prev) => [...prev, { role: "assistant", content: result.reply }]);
+        return;
       }
+      crisisPendingRef.current = false; // #5-out: §9 verdict is NOT a crisis → this turn may now persist
       if (result.reply) {
         setMessages((prev) => [...prev, { role: "assistant", content: result.reply }]);
         if (result.reachedAI) {
@@ -223,6 +241,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
       const suggestion = suggestSkill(msg);
       setSkillOffer(suggestion?.skill ?? null);
     } catch {
+      crisisPendingRef.current = false; // model error is not a §9 crisis — let the turn persist
       setMessages((prev) => [
         ...prev,
         { role: "assistant", content: "I'm having a quiet moment — my model isn't responding right now. Your phone might be low on memory or the model needs a moment. Try typing again? 💙" },
@@ -261,7 +280,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
     setLoading(false);
     if (!result.ok) {
       if (result.reason === "crisis") {
-        openCrisis();
+        openCrisis(true); // detected §9 in the user's last message
         return;
       }
       // empty → open blank
