@@ -6,6 +6,7 @@ import { Smile, Frown, Meh, Sparkle, Flame } from "lucide-react";
 import { t } from "../services/i18n";
 import { saveEmaEntry } from "../services/ema";
 import { generateTinyId } from "../services/idGen";
+import { scanForCrisis } from "../safety";
 
 
 const VALENCE_OPTIONS = [
@@ -20,7 +21,7 @@ const ENERGY_OPTIONS = [
   { key: 1, label: "Low", icon: Flame },
 ] as const;
 
-export default function EmaCheckIn({ onLogged }: { onLogged?: () => void }) {
+export default function EmaCheckIn({ onLogged, onCrisis }: { onLogged?: () => void; onCrisis?: () => void }) {
   const [step, setStep] = useState<"valence" | "energy" | "note">("valence");
   const [valence, setValence] = useState<number | null>(null);
   const [energy, setEnergy] = useState<number | null>(null);
@@ -115,6 +116,14 @@ export default function EmaCheckIn({ onLogged }: { onLogged?: () => void }) {
 
   function saveAndClose() {
     if (valence === null) return;
+    const trimmed = note.trim();
+    // §9 (re-audit #1): the note is a consequential free-text input. A crisis disclosure routes to help
+    // and is NEVER silently persisted as a mood note. The mood chip itself is not scanned (a low mood is
+    // not a crisis) — only the free text the person typed.
+    if (trimmed && scanForCrisis(trimmed)) {
+      onCrisis?.();
+      return;
+    }
     const timestamp = new Date().toISOString();
     const date = timestamp.split("T")[0];
     saveEmaEntry({
@@ -123,7 +132,7 @@ export default function EmaCheckIn({ onLogged }: { onLogged?: () => void }) {
       timestamp,
       valence,
       energy: energy ?? undefined,
-      note: note.trim() || undefined,
+      note: trimmed || undefined,
       trigger: "user_initiated",
     });
     onLogged?.();

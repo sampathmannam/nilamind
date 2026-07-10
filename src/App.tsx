@@ -62,7 +62,7 @@ import ModelSetupGate from "./components/ModelSetupGate";
 import OnboardingGate from "./components/OnboardingGate";
 import { hasCompletedOnboarding } from "./services/onboarding";
 import { resolveNavTarget, type AuxView, type TabView } from "./services/nav";
-import { getArmedCheckin, armedCheckinPrompt } from "./services/armedCheckin";
+import { getArmedCheckin, armedCheckinBody } from "./services/armedCheckin";
 import { MessageSquare, LayoutGrid, User } from "lucide-react";
 import SheetContainer from "./components/SheetContainer";
 
@@ -122,7 +122,7 @@ function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () 
     case "diary": return <DiaryCardScreen />;
     case "episode": return <EpisodeSupportScreen onSessionEnded={onClose} onNavigateToGrounding={() => { onClose(); onOpenGrounding(); }} onNavigateToBreathing={() => { onClose(); onOpenGrounding(); }} />;
     case "armed_checkin": return <ArmedCheckInScreen onClose={onClose} />;
-    case "ema_checkin": return <EmaCheckInScreen />;
+    case "ema_checkin": return <EmaCheckInScreen onCrisis={() => { onClose(); onActivateCrisis(); }} />;
     default: return <div className="p-6 text-slate-400 text-sm text-center">Not available</div>;
   }
 }
@@ -167,11 +167,14 @@ export default function App() {
     void syncDailyReminders();
   }, []);
 
-  // Schedule any pending armed check‑in as a notification on app start
+  // Schedule any pending armed check‑in as a notification on app start.
+  // re-audit #2 (privacy): the notification body is the CONTENT-FREE armedCheckinBody() — never
+  // armedCheckinPrompt(), which embeds the user's own words. A lock-screen must not leak a mental-health
+  // disclosure (mirrors notifications.ts notifyReplyReady). The private context stays inside the app.
   useEffect(() => {
     const entry = getArmedCheckin();
     if (entry) {
-      void scheduleReminderAt(new Date(entry.triggerAt), armedCheckinPrompt(entry));
+      void scheduleReminderAt(new Date(entry.triggerAt), armedCheckinBody());
     }
   }, []);
 

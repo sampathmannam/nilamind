@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from "react";
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend,
-  Scatter,
+  Scatter, ComposedChart,
 } from "recharts";
 import { loadEmaEntries } from "../services/ema";
 import {
@@ -375,14 +375,16 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
           <div className="w-full h-48" role="img" aria-label={chartTab === "emotion" ? "Line chart showing emotional intensity trend over time. Lower values indicate calmer states." : "Line chart showing sleep hours and social connection over time."}>
             <ResponsiveContainer width="100%" height="100%">
               {chartTab === "emotion" ? (
-                <LineChart data={emotionTrend}>
+                <ComposedChart data={emotionTrend}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#2E2922" vertical={false} />
                   <XAxis dataKey="date" stroke="#948A7E" fontSize={10} tickLine={false} axisLine={false} />
                   <YAxis stroke="#948A7E" fontSize={10} domain={[1, 10]} allowDecimals={false} tickLine={false} axisLine={false} />
                   <Tooltip contentStyle={{ backgroundColor: "#171311", borderColor: "#2E2922", borderRadius: "8px" }} labelStyle={{ color: "#ECE5DA" }} itemStyle={{ color: "#9479B0" }} />
                   <Line type="monotone" dataKey="intensity" name="Intensity" stroke="#9479B0" strokeWidth={3} activeDot={{ r: 6, fill: "#D8B4FE", stroke: "#9479B0" }} dot={{ r: 4, fill: "#211C17" }} />
-                    <Scatter data={emaPoints} fill="#ff8800" />
-                </LineChart>
+                  {/* EMA micro-check-in dots (re-audit #4): Scatter belongs in a ComposedChart — inside a
+                      LineChart recharts silently drops it. dataKey ties each dot to the shared date axis. */}
+                  <Scatter data={emaPoints} dataKey="intensity" name="Quick check-in" fill="#D8A657" />
+                </ComposedChart>
               ) : (
                 <LineChart data={ctxTrend}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#2E2922" vertical={false} />
