@@ -11,6 +11,7 @@ import GroundingLibraryScreen from "./components/GroundingLibraryScreen";
 import ModeScreen from "./components/ModeScreen";
 import ToolsScreen from "./components/ToolsScreen";
 import YouScreen from "./components/YouScreen";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 // LAZY — detail screens only when explicitly opened
 const SettingsScreen = lazy(() => import("./components/SettingsScreen"));
@@ -44,10 +45,14 @@ const EmaCheckInScreen = lazy(() => import("./components/EmaCheckIn"));
 const ArmedCheckInScreen = lazy(() => import("./components/ArmedCheckInScreen"));
 
 // Calm fallback while lazy chunks load
+import { Skeleton, SkeletonCard, SkeletonList, SkeletonChart } from "./components/Skeleton";
+
 function ScreenFallback() {
   return (
-    <div className="flex items-center justify-center py-24" role="status" aria-label="Loading">
-      <span className="w-2.5 h-2.5 rounded-full bg-slate-500/70 animate-ping" />
+    <div className="p-4 space-y-4" role="status" aria-label="Loading">
+      <SkeletonCard />
+      <SkeletonCard />
+      <SkeletonList count={2} />
     </div>
   );
 }
@@ -315,7 +320,8 @@ export default function App() {
       <ListeningIndicator active={wakeListening} onClick={() => setIsSettingsOpen(true)} />
 
       {/* Main content area */}
-      <main className="flex-1 min-h-0 relative flex flex-col animate-tab-fade" key={activeTab}>
+      <ErrorBoundary onError={(err: Error, info: React.ErrorInfo) => console.error("[ErrorBoundary] caught:", err, info)}>
+        <main className="flex-1 min-h-0 relative flex flex-col animate-tab-fade" key={activeTab}>
         {activeTab === "nila" && (
           <ModeScreen
             onOpenSettings={() => setIsSettingsOpen(true)}
@@ -340,6 +346,7 @@ export default function App() {
           </div>
         )}
       </main>
+      </ErrorBoundary>
 
       {/* Bottom tab bar */}
       <nav className="shrink-0 flex items-center justify-around border-t border-slate-800 bg-page/95 backdrop-blur pb-[max(8px,env(safe-area-inset-bottom))]" aria-label="Main navigation">

@@ -293,4 +293,9 @@ if (typeof window !== "undefined") {
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") void flush();
   });
+  // Periodic flush every 30s to catch any pending writes in case of unexpected process termination
+  const FLUSH_INTERVAL_MS = 30_000;
+  setInterval(() => {
+    void flush();
+  }, FLUSH_INTERVAL_MS);
 }
