@@ -88,3 +88,18 @@ export interface ShameReflectEntry {
   shameProtection: string;
   kinderView: string;
 }
+
+/** Ecological Momentary Assessment — a micro-check-in (<10s). Multiple per day. */
+export interface EmaEntry {
+  id: string;
+  date: string; // YYYY-MM-DD
+  timestamp: string; // ISO
+  /** Valence: -3 (very bad) to +3 (very good). 0 = neutral. */
+  valence: number;
+  /** Energy: 1-4 (very low / low / moderate / high). Optional on EMA. */
+  energy?: number;
+  /** Optional 1-3 word note. */
+  note?: string;
+  /** What triggered this check-in. */
+  trigger: "random" | "user_initiated";
+}

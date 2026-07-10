@@ -12,6 +12,9 @@ import { getInflectionEnabled } from "./inflectionPrefs";
 import { DAY_MS } from "./storageUtils";
 import { computeCompassionateStreak } from "./streaks";
 import type { Medication } from "./medicationAdherence";
+import { getEmaEnabled, getEmaFrequency } from "./emaPrefs";
+import { planEmaFireTimes, emaElevationSignal } from "./ema";
+import { isSafetySuppressed, markSafetySuppression } from "./notificationSuppress";
 
 // Warm, low-pressure nudges (Phase 7). Never demanding, never guilt-laden — each is an invitation.
 export const WARM_NUDGES = [
@@ -121,7 +124,7 @@ export async function ensureNotificationPermission(): Promise<boolean> {
  * Schedule a one-off reminder to fire at `when`. Returns a structured result so the caller can
  * speak an honest confirmation (or explain why it couldn't be set) — never a silent failure.
  */
-export async function scheduleReminderAt(when: Date, body: string, title = "NilaMind"): Promise<ScheduleResult> {
+export async function scheduleReminderAt(when: Date, body: string, title = "NilaMind", extra?: Record<string, unknown>): Promise<ScheduleResult> {
   if (!(when instanceof Date) || isNaN(when.getTime())) return { ok: false, reason: "error" };
   const granted = await ensureNotificationPermission();
   if (!granted) return { ok: false, reason: "denied", at: when };
@@ -135,6 +138,8 @@ export async function scheduleReminderAt(when: Date, body: string, title = "Nila
         body,
         schedule: { at: when, allowWhileIdle: true },
         smallIcon: "ic_stat_icon_config_sample",
+        // Content-free routing payload only (e.g. {view:'armed_checkin'}) — NEVER user text.
+        ...(extra ? { extra } : {}),
       }],
     });
     return { ok: true, at: when };
@@ -174,9 +179,9 @@ export async function notifyReplyReady(): Promise<void> {
 }
 
 /** Convenience used by Phase 7 reminders — schedule only if outside the user's quiet hours. */
-export async function scheduleIfAllowed(when: Date, body: string, title = "NilaMind"): Promise<ScheduleResult> {
+export async function scheduleIfAllowed(when: Date, body: string, title = "NilaMind", extra?: Record<string, unknown>): Promise<ScheduleResult> {
   if (withinQuietHours(when)) return { ok: false, reason: "unavailable", at: when };
-  return scheduleReminderAt(when, body, title);
+  return scheduleReminderAt(when, body, title, extra);
 }
 
 /** Pretty 12-hour label for confirmations, e.g. "9:00 PM". */
@@ -195,6 +200,10 @@ export interface SyncResult { scheduled: boolean; at?: string; reason?: "disable
 export async function syncDailyReminders(opts: { request?: boolean } = { request: true }): Promise<SyncResult> {
   // Always clear the previous schedule so we never stack duplicates.
   try { await LocalNotifications.cancel({ notifications: [{ id: DAILY_REMINDER_ID }] }); } catch (e) { console.error("[notifications] syncDailyReminders cancel failed:", e); }
+
+  // P6.4: the warm daily nudge is the same class of "how are you?" ping as EMA — never fire it inside a
+  // crisis/elevation suppression window (medication reminders are exempt: health-critical, not a nudge).
+  if (isSafetySuppressed()) return { scheduled: false, reason: "unavailable" };
 
   const prefs = getReminderPrefs();
   if (!prefs.enabled) return { scheduled: false, reason: "disabled" };
@@ -293,4 +302,79 @@ export async function syncMedicationReminders(meds: Medication[]): Promise<void>
   }
   if (notifications.length === 0) return;
   try { await LocalNotifications.schedule({ notifications }); } catch (e) { console.error("[notifications] syncMedicationReminders schedule failed:", e); }
+}
+
+// ── EMA quick check-ins (Phase 3) ────────────────────────────────────────────────────────────────────
+// Calendar-repeat (schedule.on:{hour,minute}) fixes the clock time every day and defeats the P3.1 "random
+// intervals" requirement, so EMA uses ONE-SHOT (schedule.at) pings over a short horizon, re-rolled to fresh
+// random times on every app open + settings change. Distinct id space; content-free body; never fires in quiet
+// hours or while a crisis/elevation suppression window is active (P6.4 — never nudge someone mid-crisis).
+const EMA_NOTIF_ID_BASE = 300_000;
+const EMA_HORIZON_DAYS = 3;
+const EMA_MAX_SLOTS = 3 * EMA_HORIZON_DAYS; // cancel range covers max frequency so lowering it strands no ids
+const EMA_BODY = "🌤️ A quick check-in — how are you right now?"; // CONTENT-FREE, fixed
+
+async function cancelEmaRange(): Promise<void> {
+  try {
+    const ids = Array.from({ length: EMA_MAX_SLOTS }, (_, i) => ({ id: EMA_NOTIF_ID_BASE + i }));
+    await LocalNotifications.cancel({ notifications: ids });
+  } catch (e) { console.error("[notifications] cancelEmaRange failed:", e); }
+}
+
+/** Cancel every scheduled EMA ping. Called at crisis-open to immediately yank already-queued nudges. */
+export async function clearEmaCheckins(): Promise<void> {
+  await cancelEmaRange();
+}
+
+/**
+ * Reconcile EMA quick-check-in notifications with the user's prefs. Idempotent: cancels the EMA id range FIRST,
+ * then reschedules randomized one-shot pings over EMA_HORIZON_DAYS. Safe on every app open (request:false, never
+ * prompts) and on settings change (request:true, may prompt). SAFETY: bails cancel-only (schedules nothing) when
+ * disabled, permission-denied, a 24h crisis/elevation suppression latch is active, or today's EMA trend is
+ * already elevating — you never push "how are you right now?" to someone mid-crisis (FEATURES_PLAN P6.4).
+ */
+export async function syncEmaCheckins(opts: { request?: boolean } = { request: true }): Promise<SyncResult> {
+  await cancelEmaRange(); // clear before any decision so a bail leaves nothing scheduled
+
+  if (!getEmaEnabled()) return { scheduled: false, reason: "disabled" };
+  if (isSafetySuppressed() || emaElevationSignal() !== "none") return { scheduled: false, reason: "unavailable" };
+
+  let granted = false;
+  if (opts.request === false) {
+    try { granted = (await LocalNotifications.checkPermissions()).display === "granted"; } catch (e) { console.error("[notifications] syncEmaCheckins checkPermissions failed:", e); granted = false; }
+  } else {
+    granted = await ensureNotificationPermission();
+  }
+  if (!granted) return { scheduled: false, reason: "denied" };
+
+  const times = planEmaFireTimes({ frequency: getEmaFrequency(), days: EMA_HORIZON_DAYS, isQuiet: withinQuietHours });
+  if (times.length === 0) return { scheduled: false, reason: "unavailable" };
+
+  try {
+    await LocalNotifications.schedule({
+      notifications: times.map((at, i) => ({
+        id: EMA_NOTIF_ID_BASE + i,
+        title: "NilaMind",
+        body: EMA_BODY,
+        schedule: { at, allowWhileIdle: true },
+        smallIcon: "ic_stat_icon_config_sample",
+        extra: { view: "ema_checkin" }, // content-free routing tag for the tap listener
+      })),
+    });
+    return { scheduled: true, at: times[0].toISOString() };
+  } catch (e) {
+    console.error("[notifications] syncEmaCheckins schedule failed:", e);
+    return { scheduled: false, reason: "unavailable" };
+  }
+}
+
+/**
+ * P6.4 — never nudge someone mid-crisis. Latch the 24h no-nudge window AND immediately yank queued EMA + daily
+ * nudges, so the guarantee holds no matter which surface detected the crisis (App crisis overlay, chat
+ * elevation in localNila, or an inline tool-screen crisis stage). Medication reminders are intentionally NOT
+ * cleared — they're health-critical, not a "how are you?" nudge. Call at EVERY §9/elevation entry point.
+ */
+export async function suppressNudgesForCrisis(): Promise<void> {
+  markSafetySuppression();
+  await Promise.allSettled([clearEmaCheckins(), clearDailyReminders()]);
 }

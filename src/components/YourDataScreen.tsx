@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { Database, Download, Trash2, ShieldCheck, Loader2, AlertTriangle, Check } from "lucide-react";
+import { Database, Download, Trash2, ShieldCheck, Loader2, AlertTriangle, Check, FileText } from "lucide-react";
 import { secureLocal } from "../services/secureLocal";
 import { loadIdentity, exportBackup } from "../services/identity";
 import { requireAuth } from "../services/biometricGate";
+import { generateCsvReport, buildTextReport, generatePdfBlob, saveReport } from "../services/exportReport";
 
 // "Your data" (AUTOPILOT Phase 2): see exactly what's stored, export it (encrypted, user-controlled),
 // or delete everything. All on-device — this screen is the opposite of telemetry.
@@ -38,6 +39,7 @@ export default function YourDataScreen() {
   const [busy, setBusy] = useState(false);
   const [backup, setBackup] = useState<string | null>(null);
   const [confirmWipe, setConfirmWipe] = useState(false);
+  const [reportBusy, setReportBusy] = useState(false);
   const rows = CATEGORIES.map((c) => ({ ...c, n: countFor(c.key) }));
   const total = rows.reduce((s, r) => s + r.n, 0);
   const id = loadIdentity();
@@ -56,6 +58,34 @@ export default function YourDataScreen() {
     a.click();
     URL.revokeObjectURL(a.href);
   };
+  const loadCheckins = () => {
+    try {
+      const raw = secureLocal.getItem("nilamind_checkins");
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch { return []; }
+  };
+
+  const handleExportCsv = async () => {
+    setReportBusy(true);
+    try {
+      const checkins = loadCheckins();
+      const csv = generateCsvReport(checkins);
+      if (csv) await saveReport(csv, "nilamind-report.csv", "text/csv");
+    } finally { setReportBusy(false); }
+  };
+
+  const handleExportPdf = async () => {
+    setReportBusy(true);
+    try {
+      const checkins = loadCheckins();
+      const text = buildTextReport(checkins);
+      const blob = generatePdfBlob(text);
+      if (blob) await saveReport(blob, "nilamind-report.pdf", "application/pdf");
+    } finally { setReportBusy(false); }
+  };
+
   const wipeEverything = async () => {
     if (!(await requireAuth("Confirm it's you to permanently delete everything on this device."))) return;
     setBusy(true);
@@ -107,6 +137,20 @@ export default function YourDataScreen() {
             <button onClick={() => navigator.clipboard.writeText(backup)} className="bg-page border border-slate-800 text-slate-300 text-xs px-3 py-2.5 rounded-xl cursor-pointer">Copy</button>
           </div>
         )}
+      </div>
+
+      {/* Clinician-friendly report export */}
+      <div className="glass rounded-2xl p-4 space-y-2">
+        <h3 className="text-xs font-bold text-slate-100 uppercase tracking-wider flex items-center gap-1.5"><FileText className="w-3.5 h-3.5" /> Export Report (readable)</h3>
+        <p className="text-[11px] text-slate-500 leading-relaxed">A plain CSV or PDF of your check-in data — no encryption, designed to share with your doctor. Not a clinical or diagnostic tool.</p>
+        <div className="flex gap-2">
+          <button onClick={handleExportCsv} disabled={reportBusy} className="flex-1 bg-page border border-slate-800 hover:bg-raised text-slate-200 text-xs font-semibold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50">
+            {reportBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />} CSV
+          </button>
+          <button onClick={handleExportPdf} disabled={reportBusy} className="flex-1 bg-page border border-slate-800 hover:bg-raised text-slate-200 text-xs font-semibold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50">
+            {reportBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />} PDF
+          </button>
+        </div>
       </div>
 
       {/* Delete */}

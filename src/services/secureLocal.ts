@@ -60,8 +60,10 @@ export const SENSITIVE_KEYS = [
   "nilamind_session_chat",
   // Active structured-protocol position — {protocolId, stepIndex}, persisted so a program resumes (see protocolProgress.ts).
   "nilamind_protocol_progress",
+  // EMA micro-check-in log — mood valence/energy + the free-text note (encrypted at rest, see ema.ts).
+  "nilamind_ema",
 ];
-const MIGRATION_VERSION = 1;
+const MIGRATION_VERSION = 2; // v2: encrypt nilamind_ema (previously stored in plaintext localStorage)
 
 const cache = new Map<string, string>();
 let hydrated = false;
@@ -158,8 +160,11 @@ export async function bootSecure(): Promise<{ mode: "device" | "pin"; unlocked: 
     // plaintext. Recovery is impossible without the key, so signal locked-out — the UI shows an honest
     // "couldn't open your data — retry" screen (SecureGate) instead of a blank safety plan. If NOT migrated,
     // plaintext still holds the data, so passthrough is genuinely safe (recover it as before).
+    // Lock-out decision hinges on "plaintext was already removed", which is true for ANY prior migration
+    // (>=1) — NOT on being at the latest schema. Using >= MIGRATION_VERSION would misclassify a v1-migrated
+    // user as never-migrated after a version bump and shadow-write their data back to plaintext (audit #5).
     let migrated = false;
-    try { migrated = migratedVersion() >= MIGRATION_VERSION; } catch { migrated = false; }
+    try { migrated = migratedVersion() >= 1; } catch { migrated = false; }
     if (migrated) {
       return { mode: "device", unlocked: false, error: "encrypted_unavailable" };
     }

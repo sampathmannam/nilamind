@@ -13,7 +13,15 @@ vi.mock("@capacitor/local-notifications", () => ({
   },
 }));
 // notifications.ts imports ./reminders — stub it (unused by notifyReplyReady).
-vi.mock("./reminders", () => ({ withinQuietHours: () => false, getReminderPrefs: () => ({ enabled: false }) }));
+// EMA + suppression + reminder deps — controllable via emaMocks (vi.hoisted so the mock factories can read it).
+const emaMocks = vi.hoisted(() => ({ enabled: true, frequency: 2, suppressed: false, elevation: "none" as string, times: [] as Date[], dailyEnabled: false, markSuppressCalls: 0 }));
+vi.mock("./reminders", () => ({
+  withinQuietHours: () => false,
+  getReminderPrefs: () => ({ enabled: emaMocks.dailyEnabled, windowStart: "10:00", windowEnd: "20:00", quietStart: "22:00", quietEnd: "08:00" }),
+}));
+vi.mock("./emaPrefs", () => ({ getEmaEnabled: () => emaMocks.enabled, getEmaFrequency: () => emaMocks.frequency }));
+vi.mock("./ema", () => ({ planEmaFireTimes: () => emaMocks.times, emaElevationSignal: () => emaMocks.elevation }));
+vi.mock("./notificationSuppress", () => ({ isSafetySuppressed: () => emaMocks.suppressed, markSafetySuppression: () => { emaMocks.markSuppressCalls++; } }));
 
 import { notifyReplyReady } from "./notifications";
 
@@ -86,5 +94,98 @@ describe("syncMedicationReminders — recurring daily med pings", () => {
     schedule.mockResolvedValue(undefined);
     await syncMedicationReminders([{ id: "med_4", name: "Y", dose: "5mg", time: "10:00", schedule: "daily" as const, active: true }]);
     expect(cancel).toHaveBeenCalled();
+  });
+});
+
+describe("syncEmaCheckins — randomized EMA quick check-ins", () => {
+  beforeEach(() => {
+    checkPermissions.mockReset(); schedule.mockReset(); cancel.mockReset();
+    emaMocks.enabled = true; emaMocks.frequency = 2; emaMocks.suppressed = false; emaMocks.elevation = "none";
+    emaMocks.times = [new Date(2026, 6, 10, 11, 0), new Date(2026, 6, 10, 20, 0)];
+    checkPermissions.mockResolvedValue({ display: "granted" });
+    schedule.mockResolvedValue(undefined);
+    cancel.mockResolvedValue(undefined);
+  });
+
+  it("schedules content-free, tap-tagged pings when enabled + granted + safe", async () => {
+    const { syncEmaCheckins } = await import("./notifications");
+    const res = await syncEmaCheckins({ request: false });
+    expect(res.scheduled).toBe(true);
+    expect(cancel).toHaveBeenCalled(); // idempotent clear first
+    expect(schedule).toHaveBeenCalledOnce();
+    const notifs = (schedule.mock.calls[0][0] as { notifications: { id: number; body: string; extra: { view: string } }[] }).notifications;
+    expect(notifs).toHaveLength(2);
+    expect(notifs.map((n) => n.id)).toEqual([300000, 300001]);
+    for (const n of notifs) {
+      expect(n.extra).toEqual({ view: "ema_checkin" });          // content-free routing tag only
+      expect(n.body).not.toMatch(/valence|energy|note|\d\/10/i); // never any mood data in the body
+    }
+  });
+
+  it("bails (cancel-only, schedules nothing) when EMA is disabled", async () => {
+    emaMocks.enabled = false;
+    const { syncEmaCheckins } = await import("./notifications");
+    const res = await syncEmaCheckins({ request: false });
+    expect(res).toEqual({ scheduled: false, reason: "disabled" });
+    expect(cancel).toHaveBeenCalled();
+    expect(schedule).not.toHaveBeenCalled();
+  });
+
+  it("bails when a crisis/elevation suppression latch is active — never nudge mid-crisis (P6.4)", async () => {
+    emaMocks.suppressed = true;
+    const { syncEmaCheckins } = await import("./notifications");
+    const res = await syncEmaCheckins({ request: false });
+    expect(res.scheduled).toBe(false);
+    expect(schedule).not.toHaveBeenCalled();
+  });
+
+  it("bails when today's EMA trend is already elevating", async () => {
+    emaMocks.elevation = "elevated";
+    const { syncEmaCheckins } = await import("./notifications");
+    await syncEmaCheckins({ request: false });
+    expect(schedule).not.toHaveBeenCalled();
+  });
+
+  it("startup (request:false) never prompts — denied ⇒ schedules nothing", async () => {
+    checkPermissions.mockResolvedValue({ display: "denied" });
+    const { syncEmaCheckins } = await import("./notifications");
+    const res = await syncEmaCheckins({ request: false });
+    expect(res).toEqual({ scheduled: false, reason: "denied" });
+    expect(schedule).not.toHaveBeenCalled();
+  });
+
+  it("clearEmaCheckins cancels the EMA id range", async () => {
+    const { clearEmaCheckins } = await import("./notifications");
+    await clearEmaCheckins();
+    expect(cancel).toHaveBeenCalled();
+    const ids = (cancel.mock.calls[0][0] as { notifications: { id: number }[] }).notifications.map((n) => n.id);
+    expect(ids).toContain(300000);
+  });
+});
+
+describe("crisis suppression of nudges (P6.4)", () => {
+  beforeEach(() => {
+    checkPermissions.mockReset(); schedule.mockReset(); cancel.mockReset();
+    emaMocks.suppressed = false; emaMocks.markSuppressCalls = 0; emaMocks.dailyEnabled = true;
+    checkPermissions.mockResolvedValue({ display: "granted" });
+    schedule.mockResolvedValue(undefined); cancel.mockResolvedValue(undefined);
+  });
+
+  it("suppressNudgesForCrisis latches the 24h window and cancels BOTH the EMA and the daily nudges", async () => {
+    const { suppressNudgesForCrisis } = await import("./notifications");
+    await suppressNudgesForCrisis();
+    expect(emaMocks.markSuppressCalls).toBe(1); // 24h latch set
+    const cancelledIds = cancel.mock.calls.flatMap((c) => (c[0] as { notifications: { id: number }[] }).notifications.map((n) => n.id));
+    expect(cancelledIds).toContain(300000); // EMA range
+    expect(cancelledIds).toContain(1001);   // daily nudge id
+  });
+
+  it("syncDailyReminders bails cancel-only (reason 'unavailable') inside a crisis window", async () => {
+    emaMocks.suppressed = true; // daily reminder is ENABLED, but a crisis window is open
+    const { syncDailyReminders } = await import("./notifications");
+    const res = await syncDailyReminders();
+    expect(res).toEqual({ scheduled: false, reason: "unavailable" });
+    expect(schedule).not.toHaveBeenCalled();
+    expect(cancel).toHaveBeenCalled(); // still clears the prior schedule first
   });
 });

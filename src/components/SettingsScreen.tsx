@@ -3,6 +3,7 @@ import { Settings as SettingsIcon, EyeOff, Users, Shield, ExternalLink } from "l
 import AppearanceSection from "./settings/AppearanceSection";
 import VoiceSection from "./settings/VoiceSection";
 import RemindersSection from "./settings/RemindersSection";
+import EmaSection from "./settings/EmaSection";
 import InflectionSection from "./settings/InflectionSection";
 import HealthConnectSection from "./settings/HealthConnectSection";
 import OnDeviceSection from "./settings/OnDeviceSection";
@@ -66,10 +67,11 @@ export default function SettingsScreen({ disableAnchorPulse, onTogglePulse, onOp
         </div>
       </div>
 
-      <VoiceSection />
-      <RemindersSection />
-      <InflectionSection />
-      <HealthConnectSection />
+<VoiceSection />
+<RemindersSection />
+<EmaSection />
+<InflectionSection />
+<HealthConnectSection />
       <OnDeviceSection />
       <IdentitySection />
       <PrivacyLockSection />

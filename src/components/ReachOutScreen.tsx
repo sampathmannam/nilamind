@@ -4,6 +4,7 @@ import { REACH_OPENERS, REACH_FRAMING, buildSmsHref } from "../services/reachOut
 import { getCrisisReply, scanForCrisis } from "../safety";
 import { detectCrisis } from "../services/crisisClassifier";
 import CrisisLines from "./CrisisLines";
+import { suppressNudgesForCrisis } from "../services/notifications";
 
 // Reach-out (trusted-person bridge). The app NEVER sends and NEVER stores the recipient/draft — it prepares
 // an editable opener the user sends THEMSELVES via their own app (Web Share → sms: → Copy). §9 gate runs at
@@ -61,7 +62,7 @@ export default function ReachOutScreen() {
   function onDraftChange(v: string) {
     setDraft(v);
     if (crisisElevated) setCrisisElevated(false);
-    if (v.trim()) void detectCrisis(v).then((c) => { if (c) setCrisisElevated(true); });
+    if (v.trim()) void detectCrisis(v).then((c) => { if (c) { setCrisisElevated(true); void suppressNudgesForCrisis(); } });
   }
   function send() {
     const text = draft.trim();
@@ -70,6 +71,7 @@ export default function ReachOutScreen() {
     // click's activation. Euphemisms were already elevated ahead of time by onDraftChange's classifier.
     if (scanForCrisis(text)) {
       setCrisisElevated(true); // §9: elevate crisis to primary, demote send — do not send yet
+      void suppressNudgesForCrisis(); // P6.4: latch no-nudge + yank queued pings
       return;
     }
     doShare(text);

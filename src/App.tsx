@@ -40,6 +40,8 @@ const ValuesWorkScreen = lazy(() => import("./components/ValuesWorkScreen"));
 const ExposureHierarchyScreen = lazy(() => import("./components/ExposureHierarchyScreen"));
 const RelapsePlanScreen = lazy(() => import("./components/RelapsePlanScreen"));
 const EpisodeSupportScreen = lazy(() => import("./components/EpisodeSupportScreen"));
+const EmaCheckInScreen = lazy(() => import("./components/EmaCheckIn"));
+const ArmedCheckInScreen = lazy(() => import("./components/ArmedCheckInScreen"));
 
 // Calm fallback while lazy chunks load
 function ScreenFallback() {
@@ -50,7 +52,8 @@ function ScreenFallback() {
   );
 }
 
-import { syncDailyReminders } from "./services/notifications";
+import { syncDailyReminders, scheduleReminderAt, syncEmaCheckins, suppressNudgesForCrisis } from "./services/notifications";
+import { LocalNotifications } from "@capacitor/local-notifications";
 import { t, LANGUAGE_CHANGED_EVENT } from "./services/i18n";
 import { wakeWord } from "./services/wakeWord";
 import { getWakeEnabled } from "./services/wakePrefs";
@@ -60,6 +63,7 @@ import ModelSetupGate from "./components/ModelSetupGate";
 import OnboardingGate from "./components/OnboardingGate";
 import { hasCompletedOnboarding } from "./services/onboarding";
 import { resolveNavTarget, type AuxView, type TabView } from "./services/nav";
+import { getArmedCheckin, armedCheckinBody } from "./services/armedCheckin";
 import { MessageSquare, LayoutGrid, User } from "lucide-react";
 import SheetContainer from "./components/SheetContainer";
 
@@ -87,6 +91,8 @@ const AUX_LABELS: Partial<Record<AuxView, string>> = {
   behaviour: "Phone patterns",
   diary: "Diary card",
   episode: "Episode support",
+  armed_checkin: "Armed check‑in",
+  ema_checkin: "Quick check‑in",
 };
 
 function auxViewLabel(view: AuxView): string {
@@ -116,6 +122,8 @@ function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () 
     case "behaviour": return <DashboardScreen />;
     case "diary": return <DiaryCardScreen />;
     case "episode": return <EpisodeSupportScreen onSessionEnded={onClose} onNavigateToGrounding={() => { onClose(); onOpenGrounding(); }} onNavigateToBreathing={() => { onClose(); onOpenGrounding(); }} />;
+    case "armed_checkin": return <ArmedCheckInScreen onClose={onClose} />;
+    case "ema_checkin": return <EmaCheckInScreen onCrisis={() => { onClose(); onActivateCrisis(); }} />;
     default: return <div className="p-6 text-slate-400 text-sm text-center">Not available</div>;
   }
 }
@@ -160,6 +168,23 @@ export default function App() {
     void syncDailyReminders();
   }, []);
 
+  // Re-roll EMA quick-check-in pings on every app open. Never prompts on startup; syncEmaCheckins bails if
+  // EMA is off, permission-denied, in quiet hours, or a crisis/elevation suppression window is active.
+  useEffect(() => {
+    void syncEmaCheckins({ request: false });
+  }, []);
+
+  // Schedule any pending armed check‑in as a notification on app start.
+  // re-audit #2 (privacy): the notification body is the CONTENT-FREE armedCheckinBody() — never
+  // armedCheckinPrompt(), which embeds the user's own words. A lock-screen must not leak a mental-health
+  // disclosure (mirrors notifications.ts notifyReplyReady). The private context stays inside the app.
+  useEffect(() => {
+    const entry = getArmedCheckin();
+    if (entry) {
+      void scheduleReminderAt(new Date(entry.triggerAt), armedCheckinBody(), "NilaMind", { view: "armed_checkin" });
+    }
+  }, []);
+
   // Wake word integration
   useEffect(() => {
     const onWakeCb = () => { setWakeListening(false); };
@@ -180,10 +205,17 @@ export default function App() {
     };
   }, []);
 
+  // Opening the crisis surface also latches a 24h no-nudge window and yanks any queued EMA pings —
+  // you never push a "how are you right now?" to someone mid-crisis (FEATURES_PLAN P6.4).
+  const activateCrisis = useCallback(() => {
+    void suppressNudgesForCrisis(); // latch 24h no-nudge + yank queued EMA/daily pings
+    setIsCrisisOpen(true);
+  }, []);
+
   // ── Unified go() for Tools/You hub rows ──
   const go = useCallback((target: string) => {
     const res = resolveNavTarget(target);
-    if (res.kind === "crisis") { setIsCrisisOpen(true); return; }
+    if (res.kind === "crisis") { activateCrisis(); return; }
     if (res.kind === "plan") { setIsGroundingOpen(true); return; }
     if (res.kind === "tab") {
       // "diary" and "plan" are logical tabs that map to Nila or sheets, not our 3-tab bar.
@@ -209,7 +241,7 @@ export default function App() {
       if (res.target === "caregiver") { setIsCaregiverOpen(true); return; }
       if (res.target === "grounding" || res.target === "breathing") { setIsGroundingOpen(true); return; }
     }
-  }, []);
+  }, [activateCrisis]);
 
   const onEpisode = useCallback(() => go("episode"), [go]);
 
@@ -232,6 +264,25 @@ export default function App() {
     return () => { removed = true; handle?.remove(); };
   }, [isCrisisOpen, isSettingsOpen, isDashboardOpen, isGroundingOpen, isMedicationOpen, isCaregiverOpen, activeAuxView, activeTab, modeScreenHasSheet]);
 
+  // Route a tapped local notification to its screen via the existing go() router. Fires for EVERY tapped
+  // notification (daily/med/armed/ema); we route ONLY on a recognised content-free {view} payload and no-op
+  // otherwise (the OS already foregrounds the app). go() self-validates the target via resolveNavTarget.
+  useEffect(() => {
+    let handle: { remove: () => void } | undefined;
+    let removed = false;
+    LocalNotifications.addListener("localNotificationActionPerformed", (action) => {
+      try {
+        const view = action?.notification?.extra?.view;
+        if (typeof view === "string" && view) go(view);
+      } catch (e) {
+        console.error("[App] notification tap routing failed:", e);
+      }
+    })
+      .then((h) => { handle = h; if (removed) h.remove(); })
+      .catch((e) => console.error("[App] addListener(localNotificationActionPerformed) failed:", e));
+    return () => { removed = true; handle?.remove(); };
+  }, [go]);
+
   return (
     <div className="relative isolate h-dvh bg-page text-slate-300 font-sans antialiased overflow-hidden flex flex-col">
       {/* Living aurora atmosphere */}
@@ -247,7 +298,7 @@ export default function App() {
       {!onboardingDone && (
         <OnboardingGate
           onComplete={() => setOnboardingDone(true)}
-          onOpenCrisis={() => setIsCrisisOpen(true)}
+          onOpenCrisis={activateCrisis}
         />
       )}
 
@@ -268,7 +319,7 @@ export default function App() {
         {activeTab === "nila" && (
           <ModeScreen
             onOpenSettings={() => setIsSettingsOpen(true)}
-            onOpenCrisis={() => setIsCrisisOpen(true)}
+            onOpenCrisis={activateCrisis}
             onOpenDashboard={() => setIsDashboardOpen(true)}
             onOpenMedication={() => setIsMedicationOpen(true)}
             onOpenGrounding={(idx) => { setIsGroundingOpen(true); setGroundingExpandIndex(idx); }}
@@ -399,7 +450,7 @@ export default function App() {
             <button onClick={() => setActiveAuxView(null)} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center">✕</button>
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto">
-            <Suspense fallback={<ScreenFallback />}>{renderAuxView(activeAuxView, () => setIsCrisisOpen(true), () => setActiveAuxView(null), () => setIsGroundingOpen(true))}</Suspense>
+            <Suspense fallback={<ScreenFallback />}>{renderAuxView(activeAuxView, activateCrisis, () => setActiveAuxView(null), () => setIsGroundingOpen(true))}</Suspense>
           </div>
         </div>
       )}
