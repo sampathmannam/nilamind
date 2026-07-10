@@ -13,7 +13,6 @@
 // the working alliance are the most consistent predictors of benefit (Flückiger et al., 2018).
 
 import { crisisLinesInline } from "./crisisResources";
-import { skillsPromptBlock } from "./skillsLibrary";
 import { relevantSkillsBlock } from "./skillRetrieval";
 import { buildPersonalContext, activeProtocolContextBlock } from "./nilaContext";
 import { getLatestReflection } from "./asyncReflection";
@@ -88,9 +87,10 @@ export const USE_SHORT_PERSONA = true;
  * benefit to justify it (prefill is the dominant TTFT cost, so fewer tokens = a faster reply). Nila can
  * still open any skill by exact name; the retriever just surfaces the best matches for the moment.
  *
- * No query (e.g. the opening turn, or a caller with no user text) falls back to the full library block —
- * a safe, complete default when there's nothing to rank against. (The episode path builds its own prompt
- * in episodePrompt.ts and is unaffected by this.)
+ * No query (opening turn / no user text) OR a query that ranks nothing → no skills block at all: the persona
+ * already tells Nila the app surfaces the relevant tool beneath her reply, and she can name any skill by heart,
+ * so dumping the whole library just re-prefilled wasted tokens. (The episode path builds its own prompt in
+ * episodePrompt.ts and is unaffected by this.)
  */
 export function buildNilaSystem(query?: string): string {
   const base = USE_SHORT_PERSONA ? NILA_SYSTEM_PROMPT_SHORT : NILA_SYSTEM_PROMPT;
@@ -99,10 +99,11 @@ export function buildNilaSystem(query?: string): string {
   // A structured program the person is partway through — grounds a free-text mid-program turn so Nila answers
   // with the program in mind, not generically (deterministic; "" when nothing is active). See nilaContext.ts.
   const activeProtocol = activeProtocolContextBlock();
-  const relevant = query ? relevantSkillsBlock(query) : "";
-  // Top-3 RAG block when we have a usable query with matches; otherwise the full library as the default.
-  // (A query that ranks nothing → relevant is "" → fall back to the full list so Nila still has skills.)
-  const skills = relevant || skillsPromptBlock();
+  // Top-k RAG block when we have a usable query with matches; otherwise NOTHING. The old full-library fallback
+  // dumped all ~40 skills (~300-500 tokens) on every no-query/no-match turn — re-prefilled every time, the
+  // dominant first-reply cost — for little gain: the persona already tells Nila the app surfaces the relevant
+  // tool beneath her reply, and she can still name any skill by heart. Fewer tokens = a faster reply.
+  const skills = query ? relevantSkillsBlock(query) : "";
 // Deterministic distortion spotting: if the user's message contains cognitive distortions,
 // and it is NOT a crisis (checked via safeSpotDistortions), inject a gentle steer into the system prompt.
 // The steering is framed as a light, non‑verdict suggestion.

@@ -205,19 +205,21 @@ describe("§9 streaming guard (e2e) — companion tripped stream suppresses unsa
 // turn (the dominant TTFT cost; KV prefix-reuse is impossible on this on-device binding). With NO query
 // it falls back to the full library as a safe default (also what the opening turn uses).
 // ─────────────────────────────────────────────────────────────────────────────
-describe("S3 RAG grounding — buildNilaSystem(query) uses top-3, no-query falls back to full library", () => {
-  it("no-query output is stable (undefined === '' === no-arg) and is the full library", () => {
+describe("S3 RAG grounding — buildNilaSystem(query) injects top-k; no-query emits NO skills block", () => {
+  it("no-query output is stable (undefined === '' === no-arg) and carries NO skills block", () => {
     expect(buildNilaSystem()).toBe(buildNilaSystem(undefined));
     expect(buildNilaSystem()).toBe(buildNilaSystem(""));
-    expect(buildNilaSystem()).toContain("IN-APP SKILLS LIBRARY");
+    // The full-library fallback was removed for speed (it re-prefilled ~300-500 wasted tokens every no-match
+    // turn — the dominant first-reply cost). No query → no skills block at all; the persona still tells Nila
+    // the app surfaces the relevant tool beneath her reply, and she can name any skill by heart.
+    expect(buildNilaSystem()).not.toContain("IN-APP SKILLS LIBRARY");
   });
-  it("a real query injects the top-3 grounding block INSTEAD OF the full library dump", () => {
+  it("a real query injects the top-k grounding block (never the full library)", () => {
     const grounded = buildNilaSystem("I keep having the same negative automatic thought");
     expect(grounded).toContain("MOST RELEVANT");
     expect(grounded).toContain("Thought Record");
-    // top-3 REPLACES the full library on a query turn → fewer wasted prompt tokens re-prefilled
     expect(grounded).not.toContain("IN-APP SKILLS LIBRARY");
-    // no-query stays the full library (safe default / opening turn), and never carries the top-3 header
+    // no-query never carries the top-k header either
     expect(buildNilaSystem()).not.toContain("MOST RELEVANT");
   });
 });
