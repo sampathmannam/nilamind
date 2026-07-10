@@ -1,6 +1,6 @@
 import { selfReportSleepSignal } from "./sleepInsight";
 import { loadMoodHistory } from "./moodHistory";
-import { spotDistortions } from "./distortionSpotter";
+import { safeSpotDistortions } from "./distortionSpotter"; // 🟡 Safety: Jitai now uses §9‑gated distortion check, needs review
 import { detectElevationRisk } from "./elevationGuard";
 import type { SleepSignal } from "./healthConnect";
 
@@ -74,8 +74,8 @@ export function assessJitai(params: {
   }
 
   if (params.lastUserText) {
-    const distortions = spotDistortions(params.lastUserText);
-    if (distortions.length >= 2) {
+    const safe = safeSpotDistortions(params.lastUserText);
+    if (safe.ok && safe.matches.length >= 2) {
       triggers.push("high_distortion");
     }
   }

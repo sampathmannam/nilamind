@@ -2,11 +2,13 @@ import React, { useMemo, useState, useEffect } from "react";
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend,
+  Scatter,
 } from "recharts";
+import { loadEmaEntries } from "../services/ema";
 import {
   Flame, TrendingUp as TrendUpIcon, TrendingDown, Minus, Activity, MessageSquare,
   CalendarCheck, ClipboardCheck, Database, Sparkles, ShieldAlert, Clock, BrainCircuit,
-  Loader2, Tag, Lightbulb, Pill, Moon, Mic,
+  Loader2, Tag, Lightbulb, Pill, Moon, Mic, Download, FileText,
 } from "lucide-react";
 import Markdown from "react-markdown";
 import { loadMoodHistory } from "../services/moodHistory";
@@ -23,6 +25,7 @@ import { computeNof1Ranking } from "../services/nOf1";
 import { PROTOCOLS } from "../services/protocols";
 import { secureLocal } from "../services/secureLocal";
 import { runDeepAssessment as runDeepAssessmentRequest } from "../services/coachAssist";
+import { generateCsvReport, buildTextReport, generatePdfBlob, saveReport } from "../services/exportReport";
 import CrisisCard from "./CrisisCard";
 import { stripProvenance } from "../services/emotionParse";
 import {
@@ -57,6 +60,8 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
   const [assessmentCrisis, setAssessmentCrisis] = useState(false);
   const [behaviourInsights, setBehaviourInsights] = useState<Insight[]>([]);
   const [behaviourDays, setBehaviourDays] = useState(0);
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const [exportBusy, setExportBusy] = useState(false);
 
   const data = useMemo(() => {
     const mood = loadMoodHistory().sort((a, b) => a.date.localeCompare(b.date));
@@ -130,6 +135,16 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
   const topTags = useMemo(() => quickNoteTags(diaryEntries), [diaryEntries]);
   const emotionTrend = useMemo(() => moodTrend(mood, timeRange), [mood, timeRange]);
   const ctxTrend = useMemo(() => contextTrend(mood, timeRange), [mood, timeRange]);
+  const emaPoints = useMemo(() => {
+    const entries = loadEmaEntries();
+    const dateSet = new Set(emotionTrend.map(p => p.date));
+    return entries
+      .filter(e => dateSet.has(e.date.slice(5)))
+      .map(e => ({
+        date: e.date.slice(5),
+        intensity: Math.round(((e.valence + 3) / 6) * 9) + 1, // map -3..+3 to 1..10 roughly
+      }));
+  }, [emotionTrend]);
   const trendLength = chartTab === "emotion" ? emotionTrend.length : ctxTrend.length;
 
   const moodSummary = (() => {
@@ -167,11 +182,59 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
     }
   };
 
+  const handleExportCsv = async () => {
+    setExportBusy(true);
+    setShowExportMenu(false);
+    try {
+      const csv = generateCsvReport(checkins);
+      if (!csv) return;
+      await saveReport(csv, "nilamind-report.csv", "text/csv");
+    } finally {
+      setExportBusy(false);
+    }
+  };
+
+  const handleExportPdf = async () => {
+    setExportBusy(true);
+    setShowExportMenu(false);
+    try {
+      const text = buildTextReport(checkins, assessments.length);
+      const blob = generatePdfBlob(text);
+      if (!blob) return;
+      await saveReport(blob, "nilamind-report.pdf", "application/pdf");
+    } finally {
+      setExportBusy(false);
+    }
+  };
+
   return (
     <div className="space-y-5 max-w-md mx-auto" id="dashboard-screen">
       <header className="space-y-1">
         <h1 className="text-xl font-semibold text-slate-100 flex items-center gap-2">
           <Activity className="w-5 h-5 text-blue-400" /> {t("dashboard")}
+          <div className="relative ml-auto">
+            <button
+              onClick={() => setShowExportMenu((v) => !v)}
+              disabled={exportBusy || checkins.length === 0}
+              className="p-1.5 rounded-lg hover:bg-slate-700/50 text-slate-400 hover:text-slate-200 disabled:opacity-30"
+              aria-label={t("exportTitle")}
+              id="dashboard-export-btn"
+            >
+              {exportBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+            </button>
+            {showExportMenu && (
+              <div className="absolute right-0 top-full mt-1 z-20 bg-slate-800 border border-slate-600 rounded-xl shadow-xl overflow-hidden min-w-[160px]">
+                <button onClick={handleExportCsv} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-200 hover:bg-slate-700 text-left">
+                  <FileText className="w-4 h-4 text-emerald-400" />
+                  <span>{t("exportCsv")}</span>
+                </button>
+                <button onClick={handleExportPdf} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-200 hover:bg-slate-700 text-left">
+                  <FileText className="w-4 h-4 text-amber-400" />
+                  <span>{t("exportPdf")}</span>
+                </button>
+              </div>
+            )}
+          </div>
         </h1>
         <p className="text-xs text-slate-400 leading-relaxed">Your local sections stay only on your device. A picture of how you're doing over time.</p>
       </header>
@@ -318,6 +381,7 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
                   <YAxis stroke="#948A7E" fontSize={10} domain={[1, 10]} allowDecimals={false} tickLine={false} axisLine={false} />
                   <Tooltip contentStyle={{ backgroundColor: "#171311", borderColor: "#2E2922", borderRadius: "8px" }} labelStyle={{ color: "#ECE5DA" }} itemStyle={{ color: "#9479B0" }} />
                   <Line type="monotone" dataKey="intensity" name="Intensity" stroke="#9479B0" strokeWidth={3} activeDot={{ r: 6, fill: "#D8B4FE", stroke: "#9479B0" }} dot={{ r: 4, fill: "#211C17" }} />
+                    <Scatter data={emaPoints} fill="#ff8800" />
                 </LineChart>
               ) : (
                 <LineChart data={ctxTrend}>

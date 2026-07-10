@@ -17,7 +17,7 @@ import { skillsPromptBlock } from "./skillsLibrary";
 import { relevantSkillsBlock } from "./skillRetrieval";
 import { buildPersonalContext, activeProtocolContextBlock } from "./nilaContext";
 import { getLatestReflection } from "./asyncReflection";
-import { spotDistortions, distortionSteer } from "./distortionSpotter";
+import { distortionSteer, safeSpotDistortions } from "./distortionSpotter"; // 🟡 Safety: distortion spotting now §9‑gated, needs review
 
 export interface NilaMessage {
   role: "user" | "assistant";
@@ -103,9 +103,14 @@ export function buildNilaSystem(query?: string): string {
   // Top-3 RAG block when we have a usable query with matches; otherwise the full library as the default.
   // (A query that ranks nothing → relevant is "" → fall back to the full list so Nila still has skills.)
   const skills = relevant || skillsPromptBlock();
-  // Deterministic distortion spotting: if the user's message contains cognitive distortions,
-  // inject a gentle steer into the system prompt so Nila can name them conversationally.
-  const distortions = query ? distortionSteer(spotDistortions(query)) : "";
+// Deterministic distortion spotting: if the user's message contains cognitive distortions,
+// and it is NOT a crisis (checked via safeSpotDistortions), inject a gentle steer into the system prompt.
+// The steering is framed as a light, non‑verdict suggestion.
+const distortions = (() => {
+  if (!query) return "";
+  const safe = safeSpotDistortions(query);
+  return safe.ok ? distortionSteer(safe.matches) : "";
+})();
   return [persona, distortions, context, activeProtocol, skills].filter(Boolean).join("\n\n");
 }
 
