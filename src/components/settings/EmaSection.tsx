@@ -1,14 +1,17 @@
 import React, { useState } from "react";
 import { Bell } from "lucide-react";
 import { getEmaEnabled, setEmaEnabled, getEmaFrequency, setEmaFrequency } from "../../services/emaPrefs";
+import { syncEmaCheckins } from "../../services/notifications";
 
 const FREQ_OPTIONS = [1, 2, 3] as const;
 
 export default function EmaSection() {
   const [enabled, setEnabled] = useState(getEmaEnabled());
   const [freq, setFreq] = useState(getEmaFrequency());
-  const toggle = () => { const next = !enabled; setEnabled(next); setEmaEnabled(next); };
-  const setFreqVal = (v: number) => { setFreq(v); setEmaFrequency(v); };
+  // After writing prefs, re-sync notifications (request:true → may prompt, the user just opted in). Toggling
+  // off makes getEmaEnabled() false, so syncEmaCheckins takes the cancel-only branch and clears the pings.
+  const toggle = () => { const next = !enabled; setEnabled(next); setEmaEnabled(next); void syncEmaCheckins({ request: true }); };
+  const setFreqVal = (v: number) => { setFreq(v); setEmaFrequency(v); void syncEmaCheckins({ request: true }); };
   return (
     <div className="glass p-5 rounded-2xl space-y-4 shadow-lg" id="settings-ema">
       <div>

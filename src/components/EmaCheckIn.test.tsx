@@ -8,19 +8,18 @@ import { loadEmaEntries } from "../services/ema";
 // route to the crisis surface and must NOT be silently stored as a mood note. The plan's "EMA skips crisis
 // detection" is correct for the mood chip (a sad face isn't a crisis) but wrong for the free-text field.
 
-// jsdom exposes localStorage on window, but ls() reads globalThis.localStorage — stub a Map-backed store
-// (same pattern as ema.test.ts) so persistence is deterministic under the render env.
+// EMA persists via secureLocal (encrypted at rest) — mock it with a Map-backed store so the render env
+// has deterministic persistence.
 const mockStore = new Map<string, string>();
-beforeEach(() => {
-  mockStore.clear();
-  vi.stubGlobal("localStorage", {
+vi.mock("../services/secureLocal", () => ({
+  secureLocal: {
     getItem: (k: string) => mockStore.get(k) ?? null,
-    setItem: (k: string, v: string) => mockStore.set(k, v),
-    removeItem: (k: string) => mockStore.delete(k),
-    clear: () => mockStore.clear(),
-  });
-});
-afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
+    setItem: (k: string, v: string) => { mockStore.set(k, v); },
+    removeItem: (k: string) => { mockStore.delete(k); },
+  },
+}));
+beforeEach(() => { mockStore.clear(); });
+afterEach(() => cleanup());
 
 /** Drive the 3-step micro-check-in (valence → energy → note) and tap Done. */
 function driveToNote(note: string) {

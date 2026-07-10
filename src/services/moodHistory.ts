@@ -3,7 +3,7 @@ import { secureLocal } from "./secureLocal";
 // MoodPoint[] for the PatternInsightEngine — so correlations run on real logs, not synthetic.
 // Read-only; touches nothing the rest of the app writes.
 
-import { ls } from "./storageUtils";
+import { loadEmaEntries } from "./ema";
 import type { MoodPoint } from './patternInsights';
 
 interface DayAgg {
@@ -64,20 +64,14 @@ export function loadMoodHistory(): MoodPoint[] {
     /* ignore malformed */
   }
 
-  // EMA micro-check-ins: nilamind_ema = EmaEntry[] ({ date, valence, energy? }). Weighted lower.
+  // EMA micro-check-ins (EmaEntry[]): read THROUGH the engine so they come from the ENCRYPTED store
+  // (secureLocal), not plaintext, and bucket by the same local YYYY-MM-DD convention as check-ins. Weighted lower.
   try {
-    const store = ls();
-    if (store) {
-      const raw = store.getItem('nilamind_ema');
-      if (raw) {
-        const list = JSON.parse(raw) as Array<{ date?: string; valence?: number }>;
-        for (const e of list) {
-          if (!e?.date || typeof e.valence !== 'number') continue;
-          const d = get(e.date);
-          d.intensitySum += valenceToIntensity(e.valence) * EMA_WEIGHT;
-          d.intensityN += EMA_WEIGHT;
-        }
-      }
+    for (const e of loadEmaEntries()) {
+      if (!e?.date || typeof e.valence !== 'number') continue;
+      const d = get(e.date);
+      d.intensitySum += valenceToIntensity(e.valence) * EMA_WEIGHT;
+      d.intensityN += EMA_WEIGHT;
     }
   } catch {
     /* ignore malformed */

@@ -1,6 +1,6 @@
 import {
   Wind, NotebookPen, Activity, LifeBuoy, TrendingUp, Moon, MessageCircle,
-  Shield, Users, Pill, Lightbulb, Compass, Mountain, AlertTriangle,
+  Shield, Users, Pill, Lightbulb, Compass, Mountain, AlertTriangle, Smile,
   type LucideIcon,
 } from "lucide-react";
 
@@ -49,6 +49,7 @@ export function buildToolGroups({ go, onEpisode, phoneEnabled }: ToolRowDeps): T
     {
       title: "Log & track",
       rows: [
+        { id: "ema_checkin", label: "Quick check-in", sub: "A 10-second mood check, right now", Icon: Smile, iconClass: "w-5 h-5 text-purple-400", onTap: () => go("ema_checkin") },
         { id: "diary", label: "Diary", sub: "A DBT diary card for today", Icon: NotebookPen, iconClass: "w-5 h-5 text-blue-400", onTap: () => go("diary") },
         { id: "assessment", label: "Screenings", sub: "PHQ-9, GAD-7 & more over time", Icon: Activity, iconClass: "w-5 h-5 text-blue-400", onTap: () => go("assessment") },
         { id: "medication", label: "Medications", sub: "Track doses and adherence", Icon: Pill, iconClass: "w-5 h-5 text-blue-400", onTap: () => go("medication") },

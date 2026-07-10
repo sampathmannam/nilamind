@@ -14,6 +14,11 @@ vi.mock("@capacitor/local-notifications", () => ({
 }));
 // notifications.ts imports ./reminders — stub it (unused by notifyReplyReady).
 vi.mock("./reminders", () => ({ withinQuietHours: () => false, getReminderPrefs: () => ({ enabled: false }) }));
+// EMA scheduling deps — controllable via emaMocks (vi.hoisted so the hoisted mock factories can read it).
+const emaMocks = vi.hoisted(() => ({ enabled: true, frequency: 2, suppressed: false, elevation: "none" as string, times: [] as Date[] }));
+vi.mock("./emaPrefs", () => ({ getEmaEnabled: () => emaMocks.enabled, getEmaFrequency: () => emaMocks.frequency }));
+vi.mock("./ema", () => ({ planEmaFireTimes: () => emaMocks.times, emaElevationSignal: () => emaMocks.elevation }));
+vi.mock("./notificationSuppress", () => ({ isSafetySuppressed: () => emaMocks.suppressed }));
 
 import { notifyReplyReady } from "./notifications";
 
@@ -86,5 +91,71 @@ describe("syncMedicationReminders — recurring daily med pings", () => {
     schedule.mockResolvedValue(undefined);
     await syncMedicationReminders([{ id: "med_4", name: "Y", dose: "5mg", time: "10:00", schedule: "daily" as const, active: true }]);
     expect(cancel).toHaveBeenCalled();
+  });
+});
+
+describe("syncEmaCheckins — randomized EMA quick check-ins", () => {
+  beforeEach(() => {
+    checkPermissions.mockReset(); schedule.mockReset(); cancel.mockReset();
+    emaMocks.enabled = true; emaMocks.frequency = 2; emaMocks.suppressed = false; emaMocks.elevation = "none";
+    emaMocks.times = [new Date(2026, 6, 10, 11, 0), new Date(2026, 6, 10, 20, 0)];
+    checkPermissions.mockResolvedValue({ display: "granted" });
+    schedule.mockResolvedValue(undefined);
+    cancel.mockResolvedValue(undefined);
+  });
+
+  it("schedules content-free, tap-tagged pings when enabled + granted + safe", async () => {
+    const { syncEmaCheckins } = await import("./notifications");
+    const res = await syncEmaCheckins({ request: false });
+    expect(res.scheduled).toBe(true);
+    expect(cancel).toHaveBeenCalled(); // idempotent clear first
+    expect(schedule).toHaveBeenCalledOnce();
+    const notifs = (schedule.mock.calls[0][0] as { notifications: { id: number; body: string; extra: { view: string } }[] }).notifications;
+    expect(notifs).toHaveLength(2);
+    expect(notifs.map((n) => n.id)).toEqual([300000, 300001]);
+    for (const n of notifs) {
+      expect(n.extra).toEqual({ view: "ema_checkin" });          // content-free routing tag only
+      expect(n.body).not.toMatch(/valence|energy|note|\d\/10/i); // never any mood data in the body
+    }
+  });
+
+  it("bails (cancel-only, schedules nothing) when EMA is disabled", async () => {
+    emaMocks.enabled = false;
+    const { syncEmaCheckins } = await import("./notifications");
+    const res = await syncEmaCheckins({ request: false });
+    expect(res).toEqual({ scheduled: false, reason: "disabled" });
+    expect(cancel).toHaveBeenCalled();
+    expect(schedule).not.toHaveBeenCalled();
+  });
+
+  it("bails when a crisis/elevation suppression latch is active — never nudge mid-crisis (P6.4)", async () => {
+    emaMocks.suppressed = true;
+    const { syncEmaCheckins } = await import("./notifications");
+    const res = await syncEmaCheckins({ request: false });
+    expect(res.scheduled).toBe(false);
+    expect(schedule).not.toHaveBeenCalled();
+  });
+
+  it("bails when today's EMA trend is already elevating", async () => {
+    emaMocks.elevation = "elevated";
+    const { syncEmaCheckins } = await import("./notifications");
+    await syncEmaCheckins({ request: false });
+    expect(schedule).not.toHaveBeenCalled();
+  });
+
+  it("startup (request:false) never prompts — denied ⇒ schedules nothing", async () => {
+    checkPermissions.mockResolvedValue({ display: "denied" });
+    const { syncEmaCheckins } = await import("./notifications");
+    const res = await syncEmaCheckins({ request: false });
+    expect(res).toEqual({ scheduled: false, reason: "denied" });
+    expect(schedule).not.toHaveBeenCalled();
+  });
+
+  it("clearEmaCheckins cancels the EMA id range", async () => {
+    const { clearEmaCheckins } = await import("./notifications");
+    await clearEmaCheckins();
+    expect(cancel).toHaveBeenCalled();
+    const ids = (cancel.mock.calls[0][0] as { notifications: { id: number }[] }).notifications.map((n) => n.id);
+    expect(ids).toContain(300000);
   });
 });

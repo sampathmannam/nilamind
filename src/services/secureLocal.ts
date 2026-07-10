@@ -60,8 +60,10 @@ export const SENSITIVE_KEYS = [
   "nilamind_session_chat",
   // Active structured-protocol position — {protocolId, stepIndex}, persisted so a program resumes (see protocolProgress.ts).
   "nilamind_protocol_progress",
+  // EMA micro-check-in log — mood valence/energy + the free-text note (encrypted at rest, see ema.ts).
+  "nilamind_ema",
 ];
-const MIGRATION_VERSION = 1;
+const MIGRATION_VERSION = 2; // v2: encrypt nilamind_ema (previously stored in plaintext localStorage)
 
 const cache = new Map<string, string>();
 let hydrated = false;

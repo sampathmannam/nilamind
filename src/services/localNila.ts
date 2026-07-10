@@ -11,6 +11,7 @@ import { buildNilaSystem, type NilaMessage } from "./nila";
 import { generateGuarded, isLocalLlmReady } from "./localLlm";
 import { detectElevationRisk, elevationGuardNote, elevationOutputNote, type ElevationLevel } from "./elevationGuard";
 import { emaElevationSignal } from "./ema";
+import { markSafetySuppression } from "./notificationSuppress";
 import { retrievePsychoedForQuery, psychoedContextBlock } from "./psychoedRetrieval";
 import type { AgentView } from "./agent";
 
@@ -43,6 +44,9 @@ export async function askNilaLocalStream(
   const combinedLevel: ElevationLevel = levels[textElevation.level] >= levels[emaLevel]
     ? textElevation.level
     : emaLevel;
+  // P6.4 — when this turn shows elevation, latch a 24h no-nudge window so the next EMA sync suppresses
+  // check-in pings. We don't push "how are you right now?" to someone who's escalating.
+  if (combinedLevel !== "none") markSafetySuppression();
   let system = buildNilaSystem(lastUser) + elevationGuardNote(combinedLevel);
 
   // B4: if the user's words match a vetted psychoeducation topic, feed a grounded snippet into the

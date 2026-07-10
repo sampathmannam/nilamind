@@ -4,7 +4,7 @@
 import React, { useState } from "react";
 import { Smile, Frown, Meh, Sparkle, Flame } from "lucide-react";
 import { t } from "../services/i18n";
-import { saveEmaEntry } from "../services/ema";
+import { saveEmaEntry, emaDateKey } from "../services/ema";
 import { generateTinyId } from "../services/idGen";
 import { scanForCrisis } from "../safety";
 
@@ -124,8 +124,9 @@ export default function EmaCheckIn({ onLogged, onCrisis }: { onLogged?: () => vo
       onCrisis?.();
       return;
     }
-    const timestamp = new Date().toISOString();
-    const date = timestamp.split("T")[0];
+    const now = new Date();
+    const timestamp = now.toISOString();
+    const date = emaDateKey(now); // local day-bucket — matches check-ins + emaElevationSignal
     saveEmaEntry({
       id: generateTinyId(),
       date,

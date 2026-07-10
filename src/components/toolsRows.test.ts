@@ -9,7 +9,7 @@ describe("Tools hub rows (redesign §2)", () => {
   it("renders all tool rows in order, when phone is off", () => {
     expect(rowIds(false)).toEqual([
       "plan", "winddown", "reach_out", "crisis_rehearsal", "relapse_plan", "episode",
-      "diary", "assessment", "medication",
+      "ema_checkin", "diary", "assessment", "medication",
       "problem_solving", "values_work", "exposure", "peer_support",
     ]);
   });
@@ -42,6 +42,15 @@ describe("Tools hub rows (redesign §2)", () => {
     episode.onTap();
     expect(episodeCalled).toBe(true);
     expect(routed).toBeNull();
+  });
+
+  it("routes the quick check-in row to the ema_checkin screen", () => {
+    let routed: string | null = null;
+    const groups = buildToolGroups({ go: (t) => { routed = t; }, onEpisode: () => {}, phoneEnabled: false });
+    const ema = groups.flatMap((g) => g.rows).find((r) => r.id === "ema_checkin")!;
+    expect(ema).toBeTruthy();
+    ema.onTap();
+    expect(routed).toBe("ema_checkin");
   });
 
   it("keeps every re-homed row out of the Tools hub", () => {

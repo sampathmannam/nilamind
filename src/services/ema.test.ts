@@ -4,20 +4,22 @@ import {
   saveEmaEntry,
   generateEmaWindows,
   emaElevationSignal,
+  randomTimeInWindow,
+  planEmaFireTimes,
   type EmaWindow,
 } from "./ema";
 
+// EMA notes are encrypted at rest — the engine persists via secureLocal, so mock that (not localStorage).
 const mockStore = new Map<string, string>();
-
-beforeEach(() => {
-  mockStore.clear();
-  vi.stubGlobal("localStorage", {
+vi.mock("./secureLocal", () => ({
+  secureLocal: {
     getItem: (k: string) => mockStore.get(k) ?? null,
-    setItem: (k: string, v: string) => mockStore.set(k, v),
-    removeItem: (k: string) => mockStore.delete(k),
-    clear: () => mockStore.clear(),
-  });
-});
+    setItem: (k: string, v: string) => { mockStore.set(k, v); },
+    removeItem: (k: string) => { mockStore.delete(k); },
+  },
+}));
+
+beforeEach(() => mockStore.clear());
 
 describe("loadEmaEntries / saveEmaEntry", () => {
   it("returns empty array when no entries stored", () => {
@@ -118,5 +120,51 @@ describe("emaElevationSignal", () => {
   it("handles entries with missing energy", () => {
     saveEmaEntry({ id: "a", date: "2026-07-10", timestamp: "2026-07-10T08:00:00.000Z", valence: 2, trigger: "random" });
     expect(emaElevationSignal()).toBe("none");
+  });
+});
+
+describe("randomTimeInWindow", () => {
+  const day = new Date(2026, 6, 10);
+  it("returns the window start at rng=0 and the end at rng→1", () => {
+    const win: EmaWindow = { start: "10:00", end: "12:00" };
+    const lo = randomTimeInWindow(win, day, () => 0);
+    expect(lo.getHours()).toBe(10);
+    expect(lo.getMinutes()).toBe(0);
+    const hi = randomTimeInWindow(win, day, () => 0.999999);
+    expect(hi.getHours()).toBe(12);
+    expect(hi.getMinutes()).toBe(0);
+  });
+  it("always lands inside the window", () => {
+    const win: EmaWindow = { start: "14:00", end: "16:00" };
+    for (const r of [0, 0.25, 0.5, 0.75, 0.99]) {
+      const t = randomTimeInWindow(win, day, () => r);
+      const min = t.getHours() * 60 + t.getMinutes();
+      expect(min).toBeGreaterThanOrEqual(14 * 60);
+      expect(min).toBeLessThanOrEqual(16 * 60);
+    }
+  });
+});
+
+describe("planEmaFireTimes", () => {
+  it("plans frequency×days future times, sorted", () => {
+    const now = new Date(2026, 6, 10, 6, 0, 0); // 6am, before all windows
+    const times = planEmaFireTimes({ frequency: 2, days: 3, now, rng: () => 0.5 });
+    expect(times).toHaveLength(6); // 2 windows/day × 3 days
+    for (const t of times) expect(t.getTime()).toBeGreaterThan(now.getTime());
+    expect(times).toEqual([...times].sort((a, b) => a.getTime() - b.getTime()));
+  });
+
+  it("never schedules into quiet hours (drops the slot instead of clamping)", () => {
+    const now = new Date(2026, 6, 10, 6, 0, 0);
+    const isQuiet = (d: Date) => d.getHours() >= 19; // evening window is quiet
+    const times = planEmaFireTimes({ frequency: 3, days: 1, now, rng: () => 0.5, isQuiet });
+    expect(times.every((t) => t.getHours() < 19)).toBe(true);
+    expect(times).toHaveLength(2); // morning + afternoon kept; evening dropped
+  });
+
+  it("drops past times so a mid-day re-sync never backdates a ping", () => {
+    const now = new Date(2026, 6, 10, 15, 0, 0); // 3pm
+    const times = planEmaFireTimes({ frequency: 3, days: 1, now, rng: () => 0.5 });
+    expect(times.every((t) => t.getTime() > now.getTime())).toBe(true);
   });
 });
