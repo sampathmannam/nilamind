@@ -71,6 +71,7 @@ import { resolveNavTarget, type AuxView, type TabView } from "./services/nav";
 import { getArmedCheckin, armedCheckinBody } from "./services/armedCheckin";
 import { MessageSquare, LayoutGrid, User } from "lucide-react";
 import SheetContainer from "./components/SheetContainer";
+import { hapticLight } from "./hooks/useHaptics";
 
 type AppTab = "nila" | "tools" | "you";
 
@@ -357,7 +358,7 @@ export default function App() {
         ]).map(({ id, label, Icon }) => (
           <button
             key={id}
-            onClick={() => setActiveTab(id)}
+            onClick={() => { setActiveTab(id); hapticLight(); }}
             className={`flex flex-col items-center gap-0.5 py-2 px-4 rounded-lg transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] ${
               activeTab === id ? "text-blue-400" : "text-slate-500 hover:text-slate-300"
             }`}
