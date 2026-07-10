@@ -16,6 +16,7 @@ import {
   reconcile, upsertUserInsight, editInsight, deleteInsight, insightsContextBlock,
 } from "./nilaInsights";
 import { registerLocalLlmBackend, type LocalLlmBackend } from "./localLlm";
+import { _resetForTest } from "./llmCache";
 
 const ins = (over: Partial<Insight> = {}): Insight => ({
   id: over.id ?? "ins_x", kind: over.kind ?? "pattern",
@@ -147,8 +148,10 @@ vi.stubGlobal("localStorage", {
   removeItem: (k: string) => { ls.delete(k); },
 });
 
-const ymdLocal = (d: Date) =>
-  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+// Mirror production: runReflection stamps the "last reflected" flag with ymd() (UTC — see nilaInsights.ts),
+// so TODAY must use the same convention or the assertion drifts whenever the local and UTC dates differ
+// (any timezone ahead of UTC near midnight). Use UTC here to match.
+const ymdLocal = (d: Date) => d.toISOString().slice(0, 10);
 const TODAY = ymdLocal(new Date());
 
 function backendReturning(reply: string): LocalLlmBackend {
@@ -165,7 +168,7 @@ function recordingBackend(reply: string) {
 }
 
 describe("runReflection (on-device)", () => {
-  beforeEach(() => { store.clear(); ls.clear(); registerLocalLlmBackend(null); (globalThis as any).__resetReflectionBootGuard?.(); });
+  beforeEach(() => { store.clear(); ls.clear(); registerLocalLlmBackend(null); _resetForTest(); (globalThis as any).__resetReflectionBootGuard?.(); });
 
   it("valid array → reconciles and adds insights, consumes the day", async () => {
     registerLocalLlmBackend(backendReturning('[{"kind":"pattern","text":"Evenings are hard."}]'));

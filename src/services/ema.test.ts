@@ -7,6 +7,7 @@ import {
   randomTimeInWindow,
   planEmaFireTimes,
   type EmaWindow,
+  emaDateKey,
 } from "./ema";
 
 // EMA notes are encrypted at rest — the engine persists via secureLocal, so mock that (not localStorage).
@@ -29,7 +30,7 @@ describe("loadEmaEntries / saveEmaEntry", () => {
   it("saves and loads a single EMA entry", () => {
     const entry = {
       id: "test-1",
-      date: "2026-07-10",
+      date: emaDateKey(),
       timestamp: "2026-07-10T14:00:00.000Z",
       valence: 2,
       energy: 3,
@@ -44,8 +45,8 @@ describe("loadEmaEntries / saveEmaEntry", () => {
   });
 
   it("preserves multiple entries across saves", () => {
-    saveEmaEntry({ id: "a", date: "2026-07-10", timestamp: "2026-07-10T10:00:00.000Z", valence: 1, trigger: "random" });
-    saveEmaEntry({ id: "b", date: "2026-07-10", timestamp: "2026-07-10T14:00:00.000Z", valence: -1, trigger: "random" });
+    saveEmaEntry({ id: "a", date: emaDateKey(), timestamp: "2026-07-10T10:00:00.000Z", valence: 1, trigger: "random" });
+    saveEmaEntry({ id: "b", date: emaDateKey(), timestamp: "2026-07-10T14:00:00.000Z", valence: -1, trigger: "random" });
     expect(loadEmaEntries()).toHaveLength(2);
   });
 
@@ -55,7 +56,7 @@ describe("loadEmaEntries / saveEmaEntry", () => {
   });
 
   it("stores the entry with the correct key", () => {
-    saveEmaEntry({ id: "k", date: "2026-07-10", timestamp: "2026-07-10T10:00:00.000Z", valence: 0, trigger: "random" });
+    saveEmaEntry({ id: "k", date: emaDateKey(), timestamp: "2026-07-10T10:00:00.000Z", valence: 0, trigger: "random" });
     expect(mockStore.has("nilamind_ema")).toBe(true);
     const raw = mockStore.get("nilamind_ema");
     expect(JSON.parse(raw!)).toHaveLength(1);
@@ -92,33 +93,33 @@ describe("emaElevationSignal", () => {
   });
 
   it("returns 'none' when entries are not elevated", () => {
-    saveEmaEntry({ id: "a", date: "2026-07-10", timestamp: "2026-07-10T10:00:00.000Z", valence: 0, energy: 2, trigger: "random" });
-    saveEmaEntry({ id: "b", date: "2026-07-10", timestamp: "2026-07-10T14:00:00.000Z", valence: 1, energy: 2, trigger: "random" });
+    saveEmaEntry({ id: "a", date: emaDateKey(), timestamp: "2026-07-10T10:00:00.000Z", valence: 0, energy: 2, trigger: "random" });
+    saveEmaEntry({ id: "b", date: emaDateKey(), timestamp: "2026-07-10T14:00:00.000Z", valence: 1, energy: 2, trigger: "random" });
     expect(emaElevationSignal()).toBe("none");
   });
 
   it("returns 'elevated' when valence + energy trend is moderate across same day", () => {
     // First entry mild
-    saveEmaEntry({ id: "a", date: "2026-07-10", timestamp: "2026-07-10T08:00:00.000Z", valence: 0, energy: 2, trigger: "random" });
+    saveEmaEntry({ id: "a", date: emaDateKey(), timestamp: "2026-07-10T08:00:00.000Z", valence: 0, energy: 2, trigger: "random" });
     // Second entry rising moderately
-    saveEmaEntry({ id: "b", date: "2026-07-10", timestamp: "2026-07-10T12:00:00.000Z", valence: 2, energy: 3, trigger: "random" });
+    saveEmaEntry({ id: "b", date: emaDateKey(), timestamp: "2026-07-10T12:00:00.000Z", valence: 2, energy: 3, trigger: "random" });
     expect(emaElevationSignal()).toBe("elevated");
   });
 
   it("returns 'high' when steep rise across same day", () => {
-    saveEmaEntry({ id: "a", date: "2026-07-10", timestamp: "2026-07-10T08:00:00.000Z", valence: -1, energy: 1, trigger: "random" });
-    saveEmaEntry({ id: "b", date: "2026-07-10", timestamp: "2026-07-10T14:00:00.000Z", valence: 3, energy: 4, trigger: "random" });
+    saveEmaEntry({ id: "a", date: emaDateKey(), timestamp: "2026-07-10T08:00:00.000Z", valence: -1, energy: 1, trigger: "random" });
+    saveEmaEntry({ id: "b", date: emaDateKey(), timestamp: "2026-07-10T14:00:00.000Z", valence: 3, energy: 4, trigger: "random" });
     expect(emaElevationSignal()).toBe("high");
   });
 
   it("ignores entries from different days", () => {
     saveEmaEntry({ id: "a", date: "2026-07-09", timestamp: "2026-07-09T08:00:00.000Z", valence: 3, energy: 4, trigger: "random" });
-    saveEmaEntry({ id: "b", date: "2026-07-10", timestamp: "2026-07-10T10:00:00.000Z", valence: 1, energy: 2, trigger: "random" });
+    saveEmaEntry({ id: "b", date: emaDateKey(), timestamp: "2026-07-10T10:00:00.000Z", valence: 1, energy: 2, trigger: "random" });
     expect(emaElevationSignal()).toBe("none");
   });
 
   it("handles entries with missing energy", () => {
-    saveEmaEntry({ id: "a", date: "2026-07-10", timestamp: "2026-07-10T08:00:00.000Z", valence: 2, trigger: "random" });
+    saveEmaEntry({ id: "a", date: emaDateKey(), timestamp: "2026-07-10T08:00:00.000Z", valence: 2, trigger: "random" });
     expect(emaElevationSignal()).toBe("none");
   });
 });
