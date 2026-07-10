@@ -52,9 +52,8 @@ function ScreenFallback() {
   );
 }
 
-import { syncDailyReminders, scheduleReminderAt, syncEmaCheckins, clearEmaCheckins } from "./services/notifications";
+import { syncDailyReminders, scheduleReminderAt, syncEmaCheckins, suppressNudgesForCrisis } from "./services/notifications";
 import { LocalNotifications } from "@capacitor/local-notifications";
-import { markSafetySuppression } from "./services/notificationSuppress";
 import { t, LANGUAGE_CHANGED_EVENT } from "./services/i18n";
 import { wakeWord } from "./services/wakeWord";
 import { getWakeEnabled } from "./services/wakePrefs";
@@ -209,8 +208,7 @@ export default function App() {
   // Opening the crisis surface also latches a 24h no-nudge window and yanks any queued EMA pings —
   // you never push a "how are you right now?" to someone mid-crisis (FEATURES_PLAN P6.4).
   const activateCrisis = useCallback(() => {
-    markSafetySuppression();
-    void clearEmaCheckins();
+    void suppressNudgesForCrisis(); // latch 24h no-nudge + yank queued EMA/daily pings
     setIsCrisisOpen(true);
   }, []);
 

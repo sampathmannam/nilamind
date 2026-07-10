@@ -13,12 +13,15 @@ vi.mock("@capacitor/local-notifications", () => ({
   },
 }));
 // notifications.ts imports ./reminders — stub it (unused by notifyReplyReady).
-vi.mock("./reminders", () => ({ withinQuietHours: () => false, getReminderPrefs: () => ({ enabled: false }) }));
-// EMA scheduling deps — controllable via emaMocks (vi.hoisted so the hoisted mock factories can read it).
-const emaMocks = vi.hoisted(() => ({ enabled: true, frequency: 2, suppressed: false, elevation: "none" as string, times: [] as Date[] }));
+// EMA + suppression + reminder deps — controllable via emaMocks (vi.hoisted so the mock factories can read it).
+const emaMocks = vi.hoisted(() => ({ enabled: true, frequency: 2, suppressed: false, elevation: "none" as string, times: [] as Date[], dailyEnabled: false, markSuppressCalls: 0 }));
+vi.mock("./reminders", () => ({
+  withinQuietHours: () => false,
+  getReminderPrefs: () => ({ enabled: emaMocks.dailyEnabled, windowStart: "10:00", windowEnd: "20:00", quietStart: "22:00", quietEnd: "08:00" }),
+}));
 vi.mock("./emaPrefs", () => ({ getEmaEnabled: () => emaMocks.enabled, getEmaFrequency: () => emaMocks.frequency }));
 vi.mock("./ema", () => ({ planEmaFireTimes: () => emaMocks.times, emaElevationSignal: () => emaMocks.elevation }));
-vi.mock("./notificationSuppress", () => ({ isSafetySuppressed: () => emaMocks.suppressed }));
+vi.mock("./notificationSuppress", () => ({ isSafetySuppressed: () => emaMocks.suppressed, markSafetySuppression: () => { emaMocks.markSuppressCalls++; } }));
 
 import { notifyReplyReady } from "./notifications";
 
@@ -157,5 +160,32 @@ describe("syncEmaCheckins — randomized EMA quick check-ins", () => {
     expect(cancel).toHaveBeenCalled();
     const ids = (cancel.mock.calls[0][0] as { notifications: { id: number }[] }).notifications.map((n) => n.id);
     expect(ids).toContain(300000);
+  });
+});
+
+describe("crisis suppression of nudges (P6.4)", () => {
+  beforeEach(() => {
+    checkPermissions.mockReset(); schedule.mockReset(); cancel.mockReset();
+    emaMocks.suppressed = false; emaMocks.markSuppressCalls = 0; emaMocks.dailyEnabled = true;
+    checkPermissions.mockResolvedValue({ display: "granted" });
+    schedule.mockResolvedValue(undefined); cancel.mockResolvedValue(undefined);
+  });
+
+  it("suppressNudgesForCrisis latches the 24h window and cancels BOTH the EMA and the daily nudges", async () => {
+    const { suppressNudgesForCrisis } = await import("./notifications");
+    await suppressNudgesForCrisis();
+    expect(emaMocks.markSuppressCalls).toBe(1); // 24h latch set
+    const cancelledIds = cancel.mock.calls.flatMap((c) => (c[0] as { notifications: { id: number }[] }).notifications.map((n) => n.id));
+    expect(cancelledIds).toContain(300000); // EMA range
+    expect(cancelledIds).toContain(1001);   // daily nudge id
+  });
+
+  it("syncDailyReminders bails cancel-only (reason 'unavailable') inside a crisis window", async () => {
+    emaMocks.suppressed = true; // daily reminder is ENABLED, but a crisis window is open
+    const { syncDailyReminders } = await import("./notifications");
+    const res = await syncDailyReminders();
+    expect(res).toEqual({ scheduled: false, reason: "unavailable" });
+    expect(schedule).not.toHaveBeenCalled();
+    expect(cancel).toHaveBeenCalled(); // still clears the prior schedule first
   });
 });

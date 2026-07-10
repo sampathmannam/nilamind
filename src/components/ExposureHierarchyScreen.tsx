@@ -3,6 +3,7 @@ import { Mountain, Plus, X } from "lucide-react";
 import { createHierarchy, addStep, removeStep, completeStep, loadHierarchy, saveHierarchy, completionRate, averageSudReduction, type ExposureHierarchy } from "../services/exposureHierarchy";
 import { scanForCrisis } from "../safety";
 import CrisisLines from "./CrisisLines";
+import { suppressNudgesForCrisis } from "../services/notifications";
 
 export default function ExposureHierarchyScreen() {
   const [hierarchy, setHierarchy] = useState<ExposureHierarchy | null>(loadHierarchy);
@@ -21,7 +22,7 @@ export default function ExposureHierarchyScreen() {
   function handleCreate() {
     const t = title.trim();
     if (!t) return;
-    if (scanForCrisis(t)) { setCrisisShown(true); return; }
+    if (scanForCrisis(t)) { setCrisisShown(true); void suppressNudgesForCrisis(); return; }
     const h = createHierarchy(t);
     saveHierarchy(h);
     refresh();
@@ -30,7 +31,7 @@ export default function ExposureHierarchyScreen() {
 
   function handleAddStep() {
     if (!hierarchy || !stepText.trim()) return;
-    if (scanForCrisis(stepText.trim())) { setCrisisShown(true); return; }
+    if (scanForCrisis(stepText.trim())) { setCrisisShown(true); void suppressNudgesForCrisis(); return; }
     const updated = addStep(hierarchy, stepText.trim(), suds);
     saveHierarchy(updated);
     refresh();

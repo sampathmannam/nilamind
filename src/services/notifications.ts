@@ -14,7 +14,7 @@ import { computeCompassionateStreak } from "./streaks";
 import type { Medication } from "./medicationAdherence";
 import { getEmaEnabled, getEmaFrequency } from "./emaPrefs";
 import { planEmaFireTimes, emaElevationSignal } from "./ema";
-import { isSafetySuppressed } from "./notificationSuppress";
+import { isSafetySuppressed, markSafetySuppression } from "./notificationSuppress";
 
 // Warm, low-pressure nudges (Phase 7). Never demanding, never guilt-laden — each is an invitation.
 export const WARM_NUDGES = [
@@ -201,6 +201,10 @@ export async function syncDailyReminders(opts: { request?: boolean } = { request
   // Always clear the previous schedule so we never stack duplicates.
   try { await LocalNotifications.cancel({ notifications: [{ id: DAILY_REMINDER_ID }] }); } catch (e) { console.error("[notifications] syncDailyReminders cancel failed:", e); }
 
+  // P6.4: the warm daily nudge is the same class of "how are you?" ping as EMA — never fire it inside a
+  // crisis/elevation suppression window (medication reminders are exempt: health-critical, not a nudge).
+  if (isSafetySuppressed()) return { scheduled: false, reason: "unavailable" };
+
   const prefs = getReminderPrefs();
   if (!prefs.enabled) return { scheduled: false, reason: "disabled" };
 
@@ -362,4 +366,15 @@ export async function syncEmaCheckins(opts: { request?: boolean } = { request: t
     console.error("[notifications] syncEmaCheckins schedule failed:", e);
     return { scheduled: false, reason: "unavailable" };
   }
+}
+
+/**
+ * P6.4 — never nudge someone mid-crisis. Latch the 24h no-nudge window AND immediately yank queued EMA + daily
+ * nudges, so the guarantee holds no matter which surface detected the crisis (App crisis overlay, chat
+ * elevation in localNila, or an inline tool-screen crisis stage). Medication reminders are intentionally NOT
+ * cleared — they're health-critical, not a "how are you?" nudge. Call at EVERY §9/elevation entry point.
+ */
+export async function suppressNudgesForCrisis(): Promise<void> {
+  markSafetySuppression();
+  await Promise.allSettled([clearEmaCheckins(), clearDailyReminders()]);
 }

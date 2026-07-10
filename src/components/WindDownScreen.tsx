@@ -9,6 +9,7 @@ import {
 } from "../services/windDown";
 import { getCrisisReply } from "../safety";
 import CrisisLines from "./CrisisLines";
+import { suppressNudgesForCrisis } from "../services/notifications";
 import { scheduleIfAllowed, formatTime } from "../services/notifications";
 
 type Stage = "park" | "settle" | "close" | "crisis";
@@ -79,6 +80,7 @@ export default function WindDownScreen() {
     setBreathing(false);
     try {
       const crisis = await checkWindDownText(text);
+      if (crisis) void suppressNudgesForCrisis(); // P6.4: latch no-nudge + yank queued pings on a §9 hit
       setStage(crisis ? "crisis" : "settle");
     } finally {
       submitting.current = false;
