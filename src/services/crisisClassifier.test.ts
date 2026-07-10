@@ -102,4 +102,32 @@ describe("crisisClassifier — additive, fail-closed §9 gate", () => {
     expect(CRISIS_THRESHOLD).toBeGreaterThan(0);
     expect(CRISIS_THRESHOLD).toBeLessThan(1);
   });
+
+  // NEGATIVE GUARD wiring — ordinary bad-day/fatigue distress must NOT be upgraded even when the embedding
+  // scores ≈1 (the reported device false positive). Deterministic proof of the guard's placement in
+  // detectCrisis; the real-model end-to-end lives in crisisClassifier.realmodel.test.ts.
+  it("ON: isBenignExhaustion suppresses a high-scoring bad-day/fatigue MISS", async () => {
+    setCrisisClassifierEnabled(true);
+    setCrisisEmbedder(constEmbedder([...COEF])); // score ≈ 1 ≥ threshold
+    expect(await detectCrisis("i had a really rough day and i just feel exhausted")).toBe(false);
+    expect(await detectCrisis("i'm so exhausted")).toBe(false);
+    // life-weariness / despair phrasing DEFERS to the classifier — the guard must NOT suppress it.
+    expect(await detectCrisis("i'm exhausted by life and ready for it to be over")).toBe(true);
+    expect(await detectCrisis("rough day and i feel like giving up")).toBe(true);
+    // and a genuine euphemism with no fatigue frame is untouched by the guard.
+    expect(await detectCrisis(EUPHEMISM)).toBe(true);
+  });
+
+  // NEGATIVE GUARD wiring — self-soothing dismissal ("i'm okay for now") must NOT be upgraded even at score≈1,
+  // so an affirmative dismissal after a §9 surface clears instead of re-tripping (latch investigation).
+  it("ON: isBenignOkayReassurance suppresses a high-scoring 'i'm okay' MISS", async () => {
+    setCrisisClassifierEnabled(true);
+    setCrisisEmbedder(constEmbedder([...COEF])); // score ≈ 1 ≥ threshold
+    expect(await detectCrisis("i'm okay for now")).toBe(false);
+    expect(await detectCrisis("i think i'm okay now")).toBe(false);
+    // crisis-minimization / lethal phrasing DEFERS to the classifier — the guard must NOT suppress it.
+    expect(await detectCrisis("i'm okay, don't worry about me")).toBe(true);
+    expect(await detectCrisis("i'm okay now that i've decided to end it")).toBe(true);
+    expect(await detectCrisis(EUPHEMISM)).toBe(true);
+  });
 });

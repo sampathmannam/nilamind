@@ -23,7 +23,7 @@
  * device-verified — see crisisEmbedder.example.ts.
  */
 import weights from "./crisisClassifier.weights.json";
-import { scanForCrisis, isBenignMedicationAdherence, isBenignHyperbole } from "../safety";
+import { scanForCrisis, isBenignMedicationAdherence, isBenignHyperbole, isBenignExhaustion, isBenignOkayReassurance } from "../safety";
 
 /** Returns a NORMALIZED (L2) sentence embedding of `dim` floats. The head was trained on normalized MiniLM
  *  mean-pooled embeddings, so the embedder MUST mean-pool + L2-normalize (Transformers.js:
@@ -91,6 +91,16 @@ export async function detectCrisis(text: string): Promise<boolean> {
   // Same posture for common hyperbole/idiom the classifier over-fires on ("could sleep for a week", "could
   // murder a biryani") — only after the keyword floor missed, and vetoed by any lethal co-signal (2026-07-06 #8).
   if (isBenignHyperbole(text)) return false;
+  // Same posture for ordinary bad-day / heavy-fatigue distress the classifier over-fires on ("i had a really
+  // rough day and i just feel exhausted" → 0.90) — a false crisis surface on a normal bad day is itself
+  // harmful. Vetoed by any lethal co-signal OR life-weariness/despair phrasing, so real (often euphemistic)
+  // disclosures still fire (device test 2026-07-10). See isBenignExhaustion in safety.ts.
+  if (isBenignExhaustion(text)) return false;
+  // Same posture for self-soothing dismissal / reassurance the classifier over-fires on ("i'm okay for now" →
+  // 0.63, "i think i'm okay now" → 0.81) — so a user's affirmative dismissal after a §9 surface clears instead
+  // of re-tripping it. Vetoed by any lethal co-signal, life-weariness/despair, OR crisis-minimization cue
+  // ("don't worry about me", "at peace", "said my goodbyes"), so real minimization still fires (2026-07-10).
+  if (isBenignOkayReassurance(text)) return false;
   const p = await scoreCrisis(text);
   return p !== null && p >= CRISIS_THRESHOLD;
 }

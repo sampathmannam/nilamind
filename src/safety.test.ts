@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isStreamingHarm, scanForCrisis, checkResponse, isBenignMedicationAdherence, isBenignHyperbole, METHOD_INTENT_PHRASES, SYCOPHANTIC_AFFIRMATIONS, ROMANIZED_IDEATION, SLANG_IDEATION } from "./safety";
+import { isStreamingHarm, scanForCrisis, checkResponse, isBenignMedicationAdherence, isBenignHyperbole, isBenignExhaustion, isBenignOkayReassurance, METHOD_INTENT_PHRASES, SYCOPHANTIC_AFFIRMATIONS, ROMANIZED_IDEATION, SLANG_IDEATION } from "./safety";
 
 // Phase 0 — anti-sycophancy / reality-testing gate. Research basis (docs/NILA_AGENT_RESEARCH_BASIS.md): sycophancy
 // — a model VALIDATING a harmful belief — is THE documented harm mechanism of LLM mental-health tools (OpenAI's
@@ -178,6 +178,107 @@ describe("isBenignMedicationAdherence — narrow negative guard for the semantic
     expect(isBenignMedicationAdherence("as prescribed, every morning, with food")).toBe(false); // no med noun
     expect(isBenignMedicationAdherence("I take my pills tonight")).toBe(false); // no adherence marker (bare timing) — left to soft-fire, the conservative side
     expect(isBenignMedicationAdherence("")).toBe(false);
+  });
+});
+
+// Benign EXHAUSTION / BAD-DAY negative guard (device test 2026-07-10). The semantic §9 classifier scores
+// ordinary heavy-fatigue talk ABOVE its 0.5796 threshold — the reported false positive "i had a really rough
+// day and i just feel exhausted" scores 0.90, "i'm so exhausted" 0.61, "i had a really rough day" 0.82 — so
+// detectCrisis fired the full crisis surface (helplines) on a normal bad day (patronizing; erodes trust).
+// isBenignExhaustion mirrors isBenignMedicationAdherence/isBenignHyperbole: a fatigue/bad-day pattern + NO
+// lethal co-signal + NO life-weariness/despair cue. It only ever suppresses the SOFT classifier upgrade (never
+// the deterministic keyword floor), and ANY weariness/despair/lethal phrasing DEFERS back to the classifier —
+// so recall on real disclosures is unchanged (every real-crisis phrasing either keeps a keyword hit or vetoes).
+describe("isBenignExhaustion — narrow negative guard for the semantic §9 gate (bad-day/fatigue FP)", () => {
+  it.each([
+    "i had a really rough day and i just feel exhausted", // the reported device false positive (score 0.90)
+    "i'm so exhausted",
+    "i feel exhausted",
+    "i had a really rough day",
+    "i'm tired and drained after a long week",
+    "work has been exhausting lately",
+    "i just feel completely burnt out",
+    "today was hard but i'll be okay",
+    "such a long day, i'm wiped out",
+    "ugh what a rough week, so drained",
+  ])("guards ordinary fatigue / bad-day distress: %j", (s) => {
+    expect(isBenignExhaustion(s)).toBe(true);
+  });
+
+  // MUST NOT guard — life-weariness/despair where fatigue vocabulary is actually euphemistic ideation. Each
+  // DEFERS to the classifier (which scores it high) instead of being suppressed.
+  it.each([
+    "i'm so tired of living",
+    "i'm exhausted by life and ready for it to be over",
+    "i'm burnt out and i just want to disappear",
+    "rough day and i feel like giving up",
+    "i'm exhausted, i can't keep going",
+    "such a long day, i feel completely hopeless",
+    "so drained, i don't see the point anymore",
+    "exhausted with everything, ready to be done",
+    "i'm worn out and i feel worthless",
+  ])("does NOT guard fatigue-worded despair / life-weariness: %j", (s) => {
+    expect(isBenignExhaustion(s)).toBe(false);
+  });
+
+  // MUST NOT guard — a lethal co-signal co-occurring with fatigue vocabulary (belt-and-suspenders veto,
+  // shared with the other two guards). The keyword floor also catches these, but the guard vetoes on its own.
+  it.each([
+    "i'm exhausted and i just can't go on",
+    "i'm so drained i don't want to wake up",
+    "so tired, i'd be better off dead",
+  ])("does NOT guard fatigue + a lethal co-signal: %j", (s) => {
+    expect(isBenignExhaustion(s)).toBe(false);
+  });
+
+  it("does NOT guard messages with no fatigue / bad-day pattern, or empty input", () => {
+    expect(isBenignExhaustion("the world would be lighter without me in it")).toBe(false); // real euphemism, no fatigue frame
+    expect(isBenignExhaustion("i had a nice walk this evening and felt pretty calm")).toBe(false); // positive
+    expect(isBenignExhaustion("")).toBe(false);
+  });
+});
+
+// Benign OKAY-REASSURANCE negative guard (device test 2026-07-10, latch investigation). The semantic §9
+// classifier scores self-soothing / dismissal phrasing ABOVE threshold — "i'm okay for now" → 0.63, "i think
+// i'm okay now" → 0.81, "i'll be okay" → 0.73 — so a user's affirmative dismissal after a §9 surface RE-TRIPS
+// §9, which is much of why dismissal felt like a stuck latch. isBenignOkayReassurance mirrors the other guards:
+// a reassurance pattern + NO lethal co-signal + NO life-weariness/despair cue + NO crisis-MINIMIZATION cue
+// ("don't worry about me", "made my decision", "said my goodbyes", "at peace", "without me"). It only ever
+// suppresses the SOFT classifier upgrade; any minimization/weariness/lethal phrasing DEFERS to the classifier,
+// so a real "I'm okay, don't worry about me" is never suppressed by this guard (recall preserved).
+describe("isBenignOkayReassurance — narrow negative guard for self-soothing dismissal (i'm-okay FP)", () => {
+  it.each([
+    "i'm okay for now",
+    "i'm okay for now, thanks",
+    "i think i'm okay now",
+    "i'll be okay",
+    "i'm fine, i was just venting",
+    "i'm good now, thanks for listening",
+    "i feel a bit better now",
+    "i'm alright now",
+  ])("guards self-soothing dismissal / reassurance: %j", (s) => {
+    expect(isBenignOkayReassurance(s)).toBe(true);
+  });
+
+  // MUST NOT guard — crisis MINIMIZATION ("I'm okay, don't worry about me" is a documented pre-attempt
+  // pattern), life-weariness, or a lethal co-signal. Each DEFERS to the classifier instead of being suppressed.
+  it.each([
+    "i'm okay, don't worry about me",
+    "i'm fine, i've made my decision",
+    "i'll be okay soon, it'll all be over",
+    "i'm at peace now, i'll be okay",
+    "i'm okay, i've said my goodbyes",
+    "i'm fine, everyone will be better off without me",
+    "i'm okay now that i've decided to end it",
+    "i'm okay i guess but i feel hopeless",
+  ])("does NOT guard reassurance masking minimization / despair / lethal intent: %j", (s) => {
+    expect(isBenignOkayReassurance(s)).toBe(false);
+  });
+
+  it("does NOT guard messages with no reassurance pattern, or empty input", () => {
+    expect(isBenignOkayReassurance("the world would be lighter without me in it")).toBe(false);
+    expect(isBenignOkayReassurance("i had a really rough day and i just feel exhausted")).toBe(false); // the exhaustion guard's job, not this one
+    expect(isBenignOkayReassurance("")).toBe(false);
   });
 });
 

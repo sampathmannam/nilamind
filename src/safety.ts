@@ -400,6 +400,85 @@ export function isBenignHyperbole(message: string): boolean {
   return HYPERBOLE_PATTERNS.test(t) && !LETHAL_COSIGNAL.test(t);
 }
 
+// Ordinary FATIGUE vocabulary (plain tiredness, not despair). Bare "tired" is intentionally EXCLUDED — it is
+// the hinge of life-weariness ideation ("tired of living"), so only unambiguous fatigue forms are listed.
+const FATIGUE_PATTERNS =
+  /\b(exhaust(ed|ing|ion)|drained|draining|burn(t|ed)[ -]?out|burnout|worn[ -]?out|wiped[ -]?out|knackered|so tired|really tired|so damn tired|dead tired|no energy|running on empty|running low)\b/;
+// "Bad day/week" framing — either an ADJECTIVE+PERIOD noun ("rough day", "long week") or a SUBJECT+COPULA+
+// ADJECTIVE clause ("today was hard", "work has been brutal"). Ordinary-distress adjectives only.
+const BAD_DAY_PATTERNS =
+  /\b(rough|hard|long|tough|terrible|awful|stressful|exhausting|draining|brutal|crappy|shitty|bad) (day|week|month|morning|evening|night|shift|stretch)\b|\b(today|yesterday|it|the day|this week|the week|work|everything) (was|has been|been|is|feels?) (so |really |pretty |super )?(rough|hard|tough|long|exhausting|draining|awful|terrible|stressful|brutal|a lot|too much)\b/;
+// Life-weariness / despair VETO — fatigue vocabulary here is euphemistic ideation, NOT ordinary tiredness, so
+// the guard must DEFER to the classifier. Generous on purpose: a false veto only means "let the classifier
+// decide" (never a suppression), so erring toward vetoing is the safe, recall-preserving direction.
+const WEARY_DESPAIR_PATTERNS = new RegExp([
+  // life-weariness: fatigue/finished verb + connector + life/existence noun ("exhausted BY life", "done WITH everything")
+  "\\b(tired|sick|exhausted|done|fed up|worn down|weary) (of|with|by|from) (living|life|it all|everything|being alive|being here|trying|this world|this life|it)\\b",
+  // wanting / readiness for an ending
+  "\\bto be over\\b", "\\ball be over\\b", "\\bfor it (all )?to (be over|end|stop)\\b",
+  "\\bready (to|for) (be done|be over|go|it)\\b",
+  "\\bwant (it|this) (all )?to (end|be over|stop)\\b",
+  "\\bwant to (disappear|vanish|be done|end it|sleep forever)\\b",
+  // despair / hopelessness markers
+  "\\b(hopeless|worthless|pointless|what'?s the point|don'?t see the point|no point|the point anymore)\\b",
+  "\\bhate (myself|my life|being alive|everything|this life)\\b",
+  "\\bcan'?t (take|cope|do this|keep going|keep doing this|go on|hold on)\\b",
+  "\\b(give up|giving up|gave up)\\b", "\\b(falling apart|breaking down|fall apart)\\b",
+  "\\b(nothing matters|empty inside|numb inside|no future|no way out)\\b",
+].join("|"));
+
+/**
+ * Narrow NEGATIVE GUARD for ordinary bad-day / heavy-fatigue distress (device test 2026-07-10).
+ *
+ * The MiniLM classifier embeds heavy-fatigue talk near the distress cluster and scores it well above threshold
+ * — "i had a really rough day and i just feel exhausted" → 0.90, "i'm so exhausted" → 0.61, "i had a really
+ * rough day" → 0.82 — so detectCrisis fired the FULL §9 crisis surface (helplines) on a normal bad day. A
+ * false "call a hotline" on someone who is merely tired is itself harmful (patronizing; erodes trust), the
+ * same posture as isBenignMedicationAdherence / isBenignHyperbole.
+ *
+ * Fires ONLY on unambiguous fatigue/bad-day phrasing AND no lethal co-signal AND no life-weariness/despair cue.
+ * SAFETY POSTURE: identical to the other two guards — it suppresses ONLY the SOFT classifier upgrade (the
+ * keyword floor runs first and always wins), and every weariness/despair/lethal phrasing DEFERS back to the
+ * classifier rather than being suppressed, so recall on genuine (often euphemistic) disclosures is unchanged.
+ */
+export function isBenignExhaustion(message: string): boolean {
+  if (!message) return false;
+  const t = message.toLowerCase().replace(/['’]/g, "'").replace(/\s+/g, " ").trim();
+  if (!(FATIGUE_PATTERNS.test(t) || BAD_DAY_PATTERNS.test(t))) return false;
+  return !LETHAL_COSIGNAL.test(t) && !WEARY_DESPAIR_PATTERNS.test(t);
+}
+
+// Self-soothing / dismissal REASSURANCE phrasing ("i'm okay for now", "i'll be okay", "i feel a bit better").
+const REASSURANCE_PATTERNS =
+  /\b(i'?m (okay|ok|fine|alright|all right|good)( now| for now| again)?|i'?ll be (okay|ok|fine|alright|all right)|i (think|feel like) i'?m (okay|ok|fine)|feeling (better|okay|fine)|feel (a bit |much |a little )?better|doing (okay|better|fine)|i'?m good now)\b/;
+// Crisis-MINIMIZATION veto — reassurance that is actually pre-attempt minimization / farewell must DEFER to the
+// classifier, never be suppressed. "I'm okay, don't worry about me" is a documented pre-attempt pattern; "at
+// peace" / "said my goodbyes" / "without me" are pre-suicide euphemism cues. Complements the LETHAL_COSIGNAL
+// and WEARY_DESPAIR vetoes below (input already apostrophe-normalized to a straight quote).
+const MINIMIZATION_PATTERNS =
+  /\b(don'?t worry about me|no need to worry|stop worrying about me|don'?t have to worry about me|without me|made my (decision|choice)|said my goodbyes|saying my goodbyes|when i'?m gone|after i'?m gone|one last|for the last time|this is goodbye|at peace|take care of (them|her|him|everyone|the kids|my))\b/;
+
+/**
+ * Narrow NEGATIVE GUARD for self-soothing dismissal / reassurance (device test 2026-07-10, latch investigation).
+ *
+ * The MiniLM classifier scores "i'm okay" reassurance ABOVE threshold — "i'm okay for now" → 0.63, "i think i'm
+ * okay now" → 0.81, "i'll be okay" → 0.73 — so a user's affirmative dismissal AFTER a §9 surface re-trips §9,
+ * which is much of why dismissal felt like a stuck latch (see ModeScreen: the crisis surface is decided
+ * per-message by detectCrisis, not by hadCrisisRef). A false crisis surface on someone saying "I'm okay" is
+ * both patronizing and makes the surface impossible to dismiss.
+ *
+ * Fires ONLY on reassurance phrasing AND no lethal co-signal AND no life-weariness/despair cue AND no crisis-
+ * MINIMIZATION cue. SAFETY POSTURE: identical to the other guards — suppresses ONLY the SOFT classifier upgrade
+ * (the keyword floor always wins), and every minimization / weariness / lethal phrasing DEFERS to the
+ * classifier, so a genuine "I'm okay, don't worry about me" is never suppressed here (recall preserved).
+ */
+export function isBenignOkayReassurance(message: string): boolean {
+  if (!message) return false;
+  const t = message.toLowerCase().replace(/['’]/g, "'").replace(/\s+/g, " ").trim();
+  if (!REASSURANCE_PATTERNS.test(t)) return false;
+  return !LETHAL_COSIGNAL.test(t) && !WEARY_DESPAIR_PATTERNS.test(t) && !MINIMIZATION_PATTERNS.test(t);
+}
+
 /**
  * Validates whether the AI's reply is safe to display.
  */
