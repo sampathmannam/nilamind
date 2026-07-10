@@ -218,7 +218,29 @@ export function setCachedReply(
     }
   }
   saveIndex(index);
-  
+
   performance.mark(`${markName}.end`);
   performance.measure(markName, `${markName}.start`, `${markName}.end`);
+}
+
+export interface CacheStats {
+  hits: number;
+  misses: number;
+  evictions: number;
+  hotSize: number;
+  diskSize: number;
+  hitRate: number; // 0..1, 0 when no lookups yet
+}
+
+/** Snapshot of cache telemetry — for the Performance Dashboard. */
+export function getCacheStats(): CacheStats {
+  const total = hitCount + missCount;
+  return {
+    hits: hitCount,
+    misses: missCount,
+    evictions: evictionCount,
+    hotSize: MEMORY_CACHE.size,
+    diskSize: loadIndex().length,
+    hitRate: total > 0 ? hitCount / total : 0,
+  };
 }

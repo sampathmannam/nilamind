@@ -5,6 +5,7 @@ import { secureLocal } from '../services/secureLocal';
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
+  name?: string;
   onError?: (error: Error, errorInfo: ErrorInfo) => void;
 }
 
@@ -31,6 +32,7 @@ export class ErrorBoundary extends Component<Props, State> {
     try {
       const entry = {
         timestamp: Date.now(),
+        boundary: this.props.name ?? 'unknown',
         message: error.message,
         stack: error.stack,
         componentStack: errorInfo.componentStack,

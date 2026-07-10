@@ -4,6 +4,7 @@ import { secureLocal } from "../services/secureLocal";
 import { loadIdentity, exportBackup } from "../services/identity";
 import { requireAuth } from "../services/biometricGate";
 import { generateCsvReport, buildTextReport, generatePdfBlob, saveReport } from "../services/exportReport";
+import { recordExportAudit, getExportAudit, type ExportAuditEntry } from "../services/exportAudit";
 
 // "Your data" (AUTOPILOT Phase 2): see exactly what's stored, export it (encrypted, user-controlled),
 // or delete everything. All on-device — this screen is the opposite of telemetry.
@@ -40,15 +41,26 @@ export default function YourDataScreen() {
   const [backup, setBackup] = useState<string | null>(null);
   const [confirmWipe, setConfirmWipe] = useState(false);
   const [reportBusy, setReportBusy] = useState(false);
+  const [audit, setAudit] = useState<ExportAuditEntry[]>(() => getExportAudit());
   const rows = CATEGORIES.map((c) => ({ ...c, n: countFor(c.key) }));
   const total = rows.reduce((s, r) => s + r.n, 0);
   const id = loadIdentity();
+
+  const pushAudit = (e: Omit<ExportAuditEntry, "timestamp">) => {
+    recordExportAudit(e);
+    setAudit(getExportAudit());
+  };
 
   const doExport = async () => {
     if (!id) return;
     if (!(await requireAuth("Confirm it's you to export your data off this device."))) return;
     setBusy(true);
-    try { setBackup(await exportBackup(id.mnemonic)); } catch { /* swallow — matches Settings doExport; avoid logging anything export-related */ } finally { setBusy(false); }
+    try {
+      const b = await exportBackup(id.mnemonic);
+      setBackup(b);
+      pushAudit({ kind: "backup", scope: "Full encrypted backup", destination: "device_download" });
+    } catch { /* swallow — matches Settings doExport; avoid logging anything export-related */ }
+    finally { setBusy(false); }
   };
   const download = () => {
     if (!backup || !id) return;
@@ -72,7 +84,10 @@ export default function YourDataScreen() {
     try {
       const checkins = loadCheckins();
       const csv = generateCsvReport(checkins);
-      if (csv) await saveReport(csv, "nilamind-report.csv", "text/csv");
+      if (csv) {
+        await saveReport(csv, "nilamind-report.csv", "text/csv");
+        pushAudit({ kind: "csv", scope: "Check-in report", destination: "device_download" });
+      }
     } finally { setReportBusy(false); }
   };
 
@@ -82,7 +97,10 @@ export default function YourDataScreen() {
       const checkins = loadCheckins();
       const text = buildTextReport(checkins);
       const blob = generatePdfBlob(text);
-      if (blob) await saveReport(blob, "nilamind-report.pdf", "application/pdf");
+      if (blob) {
+        await saveReport(blob, "nilamind-report.pdf", "application/pdf");
+        pushAudit({ kind: "pdf", scope: "Check-in report", destination: "device_download" });
+      }
     } finally { setReportBusy(false); }
   };
 
@@ -134,7 +152,7 @@ export default function YourDataScreen() {
         ) : (
           <div className="flex gap-2">
             <button onClick={download} className="flex-1 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5"><Check className="w-3.5 h-3.5" /> Download .txt</button>
-            <button onClick={() => navigator.clipboard.writeText(backup)} className="bg-page border border-slate-800 text-slate-300 text-xs px-3 py-2.5 rounded-xl cursor-pointer">Copy</button>
+            <button onClick={() => { navigator.clipboard.writeText(backup); pushAudit({ kind: "clipboard", scope: "Full encrypted backup", destination: "clipboard" }); }} className="bg-page border border-slate-800 text-slate-300 text-xs px-3 py-2.5 rounded-xl cursor-pointer">Copy</button>
           </div>
         )}
       </div>
@@ -151,6 +169,27 @@ export default function YourDataScreen() {
             {reportBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />} PDF
           </button>
         </div>
+      </div>
+
+      {/* Export audit trail */}
+      <div className="glass rounded-2xl p-4 space-y-2">
+        <h3 className="text-xs font-bold text-slate-100 uppercase tracking-wider flex items-center gap-1.5"><FileText className="w-3.5 h-3.5" /> Export history</h3>
+        <p className="text-[11px] text-slate-500 leading-relaxed">A private log of every export you've made on this device. Nothing here is ever sent anywhere.</p>
+        {audit.length === 0 ? (
+          <p className="text-[11px] text-slate-500 italic">No exports yet.</p>
+        ) : (
+          <div className="divide-y divide-slate-800/70">
+            {[...audit].reverse().map((e, i) => (
+              <div key={i} className="flex items-center justify-between py-2">
+                <div className="min-w-0">
+                  <div className="text-xs text-slate-200 capitalize">{e.kind} · {e.scope}</div>
+                  <div className="text-[10px] text-slate-500">{new Date(e.timestamp).toLocaleString()}</div>
+                </div>
+                <span className="text-[10px] font-mono text-slate-400 shrink-0 ml-2">{e.destination}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Delete */}

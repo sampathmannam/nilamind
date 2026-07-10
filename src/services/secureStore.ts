@@ -275,6 +275,16 @@ export async function kvGetAll(): Promise<Record<string, EncBlob>> {
 export const kvPut = (key: string, blob: EncBlob) => idbPut(KV_STORE, key, blob);
 export const kvDel = (key: string) => idbDel(KV_STORE, key);
 
+/** Delete every encrypted KV entry (user data wipe). Leaves the crypto meta + DEK intact so the
+ *  store stays usable afterwards without re-initialising. The in-memory `secureLocal` cache is
+ *  cleared by the caller (App) via a reload — these are the persisted bytes. */
+export async function clearAll(): Promise<void> {
+  const { keys } = await idbAll(KV_STORE);
+  for (const k of keys) {
+    try { await kvDel(k); } catch { /* best-effort */ }
+  }
+}
+
 // migration bookkeeping
 export function migratedVersion(): number {
   return meta?.migratedV ?? 0;
