@@ -9,7 +9,8 @@
 
 import { buildNilaSystem, type NilaMessage } from "./nila";
 import { generateGuarded, isLocalLlmReady } from "./localLlm";
-import { detectElevationRisk, elevationGuardNote, elevationOutputNote } from "./elevationGuard";
+import { detectElevationRisk, elevationGuardNote, elevationOutputNote, type ElevationLevel } from "./elevationGuard";
+import { emaElevationSignal } from "./ema";
 import { retrievePsychoedForQuery, psychoedContextBlock } from "./psychoedRetrieval";
 import type { AgentView } from "./agent";
 
@@ -34,8 +35,15 @@ export async function askNilaLocalStream(
   // sycophancy→mania amplification harm: the on-device model can't be trusted to reality-test, so we steer
   // it here and, for the stopping-meds case, append a reliable scripted line below.
   const lastUser = [...messages].reverse().find((m) => m.role === "user")?.content ?? "";
-  const elevation = detectElevationRisk(lastUser);
-  let system = buildNilaSystem(lastUser) + elevationGuardNote(elevation.level);
+  const textElevation = detectElevationRisk(lastUser);
+  // P3.7 — EMA elevation signal: rising valence+energy across today's micro-check-ins.
+  // Used as a softer signal alongside text-based detection. If both fire, use the higher level.
+  const emaLevel: ElevationLevel = emaElevationSignal();
+  const levels: Record<ElevationLevel, number> = { none: 0, elevated: 1, high: 2 };
+  const combinedLevel: ElevationLevel = levels[textElevation.level] >= levels[emaLevel]
+    ? textElevation.level
+    : emaLevel;
+  let system = buildNilaSystem(lastUser) + elevationGuardNote(combinedLevel);
 
   // B4: if the user's words match a vetted psychoeducation topic, feed a grounded snippet into the
   // model's awareness (RAG grounding — kills hallucination on clinical facts). Best-effort: if the
@@ -64,7 +72,7 @@ export async function askNilaLocalStream(
       signal: opts.signal,
     });
     const base = (reply || "").trim();
-    const medsNote = elevationOutputNote(elevation.level); // reliable scripted belt for the stopping-meds case
+    const medsNote = elevationOutputNote(combinedLevel); // reliable scripted belt for the stopping-meds case
     return { reply: base && medsNote ? `${base}\n\n${medsNote}` : base, reachedAI: true };
   } catch {
     // Device tried and failed (OOM, load error, cancel, hang-timeout). Stay local → offline; never cloud.

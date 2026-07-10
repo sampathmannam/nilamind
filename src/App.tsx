@@ -40,6 +40,8 @@ const ValuesWorkScreen = lazy(() => import("./components/ValuesWorkScreen"));
 const ExposureHierarchyScreen = lazy(() => import("./components/ExposureHierarchyScreen"));
 const RelapsePlanScreen = lazy(() => import("./components/RelapsePlanScreen"));
 const EpisodeSupportScreen = lazy(() => import("./components/EpisodeSupportScreen"));
+const EmaCheckInScreen = lazy(() => import("./components/EmaCheckIn"));
+const ArmedCheckInScreen = lazy(() => import("./components/ArmedCheckInScreen"));
 
 // Calm fallback while lazy chunks load
 function ScreenFallback() {
@@ -50,7 +52,7 @@ function ScreenFallback() {
   );
 }
 
-import { syncDailyReminders } from "./services/notifications";
+import { syncDailyReminders, scheduleReminderAt } from "./services/notifications";
 import { t, LANGUAGE_CHANGED_EVENT } from "./services/i18n";
 import { wakeWord } from "./services/wakeWord";
 import { getWakeEnabled } from "./services/wakePrefs";
@@ -60,6 +62,7 @@ import ModelSetupGate from "./components/ModelSetupGate";
 import OnboardingGate from "./components/OnboardingGate";
 import { hasCompletedOnboarding } from "./services/onboarding";
 import { resolveNavTarget, type AuxView, type TabView } from "./services/nav";
+import { getArmedCheckin, armedCheckinPrompt } from "./services/armedCheckin";
 import { MessageSquare, LayoutGrid, User } from "lucide-react";
 import SheetContainer from "./components/SheetContainer";
 
@@ -87,6 +90,8 @@ const AUX_LABELS: Partial<Record<AuxView, string>> = {
   behaviour: "Phone patterns",
   diary: "Diary card",
   episode: "Episode support",
+  armed_checkin: "Armed check‑in",
+  ema_checkin: "Quick check‑in",
 };
 
 function auxViewLabel(view: AuxView): string {
@@ -116,6 +121,8 @@ function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () 
     case "behaviour": return <DashboardScreen />;
     case "diary": return <DiaryCardScreen />;
     case "episode": return <EpisodeSupportScreen onSessionEnded={onClose} onNavigateToGrounding={() => { onClose(); onOpenGrounding(); }} onNavigateToBreathing={() => { onClose(); onOpenGrounding(); }} />;
+    case "armed_checkin": return <ArmedCheckInScreen onClose={onClose} />;
+    case "ema_checkin": return <EmaCheckInScreen />;
     default: return <div className="p-6 text-slate-400 text-sm text-center">Not available</div>;
   }
 }
@@ -158,6 +165,14 @@ export default function App() {
   // Sync daily reminders
   useEffect(() => {
     void syncDailyReminders();
+  }, []);
+
+  // Schedule any pending armed check‑in as a notification on app start
+  useEffect(() => {
+    const entry = getArmedCheckin();
+    if (entry) {
+      void scheduleReminderAt(new Date(entry.triggerAt), armedCheckinPrompt(entry));
+    }
   }, []);
 
   // Wake word integration

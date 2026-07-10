@@ -1,0 +1,131 @@
+// Micro-check-in that opens from push notification (<10s interaction).
+// Three-tap interaction: tap valence → tap energy (optional) → save.
+
+import React, { useState } from "react";
+import { Smile, Frown, Meh, Sparkle, Flame } from "lucide-react";
+import { t } from "../services/i18n";
+import { saveEmaEntry } from "../services/ema";
+import { generateTinyId } from "../services/idGen";
+
+
+const VALENCE_OPTIONS = [
+  { key: -3, label: "Very bad", icon: Frown, class: "text-amber-400" },
+  { key: -1, label: "Bad", icon: Frown, class: "text-orange-400" },
+  { key: 0, label: "Neutral", icon: Meh, class: "text-slate-400" },
+  { key: 1, label: "Good", icon: Smile, class: "text-green-400" },
+  { key: 3, label: "Very good", icon: Smile, class: "text-cyan-400" },
+];
+
+const ENERGY_OPTIONS = [
+  { key: 1, label: "Low", icon: Flame },
+] as const;
+
+export default function EmaCheckIn({ onLogged }: { onLogged?: () => void }) {
+  const [step, setStep] = useState<"valence" | "energy" | "note">("valence");
+  const [valence, setValence] = useState<number | null>(null);
+  const [energy, setEnergy] = useState<number | null>(null);
+  const [note, setNote] = useState("");
+
+  return (
+    <div className="flex flex-col min-h-screen bg-page" id="ema-checkin">
+      <div className="flex-1 p-6 flex flex-col gap-6">
+        <div className="text-center">
+          <p className="text-sm text-slate-300 font-semibold">How are you right now?</p>
+        </div>
+
+        {step === "valence" && (
+          <div className="grid grid-cols-5 gap-3" id="ema-valence">
+            {VALENCE_OPTIONS.map((o) => (
+              <button
+                key={o.key}
+                onClick={() => {
+                  setValence(o.key);
+                  setStep("energy");
+                }}
+                className={`flex flex-col items-center justify-center aspect-square rounded-2xl cursor-pointer transition-colors ${
+                  valence === o.key ? "bg-purple-500/20 border border-purple-400" : "bg-card hover:bg-raised"
+                }`}
+                id={`ema-valence-${o.key}`}
+              >
+                <o.icon className={`w-7 h-7 ${o.class}`} />
+                <span className="text-[11px] mt-2 text-slate-400">{o.label}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {step === "energy" && (
+          <div className="flex flex-col gap-4">
+            <p className="text-sm text-slate-300 font-semibold text-center">Your energy?</p>
+            <div className="grid grid-cols-4 gap-3">
+              {[1, 2, 3, 4].map((e) => (
+                <button
+                  key={e}
+                  onClick={() => {
+                    setEnergy(e);
+                    setStep("note");
+                  }}
+                  className={`flex flex-col items-center justify-center aspect-square rounded-2xl cursor-pointer transition-colors ${
+                    energy === e ? "bg-purple-500/20 border border-purple-400" : "bg-card hover:bg-raised"
+                  }`}
+                >
+                  <div className="flex items-center gap-0.5">
+                    {[...Array(e)].map((_, i) => (
+                      <Sparkle key={i} className={`w-4 h-4 ${
+                        e === 1 ? "text-rose-400" : 
+                        e === 2 ? "text-emerald-400" :
+                        e === 3 ? "text-blue-400" :
+                        
+                         "text-cyan-400"
+                      }`} />
+                    ))}
+                  </div>
+                  <span className="text-[11px] mt-2 text-slate-400">{
+                    e === 1 ? "Very low" :
+                    e === 2 ? "Low" :
+                    e === 3 ? "Moderate" : "High"
+                  }</span>
+                </button>
+              ))}
+            </div>
+           </div>
+        )}
+
+        {step === "note" && (
+          <div className="flex flex-col gap-4 flex-1">
+            <input
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="Two-word note..."
+              className="bg-card border border-purple-500/20 text-sm text-slate-200 rounded-2xl px-4 py-2.5 focus:outline-none focus:ring-1 focus:ring-purple-400 placeholder-slate-500"
+              maxLength={30}
+            />
+            <button
+              onClick={saveAndClose}
+              className="bg-purple-600 hover:bg-purple-500 mt-auto text-slate-100 font-semibold py-3 rounded-2xl transition-colors"
+              id="ema-save"
+            >
+              Done
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  function saveAndClose() {
+    if (valence === null) return;
+    const timestamp = new Date().toISOString();
+    const date = timestamp.split("T")[0];
+    saveEmaEntry({
+      id: generateTinyId(),
+      date,
+      timestamp,
+      valence,
+      energy: energy ?? undefined,
+      note: note.trim() || undefined,
+      trigger: "user_initiated",
+    });
+    onLogged?.();
+  }
+}
