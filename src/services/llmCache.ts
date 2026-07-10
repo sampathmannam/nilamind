@@ -52,7 +52,7 @@ export const _testMEMORY_CACHE = MEMORY_CACHE;
 // Periodically log cache stats (development aid — disabled in production via console.debug suppression)
 function logStats() {
   console.debug(`LLMCache: hits=${hitCount}, misses=${missCount}, evictions=${evictionCount}, ` +
-                `hotSize=${MEMORY_CACHE.size}, diskSize=${loadIndex().length}`);
+              `hotSize=${MEMORY_CACHE.size}, diskSize=${loadIndex().length}`);
 }
 
 /** Simple 32-bit FNV-1a hash – deterministic, synchronous, no external deps. */
@@ -118,6 +118,9 @@ export function getCachedReply(
   system: string,
   messages: { role: string; content: string }[],
 ): string | null {
+  const markName = "llmCache.get";
+  performance.mark(`${markName}.start`);
+  
   const key = cacheKey(system, messages);
 
   // Check hot memory cache — fastest path
@@ -126,12 +129,16 @@ export function getCachedReply(
     if (Date.now() - cached.createdAt <= TTL_MS) {
       hitCount++;
       logStats();
+      performance.mark(`${markName}.end`);
+      performance.measure(markName, `${markName}.start`, `${markName}.end`);
       return cached.reply;
     }
     // Expired in memory cache — drop it
     MEMORY_CACHE.delete(key);
     missCount++;
     logStats();
+    performance.mark(`${markName}.end`);
+    performance.measure(markName, `${markName}.start`, `${markName}.end`);
     // fall through to disk check
   }
 
@@ -152,11 +159,13 @@ export function getCachedReply(
         }
         hitCount++;
         logStats();
+        performance.mark(`${markName}.end`);
+        performance.measure(markName, `${markName}.start`, `${markName}.end`);
         return cached.reply;
       }
     // Expired → drop
     secureLocal.removeItem(key);
-    const index = loadIndex().filter(k => k !== key);
+    const index = loadIndex().filter((k) => k !== key);
     saveIndex(index);
     evictionCount++;
     } catch {
@@ -168,6 +177,8 @@ export function getCachedReply(
   // Cache miss
   missCount++;
   logStats();
+  performance.mark(`${markName}.end`);
+  performance.measure(markName, `${markName}.start`, `${markName}.end`);
   return null;
 }
 
@@ -177,6 +188,9 @@ export function setCachedReply(
   messages: { role: string; content: string }[],
   reply: string,
 ): void {
+  const markName = "llmCache.set";
+  performance.mark(`${markName}.start`);
+  
   const key = cacheKey(system, messages);
   const entry: CachedReply = { reply, createdAt: Date.now() };
 
@@ -204,4 +218,7 @@ export function setCachedReply(
     }
   }
   saveIndex(index);
+  
+  performance.mark(`${markName}.end`);
+  performance.measure(markName, `${markName}.start`, `${markName}.end`);
 }
