@@ -7,7 +7,8 @@ import { getCrisisLines, crisisDigits } from "./services/crisisResources";
 
 export const SUICIDAL_KEYWORDS = [
   "kill myself", "killing myself", "killed myself", // gerund/past: "thinking about KILLING myself" must trip
-  "kill my self", // #14 (2026-07-09 audit): common split spelling of "myself" — no benign reading
+  // NOTE: the split spelling "kill my self" is matched by SUICIDAL_SPLIT_RE (below), NOT as a bare substring —
+  // a substring falsely fired on "kill my self-doubt / self-criticism / selfishness" (2026-07-10 re-audit #1).
   "end my life", "ending my life", "take my life", "taking my life",
   "want to die", "want to be dead", "wish i was dead", "wish i were dead",
   "dont want to be here", "don't want to be here",
@@ -142,7 +143,10 @@ export const METHOD_INTENT_PHRASES = [
   // #12 (2026-07-09 audit): high-precision means+intent with ~zero idiom collision — the exact parallel of
   // the listed "jump in front of a train", and noose phrasing (the means-preparation form of "hang myself").
   // Idiom-heavy firearm phrasings ("shoot myself", "gun to my head") stay with the semantic classifier.
-  "step in front of a train", "tie a noose", "tied a noose", "put my head in a noose"
+  "step in front of a train", "tie a noose", "tied a noose", "put my head in a noose",
+  // #4 (2026-07-10 re-audit): present-continuous forms — the most imminent phrasing — mirroring the gerund
+  // coverage in SUICIDAL_KEYWORDS/SELF_HARM_KEYWORDS.
+  "tying a noose", "making a noose", "putting my head in a noose"
 ];
 
 // Pre-suicide EUPHEMISM gate (2026-07-05 live-test gap). "I've put my affairs in order and I finally feel at
@@ -292,8 +296,21 @@ function scanForDivestmentReadiness(normalized: string): boolean {
   if (!hasVerb) return false;
   const hasObject = DIVESTMENT_OBJECTS.some((o) => normalized.includes(o));
   if (!hasObject) return false;
-  return READINESS_CUES.some((r) => normalized.includes(r));
+  // #5 (2026-07-10 re-audit): the CONTIGUOUS divestment form ("given away my things") also lives in
+  // EUPHEMISM_PREP_CUES, so it pairs with an acceptance/finality cue ("at peace with it", "won't have to
+  // worry about me") via the general euphemism gate. The SPLIT form ("given most of my things away") has no
+  // contiguous prep cue, so without this it only matched a readiness cue — missing "given … away … at peace
+  // with it". Accept acceptance/finality as alternatives to readiness so the split form gets the same net.
+  return READINESS_CUES.some((r) => normalized.includes(r))
+    || EUPHEMISM_ACCEPTANCE_CUES.some((c) => normalized.includes(c))
+    || EUPHEMISM_FINALITY_CUES.some((c) => normalized.includes(c));
 }
+
+// #1 (2026-07-10 re-audit): the split spelling "kill my self" must fire ONLY when "self" is a standalone word,
+// not when it starts a compound ("self-doubt", "self-criticism", "selfishness") — all core wellness vocabulary
+// that a bare substring wrongly hijacked into the crisis surface. The negative lookahead rejects a following
+// hyphen or word char, so "kill my self" / "kill my self." / "kill my self tonight" still trip.
+const SUICIDAL_SPLIT_RE = /\bkill my self(?![-\w])/;
 
 /**
  * Scans user input for active suicidal ideation or self-harm warnings.
@@ -317,6 +334,8 @@ export function scanForCrisis(message: string): boolean {
     }
   }
 
+  if (SUICIDAL_SPLIT_RE.test(normalized)) return true; // #1 (re-audit): boundary-anchored "kill my self"
+
   if (scanForEuphemism(normalized)) return true;
 
   return false;
@@ -337,13 +356,15 @@ const ADHERENCE_MARKER =
 // keyword floor. Deliberately does NOT include "all my pills": present-tense "take all my pills as
 // prescribed" is a documented benign control (only past-tense "took all my pills" is a crisis token in
 // OVERDOSE_PHRASES). If any of these co-occur, the text is NOT treated as benign adherence.
-// #2 (2026-07-09 audit): stockpiling/means-accumulation cues (saved up, saving up, stockpil*, hoard*, been
-// saving) are added so the benign-adherence guard can NEVER veto a means-accumulation disclosure — "I saved
-// up all my pills and take them as prescribed" (classifier ~0.78) is no longer masked. This only lifts the
-// SOFT-classifier suppression; the classifier still decides, so genuine "saved up money for my pills" is not
-// force-flagged (the guard just stops silencing the classifier, which scores such benign text low).
+// #3 (2026-07-10 re-audit): the #2 stockpiling cues (saved up / stockpil* / hoard) were MOVED OUT of
+// LETHAL_COSIGNAL into STOCKPILE_VETO below. Left here, they cross-coupled into isBenignHyperbole (which shares
+// this same veto) and re-opened the "saving up … I could sleep for a week" classifier false-positive.
 const LETHAL_COSIGNAL =
-  /\b(never wake|don'?t wake|not wake|won'?t wake|end (it|my life|things|everything)|kill(ing)? myself|take my (own )?life|suicid|overdose|whole bottle|entire bottle|the bottle|at once|forever|better off (without|dead)|can'?t go on|no point|no reason to (live|go on)|goodbye|stop the pain|be done|end the pain|don'?t want to (be here|live|wake)|so i (don'?t|never|won'?t) wake|saved up|saving up|been saving|stockpil|hoard)\b/;
+  /\b(never wake|don'?t wake|not wake|won'?t wake|end (it|my life|things|everything)|kill(ing)? myself|take my (own )?life|suicid|overdose|whole bottle|entire bottle|the bottle|at once|forever|better off (without|dead)|can'?t go on|no point|no reason to (live|go on)|goodbye|stop the pain|be done|end the pain|don'?t want to (be here|live|wake)|so i (don'?t|never|won'?t) wake)\b/;
+
+// #2 means-accumulation cues — veto the MEDICATION-ADHERENCE guard ONLY (kept OUT of LETHAL_COSIGNAL so they
+// can never disable the hyperbole guard). "I saved up all my pills and take them as prescribed" stays un-masked.
+const STOCKPILE_VETO = /\b(saved up|saving up|been saving|stockpil|hoard)\b/;
 
 /**
  * Narrow NEGATIVE GUARD for the semantic §9 gate (see detectCrisis in crisisClassifier.ts).
@@ -362,7 +383,7 @@ const LETHAL_COSIGNAL =
 export function isBenignMedicationAdherence(message: string): boolean {
   if (!message) return false;
   const t = message.toLowerCase().replace(/['’]/g, "'").replace(/\s+/g, " ").trim();
-  return MEDICATION_NOUN.test(t) && ADHERENCE_MARKER.test(t) && !LETHAL_COSIGNAL.test(t);
+  return MEDICATION_NOUN.test(t) && ADHERENCE_MARKER.test(t) && !LETHAL_COSIGNAL.test(t) && !STOCKPILE_VETO.test(t);
 }
 
 // Common HYPERBOLE / idiom that the MiniLM classifier over-fires on (2026-07-06 audit #8): "I could sleep for
