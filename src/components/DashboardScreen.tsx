@@ -26,6 +26,7 @@ import { PROTOCOLS } from "../services/protocols";
 import { secureLocal } from "../services/secureLocal";
 import { runDeepAssessment as runDeepAssessmentRequest } from "../services/coachAssist";
 import { generateCsvReport, buildTextReport, generatePdfBlob, saveReport } from "../services/exportReport";
+import { computeRetention } from "../services/retentionMetrics";
 import CrisisCard from "./CrisisCard";
 import { stripProvenance } from "../services/emotionParse";
 import {
@@ -198,7 +199,7 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
     setExportBusy(true);
     setShowExportMenu(false);
     try {
-      const text = buildTextReport(checkins, assessments.length);
+      const text = buildTextReport(checkins, assessments.length, computeRetention());
       const blob = generatePdfBlob(text);
       if (!blob) return;
       await saveReport(blob, "nilamind-report.pdf", "application/pdf");

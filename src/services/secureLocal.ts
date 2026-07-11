@@ -62,6 +62,9 @@ export const SENSITIVE_KEYS = [
   "nilamind_protocol_progress",
   // EMA micro-check-in log — mood valence/energy + the free-text note (encrypted at rest, see ema.ts).
   "nilamind_ema",
+  // On-device retention/engagement — the distinct UTC days the app was opened (encrypted at rest, see
+  // retentionMetrics.ts). Never auto-sent; only leaves the device via the user-initiated export.
+  "nilamind_app_opens",
 ];
 const MIGRATION_VERSION = 2; // v2: encrypt nilamind_ema (previously stored in plaintext localStorage)
 

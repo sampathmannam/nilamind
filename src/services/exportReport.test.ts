@@ -79,6 +79,34 @@ describe("buildTextReport", () => {
     const textUndef = buildTextReport([mockEntry()]);
     expect(textUndef).not.toContain("Screenings");
   });
+
+  it("includes the retention block when a summary with a firstUseDay is provided", () => {
+    const text = buildTextReport([mockEntry()], undefined, {
+      firstUseDay: "2026-06-01",
+      daysSinceFirstUse: 40,
+      totalActiveDays: 4,
+      lastOpenDay: "2026-07-01",
+      spanDays: 30,
+      currentGapDays: 10,
+      longestGapDays: 23,
+      activeDaysLast7: 0,
+      activeDaysLast30: 1,
+      retainedDay1: true,
+      retainedDay7: true,
+      retainedDay14: true,
+      retainedDay30: true,
+    });
+    expect(text).toContain("Retention & engagement");
+    expect(text).toContain("First used: 2026-06-01 (40 days ago)");
+    expect(text).toContain("Days you opened NilaMind: 4");
+    expect(text).toContain("Active days in the last 7 / 30: 0 / 1");
+    expect(text).toContain("Last opened: 2026-07-01 (10 days ago)");
+    expect(text).toContain("Still opening after 1 / 7 / 14 / 30 days: yes / yes / yes / yes");
+  });
+
+  it("omits the retention block when no summary is given (existing callers unaffected)", () => {
+    expect(buildTextReport([mockEntry()])).not.toContain("Retention & engagement");
+  });
 });
 
 describe("generatePdfBlob", () => {
