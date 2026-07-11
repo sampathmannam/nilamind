@@ -44,8 +44,8 @@ export default function AgeGate({ children }: { children: React.ReactNode }) {
         <div className="space-y-1">
           <h1 className="text-lg font-bold text-slate-100">A quick check first</h1>
           <p className="text-xs text-slate-400 leading-relaxed">
-            NilaMind is a wellness support tool for adults — not therapy, and not a crisis service. To continue,
-            please confirm you're 18 or older.
+            NilaMind is a wellness support tool for adults — an AI companion, not therapy, not a medical
+            device, and not a crisis service. To continue, please confirm you're 18 or older.
           </p>
         </div>
         <div className="space-y-3">
