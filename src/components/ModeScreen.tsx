@@ -501,14 +501,13 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                     key={i}
                     className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
                   >
-                    <div
-                      className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm text-white ${
-                        m.role === "user"
-                          ? ""
-                          : "bg-slate-800 text-slate-200"
-                      }`}
-                      style={m.role === "user" ? { backgroundColor: "#6b21a8" } : undefined}
-                    >
+                      <div
+                       className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${
+                         m.role === "user"
+                           ? "bg-purple-600/70 text-white"
+                           : "bg-slate-800/80 text-slate-200"
+                       }`}
+                     >
                       {m.content}
                     </div>
                   </div>

@@ -1,10 +1,9 @@
 import { useState } from "react";
-import { Wind, MessageCircle, Moon, Sun, LayoutGrid, Sparkles, ChevronRight, Clock } from "lucide-react";
+import { Wind, MessageCircle, Moon, LayoutGrid, Sparkles, ChevronRight } from "lucide-react";
 import { getTimeMode, getUserState, getGreeting } from "../services/modeEngine";
 import { hasCheckinToday } from "../services/checkin";
 import { secureLocal } from "../services/secureLocal";
 import { buildToolGroups } from "./toolsRows";
-import { t } from "../services/i18n";
 import type { TimeMode, UserState } from "../types/modes";
 
 const MOOD_EMOJI: Record<string, string> = {
@@ -41,12 +40,12 @@ interface HeroAction {
 function getHeroAction(timeMode: TimeMode, userState: UserState | null): HeroAction {
   const hour = new Date().getHours();
   if (hour >= 20 || hour < 5) {
-    return { id: "winddown", label: "Wind down for sleep", sub: "A calm bedtime routine", icon: <Moon className="w-5 h-5" />, color: "text-indigo-400", route: "winddown" };
+    return { id: "winddown", label: "Wind down for sleep", sub: "A calm bedtime routine", icon: <Moon className="w-5 h-5" aria-hidden="true" />, color: "text-indigo-400", route: "winddown" };
   }
   if (userState === "anxious" || userState === "elevated") {
-    return { id: "plan", label: "Grounding & breathing", sub: "Calm your body in a hard minute", icon: <Wind className="w-5 h-5" />, color: "text-emerald-400", route: "plan" };
+    return { id: "plan", label: "Grounding & breathing", sub: "Calm your body in a hard minute", icon: <Wind className="w-5 h-5" aria-hidden="true" />, color: "text-emerald-400", route: "plan" };
   }
-  return { id: "nila", label: "Talk to Nila", sub: "She's here when you are", icon: <MessageCircle className="w-5 h-5" />, color: "text-blue-400", route: "nila" };
+  return { id: "checkin", label: "How are you feeling?", sub: "A quick check-in takes just a moment", icon: <Sparkles className="w-5 h-5" aria-hidden="true" />, color: "text-blue-400", route: "ema_checkin" };
 }
 
 function formatDate(): string {
@@ -76,41 +75,40 @@ export default function TodayScreen({
 
   return (
     <div className="space-y-5 max-w-md mx-auto" id="today-hub">
-      {/* Greeting */}
+      {/* Greeting — time-aware, serif voice, no emoji (screen-reader-safe) */}
       <header className="space-y-0.5">
-        <h1 className="editorial text-3xl text-slate-100">
-          {greeting}
-          {timeMode === "morning" ? " ☀️" : timeMode === "night" ? " 🌙" : " ✨"}
-        </h1>
+        <h1 className="editorial text-3xl text-slate-100">{greeting}</h1>
         <p className="text-sm text-slate-400">{formatDate()}</p>
       </header>
 
-      {/* Mood card */}
+      {/* Mood card — prompt to log if not checked in, show reflection if done */}
       <button
-        onClick={() => checkedIn ? go("diary") : go("nila")}
+        onClick={() => checkedIn ? go("diary") : go("ema_checkin")}
         className="w-full glass hover:brightness-125 p-5 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left"
       >
         {checkedIn && todayMood ? (
           <div className="flex items-center gap-4">
-            <span className="text-3xl">{todayMood.emoji}</span>
+            <span className="text-3xl" aria-hidden="true">{todayMood.emoji}</span>
             <div>
               <p className="text-sm font-semibold text-slate-100">Feeling {todayMood.label}</p>
-              <p className="text-[11px] text-slate-400 mt-0.5">Tap to see details in your diary</p>
+              <p className="text-[11px] text-slate-400 mt-0.5">Tap to see your diary</p>
             </div>
           </div>
         ) : (
-          <div className="flex items-center gap-4">
-            <span className="text-2xl">💬</span>
-            <div>
-              <p className="text-sm font-semibold text-slate-100">How are you feeling?</p>
-              <p className="text-[11px] text-slate-400 mt-0.5">A quick check-in with Nila takes just a moment</p>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full sun-cta flex items-center justify-center shrink-0">
+              <Sparkles className="w-5 h-5 text-white" aria-hidden="true" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-slate-100">How are you feeling right now?</p>
+              <p className="text-[11px] text-slate-400 mt-0.5">Two taps — no typing needed</p>
             </div>
           </div>
         )}
-        <ChevronRight className="w-5 h-5 text-slate-500 shrink-0 ml-auto" />
+        <ChevronRight className="w-5 h-5 text-slate-500 shrink-0 ml-auto" aria-hidden="true" />
       </button>
 
-      {/* Hero action */}
+      {/* Hero action — time-aware: wind-down at night, grounding when elevated, else check-in prompt */}
       <button
         onClick={() => go(hero.route)}
         className="w-full glass hover:brightness-125 p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left flex items-center gap-3"
@@ -120,30 +118,31 @@ export default function TodayScreen({
           <span className="block text-sm font-bold text-slate-100">{hero.label}</span>
           <span className="block text-[11px] text-slate-400">{hero.sub}</span>
         </span>
-        <ChevronRight className="w-5 h-5 text-slate-500 shrink-0" />
+        <ChevronRight className="w-5 h-5 text-slate-500 shrink-0" aria-hidden="true" />
       </button>
 
-      {/* Talk to Nila card */}
+      {/* Talk to Nila card — always present */}
       <button
         onClick={() => go("nila")}
         className="w-full glass hover:brightness-125 p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left flex items-center gap-3"
       >
         <span className="w-10 h-10 rounded-full sun-cta flex items-center justify-center shrink-0">
-          <Sparkles className="w-5 h-5 text-white" />
+          <MessageCircle className="w-5 h-5 text-white" aria-hidden="true" />
         </span>
         <span className="flex-1 min-w-0">
           <span className="block text-sm font-bold text-slate-100">Talk to Nila</span>
           <span className="block text-[11px] text-slate-400">Your companion — always here, always private</span>
         </span>
-        <ChevronRight className="w-5 h-5 text-slate-500 shrink-0" />
+        <ChevronRight className="w-5 h-5 text-slate-500 shrink-0" aria-hidden="true" />
       </button>
 
       {/* All tools toggle */}
       <button
         onClick={() => setShowAllTools(!showAllTools)}
+        aria-expanded={showAllTools}
         className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-slate-700/50 hover:border-slate-600/50 text-slate-400 hover:text-slate-300 text-sm font-medium transition-all cursor-pointer active:scale-[0.99]"
       >
-        <LayoutGrid className="w-4 h-4" />
+        <LayoutGrid className="w-4 h-4" aria-hidden="true" />
         {showAllTools ? "Hide tools" : "All tools"}
       </button>
 
@@ -161,12 +160,12 @@ export default function TodayScreen({
                     id={`tools-${r.id}`}
                     className="w-full flex items-center gap-3 glass hover:brightness-125 p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left"
                   >
-                    <span className="shrink-0"><r.Icon className={r.iconClass} /></span>
+                    <span className="shrink-0"><r.Icon className={r.iconClass} aria-hidden="true" /></span>
                     <span className="flex-1 min-w-0">
                       <span className="block text-sm font-bold text-slate-100">{r.label}</span>
                       <span className="block text-[11px] text-slate-400">{r.sub}</span>
                     </span>
-                    <ChevronRight className="w-5 h-5 text-slate-500 shrink-0" />
+                    <ChevronRight className="w-5 h-5 text-slate-500 shrink-0" aria-hidden="true" />
                   </button>
                 ))}
               </div>

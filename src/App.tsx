@@ -74,7 +74,7 @@ import { resolveNavTarget, type AuxView, type TabView } from "./services/nav";
 import { getArmedCheckin, armedCheckinBody } from "./services/armedCheckin";
 import { recordAppOpen } from "./services/retentionMetrics";
 import { getPilotState, markEndpointReminderScheduled, PILOT_ENDPOINT_REMINDER_BODY } from "./services/pilotStudy";
-import { MessageSquare, LayoutGrid, User } from "lucide-react";
+import { MessageSquare, LayoutGrid, User, X } from "lucide-react";
 import SheetContainer from "./components/SheetContainer";
 import { hapticLight } from "./hooks/useHaptics";
 
@@ -388,7 +388,7 @@ export default function App() {
       </div>
 
       {/* Bottom tab bar */}
-      <nav className="shrink-0 flex items-center justify-around border-t border-slate-800 bg-page/95 backdrop-blur pb-[max(8px,env(safe-area-inset-bottom))]" aria-label="Main navigation">
+      <nav className="shrink-0 flex items-center justify-around border-t border-slate-800 bg-page/95 backdrop-blur pb-[max(8px,env(safe-area-inset-bottom))]" role="tablist" aria-label="Main navigation">
         {([
           { id: "nila" as AppTab, label: "Nila", Icon: MessageSquare },
           { id: "today" as AppTab, label: "Today", Icon: LayoutGrid },
@@ -396,6 +396,7 @@ export default function App() {
         ]).map(({ id, label, Icon }) => (
           <button
             key={id}
+            role="tab"
             onClick={() => { setActiveTab(id); hapticLight(); }}
             className={`flex flex-col items-center gap-0.5 py-2 px-4 rounded-lg transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] ${
               activeTab === id ? "text-blue-400" : "text-slate-500 hover:text-slate-300"
@@ -403,7 +404,7 @@ export default function App() {
             aria-label={label}
             aria-selected={activeTab === id}
           >
-            <Icon className="w-5 h-5" />
+            <Icon className="w-5 h-5" aria-hidden="true" />
             <span className="text-[10px] font-medium">{label}</span>
           </button>
         ))}
@@ -426,7 +427,7 @@ export default function App() {
         <div className="fixed inset-0 z-50 bg-page flex flex-col animate-slide-in" id="grounding-sheet">
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
             <span className="text-sm font-semibold text-slate-100">Grounding</span>
-            <button onClick={() => { setIsGroundingOpen(false); setGroundingExpandIndex(undefined); }} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center">✕</button>
+            <button onClick={() => { setIsGroundingOpen(false); setGroundingExpandIndex(undefined); }} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Close"><X className="w-4 h-4" aria-hidden="true" /></button>
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto">
             <GroundingLibraryScreen autoExpand={groundingExpandIndex} />
@@ -439,7 +440,7 @@ export default function App() {
         <div className="fixed inset-0 z-50 bg-page flex flex-col animate-slide-in" id="settings-sheet">
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
             <span className="text-sm font-semibold text-slate-100">{t("settings")}</span>
-            <button onClick={() => setIsSettingsOpen(false)} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center">✕</button>
+            <button onClick={() => setIsSettingsOpen(false)} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Close"><X className="w-4 h-4" aria-hidden="true" /></button>
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto">
             <Suspense fallback={<ScreenFallback />}>
@@ -454,7 +455,7 @@ export default function App() {
         <div className="fixed inset-0 z-50 bg-page flex flex-col animate-slide-in" id="dashboard-sheet">
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
             <span className="text-sm font-semibold text-slate-100">{t("dashboard")}</span>
-            <button onClick={() => setIsDashboardOpen(false)} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center">✕</button>
+            <button onClick={() => setIsDashboardOpen(false)} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Close"><X className="w-4 h-4" aria-hidden="true" /></button>
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto">
             <Suspense fallback={<ScreenFallback />}><DashboardScreen /></Suspense>
@@ -467,7 +468,7 @@ export default function App() {
         <div className="fixed inset-0 z-50 bg-page flex flex-col animate-slide-in" id="medication-sheet">
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
             <span className="text-sm font-semibold text-slate-100">{t("medications")}</span>
-            <button onClick={() => setIsMedicationOpen(false)} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center">✕</button>
+            <button onClick={() => setIsMedicationOpen(false)} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Close"><X className="w-4 h-4" aria-hidden="true" /></button>
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto p-4">
             <Suspense fallback={<ScreenFallback />}><MedicationAdherenceScreen /></Suspense>
@@ -480,7 +481,7 @@ export default function App() {
         <div className="fixed inset-0 z-50 bg-page flex flex-col animate-slide-in" id="caregiver-sheet">
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
             <span className="text-sm font-semibold text-slate-100">Share with a trusted person</span>
-            <button onClick={() => setIsCaregiverOpen(false)} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center">✕</button>
+            <button onClick={() => setIsCaregiverOpen(false)} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Close"><X className="w-4 h-4" aria-hidden="true" /></button>
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto p-4">
             <Suspense fallback={<ScreenFallback />}><CaregiverShareScreen /></Suspense>
@@ -493,7 +494,7 @@ export default function App() {
         <div className="fixed inset-0 z-50 bg-page flex flex-col animate-slide-in" id="aux-view-sheet">
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
             <span className="text-sm font-semibold text-slate-100">{auxViewLabel(activeAuxView)}</span>
-            <button onClick={() => setActiveAuxView(null)} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center">✕</button>
+            <button onClick={() => setActiveAuxView(null)} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Close"><X className="w-4 h-4" aria-hidden="true" /></button>
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto">
             <Suspense fallback={<ScreenFallback />}>{renderAuxView(activeAuxView, activateCrisis, () => setActiveAuxView(null), () => setIsGroundingOpen(true))}</Suspense>

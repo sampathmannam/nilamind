@@ -24,8 +24,12 @@ export default function CrisisOverlay({
 
   useEffect(() => {
     if (isOpen) {
-      const saved = secureLocal.getItem("nilamind_safetyplan");
-      if (saved) setSafetyPlan(parseSafetyPlan(saved));
+      try {
+        const saved = secureLocal.getItem("nilamind_safetyplan");
+        if (saved) setSafetyPlan(parseSafetyPlan(saved));
+      } catch {
+        setSafetyPlan(INITIAL_SAFETY_PLAN);
+      }
       headingRef.current?.focus();
       // Lock background scroll while crisis overlay is open — a person in crisis
       // should never accidentally scroll away from the safety surface.

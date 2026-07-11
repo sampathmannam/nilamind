@@ -1,7 +1,7 @@
 // NilaFace — adaptive breathing orb. Nila's visual identity.
 // State-driven: calm glow, anxious pulse, low shimmer, elevated energy, crisis alert.
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import type { UserState } from "../types/modes";
 import { useReducedMotion } from "../hooks/useReducedMotion";
 import { faceMotion } from "./nilaFaceMotion";
@@ -83,7 +83,19 @@ export default function NilaFace({ state, onClick, onLongPress, size = 160 }: Ni
   // The orb's palette is tuned for a DARK background (low-opacity glows, a #0f172a fade-to-dark edge). On the
   // light/cream theme those wash out to near-invisibility, so on light we give the body a more opaque colored
   // gradient (no dark edge) and a stronger ring/shadow so the app's centrepiece actually reads. (audit: orb.)
-  const isLight = typeof document !== "undefined" && document.documentElement.classList.contains("theme-light");
+  // Reactive theme detection — watches <html class="theme-light"> via MutationObserver so the orb
+  // palette adapts immediately when the user switches themes (rather than one stale read at mount).
+  const [isLight, setIsLight] = useState(
+    typeof document !== "undefined" && document.documentElement.classList.contains("theme-light")
+  );
+  useEffect(() => {
+    const el = document.documentElement;
+    const observer = new MutationObserver(() => {
+      setIsLight(el.classList.contains("theme-light"));
+    });
+    observer.observe(el, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
   const bodyBackground = isLight
     ? `radial-gradient(circle at 35% 35%, ${palette.secondary}70, ${palette.primary}55 55%, ${palette.primary}22 100%)`
     : `radial-gradient(circle at 35% 35%, ${palette.secondary}10, ${palette.primary}20 60%, #0f172a 100%)`;

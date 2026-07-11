@@ -1,40 +1,36 @@
-import { ChevronRight, Sparkles, Flame } from "lucide-react";
+import { ChevronRight, Sparkles } from "lucide-react";
 import { buildYouGroups } from "./youRows";
 import { computeCompassionateStreak } from "../services/streaks";
 
 export default function YouScreen({ go }: { go: (target: string) => void }) {
   const groups = buildYouGroups();
-  let streak = { current: 0, longest: 0, message: "Welcome" };
+  let streak = { current: 0, totalActiveDays: 0, message: "Welcome" };
   try {
-    streak = computeCompassionateStreak();
+    const s = computeCompassionateStreak();
+    streak = { current: s.current, totalActiveDays: s.totalActiveDays, message: s.message };
   } catch {
     /* ignore */
   }
 
   return (
     <div className="space-y-6 max-w-md mx-auto" id="you-hub">
-      {/* Profile card */}
-      <div className="glass rounded-2xl p-5 space-y-3">
+      {/* Profile card — no streak numbers (UX_RESEARCH.md §3: streaks mirror addiction models).
+          Instead, a simple welcome and total days count. */}
+      <div className="glass rounded-2xl p-5">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full sun-cta flex items-center justify-center shrink-0">
-            <Sparkles className="w-5 h-5 text-white" />
+            <Sparkles className="w-5 h-5 text-white" aria-hidden="true" />
           </div>
           <div>
             <h1 className="editorial text-xl text-slate-100">You</h1>
             <p className="text-xs text-slate-400 mt-0.5">{streak.message}</p>
           </div>
         </div>
-        <div className="flex gap-6 pt-1">
-          <div className="flex items-center gap-1.5">
-            <Flame className="w-4 h-4 text-amber-400" />
-            <span className="text-sm font-semibold text-slate-100">{streak.current}</span>
-            <span className="text-[11px] text-slate-400">day streak</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="text-sm font-semibold text-slate-100">{streak.longest}</span>
-            <span className="text-[11px] text-slate-400">best</span>
-          </div>
-        </div>
+        {streak.totalActiveDays > 0 && (
+          <p className="text-xs text-slate-500 mt-3 pt-3 border-t border-slate-800">
+            {streak.totalActiveDays} day{streak.totalActiveDays !== 1 ? "s" : ""} spent on your wellbeing
+          </p>
+        )}
       </div>
 
       {groups.map((g) => (
@@ -48,12 +44,12 @@ export default function YouScreen({ go }: { go: (target: string) => void }) {
                 id={`you-${r.id}`}
                 className="w-full flex items-center gap-3 glass hover:brightness-125 p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left"
               >
-                <span className="shrink-0"><r.Icon className={r.iconClass} /></span>
+                <span className="shrink-0"><r.Icon className={r.iconClass} aria-hidden="true" /></span>
                 <span className="flex-1 min-w-0">
                   <span className="block text-sm font-bold text-slate-100">{r.label}</span>
                   <span className="block text-[11px] text-slate-400">{r.sub}</span>
                 </span>
-                <ChevronRight className="w-5 h-5 text-slate-500 shrink-0" />
+                <ChevronRight className="w-5 h-5 text-slate-500 shrink-0" aria-hidden="true" />
               </button>
             ))}
           </div>
