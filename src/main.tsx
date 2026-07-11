@@ -62,6 +62,20 @@ if ((import.meta as any).env?.DEV) {
   });
 }
 
+// Optional: register a free API LLM backend when explicitly enabled via Vite env variables.
+// Useful for testing against a cloud model (e.g., OpenAI) without relying on on‑device
+// inference. The backend respects the same {@link LocalLlmBackend} contract.
+if ((import.meta as any).env?.VITE_USE_FREE_API_LLM) {
+  Promise.all([
+    import("./services/freeApiLlmAdapter"),
+    import("./services/localLlm"),
+  ]).then(([{ createFreeApiBackend }, { registerLocalLlmBackend }]) => {
+    const apiUrl = (import.meta as any).env?.VITE_FREE_API_URL ?? "https://api.openai.com/v1/chat/completions";
+    const apiKey = (import.meta as any).env?.VITE_FREE_API_KEY ?? "";
+    registerLocalLlmBackend(createFreeApiBackend(apiUrl, apiKey));
+  });
+}
+
 // Native: on-device IS Nila's brain (no cloud). A size-verified on-disk model — by default the stock
 // Gemma-3-1B-it GGUF (a fine-tuned V2 4B GGUF is an optional revert/side-load), run via llama.cpp — is
 // the brain. findInstalledModel only returns a file whose byte length matches the catalog exactly, so a
