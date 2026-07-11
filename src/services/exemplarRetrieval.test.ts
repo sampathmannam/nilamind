@@ -80,7 +80,9 @@ describe("exemplarFewShotBlock", () => {
     const block = exemplarFewShotBlock(ex);
     expect(block).toContain("procrastinate"); // the user turn
     expect(block).toContain(ex[0].nila); // the gold reply
+    expect(block).toContain("Nila:"); // reply labelled as Nila (not "You:"), to curb first-person mirroring
     expect(block.toLowerCase()).toMatch(/example|how you sound|don't copy/); // framed as illustration
+    expect(block.toLowerCase()).toMatch(/as nila|say "you"|never "i"/); // explicit anti-role-confusion stance
   });
 
   it("is empty when there is nothing to inject", () => {

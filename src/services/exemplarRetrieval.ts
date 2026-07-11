@@ -110,12 +110,15 @@ export async function retrieveExemplarsForQuery(query: string, k = 2): Promise<N
  *  Framed as illustration (not the current turn) and explicitly "don't copy" to curb verbatim echoing. */
 export function exemplarFewShotBlock(exemplars: NilaExemplar[]): string {
   if (!exemplars.length) return "";
+  // Label the reply "Nila:" (not "You:") and state the stance explicitly — a 1B otherwise mirrors the
+  // examples in FIRST PERSON ("I've been avoiding...") as if the situation were its own. Speak AS Nila TO them.
   const lines = exemplars
-    .map((ex) => `- They say: "${ex.user}"\n  You: "${ex.nila}"`)
-    .join("\n");
+    .map((ex) => `Them: "${ex.user}"\nNila: "${ex.nila}"`)
+    .join("\n\n");
   return (
-    "Here's how you sound at your best on a message like this one — match the length and the move, " +
-    "then reply to what they actually said in the same spirit (don't copy these):\n" +
+    "Here's how you (Nila) sound at your best on a message like this — match the length and the move, then " +
+    "reply to what they actually said in the same spirit. Speak AS Nila, TO them: say \"you\" about their " +
+    "situation, never \"I\" as if it were happening to you. Don't copy these lines:\n\n" +
     lines
   );
 }
