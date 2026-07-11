@@ -11,6 +11,7 @@ import IdentitySection from "./settings/IdentitySection";
 import PrivacyLockSection from "./settings/PrivacyLockSection";
 import FeedbackSection from "./settings/FeedbackSection";
 import LanguageSection from "./settings/LanguageSection";
+import PilotSection from "./settings/PilotSection";
 import PerformanceDashboard from "./PerformanceDashboard";
 
 interface SettingsScreenProps {
@@ -108,6 +109,7 @@ export default function SettingsScreen({ disableAnchorPulse, onTogglePulse, onOp
       </a>
 
       <FeedbackSection />
+      <PilotSection />
 
       {/* Performance dashboard (developer/diagnostics) */}
       <button

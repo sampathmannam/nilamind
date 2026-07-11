@@ -65,6 +65,9 @@ export const SENSITIVE_KEYS = [
   // On-device retention/engagement — the distinct UTC days the app was opened (encrypted at rest, see
   // retentionMetrics.ts). Never auto-sent; only leaves the device via the user-initiated export.
   "nilamind_app_opens",
+  // Opt-in research-pilot enrollment state — baseline/endpoint days + reminder flag (encrypted at rest,
+  // see pilotStudy.ts). No study data here beyond the dates; pre/post scores are read from assessments.
+  "nilamind_pilot",
 ];
 const MIGRATION_VERSION = 2; // v2: encrypt nilamind_ema (previously stored in plaintext localStorage)
 
