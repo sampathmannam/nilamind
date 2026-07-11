@@ -11,7 +11,7 @@ import CrisisOverlay from "./components/CrisisOverlay";
 import CrisisPill from "./components/CrisisPill";
 import GroundingLibraryScreen from "./components/GroundingLibraryScreen";
 import ModeScreen from "./components/ModeScreen";
-import ToolsScreen from "./components/ToolsScreen";
+import TodayScreen from "./components/TodayScreen";
 import YouScreen from "./components/YouScreen";
 import ErrorBoundary from "./components/ErrorBoundary";
 
@@ -78,7 +78,7 @@ import { MessageSquare, LayoutGrid, User } from "lucide-react";
 import SheetContainer from "./components/SheetContainer";
 import { hapticLight } from "./hooks/useHaptics";
 
-type AppTab = "nila" | "tools" | "you";
+type AppTab = "nila" | "today" | "you";
 
 // ── Aux view label map for sheet headers ──
 const AUX_LABELS: Partial<Record<AuxView, string>> = {
@@ -151,7 +151,7 @@ export default function App() {
   const [isMedicationOpen, setIsMedicationOpen] = useState(false);
   const [isCaregiverOpen, setIsCaregiverOpen] = useState(false);
   const [activeAuxView, setActiveAuxView] = useState<AuxView | null>(null);
-  const [activeTab, setActiveTab] = useState<AppTab>("nila");
+  const [activeTab, setActiveTab] = useState<AppTab>("today");
   const [disableAnchorPulse, setDisableAnchorPulse] = useState(false);
   const [saveWarning, setSaveWarning] = useState(false);
   const [onboardingDone, setOnboardingDone] = useState(hasCompletedOnboarding());
@@ -252,7 +252,7 @@ export default function App() {
       // "diary" and "plan" are logical tabs that map to Nila or sheets, not our 3-tab bar.
       // Route them to Nila so the chat prompt handles them.
       if (res.tab === "plan") { setIsGroundingOpen(true); return; }
-      if (res.tab === "nila" || res.tab === "tools" || res.tab === "you") {
+      if (res.tab === "nila" || res.tab === "today" || res.tab === "you") {
         setActiveTab(res.tab as AppTab);
         return;
       }
@@ -363,10 +363,10 @@ export default function App() {
             />
           </ErrorBoundary>
         )}
-        {activeTab === "tools" && (
-          <ErrorBoundary name="tools" onError={(err: Error, info: React.ErrorInfo) => console.error("[ErrorBoundary:tools] caught:", err, info)}>
+        {activeTab === "today" && (
+          <ErrorBoundary name="today" onError={(err: Error, info: React.ErrorInfo) => console.error("[ErrorBoundary:today] caught:", err, info)}>
             <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-6" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
-              <ToolsScreen go={go} phoneEnabled={phoneEnabled} onEpisode={onEpisode} />
+              <TodayScreen go={go} phoneEnabled={phoneEnabled} onEpisode={onEpisode} />
             </div>
           </ErrorBoundary>
         )}
@@ -391,7 +391,7 @@ export default function App() {
       <nav className="shrink-0 flex items-center justify-around border-t border-slate-800 bg-page/95 backdrop-blur pb-[max(8px,env(safe-area-inset-bottom))]" aria-label="Main navigation">
         {([
           { id: "nila" as AppTab, label: "Nila", Icon: MessageSquare },
-          { id: "tools" as AppTab, label: t("tools"), Icon: LayoutGrid },
+          { id: "today" as AppTab, label: "Today", Icon: LayoutGrid },
           { id: "you" as AppTab, label: t("you"), Icon: User },
         ]).map(({ id, label, Icon }) => (
           <button

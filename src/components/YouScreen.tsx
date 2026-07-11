@@ -1,19 +1,41 @@
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Sparkles, Flame } from "lucide-react";
 import { buildYouGroups } from "./youRows";
-
-// Redesign §2 — the "You" hub: review / manage / learn (calmer moments). The row set lives in
-// ./youRows (the single source of truth, unit-tested in youRows.test.ts); this component is just the
-// renderer. Add/remove rows there, not here. Rows call go(target); App routes to the existing screens.
+import { computeCompassionateStreak } from "../services/streaks";
 
 export default function YouScreen({ go }: { go: (target: string) => void }) {
   const groups = buildYouGroups();
+  let streak = { current: 0, longest: 0, message: "Welcome" };
+  try {
+    streak = computeCompassionateStreak();
+  } catch {
+    /* ignore */
+  }
 
   return (
     <div className="space-y-6 max-w-md mx-auto" id="you-hub">
-      <header className="space-y-1">
-        <h1 className="editorial text-3xl text-slate-100">You</h1>
-        <p className="text-sm text-slate-400 mt-0.5">Your progress and your privacy — held on your device.</p>
-      </header>
+      {/* Profile card */}
+      <div className="glass rounded-2xl p-5 space-y-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full sun-cta flex items-center justify-center shrink-0">
+            <Sparkles className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h1 className="editorial text-xl text-slate-100">You</h1>
+            <p className="text-xs text-slate-400 mt-0.5">{streak.message}</p>
+          </div>
+        </div>
+        <div className="flex gap-6 pt-1">
+          <div className="flex items-center gap-1.5">
+            <Flame className="w-4 h-4 text-amber-400" />
+            <span className="text-sm font-semibold text-slate-100">{streak.current}</span>
+            <span className="text-[11px] text-slate-400">day streak</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-sm font-semibold text-slate-100">{streak.longest}</span>
+            <span className="text-[11px] text-slate-400">best</span>
+          </div>
+        </div>
+      </div>
 
       {groups.map((g) => (
         <section key={g.title} className="space-y-2">

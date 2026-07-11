@@ -11,7 +11,7 @@ describe("resolveNavTarget", () => {
   });
   it("maps each footer/sub tab to a tab resolution", () => {
     expect(resolveNavTarget("nila")).toEqual({ kind: "tab", tab: "nila" });
-    expect(resolveNavTarget("tools")).toEqual({ kind: "tab", tab: "tools" });
+    expect(resolveNavTarget("today")).toEqual({ kind: "tab", tab: "today" });
     expect(resolveNavTarget("you")).toEqual({ kind: "tab", tab: "you" });
     expect(resolveNavTarget("diary")).toEqual({ kind: "tab", tab: "diary" });
     expect(resolveNavTarget("plan")).toEqual({ kind: "tab", tab: "plan" });
@@ -21,8 +21,8 @@ describe("resolveNavTarget", () => {
     expect(resolveNavTarget("checkin")).toEqual({ kind: "unknown", target: "checkin" });
     expect(resolveNavTarget("console")).toEqual({ kind: "unknown", target: "console" });
   });
-  it("does NOT treat removed 'today' as a tab", () => {
-    expect(resolveNavTarget("today")).toEqual({ kind: "unknown", target: "today" });
+  it("treats unknown targets as unknown", () => {
+    expect(resolveNavTarget("oldtab")).toEqual({ kind: "unknown", target: "oldtab" });
   });
   it("maps known aux views including the new values_to_action", () => {
     expect(resolveNavTarget("dashboard")).toEqual({ kind: "aux", view: "dashboard" });
@@ -42,8 +42,9 @@ describe("resolveNavTarget", () => {
     expect(KNOWN_AUX_VIEWS).toContain("values_to_action");
     expect(KNOWN_AUX_VIEWS).not.toContain("insights");
     expect(KNOWN_AUX_VIEWS).not.toContain("nila_voice");
-    expect(TAB_TARGETS).not.toContain("today");
+    expect(TAB_TARGETS).toContain("today");
     expect(TAB_TARGETS).toContain("nila");
+    expect(TAB_TARGETS).not.toContain("tools");
   });
 });
 

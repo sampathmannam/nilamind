@@ -73,7 +73,8 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   const [protocolCard, setProtocolCard] = useState<ProtocolCard | null>(() => protocolOfferCard(""));
   const [showSafetyPlanReview, setShowSafetyPlanReview] = useState(false);
   const [skillOffer, setSkillOffer] = useState<Skill | null>(null);
-  const [pactNotice, setPactNotice] = useState<PactNotice | null>(null); // #30: surfaced pact (the human bridge)
+  const [pactNotice, setPactNotice] = useState<PactNotice | null>(null);
+  const [showQuickActions, setShowQuickActions] = useState(false);
   // #4 + #9 (audit): §9 crisis now routes through the App-level overlay (onOpenCrisis) so the Android hardware
   // back button closes it instead of exiting the app; a session that ever tripped §9 latches hadCrisisRef so
   // the transcript is never persisted/restored (keying the clear on a transient boolean re-persisted it on dismiss).
@@ -455,7 +456,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
               state={mode.userState}
               onClick={handleVoice}
               onLongPress={() => openCrisis()}
-              size={140}
+              size={160}
             />
 
             <div className="text-center space-y-2">
@@ -469,8 +470,27 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
               )}
             </div>
 
-            {/* Quick actions */}
-            <QuickActions onAction={handleQuickAction} timeMode={mode.timeMode} userState={mode.userState} />
+            {/* Quick actions — hidden behind a toggle for a cleaner first impression */}
+            {!showQuickActions && (
+              <button
+                onClick={() => setShowQuickActions(true)}
+                className="text-xs text-slate-500 hover:text-slate-300 flex items-center gap-1 transition-colors cursor-pointer"
+              >
+                <span>More tools</span>
+                <span className="text-slate-600">+</span>
+              </button>
+            )}
+            {showQuickActions && (
+              <>
+                <QuickActions onAction={handleQuickAction} timeMode={mode.timeMode} userState={mode.userState} />
+                <button
+                  onClick={() => setShowQuickActions(false)}
+                  className="text-xs text-slate-500 hover:text-slate-300 transition-colors cursor-pointer"
+                >
+                  Hide tools
+                </button>
+              </>
+            )}
 
             {/* Messages — #23 (audit): render the FULL conversation (was slice(-5), so earlier turns became
                 unreachable) and auto-scroll to the newest reply via bottomRef below. */}
