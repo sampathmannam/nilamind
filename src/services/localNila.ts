@@ -13,6 +13,7 @@ import { detectElevationRisk, elevationGuardNote, elevationOutputNote, type Elev
 import { emaElevationSignal } from "./ema";
 import { suppressNudgesForCrisis } from "./notifications";
 import { retrievePsychoedForQuery, psychoedContextBlock } from "./psychoedRetrieval";
+import { retrieveExemplarsForQuery, exemplarFewShotBlock } from "./exemplarRetrieval";
 import type { AgentView } from "./agent";
 
 export interface LocalNilaResult {
@@ -64,6 +65,18 @@ export async function askNilaLocalStream(
     if (psychoedBlock) system += "\n\n" + psychoedBlock;
   } catch {
     /* psychoed grounding is best-effort, never a hard dependency */
+  }
+
+  // Exemplar-RAG (dynamic few-shot): the 1B imitates far better than it obeys. Retrieve the 1-2 nearest
+  // gold exchanges for THIS message and inject their replies as on-target demonstrations of length/voice.
+  // Placed LAST (most salient, closest to generation). Fail-open — no match/embedder just drops the block,
+  // leaving the persona's static examples. Reuses the same MiniLM (the crisis embedder memoized lastUser).
+  try {
+    const exemplars = await retrieveExemplarsForQuery(lastUser, 2);
+    const block = exemplarFewShotBlock(exemplars);
+    if (block) system += "\n\n" + block;
+  } catch {
+    /* exemplar few-shot is best-effort, never a hard dependency */
   }
 
   try {

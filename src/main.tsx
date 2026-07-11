@@ -16,14 +16,16 @@ initTheme(); // apply the saved System/Light/Dark choice before first paint
 // crises the keyword list misses (~40% of real disclosures). See crisisClassifier.ts / crisisEmbedder.ts.
 void (async () => {
   try {
-    const [{ transformersEmbedder, warmCrisisEmbedder }, cc, pr] = await Promise.all([
+    const [{ transformersEmbedder, warmCrisisEmbedder }, cc, pr, er] = await Promise.all([
       import("./services/crisisEmbedder"),
       import("./services/crisisClassifier"),
       import("./services/psychoedRetrieval"),
+      import("./services/exemplarRetrieval"),
     ]);
     cc.setCrisisEmbedder(transformersEmbedder);
     cc.setCrisisClassifierEnabled(true);
     pr.setPsychoedEmbedder(transformersEmbedder);
+    er.setExemplarEmbedder(transformersEmbedder); // dynamic few-shot for the on-device reply (shares the MiniLM)
     // Warm the MiniLM shortly after startup, at idle, so the FIRST crisis check on ANY surface (episode,
     // voice call, self-compassion — not just chat, which warms on mount) doesn't degrade to keyword-only
     // during a cold load. Idle-deferred so it never delays first paint; safe on the plugin thread (this is
