@@ -38,7 +38,7 @@ import { startVoiceSession, endVoiceSession } from "../services/voicePatterns";
 import LearnScreen from "./LearnScreen";
 import { parseSafetyPlan } from "../services/safetyPlan";
 import { shouldPromptReview, markSafetyPlanReviewed } from "../services/safetyPlanFollowUp";
-import { Settings, LifeBuoy, Mic, Send, MicOff, X, ShieldCheck } from "lucide-react";
+import { Settings, Mic, Send, MicOff, X, ShieldCheck } from "lucide-react";
 
 interface ModeScreenProps {
   onOpenSettings?: () => void;
@@ -423,13 +423,9 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           >
             <Settings className="w-4 h-4" />
           </button>
-          <button
-            onClick={() => openCrisis()}
-            className="p-2 rounded-full hover:bg-rose-500/10 text-rose-400 hover:text-rose-300 transition-colors cursor-pointer"
-            aria-label={t("crisisButton")}
-          >
-            <LifeBuoy className="w-4 h-4" />
-          </button>
+          {/* Crisis access is now the App-shell CrisisPill (persistent on every tab), so the redundant
+              icon-only LifeBuoy that used to live here was removed. §9 auto-detection still routes through
+              openCrisis() below — only the manual header button moved to the shell. */}
         </div>
       </div>
 
