@@ -1,7 +1,8 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
+import fs from 'fs';
 import path from 'path';
-import {defineConfig} from 'vite';
+import {defineConfig, type Connect, type ViteDevServer} from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
 // @huggingface/transformers emits its own copy of the onnxruntime-web wasm via `new URL(...)`, which vite
@@ -21,12 +22,50 @@ function dropRedundantOrtWasm() {
   };
 }
 
+// DEV-SERVER ONLY. The on-device §9 crisis classifier (crisisEmbedder.ts) points onnxruntime-web at the wasm
+// glue in public/ort/ via `env.backends.onnx.wasm.wasmPaths = "/ort/"`, and ORT loads that glue with a
+// dynamic `import("/ort/ort-wasm-simd-threaded.asyncify.mjs")`. Vite's dep pipeline requests that URL with a
+// `?import` query, which makes Vite's servePublicMiddleware skip it (it treats `?import` as a source import)
+// and hand it to the transform middleware — which HARD-ERRORS because the file lives in /public ("...should
+// not be imported from source code"). Under `vite dev` that surfaces as a blocking error overlay, and the
+// classifier fails to load, so §9 silently degrades to the keyword-only floor in the browser preview.
+//
+// A production `vite build` has no dev server: public/ort/* is copied as-is and served statically, so
+// wasmPaths="/ort/" resolves via a plain GET — this never fires. Native (Capacitor) is the same: bundled
+// assets, no Vite. So this shim is scoped to `apply: 'serve'` and changes NOTHING about the build output or
+// the runtime wasmPaths; it only makes the dev server answer /ort/*.mjs (with or without ?import) with the
+// raw module bytes — exactly what a static host does in prod — instead of erroring. Registered from the
+// configureServer BODY so it runs before Vite's internal transform middleware (which is where the throw is).
+function serveOrtGlueInDev() {
+  const ortDir = path.resolve(__dirname, 'public/ort');
+  return {
+    name: 'serve-ort-glue-in-dev',
+    apply: 'serve' as const,
+    configureServer(server: ViteDevServer) {
+      const handler: Connect.NextHandleFunction = (req, res, next) => {
+        // Match /ort/<name>.mjs regardless of query string (the failing case carries `?import`). Only .mjs:
+        // the ~23 MB .wasm is fetch()'d (never import()'d) so it gets no `?import` and Vite already serves it.
+        const m = /^\/ort\/([\w.-]+\.mjs)(?:\?.*)?$/.exec(req.url ?? '');
+        if (!m) return next();
+        const file = path.join(ortDir, m[1]);
+        // Defense-in-depth: never escape public/ort, and fall through if the file is somehow absent.
+        if (!file.startsWith(ortDir + path.sep) || !fs.existsSync(file)) return next();
+        res.setHeader('Content-Type', 'text/javascript; charset=utf-8');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.end(fs.readFileSync(file));
+      };
+      server.middlewares.use(handler);
+    },
+  };
+}
+
 export default defineConfig(({ mode }) => {
   return {
     // Strip console.*/debugger from RELEASE bundles only (production + store) so nothing reaches logcat, where
     // a co-located app with READ_LOGS could read it. Dev + test keep their logs for debugging.
     esbuild: mode === 'production' || mode === 'store' ? { drop: ['console', 'debugger'] } : {},
     plugins: [
+      serveOrtGlueInDev(),
       dropRedundantOrtWasm(),
       react(),
       tailwindcss(),

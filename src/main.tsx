@@ -119,6 +119,12 @@ if (Capacitor.isNativePlatform()) {
   const ric = (globalThis as any).requestIdleCallback as undefined | ((cb: () => void, o?: any) => number);
   if (ric) ric(scheduleReflection, { timeout: 30_000 });
   else setTimeout(scheduleReflection, 15_000);
+// Fire-and-forget GitHub auto‑update check (Android only)
+if (Capacitor.getPlatform?.() === "android") {
+  import("./services/autoUpdate").then(({ checkForGitHubUpdate }) => {
+    void checkForGitHubUpdate();
+  }).catch(() => {});
+}
 } else if (!(import.meta as any).env?.DEV) {
   // WEB front door (rung 0): there is no llama.cpp brain in a browser, so register the deterministic,
   // LLM-free reflection backend. isLocalLlmReady() then becomes true and sendToNila routes to it instead
