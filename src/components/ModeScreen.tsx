@@ -460,7 +460,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
             </div>
 
             {/* Quick actions */}
-            <QuickActions onAction={handleQuickAction} timeMode={mode.timeMode} />
+            <QuickActions onAction={handleQuickAction} timeMode={mode.timeMode} userState={mode.userState} />
 
             {/* Messages — #23 (audit): render the FULL conversation (was slice(-5), so earlier turns became
                 unreachable) and auto-scroll to the newest reply via bottomRef below. */}
