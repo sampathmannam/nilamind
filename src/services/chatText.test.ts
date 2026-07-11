@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { stripChatMarkdown, trimToLastSentence } from "./chatText";
+import { stripChatMarkdown, trimToLastSentence, stripSpeakerLabel } from "./chatText";
 
 describe("stripChatMarkdown", () => {
   it("removes bold, italics, bullets, headers — keeps the words", () => {
@@ -26,5 +26,21 @@ describe("trimToLastSentence", () => {
     expect(trimToLastSentence("I hear you.")).toBe("I hear you.");
     expect(trimToLastSentence("What's the hardest part")).toBe("What's the hardest part");
     expect(trimToLastSentence('He said "hi." And then')).toBe('He said "hi."');
+  });
+});
+
+describe("stripSpeakerLabel", () => {
+  it("strips a copied speaker label and unwraps a fully-quoted reply (the real device artifact)", () => {
+    // exact shape observed on-device after the exemplar relabel
+    expect(stripSpeakerLabel('Nila: "It\'s like a little voice inside you that keeps whispering, \'Don\'t!\'"'))
+      .toBe("It's like a little voice inside you that keeps whispering, 'Don't!'");
+    expect(stripSpeakerLabel("You: hey there")).toBe("hey there");
+  });
+  it("keeps inner quotes and leaves clean text alone", () => {
+    expect(stripSpeakerLabel("I hear you.")).toBe("I hear you.");
+    expect(stripSpeakerLabel("Sounds like you're stuck.")).toBe("Sounds like you're stuck.");
+  });
+  it("does not unwrap a partially-quoted reply", () => {
+    expect(stripSpeakerLabel('"just this part" and then more')).toBe('"just this part" and then more');
   });
 });

@@ -21,7 +21,7 @@ import type { LocalLlmBackend, LocalGenParams } from "./localLlm";
 // prompt STRING (not messages[]) to dodge the binding's crashing jinja path — see that file for why.
 import { toGemmaPrompt, windowMessages } from "./gemmaPrompt";
 // Sentence-boundary trim for a length-capped reply (pure, unit-tested).
-import { trimToLastSentence } from "./chatText";
+import { trimToLastSentence, stripSpeakerLabel } from "./chatText";
 
 // Side-loaded GGUF in the app's own external files dir (adb push, mirrors the capgo .task path). The
 // PRODUCTION path is downloadModel() on first run — deferred; side-load validates the end-to-end brain.
@@ -161,6 +161,8 @@ export function createLlamaCppBackend(
         let text = (res?.text || full).trim();
         const cut = text.search(/<(?:end|start)_of_turn>/);
         if (cut !== -1) text = text.slice(0, cut).trim();
+        // A small model sometimes copies the few-shot 'Nila: "..."' framing into its own reply — strip it.
+        text = stripSpeakerLabel(text);
         // If the length cap (not the <end_of_turn> stop) ended the reply, it may dangle mid-sentence —
         // trim back to the last complete sentence so Nila never trails off.
         text = trimToLastSentence(text);

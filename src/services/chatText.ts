@@ -18,6 +18,17 @@ export function stripChatMarkdown(text: string): string {
     .trim();
 }
 
+/** Strip a leading speaker label ("Nila:", "You:", "Them:") and unwrap a fully-quoted reply. A small
+ *  model sometimes copies the few-shot examples' `Nila: "..."` format straight into its own output. */
+export function stripSpeakerLabel(text: string): string {
+  let t = text.trim();
+  t = t.replace(/^\s*(?:nila|you|them)\s*[:\-–]\s*/i, "").trim(); // drop a copied speaker label
+  // unwrap only when the WHOLE reply is wrapped in one matching quote pair (keeps inner quotes intact)
+  const m = t.match(/^(["'“‘])([\s\S]+)(["'”’])$/);
+  if (m) t = m[2].trim();
+  return t;
+}
+
 /** If `text` was cut mid-thought, trim to the last complete sentence. Clean/boundary-less text is
  *  returned unchanged. */
 export function trimToLastSentence(text: string): string {
