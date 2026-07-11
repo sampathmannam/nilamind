@@ -174,7 +174,7 @@ A "What Nila remembers" screen exposes full view, edit, and delete over everythi
 
 ## 4. Evidence & Honest Limits
 
-Citations below should be verified against their primary sources before being relied upon; attributions we are less certain of are marked **(verify)**.
+Citations below should be verified against their primary sources before being relied upon; attributions we are less certain of are marked **(verify)**. For the full feature-by-feature evidence page — clinical basis and honest limit for each capability — see [`EVIDENCE.md`](EVIDENCE.md).
 
 | Area | Clinical basis (cite) | Honest limit |
 |---|---|---|

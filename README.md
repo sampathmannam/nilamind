@@ -71,6 +71,12 @@ The design is grounded in research, not vibes. The reasoning, with citations,
 is in [`docs/NILA_AGENT_DESIGN.md`](docs/NILA_AGENT_DESIGN.md) and
 [`docs/UX_RESEARCH.md`](docs/UX_RESEARCH.md).
 
+**Transparency, evidence & honesty** (we try hard not to overclaim):
+[`docs/TRANSPARENCY.md`](docs/TRANSPARENCY.md) — model card, the deterministic §9 safety
+architecture, and a privacy datasheet · [`docs/EVIDENCE.md`](docs/EVIDENCE.md) — what the
+evidence does and doesn't show, feature by feature · [`docs/PILOT_PROTOCOL.md`](docs/PILOT_PROTOCOL.md) —
+how we'd actually measure whether it helps.
+
 ## How Nila actually works
 
 A small model that runs on a phone is **not** a good free-form therapist, and
