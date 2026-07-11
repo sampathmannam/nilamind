@@ -47,6 +47,7 @@ const EpisodeSupportScreen = lazy(() => import("./components/EpisodeSupportScree
 const EmaCheckInScreen = lazy(() => import("./components/EmaCheckIn"));
 const ArmedCheckInScreen = lazy(() => import("./components/ArmedCheckInScreen"));
 const AboutNilaScreen = lazy(() => import("./components/AboutNilaScreen"));
+const InsightsScreen = lazy(() => import("./components/InsightsScreen"));
 
 // Calm fallback while lazy chunks load
 import { Skeleton, SkeletonCard, SkeletonList, SkeletonChart } from "./components/Skeleton";
@@ -84,6 +85,7 @@ type AppTab = "nila" | "today" | "you";
 // ── Aux view label map for sheet headers ──
 const AUX_LABELS: Partial<Record<AuxView, string>> = {
   about_nila: "About Nila",
+  insights: "Your patterns",
   thought_record: "Thought record",
   assessment: "Screenings",
   values_to_action: "Values to action",
@@ -117,6 +119,7 @@ function auxViewLabel(view: AuxView): string {
 function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () => void, onOpenGrounding: () => void) {
   switch (view) {
     case "about_nila": return <AboutNilaScreen />;
+    case "insights": return <InsightsScreen onClose={onClose} />;
     case "thought_record": return <ThoughtRecordScreen />;
     case "assessment": return <AssessmentScreen onActivateCrisis={onActivateCrisis} />;
     case "values_to_action": return <ValuesToActionScreen />;
