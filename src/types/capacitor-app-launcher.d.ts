@@ -1,4 +1,4 @@
-declare module 'capacitor-app-launcher' {
+declare module '@capacitor/app-launcher' {
   export interface AppLauncherOptions {
     uri: string;
     mimeType: string;

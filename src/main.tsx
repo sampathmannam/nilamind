@@ -120,7 +120,7 @@ if (Capacitor.isNativePlatform()) {
   if (ric) ric(scheduleReflection, { timeout: 30_000 });
   else setTimeout(scheduleReflection, 15_000);
 // Fire-and-forget GitHub auto‑update check (Android only)
-if (Capacitor.getPlatform?.() === "android") {
+if (Capacitor.isNativePlatform()) {
   import("./services/autoUpdate").then(({ checkForGitHubUpdate }) => {
     void checkForGitHubUpdate();
   }).catch(() => {});
