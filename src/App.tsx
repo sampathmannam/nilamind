@@ -70,6 +70,7 @@ import OnboardingGate from "./components/OnboardingGate";
 import { hasCompletedOnboarding } from "./services/onboarding";
 import { resolveNavTarget, type AuxView, type TabView } from "./services/nav";
 import { getArmedCheckin, armedCheckinBody } from "./services/armedCheckin";
+import { recordAppOpen } from "./services/retentionMetrics";
 import { MessageSquare, LayoutGrid, User } from "lucide-react";
 import SheetContainer from "./components/SheetContainer";
 import { hapticLight } from "./hooks/useHaptics";
@@ -174,6 +175,13 @@ export default function App() {
   // Sync daily reminders
   useEffect(() => {
     void syncDailyReminders();
+  }, []);
+
+  // Record that the app was opened today (on-device retention instrumentation). Runs after SecureGate has
+  // hydrated the encrypted store; idempotent per calendar day, so StrictMode's double mount-effect is safe.
+  // Nothing is sent anywhere — the metric only leaves the device via the user-initiated export.
+  useEffect(() => {
+    recordAppOpen();
   }, []);
 
   // Re-roll EMA quick-check-in pings on every app open. Never prompts on startup; syncEmaCheckins bails if
