@@ -21,7 +21,7 @@ model: if an app fails a lower level, the higher levels don't matter. The five l
 | **2 · Privacy & Safety** | Data collection/sharing, security, crisis handling | **Strongly met — our best level.** 100% on-device; **AES-256-GCM** at rest; **no account, no server, no analytics/telemetry**; zero-egress chat/voice/STT; deterministic, model-independent **§9 crisis safety**; a published [system card](TRANSPARENCY.md). |
 | **3 · Clinical Foundation / Evidence** | Does *this app* have evidence it works? | **Not met yet — the honest gap.** NilaMind is built on evidence-based *methods* (PHQ-9/GAD-7, BA, DBT/CBT/ACT/CFT — all cited in [`EVIDENCE.md`](EVIDENCE.md)), but **there is no study of the app itself**: no efficacy/effectiveness data, and retention is unmeasured. Like most apps in the category, NilaMind does not clear this level — and we say so. ([`PILOT_PROTOCOL.md`](PILOT_PROTOCOL.md) is the plan to start.) |
 | **4 · Engagement & Ease of Use** | Usability, accessibility, will people actually use it | **Partially met.** Voice-first, accessibility work done (WCAG-oriented, reduced-motion, TalkBack), works offline; **but no usability or engagement data**, and adherence is unmeasured. |
-| **5 · Clinical Integration / Interoperability** | Fits into care, data portability, sharing with a clinician | **Partially met.** User-initiated clinician **export** (CSV / text / PDF, with a non-diagnostic disclaimer) and a caregiver-share snapshot; **but no EHR/FHIR interoperability** and no formal care-pathway integration. |
+| **5 · Clinical Integration / Interoperability** | Fits into care, data portability, sharing with a clinician | **Partially met.** User-initiated clinician **export** (CSV / PDF, plus a **portable structured JSON** — assessment history, retention & pilot summary — that a clinician's system or a researcher can ingest) and a caregiver-share snapshot; **but not yet an EHR/FHIR-standard format** and no formal care-pathway integration. |
 
 **Read of the pyramid:** NilaMind is genuinely strong exactly where the model weights the *foundations*
 (Levels 1–2), and transparent that it does not yet clear the *evidence* level (3). That is the accurate
@@ -57,7 +57,7 @@ In priority order, honestly:
 2. **Independent listing / evaluation** — submit NilaMind to the M-Health Index & Navigation Database so the
    privacy and clinical-foundation ratings come from a third party, not from us.
 3. **A named clinical advisor** reviewing the content library.
-4. **Basic interoperability** (a portable, standards-aligned export) to strengthen Level 5.
+4. **Standards-aligned interoperability** (a FHIR-shaped export) to fully strengthen Level 5 — the portable JSON export is a first step; a recognised clinical standard is the next.
 
 ---
 

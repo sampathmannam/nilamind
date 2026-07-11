@@ -3,9 +3,10 @@ import { Database, Download, Trash2, ShieldCheck, Loader2, AlertTriangle, Check,
 import { secureLocal } from "../services/secureLocal";
 import { loadIdentity, exportBackup } from "../services/identity";
 import { requireAuth } from "../services/biometricGate";
-import { generateCsvReport, buildTextReport, generatePdfBlob, saveReport } from "../services/exportReport";
+import { generateCsvReport, buildTextReport, generatePdfBlob, saveReport, buildClinicalJson } from "../services/exportReport";
 import { computeRetention } from "../services/retentionMetrics";
 import { isPilotEnrolled, computePilotSummary } from "../services/pilotStudy";
+import { loadAssessments } from "../services/assessments";
 import { recordExportAudit, getExportAudit, type ExportAuditEntry } from "../services/exportAudit";
 
 // "Your data" (AUTOPILOT Phase 2): see exactly what's stored, export it (encrypted, user-controlled),
@@ -106,6 +107,21 @@ export default function YourDataScreen() {
     } finally { setReportBusy(false); }
   };
 
+  const handleExportJson = async () => {
+    setReportBusy(true);
+    try {
+      const json = buildClinicalJson({
+        generatedAt: new Date().toISOString(),
+        checkins: loadCheckins(),
+        assessments: loadAssessments(),
+        retention: computeRetention(),
+        pilot: isPilotEnrolled() ? computePilotSummary() ?? undefined : undefined,
+      });
+      await saveReport(json, "nilamind-data.json", "application/json");
+      pushAudit({ kind: "json", scope: "Structured data export", destination: "device_download" });
+    } finally { setReportBusy(false); }
+  };
+
   const wipeEverything = async () => {
     if (!(await requireAuth("Confirm it's you to permanently delete everything on this device."))) return;
     setBusy(true);
@@ -161,14 +177,17 @@ export default function YourDataScreen() {
 
       {/* Clinician-friendly report export */}
       <div className="glass rounded-2xl p-4 space-y-2">
-        <h3 className="text-xs font-bold text-slate-100 uppercase tracking-wider flex items-center gap-1.5"><FileText className="w-3.5 h-3.5" /> Export Report (readable)</h3>
-        <p className="text-[11px] text-slate-500 leading-relaxed">A plain CSV or PDF of your check-in data — no encryption, designed to share with your doctor. Not a clinical or diagnostic tool.</p>
+        <h3 className="text-xs font-bold text-slate-100 uppercase tracking-wider flex items-center gap-1.5"><FileText className="w-3.5 h-3.5" /> Export Report</h3>
+        <p className="text-[11px] text-slate-500 leading-relaxed">A CSV or PDF of your check-in data to share with your doctor, or a structured JSON (assessment history, retention &amp; pilot summary) a clinician's system or a researcher can read. No encryption — saved to this device. Not a clinical or diagnostic tool.</p>
         <div className="flex gap-2">
           <button onClick={handleExportCsv} disabled={reportBusy} className="flex-1 bg-page border border-slate-800 hover:bg-raised text-slate-200 text-xs font-semibold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50">
             {reportBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />} CSV
           </button>
           <button onClick={handleExportPdf} disabled={reportBusy} className="flex-1 bg-page border border-slate-800 hover:bg-raised text-slate-200 text-xs font-semibold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50">
             {reportBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />} PDF
+          </button>
+          <button onClick={handleExportJson} disabled={reportBusy} id="export-json" className="flex-1 bg-page border border-slate-800 hover:bg-raised text-slate-200 text-xs font-semibold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50">
+            {reportBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />} JSON
           </button>
         </div>
       </div>
