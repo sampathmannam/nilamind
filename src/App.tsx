@@ -46,6 +46,7 @@ const RelapsePlanScreen = lazy(() => import("./components/RelapsePlanScreen"));
 const EpisodeSupportScreen = lazy(() => import("./components/EpisodeSupportScreen"));
 const EmaCheckInScreen = lazy(() => import("./components/EmaCheckIn"));
 const ArmedCheckInScreen = lazy(() => import("./components/ArmedCheckInScreen"));
+const AboutNilaScreen = lazy(() => import("./components/AboutNilaScreen"));
 
 // Calm fallback while lazy chunks load
 import { Skeleton, SkeletonCard, SkeletonList, SkeletonChart } from "./components/Skeleton";
@@ -82,6 +83,7 @@ type AppTab = "nila" | "today" | "you";
 
 // ── Aux view label map for sheet headers ──
 const AUX_LABELS: Partial<Record<AuxView, string>> = {
+  about_nila: "About Nila",
   thought_record: "Thought record",
   assessment: "Screenings",
   values_to_action: "Values to action",
@@ -114,6 +116,7 @@ function auxViewLabel(view: AuxView): string {
 // ── Aux view component renderers (module-scoped lazy imports — created once, not per render)
 function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () => void, onOpenGrounding: () => void) {
   switch (view) {
+    case "about_nila": return <AboutNilaScreen />;
     case "thought_record": return <ThoughtRecordScreen />;
     case "assessment": return <AssessmentScreen onActivateCrisis={onActivateCrisis} />;
     case "values_to_action": return <ValuesToActionScreen />;
@@ -151,6 +154,7 @@ export default function App() {
   const [isMedicationOpen, setIsMedicationOpen] = useState(false);
   const [isCaregiverOpen, setIsCaregiverOpen] = useState(false);
   const [activeAuxView, setActiveAuxView] = useState<AuxView | null>(null);
+  const [closingAuxView, setClosingAuxView] = useState<AuxView | null>(null);
   const [activeTab, setActiveTab] = useState<AppTab>("today");
   const [disableAnchorPulse, setDisableAnchorPulse] = useState(false);
   const [saveWarning, setSaveWarning] = useState(false);
@@ -158,7 +162,17 @@ export default function App() {
   const [wakeListening, setWakeListening] = useState(false);
   const [phoneEnabled] = useState(false);
   const [modeScreenHasSheet, setModeScreenHasSheet] = useState(false);
-  const [, setLangTick] = useState(0); // audit 2.23 — bump to re-render t()-driven copy on a language switch
+  const [, setLangTick] = useState(0);
+  const closeSheet = useCallback((view: AuxView | null) => {
+    if (!view) return;
+    setClosingAuxView(view);
+    setActiveAuxView(null);
+    setTimeout(() => setClosingAuxView(null), 200);
+  }, []);
+
+  const closeActiveAux = useCallback(() => {
+    if (activeAuxView) closeSheet(activeAuxView);
+  }, [activeAuxView, closeSheet]);
 
   useEffect(() => onPersistError((failingKeys) => setSaveWarning(failingKeys.length > 0)), []);
 
@@ -490,14 +504,14 @@ export default function App() {
       )}
 
       {/* Generic aux view sheet — all other screens */}
-      {activeAuxView && (
-        <div className="fixed inset-0 z-50 bg-page flex flex-col animate-slide-in" id="aux-view-sheet">
+      {(activeAuxView || closingAuxView) && (
+        <div className={`fixed inset-0 z-50 bg-page flex flex-col ${closingAuxView ? "animate-slide-out" : "animate-slide-in"}`} id="aux-view-sheet">
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
-            <span className="text-sm font-semibold text-slate-100">{auxViewLabel(activeAuxView)}</span>
-            <button onClick={() => setActiveAuxView(null)} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Close"><X className="w-4 h-4" aria-hidden="true" /></button>
+            <span className="text-sm font-semibold text-slate-100">{auxViewLabel(activeAuxView || closingAuxView!)}</span>
+            <button onClick={() => closeSheet(activeAuxView)} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Close"><X className="w-4 h-4" aria-hidden="true" /></button>
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto">
-            <Suspense fallback={<ScreenFallback />}>{renderAuxView(activeAuxView, activateCrisis, () => setActiveAuxView(null), () => setIsGroundingOpen(true))}</Suspense>
+            <Suspense fallback={<ScreenFallback />}>{renderAuxView((activeAuxView || closingAuxView)!, activateCrisis, closeActiveAux, () => setIsGroundingOpen(true))}</Suspense>
           </div>
         </div>
       )}

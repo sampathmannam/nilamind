@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, ShieldCheck, Sparkles, Settings as SettingsIcon,
-  Brain, Compass, BookOpen, Users,
+  Brain, Compass, BookOpen, Users, Info,
   type LucideIcon,
 } from "lucide-react";
 
@@ -29,6 +29,7 @@ export function buildYouGroups(): YouGroup[] {
     {
       title: "Manage",
       rows: [
+        { id: "about_nila", label: "About Nila", sub: "How Nila works, privacy, and boundaries", Icon: Info, iconClass: "w-5 h-5 text-blue-400" },
         { id: "dashboard", label: "Your dashboard", sub: "Streak, mood & score trends, recent Nila", Icon: LayoutDashboard, iconClass: "w-5 h-5 text-blue-400" },
         { id: "your_data", label: "Your data", sub: "Export everything, or delete it — your call", Icon: ShieldCheck, iconClass: "w-5 h-5 text-emerald-400" },
         { id: "nila_memory", label: "What Nila remembers", sub: "See, edit, or delete what she knows", Icon: Sparkles, iconClass: "w-5 h-5 text-fuchsia-400" },

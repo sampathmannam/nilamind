@@ -1,15 +1,68 @@
-import { ChevronRight, Sparkles } from "lucide-react";
+import React from "react";
+import { ChevronRight, Sparkles, TrendingUp, Target, CheckCircle, X } from "lucide-react";
 import { buildYouGroups } from "./youRows";
 import { computeCompassionateStreak } from "../services/streaks";
+import { secureLocal } from "../services/secureLocal";
+import { getIntention, setIntention, completeIntention, clearIntention, INTENTION_OPTIONS, isIntentionCompleted, getCompletionAck, markAckShown } from "../services/weeklyIntention";
+
+function getWeekSnapshot(): { checkinDays: number; topEmotion: string | null } | null {
+  try {
+    const raw = secureLocal.getItem("nilamind_checkins");
+    if (!raw) return null;
+    const list = JSON.parse(raw);
+    if (!Array.isArray(list) || list.length === 0) return null;
+    const d = new Date();
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    const weekStart = new Date(d.getFullYear(), d.getMonth(), diff).toISOString().split("T")[0];
+    const weekEntries = list.filter((e: any) => e?.date && e.date >= weekStart);
+    if (weekEntries.length === 0) return null;
+    const counts: Record<string, number> = {};
+    for (const e of weekEntries) {
+      const em = (e.emotion || "").replace(/\s*\(Nila\)/g, "").toLowerCase().trim();
+      if (em) counts[em] = (counts[em] || 0) + 1;
+    }
+    let topEmotion: string | null = null, topCount = 0;
+    for (const [em, c] of Object.entries(counts)) {
+      if (c > topCount) { topCount = c; topEmotion = em; }
+    }
+    return { checkinDays: weekEntries.length, topEmotion };
+  } catch { return null; }
+}
 
 export default function YouScreen({ go }: { go: (target: string) => void }) {
   const groups = buildYouGroups();
+  const weekSnapshot = getWeekSnapshot();
+  const [intention, setIntentionState] = React.useState(getIntention());
+  const [showPicker, setShowPicker] = React.useState(false);
   let streak = { current: 0, totalActiveDays: 0, message: "Welcome" };
   try {
     const s = computeCompassionateStreak();
     streak = { current: s.current, totalActiveDays: s.totalActiveDays, message: s.message };
   } catch {
     /* ignore */
+  }
+
+  const handleSetIntention = (text: string) => {
+    const i = setIntention(text);
+    setIntentionState(i);
+    setShowPicker(false);
+  };
+
+  const handleComplete = () => {
+    completeIntention();
+    setIntentionState(getIntention());
+  };
+
+  const handleClear = () => {
+    clearIntention();
+    setIntentionState(null);
+  };
+
+  const ack = getCompletionAck();
+  if (ack) {
+    // auto-mark shown after a tick
+    setTimeout(() => markAckShown(), 0);
   }
 
   return (
@@ -32,6 +85,110 @@ export default function YouScreen({ go }: { go: (target: string) => void }) {
           </p>
         )}
       </div>
+
+      {/* Weekly snapshot — visible when the user has check-in data this week */}
+      {weekSnapshot && weekSnapshot.checkinDays > 0 && (
+        <div className="glass rounded-2xl p-4">
+          <div className="flex items-center gap-3">
+            <TrendingUp className="w-5 h-5 text-emerald-400 shrink-0" aria-hidden="true" />
+            <div className="text-xs text-slate-400">
+              <span className="text-slate-200 font-semibold">{weekSnapshot.checkinDays} day{weekSnapshot.checkinDays > 1 ? "s" : ""}</span> checked in this week
+              {weekSnapshot.topEmotion && (
+                <> · mostly <span className="text-slate-200 font-semibold capitalize">{weekSnapshot.topEmotion}</span></>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Weekly intention — gentle micro-commitment */}
+      {ack && (
+        <div className="glass rounded-2xl p-4 border-l-4 border-l-emerald-500">
+          <div className="flex items-center gap-3">
+            <CheckCircle className="w-5 h-5 text-emerald-400 shrink-0" />
+            <p className="text-xs text-slate-300 leading-relaxed">{ack}</p>
+          </div>
+        </div>
+      )}
+      {intention && !intention.completed && (
+        <div className="glass rounded-2xl p-4">
+          <div className="flex items-start gap-3">
+            <Target className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-slate-400">This week's intention</p>
+              <p className="text-sm text-slate-200 font-medium mt-0.5">{intention.text}</p>
+              <div className="flex gap-2 mt-3">
+                <button
+                  onClick={handleComplete}
+                  className="px-3 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-xs font-medium transition-colors cursor-pointer"
+                >
+                  Mark done
+                </button>
+                <button
+                  onClick={handleClear}
+                  className="px-3 py-1.5 rounded-lg hover:bg-slate-800/50 text-slate-500 text-xs font-medium transition-colors cursor-pointer"
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {(!intention || intention.completed) && !ack && (
+        <button
+          onClick={() => setShowPicker(true)}
+          className="w-full glass hover:brightness-125 p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left flex items-center gap-3"
+        >
+          <span className="w-10 h-10 rounded-full sun-cta flex items-center justify-center shrink-0">
+            <Target className="w-5 h-5 text-white" />
+          </span>
+          <span className="flex-1 min-w-0">
+            <span className="block text-sm font-bold text-slate-100">Set a gentle intention</span>
+            <span className="block text-[11px] text-slate-400">One small thing you'd like to try this week</span>
+          </span>
+          <ChevronRight className="w-5 h-5 text-slate-500 shrink-0" />
+        </button>
+      )}
+
+      {/* Intention picker modal */}
+      {showPicker && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-end" onClick={() => setShowPicker(false)}>
+          <div className="w-full bg-page rounded-t-2xl p-4 max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-slate-100">Set an intention</h2>
+              <button onClick={() => setShowPicker(false)} className="p-2 text-slate-400 hover:text-slate-200">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <p className="text-xs text-slate-400 mb-4">Pick one, or write your own. No pressure — just a gentle nudge.</p>
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {INTENTION_OPTIONS.map((opt) => (
+                <button
+                  key={opt}
+                  onClick={() => { handleSetIntention(opt); }}
+                  className="w-full text-left glass hover:brightness-125 p-3 rounded-xl transition-all cursor-pointer"
+                >
+                  <span className="text-sm text-slate-200">{opt}</span>
+                </button>
+              ))}
+              <div className="pt-2 border-t border-slate-800">
+                <input
+                  type="text"
+                  placeholder="Or write your own…"
+                  className="w-full glass rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && e.currentTarget.value.trim()) {
+                      handleSetIntention(e.currentTarget.value.trim());
+                    }
+                  }}
+                  autoFocus
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {groups.map((g) => (
         <section key={g.title} className="space-y-2">

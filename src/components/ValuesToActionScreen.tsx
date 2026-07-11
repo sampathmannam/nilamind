@@ -36,6 +36,7 @@ import {
   TrendingUp,
   Footprints,
 } from "lucide-react";
+import { hapticLight, hapticSuccess } from "../hooks/useHaptics";
 
 // "Values to Action" — zero-migration merge of the Values Compass (WHY: what matters, where life has
 // drifted) and Behavioural Activation (DO: act before the mood catches up). All three legacy stores
@@ -98,6 +99,7 @@ export default function ValuesToActionScreen() {
     saveValues(snap);
     setSnapshot(snap);
     setValuesMode("review");
+    hapticSuccess();
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
   const addAction = (domainId: string) => {
@@ -115,6 +117,7 @@ export default function ValuesToActionScreen() {
   };
   const markStepDone = (a: CommittedAction) => {
     setActions(upsertAction({ ...a, status: "done", doneDate: todayStr() }));
+    hapticLight();
   };
 
   // ── Activity handlers ──
@@ -134,6 +137,7 @@ export default function ValuesToActionScreen() {
       status: "planned",
     };
     setActivities(upsertActivity(entry));
+    hapticLight();
     resetChoice();
   };
   const startRating = (title: string, category: BACategory, existingId?: string) => {
@@ -154,6 +158,7 @@ export default function ValuesToActionScreen() {
       note: rating.note.trim() || undefined,
     };
     setActivities(upsertActivity(entry));
+    hapticSuccess();
     setRating(null);
     resetChoice();
   };

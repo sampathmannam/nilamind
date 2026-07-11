@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { Mountain, Plus, X } from "lucide-react";
+import { Mountain, Plus, X, CheckCircle } from "lucide-react";
 import { createHierarchy, addStep, removeStep, completeStep, loadHierarchy, saveHierarchy, completionRate, averageSudReduction, type ExposureHierarchy } from "../services/exposureHierarchy";
 import { scanForCrisis } from "../safety";
+import { hapticSuccess } from "../hooks/useHaptics";
 import CrisisLines from "./CrisisLines";
 import { suppressNudgesForCrisis } from "../services/notifications";
 
@@ -13,6 +14,7 @@ export default function ExposureHierarchyScreen() {
   const [completingStep, setCompletingStep] = useState<string | null>(null);
   const [postSuds, setPostSuds] = useState(50);
   const [learning, setLearning] = useState("");
+  const [celebratedStep, setCelebratedStep] = useState<string | null>(null);
   // §9: a free-text field is a crisis-disclosure surface. If the input reads as crisis, we surface help
   // instead of treating it as an exposure — the deterministic gate, matching ReachOut/Psychoed.
   const [crisisShown, setCrisisShown] = useState(false);
@@ -52,6 +54,9 @@ export default function ExposureHierarchyScreen() {
     const updated = completeStep(hierarchy, stepId, step.suds, postSuds, learning);
     saveHierarchy(updated);
     refresh();
+    hapticSuccess();
+    setCelebratedStep(step.description);
+    setTimeout(() => setCelebratedStep(null), 3000);
     setCompletingStep(null); setPostSuds(50); setLearning("");
   }
 
@@ -98,6 +103,17 @@ export default function ExposureHierarchyScreen() {
             </div>
           )}
         </div>
+
+        {/* Celebration message after step completion */}
+        {celebratedStep && (
+          <div className="glass rounded-2xl p-4 border-l-4 border-l-emerald-500 flex items-center gap-3">
+            <CheckCircle className="w-5 h-5 text-emerald-400 shrink-0" />
+            <p className="text-xs text-slate-300 leading-relaxed">
+              <span className="text-emerald-300 font-semibold">Step completed</span> — {celebratedStep}.
+              That takes courage, even when it's hard.
+            </p>
+          </div>
+        )}
 
         {completingStep ? (
           <div className="glass rounded-2xl p-4 space-y-3 border-l-4 border-l-emerald-500">

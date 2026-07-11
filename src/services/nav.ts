@@ -6,6 +6,7 @@
 export type TabView = "diary" | "plan" | "nila" | "today" | "you";
 
 export type AuxView =
+  | "about_nila"
   | "thought_record"
   | "self_compassion"
   | "settings"
@@ -41,7 +42,7 @@ export const TAB_TARGETS: readonly TabView[] = [
 ];
 
 export const KNOWN_AUX_VIEWS: readonly AuxView[] = [
-   "thought_record", "self_compassion", "settings", "behaviour", "reach_out", "assessment",
+   "about_nila", "thought_record", "self_compassion", "settings", "behaviour", "reach_out", "assessment",
    "values_to_action", "skills", "dashboard", "your_data", "why", "nila_memory", "winddown", "understand", "pact",
    "learn", "crisis_rehearsal", "peer_support", "medication", "problem_solving", "values_work", "exposure", "relapse_plan", "caregiver", "episode",
   "diary",

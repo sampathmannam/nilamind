@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Wind, MessageCircle, Moon, LayoutGrid, Sparkles, ChevronRight } from "lucide-react";
+import { Wind, MessageCircle, Moon, LayoutGrid, Sparkles, ChevronRight, HeartHandshake, Sparkle } from "lucide-react";
 import { getTimeMode, getUserState, getGreeting } from "../services/modeEngine";
 import { hasCheckinToday } from "../services/checkin";
 import { secureLocal } from "../services/secureLocal";
 import { buildToolGroups } from "./toolsRows";
+import { loadInsights } from "../services/nilaInsights";
 import type { TimeMode, UserState } from "../types/modes";
 
 const MOOD_EMOJI: Record<string, string> = {
@@ -55,6 +56,45 @@ function formatDate(): string {
   return `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]}`;
 }
 
+function getWeekStart(): string {
+  const d = new Date();
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  return new Date(d.getFullYear(), d.getMonth(), diff).toISOString().split("T")[0];
+}
+
+function getWeekInsight(): { checkinCount: number; topEmotion: string | null } | null {
+  try {
+    const raw = secureLocal.getItem("nilamind_checkins");
+    if (!raw) return null;
+    const list = JSON.parse(raw);
+    if (!Array.isArray(list) || list.length === 0) return null;
+    const weekStart = getWeekStart();
+    const weekEntries = list.filter((e: any) => e?.date && e.date >= weekStart);
+    if (weekEntries.length === 0) return null;
+    const emotionCounts: Record<string, number> = {};
+    for (const e of weekEntries) {
+      const em = (e.emotion || "").replace(/\s*\(Nila\)/g, "").toLowerCase().trim();
+      if (em) emotionCounts[em] = (emotionCounts[em] || 0) + 1;
+    }
+    let topEmotion: string | null = null, topCount = 0;
+    for (const [em, count] of Object.entries(emotionCounts)) {
+      if (count > topCount) { topCount = count; topEmotion = em; }
+    }
+    return { checkinCount: weekEntries.length, topEmotion };
+  } catch { return null; }
+}
+
+function getNilaReflection(): string | null {
+  try {
+    const insights = loadInsights();
+    if (!insights.length) return null;
+    // Pick a random insight (rotates on each render, but stable within session is fine)
+    const idx = Math.floor(Math.random() * insights.length);
+    return insights[idx].text;
+  } catch { return null; }
+}
+
 export default function TodayScreen({
   go,
   phoneEnabled,
@@ -72,6 +112,16 @@ export default function TodayScreen({
   const todayMood = getTodayMood();
   const hero = getHeroAction(timeMode, userState);
   const groups = buildToolGroups({ go, onEpisode, phoneEnabled });
+  const weekInsight = getWeekInsight();
+  const nilaReflection = getNilaReflection();
+  const hasAnyCheckins = (() => {
+    try {
+      const raw = secureLocal.getItem("nilamind_checkins");
+      if (!raw) return false;
+      const list = JSON.parse(raw);
+      return Array.isArray(list) && list.length > 0;
+    } catch { return false; }
+  })();
 
   return (
     <div className="space-y-5 max-w-md mx-auto" id="today-hub">
@@ -80,6 +130,20 @@ export default function TodayScreen({
         <h1 className="editorial text-3xl text-slate-100">{greeting}</h1>
         <p className="text-sm text-slate-400">{formatDate()}</p>
       </header>
+
+      {/* Empty-state welcome — shown only on first launch when no check-ins exist yet */}
+      {!hasAnyCheckins && (
+        <div className="glass p-5 rounded-2xl space-y-2">
+          <div className="flex items-center gap-3">
+            <HeartHandshake className="w-6 h-6 text-blue-400 shrink-0" aria-hidden="true" />
+            <p className="text-sm font-semibold text-slate-100">Welcome to NilaMind</p>
+          </div>
+          <p className="text-xs text-slate-400 leading-relaxed">
+            Everything here stays on your device. Start with a check-in — it takes two taps.
+            Nila will suggest tools based on how you're feeling.
+          </p>
+        </div>
+      )}
 
       {/* Mood card — prompt to log if not checked in, show reflection if done */}
       <button
@@ -107,6 +171,35 @@ export default function TodayScreen({
         )}
         <ChevronRight className="w-5 h-5 text-slate-500 shrink-0 ml-auto" aria-hidden="true" />
       </button>
+
+      {/* Weekly insight card — contextual data summary when there's check-in data */}
+      {weekInsight && weekInsight.checkinCount > 0 && (
+        <div className="glass p-4 rounded-2xl">
+          <div className="flex items-center gap-3">
+            <Sparkles className="w-5 h-5 text-blue-400 shrink-0" aria-hidden="true" />
+            <p className="text-xs text-slate-400 leading-relaxed">
+              <span className="text-slate-200 font-semibold">{weekInsight.checkinCount} check-in{weekInsight.checkinCount > 1 ? "s" : ""}</span>
+              {weekInsight.topEmotion ? (
+                <> this week · mostly <span className="text-slate-200 font-semibold capitalize">{weekInsight.topEmotion}</span></>
+              ) : (
+                <> this week</>
+              )}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Nila's reflection — a durable insight from your history */}
+      {nilaReflection && (
+        <div className="glass p-4 rounded-2xl border-l-4 border-l-blue-500">
+          <div className="flex items-start gap-3">
+            <Sparkle className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" aria-hidden="true" />
+            <p className="text-xs text-slate-300 leading-relaxed">
+              <span className="text-slate-100 font-semibold">Nila noticed:</span> {nilaReflection}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Hero action — time-aware: wind-down at night, grounding when elevated, else check-in prompt */}
       <button

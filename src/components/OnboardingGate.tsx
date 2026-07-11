@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { LifeBuoy, ChevronRight, ChevronLeft, Shield, Globe, HeartHandshake } from "lucide-react";
+import { LifeBuoy, ChevronRight, ChevronLeft, Shield, Globe, HeartHandshake, MessageCircle, Check } from "lucide-react";
 import {
   completeOnboarding,
   getOnboardingRegion,
@@ -7,6 +7,12 @@ import {
 } from "../services/onboarding";
 import { allRegions, type RegionCode, getCrisisLines } from "../services/crisisResources";
 import { t } from "../services/i18n";
+import { secureLocal } from "../services/secureLocal";
+
+const USER_GOALS = [
+  "Feeling low", "Managing stress", "Managing anxiety",
+  "Tracking moods", "Building skills", "Just curious",
+] as const;
 
 interface OnboardingGateProps {
   onComplete: () => void;
@@ -23,7 +29,7 @@ const SLIDES = [
   {
     id: "privacy",
     title: "Your data stays with you",
-    body: "All your history, chats, and notes are stored locally and encrypted on this device. No accounts, no cloud, no ads.",
+    body: "All your history, chats, and insights are stored locally and encrypted on this device. No accounts, no cloud, no ads.",
     icon: <Shield className="w-10 h-10 text-emerald-400" />,
   },
   {
@@ -32,11 +38,29 @@ const SLIDES = [
     body: "This sets the crisis helplines shown if you ever need them. You can change it later in Settings.",
     icon: <Globe className="w-10 h-10 text-indigo-400" />,
   },
+  {
+    id: "how_nila_helps",
+    title: "How Nila helps",
+    body: "I can listen, suggest tools, and help you notice patterns — all based on what you share. Every feature is grounded in research you can explore anytime. I'm not a therapist and I don't diagnose — I'm a companion, not a replacement for care.",
+    icon: <MessageCircle className="w-10 h-10 text-blue-400" />,
+  },
+  {
+    id: "goals",
+    title: "What brings you here?",
+    body: "This helps me suggest the most useful things. Pick what fits — you can change it anytime.",
+    icon: <HeartHandshake className="w-10 h-10 text-amber-400" />,
+  },
 ];
 
 export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingGateProps) {
   const [step, setStep] = useState(0);
   const [region, setRegion] = useState<RegionCode>(getOnboardingRegion());
+  const [selectedGoals, setSelectedGoals] = useState<string[]>(() => {
+    try {
+      const raw = secureLocal.getItem("nilamind_user_goal");
+      return raw ? JSON.parse(raw) : [];
+    } catch { return []; }
+  });
 
   const slide = SLIDES[step];
   const isLast = step === SLIDES.length - 1;
@@ -46,7 +70,18 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
     setOnboardingRegion(code);
   };
 
+  const toggleGoal = (goal: string) => {
+    setSelectedGoals((prev) => {
+      const next = prev.includes(goal)
+        ? prev.filter((g) => g !== goal)
+        : [...prev, goal];
+      try { secureLocal.setItem("nilamind_user_goal", JSON.stringify(next)); } catch { /* best-effort */ }
+      return next;
+    });
+  };
+
   const finish = () => {
+    try { secureLocal.setItem("nilamind_user_goal", JSON.stringify(selectedGoals)); } catch { /* best-effort */ }
     completeOnboarding();
     onComplete();
   };
@@ -78,8 +113,9 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
 
         {slide.id === "region" && (
           <div className="w-full space-y-2 text-left">
-            <label className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Crisis lines</label>
+            <label htmlFor="region-select" className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Crisis lines</label>
             <select
+              id="region-select"
               value={region}
               onChange={(e) => handleRegionChange(e.target.value as RegionCode)}
               className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer"
@@ -89,6 +125,28 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
               ))}
             </select>
             <p className="text-[11px] text-slate-500">Preview: {preview}</p>
+          </div>
+        )}
+
+        {slide.id === "goals" && (
+          <div className="w-full flex flex-wrap justify-center gap-2">
+            {USER_GOALS.map((goal) => {
+              const selected = selectedGoals.includes(goal);
+              return (
+                <button
+                  key={goal}
+                  onClick={() => toggleGoal(goal)}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm transition-all cursor-pointer ${
+                    selected
+                      ? "bg-blue-500/20 border-blue-500/50 text-blue-300 font-semibold"
+                      : "bg-slate-800/50 border-slate-700/50 text-slate-400 hover:text-slate-300 hover:border-slate-600"
+                  }`}
+                >
+                  {selected && <Check className="w-4 h-4 stroke-[2.5]" />}
+                  {goal}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>

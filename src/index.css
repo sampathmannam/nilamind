@@ -207,6 +207,10 @@ html, body { background-color: var(--color-page); color: var(--color-slate-100);
 @keyframes sheet-slide-in { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 .animate-slide-in { animation: sheet-slide-in 200ms ease-out; }
 
+/* ── Sheet slide-out animation (200ms, ease-in) ── */
+@keyframes sheet-slide-out { from { transform: translateY(0); opacity: 1; } to { transform: translateY(100%); opacity: 0; } }
+.animate-slide-out { animation: sheet-slide-out 200ms ease-in forwards; }
+
 /* ── Tab crossfade ── */
 @keyframes tab-fade-in { from { opacity: 0; } to { opacity: 1; } }
 .animate-tab-fade { animation: tab-fade-in 150ms ease-out; }

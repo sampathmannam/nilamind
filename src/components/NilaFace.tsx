@@ -120,9 +120,15 @@ export default function NilaFace({ state, onClick, onLongPress, size = 160 }: Ni
       onClick={onClick}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
+      onKeyDown={(e) => {
+        if ((e.key === "Enter" || e.key === " ") && onLongPress) {
+          e.preventDefault();
+          onLongPress();
+        }
+      }}
       className="relative flex items-center justify-center cursor-pointer active:scale-95 transition-transform duration-150"
       style={{ width: size, height: size }}
-      aria-label="Talk to Nila"
+      aria-label="Talk to Nila — long press or press Enter for crisis resources"
     >
       <style>{`
         @keyframes nila-breathe {
