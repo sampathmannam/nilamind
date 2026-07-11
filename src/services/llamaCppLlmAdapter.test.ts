@@ -121,6 +121,30 @@ describe("createLlamaCppBackend", () => {
     expect(reply).toBe("Hello.");
   });
 
+  it("generate applies anti-repetition sampling so the stock 1B can't degenerate into loops", async () => {
+    // Regression guard for the "broken record" bug: stock Gemma-3-1B with NO repetition penalty
+    // (the binding defaults penalty_repeat=1.0 / dry_multiplier=0.0 = disabled) loops a sentence
+    // for the whole reply. The real completion MUST carry explicit repetition control.
+    const b = createLlamaCppBackend();
+    await flush();
+
+    await b.generate({
+      system: "s",
+      messages: [{ role: "user", content: "hi" }],
+      onToken: () => {},
+    });
+
+    // The real reply completion (n_predict:220), not the n_predict:1 warm prefill.
+    const realCall = mockCompletion.mock.calls.find(
+      ([opts]) => (opts as { n_predict?: number }).n_predict !== 1,
+    );
+    expect(realCall).toBeTruthy();
+    const opts = realCall![0] as Record<string, number>;
+    expect(opts.penalty_repeat).toBeGreaterThan(1); // flat repeat penalty active
+    expect(opts.penalty_last_n).toBeGreaterThanOrEqual(256); // window long enough to see a multi-sentence loop
+    expect(opts.dry_multiplier).toBeGreaterThan(0); // DRY sequence-repetition penalty active
+  });
+
   it("non-streaming fallback feeds full text through onToken once when streaming never fires", async () => {
     mockCompletion.mockImplementation(
       () => Promise.resolve({ text: "Full reply." }),

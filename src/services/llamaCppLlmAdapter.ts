@@ -122,6 +122,23 @@ export function createLlamaCppBackend(
             temperature: 0.4,
             top_k: 40,
             top_p: 0.95,
+            // Anti-repetition sampling. WITHOUT this the now-shipping STOCK Gemma-3-1B (small, NOT
+            // brevity-tuned, and run at a low temp that sharpens the distribution) degenerates into
+            // verbatim "broken record" loops — repeating one sentence for the entire reply. The binding
+            // DEFAULTS these OFF (penalty_repeat:1.0 and dry_multiplier:0.0 both mean "disabled"), so we
+            // MUST set them explicitly:
+            //   • penalty_repeat 1.1  — the well-tested llama.cpp CLI default; enough to discourage loops
+            //     without distorting the natural reuse of common words ("you", "feel") a wellness voice needs.
+            //   • penalty_last_n 256  — the 64 default is shorter than a single looped clause here; 256 spans
+            //     the whole reply so a multi-sentence loop is actually in the penalty window.
+            //   • DRY (dry_multiplier 0.8) — penalises repeated *sequences* (not just tokens) with an
+            //     exponentially growing cost; this is the decisive killer for the exact multi-sentence loop
+            //     above, and gentler on legitimate word reuse than cranking penalty_repeat high would be.
+            penalty_repeat: 1.1,
+            penalty_last_n: 256,
+            dry_multiplier: 0.8,
+            dry_base: 1.75,
+            dry_allowed_length: 2,
             // Stop on the Gemma turn boundaries so Nila never runs into a fabricated next turn.
             stop: ["<end_of_turn>", "<start_of_turn>"],
           },
