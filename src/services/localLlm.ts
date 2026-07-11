@@ -1,4 +1,5 @@
-// The on-device LLM runtime SEAM for Nila's brain — the fine-tuned Gemma-3-4B (V2), shipped as a GGUF.
+// The on-device LLM runtime SEAM for Nila's brain — by default the stock Gemma-3-1B-it (~806 MB), shipped
+// as a GGUF; the fine-tuned Gemma-3-4B (V2) is an optional revert/side-load, not the default (2026-07-07 speed A/B).
 //
 // The real binding (llama.cpp via llama-cpp-capacitor) is a NATIVE, device-only dependency that
 // cannot run in the web build or in node/test — so it is deliberately NOT imported here. Instead the

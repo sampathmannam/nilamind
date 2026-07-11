@@ -132,7 +132,7 @@ An F-Droid-format repository, installable from inside the F-Droid client, that a
 signed APK** (no rebuild-from-source) and merely *flags* prebuilt/native bits as disclosed
 anti-features. It would be a fine home **except for its size limit**. Mainline f-droid.org is a
 separate, stricter matter — it builds from source and rejects the prebuilt `libllama-cpp-arm64.so`
-(the 4B inference engine).
+(the native llama.cpp inference engine).
 
 ### Prereqs (already done in this repo)
 - ✅ FOSS license (`LICENSE`, Apache-2.0) and public source on GitHub.
