@@ -29,6 +29,7 @@ const YourDataScreen = lazy(() => import("./components/YourDataScreen"));
 const WhyScreen = lazy(() => import("./components/WhyScreen"));
 const NilaMemoryScreen = lazy(() => import("./components/NilaMemoryScreen"));
 const WindDownScreen = lazy(() => import("./components/WindDownScreen"));
+const SocialRhythmScreen = lazy(() => import("./components/SocialRhythmScreen"));
 // #21 (audit): module-scoped so it isn't re-created on every App render (which remounted DiaryCardScreen,
 // flashed Suspense, and discarded the user's unsaved emotion sliders / notes on any parent state change).
 const DiaryCardScreen = lazy(() => import("./components/DiaryCardScreen"));
@@ -88,6 +89,7 @@ const AUX_LABELS: Partial<Record<AuxView, string>> = {
   why: "Why we built this",
   nila_memory: "What Nila remembers",
   winddown: "Wind down",
+  social_rhythm: "Social rhythm",
   reach_out: "Reach out",
   pact: "PACT plan",
   learn: "Learn",
@@ -119,6 +121,7 @@ function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () 
     case "why": return <WhyScreen />;
     case "nila_memory": return <NilaMemoryScreen />;
     case "winddown": return <WindDownScreen />;
+    case "social_rhythm": return <SocialRhythmScreen />;
     case "reach_out": return <ReachOutScreen />;
     case "pact": return <PactScreen />;
     case "learn": return <LearnScreen />;

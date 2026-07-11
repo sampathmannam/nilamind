@@ -33,6 +33,7 @@ export type AuxView =
   | "caregiver"
   | "episode"
   | "diary"
+  | "social_rhythm"
   | "ema_checkin";
 
 export const TAB_TARGETS: readonly TabView[] = [
@@ -44,6 +45,7 @@ export const KNOWN_AUX_VIEWS: readonly AuxView[] = [
    "values_to_action", "skills", "dashboard", "your_data", "why", "nila_memory", "winddown", "understand", "pact",
    "learn", "crisis_rehearsal", "peer_support", "medication", "problem_solving", "values_work", "exposure", "relapse_plan", "caregiver", "episode",
   "diary",
+    "social_rhythm",
     "armed_checkin",
     "ema_checkin",
   ];
