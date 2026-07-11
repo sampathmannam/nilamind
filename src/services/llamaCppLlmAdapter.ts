@@ -20,6 +20,8 @@ import type { LocalLlmBackend, LocalGenParams } from "./localLlm";
 // Prompt construction lives in gemmaPrompt.ts (pure, unit-tested, no native import). We pass a raw
 // prompt STRING (not messages[]) to dodge the binding's crashing jinja path — see that file for why.
 import { toGemmaPrompt, windowMessages } from "./gemmaPrompt";
+// Sentence-boundary trim for a length-capped reply (pure, unit-tested).
+import { trimToLastSentence } from "./chatText";
 
 // Side-loaded GGUF in the app's own external files dir (adb push, mirrors the capgo .task path). The
 // PRODUCTION path is downloadModel() on first run — deferred; side-load validates the end-to-end brain.
@@ -112,11 +114,13 @@ export function createLlamaCppBackend(
         const res = await ctx.completion(
           {
             prompt,
-            // Cap reply length — decode is the per-token cost on CPU. 80 was sized for the fine-tuned 4B's
-            // trained ~50-word brevity; the now-shipping STOCK Gemma-3-1B is NOT brevity-tuned and hit that
-            // cap mid-sentence. 220 matches gemmaPrompt.ts REPLY_RESERVE (n_ctx budget) and lets a normal
-            // reply finish; the Gemma <end_of_turn> stop still ends most replies well before this.
-            n_predict: 220,
+            // Hard cap on reply length. A short, warm companion reply is 1-3 sentences (~60-90 tokens);
+            // 128 leaves headroom for the rare "one plain fact, then back to them" turn while making an
+            // essay PHYSICALLY impossible on a 1B that ignores the persona's brevity instruction. Decode is
+            // the per-token CPU cost, so this also speeds replies up. trimToLastSentence() below cleans any
+            // reply that actually hits this cap so it never ends mid-thought. (Was 220 — sized before the
+            // companion-mode persona + this cap made short replies the norm.)
+            n_predict: 128,
             // Low temp tracks the validated greedy behaviour (briefer, more in-distribution) — the model
             // was fine-tuned for ~50-word replies; high temp drifts longer + slower to decode.
             temperature: 0.4,
@@ -157,6 +161,9 @@ export function createLlamaCppBackend(
         let text = (res?.text || full).trim();
         const cut = text.search(/<(?:end|start)_of_turn>/);
         if (cut !== -1) text = text.slice(0, cut).trim();
+        // If the length cap (not the <end_of_turn> stop) ended the reply, it may dangle mid-sentence —
+        // trim back to the last complete sentence so Nila never trails off.
+        text = trimToLastSentence(text);
         // No tokens streamed on-device (full empty) -> the streamed consumers (the voice-call speech
         // queue, the live §9 stream guard, the progressive bubble render) never ran. Feed the finished
         // reply through onToken ONCE so they all work: voice speaks it, the live guard scans it, it

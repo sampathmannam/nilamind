@@ -221,4 +221,20 @@ describe("createLlamaCppBackend", () => {
     ctrl.abort();
     await expect(gen).rejects.toThrow("aborted");
   });
+
+  it("caps reply length (<=128 predicted tokens) so the 1B can't essay", async () => {
+    const b = createLlamaCppBackend();
+    await flush();
+    await b.generate({ system: "s", messages: [{ role: "user", content: "hi" }], onToken: () => {} });
+    const realCall = mockCompletion.mock.calls.find(([o]) => (o as { n_predict?: number }).n_predict !== 1);
+    expect((realCall![0] as { n_predict: number }).n_predict).toBeLessThanOrEqual(128);
+  });
+
+  it("trims a length-cut reply back to the last complete sentence", async () => {
+    mockCompletion.mockResolvedValue({ text: "I hear you. That sounds really" });
+    const b = createLlamaCppBackend();
+    await flush();
+    const reply = await b.generate({ system: "s", messages: [{ role: "user", content: "hi" }], onToken: () => {} });
+    expect(reply).toBe("I hear you.");
+  });
 });
