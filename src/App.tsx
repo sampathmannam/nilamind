@@ -1,7 +1,7 @@
 // App.tsx — 3-tab IA (Nila / Tools / You) with aux-view routing.
 // BiometricGateHost and ModelSetupGate are standalone gates (no children).
 
-import { secureLocal, onPersistError, pendingWriteFailures } from "./services/secureLocal";
+import { secureLocal, onPersistError } from "./services/secureLocal";
 import React, { useState, useEffect, lazy, Suspense, useCallback, useMemo } from "react";
 import { App as CapApp } from "@capacitor/app";
 import { useReducedMotion } from "./hooks/useReducedMotion";
@@ -73,7 +73,6 @@ import { getArmedCheckin, armedCheckinBody } from "./services/armedCheckin";
 import { MessageSquare, LayoutGrid, User } from "lucide-react";
 import SheetContainer from "./components/SheetContainer";
 import { hapticLight } from "./hooks/useHaptics";
-import { OfflineIndicator } from "./components/OfflineIndicator";
 
 type AppTab = "nila" | "tools" | "you";
 
@@ -317,16 +316,6 @@ export default function App() {
           <span className="font-semibold text-amber-300">Save issue:</span>
           <span>Some changes couldn't be saved.</span>
           <button onClick={() => setSaveWarning(false)} className="ml-auto text-amber-400 hover:text-amber-200 cursor-pointer">Dismiss</button>
-        </div>
-      )}
-
-      {/* Offline indicator */}
-      {pendingWriteFailures().length > 0 && (
-        <div className="bg-amber-600/20 border-b border-amber-500/30 px-4 py-2 flex items-center gap-2 text-[11px] text-amber-200/90 z-40 shrink-0" id="offline-warning">
-          <span className="flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" aria-hidden="true" />
-            Offline — {pendingWriteFailures().length} change{pendingWriteFailures().length === 1 ? "" : "s"} pending
-          </span>
         </div>
       )}
 
