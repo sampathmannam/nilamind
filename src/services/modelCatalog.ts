@@ -2,12 +2,11 @@
 // IMPORTANT: `filename` MUST match the runtime adapter's DEFAULT_MODEL_PATH name, so a downloaded
 // file is found + loaded with no extra wiring. Hosted on a PUBLIC HuggingFace repo (no auth).
 //
-// SPEED A/B (2026-07-07): temporarily running the stock Gemma-3-1B-it instead of the fine-tuned 4B, to
-// feel whether ~3x-faster load + generation on the CPU path is worth the quality/specialisation tradeoff.
-// The 4B entry is preserved below (commented) so it's a one-line revert. Hosted on unsloth's PUBLIC repo
-// (verified non-gated: resolve HEAD -> user_id=public, HTTP 200) with an EXACT sizeBytes so the integrity
-// check still rejects a truncated transfer or a 401/HTML error-body (the old gated-repo 137-byte trap).
+// The primary model is Qwen2.5-1.5B (2026-07-11 speed swap), which has better instruction following
+// and architectural efficiency (GQA, better llama.cpp support) than the older Gemma-3-1B.
+// The Gemma entry is preserved below (commented) as a one-line revert for the old speed A/B.
 export type ModelRuntime = "task" | "gguf";
+export type PromptFormat = "gemma" | "qwen";
 
 export interface CatalogModel {
   id: string;
@@ -24,23 +23,34 @@ export interface CatalogModel {
   // until a real hash is filled in, so shipping without the hash never blocks a legitimate download.
   sha256?: string;
   runtime: ModelRuntime;
+  promptFormat: PromptFormat; // which prompt template builder to use
 }
 
 export const MODELS: CatalogModel[] = [
   {
-    id: "fast-1b",
+    id: "fast",
     label: "Nila's brain (fast)",
-    detail: "Gemma-3-1B · ~806 MB · much faster load + replies · runs entirely on your phone",
-    filename: "gemma-3-1b-it-Q4_K_M.gguf",
-    url: "https://huggingface.co/unsloth/gemma-3-1b-it-GGUF/resolve/main/gemma-3-1b-it-Q4_K_M.gguf",
-    sizeBytes: 806058272,
-    // #29 (audit): SHA-256 = the HF LFS oid, verified against the live LFS pointer
-    // (huggingface.co/unsloth/gemma-3-1b-it-GGUF/raw/main/gemma-3-1b-it-Q4_K_M.gguf) on 2026-07-09.
-    // modelDownload.verifyPart now checks the downloaded .part against this before it becomes the brain,
-    // defending a same-size poisoned GGUF that would otherwise slip past the byte-length + magic checks.
-    sha256: "8270790f3ab69fdfe860b7b64008d9a19986d8df7e407bb018184caa08798ebd",
+    detail: "Qwen2.5-1.5B · ~1.1 GB · fast & capable · runs entirely on your phone",
+    filename: "qwen2.5-1.5b-instruct-q4_k_m.gguf",
+    url: "https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF/resolve/main/qwen2.5-1.5b-instruct-q4_k_m.gguf",
+    sizeBytes: 1117320736,
+    // SHA-256 from HF LFS pointer (2026-07-11): model Qwen/Qwen2.5-1.5B-Instruct-GGUF
+    sha256: "6a1a2eb6d15622bf3c96857206351ba97e1af16c30d7a74ee38970e434e9407e",
     runtime: "gguf",
+    promptFormat: "qwen",
   },
+  // --- Old Gemma-3-1B (revert: uncomment and move above "fast" to restore the previous brain) ------------
+  // {
+  //   id: "gemma-1b",
+  //   label: "Nila's brain (fast)",
+  //   detail: "Gemma-3-1B · ~806 MB · much faster load + replies · runs entirely on your phone",
+  //   filename: "gemma-3-1b-it-Q4_K_M.gguf",
+  //   url: "https://huggingface.co/unsloth/gemma-3-1b-it-GGUF/resolve/main/gemma-3-1b-it-Q4_K_M.gguf",
+  //   sizeBytes: 806058272,
+  //   sha256: "8270790f3ab69fdfe860b7b64008d9a19986d8df7e407bb018184caa08798ebd",
+  //   runtime: "gguf",
+  //   promptFormat: "gemma",
+  // },
   // --- Original fine-tuned 4B specialist (revert: move this above the 1B to restore) --------------------
   // {
   //   id: "best-4b",
@@ -51,6 +61,7 @@ export const MODELS: CatalogModel[] = [
   //   sizeBytes: 2489894016,
   //   sha256: "338e11713fdf23c3b507de2b922fefb772557eb54efffea2e25ab9dd28e86fcf",
   //   runtime: "gguf",
+  //   promptFormat: "gemma",
   // },
 ];
 
