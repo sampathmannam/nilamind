@@ -5,6 +5,7 @@ import { loadIdentity, exportBackup } from "../services/identity";
 import { requireAuth } from "../services/biometricGate";
 import { generateCsvReport, buildTextReport, generatePdfBlob, saveReport } from "../services/exportReport";
 import { computeRetention } from "../services/retentionMetrics";
+import { isPilotEnrolled, computePilotSummary } from "../services/pilotStudy";
 import { recordExportAudit, getExportAudit, type ExportAuditEntry } from "../services/exportAudit";
 
 // "Your data" (AUTOPILOT Phase 2): see exactly what's stored, export it (encrypted, user-controlled),
@@ -96,7 +97,7 @@ export default function YourDataScreen() {
     setReportBusy(true);
     try {
       const checkins = loadCheckins();
-      const text = buildTextReport(checkins, undefined, computeRetention());
+      const text = buildTextReport(checkins, undefined, computeRetention(), isPilotEnrolled() ? computePilotSummary() ?? undefined : undefined);
       const blob = generatePdfBlob(text);
       if (blob) {
         await saveReport(blob, "nilamind-report.pdf", "application/pdf");

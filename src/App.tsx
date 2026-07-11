@@ -71,6 +71,7 @@ import { hasCompletedOnboarding } from "./services/onboarding";
 import { resolveNavTarget, type AuxView, type TabView } from "./services/nav";
 import { getArmedCheckin, armedCheckinBody } from "./services/armedCheckin";
 import { recordAppOpen } from "./services/retentionMetrics";
+import { getPilotState, markEndpointReminderScheduled, PILOT_ENDPOINT_REMINDER_BODY } from "./services/pilotStudy";
 import { MessageSquare, LayoutGrid, User } from "lucide-react";
 import SheetContainer from "./components/SheetContainer";
 import { hapticLight } from "./hooks/useHaptics";
@@ -182,6 +183,16 @@ export default function App() {
   // Nothing is sent anywhere — the metric only leaves the device via the user-initiated export.
   useEffect(() => {
     recordAppOpen();
+  }, []);
+
+  // If enrolled in the opt-in research pilot, schedule the single endpoint check-in reminder once. The body
+  // is content-free (routes to the assessment view). No-op for everyone not enrolled.
+  useEffect(() => {
+    const p = getPilotState();
+    if (p?.enrolled && !p.endpointReminderScheduled) {
+      void scheduleReminderAt(new Date(`${p.endpointDueDay}T10:00:00`), PILOT_ENDPOINT_REMINDER_BODY, "NilaMind", { view: "assessment" })
+        .then((r) => { if (r.ok) markEndpointReminderScheduled(); });
+    }
   }, []);
 
   // Re-roll EMA quick-check-in pings on every app open. Never prompts on startup; syncEmaCheckins bails if

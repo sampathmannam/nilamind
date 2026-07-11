@@ -107,6 +107,30 @@ describe("buildTextReport", () => {
   it("omits the retention block when no summary is given (existing callers unaffected)", () => {
     expect(buildTextReport([mockEntry()])).not.toContain("Retention & engagement");
   });
+
+  it("includes the pilot pre/post block when a pilot summary is provided", () => {
+    const text = buildTextReport([mockEntry()], undefined, undefined, {
+      enrolledDay: "2026-06-01",
+      endpointDueDay: "2026-06-29",
+      endpointReached: true,
+      daysRemaining: 0,
+      instruments: [
+        { id: "PHQ-9", label: "PHQ-9 (depression, lower is better)", higherIsBetter: false,
+          baseline: { total: 15, date: "2026-06-01" }, endpoint: { total: 8, date: "2026-06-30" }, change: -7, improved: true },
+        { id: "WHO-5", label: "WHO-5 (wellbeing, higher is better)", higherIsBetter: true,
+          baseline: { total: 40, date: "2026-06-01" }, endpoint: null, change: null, improved: null },
+      ],
+    });
+    expect(text).toContain("Research pilot");
+    expect(text).toContain("Enrolled: 2026-06-01; endpoint due: 2026-06-29 (reached)");
+    expect(text).toContain("PHQ-9 (depression, lower is better): 15 -> 8 (change -7, improved)");
+    expect(text).toContain("WHO-5 (wellbeing, higher is better): baseline 40; endpoint not yet recorded");
+    expect(text).toContain("single-arm pre/post");
+  });
+
+  it("omits the pilot block when no pilot summary is given", () => {
+    expect(buildTextReport([mockEntry()])).not.toContain("Research pilot");
+  });
 });
 
 describe("generatePdfBlob", () => {
