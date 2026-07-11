@@ -1,6 +1,6 @@
 import { App } from '@capacitor/app';
 import { Filesystem, Directory } from '@capacitor/filesystem';
-import { AppLauncher } from 'capacitor-app-launcher';
+import { AppLauncher } from '@capacitor/app-launcher';
 
 /** Simple semver compare – returns true if `latest` is newer than `current`. */
 function isNewerVersion(current: string, latest: string): boolean {

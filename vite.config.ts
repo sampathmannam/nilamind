@@ -136,7 +136,8 @@ export default defineConfig(({ mode }) => {
     ],
     build: {
       rollupOptions: {
-        output: {
+        external: ['@capacitor/app-launcher'],
+    output: {
           // Split heavy, non-boot-critical libraries into their own chunks so they're no longer welded
           // into the ~7.5 MB eager boot bundle. Each is only pulled when the screen that uses it mounts
           // (charts/insights → recharts, PDF export → jspdf, markdown rendering → react-markdown, the
