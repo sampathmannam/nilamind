@@ -132,6 +132,22 @@ describe("buildTextReport", () => {
   it("omits the pilot block when no pilot summary is given", () => {
     expect(buildTextReport([mockEntry()])).not.toContain("Research pilot");
   });
+
+  it("renders the assessment trajectory oldest-to-newest and derives the count from the array", () => {
+    const a = (over: Partial<AssessmentEntry>): AssessmentEntry => ({
+      id: "x", date: "2026-06-01", timestamp: "2026-06-01T10:00:00.000Z", instrument: "PHQ-9",
+      responses: [], total: 10, severity: "Moderate", safetyFlag: false, ...over,
+    });
+    const text = buildTextReport([mockEntry()], undefined, undefined, undefined, [
+      a({ instrument: "PHQ-9", date: "2026-06-30", total: 8, severity: "Mild" }),
+      a({ instrument: "PHQ-9", date: "2026-06-01", total: 15, severity: "Moderately severe" }),
+      a({ instrument: "GAD-7", date: "2026-06-15", total: 12, severity: "Moderate" }),
+    ]);
+    expect(text).toContain("Assessments over time");
+    expect(text).toContain("PHQ-9: 2026-06-01 = 15 (Moderately severe); 2026-06-30 = 8 (Mild)"); // sorted, oldest→newest
+    expect(text).toContain("GAD-7: 2026-06-15 = 12 (Moderate)");
+    expect(text).toContain("Screenings completed: 3"); // count derived from the array
+  });
 });
 
 describe("buildClinicalJson", () => {
