@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { generateCsvReport, buildTextReport, generatePdfBlob } from "./exportReport";
+import { generateCsvReport, buildTextReport, generatePdfBlob, buildClinicalJson } from "./exportReport";
 import type { CheckInEntry } from "../types";
+import type { AssessmentEntry } from "./assessments";
 
 function mockEntry(overrides: Partial<CheckInEntry> = {}): CheckInEntry {
   return {
@@ -130,6 +131,38 @@ describe("buildTextReport", () => {
 
   it("omits the pilot block when no pilot summary is given", () => {
     expect(buildTextReport([mockEntry()])).not.toContain("Research pilot");
+  });
+});
+
+describe("buildClinicalJson", () => {
+  const assess = (over: Partial<AssessmentEntry> = {}): AssessmentEntry => ({
+    id: over.id ?? "a1", date: over.date ?? "2026-06-15", timestamp: over.timestamp ?? "2026-06-15T10:00:00.000Z",
+    instrument: over.instrument ?? "PHQ-9", responses: over.responses ?? [], total: over.total ?? 12,
+    severity: over.severity ?? "Moderate", safetyFlag: over.safetyFlag ?? false,
+  });
+
+  it("emits schema-versioned, parseable JSON with a check-in summary and sorted assessments", () => {
+    const json = buildClinicalJson({
+      generatedAt: "2026-07-11T00:00:00.000Z",
+      checkins: [
+        mockEntry({ date: "2026-06-16", intensity: 4, sleepHours: 8 }),
+        mockEntry({ date: "2026-06-15", intensity: 6, sleepHours: 6 }),
+      ],
+      assessments: [assess({ date: "2026-06-30", total: 8, severity: "Mild" }), assess({ date: "2026-06-01", total: 15, severity: "Moderately severe" })],
+    });
+    const parsed = JSON.parse(json);
+    expect(parsed.schema).toBe("nilamind.clinical-export/v1");
+    expect(parsed.disclaimer).toMatch(/not a clinical or diagnostic tool/);
+    expect(parsed.checkins).toMatchObject({ count: 2, averageIntensity: 5, averageSleepHours: 7, firstDate: "2026-06-15", lastDate: "2026-06-16" });
+    expect(parsed.assessments.map((a: { date: string }) => a.date)).toEqual(["2026-06-01", "2026-06-30"]); // sorted ascending
+    expect(parsed.assessments[0]).toMatchObject({ instrument: "PHQ-9", total: 15, severity: "Moderately severe", safetyFlag: false });
+  });
+
+  it("passes retention/pilot through, or null when absent", () => {
+    const parsed = JSON.parse(buildClinicalJson({ generatedAt: "2026-07-11T00:00:00.000Z", checkins: [], assessments: [] }));
+    expect(parsed.retention).toBeNull();
+    expect(parsed.pilot).toBeNull();
+    expect(parsed.checkins).toMatchObject({ count: 0, averageIntensity: null });
   });
 });
 

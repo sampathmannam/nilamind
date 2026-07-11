@@ -7,7 +7,7 @@ import { secureLocal, appendToSecureArray } from "./secureLocal";
 const AUDIT_KEY = "nilamind_export_audit";
 const MAX_ENTRIES = 100;
 
-export type ExportKind = "backup" | "csv" | "pdf" | "clipboard";
+export type ExportKind = "backup" | "csv" | "pdf" | "json" | "clipboard";
 export type ExportDestination = "device_download" | "device_documents" | "clipboard";
 
 export interface ExportAuditEntry {
