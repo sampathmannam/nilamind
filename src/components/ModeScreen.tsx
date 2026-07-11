@@ -13,6 +13,7 @@ import { hasCheckinToday, getSkipFlag } from "../services/checkin";
 import { t } from "../services/i18n";
 import { useTypingSession } from "../hooks/useTypingSession";
 import { getSuggestions, timeSlot } from "../services/chatSuggestions";
+import { stripChatMarkdown } from "../services/chatText";
 import { suggestSkill } from "../services/skillSuggest";
 import { filterSkills, type Skill } from "../services/skillsLibrary";
 import NilaCheckIn from "./NilaCheckIn";
@@ -483,7 +484,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                       }`}
                       style={m.role === "user" ? { backgroundColor: "#6b21a8" } : undefined}
                     >
-                      {m.content}
+                      {m.role === "user" ? m.content : stripChatMarkdown(m.content)}
                     </div>
                   </div>
                 ))}
