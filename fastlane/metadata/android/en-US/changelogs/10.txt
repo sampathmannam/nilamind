@@ -1,0 +1,5 @@
+Research pilot (optional, on-device):
+- A new opt-in "Research pilot" in Settings lets you help find out whether NilaMind actually helps — by tracking your own PHQ-9 / GAD-7 / WHO-5 before and after ~4 weeks of use.
+- Everything stays on your device and is encrypted. Nothing is sent anywhere automatically; your export gains a private pre/post + retention summary only if you choose to share it.
+- One gentle endpoint reminder; withdraw any time and the pilot state is deleted.
+- Full method in docs/PILOT_PROTOCOL.md (single-arm feasibility design — a signal, not proof).
