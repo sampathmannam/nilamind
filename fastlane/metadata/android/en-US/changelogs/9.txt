@@ -1,0 +1,4 @@
+Transparency & honesty pass:
+- New public transparency/system card (docs/TRANSPARENCY.md): model card, the deterministic §9 safety architecture, and a privacy datasheet.
+- Corrected the docs to match what actually ships — the default on-device brain is the stock Gemma-3-1B (the fine-tuned 4B is a research preview, not the default).
+- On-device retention instrumentation: privately measures your own app-open history (encrypted on-device), shown only if you choose to include it in an export. No tracking, no server, no nudging.
