@@ -39,7 +39,7 @@ import { startVoiceSession, endVoiceSession } from "../services/voicePatterns";
 import LearnScreen from "./LearnScreen";
 import { parseSafetyPlan } from "../services/safetyPlan";
 import { shouldPromptReview, markSafetyPlanReviewed } from "../services/safetyPlanFollowUp";
-import { Settings, LifeBuoy, Mic, Send, MicOff, X, ShieldCheck } from "lucide-react";
+import { Settings, LifeBuoy, Mic, Send, MicOff, X, ShieldCheck, SquarePen } from "lucide-react";
 
 interface ModeScreenProps {
   onOpenSettings?: () => void;
@@ -73,6 +73,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   const [showSafetyPlanReview, setShowSafetyPlanReview] = useState(false);
   const [skillOffer, setSkillOffer] = useState<Skill | null>(null);
   const [pactNotice, setPactNotice] = useState<PactNotice | null>(null); // #30: surfaced pact (the human bridge)
+  const [confirmNewChat, setConfirmNewChat] = useState(false); // "new conversation" confirm dialog
   // #4 + #9 (audit): §9 crisis now routes through the App-level overlay (onOpenCrisis) so the Android hardware
   // back button closes it instead of exiting the app; a session that ever tripped §9 latches hadCrisisRef so
   // the transcript is never persisted/restored (keying the clear on a transient boolean re-persisted it on dismiss).
@@ -409,6 +410,19 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   const chatTyping = useTypingSession("chat");
   const question = getNilaQuestion(mode.timeMode, mode.userState, mode.hasCheckedIn);
 
+  // Explicit "new conversation" — clears the transcript (memory + encrypted store) and resets the live UI so
+  // the on-device model is no longer fed the prior turns (which a small model imitates over its system prompt).
+  // Also lifts the crisis latch so the fresh chat persists normally again.
+  const startNewConversation = () => {
+    clearSessionChat();
+    setMessages([]);
+    setSkillOffer(null);
+    setPactNotice(null);
+    setProtocolCard(protocolOfferCard(""));
+    hadCrisisRef.current = false;
+    setConfirmNewChat(false);
+  };
+
   return (
     <div className="flex flex-col h-full bg-page">
       {/* Header */}
@@ -417,6 +431,15 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           <span className="text-sm font-semibold text-slate-100">{greeting}</span>
         </div>
         <div className="flex items-center gap-2">
+          {messages.length > 0 && (
+            <button
+              onClick={() => setConfirmNewChat(true)}
+              className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500"
+              aria-label="New conversation"
+            >
+              <SquarePen className="w-4 h-4" />
+            </button>
+          )}
           <button
             onClick={onOpenSettings}
             className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500"
@@ -433,6 +456,42 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           </button>
         </div>
       </div>
+
+      {/* New-conversation confirm — clearing a mental-health chat is destructive, so gate it behind a gentle ask */}
+      {confirmNewChat && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-6"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Start a new conversation"
+          onClick={() => setConfirmNewChat(false)}
+        >
+          <div
+            className="w-full max-w-xs rounded-2xl bg-slate-900 border border-slate-700 p-5 space-y-3"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-sm font-semibold text-slate-100">Start a new conversation?</p>
+            <p className="text-xs text-slate-400">
+              This clears the current chat from your device. Nila won't carry what was said here into the new one.
+            </p>
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={() => setConfirmNewChat(false)}
+                className="flex-1 py-2 rounded-xl bg-slate-800 text-slate-200 text-sm cursor-pointer hover:bg-slate-700 transition-colors"
+              >
+                Keep it
+              </button>
+              <button
+                onClick={startNewConversation}
+                className="flex-1 py-2 rounded-xl text-white text-sm cursor-pointer transition-opacity hover:opacity-90"
+                style={{ backgroundColor: "#6b21a8" }}
+              >
+                Start fresh
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main content — scrollable for chat messages */}
       <div className="flex-1 min-h-0 overflow-y-auto flex flex-col items-center justify-start p-4 space-y-6 pt-8">
