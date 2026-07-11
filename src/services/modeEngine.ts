@@ -7,7 +7,14 @@ import { secureLocal } from "./secureLocal";
 import { detectElevationRisk } from "./elevationGuard";
 import type { ElevationLevel } from "./elevationGuard";
 import { emaElevationSignal } from "./ema";
+import { chatElevationSignal } from "./chatElevation";
 import type { UserState, TimeMode } from "../types/modes";
+
+// Pick the higher of two elevation levels (none < elevated < high).
+const ELEVATION_RANK: Record<ElevationLevel, number> = { none: 0, elevated: 1, high: 2 };
+function higherElevation(a: ElevationLevel, b: ElevationLevel): ElevationLevel {
+  return ELEVATION_RANK[a] >= ELEVATION_RANK[b] ? a : b;
+}
 
 /**
  * Get the current time-based mode.
@@ -54,10 +61,12 @@ export function getUserState(): UserState | null {
     base = null;
   }
 
-  // Fold in a sustained EMA-detected elevation trajectory. Wrapped separately so a storage error in the
-  // EMA read can never discard an otherwise-valid check-in state.
+  // Fold in the elevation signals: a sustained EMA trajectory today (emaElevationSignal) OR a still-active
+  // chat-detected elevation latch (chatElevationSignal — manic markers the user typed, within its cool-down).
+  // Take the higher of the two. Wrapped separately so a storage error here can never discard a valid
+  // check-in state.
   try {
-    return foldElevation(base, emaElevationSignal());
+    return foldElevation(base, higherElevation(emaElevationSignal(), chatElevationSignal()));
   } catch {
     return base;
   }

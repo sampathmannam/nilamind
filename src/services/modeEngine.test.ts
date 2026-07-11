@@ -7,10 +7,16 @@ vi.mock("./secureLocal", () => ({
   onPersistError: () => () => {},
 }));
 vi.mock("./ema", () => ({ emaElevationSignal: vi.fn(() => "none") }));
+vi.mock("./chatElevation", () => ({
+  chatElevationSignal: vi.fn(() => "none"),
+  noteChatElevation: vi.fn(),
+  clearChatElevation: vi.fn(),
+}));
 
 import { foldElevation, getUserState } from "./modeEngine";
 import { secureLocal } from "./secureLocal";
 import { emaElevationSignal } from "./ema";
+import { chatElevationSignal } from "./chatElevation";
 
 describe("foldElevation — EMA elevation folded into the derived state (manic-first)", () => {
   it("no EMA signal → base passes through unchanged", () => {
@@ -41,6 +47,8 @@ describe("getUserState — folds the EMA elevation signal into the check-in stat
     vi.mocked(secureLocal.getItem).mockReset();
     vi.mocked(emaElevationSignal).mockReset();
     vi.mocked(emaElevationSignal).mockReturnValue("none");
+    vi.mocked(chatElevationSignal).mockReset();
+    vi.mocked(chatElevationSignal).mockReturnValue("none");
   });
 
   it("calm check-in + rising EMA → elevated (the signal now reaches the pixels)", () => {
@@ -70,5 +78,21 @@ describe("getUserState — folds the EMA elevation signal into the check-in stat
       JSON.stringify([{ date: "2026-07-11", emotion: "Calm (Nila)", intensity: 4 }]),
     );
     expect(getUserState()).toBe("calm");
+  });
+
+  it("calm check-in + an active CHAT elevation latch → elevated (typed manic content settles the UI)", () => {
+    vi.mocked(secureLocal.getItem).mockReturnValue(
+      JSON.stringify([{ date: "2026-07-11", emotion: "Calm (Nila)", intensity: 4 }]),
+    );
+    vi.mocked(chatElevationSignal).mockReturnValue("elevated");
+    expect(getUserState()).toBe("elevated");
+  });
+
+  it("low check-in + chat elevation latch → stays low (self-report still wins)", () => {
+    vi.mocked(secureLocal.getItem).mockReturnValue(
+      JSON.stringify([{ date: "2026-07-11", emotion: "Low (Nila)", intensity: 4 }]),
+    );
+    vi.mocked(chatElevationSignal).mockReturnValue("high");
+    expect(getUserState()).toBe("low");
   });
 });
