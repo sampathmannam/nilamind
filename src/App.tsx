@@ -4,6 +4,7 @@
 import { secureLocal, onPersistError } from "./services/secureLocal";
 import React, { useState, useEffect, lazy, Suspense, useCallback, useMemo } from "react";
 import { App as CapApp } from "@capacitor/app";
+import { useReducedMotion } from "./hooks/useReducedMotion";
 
 // Eager — crisis path must never lazy-load
 import CrisisOverlay from "./components/CrisisOverlay";
@@ -135,6 +136,7 @@ function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () 
 }
 
 export default function App() {
+  const prefersReduced = useReducedMotion();
   const [isCrisisOpen, setIsCrisisOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isDashboardOpen, setIsDashboardOpen] = useState(false);
@@ -320,34 +322,39 @@ export default function App() {
       {/* Listening indicator (wake word) */}
       <ListeningIndicator active={wakeListening} onClick={() => setIsSettingsOpen(true)} />
 
-      {/* Main content area */}
-      <ErrorBoundary onError={(err: Error, info: React.ErrorInfo) => console.error("[ErrorBoundary] caught:", err, info)}>
-        <main className="flex-1 min-h-0 relative flex flex-col animate-tab-fade" key={activeTab}>
+      {/* Main content area — each tab isolated in its own ErrorBoundary so one tab crashing
+          can't take down the others (redesign §5: localized failure). */}
+      <main className="flex-1 min-h-0 relative flex flex-col animate-tab-fade" key={activeTab}>
         {activeTab === "nila" && (
-          <ModeScreen
-            onOpenSettings={() => setIsSettingsOpen(true)}
-            onOpenCrisis={activateCrisis}
-            onOpenDashboard={() => setIsDashboardOpen(true)}
-            onOpenMedication={() => setIsMedicationOpen(true)}
-            onOpenGrounding={(idx) => { setIsGroundingOpen(true); setGroundingExpandIndex(idx); }}
-            onOpenDiary={() => setActiveAuxView("diary" as AuxView)}
-            onOpenReachOut={() => setActiveAuxView("reach_out" as AuxView)}
-            onOpenWindDown={() => setActiveAuxView("winddown" as AuxView)}
-            onInternalSheetChange={(open) => setModeScreenHasSheet(open)}
-          />
+          <ErrorBoundary name="nila" onError={(err: Error, info: React.ErrorInfo) => console.error("[ErrorBoundary:nila] caught:", err, info)}>
+            <ModeScreen
+              onOpenSettings={() => setIsSettingsOpen(true)}
+              onOpenCrisis={activateCrisis}
+              onOpenDashboard={() => setIsDashboardOpen(true)}
+              onOpenMedication={() => setIsMedicationOpen(true)}
+              onOpenGrounding={(idx) => { setIsGroundingOpen(true); setGroundingExpandIndex(idx); }}
+              onOpenDiary={() => setActiveAuxView("diary" as AuxView)}
+              onOpenReachOut={() => setActiveAuxView("reach_out" as AuxView)}
+              onOpenWindDown={() => setActiveAuxView("winddown" as AuxView)}
+              onInternalSheetChange={(open) => setModeScreenHasSheet(open)}
+            />
+          </ErrorBoundary>
         )}
         {activeTab === "tools" && (
-          <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-6" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
-            <ToolsScreen go={go} phoneEnabled={phoneEnabled} onEpisode={onEpisode} />
-          </div>
+          <ErrorBoundary name="tools" onError={(err: Error, info: React.ErrorInfo) => console.error("[ErrorBoundary:tools] caught:", err, info)}>
+            <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-6" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
+              <ToolsScreen go={go} phoneEnabled={phoneEnabled} onEpisode={onEpisode} />
+            </div>
+          </ErrorBoundary>
         )}
         {activeTab === "you" && (
-          <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-6" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
-            <YouScreen go={go} />
-          </div>
+          <ErrorBoundary name="you" onError={(err: Error, info: React.ErrorInfo) => console.error("[ErrorBoundary:you] caught:", err, info)}>
+            <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-6" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
+              <YouScreen go={go} />
+            </div>
+          </ErrorBoundary>
         )}
       </main>
-      </ErrorBoundary>
 
       {/* Bottom tab bar */}
       <nav className="shrink-0 flex items-center justify-around border-t border-slate-800 bg-page/95 backdrop-blur pb-[max(8px,env(safe-area-inset-bottom))]" aria-label="Main navigation">
