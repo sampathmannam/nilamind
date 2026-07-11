@@ -98,7 +98,7 @@ export default function YourDataScreen() {
     setReportBusy(true);
     try {
       const checkins = loadCheckins();
-      const text = buildTextReport(checkins, undefined, computeRetention(), isPilotEnrolled() ? computePilotSummary() ?? undefined : undefined);
+      const text = buildTextReport(checkins, undefined, computeRetention(), isPilotEnrolled() ? computePilotSummary() ?? undefined : undefined, loadAssessments());
       const blob = generatePdfBlob(text);
       if (blob) {
         await saveReport(blob, "nilamind-report.pdf", "application/pdf");
