@@ -5,6 +5,8 @@ import { hasCheckinToday, getSkipFlag } from "./checkin";
 import { selfReportSleepSignal } from "./sleepInsight";
 import { secureLocal } from "./secureLocal";
 import { detectElevationRisk } from "./elevationGuard";
+import type { ElevationLevel } from "./elevationGuard";
+import { emaElevationSignal } from "./ema";
 import type { UserState, TimeMode } from "../types/modes";
 
 /**
@@ -20,40 +22,60 @@ export function getTimeMode(): TimeMode {
 }
 
 /**
- * Get the user's current emotional state from recent check-ins.
- * Returns null if no recent data.
+ * Get the user's current emotional state from recent check-ins, then fold in a sustained EMA elevation
+ * trajectory (see foldElevation). Returns null if there is no signal at all.
  */
 export function getUserState(): UserState | null {
+  let base: UserState | null = null;
   try {
     const raw = secureLocal.getItem("nilamind_checkins");
-    if (!raw) return null;
-    const checkins = JSON.parse(raw);
-    if (!Array.isArray(checkins) || checkins.length === 0) return null;
-
-    // Get most recent check-in
-    const sorted = [...checkins].sort((a: any, b: any) =>
-      new Date(b.date).getTime() - new Date(a.date).getTime()
-    );
-    const latest = sorted[0];
-    if (!latest) return null;
-
-    const emotion = (latest.emotion || "").toLowerCase();
-    const intensity = latest.intensity || 5;
-
-    // Map emotion to state
-    if (/anx|worr|panic|nervous/.test(emotion)) return "anxious";
-    if (/low|sad|down|empty|hopeless/.test(emotion)) return "low";
-    if (/calm|okay|good|fine/.test(emotion)) return "calm";
-    if (/angry|frustrated|irritab/.test(emotion)) return "elevated";
-    if (/overwhelm|stressed/.test(emotion)) return "anxious";
-
-    // High intensity = elevated state
-    if (intensity >= 7) return "elevated";
-
-    return "calm";
+    if (raw) {
+      const checkins = JSON.parse(raw);
+      if (Array.isArray(checkins) && checkins.length > 0) {
+        // Most recent check-in
+        const latest = [...checkins].sort(
+          (a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+        )[0];
+        if (latest) {
+          const emotion = (latest.emotion || "").toLowerCase();
+          const intensity = latest.intensity || 5;
+          // Map emotion → state (order matters; explicit self-report wins over intensity)
+          if (/anx|worr|panic|nervous/.test(emotion)) base = "anxious";
+          else if (/low|sad|down|empty|hopeless/.test(emotion)) base = "low";
+          else if (/calm|okay|good|fine/.test(emotion)) base = "calm";
+          else if (/angry|frustrated|irritab/.test(emotion)) base = "elevated";
+          else if (/overwhelm|stressed/.test(emotion)) base = "anxious";
+          else if (intensity >= 7) base = "elevated";
+          else base = "calm";
+        }
+      }
+    }
   } catch {
-    return null;
+    base = null;
   }
+
+  // Fold in a sustained EMA-detected elevation trajectory. Wrapped separately so a storage error in the
+  // EMA read can never discard an otherwise-valid check-in state.
+  try {
+    return foldElevation(base, emaElevationSignal());
+  } catch {
+    return base;
+  }
+}
+
+/**
+ * Fold a sustained EMA elevation signal (emaElevationSignal — a rapid valence+energy rise across today)
+ * into the derived UserState. A genuine upward trajectory upgrades a CALM or unknown state to the
+ * protective "elevated" posture so the Living Interface can quiet down — the pixel-level extension of the
+ * app's existing anti-mania-amplification steer (Østergaard 2023; elevationGuard already steers Nila's
+ * words). It NEVER overrides an explicit self-report of distress (anxious/low) — respecting what the
+ * person just told us — nor an already-elevated/crisis state. High-precision by construction: the signal
+ * only fires on a real valence+energy rise, so a truly calm person is not mislabelled and invalidated.
+ */
+export function foldElevation(base: UserState | null, emaLevel: ElevationLevel): UserState | null {
+  if (emaLevel === "none") return base;
+  if (base === null || base === "calm") return "elevated";
+  return base;
 }
 
 /**
