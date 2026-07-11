@@ -9,6 +9,8 @@ import {
   getGreeting,
   getNilaQuestion,
 } from "../services/modeEngine";
+import { clearChatElevation, noteChatElevation } from "../services/chatElevation";
+import { detectElevationRisk } from "../services/elevationGuard";
 import { hasCheckinToday, getSkipFlag } from "../services/checkin";
 import { t } from "../services/i18n";
 import { useTypingSession } from "../hooks/useTypingSession";
@@ -157,6 +159,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
 
   const handleCheckinLogged = (entry: CheckInEntry) => {
     setShowCheckin(false);
+    clearChatElevation(); // a fresh check-in supersedes any chat-detected elevation → relax the UI
     setMode(getCurrentMode());
     setMessages((prev) => [
       ...prev,
@@ -229,6 +232,10 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
         return;
       }
       crisisPendingRef.current = false; // #5-out: §9 verdict is NOT a crisis → this turn may now persist
+      // Manic-first: if the user typed manic content this turn (deterministic, LLM-independent), latch it so
+      // the interface settles — the pixel-level half of the elevation guard (which also steers Nila's words).
+      // Not written on a §9 turn (that path returned above). Picked up by the setMode(getCurrentMode()) below.
+      noteChatElevation(detectElevationRisk(msg).level);
       if (result.reply) {
         setMessages((prev) => [...prev, { role: "assistant", content: result.reply }]);
         if (result.reachedAI) {
@@ -237,6 +244,9 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
       }
       // After Nila replies, refresh the protocol card (continue if active, else re-offer).
       setProtocolCard(protocolOfferCard(msg));
+      // Chat-detected elevation may have latched during this turn (localNila → noteChatElevation) — recompute
+      // the mode so the interface settles (orb slows, home thins) in response to what the user just typed.
+      setMode(getCurrentMode());
       // Suggest a relevant coping skill if the user expressed distress
       const suggestion = suggestSkill(msg);
       setSkillOffer(suggestion?.skill ?? null);
@@ -460,7 +470,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
             </div>
 
             {/* Quick actions */}
-            <QuickActions onAction={handleQuickAction} timeMode={mode.timeMode} />
+            <QuickActions onAction={handleQuickAction} timeMode={mode.timeMode} userState={mode.userState} />
 
             {/* Messages — #23 (audit): render the FULL conversation (was slice(-5), so earlier turns became
                 unreachable) and auto-scroll to the newest reply via bottomRef below. */}

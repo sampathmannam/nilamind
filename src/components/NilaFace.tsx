@@ -3,6 +3,8 @@
 
 import React, { useMemo } from "react";
 import type { UserState } from "../types/modes";
+import { useReducedMotion } from "../hooks/useReducedMotion";
+import { faceMotion } from "./nilaFaceMotion";
 
 interface NilaFaceProps {
   state: UserState | null;
@@ -73,6 +75,10 @@ function getPalette(state: UserState | null): OrbPalette {
 
 export default function NilaFace({ state, onClick, onLongPress, size = 160 }: NilaFaceProps) {
   const palette = useMemo(() => getPalette(state), [state]);
+  // Motion is state- and reduced-motion-aware: 'elevated' SLOWS the orb (settles it), and
+  // prefers-reduced-motion stops all ambient motion (see nilaFaceMotion — manic-first + a11y).
+  const prefersReduced = useReducedMotion();
+  const motion = useMemo(() => faceMotion(state, prefersReduced), [state, prefersReduced]);
   const holdTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   // The orb's palette is tuned for a DARK background (low-opacity glows, a #0f172a fade-to-dark edge). On the
   // light/cream theme those wash out to near-invisibility, so on light we give the body a more opaque colored
@@ -128,7 +134,7 @@ export default function NilaFace({ state, onClick, onLongPress, size = 160 }: Ni
           width: size,
           height: size,
           background: `radial-gradient(circle, ${palette.glow} 0%, transparent 70%)`,
-          animation: "nila-breathe 3s ease-in-out infinite",
+          animation: motion.animate ? `nila-breathe ${motion.breatheSec}s ease-in-out infinite` : "none",
         }}
       />
 
@@ -138,7 +144,7 @@ export default function NilaFace({ state, onClick, onLongPress, size = 160 }: Ni
         width={size + ringWidth * 2}
         height={size + ringWidth * 2}
         viewBox={`0 0 ${size + ringWidth * 2} ${size + ringWidth * 2}`}
-        style={{ animation: "nila-spin-slow 20s linear infinite" }}
+        style={{ animation: motion.animate ? `nila-spin-slow ${motion.spinSec}s linear infinite` : "none" }}
         aria-hidden="true"
       >
         <circle
@@ -181,7 +187,7 @@ export default function NilaFace({ state, onClick, onLongPress, size = 160 }: Ni
           style={{
             background: `linear-gradient(135deg, transparent 40%, ${palette.glow} 50%, transparent 60%)`,
             backgroundSize: "200% 200%",
-            animation: "nila-shimmer 6s ease-in-out infinite",
+            animation: motion.animate ? `nila-shimmer ${motion.shimmerSec}s ease-in-out infinite` : "none",
             opacity: 0.4,
           }}
         />
