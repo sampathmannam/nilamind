@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { TrendingDown, Download, AlertCircle, CheckCircle, Gauge, Database } from "lucide-react";
+import { TrendingDown, Download, AlertCircle, CheckCircle, Gauge } from "lucide-react";
 import { useReducedMotion } from "../hooks/useReducedMotion";
 import { hapticLight } from "../hooks/useHaptics";
 import { getMetrics, recordMetric, onMetric, clearMetrics, type PerformanceMetric } from "../services/performance";
-import { getCacheStats, type CacheStats } from "../services/llmCache";
 import { secureLocal } from "../services/secureLocal";
 
-type Tab = "vitals" | "cache" | "errors";
+type Tab = "vitals" | "errors";
 
 const VITALS: { name: string; good: number; poor: number; unit: string }[] = [
   { name: "LCP", good: 2500, poor: 4000, unit: "ms" },
@@ -45,12 +44,10 @@ export default function PerformanceDashboard() {
   const prefersReduced = useReducedMotion();
   const [tab, setTab] = useState<Tab>("vitals");
   const [metrics, setMetrics] = useState<PerformanceMetric[]>([]);
-  const [cache, setCache] = useState<CacheStats>({ hits: 0, misses: 0, evictions: 0, hotSize: 0, diskSize: 0, hitRate: 0 });
   const [errors, setErrors] = useState<ErrorEntry[]>([]);
 
   const refresh = useCallback(() => {
     setMetrics(getMetrics());
-    setCache(getCacheStats());
     try {
       const raw = secureLocal.getItem("nilamind_error_log");
       const parsed = raw ? JSON.parse(raw) : [];
@@ -77,7 +74,7 @@ export default function PerformanceDashboard() {
   }, [refresh]);
 
   const handleExport = useCallback(() => {
-    const data = { exportedAt: Date.now(), metrics: getMetrics(), cache: getCacheStats(), errors };
+    const data = { exportedAt: Date.now(), metrics: getMetrics(), errors };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -114,7 +111,6 @@ export default function PerformanceDashboard() {
       <div className="flex gap-1 bg-page rounded-xl p-1">
         {([
           { id: "vitals", label: "Vitals", icon: Gauge },
-          { id: "cache", label: "Cache", icon: Database },
           { id: "errors", label: "Errors", icon: AlertCircle },
         ] as { id: Tab; label: string; icon: typeof Gauge }[]).map((t) => (
           <button
@@ -154,17 +150,6 @@ export default function PerformanceDashboard() {
           <p className="text-[10px] text-slate-500 leading-relaxed pt-1">
             Core Web Vitals are collected automatically. Use the app to populate real measurements.
           </p>
-        </div>
-      )}
-
-      {tab === "cache" && (
-        <div className="grid grid-cols-2 gap-2 text-center">
-          <Stat label="Cache hits" value={cache.hits} color="text-blue-400" />
-          <Stat label="Cache misses" value={cache.misses} color="text-amber-400" />
-          <Stat label="Hit rate" value={`${(cache.hitRate * 100).toFixed(0)}%`} color="text-emerald-400" />
-          <Stat label="Evictions" value={cache.evictions} color="text-rose-400" />
-          <Stat label="Hot size" value={cache.hotSize} color="text-slate-200" />
-          <Stat label="Disk size" value={cache.diskSize} color="text-slate-200" />
         </div>
       )}
 

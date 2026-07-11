@@ -16,7 +16,6 @@ import {
   reconcile, upsertUserInsight, editInsight, deleteInsight, insightsContextBlock,
 } from "./nilaInsights";
 import { registerLocalLlmBackend, type LocalLlmBackend } from "./localLlm";
-import { _resetForTest } from "./llmCache";
 
 const ins = (over: Partial<Insight> = {}): Insight => ({
   id: over.id ?? "ins_x", kind: over.kind ?? "pattern",
@@ -168,7 +167,7 @@ function recordingBackend(reply: string) {
 }
 
 describe("runReflection (on-device)", () => {
-  beforeEach(() => { store.clear(); ls.clear(); registerLocalLlmBackend(null); _resetForTest(); (globalThis as any).__resetReflectionBootGuard?.(); });
+  beforeEach(() => { store.clear(); ls.clear(); registerLocalLlmBackend(null); (globalThis as any).__resetReflectionBootGuard?.(); });
 
   it("valid array → reconciles and adds insights, consumes the day", async () => {
     registerLocalLlmBackend(backendReturning('[{"kind":"pattern","text":"Evenings are hard."}]'));

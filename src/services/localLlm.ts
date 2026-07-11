@@ -11,7 +11,6 @@
 // ollamaLlmAdapter.ts (desktop/dev). main.tsx registers the right one per platform once the model loads.
 
 import { runExclusive, tryRunExclusive } from "./modelLock";
-import { getCachedReply, setCachedReply } from "./llmCache";
 
 export interface LocalGenParams {
   /** Full system instruction (buildNilaSystem) — persona + on-device memory + skills. */
@@ -157,22 +156,6 @@ export async function generateOnDevice(
   opts?: { wait?: boolean },
 ): Promise<string | null> {
   if (!backend || !backend.isReady()) return null;
-
-  // ----- Cache lookup -----
-  const cached = getCachedReply(system, messages);
-  if (cached !== null) {
-    // If a token callback is supplied, emit the cached reply in token‑wise chunks so UI updates similarly.
-    if (onToken) {
-      // Simple chunking by whitespace – not true LLM tokens but provides incremental UI feedback.
-      const parts = cached.split(/\s+/);
-      for (const part of parts) {
-        if (signal?.aborted) break;
-        onToken(part + " ");
-      }
-    }
-    return cached;
-  }
-
   // Never start a second completion on the one plugin thread. AUX callers (reflection, coachAssist "Ask Nila")
   // pass nothing → tryRunExclusive returns null the instant the model is busy, so they defer and degrade
   // gracefully. A PRIMARY user-facing caller (the EPISODE conversation) passes { wait:true } → runExclusive so
@@ -180,10 +163,6 @@ export async function generateOnDevice(
   const run = opts?.wait ? runExclusive : tryRunExclusive;
   try {
     const reply = await run(() => rawGuardedGenerate({ system, messages, onToken, signal }));
-    if (reply !== null) {
-      // Store successful reply in cache for future identical prompts.
-      setCachedReply(system, messages, reply.trim());
-    }
     return reply === null ? null : reply.trim() || null;
   } catch {
     return null;
