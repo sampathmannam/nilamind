@@ -32,7 +32,7 @@ const TIPS = [
 ];
 
 export default function ModelSetupScreen({ onReady }: { onReady: () => void }) {
-  const model = MODELS[0]; // we ship a single model — the fine-tuned 4B specialist
+  const model = MODELS[0]; // we ship a single model — the stock Gemma-3-1B-it (2026-07-07 speed A/B; the fine-tuned 4B is an optional one-line-revert/side-load, not MODELS[0])
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState<DownloadProgress | null>(null);

@@ -62,11 +62,11 @@ if ((import.meta as any).env?.DEV) {
   });
 }
 
-// Native: on-device IS Nila's brain (no cloud). A size-verified on-disk model — the fine-tuned V2 4B
-// GGUF (side-loaded OR downloaded in-app), run via llama.cpp — is the brain. findInstalledModel only
-// returns a file whose byte length matches the catalog exactly, so a truncated/corrupt file is never
-// loaded. If no valid model is on disk yet, mark the brain as needing first-run setup so the user can
-// download the 4B in-app (no adb). If nothing is ready, isLocalLlmReady() stays false and the chat is
+// Native: on-device IS Nila's brain (no cloud). A size-verified on-disk model — by default the stock
+// Gemma-3-1B-it GGUF (a fine-tuned V2 4B GGUF is an optional revert/side-load), run via llama.cpp — is
+// the brain. findInstalledModel only returns a file whose byte length matches the catalog exactly, so a
+// truncated/corrupt file is never loaded. If no valid model is on disk yet, mark the brain as needing
+// first-run setup so the user can download the model in-app (no adb). If nothing is ready, isLocalLlmReady() stays false and the chat is
 // the calm offline companion. (No Google/Gemini-Nano path — the app has ZERO proprietary deps so it
 // stays cleanly FOSS for the F-Droid ecosystem.) Code-split so the native bindings never enter the web bundle.
 if (Capacitor.isNativePlatform()) {

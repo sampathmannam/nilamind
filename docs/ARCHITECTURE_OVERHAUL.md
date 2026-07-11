@@ -22,10 +22,14 @@
 - Created `ReachOutInlineCard` — template → send via SMS
 - Created `WindDownInlineCard` — park worry + breathing
 
-### Phase 3: Proactive System ✅
+### Phase 3: Proactive System (partial — prompt-context only, not autonomous)
 - Added 7 proactive triggers (check-in, sleep, evening, medication, diary, inactivity, weekly)
 - Added `proactiveContextBlock()` — tells Nila about the proactive moment
 - Wired proactiveEngine to nilaContext system prompt
+- **Scope reality:** `proactiveEngine`/`jitaiEngine` only rewrite the in-chat system prompt (read once the
+  user is already in chat). There is **no** autonomous greeting, scheduler, or push loop here, and the
+  claimed `ProactiveCard.tsx` / `StreamView.tsx` do not exist. User-facing proactivity is limited to the
+  opt-in / user-armed OS notifications in `notifications.ts`.
 
 ### Phase 4: Detail Sheets ✅
 - Created `DetailSheet.tsx` — slide-up overlay component
@@ -96,7 +100,7 @@ NilaMind has **30+ screens across 3 tabs**, requiring users to navigate to find 
 ### Core Concept: Nila IS the Interface
 
 Instead of 3 tabs with catalogs, the app becomes **a single scrollable stream** where:
-- Nila greets you proactively
+- Nila greets you proactively *(proposed redesign; in the shipped build the "proactive" path only rewrites the in-chat system prompt — there is no autonomous greeting. Opt-in daily nudges live in `notifications.ts`.)*
 - Tools are embedded as interactive cards IN the stream
 - Nila orchestrates: she surfaces the right tool at the right moment
 - The user never navigates away from Nila

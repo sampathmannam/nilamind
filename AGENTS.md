@@ -4,7 +4,8 @@ Read this before changing anything. It's for any coding agent (OpenCode, Claude 
 
 ## What this is
 A **privacy-first, ON-DEVICE mental-health WELLNESS companion.** Ionic/React/Capacitor app with a
-fine-tuned **Gemma-3-4B** brain running locally via a llama.cpp seam. India-first, **manic-first** (bipolar-aware).
+stock **Gemma-3-1B-it** brain running locally by default via a llama.cpp seam (a fine-tuned **Gemma-3-4B**
+is an optional revert/side-load, not the default — 2026-07-07 speed A/B). India-first, **manic-first** (bipolar-aware).
 Core promise: **nothing leaves your phone.**
 
 ## Golden rules — DO NOT VIOLATE

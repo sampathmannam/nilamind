@@ -1,7 +1,9 @@
-// llama-cpp-capacitor LocalLlmBackend adapter — the NATIVE/on-phone transport for Nila's V2 4B brain.
+// llama-cpp-capacitor LocalLlmBackend adapter — the NATIVE/on-phone transport for Nila's on-device brain
+// (by default the stock Gemma-3-1B-it; the fine-tuned V2 4B is an optional revert/side-load, not the default).
 //
 // Replaces the @capgo/capacitor-llm (MediaPipe .task, flat "User:/Nila:" string) path with llama.cpp +
-// a real GGUF, so Nila's brain is the therapy-tuned Gemma-3-4B QLoRA (V2). Two things this buys us that
+// a real GGUF. By default (2026-07-07 speed A/B) that GGUF is the stock, un-fine-tuned Gemma-3-1B-it; the
+// therapy-tuned Gemma-3-4B QLoRA (V2) is only the brain if it is restored/side-loaded. Two things this buys us that
 // the MediaPipe path could not:
 //   1. The model's REAL Gemma-3 chat template (messages[] -> native jinja) instead of a flat roleless
 //      transcript — the exact format V2 was validated under (fixes the silent role-confusion risk).
@@ -67,7 +69,7 @@ export function createLlamaCppBackend(
   })();
 
   return {
-    id: `gemma3-4b-llamacpp/${label}`,
+    id: `gguf-llamacpp/${label}`,
     isReady: () => ready && !!ctx,
     loadState: () => (ready && ctx ? "ready" : loadFailed ? "error" : "loading"),
 

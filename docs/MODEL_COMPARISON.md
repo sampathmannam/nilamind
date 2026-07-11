@@ -7,10 +7,12 @@
 
 ## ⚠️ Deployment status — read first (2026-07-07)
 
-**This is exploratory research, NOT the shipped configuration.** NilaMind's current on-device brain is
-**Gemma-3-4B** (`v2-4b-Q4_K_M.gguf`, ~2.5 GB), running **CPU-only via `llama-cpp-capacitor`** — device-verified
-on an ~11.5 GB-RAM Android (Moto, ZD2232FCR5), producing warm, contextual replies with §9 crisis safety firing
-model-independently. A Vulkan GPU inference path was tried and **removed** (it failed to compile shaders on the
+**This is exploratory research.** **Outcome (2026-07-07 speed A/B):** the lightweight-tier idea this doc
+explores was adopted — the shipped default on-device brain is now the **stock Gemma-3-1B-it**
+(`gemma-3-1b-it-Q4_K_M.gguf`, ~806 MB), for a much faster load and replies. The previously-shipped
+therapy-tuned **Gemma-3-4B** (`v2-4b-Q4_K_M.gguf`, ~2.5 GB) survives only as a one-line catalog revert /
+developer side-load. Both run **CPU-only via `llama-cpp-capacitor`** — device-verified on an ~11.5 GB-RAM
+Android (Moto, ZD2232FCR5), with §9 crisis safety firing model-independently. A Vulkan GPU inference path was tried and **removed** (it failed to compile shaders on the
 Adreno GPU → `VK_ERROR_DEVICE_LOST` → hard crash); CPU is the reliable transport. See
 [`nilaContext` / `modelDownload`](../src/services/modelDownload.ts) and the `fix(llm)` commit.
 
