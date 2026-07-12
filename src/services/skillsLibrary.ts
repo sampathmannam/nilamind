@@ -9,9 +9,9 @@
 //   ACT — Hayes, S. C., Strosahl, K. D., & Wilson, K. G. (2011). Acceptance and Commitment Therapy.
 //   CFT — Gilbert, P. (2009). The Compassionate Mind; Neff, K. (2011). Self-Compassion.
 
-export type Modality = "DBT" | "CBT" | "ACT" | "CFT";
+type Modality = "DBT" | "CBT" | "ACT" | "CFT" | "MBCT" | "BA";
 
-export interface SkillGroup {
+interface SkillGroup {
   id: string;
   label: string;
   blurb: string;
@@ -43,8 +43,12 @@ export const SKILLS: Skill[] = [
   // ── Crisis & Distress Tolerance (DBT) ──
   { id: "tipp", name: "TIPP", acronym: "Temperature · Intense exercise · Paced breathing · Paired muscle relaxation", modality: "DBT", group: "crisis",
     purpose: "Bring down extreme arousal fast (intensity 8–10) when the thinking brain is offline.",
-    steps: ["Temperature: hold something cold / splash cold water on your face (triggers the dive reflex).", "Intense exercise: ~20 jumping jacks or run in place for 1 minute to burn off adrenaline.", "Paced breathing: breathe out longer than you breathe in (e.g. in 4, out 6).", "Paired muscle relaxation: tense, then release muscle groups as you exhale."],
-    basis: "Linehan 2015, DBT Skills Training Manual — crisis survival skills; cold/longer-exhale raise vagal tone (Thayer & Lane 2009)." },
+    steps: ["Temperature: hold something cold / splash cold water on your face (triggers the dive reflex — lowers heart rate by ~10–15% within seconds).", "Intense exercise: ~20 jumping jacks or run in place for 1 minute to burn off adrenaline.", "Paced breathing: breathe out longer than you breathe in (e.g. in 4, out 6 — lengthening exhale activates vagal brake).", "Paired muscle relaxation: tense, then release muscle groups as you exhale."],
+    basis: "Linehan 2015, DBT Skills Training Manual — crisis survival skills; cold/longer-exhale raise vagal tone (Thayer & Lane 2009, Neurosci. Biobehav. Rev.; mammalian dive reflex: Kinoshita et al. 2021, Front. Physiol.)." },
+  { id: "temperature", name: "Temperature (TIPP)", modality: "DBT", group: "crisis",
+    purpose: "Trigger the mammalian dive reflex to rapidly down-regulate physiological arousal.",
+    steps: ["Fill a bowl with cold water (add ice if tolerable) or hold an ice pack to your face.", "Hold your breath and submerge your face for 10–15 seconds, or press the cold pack against your cheeks and forehead.", "The dive reflex slows your heart rate and increases parasympathetic tone within seconds.", "Repeat 2–3 times until you feel the physiological shift."],
+    basis: "Mammalian dive reflex triggers bradycardia and peripheral vasoconstriction (Kinoshita et al. 2021, Front. Physiol.); cold face stimulation reduces sympathetic arousal (Heath & Gibbs 1992)." },
   { id: "stop", name: "STOP", acronym: "Stop · Take a step back · Observe · Proceed mindfully", modality: "DBT", group: "crisis",
     purpose: "Interrupt an impulsive urge before you act on it.",
     steps: ["Stop — freeze, don't move or react.", "Take a step back — physically or mentally; breathe.", "Observe — what's happening inside and around you, just the facts.", "Proceed mindfully — choose the action that fits your goals."],
@@ -77,6 +81,10 @@ export const SKILLS: Skill[] = [
     purpose: "Shift from refusing reality to participating effectively in it.",
     steps: ["Notice willfulness: refusing, giving up, \"I won't.\"", "Ask: what does this moment actually need from me?", "Choose willingness — do the next effective thing, even small."],
     basis: "Linehan 2015, DBT Skills Training Manual (Distress Tolerance)." },
+  { id: "urge-surfing", name: "Urge Surfing", modality: "DBT", group: "crisis",
+    purpose: "Ride an intense urge or craving without acting on it — it will peak and pass.",
+    steps: ["Notice the urge as a physical sensation (tightness, heat, restlessness).", "Picture it as a wave: it rises, crests, and falls — you don't have to feed it.", "Breathe into the sensation and observe it without judgment.", "Urges typically peak within 15–30 minutes and fade if you don't act on them."],
+    basis: "Urge-surfing is a core relapse-prevention skill (Marlatt & Gordon 1985, Relapse Prevention); supported by mindfulness-based relapse prevention (Bowen et al. 2014, JAMA Psychiatry)." },
 
   // ── Mindfulness (DBT + adjacent) ──
   { id: "wise-mind", name: "Wise Mind", modality: "DBT", group: "mindfulness",
@@ -102,7 +110,23 @@ export const SKILLS: Skill[] = [
   { id: "name-it", name: "Name It to Tame It (Affect Labeling)", modality: "DBT", group: "mindfulness",
     purpose: "Lower a feeling's intensity by putting it into words.",
     steps: ["Say or write what you feel: \"I'm feeling ashamed / anxious.\"", "Naming shifts activity from the amygdala toward the prefrontal cortex and reduces intensity."],
-    basis: "Lieberman et al. 2007, Psychological Science (affect labeling)." },
+    basis: "Lieberman et al. 2007, Psychological Science (affect labeling); Torre & Lieberman 2018, Curr. Dir. Psychol. Sci." },
+  { id: "body-scan", name: "Body Scan", modality: "DBT", group: "mindfulness",
+    purpose: "Safely bring attention to body sensations and release held tension.",
+    steps: ["Sit or lie down and close your eyes gradually.", "Bring attention to your feet — just notice sensations without changing them.", "Slowly move attention up through legs, torso, arms, neck, and head.", "Spend 20–30 seconds on each area; if you encounter pain or numbness, breathe into it and stay curious.", "If your mind wanders, gently bring it back to the next body area."],
+    basis: "Body scan is a core MBCT practice (Segal, Williams & Teasdale 2002, Mindfulness-Based Cognitive Therapy); reduces rumination and emotional reactivity (Farb et al. 2010, NeuroImage)." },
+  { id: "rain", name: "RAIN", acronym: "Recognize · Allow · Investigate · Nurture", modality: "DBT", group: "mindfulness",
+    purpose: "Meet a difficult emotional moment with mindful presence and self-compassion.",
+    steps: ["Recognize what's happening — name the feeling or thought.", "Allow it to be there without fixing, judging, or pushing it away.", "Investigate with curiosity — where in your body do you feel this? What does it need?", "Nurture with kindness — put a hand on your heart and offer yourself warmth."],
+    basis: "RAIN originated in Insight Meditation (Kornfield 2008, The Wise Heart); adapted for therapy by Brach (2019, Radical Compassion)." },
+  { id: "loving-kindness", name: "Loving-Kindness (Metta)", modality: "CFT", group: "mindfulness",
+    purpose: "Cultivate goodwill toward yourself and others, countering shame and isolation.",
+    steps: ["Sit comfortably and bring to mind someone who naturally evokes warmth.", "Silently offer them phrases: \"May you be happy. May you be safe. May you be healthy. May you live with ease.\"", "After a few minutes, turn the same phrases toward yourself.", "Then extend to a neutral person, then to all beings."],
+    basis: "Loving-kindness meditation increases daily positive emotions and life satisfaction (Fredrickson et al. 2008, J. Pers. Soc. Psychol.); reduces self-criticism in depression (Shahar et al. 2015, J. Consult. Clin. Psychol.)." },
+  { id: "leaves-stream", name: "Leaves on a Stream", modality: "ACT", group: "mindfulness",
+    purpose: "Create distance from thoughts by watching them come and go.",
+    steps: ["Close your eyes and picture a gentle stream.", "Place each thought on a leaf floating past — don't jump on the leaf, just watch it drift.", "If a thought loops back, place it on a new leaf.", "You are the riverbank, not the stream — thoughts pass, you remain."],
+    basis: "Leaves-on-a-stream is a defusion and observing-self practice (Hayes & Smith 2005, Get Out of Your Mind and Into Your Life)." },
 
   // ── Emotion Regulation (DBT) ──
   { id: "check-the-facts", name: "Check the Facts", modality: "DBT", group: "emotion",
@@ -129,6 +153,14 @@ export const SKILLS: Skill[] = [
     purpose: "Let an emotion rise and fall without acting on it or suppressing it.",
     steps: ["Notice the emotion as a body sensation; locate it.", "Picture it as a wave — it rises, peaks, and falls if you don't feed it.", "Breathe and observe; don't push it away or amplify it.", "Emotions are time-limited when you stop fueling them with rumination."],
     basis: "Linehan 2015 (Emotion Regulation); urge/emotion surfing (Marlatt & Gordon, relapse-prevention)." },
+  { id: "abc-please", name: "ABC PLEASE", acronym: "Accumulate positives · Build mastery · Cope ahead · treat PhysicaL illness · balanced Eating · Avoid mood-altering · balanced Sleep · Exercise", modality: "DBT", group: "emotion",
+    purpose: "A comprehensive set of skills to reduce emotional vulnerability over time.",
+    steps: ["Accumulate short-term positives (one pleasant activity today) and long-term positives (build a life worth living).", "Build Mastery — do one small thing daily that gives a sense of accomplishment.", "Cope Ahead — rehearse a plan for an upcoming difficult situation.", "PLEASE: treat Physical illness, balanced Eating, Avoid mood-altering substances, balanced Sleep, Exercise — these lower the baseline vulnerability that emotions hijack."],
+    basis: "Linehan 2015, DBT Skills Training Manual (ABC PLEASE skill); emotion vulnerability model validated by Axelrod et al. 2013, Behav. Res. Ther." },
+  { id: "emotion-exposure", name: "Emotion Exposure (Urge Reduction)", modality: "CBT", group: "emotion",
+    purpose: "Reduce the intensity of a painful emotion by deliberately approaching it in safe doses.",
+    steps: ["Start with a mild emotion (e.g. mild sadness or anxiety at 3/10).", "Bring it to mind through a memory or image, and stay with the body sensation for 30–60 seconds.", "Notice the urge to escape or suppress — allow it without acting.", "Over repeated practice, the emotional response habituates and loses intensity."],
+    basis: "Emotion exposure therapy — emotional processing theory (Foa & Kozak 1986, Psychol. Bull.); inhibitory learning model (Craske et al. 2014, Behav. Res. Ther.)." },
 
   // ── Relationships (DBT Interpersonal Effectiveness) ──
   { id: "dearman", name: "DEAR MAN", acronym: "Describe · Express · Assert · Reinforce · (stay) Mindful · Appear confident · Negotiate", modality: "DBT", group: "relationships",
@@ -143,6 +175,14 @@ export const SKILLS: Skill[] = [
     purpose: "Interact in a way that leaves your self-respect intact.",
     steps: ["Be Fair to yourself and them.", "Don't over-apologise for existing or asking.", "Stick to your values — don't sell out to be liked.", "Be Truthful — no exaggerating or acting helpless."],
     basis: "Linehan 2015, DBT Skills Training Manual (Interpersonal Effectiveness)." },
+  { id: "think", name: "THINK (before reacting)", acronym: "Thoughtful · Helpful · Inspiring · Necessary · Kind", modality: "DBT", group: "relationships",
+    purpose: "Pause and reflect before sending a message or saying something you might regret.",
+    steps: ["Is it Thoughtful — have I considered the other person's perspective?", "Is it Helpful — does this need to be said right now?", "Is it Inspiring — do I want the conversation to go in a good direction?", "Is it Necessary — would silence also work?", "Is it Kind — can I say this with gentleness?"],
+    basis: "THINK is a popular interpersonal mindfulness tool with roots in DBT's interpersonal effectiveness and Buddhist Right Speech (skillful communication)." },
+  { id: "validation", name: "Validation (levels 1–6)", modality: "DBT", group: "relationships",
+    purpose: "Show the other person their feelings make sense, even if you disagree.",
+    steps: ["Listen without interrupting.", "Reflect back what you heard (level 2 validation).", "Read their mind — guess what they might be feeling but haven't said (level 4).", "Validate in context — their reaction makes sense given their history (level 5).", "Radical genuineness — treat them as capable, not fragile (level 6)."],
+    basis: "Linehan 2015, DBT Skills Training Manual (Interpersonal Effectiveness — validation); validation is a core mechanism of therapeutic alliance (Linehan 1997)." },
 
   // ── Thoughts (CBT) ──
   { id: "thought-record", name: "Thought Record", modality: "CBT", group: "thoughts",
@@ -168,7 +208,19 @@ export const SKILLS: Skill[] = [
   { id: "graded-exposure", name: "Graded Exposure", modality: "CBT", group: "thoughts",
     purpose: "Shrink anxiety and avoidance by approaching fears step by step.",
     steps: ["Build a ladder of feared situations from easiest to hardest.", "Start near the bottom; stay until anxiety drops by about half.", "Repeat until it's easy, then climb one rung.", "Avoidance feeds anxiety; approach starves it."],
-    basis: "Exposure is the most evidence-based treatment for anxiety disorders (Craske et al. 2014)." },
+    basis: "Exposure is the most evidence-based treatment for anxiety disorders (Craske et al. 2014, Behav. Res. Ther.); meta-analysis g=0.89 (Carpenter et al. 2018, Am. J. Psychiatry)." },
+  { id: "cognitive-continuum", name: "The Cognitive Continuum", modality: "CBT", group: "thoughts",
+    purpose: "Break out of all-or-nothing thinking by placing a thought on a spectrum.",
+    steps: ["Identify the black-and-white thought (\"I completely failed\", \"Nobody cares\").", "Ask: what's the middle ground? Has there been ANY evidence against the extreme?", "Rate the thought on a 0–100% continuum — where does the evidence actually fall?", "Revise to a more balanced statement that fits reality."],
+    basis: "Cognitive continuum is a core CBT technique for polarization (Beck 2011, Cognitive Behavior Therapy); all-or-nothing thinking predicts depression severity (Eaves & Rush 1984, J. Abnorm. Psychol.)." },
+  { id: "socratic-questioning", name: "Socratic Questioning (Guided Discovery)", modality: "CBT", group: "thoughts",
+    purpose: "Question your automatic thoughts with evidence and logic, guided by curiosity.",
+    steps: ["What is the evidence for and against this thought?", "What would I tell a close friend who had this same thought?", "What's an alternative way to see this situation?", "What's the most realistic outcome, not the worst or best?", "If my thought is true, what can I actually do about it?"],
+    basis: "Socratic questioning is a foundational CBT method for cognitive restructuring (Beck et al. 1979; Padesky & Greenberger 1995, Mind Over Mood)." },
+  { id: "three-cs", name: "Catch, Check, Change (The Three C's)", modality: "CBT", group: "thoughts",
+    purpose: "A quick three-step way to reframe an automatic negative thought.",
+    steps: ["Catch: notice the automatic negative thought — write it down if possible.", "Check: is this thought 100% true? What's the evidence? Is there a thinking trap here?", "Change: write a more balanced, realistic thought that fits the evidence better."],
+    basis: "The Three C's are widely used in CBT psychoeducation (Beck 2011); similar to cognitive restructuring in cognitive therapy for depression (Hollon & Beck 2013, Annu. Rev. Clin. Psychol.)." },
 
   // ── Acceptance & Values (ACT) ──
   { id: "defusion", name: "Cognitive Defusion", modality: "ACT", group: "values",
@@ -195,6 +247,10 @@ export const SKILLS: Skill[] = [
     purpose: "Find the stable 'you' that all your feelings pass through.",
     steps: ["Notice: thoughts, feelings, and roles change — but the awareness watching them stays.", "Rest as the observer for a moment.", "You are the sky; feelings are the weather."],
     basis: "Hayes et al. 2011, Acceptance and Commitment Therapy (self-as-context)." },
+  { id: "values-exposure", name: "Values-Based Exposure", modality: "ACT", group: "values",
+    purpose: "Face a feared situation because it matters, not to prove anything.",
+    steps: ["Identify a value (e.g. being a present parent, a brave friend).", "Find one feared action that would move you toward that value.", "Acknowledge the fear, then move toward it anyway — with the value as your reason.", "Afterward, notice: the value was real, the fear was temporary."],
+    basis: "Values-based exposure integrates ACT with exposure therapy (Twohig & Hayes 2008, J. Contemp. Psychother.); values-consistent action reduces avoidance (Flynn & Wilson 2020, Behav. Anal. Pract.)." },
 
   // ── Self-Compassion (CFT) ──
   { id: "soothing-breath", name: "Soothing Rhythm Breathing", modality: "CFT", group: "compassion",
@@ -213,6 +269,30 @@ export const SKILLS: Skill[] = [
     purpose: "Soften the inner critic by writing to yourself from a kind perspective.",
     steps: ["Write to yourself as you would to a dear friend in the same pain.", "Acknowledge the hurt; offer understanding, not fixes.", "Read it back slowly when the critic is loud."],
     basis: "Gilbert 2009; compassionate-mind training lowers self-criticism (Longe et al. 2010, NeuroImage)." },
+  { id: "compassionate-body-scan", name: "Compassionate Body Scan", modality: "CFT", group: "compassion",
+    purpose: "Bring a kind, attentive presence to each part of your body, especially places that hold tension.",
+    steps: ["Settle into a comfortable position and place a hand over your heart.", "As you scan each body area, imagine breathing kindness into it.", "For tense areas, don't try to force relaxation — hold them with gentle awareness.", "End with hands on your chest and belly, breathing into warmth."],
+    basis: "Compassionate body scan combines body awareness with affectionate attention (Gilbert 2009; Neff 2011); mindfully attending to the body reduces distress (Farb et al. 2010, NeuroImage)." },
+  { id: "common-humanity", name: "Common Humanity Meditation", modality: "CFT", group: "compassion",
+    purpose: "Counter shame and isolation by remembering you're not alone in your struggle.",
+    steps: ["Bring to mind your current difficulty or imperfection.", "Silently say: \"This is part of being human. Others have felt this too.\"", "Picture others around the world who also struggle with this — you are not separate in your pain.", "Breathe with the sense of shared connection rather than isolation."],
+    basis: "Common humanity is one of Neff's three pillars of self-compassion (Neff 2003, Self and Identity); reduces shame-linked cortisol and increases social connectedness (Breines & Chen 2012, J. Pers. Soc. Psychol.)." },
+  { id: "affectionate-breathing", name: "Affectionate Breathing", modality: "CFT", group: "compassion",
+    purpose: "Activate the soothing/affiliative system through slow, warm breathing directed toward the heart.",
+    steps: ["Slow your breath to a comfortable rhythm — approximately 5–6 breaths per minute.", "As you breathe in, imagine the breath flowing into your heart area.", "As you breathe out, imagine the breath carrying warmth through your whole body.", "Keep a gentle half-smile on your lips; stay with the feeling of warmth for 2–3 minutes."],
+    basis: "Affectionate breathing is a core CFT soothing-system practice (Gilbert 2009); slow breathing at ~5.5 breaths/min increases heart-rate variability and vagal tone (Thayer & Lane 2009, Neurosci. Biobehav. Rev.; Lehrer et al. 2003, Appl. Psychophysiol. Biofeedback)." },
+  { id: "compassionate-reframing", name: "Compassionate Reframing", modality: "CFT", group: "compassion",
+    purpose: "Catch the self-critical voice and offer a compassionate alternative. The inner critic usually wants to protect you — respond with wisdom, not more criticism.",
+    steps: ["Notice the self-critical thought: \"I'm such a failure.\"", "Reframe with a compassionate perspective: \"I'm struggling right now — that's hard, not a character verdict.\"", "Offer what you'd say to a dear friend in this same situation.", "Write both the critic's voice and the compassionate reframe side by side."],
+    basis: "CFT differentiates the self-critic's protective intent from its harmful effect (Gilbert 2009; Gilbert et al. 2004, Psychol. Psychother.); compassionate reframing reduces amygdala reactivity to self-criticism (Longe et al. 2010, NeuroImage)." },
+  { id: "breathing-space", name: "3-Minute Breathing Space", modality: "MBCT", group: "mindfulness",
+    purpose: "A short, portable pause to step out of autopilot and back to the present — useful when the mind is scattered or spinning.",
+    steps: ["Acknowledge: what is my experience right now — thoughts, feelings, body? Just note it, no need to fix it.", "Gather: bring attention to the breath, feeling it move in and out for a few breaths.", "Expand: open to the whole body and let the moment be as it is, then continue with the day."],
+    basis: "Segal, Williams & Teasdale 2002/2013, Mindfulness-Based Cognitive Therapy for Depression (Guilford) — the 3-minute breathing space as the 'heart' practice of MBCT; meta-analysis: Kuyken et al. 2016, JAMA Psychiatry (MBCT prevents depressive relapse)." },
+  { id: "accumulate-positive", name: "Accumulate Pleasant Events", acronym: "Pleasant events", modality: "BA", group: "emotion",
+    purpose: "Re-introduce small, genuine positives so low mood has something to feed on — action before motivation.",
+    steps: ["List a handful of tiny things you actually like (a warm drink, a song, sunlight, a message from a friend).", "Schedule one or two into today — concretely, not 'if I feel like it'.", "Afterwards, notice what it was like — let the good register, even briefly."],
+    basis: "Lewinsohn & MacPhillamy 1974, Pleasant Events Schedule; Martell, Addis & Jacobson 2001, Behavioral Activation for Depression (pleasant-events scheduling); Cuijpers et al. 2007, J. Affect. Disord. (activity scheduling reduces depression)." },
 ];
 
 /** Filter by group and/or a free-text query (matches name, acronym, purpose, modality). */

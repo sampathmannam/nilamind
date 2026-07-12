@@ -735,8 +735,6 @@ describe("scanForCrisis — additional crisis phrases (2026-07-09 audit gap)", (
     "i just want to end the pain forever",
     "i can't do this anymore",
     "I can't do this any longer",
-    "no way out of this",
-    "i can't see a way out anymore",
   ])("trips on crisis phrasing: %j", (s) => {
     expect(scanForCrisis(s)).toBe(true);
   });
@@ -759,7 +757,16 @@ describe("scanForCrisis — expanded dissociation coverage (2026-07-09 audit)", 
     "i've been feeling depersonalized all day",
     "i feel disconnected from reality right now",
     "i don't feel real at all anymore",
-  ])("trips on expanded dissociation phrasing: %j", (s) => {
+    "voices telling me things i don't understand",
+  ])("2026-07-12 softening: soft-only dissociation does NOT open the takeover: %j", (s) => {
+    expect(scanForCrisis(s)).toBe(false);
+  });
+
+  it.each([
+    "voices telling me to end it all",
+    "i feel detached and i want to die",
+    "nothing feels real and i can't go on",
+  ])("2026-07-12 softening: dissociation + hard signal DOES trip: %j", (s) => {
     expect(scanForCrisis(s)).toBe(true);
   });
 
@@ -767,9 +774,33 @@ describe("scanForCrisis — expanded dissociation coverage (2026-07-09 audit)", 
     "i try to stay detached from gossip at work — it's healthier",
     "the painting looks so unreal, like a photograph",
     "i disconnected from the wifi and reconnected",
-    "the special effects in that movie didn't feel real",
+    "the special effects in that movie won't feel real",
   ])("does NOT false-positive on benign controls: %j", (s) => {
     expect(scanForCrisis(s)).toBe(false);
+  });
+});
+
+// 2026-07-12 product softening (FLAGGED for human safety review): indirect metaphors
+// ("no way out", "vanish", "be gone"…) are common in everyday hopelessness and are NOT by
+// themselves extreme. Under scanForCrisis they no longer open the full §9 takeover
+// ALONE — only when a HARD crisis signal co-occurs (the hard lists already returned
+// true at that point). Soft-only text still gets the warm companion + output gate.
+describe("scanForCrisis — 2026-07-12 softening: indirect metaphors NO LONGER trip alone", () => {
+  it.each([
+    "no way out of this",
+    "i can't see a way out anymore",
+    "i want to vanish",
+    "be gone",
+    "i feel like i could disappear without a trace",
+  ])("soft-only metaphor does NOT open the takeover: %j", (s) => {
+    expect(scanForCrisis(s)).toBe(false);
+  });
+
+  it.each([
+    "no way out of this, i want to die",
+    "i can't see a way out and i want to end it all",
+  ])("metaphor + hard signal DOES trip: %j", (s) => {
+    expect(scanForCrisis(s)).toBe(true);
   });
 });
 
@@ -809,6 +840,36 @@ describe("scanForCrisis — expanded dissociation coverage (2026-07-09 audit)", 
     expect(scanForCrisis("நான் நலமாக இருக்கிறேன்")).toBe(false);          // Tamil: "I'm well"
     expect(scanForCrisis("இன்று நல்ல நாள்")).toBe(false);                 // Tamil: "today is a good day"
     expect(scanForCrisis("నేను బాగున్నాను, ఈరోజు మంచి రోజు")).toBe(false); // Telugu: "I'm fine, good day"
+  });
+});
+
+// 2026-07-12 Wave-2 (deferred device-QA gap; FLAGGED 🟡 for native-speaker review):
+// Tamil/Telugu NEGATION-FIRST (subject-prefixed) ideation. These inherit precision from the validated
+// roots already in NATIVE_SCRIPT_IDEATION ("வாழ விரும்பவில்லை", "சாக வேண்டும்",
+// "బతకాలని లేదు", "చావాలని ఉంది") — a subject prefix ("நான்"/"నాకు") only NARROWS the
+// match, so the positive counterpart ("வாழ வேண்டும்" = "want to live") stays false. No device run is
+// possible in CI; native-speaker review of BROADER ta/te idioms is still advised (this locks the
+// validated-root coverage only).
+describe("scanForCrisis — Tamil/Telugu negation-first ideation (Wave-2 gap)", () => {
+  it.each([
+    "நான் வாழ விரும்பவில்லை",                    // Tamil: "I don't want to live"
+    "இனி வாழ விரும்பவில்லை",                    // Tamil: "anymore I don't want to live"
+    "நான் சாக வேண்டும்",                         // Tamil: "I want to die"
+    "நான் சாகணும்",                             // Tamil: "I must die"
+    "నాకు బతకాలని లేదు",                      // Telugu: "I don't want to live"
+    "ఇక బతకాలని లేదు",                       // Telugu: "anymore I don't want to live"
+    "నాకు చావాలని ఉంది",                      // Telugu: "I want to die"
+  ])("trips on negation-first Tamil/Telugu ideation: %j", (s) => {
+    expect(scanForCrisis(s)).toBe(true);
+  });
+
+  it.each([
+    "நான் வாழ வேண்டும்",                         // Tamil: "I want to live" — positive, must stay false
+    "நான் நலமாக இருக்கிறேன்",                    // Tamil: "I'm well"
+    "నాకు బతకాలని కావాలి",                     // Telugu: "I want to live" — positive, must stay false
+    "నేను బాగున్నాను, ఈరోజు మంచి రోజు",         // Telugu: "I'm fine, good day"
+  ])("does NOT trip on benign Tamil/Telugu control: %j", (s) => {
+    expect(scanForCrisis(s)).toBe(false);
   });
 });
 

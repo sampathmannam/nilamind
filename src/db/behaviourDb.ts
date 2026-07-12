@@ -24,7 +24,7 @@ class BehaviourDB extends Dexie {
   }
 }
 
-export const behaviourDb = new BehaviourDB();
+const behaviourDb = new BehaviourDB();
 
 function isEnvelope(row: Row): row is { date: string; enc: EncBlob } {
   return !!row && typeof (row as any).enc === 'object' && (row as any).enc?.ct !== undefined;
@@ -55,7 +55,7 @@ export async function saveSnapshot(snapshot: BehaviourSnapshot): Promise<void> {
   await behaviourDb.daily.put(await toRow(snapshot));
 }
 
-export async function getSnapshot(date: string): Promise<BehaviourSnapshot | undefined> {
+async function getSnapshot(date: string): Promise<BehaviourSnapshot | undefined> {
   return fromRow(await behaviourDb.daily.get(date));
 }
 
@@ -66,13 +66,13 @@ export async function getRecentSnapshots(days = 30): Promise<BehaviourSnapshot[]
   return decrypted.filter((s): s is BehaviourSnapshot => !!s).reverse();
 }
 
-export async function getAllSnapshots(): Promise<BehaviourSnapshot[]> {
+async function getAllSnapshots(): Promise<BehaviourSnapshot[]> {
   const rows = await behaviourDb.daily.orderBy('date').toArray();
   const decrypted = await Promise.all(rows.map((r) => fromRow(r)));
   return decrypted.filter((s): s is BehaviourSnapshot => !!s);
 }
 
 /** Wipe all behaviour history (exposed in Settings → full user control, plan Part 11.4). */
-export async function clearBehaviourData(): Promise<void> {
+async function clearBehaviourData(): Promise<void> {
   await behaviourDb.daily.clear();
 }

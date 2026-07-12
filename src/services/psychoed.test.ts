@@ -7,8 +7,8 @@ import {
 } from "./psychoed";
 
 describe("PSYCHOED_TOPICS corpus", () => {
-  it("has exactly 10 topics, each fully populated + cited", () => {
-    expect(PSYCHOED_TOPICS).toHaveLength(10);
+  it("has exactly 22 topics, each fully populated + cited", () => {
+    expect(PSYCHOED_TOPICS).toHaveLength(22);
     const ids = new Set<string>();
     for (const t of PSYCHOED_TOPICS) {
       expect(t.id).toBeTruthy();
@@ -24,7 +24,7 @@ describe("PSYCHOED_TOPICS corpus", () => {
 
   it("physical-symptom topics (anxiety-body, panic) carry the emergency caveat; others don't", () => {
     const withCaveat = PSYCHOED_TOPICS.filter((t) => t.emergencyCaveat).map((t) => t.id).sort();
-    expect(withCaveat).toEqual(["anxiety-alarm", "panic-passes"]);
+    expect(withCaveat).toEqual(["anxiety-alarm", "panic-passes", "stress-hpa-axis", "trauma-body"]);
     for (const t of PSYCHOED_TOPICS) {
       if (t.emergencyCaveat) expect(t.emergencyCaveat).toBe(EMERGENCY_CAVEAT);
     }
@@ -49,7 +49,7 @@ describe("searchPsychoed", () => {
 
   it("empty query returns all topics in corpus order", () => {
     const all = searchPsychoed("");
-    expect(all).toHaveLength(10);
+    expect(all).toHaveLength(22);
     expect(all.map((t) => t.id)).toEqual(PSYCHOED_TOPICS.map((t) => t.id));
     expect(searchPsychoed("   ").map((t) => t.id)).toEqual(PSYCHOED_TOPICS.map((t) => t.id));
   });
@@ -57,8 +57,14 @@ describe("searchPsychoed", () => {
   it("returns only relevant topics for a specific query (drops zero-score)", () => {
     const res = searchPsychoed("avoiding things i'm scared of");
     expect(res.length).toBeGreaterThan(0);
-    expect(res.length).toBeLessThan(10);
+    expect(res.length).toBeLessThan(22);
     expect(res.map((t) => t.id)).toContain("avoidance-grows-fear");
+  });
+
+  it("new research-cited explainers rank first for their colloquial cues", () => {
+    expect(searchPsychoed("I feel so lonely and disconnected")[0].id).toBe("social-connection-and-mood");
+    expect(searchPsychoed("I have no energy to get started")[0].id).toBe("behavioral-activation-basics");
+    expect(searchPsychoed("after a bad night's sleep I'm on edge and wired")[0].id).toBe("sleep-debt-and-anxiety");
   });
 });
 

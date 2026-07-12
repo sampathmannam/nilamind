@@ -30,14 +30,14 @@ describe("CrisisOverlay — §9 crisis surface renders (audit #27)", () => {
     expect((document.getElementById("crisis-lines")?.children.length ?? 0)).toBeGreaterThan(0);
     expect(document.getElementById("grounding-shortcut-btn")).toBeTruthy();
     expect(document.getElementById("breathing-shortcut-btn")).toBeTruthy();
-    expect(screen.getAllByText(/your safety plan/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/coping plan/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/warning signs i notice/i)).toBeTruthy(); // safety-plan section 1 renders
   });
 
-  it("calls onClose when 'I'm okay for now' is tapped", () => {
+  it("calls onClose when 'I feel steadier now' is tapped", () => {
     const onClose = vi.fn();
     render(<CrisisOverlay isOpen onClose={onClose} onNavigateToGrounding={noop} onNavigateToBreathing={noop} />);
-    fireEvent.click(screen.getByText(/i'm okay for now/i));
+    fireEvent.click(screen.getByText(/steadier now/i));
     expect(onClose).toHaveBeenCalledOnce();
   });
 

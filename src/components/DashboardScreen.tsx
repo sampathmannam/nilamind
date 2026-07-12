@@ -56,8 +56,7 @@ function readArr<T>(key: string): T[] {
   }
 }
 
-// The USER's own private analytics. Local sections never leave the device. The single off-device
-// feature — Nila's Deep Evaluation — is user-initiated and explicitly disclosed.
+// The USER's own private analytics. Local sections never leave the device.
 export default function DashboardScreen({ onManageData }: { onManageData?: () => void }) {
   const [timeRange, setTimeRange] = useState<"7d" | "30d">("30d");
   const [chartTab, setChartTab] = useState<"emotion" | "context">("emotion");
@@ -444,6 +443,14 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
               Avg mood: <span className="font-mono text-slate-300">{usageSummary.avgMood.toFixed(1)}/10</span>
               {usageSummary.topEmotion && <> · Top: <span className="text-slate-300 capitalize">{usageSummary.topEmotion}</span></>}
               {usageSummary.features.includes("values_snapshot") && <> · <span className="text-emerald-400">Values set ✓</span></>}
+            </p>
+          )}
+          {usageSummary.moodSleepCorrelation && (
+            <p className="text-[10px] text-slate-500 text-center">
+              Sleep: {usageSummary.moodSleepCorrelation.highSleepMood.toFixed(1)}/10 with ≥7h sleep · {usageSummary.moodSleepCorrelation.lowSleepMood.toFixed(1)}/10 with &lt;7h
+              {usageSummary.sleepTrend && (
+                <> · Last 3-check-in avg: <span className={usageSummary.sleepTrend.recentAvg >= usageSummary.sleepTrend.olderAvg ? "text-emerald-400" : "text-amber-400"}>{usageSummary.sleepTrend.recentAvg.toFixed(1)}h</span></>
+              )}
             </p>
           )}
         </div>

@@ -327,6 +327,32 @@ export const PROTOCOLS: Protocol[] = [
         prompt: "After a few days of noticing small positives: has anything softened? Not forcing happiness — just noticing whether a little more light gets through." },
     ],
   },
+  {
+    // Micro-protocol (3 steps) — deliberately short, matching the "micro-action" evidence unit for ACT
+    // values work (single values-congruent behaviours, not grand life-purpose goals).
+    id: "values-action",
+    title: "Values-Based Action",
+    basis:
+      "ACT (Acceptance & Commitment Therapy) treats clarification + pursuit of personal values as a core " +
+      "change process: a meta-analysis of 39 ACT studies (Levin, Hildebrandt, Lillis & Hayes, 2012, " +
+      "Behaviour Research and Therapy) found values-based action a key mediator of outcomes, and Dahl, Plumb, " +
+      "Stewart & Lundgren (2009, ACBS) show clarifying and acting on values reduces experiential avoidance. " +
+      "The evidence unit is the small, concrete value-congruent action — not a sweeping life-purpose goal.",
+    forConcerns: [
+      "lost my purpose", "no purpose", "sense of purpose", "what matters to me", "don't know what i care about",
+      "dont know what i care about", "feel directionless", "no direction", "adrift", "hollow", "void inside",
+      "meaningless", "unfulfilled", "what do i value", "my values", "nothing feels worth it", "why bother anymore",
+      "what's worth doing", "whats worth doing", "empty inside", "no sense of meaning",
+    ],
+    steps: [
+      { id: "vba-1", kind: "psychoed", title: "Values, not purpose",
+        prompt: "Sometimes the hard part isn't energy — it's that nothing feels like it matters. In ACT, 'values' are the things you'd quietly care about even on an off day: kindness, making something, being there for someone, honesty. We're not chasing one big life-purpose — just one small thing that's genuinely you. Want to find one?" },
+      { id: "vba-2", kind: "reflect", title: "Name a quiet value",
+        prompt: "If you set the 'shoulds' aside for a second: what's one thing you've always quietly cared about — maybe helping, creating, being dependable, learning? You don't have to explain it. Just name it." },
+      { id: "vba-3", kind: "plan", title: "One tiny value-action",
+        prompt: "Pick the smallest action that fits that value — small enough it's almost easy: a message to someone you care about, five minutes on something you make, one honest thing said. What's the smallest version you could do today?" },
+    ],
+  },
   DBT_SKILLS_TRAINING,
   ACT_TRAINING,
   ASSERTION_TRAINING,

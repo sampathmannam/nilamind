@@ -15,6 +15,7 @@ export interface ExportAuditEntry {
   kind: ExportKind;
   scope: string; // human label of what was exported
   destination: ExportDestination;
+  filename?: string;
 }
 
 /** Record an export event. Fire-and-forget via the atomic shared-array primitive. */

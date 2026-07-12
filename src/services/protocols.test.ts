@@ -90,6 +90,11 @@ describe("routeToProtocol — modular matching (concern → the right evidence-b
     const p = routeToProtocol("i want to notice the good things, i feel like i only see the bad stuff");
     expect(p?.id).toBe("gratitude");
   });
+
+  it("routes lost-purpose / 'what matters to me' → Values-Based Action", () => {
+    const p = routeToProtocol("i've lost my sense of purpose, i don't know what matters to me anymore");
+    expect(p?.id).toBe("values-action");
+  });
 });
 
 // Clinical research upgrades wave 2 (2026-07-12) — Tasks C/D/E, docs/superpowers/plans/2026-07-12-clinical-

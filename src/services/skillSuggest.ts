@@ -39,7 +39,10 @@ const DISTRESS_MAP: [RegExp, string, string, string, string][] = [
   [/\b(meaning|purpose|what matters|values|direction|lost|stuck|what should i do)\b/i, "values", "Searching for direction", "🧭", "values-clarify"],
 
   [/\b(hat(e|ing) myself|i'?m awful|i'?m a failure|not good enough|critic in my head|i suck|i'?m worthless)\b/i, "compassion", "Harsh self-criticism", "🤗", "self-compassion-break"],
-  [/\b(lonely|alone|nobody|no one|isolated|disconnected)\b/i, "compassion", "Loneliness", "💙", "compassionate-self"],
+  [/\b(lonely|alone|nobody|no one|belong|reconnect|reach out|isolated|disconnected)\b/i, "compassion", "Loneliness or disconnection", "💙", "compassionate-self"],
+
+  [/\b(tired|exhausted|wired|edgy|irritable|short fuse|worn out|can'?t get (up|started|going)|overwhelmed by everything|all at once)\b/i, "emotion", "Low energy or stuck", "🔋", "accumulate-positive"],
+  [/\b(scattered|spinning off|off task)\b/i, "mindfulness", "Scattered or can't settle", "🧘", "breathing-space"],
 ];
 
 /** Find the best skill suggestion for a user message. Returns null if nothing matches or if crisis. */

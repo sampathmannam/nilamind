@@ -31,6 +31,7 @@
     "@capacitor/haptics": "^8.0.2",
     "@capacitor/local-notifications": "^8.2.0",
     "@capacitor/preferences": "^8.0.1",
+    "@capacitor/share": "^8.0.1",
     "@capacitor/status-bar": "^8.0.2",
     "@capgo/capacitor-android-usagestatsmanager": "^8.0.32",
     "@fontsource/inter": "^5.2.8",

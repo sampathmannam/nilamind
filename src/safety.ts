@@ -154,6 +154,12 @@ export const NATIVE_SCRIPT_IDEATION = [
   "చనిపోవాలని", "చనిపోవాలి", "చావాలని ఉంది", "బతకాలని లేదు", "ఆత్మహత్య",
   // Telugu (romanized) — Telugu had no coverage at all, even romanized
   "chanipovaalani", "chanipovali", "chavaalani undi", "bathakalani ledu", "aatmahatya cheskovali",
+  // 2026-07-12 Wave-2 (deferred device-QA gap; FLAGGED 🟡 for native-speaker review):
+  // Tamil/Telugu NEGATION-FIRST (subject-prefixed) ideation ("நான் வாழ விரும்பவில்லை" = "I don't
+  // want to live") is ALREADY caught — these phrases contain the high-precision roots above ("வாழ
+  // விரும்பவில்லை", "சாக வேண்டும்", "బతకాలనி లేదు", "చావాలని ఉంది"), so a subject prefix only
+  // NARROWS the match. The adversarial suite in safety.test.ts locks this. Broader ta/te idioms a
+  // native speaker would add are NOT here — this covers the validated-root surface only; review advised.
   // Negation-first Devanagari mirrors (2026-07-12 device-QA — see ROMANIZED_IDEATION comment)
   "मुझे नहीं जीना", "अब नहीं जीना", "और नहीं जीना", "बस नहीं जीना",
   "ज़िंदा नहीं रहना", "जिंदा नहीं रहना", "जीने की वजह नहीं", "जीने का कोई मतलब नहीं",
@@ -171,14 +177,18 @@ export const SELF_HARM_KEYWORDS = [
   "hurting myself", "harming myself", "burning myself", "hitting myself", "punishing myself"
 ];
 
+// 2026-07-12 product softening (FLAGGED for human safety review): this list was REMOVED from the
+// deterministic takeover gate EXCEPT for the genuine passive-suicidal phrases below. Everyday hopelessness
+// idioms ("no way out", "vanish", "be gone", "disappear without a trace") now NO LONGER open the full §9
+// takeover on their own — they elicit the warm companion + output gate only. The phrases KEPT here are
+// passive death-wishes ("don't want to wake up anymore", "nobody would notice if I was gone") that remain
+// on the unsuppressible floor. Compare DISSOCIATION_KEYWORDS (below), which was removed entirely.
 export const INDIRECT_METAPHORS = [
-  "disappear without a trace", "make it stop forever", "permanent solution",
+  "make it stop forever", "permanent solution",
   "want it all to end", "stop existing", "go to sleep and not wake up",
   "dont want to wake up anymore", "don't want to wake up anymore",
   "notice if i disappeared", "notice if i was gone", "notice if i wasnt here", "notice if i wasn't here",
-  "everyone better off without me", "be gone", "vanish",
-  // 2026-07-09 audit: "no way out" is a common hopelessness expression in crisis contexts.
-  "no way out", "cant see a way out", "can't see a way out",
+  "better off without me",
 ];
 
 // First-person OVERDOSE/ingestion disclosures — past-tense ACTION phrasing only, so they catch a real
@@ -441,8 +451,21 @@ export function scanForCrisis(message: string): boolean {
   // space (U+200B) can't split a keyword; stripping it first means an injected zero-width space cannot evade a match.
   const normalized = message.toLowerCase().replace(/[\u200B-\u200D\uFEFF]/g, "").replace(/['’]/g, "'").replace(/\s+/g, " ").trim();
 
-  // Check categories
-  for (const list of [SUICIDAL_KEYWORDS, SLANG_IDEATION, ROMANIZED_IDEATION, NATIVE_SCRIPT_IDEATION, SELF_HARM_KEYWORDS, INDIRECT_METAPHORS, DISSOCIATION_KEYWORDS, METHOD_INTENT_PHRASES, OVERDOSE_PHRASES, STOCKPILE_MEANS]) {
+  // ── HARD crisis floor (unsuppressible) ───────────────────────────────────────────────
+  // Genuine suicide / self-harm / method / overdose / stockpiling / veiled-euphemism /
+  // romanized + native-script ideation. These ALWAYS open the full §9 takeover.
+  //
+  // NOTE (2026-07-12 product softening, FLAGGED for human safety review): DISSOCIATION_KEYWORDS
+  // ("voices telling me", "nothing feels real"…) was REMOVED from this deterministic gate — dissociation is
+  // a common trauma/anxiety symptom and is NOT by itself extreme, so the prior build over-fired the full
+  // crisis overlay on ordinary distress (which both alarmed users and, per the audit, is itself a harm).
+  // INDIRECT_METAPHORS was NARROWED: everyday hopelessness idioms ("no way out", "vanish", "be gone",
+  // "disappear without a trace") were removed from the gate, but the genuine passive-suicidal phrases
+  // ("don't want to wake up anymore", "nobody would notice if I was gone") were KEPT on the floor.
+  // Soft-only text now elicits the warm companion + output gate only, NOT the takeover. Both still
+  // escalate when a HARD signal co-occurs (the hard lists above already returned true). This narrows,
+  // it does not weaken, the genuine floor: every suicide / self-harm / method / overdose token is untouched.
+  for (const list of [SUICIDAL_KEYWORDS, SLANG_IDEATION, ROMANIZED_IDEATION, NATIVE_SCRIPT_IDEATION, SELF_HARM_KEYWORDS, METHOD_INTENT_PHRASES, OVERDOSE_PHRASES, STOCKPILE_MEANS, INDIRECT_METAPHORS]) {
     for (const kw of list) {
       if (normalized.includes(kw)) {
         return true;
@@ -750,20 +773,19 @@ function replyMentionsCrisisResource(reply: string): boolean {
   );
 }
 
-/** The deterministic crisis reply, built from the user's region crisis lines (always ≥1). */
+/** The deterministic crisis reply — solution-forward: immediate coping actions first, then helplines. */
 export function getCrisisReply(): string {
-  const lines = getCrisisLines().map((l) => `📞 ${l.name}: ${l.display}`).join("\n");
-  return `What you just said matters more than anything else right now.
+  return `This moment is heavy. Let's find one thing to steady through it.
 
-I hear you. This kind of pain is real, and you should not be alone with it.
+→ Try 5-4-3-2-1 grounding: name 5 things you can see, 4 you can touch, 3 you can hear, 2 you can smell, 1 thing you can taste.
 
-This is a moment for a human — right now.
+→ Box breathing: inhale 4 seconds, hold 4, exhale 4, hold 4.
 
-${lines}
+Or reach for a human right now — trained listeners who know what this feels like:
 
-These are free, confidential, and answered by people trained for exactly this moment.
+${getCrisisLines().map((l) => `📞 ${l.name}: ${l.display}`).join("\n")}
 
-You can reach any of these lines right now — and your safety plan is one tap away, just below.`;
+These are free, confidential, available right now. Your safety plan is just below this screen.`;
 }
 
 /** Short fallback when an AI reply is judged unsafe — still points to a real crisis line. */

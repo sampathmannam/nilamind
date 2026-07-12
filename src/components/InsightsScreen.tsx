@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Sparkles, Shield, TrendingUp, TrendingDown, Minus, HelpCircle, Activity, Moon, Smartphone, Heart, Footprints, Users, ShieldCheck } from "lucide-react";
 import { secureLocal } from "../services/secureLocal";
 import { generateInsights, assessmentInsights, daysOfData, type Insight } from "../services/patternInsights";
-import { getTodaySnapshot } from "../services/phoneBehaviour";
+import { getRecentSnapshots } from "../db/behaviourDb";
 import { loadMoodHistory } from "../services/moodHistory";
 import { loadAssessments, type AssessmentEntry } from "../services/assessments";
 import { getNo1Insights, type No1Insight } from "../services/nOf1";
@@ -118,12 +118,8 @@ export default function InsightsScreen({ onClose }: InsightsScreenProps) {
     let mounted = true;
     async function load() {
       try {
-        // Load behaviour snapshots from secureLocal
-        let snaps: any[] = [];
-        try {
-          const raw = secureLocal.getItem("nilamind_behaviour_snapshots");
-          if (raw) snaps = JSON.parse(raw);
-        } catch { /* ignore */ }
+        // Load behaviour snapshots from IndexedDB (behaviourDb)
+        const snaps = await getRecentSnapshots(30);
 
         // Load mood history
         const mood = await loadMoodHistory();

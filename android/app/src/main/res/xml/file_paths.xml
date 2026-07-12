@@ -2,4 +2,8 @@
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
     <external-path name="my_images" path="." />
     <cache-path name="my_cache_images" path="." />
+    <!-- Reports are written to the app's internal Documents dir (Capacitor Directory.Documents).
+         Exposing it lets FileProvider.resolve the content:// URI the Share sheet needs, so a
+         tapped export in Export history can actually be opened/shared on Android. -->
+    <files-path name="nilamind_docs" path="Documents" />
 </paths>

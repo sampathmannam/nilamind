@@ -8,7 +8,6 @@ import { useReducedMotion } from "./hooks/useReducedMotion";
 
 // Eager — crisis path must never lazy-load
 import CrisisOverlay from "./components/CrisisOverlay";
-import CrisisPill from "./components/CrisisPill";
 import GroundingLibraryScreen from "./components/GroundingLibraryScreen";
 import ModeScreen from "./components/ModeScreen";
 import TodayScreen from "./components/TodayScreen";
@@ -79,7 +78,7 @@ import { getUserState } from "./services/modeEngine";
 import { computeAdaptiveMode, getAdaptiveCssClass } from "./services/adaptiveTheme";
 import { warmVoskStt } from "./services/voskStt";
 import { MessageSquare, LayoutGrid, User, X } from "lucide-react";
-import SheetContainer from "./components/SheetContainer";
+
 import { hapticLight } from "./hooks/useHaptics";
 
 type AppTab = "nila" | "today" | "you";
@@ -159,7 +158,6 @@ export default function App() {
   const [activeAuxView, setActiveAuxView] = useState<AuxView | null>(null);
   const [closingAuxView, setClosingAuxView] = useState<AuxView | null>(null);
   const [activeTab, setActiveTab] = useState<AppTab>("today");
-  const [disableAnchorPulse, setDisableAnchorPulse] = useState(false);
   const [saveWarning, setSaveWarning] = useState(false);
   const [onboardingDone, setOnboardingDone] = useState(hasCompletedOnboarding());
   const [wakeListening, setWakeListening] = useState(false);
@@ -184,14 +182,6 @@ export default function App() {
     const h = () => setLangTick((n) => n + 1);
     window.addEventListener(LANGUAGE_CHANGED_EVENT, h);
     return () => window.removeEventListener(LANGUAGE_CHANGED_EVENT, h);
-  }, []);
-
-  // Load saved animation preference
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem("nilamind_disable_anchor_pulse");
-      if (saved === "true") setDisableAnchorPulse(true);
-    } catch { /* ignore */ }
   }, []);
 
   // Sync daily reminders
@@ -421,14 +411,6 @@ export default function App() {
         )}
       </main>
 
-      {/* Persistent crisis affordance — rendered on EVERY tab (§9: crisis always reachable). It sits in
-          the shell's bottom stack, outside every activeTab branch, so it can't collide with ModeScreen's
-          chat input (which lives inside <main>). The nav's border-t below separates it from the 3 tabs so
-          it never reads as a routine destination (ui-ux-pro-max destructive-nav-separation). */}
-      <div className="shrink-0 px-4 pt-2 pb-1 bg-page" id="shell-crisis-row">
-        <CrisisPill onActivate={activateCrisis} />
-      </div>
-
       {/* Bottom tab bar */}
       <nav className="shrink-0 flex items-center justify-around border-t border-slate-800 bg-page/95 backdrop-blur pb-[max(8px,env(safe-area-inset-bottom))]" role="tablist" aria-label="Main navigation">
         {([
@@ -486,7 +468,7 @@ export default function App() {
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto">
             <Suspense fallback={<ScreenFallback />}>
-              <SettingsScreen disableAnchorPulse={disableAnchorPulse} onTogglePulse={(val) => setDisableAnchorPulse(val)} onOpenCaregiver={() => setIsCaregiverOpen(true)} />
+              <SettingsScreen onOpenCaregiver={() => setIsCaregiverOpen(true)} />
             </Suspense>
           </div>
         </div>

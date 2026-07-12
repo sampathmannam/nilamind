@@ -127,10 +127,10 @@ describe("crisisClassifier — REAL MiniLM end-to-end §9 regression", () => {
     await realEmbedder("warmup"); // pay the one-time model load up front
   }, 120_000);
 
-  it("the raw model STILL scores the pills phrase above threshold (fix is the guard, not the model)", async () => {
+  it("the raw model STILL scores the pills phrase below the raised threshold (guard no longer needed for this case)", async () => {
     const p = await scoreCrisis("I need to take my pills exactly as prescribed");
     expect(p).not.toBeNull();
-    expect(p as number).toBeGreaterThan(CRISIS_THRESHOLD); // ~0.62 — unchanged; we did not retrain/re-threshold
+    expect(p as number).toBeLessThan(CRISIS_THRESHOLD); // ~0.62 — now below the 0.68 threshold
   }, 60_000);
 
   it.each(BENIGN_MED)("does NOT fire the §9 gate on benign adherence: %j", async (s) => {

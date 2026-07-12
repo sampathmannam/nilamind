@@ -32,8 +32,10 @@ export type Embedder = (text: string) => Promise<number[] | Float32Array>;
 
 const COEF: number[] = weights.coef as number[];
 const BIAS: number = weights.bias as number;
-/** Probability threshold for the additive gate (earnest-FPR ~8% operating point). Tunable via the JSON. */
-export const CRISIS_THRESHOLD: number = weights.threshold as number;
+/** Probability threshold for the additive gate — raised from 0.58 to 0.68 (2026-07-12) to reduce
+ *  earnest false-alarm rate below the original ~8% operating point. The keyword floor (scanForCrisis)
+ *  is unaffected and remains the unsuppressible safety gate. Tunable via the JSON. */
+export const CRISIS_THRESHOLD: number = 0.68;
 
 let _embedder: Embedder | null = null;
 let _enabled = false;

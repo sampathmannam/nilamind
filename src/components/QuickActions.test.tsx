@@ -39,4 +39,22 @@ describe("selectQuickActions — home actions quiet down when elevated", () => {
   it("null/unknown state behaves like the normal time-filtered set", () => {
     expect(selectQuickActions("day", null).map((a) => a.id)).toContain("learn");
   });
+
+  // 2026-07-12 de-emphasis (user directive): the crisis shortcut is NOT a permanent fixture of the
+  // home grid — it must not be constantly visible. The real §9 safety net is the input gate (fires on
+  // any crisis message regardless of button), so this only changes prominence, not reachability. The
+  // shortcut re-surfaces precisely when the user is `low`/distressed (visible when needed).
+  it("calm/anxious → crisis shortcut is NOT in the home grid (de-emphasized)", () => {
+    expect(selectQuickActions("day", "calm").map((a) => a.id)).not.toContain("crisis");
+    expect(selectQuickActions("day", "anxious").map((a) => a.id)).not.toContain("crisis");
+    expect(selectQuickActions("morning", "calm").map((a) => a.id)).not.toContain("crisis");
+  });
+
+  it("low/distressed → crisis shortcut re-appears (visible when needed)", () => {
+    expect(selectQuickActions("day", "low").map((a) => a.id)).toContain("crisis");
+  });
+
+  it("null state → crisis shortcut absent (not constantly visible)", () => {
+    expect(selectQuickActions("day", null).map((a) => a.id)).not.toContain("crisis");
+  });
 });

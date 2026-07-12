@@ -1,9 +1,12 @@
 // NilaFace — adaptive breathing orb. Nila's visual identity.
 // State-driven: calm glow, anxious pulse, low shimmer, elevated energy, crisis alert.
 
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useEffect, useRef } from "react";
 import type { UserState } from "../types/modes";
 import { useReducedMotion } from "../hooks/useReducedMotion";
+import { useSensoryComfort } from "../hooks/useSensoryComfort";
+import { useIsLightTheme } from "../hooks/useIsLightTheme";
+import { hapticLight, hapticMedium } from "../hooks/useHaptics";
 import { faceMotion } from "./nilaFaceMotion";
 
 interface NilaFaceProps {
@@ -11,6 +14,7 @@ interface NilaFaceProps {
   onClick?: () => void;
   onLongPress?: () => void;
   size?: number;
+  isListening?: boolean;
 }
 
 interface OrbPalette {
@@ -54,11 +58,11 @@ const PALETTES: Record<string, OrbPalette> = {
     core: "#ECCF94",      // --color-amber-200
   },
   crisis: {
-    primary: "#CE8470",   // --color-rose-400 (terracotta crisis)
-    secondary: "#DDA593", // --color-rose-300
-    glow: "rgba(206,132,112,0.35)",
-    ring: "rgba(206,132,112,0.20)",
-    core: "#ECC2B6",      // --color-rose-200
+    primary: "#B5614E",   // --color-rose-500 (deeper crisis red — distinct from anxious rose-400)
+    secondary: "#CE8470", // --color-rose-400
+    glow: "rgba(181,97,78,0.40)",
+    ring: "rgba(181,97,78,0.40)",
+    core: "#DDA593",      // --color-rose-300
   },
 };
 
@@ -73,36 +77,44 @@ function getPalette(state: UserState | null): OrbPalette {
   }
 }
 
-export default function NilaFace({ state, onClick, onLongPress, size = 160 }: NilaFaceProps) {
+export default function NilaFace({ state, onClick, onLongPress, size = 160, isListening = false }: NilaFaceProps) {
   const palette = useMemo(() => getPalette(state), [state]);
   // Motion is state- and reduced-motion-aware: 'elevated' SLOWS the orb (settles it), and
   // prefers-reduced-motion stops all ambient motion (see nilaFaceMotion — manic-first + a11y).
+  // Listening state overrides with a faster pulse (halved breathe/shimmer) so the orb signals
+  // active attention.
   const prefersReduced = useReducedMotion();
-  const motion = useMemo(() => faceMotion(state, prefersReduced), [state, prefersReduced]);
+  const [sensoryComfort] = useSensoryComfort();
+  const reduced = prefersReduced || sensoryComfort;
+  const baseMotion = useMemo(() => faceMotion(state, reduced), [state, reduced]);
+  const motion = useMemo(() => {
+    if (isListening && baseMotion.animate) {
+      return { ...baseMotion, breatheSec: baseMotion.breatheSec / 2, shimmerSec: baseMotion.shimmerSec / 2 };
+    }
+    return baseMotion;
+  }, [isListening, baseMotion]);
   const holdTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-  // The orb's palette is tuned for a DARK background (low-opacity glows, a #0f172a fade-to-dark edge). On the
-  // light/cream theme those wash out to near-invisibility, so on light we give the body a more opaque colored
-  // gradient (no dark edge) and a stronger ring/shadow so the app's centrepiece actually reads. (audit: orb.)
-  // Reactive theme detection — watches <html class="theme-light"> via MutationObserver so the orb
-  // palette adapts immediately when the user switches themes (rather than one stale read at mount).
-  const [isLight, setIsLight] = useState(
-    typeof document !== "undefined" && document.documentElement.classList.contains("theme-light")
-  );
-  useEffect(() => {
-    const el = document.documentElement;
-    const observer = new MutationObserver(() => {
-      setIsLight(el.classList.contains("theme-light"));
-    });
-    observer.observe(el, { attributes: true, attributeFilter: ["class"] });
-    return () => observer.disconnect();
-  }, []);
+  const isLight = useIsLightTheme();
+  // Listening state also gets a brighter glow so the user sees the orb "light up" when mic is on.
+  const activePalette = isListening
+    ? { ...palette, glow: palette.glow.replace("0.25", "0.45").replace("0.20", "0.45").replace("0.28", "0.50").replace("0.35", "0.55").replace("0.40", "0.60") }
+    : palette;
   const bodyBackground = isLight
-    ? `radial-gradient(circle at 35% 35%, ${palette.secondary}70, ${palette.primary}55 55%, ${palette.primary}22 100%)`
-    : `radial-gradient(circle at 35% 35%, ${palette.secondary}10, ${palette.primary}20 60%, #0f172a 100%)`;
-  const bodyBorder = isLight ? `1.5px solid ${palette.primary}66` : `1px solid ${palette.ring}`;
+    ? `radial-gradient(circle at 35% 35%, ${activePalette.secondary}70, ${activePalette.primary}55 55%, ${activePalette.primary}22 100%)`
+    : `radial-gradient(circle at 35% 35%, ${activePalette.secondary}10, ${activePalette.primary}20 60%, #0f172a 100%)`;
+  const bodyBorder = isLight ? `1.5px solid ${activePalette.primary}66` : `1px solid ${activePalette.ring}`;
   const bodyShadow = isLight
-    ? `0 6px ${size * 0.28}px ${palette.primary}33, inset 0 0 ${size * 0.15}px rgba(255,255,255,0.25)`
-    : `0 0 ${size * 0.3}px ${palette.glow}, inset 0 0 ${size * 0.15}px rgba(255,255,255,0.03)`;
+    ? `0 6px ${size * 0.28}px ${activePalette.primary}33, inset 0 0 ${size * 0.15}px rgba(255,255,255,0.25)`
+    : `0 0 ${size * 0.3}px ${activePalette.glow}, inset 0 0 ${size * 0.15}px rgba(255,255,255,0.03)`;
+
+  // Haptic on state transition: light tap for most state changes, warning for crisis.
+  const prevState = useRef(state);
+  useEffect(() => {
+    if (prevState.current && prevState.current !== state) {
+      void (state === "crisis" ? hapticMedium() : hapticLight());
+    }
+    prevState.current = state;
+  }, [state]);
 
   const handleTouchStart = () => {
     holdTimer.current = setTimeout(() => onLongPress?.(), 500);
@@ -127,24 +139,13 @@ export default function NilaFace({ state, onClick, onLongPress, size = 160 }: Ni
         }
       }}
       className="relative flex items-center justify-center cursor-pointer active:scale-95 transition-transform duration-150"
-      style={{ width: size, height: size }}
+      style={{
+        width: size,
+        height: size,
+        animation: motion.animate ? `nila-drift 8s ease-in-out infinite` : "none",
+      }}
       aria-label="Talk to Nila — long press or press Enter for crisis resources"
     >
-      <style>{`
-        @keyframes nila-breathe {
-          0%, 100% { transform: scale(1); opacity: 0.6; }
-          50% { transform: scale(1.08); opacity: 1; }
-        }
-        @keyframes nila-spin-slow {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        @keyframes nila-shimmer {
-          0% { background-position: 200% 0; }
-          100% { background-position: -200% 0; }
-        }
-      `}</style>
-
       {/* Outer glow halo — breathes */}
       <div
         className="absolute rounded-full"
@@ -152,11 +153,11 @@ export default function NilaFace({ state, onClick, onLongPress, size = 160 }: Ni
           width: size,
           height: size,
           background: `radial-gradient(circle, ${palette.glow} 0%, transparent 70%)`,
-          animation: motion.animate ? `nila-breathe ${motion.breatheSec}s ease-in-out infinite` : "none",
+          animation: motion.animate ? `nila-breathe ${motion.breatheSec}s infinite` : "none",
         }}
       />
 
-      {/* Orb ring — slowly rotates */}
+      {/* Orb ring — slowly rotates; when motion off, ring statically signals state */}
       <svg
         className="absolute"
         width={size + ringWidth * 2}
@@ -171,8 +172,8 @@ export default function NilaFace({ state, onClick, onLongPress, size = 160 }: Ni
           r={size / 2 - ringWidth}
           fill="none"
           stroke={palette.ring}
-          strokeWidth={ringWidth}
-          strokeDasharray={`${Math.round(size * 0.4)} ${Math.round(size * 0.6)}`}
+          strokeWidth={!motion.animate && state === "crisis" ? ringWidth * 2.5 : ringWidth}
+          strokeDasharray={!motion.animate && state === "crisis" ? "none" : `${Math.round(size * 0.4)} ${Math.round(size * 0.6)}`}
           strokeLinecap="round"
         />
       </svg>
@@ -210,12 +211,13 @@ export default function NilaFace({ state, onClick, onLongPress, size = 160 }: Ni
           }}
         />
 
-        {/* Core light dot */}
+        {/* Core light dot — elliptical during crisis (subtle distress signal) */}
         <div
-          className="rounded-full relative"
+          className="relative"
           style={{
-            width: coreR * 2,
+            width: state === "crisis" ? coreR * 2.6 : coreR * 2,
             height: coreR * 2,
+            borderRadius: state === "crisis" ? "50%" : "9999px",
             background: `radial-gradient(circle, ${palette.core}, ${palette.primary}80)`,
             boxShadow: `0 0 ${coreR}px ${palette.glow}`,
           }}

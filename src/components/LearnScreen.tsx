@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from "react";
 import { BookOpen, Search, X, ChevronDown, LifeBuoy, AlertTriangle, FlaskConical, Heart } from "lucide-react";
 import { searchLearn, type LearnResult, type LearnSource } from "../services/learnLibrary";
 import { checkPsychoedQuery } from "../services/psychoed";
-import { detectCrisis } from "../services/crisisClassifier";
 import { getCrisisReply } from "../safety";
 import { getSkill } from "../services/skillsLibrary";
 import { PSYCHOED_TOPICS } from "../services/psychoed";
@@ -66,7 +65,6 @@ export default function LearnScreen() {
   function onQueryChange(v: string) {
     if (checkPsychoedQuery(v)) { setCrisis(true); setQuery(""); return; }
     setQuery(v);
-    if (v.trim()) void detectCrisis(v).then((c) => { if (c) { setCrisis(true); setQuery(""); } });
   }
 
   function needSupport() { setCrisis(true); setQuery(""); }

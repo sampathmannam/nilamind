@@ -49,8 +49,11 @@ describe("checkReachText (send-time §9 gate)", () => {
 
   it("fires across the keyword floor (preserved through the async detectCrisis swap)", async () => {
     expect(await checkReachText("I want to kill myself")).toBe(true); // suicidal
-    expect(await checkReachText("I want to vanish")).toBe(true); // indirect metaphor
-    expect(await checkReachText("I just want to be gone")).toBe(true); // indirect metaphor
+    // 2026-07-12 product softening (FLAGGED for human safety review): everyday idioms
+    // "vanish"/"be gone" were REMOVED from the keyword floor so they no longer open the full
+    // §9 takeover on their own. Genuine passive-suicidal phrases below remain on the floor.
+    expect(await checkReachText("I don't want to wake up anymore")).toBe(true); // passive death-wish (kept)
+    expect(await checkReachText("everyone would be better off without me")).toBe(true); // passive death-wish (kept)
     expect(await checkReachText("I want to cut myself")).toBe(true); // self-harm
     expect(await checkReachText("I'm going to hang myself")).toBe(true); // method+intent
   });

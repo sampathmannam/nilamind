@@ -17,10 +17,12 @@ import { useTypingSession } from "../hooks/useTypingSession";
 import { getSuggestions, timeSlot } from "../services/chatSuggestions";
 import { stripChatMarkdown } from "../services/chatText";
 import { suggestSkill } from "../services/skillSuggest";
+import { deriveInMomentInsight } from "../services/inMomentInsight";
 import { filterSkills, type Skill } from "../services/skillsLibrary";
 import NilaCheckIn from "./NilaCheckIn";
 import ChatLoading from "./ChatLoading";
 import SkillOfferCard from "./SkillOfferCard";
+import InMomentInsightCard from "./InMomentInsightCard";
 import PactNoticeCard from "./PactNoticeCard";
 import { activePactNotice, dismissPactNoticeToday, type PactNotice } from "../services/pactNotice";
 import type { CheckInEntry } from "../types";
@@ -50,6 +52,7 @@ import { computeCompassionateStreak } from "../services/streaks";
 import { Settings, Mic, Send, MicOff, Keyboard, X, ShieldCheck, ThumbsUp, ThumbsDown, MessageCircle, Brain, Moon, SquarePen } from "lucide-react";
 import { hapticLight, hapticMedium } from "../hooks/useHaptics";
 import { recordFeedback } from "../services/nilaFeedback";
+import { notifyReplyReady } from "../services/notifications";
 
 interface ModeScreenProps {
   onOpenSettings?: () => void;
@@ -313,10 +316,12 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
       // the interface settles — the pixel-level half of the elevation guard (which also steers Nila's words).
       // Not written on a §9 turn (that path returned above). Picked up by the setMode(getCurrentMode()) below.
       noteChatElevation(detectElevationRisk(msg).level);
+      const insight = deriveInMomentInsight(msg, mode.userState);
       if (result.reply) {
-        setMessages((prev) => [...prev, { role: "assistant", content: result.reply }]);
+        setMessages((prev) => [...prev, { role: "assistant", content: result.reply, insight: insight ?? undefined }]);
         if (result.reachedAI) {
           speakIfEnabled(result.reply);
+          if (document.hidden) void notifyReplyReady();
         }
       }
       // After Nila replies, refresh the protocol card (continue if active, else re-offer).
@@ -325,8 +330,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
       // the mode so the interface settles (orb slows, home thins) in response to what the user just typed.
       setMode(getCurrentMode());
       // Suggest a relevant coping skill if the user expressed distress
-      const suggestion = suggestSkill(msg);
-      setSkillOffer(suggestion?.skill ?? null);
+      setSkillOffer(insight?.skill?.skill ?? null);
     } catch {
       crisisPendingRef.current = false; // model error is not a §9 crisis — let the turn persist
       setMessages((prev) => [
@@ -542,9 +546,8 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           >
             <Settings className="w-4 h-4" />
           </button>
-          {/* Crisis access is now the App-shell CrisisPill (persistent on every tab), so the redundant
-              icon-only LifeBuoy that used to live here was removed. §9 auto-detection still routes through
-              openCrisis() below — only the manual header button moved to the shell. */}
+          {/* Crisis auto-detection routes through openCrisis() below. No persistent crisis button in the
+              header — the app no longer shows a constant crisis affordance on every screen. */}
         </div>
       </div>
 
@@ -601,6 +604,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
               onClick={handleVoice}
               onLongPress={() => openCrisis()}
               size={160}
+              isListening={listening}
             />
 
             <div className="text-center space-y-2">
@@ -680,9 +684,24 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                             <ThumbsDown className="w-4 h-4" />
                           </button>
                         </div>
-                      )}
+                        )}
+                        {m.role === "assistant" && m.insight && (
+                          <InMomentInsightCard
+                            explainerTitle={m.insight.explainer?.title ?? ""}
+                            explainerSummary={m.insight.explainer?.summary ?? ""}
+                            explainerBasis={m.insight.explainer?.basis ?? ""}
+                            skillEmoji={m.insight.skill?.emoji ?? ""}
+                            skillName={m.insight.skill?.skill.name ?? ""}
+                            skillReason={m.insight.skill?.reason ?? ""}
+                            onTrySkill={
+                              m.insight.skill
+                                ? () => handleTrySkill(m.insight!.skill!.skill)
+                                : undefined
+                            }
+                          />
+                        )}
+                      </div>
                     </div>
-                  </div>
                 ))}
               </div>
             )}
