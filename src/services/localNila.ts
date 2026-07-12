@@ -7,7 +7,7 @@
 // reachedAI:false so the caller shows the offline experience — it never silently falls back to the cloud
 // (that would break the user's on-device/privacy choice).
 
-import { buildNilaSystem, type NilaMessage } from "./nila";
+import { buildNilaSystem, explainerQuestionSteer, type NilaMessage } from "./nila";
 import { generateGuarded, isLocalLlmReady } from "./localLlm";
 import { detectElevationRisk, elevationGuardNote, elevationOutputNote, type ElevationLevel } from "./elevationGuard";
 import { emaElevationSignal } from "./ema";
@@ -78,6 +78,11 @@ export async function askNilaLocalStream(
   } catch {
     /* exemplar few-shot is best-effort, never a hard dependency */
   }
+
+  // Per-turn stance steer for "why/how" explainer questions — appended LAST (most salient) so the model
+  // reflects instead of lecturing. Exemplar-RAG alone lost to Qwen's lecture default on these (2026-07-12).
+  const explainerSteer = explainerQuestionSteer(lastUser);
+  if (explainerSteer) system += "\n\n" + explainerSteer;
 
   try {
     // generateGuarded races a hang-timeout (Gate 6) so a true native deadlock still falls back to the
