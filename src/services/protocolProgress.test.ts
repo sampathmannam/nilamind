@@ -3,16 +3,27 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 // Encrypted-persistence backing mocked as a sync in-memory map (mirrors secureLocal). `store` = "disk": it
 // PERSISTS across a simulated app restart (module reload), while the module's `active` state resets.
 const store: Record<string, string> = {};
+const baStore: Record<string, string> = {};
 vi.mock("./secureLocal", () => ({
   secureLocal: {
-    getItem: (k: string) => store[k] ?? null,
-    setItem: (k: string, v: string) => { store[k] = v; },
-    removeItem: (k: string) => { delete store[k]; },
+    getItem: (k: string) => {
+      if (k.startsWith("nilamind_ba_")) return baStore[k] ?? null;
+      return store[k] ?? null;
+    },
+    setItem: (k: string, v: string) => {
+      if (k.startsWith("nilamind_ba_")) baStore[k] = v;
+      else store[k] = v;
+    },
+    removeItem: (k: string) => {
+      if (k.startsWith("nilamind_ba_")) delete baStore[k];
+      else delete store[k];
+    },
   },
   SENSITIVE_KEYS: [] as string[],
 }));
 
 const KEY = "nilamind_protocol_progress";
+const BA_KEY = "nilamind_ba_activities";
 
 /** Fresh module instance = a simulated app restart: `active` resets, `store` (disk) survives. */
 async function load() {
@@ -20,7 +31,16 @@ async function load() {
   return import("./protocolProgress");
 }
 
-beforeEach(() => { for (const k of Object.keys(store)) delete store[k]; });
+/** Load behaviouralActivation module with mocked secureLocal. */
+async function loadBA() {
+  vi.resetModules();
+  return import("./behaviouralActivation");
+}
+
+beforeEach(() => {
+  for (const k of Object.keys(store)) delete store[k];
+  for (const k of Object.keys(baStore)) delete baStore[k];
+});
 
 describe("protocolProgress — start / advance / complete", () => {
   it("starts a valid protocol at step 0", async () => {
@@ -93,5 +113,111 @@ describe("protocolOffer — offer only when nothing active + a concern matches",
   it("does NOT offer on a benign message", async () => {
     const m = await load();
     expect(m.protocolOffer("thanks, that really helped")).toBeNull();
+  });
+});
+
+describe("BA protocol integration — BA engine wired to protocol steps", () => {
+  it("BA protocol advances through all 5 steps correctly", async () => {
+    const m = await load();
+    const first = m.startProtocol("behavioral-activation");
+    expect(first?.step.id).toBe("ba-1"); // psychoed
+    expect(first?.step.kind).toBe("psychoed");
+
+    let r = m.advanceProtocol();
+    expect(r && "step" in r ? r.step.id : undefined).toBe("ba-2"); // reflect
+    r = m.advanceProtocol();
+    expect(r && "step" in r ? r.step.id : undefined).toBe("ba-3"); // plan
+    r = m.advanceProtocol();
+    expect(r && "step" in r ? r.step.id : undefined).toBe("ba-4"); // exercise
+    r = m.advanceProtocol();
+    expect(r && "step" in r ? r.step.id : undefined).toBe("ba-5"); // reflect
+    const done = m.advanceProtocol();
+    expect(done).toMatchObject({ done: true });
+    if (done && "protocol" in done) expect(done.protocol.title).toBe("Behavioral Activation");
+  });
+
+  it("BA plan step (ba-3) has kind=plan and exercise step (ba-4) has kind=exercise", async () => {
+    const m = await load();
+    m.startProtocol("behavioral-activation");
+    m.advanceProtocol(); // ba-1 -> ba-2
+    m.advanceProtocol(); // ba-2 -> ba-3 (plan)
+    const planStep = m.getActiveProgress();
+    expect(planStep?.step.kind).toBe("plan");
+    expect(planStep?.step.title).toBe("Pick something small");
+
+    m.advanceProtocol(); // ba-3 -> ba-4 (exercise)
+    const exStep = m.getActiveProgress();
+    expect(exStep?.step.kind).toBe("exercise");
+    expect(exStep?.step.title).toBe("Schedule it");
+  });
+});
+
+describe("BA engine — activity logging and insight", () => {
+  async function makeBA() {
+    vi.resetModules();
+    for (const k of Object.keys(baStore)) delete baStore[k];
+    return import("./behaviouralActivation");
+  }
+
+  it("logs a planned activity and later marks it done with mastery/pleasure", async () => {
+    const m = await makeBA();
+    const now = "2026-01-15";
+
+    // Plan an activity (status: planned)
+    m.upsertActivity({
+      id: "a1",
+      date: now,
+      timestamp: "10:00",
+      title: "Walk outside",
+      category: "movement",
+      status: "planned",
+    });
+
+    // Complete it with ratings
+    m.upsertActivity({
+      id: "a1",
+      date: now,
+      timestamp: "10:00",
+      title: "Walk outside",
+      category: "movement",
+      status: "done",
+      mastery: 7,
+      pleasure: 6,
+    });
+
+    const loaded = m.loadActivities();
+    expect(loaded).toHaveLength(1);
+    expect(loaded[0].status).toBe("done");
+    expect(loaded[0].mastery).toBe(7);
+    expect(loaded[0].pleasure).toBe(6);
+  });
+
+  it("computes insight from rated activities", async () => {
+    const m = await makeBA();
+    const now = "2026-01-15";
+
+    m.upsertActivity({ id: "a1", date: now, timestamp: "10:00", title: "Walk", category: "movement", status: "done", mastery: 7, pleasure: 6 });
+    m.upsertActivity({ id: "a2", date: now, timestamp: "10:00", title: "Text", category: "connection", status: "done", mastery: 5, pleasure: 8 });
+    m.upsertActivity({ id: "a3", date: now, timestamp: "10:00", title: "Make bed", category: "mastery", status: "done", mastery: 8, pleasure: 4 });
+
+    const insight = m.computeInsight();
+    expect(insight.done).toBe(3);
+    expect(insight.avgMastery).toBeCloseTo(6.67, 1);
+    expect(insight.avgPleasure).toBeCloseTo(6, 1);
+    expect(insight.topCategory).not.toBeNull();
+    expect(insight.topCategory?.id).toBe("movement"); // (7+6)=13 vs (5+8)=13 vs (8+4)=12 — tie but movement first in list
+  });
+
+  it("ignores unrated activities for averages", async () => {
+    const m = await makeBA();
+    const now = "2026-01-15";
+
+    m.upsertActivity({ id: "a1", date: now, timestamp: "10:00", title: "Rated", category: "movement", status: "done", mastery: 8, pleasure: 8 });
+    m.upsertActivity({ id: "a2", date: now, timestamp: "10:00", title: "Unrated", category: "movement", status: "done" }); // no ratings
+
+    const insight = m.computeInsight();
+    expect(insight.done).toBe(2);
+    expect(insight.avgMastery).toBe(8);
+    expect(insight.avgPleasure).toBe(8);
   });
 });

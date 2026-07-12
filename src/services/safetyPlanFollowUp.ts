@@ -15,7 +15,8 @@ import { secureLocal } from "./secureLocal";
 import { parseSafetyPlan } from "./safetyPlan";
 
 /** Stanley-Brown evidence: first follow-up within 48h, then every 14 days. */
-const DEFAULT_STALE_THRESHOLD_DAYS = 14;
+const FIRST_FOLLOW_UP_HOURS = 48;
+const STALE_THRESHOLD_DAYS = 14;
 
 /** Round epoch-ms difference down to integer days. */
 export function daysSinceLastReview(plan: SafetyPlan): number | null {
@@ -23,44 +24,96 @@ export function daysSinceLastReview(plan: SafetyPlan): number | null {
   return Math.floor((Date.now() - plan.lastUpdatedAt) / (1000 * 60 * 60 * 24));
 }
 
+/** Hours since plan was created/last updated. */
+export function hoursSinceLastUpdate(plan: SafetyPlan): number | null {
+  if (plan.lastUpdatedAt == null) return null;
+  return Math.floor((Date.now() - plan.lastUpdatedAt) / (1000 * 60 * 60));
+}
+
+/** True when the 48h first follow-up window has passed and follow-up hasn't been done. */
+export function isFirstFollowUpDue(plan: SafetyPlan): boolean {
+  if (plan.firstFollowUpDoneAt != null) return false; // already done
+  if (plan.lastUpdatedAt == null) return false; // never saved
+  return hoursSinceLastUpdate(plan) !== null && hoursSinceLastUpdate(plan)! >= FIRST_FOLLOW_UP_HOURS;
+}
+
 export interface StalenessOptions {
   thresholdDays?: number;
 }
 
-/** True when the safety plan hasn't been reviewed within the threshold window. */
+/** True when the periodic (14-day) review is due. */
 export function isStale(plan: SafetyPlan, opts: StalenessOptions = {}): boolean {
-  const days = daysSinceLastReview(plan);
-  if (days == null) return false; // legacy plan — never reviewed intentionally, don't call it stale
-  return days >= (opts.thresholdDays ?? DEFAULT_STALE_THRESHOLD_DAYS);
+  if (plan.lastUpdatedAt == null) return false; // legacy plan — never reviewed intentionally
+  return daysSinceLastReview(plan) !== null && daysSinceLastReview(plan)! >= (opts.thresholdDays ?? 14);
 }
 
-/** Gate for surfacing a review prompt in the UI. Currently: stale by the default threshold. */
+/** Gate for surfacing a review prompt in the UI. Includes 48h first follow-up and 14-day periodic. */
 export function shouldPromptReview(plan: SafetyPlan): boolean {
-  return isStale(plan);
+  return isFirstFollowUpDue(plan) || isStale(plan);
+}
+
+/** True when ANY follow-up is due (48h first or 14-day periodic). */
+export function isAnyFollowUpDue(plan: SafetyPlan): boolean {
+  return isFirstFollowUpDue(plan) || isStale(plan);
 }
 
 /**
- * Generates a gentle context block for Nila's system prompt when the safety plan is stale.
+ * Generates a gentle context block for Nila's system prompt when a follow-up is due.
  * Returns "" when no follow-up hint is needed. Never uses alarmist language.
  */
 export function safetyPlanFollowUpContextBlock(plan: SafetyPlan): string {
-  const days = daysSinceLastReview(plan);
-  if (days == null || days < DEFAULT_STALE_THRESHOLD_DAYS) return "";
+  const parts: string[] = [];
 
-  // Gentle invitation — never a demand
-  return [
-    `SAFETY-PLAN FOLLOW-UP (gentle — this is an invitation, never a push)`,
-    `They last reviewed their safety plan about ${days} days ago. You can gently`,
-    `mention it if it feels natural — e.g., "I noticed it's been a little while since`,
-    `you looked at your safety plan. No pressure at all, just a quiet nudge if now`,
-    `feels like a helpful time." Never ask "have you used it?" or "did it help?" —`,
-    `those can feel evaluative. Keep it light: a reminder that the plan exists and`,
-    `they can update it whenever they want.`,
-  ].join(" ");
+  // 48h first follow-up
+  if (isFirstFollowUpDue(plan)) {
+    const hrs = hoursSinceLastUpdate(plan) ?? 0;
+    parts.push(
+      `SAFETY-PLAN FOLLOW-UP (first, ~48h window — gentle invitation, never a push)`,
+      `It's been about ${hrs} hours since their safety plan was created/updated. The first follow-up`,
+      `within ~48h is the most impactful part of the Stanley-Brown protocol. You can gently`,
+      `mention it if it feels natural — e.g., "I noticed it's been a couple of days since you`,
+      `made your safety plan. No pressure at all, but I'm here if you want to walk through`,
+      `it together or make any tweaks." Never ask "did you use it?" — that's evaluative.`,
+      `Keep it light: a reminder the plan exists and they can update it whenever.`
+    );
+  }
+
+  // Periodic 14-day review
+  if (isStale(plan)) {
+    const days = daysSinceLastReview(plan);
+    if (days != null && days >= 14) {
+      parts.push(
+        `SAFETY-PLAN REVIEW (periodic, ~14 days — gentle invitation, never a push)`,
+        `Their safety plan was last reviewed about ${days} days ago. You can gently`,
+        `mention it if it feels natural — e.g., "It's been a little while since you looked`,
+        `at your safety plan. No pressure, just a quiet nudge if now feels like a helpful`,
+        `time." Never ask "have you used it?" or "did it help?" — those feel evaluative.`,
+        `Keep it light: a reminder the plan exists and they can update it whenever.`
+      );
+    }
+  }
+
+  return parts.join("\n\n");
 }
 
 /**
- * Mark the safety plan as reviewed now (e.g. user tapped "Looks good" on a follow-up prompt).
+ * Mark the 48h first follow-up as done (e.g. user tapped "Looks good" on the follow-up prompt).
+ * Updates only the timestamp without changing the plan's content. Returns true on success.
+ */
+export function markFirstFollowUpDone(): boolean {
+  try {
+    const raw = secureLocal.getItem("nilamind_safetyplan");
+    const plan = parseSafetyPlan(raw);
+    plan.firstFollowUpDoneAt = Date.now();
+    secureLocal.setItem("nilamind_safetyplan", JSON.stringify(plan));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Mark the safety plan as reviewed now (e.g. user tapped "Looks good" on a review prompt).
  * Updates only the timestamp without changing the plan's content. Returns true on success.
  */
 export function markSafetyPlanReviewed(): boolean {

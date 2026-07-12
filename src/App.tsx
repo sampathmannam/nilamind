@@ -24,7 +24,6 @@ const CaregiverShareScreen = lazy(() => import("./components/CaregiverShareScree
 // LAZY — aux view screens (module-scoped so lazy() runs once, not per render)
 const ThoughtRecordScreen = lazy(() => import("./components/ThoughtRecordScreen"));
 const AssessmentScreen = lazy(() => import("./components/AssessmentScreen"));
-const ValuesToActionScreen = lazy(() => import("./components/ValuesToActionScreen"));
 const SkillsLibraryScreen = lazy(() => import("./components/SkillsLibraryScreen"));
 const YourDataScreen = lazy(() => import("./components/YourDataScreen"));
 const WhyScreen = lazy(() => import("./components/WhyScreen"));
@@ -88,7 +87,6 @@ const AUX_LABELS: Partial<Record<AuxView, string>> = {
   insights: "Your patterns",
   thought_record: "Thought record",
   assessment: "Screenings",
-  values_to_action: "Values to action",
   skills: "Skills library",
   your_data: "Your data",
   why: "Why we built this",
@@ -122,7 +120,6 @@ function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () 
     case "insights": return <InsightsScreen onClose={onClose} />;
     case "thought_record": return <ThoughtRecordScreen />;
     case "assessment": return <AssessmentScreen onActivateCrisis={onActivateCrisis} />;
-    case "values_to_action": return <ValuesToActionScreen />;
     case "skills": return <SkillsLibraryScreen />;
     case "your_data": return <YourDataScreen />;
     case "why": return <WhyScreen />;

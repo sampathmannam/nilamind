@@ -40,9 +40,12 @@ import { speakIfEnabled, speak, listenOnce, stopSpeaking } from "../services/voi
 import { startVoiceSession, endVoiceSession } from "../services/voicePatterns";
 import LearnScreen from "./LearnScreen";
 import { parseSafetyPlan } from "../services/safetyPlan";
-import { shouldPromptReview, markSafetyPlanReviewed } from "../services/safetyPlanFollowUp";
+import { shouldPromptReview, isFirstFollowUpDue, markFirstFollowUpDone, markSafetyPlanReviewed } from "../services/safetyPlanFollowUp";
+import { selfReportSleepSignal } from "../services/sleepInsight";
+import { assessJitai, type JitaiDecision } from "../services/jitaiEngine";
+import { loadMoodHistory } from "../services/moodHistory";
 import { computeCompassionateStreak } from "../services/streaks";
-import { Settings, Mic, Send, MicOff, X, ShieldCheck, ThumbsUp, ThumbsDown, MessageCircle, SquarePen } from "lucide-react";
+import { Settings, Mic, Send, MicOff, X, ShieldCheck, ThumbsUp, ThumbsDown, MessageCircle, Brain, Moon, SquarePen } from "lucide-react";
 import { hapticLight, hapticMedium } from "../hooks/useHaptics";
 import { recordFeedback } from "../services/nilaFeedback";
 
@@ -76,6 +79,9 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   const [thoughtRecordDraft, setThoughtRecordDraft] = useState<ThoughtRecordDraft | undefined>();
   const [protocolCard, setProtocolCard] = useState<ProtocolCard | null>(() => protocolOfferCard(""));
   const [showSafetyPlanReview, setShowSafetyPlanReview] = useState(false);
+  const [showSafetyPlanFollowUp, setShowSafetyPlanFollowUp] = useState(false);
+  const [sleepProdromeNudge, setSleepProdromeNudge] = useState<{ firing: boolean; detail: string } | null>(null);
+  const [jitaiNudge, setJitaiNudge] = useState<JitaiDecision | null>(null);
   const [skillOffer, setSkillOffer] = useState<Skill | null>(null);
   const [pactNotice, setPactNotice] = useState<PactNotice | null>(null); // #30: surfaced pact (the human bridge)
   const [confirmNewChat, setConfirmNewChat] = useState(false); // "new conversation" confirm dialog
@@ -131,10 +137,43 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
       const raw = secureLocal.getItem("nilamind_safetyplan");
       const plan = parseSafetyPlan(raw);
       setShowSafetyPlanReview(shouldPromptReview(plan));
+      setShowSafetyPlanFollowUp(isFirstFollowUpDue(plan));
     } catch {
       setShowSafetyPlanReview(false);
+      setShowSafetyPlanFollowUp(false);
     }
   }, [auxView]);
+
+  // C1: sleep prodrome nudge (soft signal, never alarmist) + JITAI nudge
+  useEffect(() => {
+    let cancelled = false;
+    const checkSignals = async () => {
+      try {
+        // Sleep prodrome from self-report (available today) or wearable when connected
+        const sleepSignal = selfReportSleepSignal();
+        if (!cancelled) setSleepProdromeNudge(sleepSignal);
+      } catch { /* best-effort */ }
+
+      try {
+        // JITAI nudge based on current signals
+        const moodHist = loadMoodHistory();
+        const lastCheckin = moodHist[moodHist.length - 1];
+        const daysSinceLastCheckin = lastCheckin
+          ? Math.max(0, Math.floor((Date.now() - new Date(lastCheckin.date).getTime()) / 86400000))
+          : 99;
+        const jitai = assessJitai({
+          sleep: selfReportSleepSignal(),
+          moodHistory: moodHist,
+          lastUserText: messages.filter(m => m.role === "user").pop()?.content,
+          daysSinceLastCheckin,
+        });
+        if (!cancelled) setJitaiNudge(jitai);
+      } catch { /* best-effort */ }
+    };
+    checkSignals();
+    const interval = setInterval(checkSignals, 5 * 60 * 1000); // re-check every 5 min
+    return () => { cancelled = true; clearInterval(interval); };
+  }, [messages, auxView]);
 
   // audit 2.1 — CHAT PERSISTENCE (regressed in the rewrite: sessionChat was imported but never used).
   // Restore an in-progress conversation on mount so it survives leaving/killing the app; a crisis session
@@ -338,6 +377,11 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   const handleMarkSafetyPlanReviewed = () => {
     markSafetyPlanReviewed();
     setShowSafetyPlanReview(false);
+  };
+
+  const handleMarkSafetyPlanFollowUpDone = () => {
+    markFirstFollowUpDone();
+    setShowSafetyPlanFollowUp(false);
   };
 
   const handleProtocolTap = () => {
@@ -646,7 +690,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
       {/* Input bar */}
       {!showCheckin && (
         <div className="px-4 py-3 border-t border-slate-800/50 space-y-2">
-          {showSafetyPlanReview && (
+{showSafetyPlanReview && (
             <div
               className="w-full px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs"
               id="safety-plan-review-card"
@@ -669,11 +713,107 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                     >
                       Looks good
                     </button>
+</div>
+              </div>
+            </div>
+          </div>
+          )}
+
+          {/* 48h Safety Plan First Follow-Up (Stanley-Brown) */}
+          {showSafetyPlanFollowUp && (
+            <div
+              className="w-full px-3 py-2 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-200 text-xs"
+              id="safety-plan-followup-card"
+            >
+              <div className="flex items-start gap-2">
+                <ShieldCheck className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" />
+                <div className="flex-1">
+                  <p className="font-medium">Safety plan — first follow-up (~48h)</p>
+                  <p className="text-blue-200/70 mt-0.5">The first follow-up within ~48h is the most impactful part of the Stanley-Brown protocol. No pressure — just a gentle nudge if now feels like a good time.</p>
+                  <div className="flex gap-2 mt-2">
+                    <button
+                      onClick={handleOpenSafetyPlan}
+                      className="px-2.5 py-1 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-200 font-medium transition-colors cursor-pointer"
+                    >
+                      Review plan
+                    </button>
+                    <button
+                      onClick={handleMarkSafetyPlanFollowUpDone}
+                      className="px-2.5 py-1 rounded-lg hover:bg-blue-500/15 text-blue-200/80 transition-colors cursor-pointer"
+                    >
+                      Done
+                    </button>
                   </div>
                 </div>
               </div>
             </div>
           )}
+
+          {/* Sleep prodrome nudge (C1 — soft signal, never alarm) */}
+          {sleepProdromeNudge && (
+            <div
+              key="sleep-prodrome"
+              className="w-full px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs"
+              id="sleep-prodrome-card"
+            >
+              <div className="flex items-start gap-2">
+                <Moon className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
+                <div className="flex-1">
+                  <p className="font-medium">Sleep has been short lately</p>
+                  <p className="text-amber-200/70 mt-0.5">{sleepProdromeNudge.detail}</p>
+                  <div className="flex gap-2 mt-2">
+                    <button
+                      onClick={() => onOpenWindDown?.()}
+                      className="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 font-medium transition-colors cursor-pointer"
+                    >
+                      Wind down
+                    </button>
+                    <button
+                      onClick={() => setSleepProdromeNudge(null)}
+                      className="px-2.5 py-1 rounded-lg hover:bg-amber-500/15 text-amber-200/80 transition-colors cursor-pointer"
+                    >
+                      Not now
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* JITAI nudge */}
+          {jitaiNudge?.shouldNudge && (
+            <div
+              key="jitai-nudge"
+              className="w-full px-3 py-2 rounded-xl bg-slate-800/50 border border-slate-700 text-slate-200 text-xs"
+              id="jitai-nudge-card"
+            >
+              <div className="flex items-start gap-2">
+                <Brain className="w-4 h-4 text-violet-400 mt-0.5 shrink-0" />
+                <div className="flex-1">
+                  <p className="font-medium">Quick nudge</p>
+                  <p className="text-slate-200/70 mt-0.5">{jitaiNudge.nudgeText}</p>
+                  {jitaiNudge.suggestedTool && (
+                    <button
+                      onClick={() => {
+                        const actionMap: Record<string, string> = {
+                          winddown: "wind_down",
+                          grounding: "grounding",
+                          breathing: "breathing",
+                        };
+                        if (actionMap[jitaiNudge.suggestedTool!]) {
+                          handleQuickAction(actionMap[jitaiNudge.suggestedTool!]);
+                        }
+                      }}
+                      className="px-2.5 py-1 rounded-lg bg-violet-500/20 hover:bg-violet-500/30 text-violet-200 font-medium transition-colors cursor-pointer mt-2"
+                    >
+                      Try {jitaiNudge.suggestedTool}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+)}
+
           {protocolCard && (
             <button
               onClick={handleProtocolTap}

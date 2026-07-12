@@ -9,11 +9,9 @@ export type AuxView =
   | "about_nila"
   | "insights"
   | "thought_record"
-  | "self_compassion"
   | "settings"
   | "behaviour"
   | "assessment"
-  | "values_to_action"
   | "skills"
   | "dashboard"
   | "your_data"
@@ -43,14 +41,14 @@ export const TAB_TARGETS: readonly TabView[] = [
 ];
 
 export const KNOWN_AUX_VIEWS: readonly AuxView[] = [
-   "about_nila", "insights", "thought_record", "self_compassion", "settings", "behaviour", "reach_out", "assessment",
-   "values_to_action", "skills", "dashboard", "your_data", "why", "nila_memory", "winddown", "understand", "pact",
+   "about_nila", "insights", "thought_record", "settings", "behaviour", "reach_out", "assessment",
+   "skills", "dashboard", "your_data", "why", "nila_memory", "winddown", "understand", "pact",
    "learn", "crisis_rehearsal", "peer_support", "medication", "problem_solving", "values_work", "exposure", "relapse_plan", "caregiver", "episode",
-  "diary",
-    "social_rhythm",
-    "armed_checkin",
-    "ema_checkin",
-  ];
+   "diary",
+     "social_rhythm",
+     "armed_checkin",
+     "ema_checkin",
+   ];
 
 export type NavResolution =
   | { kind: "crisis" }

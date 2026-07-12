@@ -24,9 +24,9 @@ describe("resolveNavTarget", () => {
   it("treats unknown targets as unknown", () => {
     expect(resolveNavTarget("oldtab")).toEqual({ kind: "unknown", target: "oldtab" });
   });
-  it("maps known aux views including the new values_to_action and insights", () => {
+  it("maps known aux views including insights (values_to_action retired per PLAN_OF_ACTION A6)", () => {
     expect(resolveNavTarget("dashboard")).toEqual({ kind: "aux", view: "dashboard" });
-    expect(resolveNavTarget("values_to_action")).toEqual({ kind: "aux", view: "values_to_action" });
+    expect(resolveNavTarget("values_to_action")).toEqual({ kind: "unknown", target: "values_to_action" });
     expect(resolveNavTarget("skills")).toEqual({ kind: "aux", view: "skills" });
     expect(resolveNavTarget("assessment")).toEqual({ kind: "aux", view: "assessment" });
     expect(resolveNavTarget("insights")).toEqual({ kind: "aux", view: "insights" });
@@ -39,7 +39,7 @@ describe("resolveNavTarget", () => {
     expect(resolveNavTarget("totally_made_up")).toEqual({ kind: "unknown", target: "totally_made_up" });
   });
   it("exposes stable allowlists", () => {
-    expect(KNOWN_AUX_VIEWS).toContain("values_to_action");
+    expect(KNOWN_AUX_VIEWS).not.toContain("values_to_action");
     expect(KNOWN_AUX_VIEWS).toContain("insights");
     expect(KNOWN_AUX_VIEWS).not.toContain("nila_voice");
     expect(TAB_TARGETS).toContain("today");

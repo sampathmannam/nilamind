@@ -12,6 +12,7 @@ import {
   isStale,
   safetyPlanFollowUpContextBlock,
   shouldPromptReview,
+  isFirstFollowUpDue,
 } from "./safetyPlanFollowUp";
 import type { SafetyPlan } from "../types";
 
@@ -27,6 +28,11 @@ const planNoTimestamp: SafetyPlan = {
 const planToday: SafetyPlan = {
   ...planNoTimestamp,
   lastUpdatedAt: Date.now(),
+};
+
+const plan48HoursAgo: SafetyPlan = {
+  ...planNoTimestamp,
+  lastUpdatedAt: Date.now() - 48 * 60 * 60 * 1000,
 };
 
 const plan10DaysAgo: SafetyPlan = {
@@ -77,6 +83,19 @@ describe("isStale", () => {
   it("respects custom threshold", () => {
     expect(isStale(plan10DaysAgo, { thresholdDays: 7 })).toBe(true);
   });
+
+  // 48-hour first follow-up (Stanley-Brown)
+  it("returns true for 48h threshold when plan is 48h old", () => {
+    expect(isFirstFollowUpDue(plan48HoursAgo)).toBe(true);
+  });
+
+  it("returns false for 48h threshold when plan is 1 day old", () => {
+    const plan1DayAgo: SafetyPlan = {
+      ...planNoTimestamp,
+      lastUpdatedAt: Date.now() - 24 * 60 * 60 * 1000,
+    };
+    expect(isFirstFollowUpDue(plan1DayAgo)).toBe(false);
+  });
 });
 
 describe("shouldPromptReview", () => {
@@ -88,12 +107,66 @@ describe("shouldPromptReview", () => {
     expect(shouldPromptReview(planToday)).toBe(false);
   });
 
-  it("returns false when updated 10 days ago (within 14-day window)", () => {
-    expect(shouldPromptReview(plan10DaysAgo)).toBe(false);
+  it("returns true when updated 10 days ago (48h follow-up due, 14-day window not yet)", () => {
+    // 48h follow-up is due even though 14-day window hasn't passed
+    expect(shouldPromptReview(plan10DaysAgo)).toBe(true);
   });
 
   it("returns true when staler than 14 days", () => {
     expect(shouldPromptReview(plan50DaysAgo)).toBe(true);
+  });
+
+  // 48-hour first follow-up (Stanley-Brown)
+  it("returns true for 48h first follow-up when plan is 48h old and not done", () => {
+    const plan48hNotDone: SafetyPlan = {
+      ...plan48HoursAgo,
+      firstFollowUpDoneAt: undefined,
+    };
+    expect(shouldPromptReview(plan48hNotDone)).toBe(true);
+  });
+
+  it("returns false for 48h follow-up when already done", () => {
+    const plan48hDone: SafetyPlan = {
+      ...plan48HoursAgo,
+      firstFollowUpDoneAt: Date.now() - 24 * 60 * 60 * 1000,
+    };
+    expect(shouldPromptReview(plan48hDone)).toBe(false);
+  });
+
+  it("returns false for 48h follow-up when plan is 1 day old", () => {
+    const plan1DayAgo: SafetyPlan = {
+      ...planNoTimestamp,
+      lastUpdatedAt: Date.now() - 24 * 60 * 60 * 1000,
+      firstFollowUpDoneAt: undefined,
+    };
+    expect(shouldPromptReview(plan1DayAgo)).toBe(false);
+  });
+});
+
+describe("isFirstFollowUpDue", () => {
+  it("returns true when 48h passed and not done", () => {
+    expect(isFirstFollowUpDue(plan48HoursAgo)).toBe(true);
+  });
+
+  it("returns false when already done", () => {
+    const planDone: SafetyPlan = {
+      ...plan48HoursAgo,
+      firstFollowUpDoneAt: Date.now(),
+    };
+    expect(isFirstFollowUpDue(planDone)).toBe(false);
+  });
+
+  it("returns false when < 48h passed", () => {
+    expect(isFirstFollowUpDue(planToday)).toBe(false);
+    const plan1DayAgo: SafetyPlan = {
+      ...planNoTimestamp,
+      lastUpdatedAt: Date.now() - 24 * 60 * 60 * 1000,
+    };
+    expect(isFirstFollowUpDue(plan1DayAgo)).toBe(false);
+  });
+
+  it("returns false for legacy plan (no timestamp)", () => {
+    expect(isFirstFollowUpDue(planNoTimestamp)).toBe(false);
   });
 });
 
