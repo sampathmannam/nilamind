@@ -198,11 +198,11 @@ export function buildPersonalContext(): string {
     lines.push(`- A few hard moments lately (${episodes.length})${whenStr} — they got through them.`);
   }
 
-  // ── Showing up (streak) ───────────────────────────────────────────────────
+  // ── Showing up (streak — Phase 8: forgiving, non-pressure language) ───────
   try {
     const streak = computeCompassionateStreak();
-    if (streak?.current && streak.current >= 2) {
-      lines.push(`- They've checked in ${streak.current} days running — they keep showing up for themselves.`);
+    if (streak?.totalActiveDays && streak.totalActiveDays >= 2) {
+      lines.push(`- They keep showing up for themselves — ${streak.totalActiveDays} days of self-care logged so far.`);
     }
   } catch {
     /* streak is best-effort */
@@ -444,7 +444,7 @@ export function buildReflectionDigest(): string {
 
   try {
     const streak = computeCompassionateStreak();
-    if (streak?.current && streak.current >= 2) lines.push(`Showing up: ${streak.current}-day streak.`);
+    if (streak?.totalActiveDays && streak.totalActiveDays >= 2) lines.push(`Showed up: ${streak.totalActiveDays} total days.`);
   } catch {
     /* best-effort */
   }

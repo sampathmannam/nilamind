@@ -5,6 +5,7 @@ import { hasCheckinToday } from "../services/checkin";
 import { secureLocal } from "../services/secureLocal";
 import { buildToolGroups } from "./toolsRows";
 import { loadInsights } from "../services/nilaInsights";
+import { getCapacityLevel } from "../services/capacitySignal";
 import type { TimeMode, UserState } from "../types/modes";
 
 const MOOD_EMOJI: Record<string, string> = {
@@ -107,6 +108,7 @@ export default function TodayScreen({
   const [showAllTools, setShowAllTools] = useState(false);
   const timeMode = getTimeMode();
   const userState = getUserState();
+  const capacity = getCapacityLevel(userState);
   const greeting = getGreeting(timeMode);
   const checkedIn = hasCheckinToday(new Date().toISOString().split("T")[0]);
   const todayMood = getTodayMood();
@@ -229,7 +231,12 @@ export default function TodayScreen({
         <ChevronRight className="w-5 h-5 text-slate-500 shrink-0" aria-hidden="true" />
       </button>
 
-      {/* All tools toggle */}
+      {/* Capacity-adaptive tools section (Phase 8: forgiving engagement) */}
+      {capacity === "low" && (
+        <p className="text-[11px] text-slate-500 text-center leading-relaxed italic">
+          A quiet day? That's okay. The essentials are above — everything else can wait.
+        </p>
+      )}
       <button
         onClick={() => setShowAllTools(!showAllTools)}
         aria-expanded={showAllTools}

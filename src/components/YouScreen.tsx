@@ -1,9 +1,11 @@
 import React from "react";
-import { ChevronRight, Sparkles, TrendingUp, Target, CheckCircle, X } from "lucide-react";
+import { ChevronRight, Sparkles, TrendingUp, Target, CheckCircle, X, Circle } from "lucide-react";
 import { buildYouGroups } from "./youRows";
 import { computeCompassionateStreak } from "../services/streaks";
 import { secureLocal } from "../services/secureLocal";
 import { getIntention, setIntention, completeIntention, clearIntention, INTENTION_OPTIONS, isIntentionCompleted, getCompletionAck, markAckShown } from "../services/weeklyIntention";
+import { getCapacityLevel } from "../services/capacitySignal";
+import { getUserState } from "../services/modeEngine";
 
 function getWeekSnapshot(): { checkinDays: number; topEmotion: string | null } | null {
   try {
@@ -30,18 +32,81 @@ function getWeekSnapshot(): { checkinDays: number; topEmotion: string | null } |
   } catch { return null; }
 }
 
+/** A 7-dot constellation showing the last 7 days. Filled dots for active days, empty for missed. */
+function StreakConstellation({ activeDays }: { activeDays: string[] }) {
+  const dots: React.ReactNode[] = [];
+  const today = new Date();
+  const dayLabels = ["M", "T", "W", "T", "F", "S", "S"];
+  // Start from Monday of current week
+  const monday = new Date(today);
+  const dayOfWeek = today.getDay();
+  const monOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  monday.setDate(today.getDate() + monOffset);
+
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    const dateStr = d.toISOString().slice(0, 10);
+    const active = activeDays.includes(dateStr);
+    dots.push(
+      <div key={i} className="flex flex-col items-center gap-1" title={dateStr}>
+        <Circle
+          className={`w-3.5 h-3.5 ${active ? "text-emerald-400 fill-emerald-400/50" : "text-slate-600"}`}
+          aria-hidden="true"
+        />
+        <span className="text-[9px] font-mono text-slate-600">{dayLabels[i]}</span>
+      </div>
+    );
+  }
+  return <div className="flex items-center justify-center gap-2.5 mt-2">{dots}</div>;
+}
+
+function getLast7Days(): string[] {
+  const dates: string[] = [];
+  const today = new Date();
+  const dayOfWeek = today.getDay();
+  const monOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  const monday = new Date(today);
+  monday.setDate(today.getDate() + monOffset);
+
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    dates.push(d.toISOString().slice(0, 10));
+  }
+  return dates;
+}
+
+function getActiveDaysInRange(): string[] {
+  try {
+    const raw = secureLocal.getItem("nilamind_checkins");
+    if (!raw) return [];
+    const list = JSON.parse(raw);
+    if (!Array.isArray(list)) return [];
+    const weekDays = getLast7Days();
+    const active = new Set<string>();
+    for (const e of list) {
+      if (e?.date && weekDays.includes(e.date)) active.add(e.date);
+    }
+    return [...active];
+  } catch { return []; }
+}
+
 export default function YouScreen({ go }: { go: (target: string) => void }) {
   const groups = buildYouGroups();
   const weekSnapshot = getWeekSnapshot();
   const [intention, setIntentionState] = React.useState(getIntention());
   const [showPicker, setShowPicker] = React.useState(false);
   let streak = { current: 0, totalActiveDays: 0, message: "Welcome" };
+  let capacity = "high" as "low" | "medium" | "high";
   try {
     const s = computeCompassionateStreak();
     streak = { current: s.current, totalActiveDays: s.totalActiveDays, message: s.message };
+    capacity = getCapacityLevel(getUserState());
   } catch {
     /* ignore */
   }
+  const activeDays = getActiveDaysInRange();
 
   const handleSetIntention = (text: string) => {
     const i = setIntention(text);
@@ -67,21 +132,31 @@ export default function YouScreen({ go }: { go: (target: string) => void }) {
 
   return (
     <div className="space-y-6 max-w-md mx-auto" id="you-hub">
-      {/* Profile card — no streak numbers (UX_RESEARCH.md §3: streaks mirror addiction models).
-          Instead, a simple welcome and total days count. */}
+      {/* Profile card — constellation metaphor (Phase 8: forgiving engagement).
+          No streak numbers — a visual constellation of the week instead. */}
       <div className="glass rounded-2xl p-5">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full sun-cta flex items-center justify-center shrink-0">
             <Sparkles className="w-5 h-5 text-white" aria-hidden="true" />
           </div>
-          <div>
+          <div className="flex-1 min-w-0">
             <h1 className="editorial text-xl text-slate-100">You</h1>
             <p className="text-xs text-slate-400 mt-0.5">{streak.message}</p>
           </div>
         </div>
         {streak.totalActiveDays > 0 && (
-          <p className="text-xs text-slate-500 mt-3 pt-3 border-t border-slate-800">
-            {streak.totalActiveDays} day{streak.totalActiveDays !== 1 ? "s" : ""} spent on your wellbeing
+          <>
+            <div className="mt-3 pt-3 border-t border-slate-800">
+              <StreakConstellation activeDays={activeDays} />
+            </div>
+            <p className="text-[10px] text-slate-500 text-center mt-1.5">
+              {streak.totalActiveDays} day{streak.totalActiveDays !== 1 ? "s" : ""} this week
+            </p>
+          </>
+        )}
+        {capacity === "low" && (
+          <p className="text-[10px] text-slate-500 mt-2 text-center italic">
+            Today might feel heavy — that's okay. Just being here is enough.
           </p>
         )}
       </div>

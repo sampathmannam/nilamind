@@ -58,10 +58,24 @@ describe("computeCompassionateStreak — grace + freeze budget (audit #25)", () 
     expect(s.freezesUsed).toBe(1);
   });
 
-  it("two consecutive missed days end the streak (lapsed, welcomed back)", () => {
+  it("3-day forgiving window: 2 missed days is NOT lapsed", () => {
     setCheckins([utcDay(today.getTime() - 2 * DAY_MS), utcDay(today.getTime() - 3 * DAY_MS)]);
     const s = computeCompassionateStreak(today);
-    expect(s.lapsed).toBe(true);
+    expect(s.lapsed).toBe(false);
     expect(s.daysSinceLast).toBe(2);
+  });
+
+  it("3-day forgiving window: 3 missed days is NOT lapsed", () => {
+    setCheckins([utcDay(today.getTime() - 3 * DAY_MS), utcDay(today.getTime() - 4 * DAY_MS)]);
+    const s = computeCompassionateStreak(today);
+    expect(s.lapsed).toBe(false);
+    expect(s.daysSinceLast).toBe(3);
+  });
+
+  it("3-day forgiving window: 4 missed days IS lapsed (welcome back)", () => {
+    setCheckins([utcDay(today.getTime() - 4 * DAY_MS), utcDay(today.getTime() - 5 * DAY_MS)]);
+    const s = computeCompassionateStreak(today);
+    expect(s.lapsed).toBe(true);
+    expect(s.daysSinceLast).toBe(4);
   });
 });

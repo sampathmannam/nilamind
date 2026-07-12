@@ -112,7 +112,7 @@ export function computeCompassionateStreak(today: Date = new Date()): Compassion
     break;
   }
 
-  const lapsed = daysSinceLast >= 2;
+  const lapsed = daysSinceLast >= 4;
   const milestone = activeToday && MILESTONES.includes(current) ? current : null;
 
   let message: string;
