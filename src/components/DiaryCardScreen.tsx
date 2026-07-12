@@ -9,6 +9,7 @@ import { useTypingSession } from "../hooks/useTypingSession";
 import { hapticMedium } from "../hooks/useHaptics";
 import CrisisCard from "./CrisisCard";
 import { listenOnce, stopListening } from "../services/voice";
+import DailyIntentionCard from "./DailyIntentionCard";
 
 export default function DiaryCardScreen() {
   const [selectedDate, setSelectedDate] = useState<string>(
@@ -27,7 +28,6 @@ export default function DiaryCardScreen() {
   const [skillsUsed, setSkillsUsed] = useState<string[]>([]);
   const [quickNotes, setQuickNotes] = useState<string>("");
   const [quickNoteTags, setQuickNoteTags] = useState<string[]>([]);
-  const [morningIntention, setMorningIntention] = useState<string>("");
   const [isSaved, setIsSaved] = useState<boolean>(false);
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
@@ -51,7 +51,6 @@ export default function DiaryCardScreen() {
           setSkillsUsed(existing.skillsUsed || []);
           setQuickNotes(existing.quickNotes || "");
           setQuickNoteTags(existing.quickNoteTags || []);
-          setMorningIntention(existing.morningIntention || "");
           return;
         }
       } catch {
@@ -71,7 +70,6 @@ export default function DiaryCardScreen() {
     setSkillsUsed([]);
     setQuickNotes("");
     setQuickNoteTags([]);
-    setMorningIntention("");
   }, [selectedDate]);
 
   const handleEmotionChange = (key: keyof typeof emotions, val: number) => {
@@ -98,13 +96,16 @@ export default function DiaryCardScreen() {
       }
     }
 
+    // morningIntention is no longer written here — Part 3 now defers to the unified daily-intention
+    // store (weeklyIntention.ts's DailyIntention, via DailyIntentionCard) instead of its own
+    // free-text field. The DiaryCardEntry type keeps the field (optional) for backward-compat
+    // reads of older entries (see nilaContext.ts/coachAssist.ts's privacy scan, which still checks it).
     entries[selectedDate] = {
       date: selectedDate,
       emotions,
       skillsUsed,
       quickNotes,
       quickNoteTags,
-      morningIntention,
     };
 
     secureLocal.setItem("nilamind_diary", JSON.stringify(entries));
@@ -238,22 +239,16 @@ export default function DiaryCardScreen() {
           </div>
         </div>
 
-        {/* PART 3: Morning Intention */}
+        {/* PART 3: Today's Intention — Wave 3 Group I: this used to be its own free-text field
+            (one of three independent, contradictory "intention" surfaces). It now renders the
+            same structured if-then DailyIntentionCard the Today hub uses, backed by the ONE
+            canonical daily-intention store (weeklyIntention.ts), so setting/editing it here and
+            on the Today hub stay in sync instead of drifting apart. */}
         <div className="space-y-4">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-2 flex items-center gap-2">
-            3. Morning Intention
+            3. Today's Intention
           </h3>
-          <input
-            type="text"
-            value={morningIntention}
-            onChange={(e) => {
-              setMorningIntention(e.target.value);
-              setIsSaved(false);
-            }}
-            placeholder="e.g. Note to self..."
-            aria-label="Morning Intention"
-            className="w-full bg-page border border-slate-800 border-l-2 border-l-amber-500/50 rounded-lg p-3 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-blue-500/50"
-          />
+          <DailyIntentionCard />
         </div>
 
         {/* PART 4: Quick Notes */}

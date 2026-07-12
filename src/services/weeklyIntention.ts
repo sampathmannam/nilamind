@@ -106,3 +106,64 @@ export function markAckShown(): void {
   i.ackShown = true;
   saveRaw(i);
 }
+
+// ── Daily if-then implementation intention ──
+// Wave 3 Group I (2026-07-12): the app previously had THREE independent, contradictory "intention"
+// surfaces — this weekly picker, a free-text chat question (modeEngine.ts's "What's your intention
+// for today?"), and a free-text diary field (DiaryCardScreen.tsx) — exactly the friction the
+// synthesis warned against, per Borghouts, Eikey, Mark et al. (2021), J Med Internet Res. This is
+// the ONE canonical daily store both of those now defer to. It carries a structured if-then
+// ("implementation intention") plan rather than free text: specific/structured plans produce
+// d=0.65 on goal attainment generally and d=0.61 specifically on overcoming failure-to-start —
+// exactly the "opens the app but doesn't act" gap an unstructured prompt is vulnerable to,
+// per Gollwitzer & Sheeran (2006), Adv Exp Soc Psychol.
+export interface DailyIntention {
+  if: string;
+  then: string;
+  date: string; // YYYY-MM-DD — the day this intention is for
+}
+
+const DAILY_KEY = "nilamind_daily_intention";
+
+function loadDailyRaw(): DailyIntention | null {
+  try {
+    const raw = secureLocal.getItem(DAILY_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed.if === "string" && typeof parsed.then === "string" && parsed.date
+      ? parsed
+      : null;
+  } catch { return null; }
+}
+
+function saveDailyRaw(i: DailyIntention | null): void {
+  try {
+    if (i) secureLocal.setItem(DAILY_KEY, JSON.stringify(i));
+    else secureLocal.removeItem(DAILY_KEY);
+  } catch { /* best-effort */ }
+}
+
+/** Today's if-then intention, or null if none has been set yet or it was set on a prior day. */
+export function getDailyIntention(): DailyIntention | null {
+  const i = loadDailyRaw();
+  if (!i) return null;
+  if (i.date !== ymd(new Date())) return null; // a new day — the old plan has expired
+  return i;
+}
+
+/** Set (or overwrite) today's if-then intention. Returns null and persists nothing if either
+ *  field is blank — both halves of the implementation intention are required for it to be a
+ *  concrete, evidence-backed plan rather than a vague reminder. */
+export function setDailyIntention(ifText: string, thenText: string): DailyIntention | null {
+  const cleanIf = ifText.trim();
+  const cleanThen = thenText.trim();
+  if (!cleanIf || !cleanThen) return null;
+  const i: DailyIntention = { if: cleanIf, then: cleanThen, date: ymd(new Date()) };
+  saveDailyRaw(i);
+  return i;
+}
+
+/** Clear today's daily intention (e.g. so the user can start over). */
+export function clearDailyIntention(): void {
+  saveDailyRaw(null);
+}

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Wind, MessageCircle, Moon, LayoutGrid, Sparkles, ChevronRight, HeartHandshake, Sparkle, Clock3 } from "lucide-react";
+import { Wind, MessageCircle, Moon, LayoutGrid, Sparkles, ChevronRight, HeartHandshake, Sparkle, Clock3, Target } from "lucide-react";
 import { getTimeMode, getUserState, getGreeting } from "../services/modeEngine";
 import { hasCheckinToday } from "../services/checkin";
 import { secureLocal } from "../services/secureLocal";
@@ -8,6 +8,8 @@ import { loadInsights } from "../services/nilaInsights";
 import { getCapacityLevel } from "../services/capacitySignal";
 import { hasRhythmToday, loadTodayAnchors, RHYTHM_ANCHORS } from "../services/socialRhythm";
 import { getUserGoals } from "../services/chatSuggestions";
+import { getDailyIntention } from "../services/weeklyIntention";
+import DailyIntentionCard from "./DailyIntentionCard";
 import type { TimeMode, UserState } from "../types/modes";
 
 // Goal -> the tool row ids it should promote to the front of their group, when present in that group.
@@ -73,13 +75,23 @@ interface HeroAction {
   route: string;
 }
 
-function getHeroAction(timeMode: TimeMode, userState: UserState | null): HeroAction {
+// Wave 3 Group I (2026-07-12, confirmed product decision) — the Today hub leads with a structured
+// tool rather than "Talk to Nila" as the primary CTA. The night/wind-down and anxious-or-elevated/
+// grounding branches are safety-adaptive and stay unconditionally on top (never displaced by an
+// engagement nudge). Otherwise, when today's if-then intention hasn't been set yet, the hero
+// promotes setting it — the DailyIntentionCard rendered further down the hub — instead of the
+// generic check-in prompt, which duplicates the mood card above it. Once it's set, the hero falls
+// back to the original check-in prompt.
+export function getHeroAction(timeMode: TimeMode, userState: UserState | null, dailyIntentionSet: boolean): HeroAction {
   const hour = new Date().getHours();
   if (hour >= 20 || hour < 5) {
     return { id: "winddown", label: "Wind down for sleep", sub: "A calm bedtime routine", icon: <Moon className="w-5 h-5" aria-hidden="true" />, color: "text-indigo-400", route: "winddown" };
   }
   if (userState === "anxious" || userState === "elevated") {
     return { id: "plan", label: "Grounding & breathing", sub: "Calm your body in a hard minute", icon: <Wind className="w-5 h-5" aria-hidden="true" />, color: "text-emerald-400", route: "plan" };
+  }
+  if (!dailyIntentionSet) {
+    return { id: "daily_intention", label: "Set today's intention", sub: "A 30-second if-then plan — research-backed", icon: <Target className="w-5 h-5" aria-hidden="true" />, color: "text-amber-400", route: "" };
   }
   return { id: "checkin", label: "How are you feeling?", sub: "A quick check-in takes just a moment", icon: <Sparkles className="w-5 h-5" aria-hidden="true" />, color: "text-blue-400", route: "ema_checkin" };
 }
@@ -146,7 +158,8 @@ export default function TodayScreen({
   const greeting = getGreeting(timeMode);
   const checkedIn = hasCheckinToday(new Date().toISOString().split("T")[0]);
   const todayMood = getTodayMood();
-  const hero = getHeroAction(timeMode, userState);
+  const dailyIntentionSet = !!getDailyIntention();
+  const hero = getHeroAction(timeMode, userState, dailyIntentionSet);
   const groups = personalizeToolOrder(buildToolGroups({ go, onEpisode, phoneEnabled }), getUserGoals());
   const weekInsight = getWeekInsight();
   const nilaReflection = getNilaReflection();
@@ -267,9 +280,18 @@ export default function TodayScreen({
         </div>
       )}
 
-      {/* Hero action — time-aware: wind-down at night, grounding when elevated, else check-in prompt */}
+      {/* Hero action — time-aware: wind-down at night, grounding when elevated, else the structured
+          daily-intention prompt (until set) or the check-in prompt. Wave 3 Group I: the daily-
+          intention branch isn't a nav route — it scrolls/focuses the DailyIntentionCard rendered
+          just below instead of navigating away from the Today hub. */}
       <button
-        onClick={() => go(hero.route)}
+        onClick={() => {
+          if (hero.id === "daily_intention") {
+            document.getElementById("today-daily-intention")?.scrollIntoView({ behavior: "smooth", block: "center" });
+            return;
+          }
+          go(hero.route);
+        }}
         className="w-full glass hover:brightness-125 p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left flex items-center gap-3"
       >
         <span className={`shrink-0 ${hero.color}`}>{hero.icon}</span>
@@ -280,7 +302,12 @@ export default function TodayScreen({
         <ChevronRight className="w-5 h-5 text-slate-500 shrink-0" aria-hidden="true" />
       </button>
 
-      {/* Talk to Nila card — always present */}
+      {/* Daily intention — the structured if-then picker (Wave 3 Group I). Rendered unconditionally
+          (not just while unset) so it's also where you review/edit today's plan once it's saved —
+          the SAME canonical store DiaryCardScreen's Part 3 reads/writes, so the two stay in sync. */}
+      <DailyIntentionCard />
+
+      {/* Talk to Nila card — always present, exactly one tap away, never the default lead */}
       <button
         onClick={() => go("nila")}
         className="w-full glass hover:brightness-125 p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left flex items-center gap-3"

@@ -157,7 +157,12 @@ export function getNilaQuestion(
   // Morning
   if (timeMode === "morning") {
     if (!hasCheckedIn) return "How did you sleep?";
-    return "What's your intention for today?";
+    // Wave 3 Group I (2026-07-12): "What's your intention for today?" used to be answered here as
+    // free text — one of three independent, contradictory "intention" surfaces (synthesis finding).
+    // Setting today's intention now happens through the structured if-then DailyIntentionCard on
+    // the Today hub (weeklyIntention.ts's canonical daily-intention store), so this chat prompt no
+    // longer asks for it — it just opens the conversation instead.
+    return "How's your morning going?";
   }
 
   // Day
