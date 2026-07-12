@@ -117,9 +117,10 @@ describe("buildTextReport", () => {
       daysRemaining: 0,
       instruments: [
         { id: "PHQ-9", label: "PHQ-9 (depression, lower is better)", higherIsBetter: false,
-          baseline: { total: 15, date: "2026-06-01" }, endpoint: { total: 8, date: "2026-06-30" }, change: -7, improved: true },
+          baseline: { total: 15, date: "2026-06-01" }, endpoint: { total: 8, date: "2026-06-30" }, change: -7, improved: true,
+          reliableChange: { direction: "improvement", delta: -7, threshold: 5, confidence: "cited" } },
         { id: "WHO-5", label: "WHO-5 (wellbeing, higher is better)", higherIsBetter: true,
-          baseline: { total: 40, date: "2026-06-01" }, endpoint: null, change: null, improved: null },
+          baseline: { total: 40, date: "2026-06-01" }, endpoint: null, change: null, improved: null, reliableChange: null },
       ],
     });
     expect(text).toContain("Research pilot");

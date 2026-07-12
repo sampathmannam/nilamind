@@ -332,3 +332,67 @@ export function isSameRecallWindowRetake(entry: AssessmentEntry | null): boolean
   const since = daysSince(entry);
   return since !== null && since < RECALL_WINDOW_GUARD_DAYS;
 }
+
+// ── Reliable change / MCID banding (2026-07-12 Wave 3, Group G) ──────────────────────────────
+//
+// A raw point-to-point delta on a self-report instrument is partly signal, partly test-retest
+// noise. The minimal clinically important difference (MCID) is the smallest total-score change
+// the literature considers reliably "real" rather than noise — below it, "I feel worse" isn't yet
+// statistically warranted; at or above it, it is. PHQ-9 and GAD-7 have cited MCID figures:
+//
+//   PHQ-9 MCID ≈ 5 points — Löwe, Unützer, Callahan, Perkins & Kroenke (2004), Medical Care,
+//                            42(12):1194–1201.
+//   GAD-7 MCID ≈ 4 points — Toussaint, Hüsing, Gumz, Wingenfeld, Härter, Schramm & Löwe (2020),
+//                            Journal of Affective Disorders, 265:395–401.
+//
+// WHO-5 has NO established MCID in this app's citation set — the clinical-research synthesis
+// explicitly says WHO-5 must be handled "cautiously." The 10-point (10% of its 0–100 range)
+// threshold below is therefore an ENGINEERING DEFAULT, NOT a citation-derived figure — callers get
+// confidence:"heuristic" instead of "cited" so the UI can hedge its copy accordingly, never
+// presenting a WHO-5 shift with the same confidence as a cited PHQ-9/GAD-7 reliable-change flag.
+//
+// PHQ-2 and PSS-4 have no MCID entry at all — classifyChange() returns null for them rather than
+// inventing a number that isn't in the research synthesis.
+const CHANGE_THRESHOLDS: Partial<Record<InstrumentId, { value: number; confidence: "cited" | "heuristic" }>> = {
+  "PHQ-9": { value: 5, confidence: "cited" },
+  "GAD-7": { value: 4, confidence: "cited" },
+  "WHO-5": { value: 10, confidence: "heuristic" },
+};
+
+export type ChangeDirection = "improvement" | "deterioration" | "no_reliable_change";
+
+export interface ChangeClassification {
+  direction: ChangeDirection;
+  /** currentTotal - previousTotal, raw and signed (not adjusted for higherIsBetter). */
+  delta: number;
+  /** The MCID (or engineering-default heuristic) magnitude used to classify this change. */
+  threshold: number;
+  /** "cited" = a published MCID figure; "heuristic" = an engineering default, not citation-derived
+   *  (currently only WHO-5). Never upgrade a "heuristic" result to be presented as "cited". */
+  confidence: "cited" | "heuristic";
+}
+
+/**
+ * Classify a score change between two totals for the same instrument as a reliable improvement,
+ * a reliable deterioration, or "no reliable change" (within the noise band), using each
+ * instrument's MCID as the noise floor. Pure function — no I/O, no side effects.
+ *
+ * Returns null when the instrument has no established reliable-change threshold (PHQ-2, PSS-4).
+ */
+export function classifyChange(
+  instrumentId: InstrumentId,
+  previousTotal: number,
+  currentTotal: number,
+): ChangeClassification | null {
+  const threshold = CHANGE_THRESHOLDS[instrumentId];
+  if (!threshold) return null;
+  const inst = INSTRUMENTS[instrumentId];
+  const delta = currentTotal - previousTotal;
+  // Normalize so a positive effectiveDelta always means "better," regardless of scale direction.
+  const effectiveDelta = inst.higherIsBetter ? delta : -delta;
+  let direction: ChangeDirection;
+  if (effectiveDelta >= threshold.value) direction = "improvement";
+  else if (effectiveDelta <= -threshold.value) direction = "deterioration";
+  else direction = "no_reliable_change";
+  return { direction, delta, threshold: threshold.value, confidence: threshold.confidence };
+}

@@ -12,6 +12,8 @@ import {
   latestFor,
   daysSince,
   isSameRecallWindowRetake,
+  classifyChange,
+  ChangeClassification,
 } from "../services/assessments";
 import {
   LineChart,
@@ -75,6 +77,10 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
   const [responses, setResponses] = useState<(number | null)[]>([]);
   const [result, setResult] = useState<ScoredResult | null>(null);
   const [history, setHistory] = useState<AssessmentEntry[]>([]);
+  // Reliable-change classification vs. the immediately-prior entry for the SAME instrument, or null
+  // when there's no prior entry to compare against (first-ever take) or no established threshold
+  // (PHQ-2, PSS-4) — see classifyChange() in assessments.ts.
+  const [change, setChange] = useState<ChangeClassification | null>(null);
 
   useEffect(() => {
     setHistory(loadAssessments());
@@ -120,6 +126,9 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
     if (!inst || !allAnswered) return;
     const nums = responses.map((r) => r ?? 0);
     const scored = scoreAssessment(inst.id, nums);
+    // Capture the prior entry BEFORE this submission is saved, so the reliable-change comparison is
+    // "last time -> this time," not "this time -> this time."
+    const previous = latestFor(inst.id, history);
     const now = new Date();
     const entry: AssessmentEntry = {
       id: "as_" + Date.now(),
@@ -133,6 +142,7 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
     };
     setHistory(saveAssessment(entry));
     setResult(scored);
+    setChange(previous ? classifyChange(inst.id, previous.total, scored.total) : null);
     setPhase("result");
     scrollToTop();
   };
@@ -353,6 +363,38 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
           </div>
           <p className="text-xs text-slate-300 leading-relaxed">{result.band.interpretation}</p>
         </div>
+
+        {/* Reliable-change / deterioration nudge — fires ONLY on a reliable (>=MCID) worsening vs. the
+            immediately-prior entry for this instrument. Non-alarming, never blocking; hedges its own
+            confidence for WHO-5 (no cited MCID) vs. PHQ-9/GAD-7 (cited). */}
+        {change?.direction === "deterioration" && (
+          <div
+            className="bg-orange-500/10 border border-orange-500/30 rounded-2xl p-4 space-y-2"
+            id="assessment-deterioration-nudge"
+          >
+            <div className="flex items-center gap-2 text-orange-300">
+              <Activity className="w-4 h-4 shrink-0" />
+              <h3 className="text-xs font-bold">This looks like a real shift, not day-to-day noise</h3>
+            </div>
+            <p className="text-[11px] text-slate-300 leading-relaxed">
+              {change.confidence === "cited" ? (
+                <>
+                  Your {inst.name} score moved by more than the {change.threshold}-point range research
+                  treats as a reliable change, not ordinary variation (Löwe et al., 2004; Toussaint et
+                  al., 2020).
+                </>
+              ) : (
+                <>
+                  Your {inst.name} score moved more than usual. WHO-5 doesn't have as well-established a
+                  reliable-change threshold as PHQ-9/GAD-7, so take this as a gentle heads-up rather than
+                  a firm signal.
+                </>
+              )}{" "}
+              It might be worth mentioning to someone you trust, or a professional, if it keeps moving
+              this way — no need to act on this alone right now.
+            </p>
+          </div>
+        )}
 
         {/* Cut-point + citation */}
         <div className="glass rounded-xl p-4 space-y-2">

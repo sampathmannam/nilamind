@@ -129,3 +129,44 @@ describe("computePilotSummary", () => {
     }
   });
 });
+
+// Reliable-change flag (2026-07-12 Wave 3, Group G): the pilot's pre/post comparison must report a
+// classifyChange()-backed reliable-change flag alongside the raw point delta — reuses the same
+// function as AssessmentScreen.tsx's deterioration nudge, not a duplicated calculation.
+describe("computePilotSummary — reliable-change flag", () => {
+  it("flags a PHQ-9 reliable improvement (>=5-point drop) with cited confidence", () => {
+    enrollPilot(at("2026-06-01T10:00:00Z"));
+    seedAssessments(entry("PHQ-9", "2026-06-01", 15), entry("PHQ-9", "2026-06-30", 8));
+    const phq = computePilotSummary(at("2026-06-30T10:00:00Z"))!.instruments.find((i) => i.id === "PHQ-9")!;
+    expect(phq.reliableChange).toEqual({ direction: "improvement", delta: -7, threshold: 5, confidence: "cited" });
+  });
+
+  it("does NOT flag a GAD-7 change within the ~4-point MCID band as reliable", () => {
+    enrollPilot(at("2026-06-01T10:00:00Z"));
+    seedAssessments(entry("GAD-7", "2026-06-01", 12), entry("GAD-7", "2026-06-30", 9));
+    const gad = computePilotSummary(at("2026-06-30T10:00:00Z"))!.instruments.find((i) => i.id === "GAD-7")!;
+    expect(gad.reliableChange!.direction).toBe("no_reliable_change");
+  });
+
+  it("flags a reliable WHO-5 improvement with heuristic (not cited) confidence", () => {
+    enrollPilot(at("2026-06-01T10:00:00Z"));
+    seedAssessments(entry("WHO-5", "2026-06-01", 40), entry("WHO-5", "2026-06-30", 60));
+    const who = computePilotSummary(at("2026-06-30T10:00:00Z"))!.instruments.find((i) => i.id === "WHO-5")!;
+    expect(who.reliableChange!.direction).toBe("improvement");
+    expect(who.reliableChange!.confidence).toBe("heuristic");
+  });
+
+  it("flags a reliable PHQ-9 deterioration (>=5-point rise)", () => {
+    enrollPilot(at("2026-06-01T10:00:00Z"));
+    seedAssessments(entry("PHQ-9", "2026-06-01", 8), entry("PHQ-9", "2026-06-30", 15));
+    const phq = computePilotSummary(at("2026-06-30T10:00:00Z"))!.instruments.find((i) => i.id === "PHQ-9")!;
+    expect(phq.reliableChange!.direction).toBe("deterioration");
+  });
+
+  it("is null when there is no endpoint (nothing to compare)", () => {
+    enrollPilot(at("2026-06-01T10:00:00Z"));
+    seedAssessments(entry("PHQ-9", "2026-06-30", 9)); // one entry, no endpoint pair
+    const phq = computePilotSummary(at("2026-06-30T10:00:00Z"))!.instruments.find((i) => i.id === "PHQ-9")!;
+    expect(phq.reliableChange).toBeNull();
+  });
+});
