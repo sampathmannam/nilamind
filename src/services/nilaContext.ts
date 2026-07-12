@@ -29,6 +29,7 @@ import { sleepHoursVariability, variabilityContextBlock } from "./sleepHoursVari
 import type { VariabilitySignal } from "./sleepHoursVariability";
 import { assessJitai } from "./jitaiEngine";
 import { computeUsageSummary } from "./usageAnalytics";
+import { computeCircadianFeedback } from "./circadianFeedback";
 // #8 (audit): these were pulled via CommonJS require() below, which throws "require is not defined" in the
 // ESM Capacitor WebView bundle and was swallowed by try/catch — so BA + proactive context silently never
 // reached Nila in production. Static ESM imports (no import cycle: neither module imports nilaContext).
@@ -239,6 +240,20 @@ export function buildPersonalContext(): string {
   const trajectory = trajectoryContextBlock(selfReportSleepSignal());
   // Sleep hours variability — circadian regularity signal (C1). Soft-signal nudge only.
   const sleepVariability = variabilityContextBlock(sleepHoursVariability(selfReportedSleepNights()));
+  // Circadian + social rhythm fused feedback — combined score + guidance for Nila to reference.
+  let circadianBlock = "";
+  try {
+    const moodHist = loadMoodHistory();
+    const sleeps = moodHist
+      .filter((m) => typeof m.sleepHours === "number" && m.sleepHours > 0)
+      .map((m) => m.sleepHours as number);
+    if (sleeps.length >= 3) {
+      const feedback = computeCircadianFeedback({ sleeps });
+      if (feedback && feedback.needsAttention) {
+        circadianBlock = `CIRCADIAN FEEDBACK: ${feedback.guidance} Combined score: ${feedback.combinedScore}/100.`;
+      }
+    }
+  } catch { /* best-effort */ }
   // A detected trend shift — only when the user has opted into inflection awareness.
   const inflection = getInflectionEnabled() ? inflectionContextBlock(topFireableSignal()) : "";
 
@@ -267,7 +282,7 @@ export function buildPersonalContext(): string {
     }
   } catch { /* best-effort */ }
 
-  if (lines.length === 0 && !memory && !insights && !profile && !trajectory && !inflection && !safetyPlanFollowUp && !sleepVariability && !jitaiNudge) return "";
+  if (lines.length === 0 && !memory && !insights && !profile && !trajectory && !inflection && !safetyPlanFollowUp && !sleepVariability && !jitaiNudge && !circadianBlock) return "";
 
   const out: string[] = [
     // Terse header only. HOW to use memory (gently, never recite, don't over-claim, trust the present) already
@@ -277,6 +292,7 @@ export function buildPersonalContext(): string {
   ];
   if (trajectory) out.push(trajectory);
   if (sleepVariability) out.push(sleepVariability);
+  if (circadianBlock) out.push(circadianBlock);
   if (inflection) out.push(inflection);
   if (profile) out.push(profile);
   if (insights) {

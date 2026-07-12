@@ -21,6 +21,8 @@ import { adherenceSummary } from "../services/medicationAdherence";
 import { getRecentMetrics, detectMoodSignal } from "../services/typingPatterns";
 import { voiceMoodSignal } from "../services/voicePatterns";
 import { computeCircadianInsight } from "../services/circadian";
+import { computeCircadianFeedback } from "../services/circadianFeedback";
+import { computeRhythmRegularity } from "../services/socialRhythm";
 import { computeNof1Ranking } from "../services/nOf1";
 import { PROTOCOLS } from "../services/protocols";
 import { secureLocal } from "../services/secureLocal";
@@ -100,11 +102,16 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
     const circadian = computeCircadianInsight(mood);
     const nOf1 = computeNof1Ranking();
     const usageSummary = computeUsageSummary();
+    const rhythmReg = computeRhythmRegularity();
+    const circadianFeedback = circadian ? computeCircadianFeedback({
+      sleeps: mood.filter((m) => typeof m.sleepHours === "number" && m.sleepHours > 0).map((m) => m.sleepHours as number),
+      rhythmVariabilityMin: rhythmReg.overallVariabilityMin,
+    }) : null;
 
-    return { mood, streak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian, nOf1, usageSummary };
+    return { mood, streak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian, nOf1, usageSummary, circadianFeedback };
   }, []);
 
-  const { mood, streak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian, nOf1, usageSummary } = data;
+  const { mood, streak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian, nOf1, usageSummary, circadianFeedback } = data;
 
   // Load behaviour snapshots async and compute daily-behaviour insights
   useEffect(() => {
@@ -443,6 +450,24 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
             </div>
             <p className="text-[11px] text-slate-400 leading-relaxed mt-1">{circadian.note}</p>
             <p className="text-[10px] text-slate-500 mt-1">From {circadian.nights} nights of self-reported sleep. Avg {circadian.avgSleep}h.</p>
+          </div>
+        </div>
+      )}
+
+      {/* Fused circadian + social rhythm feedback loop */}
+      {circadianFeedback && (
+        <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 flex items-start gap-3">
+          <div className={`p-2 rounded-xl ${circadianFeedback.needsAttention ? "bg-amber-500/10 text-amber-400" : "bg-emerald-500/10 text-emerald-400"}`}>
+            <Moon className="w-5 h-5" />
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-slate-100">Rhythm stability</p>
+              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${circadianFeedback.needsAttention ? "bg-amber-500/20 text-amber-300" : "bg-emerald-500/20 text-emerald-300"}`}>
+                {circadianFeedback.combinedScore}/100
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-400 leading-relaxed mt-1">{circadianFeedback.guidance}</p>
           </div>
         </div>
       )}
