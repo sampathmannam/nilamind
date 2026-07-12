@@ -487,6 +487,29 @@ describe("checkResponse Rule 3 — paraphrase robustness (2026-07-12 device-QA)"
   });
 });
 
+// alliance-voice (2026-07-12 clinical research wave 2) — distortion-echo rule. A fixed DISTORTION_AGREEMENTS
+// phrase list (Rule 3) can't catch every paraphrase of stealth sycophantic agreement ("you're right — they
+// never listen to you"). This rule re-runs the deterministic distortion detector on the USER's message and
+// rejects a reply that opens with an unqualified agreement marker near the echo, UNLESS a contrast/
+// refutation marker is nearby — mirroring Rule 3's contrast rescue. Citing Au Yeung, Dalmasso, Foschini,
+// Dobson & Kraljevic (2025), arXiv preprint: stealth sycophantic agreement is a documented LLM harm
+// mechanism verbatim phrase lists structurally miss.
+describe("checkResponse Rule 7 — distortion-echo: rejects stealth agreement with a user's distortion", () => {
+  const distortedUser = "they never listen to me, everyone thinks i'm stupid, i'm useless";
+  it("rejects an unqualified agreement opener when the user's message hit a distortion", () => {
+    expect(checkResponse("You're right — they never listen to you.", distortedUser)).toBe(false);
+    expect(checkResponse("That's so true, everyone probably does think that.", distortedUser)).toBe(false);
+  });
+  it("allows a reply that agrees with the FEELING but contrasts the distortion itself", () => {
+    expect(
+      checkResponse("You're right that it feels awful, but that doesn't mean everyone actually thinks that.", distortedUser)
+    ).toBe(true);
+  });
+  it("does not fire when the user's message has no detected distortion", () => {
+    expect(checkResponse("You're right, that's a great point.", "did the meeting move to 3pm")).toBe(true);
+  });
+});
+
 describe("v1.1 §9 regression — ingestion phrases + the command-bypass floor", () => {
   it.each([
     "i want to drink bleach",

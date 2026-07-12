@@ -6,6 +6,7 @@ import {
   getWindDownReminder,
   setWindDownReminder,
   checkWindDownText,
+  containsSleepRestrictionLanguage,
 } from "./windDown";
 
 describe("SLEEP_TIPS corpus", () => {
@@ -70,6 +71,27 @@ describe("getWindDownReminder / setWindDownReminder", () => {
     const r = getWindDownReminder();
     expect(r.enabled).toBe(true);
     expect(r.time).toBe("22:30");
+  });
+});
+
+describe("no-sleep-restriction guard (permanent — bipolar-aware, manic-first)", () => {
+  it("SLEEP_TIPS never contain sleep-restriction / time-in-bed-cutting language", () => {
+    for (const t of SLEEP_TIPS) {
+      expect(containsSleepRestrictionLanguage(t.text)).toBe(false);
+    }
+  });
+  it("containsSleepRestrictionLanguage flags known sleep-restriction phrasing", () => {
+    expect(containsSleepRestrictionLanguage("Try restricting your time in bed to build sleep pressure.")).toBe(true);
+    expect(containsSleepRestrictionLanguage("Go to bed later than usual tonight.")).toBe(true);
+    expect(containsSleepRestrictionLanguage("Delaying your bedtime can help some people fall asleep faster.")).toBe(true);
+    expect(containsSleepRestrictionLanguage("It can help to sleep less on weeknights.")).toBe(true);
+  });
+  it("does not false-positive on ordinary wind-down copy", () => {
+    for (const t of SLEEP_TIPS) {
+      expect(containsSleepRestrictionLanguage(t.text)).toBe(false);
+    }
+    expect(containsSleepRestrictionLanguage("Dim the lights an hour before bed.")).toBe(false);
+    expect(containsSleepRestrictionLanguage("A consistent wake time can help.")).toBe(false);
   });
 });
 

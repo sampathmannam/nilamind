@@ -37,3 +37,19 @@ describe("composeWelcome — warm, varying, but ALWAYS honest it's an AI", () =>
       .not.toBe(composeWelcome({ returning: true, part: "evening" }));
   });
 });
+
+// alliance-voice (2026-07-12 clinical research wave 2): expectation-setting on first contact. Known-machine
+// status increases willingness to disclose (Lucas, Gratch, King & Morency, 2014, Computers in Human
+// Behavior) and a working bond can form despite that disclosure within ~5 days (Darcy et al., 2021, JMIR
+// Formative Research) — but "sustained over 8 weeks" was checked and found UNSUPPORTED by the synthesis, so
+// the copy must never claim that specific figure.
+describe("composeWelcome — first-contact expectation-setting (Lucas 2014 / Darcy 2021)", () => {
+  it("first-timers get a line naming that being upfront about being an AI makes it easier to open up", () => {
+    const w = composeWelcome({ returning: false, part: "morning" }).toLowerCase();
+    expect(w).toMatch(/easier to (say|share|open up|be honest|talk)/);
+  });
+  it("never claims a specific unsupported bond-duration figure", () => {
+    const w = composeWelcome({ returning: false, part: "morning" }).toLowerCase();
+    expect(w).not.toMatch(/8 weeks|eight weeks|sustained/);
+  });
+});

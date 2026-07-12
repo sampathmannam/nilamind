@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { PROTOCOLS, routeToProtocol, type Protocol } from "./protocols";
+import { PROTOCOLS, routeToProtocol, type Protocol, type ProtocolStep } from "./protocols";
 
 // Phase 1 — structured protocols + lightweight formulation-for-ROUTING. Research basis
 // (docs/NILA_AGENT_RESEARCH_BASIS.md): STRUCTURE beats open chat; the one personalization that wins is modular
@@ -89,5 +89,59 @@ describe("routeToProtocol — modular matching (concern → the right evidence-b
   it("routes gratitude / positive focus → Gratitude Practice", () => {
     const p = routeToProtocol("i want to notice the good things, i feel like i only see the bad stuff");
     expect(p?.id).toBe("gratitude");
+  });
+});
+
+// Clinical research upgrades wave 2 (2026-07-12) — Tasks C/D/E, docs/superpowers/plans/2026-07-12-clinical-
+// research-synthesis.md (ba-pst, gad-worry, dbt-skills sections). Folded into EXISTING steps (not new step ids)
+// to preserve the fixed 5-step sequencing other suites (protocolProgress.test.ts, activeProtocolContext.test.ts)
+// depend on.
+describe("protocols — clinical upgrades wave 2 (Task C/D/E)", () => {
+  function step(protocolId: string, stepId: string): ProtocolStep {
+    const p = PROTOCOLS.find((pr) => pr.id === protocolId)!;
+    const s = p.steps.find((st) => st.id === stepId);
+    if (!s) throw new Error(`step ${stepId} not found in ${protocolId}`);
+    return s;
+  }
+
+  it("BA ba-2 names the TRAP→TRAC avoidance pattern (Jacobson, Martell & Dimidjian, 2001)", () => {
+    const s = step("behavioral-activation", "ba-2");
+    expect(s.prompt).toContain("TRAP");
+    expect(s.prompt).toContain("TRAC");
+    // the original reflect question must still be present — protocolChat.test.ts depends on this exact phrase
+    expect(s.prompt).toContain("something you used to do");
+  });
+
+  it("BA ba-4 adds an if-then implementation-intention plan + a barrier-plan question (Gollwitzer & Sheeran, 2006)", () => {
+    const s = step("behavioral-activation", "ba-4");
+    expect(s.prompt.toLowerCase()).toContain("if ");
+    expect(s.prompt.toLowerCase()).toContain("then i will");
+    expect(s.prompt.toLowerCase()).toContain("get in the way");
+  });
+
+  it("worry-postponement wp-1 adds a solvable-vs-hypothetical worry triage (Borkovec, Wilkinson, Folensbee & Lerman, 1983)", () => {
+    const s = step("worry-postponement", "wp-1");
+    expect(s.prompt.toLowerCase()).toContain("solvable");
+  });
+
+  it("worry-postponement wp-3 reframes postponement as a metacognitive behavioral experiment (Krzikalla et al., 2024)", () => {
+    const s = step("worry-postponement", "wp-3");
+    expect(s.prompt.toLowerCase()).toContain("can't control");
+  });
+
+  it("cooling-anger ag-3 adds anti-rumination + a reappraisal micro-step (Pop, Nechita, Miu & Szentágotai-Tătar, 2025; Szasz, Szentagotai & Hofmann, 2011)", () => {
+    const s = step("cooling-anger", "ag-3");
+    expect(s.prompt.toLowerCase()).toContain("replay");
+    expect(s.prompt.toLowerCase()).toMatch(/reappraisal|another way to see|different angle/);
+  });
+
+  it("worry-postponement still has exactly 5 steps (sequencing other suites hardcode)", () => {
+    const p = PROTOCOLS.find((pr) => pr.id === "worry-postponement")!;
+    expect(p.steps).toHaveLength(5);
+  });
+
+  it("behavioral-activation still has exactly 5 steps (sequencing other suites hardcode)", () => {
+    const p = PROTOCOLS.find((pr) => pr.id === "behavioral-activation")!;
+    expect(p.steps).toHaveLength(5);
   });
 });

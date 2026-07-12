@@ -10,9 +10,16 @@ import { loadAssessments, assessmentsFor } from "../services/assessments";
 import { buildFhirBundle } from "../services/fhirExport";
 import { recordExportAudit, getExportAudit, type ExportAuditEntry } from "../services/exportAudit";
 import { buildClinicianReport, type ClinicianReportInput, type ClinicianMedication, type AssessmentTrajectory } from "../services/clinicianReport";
+import { assessTemporalRisk } from "../services/temporalRiskAssessment";
+import { CrisisMetricsTracker } from "../services/crisisSafetyValidation";
+import type { CrisisMetrics } from "../services/crisisSafetyValidation";
+import type { RiskAssessment } from "../services/temporalRiskAssessment";
+import { loadInsights } from "../services/nilaInsights";
+import { loadRhythm, computeRhythmRegularity, parseTime, type RhythmEntry, type AnchorKey, type RhythmAnchors } from "../services/socialRhythm";
 import { loadMoodHistory } from "../services/moodHistory";
 import { computeCircadianFeedback } from "../services/circadianFeedback";
-import { loadRhythm, computeRhythmRegularity } from "../services/socialRhythm";
+import { getTodaySnapshot } from "../services/phoneBehaviour";
+import type { BehaviourSnapshot, AppCategory } from "../services/phoneBehaviour";
 import { loadMedications, loadMedicationLogs, adherenceRate, commonSideEffects } from "../services/medicationAdherence";
 import { nilaStats } from "../services/nilaSessions";
 import { featureAdoption } from "../services/usageAnalytics";
@@ -131,20 +138,344 @@ export default function YourDataScreen() {
     } finally { setReportBusy(false); }
   };
 
-  const handleExportFhir = async () => {
-    setReportBusy(true);
-    try {
-      const bundle = buildFhirBundle({
-        generatedAt: new Date().toISOString(),
-        subjectId: id?.userId ?? null,
-        assessments: loadAssessments(),
-      });
-      await saveReport(bundle, "nilamind-fhir-bundle.json", "application/fhir+json");
-      pushAudit({ kind: "fhir", scope: "FHIR R4 assessment bundle", destination: "device_download" });
-    } finally { setReportBusy(false); }
-  };
+const handleExportFhir = async () => {
+     setReportBusy(true);
+     try {
+       const bundle = buildFhirBundle({
+         generatedAt: new Date().toISOString(),
+         subjectId: id?.userId ?? null,
+         assessments: loadAssessments(),
+       });
+       await saveReport(bundle, "nilamind-fhir-bundle.json", "application/fhir+json");
+       pushAudit({ kind: "fhir", scope: "FHIR R4 assessment bundle", destination: "device_download" });
+     } finally { setReportBusy(false); }
+   };
 
-  const handleExportClinicianPdf = async () => {
+   // Helper functions for enhanced clinician report
+   const calculateEmotionalStateSummary = (checkins: any[]): { 
+     intensityDistribution: { mild: number, moderate: number, severe: number };
+     topGranularEmotions: Array<{ emotion: string, count: number }>;
+     emotionalVariability: number;
+   } => {
+     // Filter check-ins with valid intensity
+     const validCheckins = checkins.filter(c => typeof c.intensity === 'number');
+     
+     if (validCheckins.length === 0) {
+       return {
+         intensityDistribution: { mild: 0, moderate: 0, severe: 0 },
+         topGranularEmotions: [],
+         emotionalVariability: 0
+       };
+     }
+     
+     // Calculate intensity distribution (1-3 mild, 4-6 moderate, 7-10 severe)
+     const intensities = validCheckins.map(c => c.intensity as number);
+     const mild = intensities.filter(i => i >= 1 && i <= 3).length;
+     const moderate = intensities.filter(i => i >= 4 && i <= 6).length;
+     const severe = intensities.filter(i => i >= 7 && i <= 10).length;
+     const total = validCheckins.length;
+     
+     const intensityDistribution = {
+       mild: Math.round((mild / total) * 100),
+       moderate: Math.round((moderate / total) * 100),
+       severe: Math.round((severe / total) * 100)
+     };
+     
+     // Calculate emotional variability (standard deviation)
+     const mean = intensities.reduce((sum, val) => sum + val, 0) / intensities.length;
+     const variance = intensities.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / intensities.length;
+     const emotionalVariability = Math.round(Math.sqrt(Math.max(0, variance)) * 10) / 10; // Round to 1 decimal
+     
+     // Get top granular emotions
+     const granularEmotions = checkins
+       .filter(c => c.granularEmotion && typeof c.granularEmotion === 'string' && c.granularEmotion.trim() !== '')
+       .map(c => c.granularEmotion as string);
+     
+     const emotionCounts: Record<string, number> = {};
+     granularEmotions.forEach(emotion => {
+       emotionCounts[emotion] = (emotionCounts[emotion] || 0) + 1;
+     });
+     
+     const topGranularEmotions = Object.entries(emotionCounts)
+       .sort(([, a], [, b]) => b - a)
+       .slice(0, 5)
+       .map(([emotion, count]) => ({ emotion, count }));
+     
+     return {
+       intensityDistribution,
+       topGranularEmotions,
+       emotionalVariability
+     };
+   };
+
+   const calculateContextualAnalysis = (checkins: any[]): {
+     highIntensityContexts: Array<{ context: string, count: number }>;
+     lowIntensityContexts: Array<{ context: string, count: number }>;
+   } => {
+     // Filter check-ins with valid intensity and context
+     const validCheckins = checkins.filter(c => 
+       typeof c.intensity === 'number' && 
+       c.context && 
+       typeof c.context === 'string' && 
+       c.context.trim() !== ''
+     );
+     
+     if (validCheckins.length === 0) {
+       return {
+         highIntensityContexts: [],
+         lowIntensityContexts: []
+       };
+     }
+     
+     // Split into high intensity (7-10) and low intensity (1-3)
+     const highIntensityCheckins = validCheckins.filter(c => 
+       (c.intensity as number) >= 7 && (c.intensity as number) <= 10
+     );
+     
+     const lowIntensityCheckins = validCheckins.filter(c => 
+       (c.intensity as number) >= 1 && (c.intensity as number) <= 3
+     );
+     
+     // Count contexts for high intensity
+     const highContextCounts: Record<string, number> = {};
+     highIntensityCheckins.forEach(c => {
+       const context = c.context as string;
+       highContextCounts[context] = (highContextCounts[context] || 0) + 1;
+     });
+     
+     // Count contexts for low intensity
+     const lowContextCounts: Record<string, number> = {};
+     lowIntensityCheckins.forEach(c => {
+       const context = c.context as string;
+       lowContextCounts[context] = (lowContextCounts[context] || 0) + 1;
+     });
+     
+     // Get top 3 for each
+     const highIntensityContexts = Object.entries(highContextCounts)
+       .sort(([, a], [, b]) => b - a)
+       .slice(0, 3)
+       .map(([context, count]) => ({ context, count }));
+     
+     const lowIntensityContexts = Object.entries(lowContextCounts)
+       .sort(([, a], [, b]) => b - a)
+       .slice(0, 3)
+       .map(([context, count]) => ({ context, count }));
+     
+     return {
+       highIntensityContexts,
+       lowIntensityContexts
+     };
+   };
+
+   const calculateWhatHelpedSummary = async (): Promise<Array<{ text: string, date: string }>> => {
+     try {
+       const insights = loadInsights();
+       // Filter for what_helps insights and sort by date descending (most recent first)
+       const whatHelpedInsights = insights
+         .filter(insight => insight.kind === "what_helps")
+         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+         .map(insight => ({
+           text: insight.text,
+           date: insight.date
+         }));
+       // Return top 5 most recent
+       return whatHelpedInsights.slice(0, 5);
+     } catch (error) {
+       console.error("Failed to load what_helps insights:", error);
+       return [];
+     }
+   };
+
+   const calculateEnhancedSleepDetails = (checkins: any[], moodHistory: any[]): {
+     avgBedtime: string | null;
+     avgWakeTime: string | null;
+     bedtimeConsistency: number;
+     wakeTimeConsistency: number;
+   } => {
+     // We'll derive sleep times from moodHistory if available, otherwise from check-ins
+     // For simplicity, we'll use check-in sleepHours to estimate consistency
+     // In a more complete implementation, we'd have actual bedtime/wake time data
+     
+     const sleepEntries = checkins
+       .filter(c => typeof c.sleepHours === 'number' && c.sleepHours > 0)
+       .map(c => ({ 
+         date: new Date(c.date),
+         hours: c.sleepHours as number
+       }))
+       .sort((a, b) => b.date.getTime() - a.date.getTime()); // Most recent first
+     
+     if (sleepEntries.length === 0) {
+       return {
+         avgBedtime: null,
+         avgWakeTime: null,
+         bedtimeConsistency: 0,
+         wakeTimeConsistency: 0
+       };
+     }
+     
+     // For now, we'll return placeholder values since we don't have actual bedtime/wake time
+     // In a real implementation with more detailed sleep tracking, we would calculate:
+     // - Average bedtime and wake time from sleep logs
+     // - Consistency scores based on variability of these times
+     
+     return {
+       avgBedtime: null, // Would be calculated from actual bedtime data
+       avgWakeTime: null, // Would be calculated from actual wake time data
+       bedtimeConsistency: 0, // Placeholder
+       wakeTimeConsistency: 0 // Placeholder
+     };
+   };
+
+const calculateEnhancedSocialRhythmDetails = (rhythmData: any[]): {
+        anchorRegularity: Record<string, number>;
+        averageAnchorTimes: Record<string, string>;
+    } => {
+        if (rhythmData.length === 0) {
+            return {
+                anchorRegularity: {},
+                averageAnchorTimes: {}
+            };
+        }
+        
+        const now = Date.now();
+        const cutoff = now - (14 * 24 * 60 * 60 * 1000); // 14 days
+        
+        const recentEntries = rhythmData
+            .filter(entry => new Date(entry.date).getTime() >= cutoff)
+            .slice(-10); // Last 10 entries
+        
+        if (recentEntries.length === 0) {
+            return {
+                anchorRegularity: {},
+                averageAnchorTimes: {}
+            };
+        }
+        
+        const anchorKeys: Array<keyof RhythmAnchors> = ['wake', 'firstContact', 'startActivity', 'dinner', 'bed'];
+        const anchorRegularity: Record<string, number> = {};
+        const averageAnchorTimes: Record<string, string> = {};
+        
+        for (const anchor of anchorKeys) {
+            const times = recentEntries
+                .map(entry => {
+                    const timeStr = entry.anchors[anchor];
+                    return timeStr ? parseTime(timeStr) : null;
+                })
+                .filter((t): t is number => t !== null);
+            
+            if (times.length >= 3) {
+                // Calculate mean time in minutes
+                const meanMinutes = times.reduce((sum, val) => sum + val, 0) / times.length;
+                
+                // Convert back to HH:MM format
+                const hours = Math.floor(meanMinutes / 60) % 24;
+                const minutes = Math.round(meanMinutes) % 60;
+                const timeString = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+                
+                // Calculate standard deviation as a measure of irregularity
+                const variance = times.reduce((sum, val) => sum + Math.pow(val - meanMinutes, 2), 0) / times.length;
+                const stdDev = Math.sqrt(Math.max(0, variance));
+                
+                // Convert to consistency score (0-1, where 1 is perfectly consistent)
+                // Assuming 30 minutes std dev is completely inconsistent (0), 0 min is perfectly consistent (1)
+                const consistency = Math.max(0, Math.min(1, 1 - (stdDev / 30)));
+                
+                anchorRegularity[anchor] = Math.round(consistency * 100) / 100; // Round to 2 decimal places
+                averageAnchorTimes[anchor] = timeString;
+            } else {
+                anchorRegularity[anchor] = 0;
+                averageAnchorTimes[anchor] = "Not enough data";
+            }
+        }
+        
+        return {
+anchorRegularity,
+             averageAnchorTimes
+};
+       };
+   
+    const calculateBehavioralInsights = (): {
+        screenTimeCorrelation: number | null;
+        socialMediaCorrelation: number | null;
+        physicalActivityCorrelation: number | null;
+        mobilityPatterns: {
+            homeTimePercentage: number | null;
+            locationVariety: number | null;
+        };
+    } => {
+        try {
+            // Try to get today's snapshot for basic data
+            getTodaySnapshot().then(snapshot => {
+                // Could use snapshot data here in future implementations
+            });
+        } catch {
+            // Silently handle - behavioral insights are optional
+        }
+        
+        // Return placeholder structure with null values
+        // indicating these would be computed with sufficient data
+        return {
+            screenTimeCorrelation: null,
+            socialMediaCorrelation: null,
+            physicalActivityCorrelation: null,
+            mobilityPatterns: {
+                homeTimePercentage: null,
+                locationVariety: null
+            }
+        };
+    };
+    
+    const calculateUserInsightsSummary = (): {
+        workingThrough: Array<{ text: string, date: string }>;
+        patternsIdentified: Array<{ text: string, date: string }>;
+        contextInsights: Array<{ text: string, date: string }>;
+        valuesClarified: Array<{ text: string, date: string }>;
+    } => {
+        try {
+            const insights = loadInsights();
+            
+            // Group insights by kind and sort by date (most recent first)
+            const grouped = {
+                workingThrough: insights
+                    .filter(i => i.kind === "working_through")
+                    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                    .map(i => ({ text: i.text, date: i.date })),
+                    
+                patternsIdentified: insights
+                    .filter(i => i.kind === "pattern")
+                    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                    .map(i => ({ text: i.text, date: i.date })),
+                    
+                contextInsights: insights
+                    .filter(i => i.kind === "context")
+                    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                    .map(i => ({ text: i.text, date: i.date })),
+                    
+                valuesClarified: insights
+                    .filter(i => i.kind === "value")
+                    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                    .map(i => ({ text: i.text, date: i.date }))
+            };
+            
+            // Limit each category to top 3 most recent
+            return {
+                workingThrough: grouped.workingThrough.slice(0, 3),
+                patternsIdentified: grouped.patternsIdentified.slice(0, 3),
+                contextInsights: grouped.contextInsights.slice(0, 3),
+                valuesClarified: grouped.valuesClarified.slice(0, 3)
+            };
+        } catch (error) {
+            console.error("Failed to load user insights:", error);
+            return {
+                workingThrough: [],
+                patternsIdentified: [],
+                contextInsights: [],
+valuesClarified: []
+             };
+         }
+      };
+
+     const handleExportClinicianPdf = async () => {
     setReportBusy(true);
     try {
       const now = new Date();
@@ -224,25 +555,53 @@ export default function YourDataScreen() {
         byTimeOfDay: byTimeOfDayStr,
       };
 
-      const stats = nilaStats();
-      const featuresUsed = featureAdoption();
+const stats = nilaStats();
+       const featuresUsed = featureAdoption();
+       
+       // Get crisis metrics for the reporting period
+       const crisisTracker = new CrisisMetricsTracker();
+       const crisisMetrics = await crisisTracker.getMetrics();
+       
+       // Get temporal risk assessment
+       const temporalRiskAssessment = await assessTemporalRisk();
+       
+       // Calculate enhanced summaries for clinician report
+       const checkins = loadCheckins();
+       const moodHistory = loadMoodHistory();
+        const rhythmData = loadRhythm();
+        const emotionalStateSummary = calculateEmotionalStateSummary(checkins);
+        const contextualAnalysis = calculateContextualAnalysis(checkins);
+        const whatHelpedSummary = await calculateWhatHelpedSummary();
+        const enhancedSleepDetails = calculateEnhancedSleepDetails(checkins, moodHistory);
+        const enhancedSocialRhythmDetails = calculateEnhancedSocialRhythmDetails(rhythmData);
+        const behavioralInsights = calculateBehavioralInsights();
+        const userInsightsSummary = calculateUserInsightsSummary();
 
-      const input: ClinicianReportInput = {
-        periodLabel,
-        periodDays,
-        totalCheckins,
-        daysActive,
-        avgIntensity,
-        avgSleepHours,
-        circadianScore,
-        socialRhythmVariability,
-        assessmentTrajectories,
-        medications,
-        episodes,
-        protocolsCompleted: 0,
-        nilaSessions: stats.total,
-        featuresUsed,
-      };
+       const input: ClinicianReportInput = {
+         periodLabel,
+         periodDays,
+         totalCheckins,
+         daysActive,
+         avgIntensity,
+         avgSleepHours,
+         circadianScore,
+         socialRhythmVariability,
+         assessmentTrajectories,
+         medications,
+         episodes,
+         protocolsCompleted: 0,
+         nilaSessions: stats.total,
+         featuresUsed,
+          crisisMetrics, // Add crisis metrics to the report
+          temporalRiskAssessment, // Add temporal risk assessment to the report
+          emotionalStateSummary,
+          contextualAnalysis,
+          whatHelpedSummary,
+          enhancedSleepDetails,
+          enhancedSocialRhythmDetails,
+          behavioralInsights,
+          userInsightsSummary
+       };
 
       const text = buildClinicianReport(input);
       const blob = generatePdfBlob(text);

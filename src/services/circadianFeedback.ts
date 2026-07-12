@@ -1,7 +1,8 @@
 // Circadian rhythm stabilization feedback loop — fuses sleep regularity (circadian.ts) and
 // social rhythm regularity (socialRhythm.ts) into a single combined score, with structured
-// guidance text. Inspired by the Circadian Rhythm Management (CRM) app approach (3.39× recurrence
-// reduction for MDD/BD; Gottlieb et al. 2025).
+// guidance text. Inspired by the Circadian Rhythm Management (CRM) app approach (~3.4× recurrence
+// reduction for MDD/BD in the CRM trial, NCT05400785; Yeom, Jeong, Moon et al., 2026, American
+// Journal of Psychiatry — corrected 2026-07-12 from a nonexistent "Gottlieb et al. 2025" citation).
 //
 // 🟡 Safety: sleep-related proactive guidance — never recommends sleep restriction.
 // All guidance is population-safe (manic-first, bipolar-aware).

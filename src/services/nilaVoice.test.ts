@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildNilaSystem, explainerQuestionSteer } from "./nila";
+import { buildNilaSystem, explainerQuestionSteer, consecutiveQuestionSteer } from "./nila";
 import { buildEpisodeSystem } from "./episodePrompt";
 
 describe("Nila voice (short companion persona)", () => {
@@ -43,6 +43,50 @@ describe("explainerQuestionSteer", () => {
   it("episode path also gets the explainer steer (footgun closed)", () => {
     const sys = buildEpisodeSystem([], "why do i feel so anxious all the time");
     expect(sys).toContain("STANCE FOR THIS MESSAGE");
+  });
+
+  // gad-worry synthesis item, moved into Task F scope: anchor the "why am I anxious" fallback fact to
+  // the existing anxiety-alarm psychoed card (searchPsychoed) instead of letting the small on-device
+  // model freely generate it, citing Donker, Griffiths, Cuijpers & Christensen (2009), BMC Medicine
+  // (psychoeducation alone has only a small, unproven-for-anxiety effect, so the one permitted plain
+  // sentence should be anchored to evidence-cited content, not a free paraphrase).
+  it("anchors the anxiety 'why' explainer fact to the psychoed anxiety-alarm card (Barlow) instead of free generation", () => {
+    for (const q of ["why am i so anxious", "what makes me so anxious", "why does my heart race when i'm anxious"]) {
+      const steer = explainerQuestionSteer(q).toLowerCase();
+      expect(steer, `should anchor for: ${q}`).toContain("alarm");
+      expect(steer, `should cite Barlow for: ${q}`).toContain("barlow");
+    }
+  });
+
+  it("does not anchor to the anxiety card for unrelated why/how questions", () => {
+    const steer = explainerQuestionSteer("why do i procrastinate so much").toLowerCase();
+    expect(steer).not.toContain("barlow");
+  });
+});
+
+// Magill et al. (2018), J Consulting and Clinical Psychology: the reflections:questions RATIO itself is
+// not outcome-linked — so this is a burnout/interrogation guard, NOT a prescribed cadence. See the
+// GUARDRAIL comment on consecutiveQuestionSteer in nila.ts before "fixing" this into a ratio.
+describe("consecutiveQuestionSteer — question cap after 2 straight question-ending replies", () => {
+  it("fires when the LAST TWO Nila replies both ended in a question", () => {
+    const steer = consecutiveQuestionSteer(["how did that feel?", "what happened next?"]).toLowerCase();
+    expect(steer).toContain("stance for this message");
+    expect(steer).toMatch(/do not ask another question|reflect/);
+  });
+
+  it("stays empty with fewer than 2 replies", () => {
+    expect(consecutiveQuestionSteer([])).toBe("");
+    expect(consecutiveQuestionSteer(["one reply that ends in a question?"])).toBe("");
+  });
+
+  it("stays empty unless BOTH of the last two ended in '?'", () => {
+    expect(consecutiveQuestionSteer(["that sounds hard.", "what happened next?"])).toBe("");
+    expect(consecutiveQuestionSteer(["how did that feel?", "glad you told me that."])).toBe("");
+  });
+
+  it("only looks at the LAST two, ignoring older history", () => {
+    const steer = consecutiveQuestionSteer(["what's up?", "that sounds hard.", "how are you feeling?"]);
+    expect(steer).toBe(""); // last two are a statement + a question — not two in a row
   });
 });
 

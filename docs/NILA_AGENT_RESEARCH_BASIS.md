@@ -99,8 +99,14 @@ we already chose*, and adds a new one.
   *PLOS ONE 2011*; JMIR 2020 e18100), and **for apps, human feedback added NOTHING** (Firth *World Psychiatry 2017*:
   g=0.47 without vs 0.14 with). → An always-on LLM plausibly does guidance's *job* (accountability, responsiveness,
   tailoring) — the retention lever. Not yet RCT-proven; Therabot is the closest positive.
-- **Best-evidenced cards:** iCBT-for-GAD/worry (d≈−0.91; face-to-face-equivalent, *Front Psychiatry 2022* PMC9366007)
-  and Behavioral Activation (SMD −0.51, larger in moderate-severe). Self-compassion real but quality-limited.
+- **Best-evidenced cards:** iCBT-for-GAD/worry (d≈−0.91; face-to-face-equivalent, *Front Psychiatry 2022* PMC9366007
+  — describes FULL, mostly therapist-guided iCBT-GAD packages; the isolated worry-postponement technique alone is
+  much smaller, d≈0.19–0.31 per Richards et al. 2015 / Dippel et al. 2024 — see `protocols.ts` "worry-postponement".
+  **⚠️ FLAG (2026-07-12 wave-2 pass): the PMC9366007 citation itself was not re-verified this wave — treat as
+  needing a follow-up verification pass, not as newly confirmed.**)
+  and Behavioral Activation (internet BA g≈−0.49 post-treatment, apps≈−0.39; unguided not significant; no effect
+  at 6-month follow-up — corrected 2026-07-12 from an unverifiable "SMD ≈ −0.51," per Alber et al., 2023; Jia et
+  al., 2025, *JMIR*). Self-compassion real but quality-limited.
 - **⚠️ Personalized formulation does NOT reliably beat generic protocols** (Emmelkamp, *World Psychiatry 2021*): RCTs
   show ≈ equivalence. The ONE personalization win is **modular MATCHING** (MATCH RCT beat fixed CBT). → **Build a
   LIGHTWEIGHT formulation-for-ROUTING layer (5 P's as intake to select + personalize framing of modules), NOT a

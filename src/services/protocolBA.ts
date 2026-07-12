@@ -8,8 +8,8 @@ export type BAStepSignal =
   | { kind: "rating"; stepId: string; activityId: string; title: string };
 
 export type BAAction =
-  | { type: "pick_activity"; activity: { id: string; title: string; category: BACategory; tiny: string } }
-  | { type: "rate_activity"; activityId: string; mastery: number; pleasure: number }
+  | { type: "pick_activity"; activity: { id: string; title: string; category: BACategory; tiny: string }; moodBefore?: number }
+  | { type: "rate_activity"; activityId: string; mastery: number; pleasure: number; moodAfter?: number }
   | { type: "skip_rating"; activityId: string }
   | { type: "advance_step" };
 
@@ -49,8 +49,10 @@ export function getBAActivityIdeas(category: BACategory): ActivityIdea[] {
 
 /**
  * Pick an activity from the menu - logs it as planned and advances to next step.
+ * Optionally captures moodBefore (0–10) — the pre-rating half of BA's before/after mood loop
+ * (Jacobson, Martell & Dimidjian, 2001). Never fabricated when the caller doesn't supply it.
  */
-export function pickBAActivity(title: string, category: BACategory): BAActivityLog {
+export function pickBAActivity(title: string, category: BACategory, moodBefore?: number): BAActivityLog {
   const now = new Date();
   const date = now.toISOString().split("T")[0];
   const timestamp = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -63,6 +65,7 @@ export function pickBAActivity(title: string, category: BACategory): BAActivityL
     title,
     category,
     status: "planned",
+    ...(typeof moodBefore === "number" ? { moodBefore } : {}),
   };
 
   upsertActivity(activity);
@@ -98,6 +101,7 @@ export function handleBAAction(action: BAAction): BAStepSignal | { done: true } 
         category: action.activity.category,
         status: "planned",
         note: `Tiny version: ${action.activity.tiny}`,
+        ...(typeof action.moodBefore === "number" ? { moodBefore: action.moodBefore } : {}),
       });
 
       // Advance to exercise step
@@ -121,6 +125,7 @@ export function handleBAAction(action: BAAction): BAStepSignal | { done: true } 
           status: "done",
           mastery: action.mastery,
           pleasure: action.pleasure,
+          ...(typeof action.moodAfter === "number" ? { moodAfter: action.moodAfter } : {}),
         });
       }
       return null;

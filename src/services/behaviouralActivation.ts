@@ -114,8 +114,12 @@ export interface BAActivityLog {
   title: string;
   category: BACategory;
   status: "planned" | "done" | "skipped";
-  // Acting before motivation: capture the mood/urge BEFORE, then mastery+pleasure AFTER.
+  // Acting before motivation: capture the mood/urge BEFORE, then mood + mastery+pleasure AFTER — the
+  // before/after mood pair is core, evidence-defined BA (Jacobson, Martell & Dimidjian, 2001, Clin Psychol
+  // Sci Pract) and the ingredient most commercial apps omit; without it there's no learning signal that
+  // acting actually shifted mood.
   moodBefore?: number; // 0–10 (optional pre-rating)
+  moodAfter?: number; // 0–10 (optional post-rating, alongside mastery/pleasure)
   mastery?: number; // 0–10, sense of accomplishment (rated after doing)
   pleasure?: number; // 0–10, enjoyment (rated after doing)
   note?: string;

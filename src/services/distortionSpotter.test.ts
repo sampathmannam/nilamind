@@ -134,6 +134,30 @@ describe("paraphrase robustness (2026-07-12 device-QA)", () => {
   });
 });
 
+// alliance-voice (2026-07-12 clinical research wave 2): validate-first, one-question-max. Invalidation-
+// first replies raise arousal where validation lowers it (Shenk & Fruzzetti, 2011, J Social and Clinical
+// Psychology); the challenging QUESTION itself carries the evidence — Socratic questioning predicts
+// next-session symptom change (Braun, Strunk, Sasso & Cooper, 2015, Behaviour Research and Therapy) — so a
+// single well-placed question beats a stacked checklist, even when several distortions matched at once.
+describe("distortionSteer — validate-first, one-question-max (2026-07-12 alliance-voice)", () => {
+  it("puts a VALIDATE instruction before the challenge instruction", () => {
+    const matches = spotDistortions("i'm an idiot and i'm a failure at everything");
+    const steer = distortionSteer(matches).toLowerCase();
+    const validateIdx = steer.indexOf("validate");
+    const challengeIdx = steer.search(/at most one|only after/);
+    expect(validateIdx).toBeGreaterThanOrEqual(0);
+    expect(challengeIdx).toBeGreaterThan(validateIdx);
+  });
+
+  it("caps at exactly ONE question even when multiple distortions matched in one message", () => {
+    const matches = spotDistortions("I always mess everything up, I'm such a failure, and everyone thinks I'm stupid");
+    expect(matches.length).toBeGreaterThanOrEqual(2);
+    const steer = distortionSteer(matches);
+    const questionMarks = (steer.match(/\?/g) || []).length;
+    expect(questionMarks).toBe(1);
+  });
+});
+
 describe("safeSpotDistortions — §9 gate", () => {
   it("spots a distortion on ordinary negative thoughts", () => {
     const r = safeSpotDistortions("I always mess everything up");

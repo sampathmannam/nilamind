@@ -39,8 +39,9 @@ export const PROTOCOLS: Protocol[] = [
     id: "behavioral-activation",
     title: "Behavioral Activation",
     basis:
-      "Evidence-based for depression; app-delivered BA reduces depressive symptoms (SMD ≈ −0.51, larger in " +
-      "moderate–severe). See docs/NILA_AGENT_RESEARCH_BASIS.md.",
+      "Evidence-based for depression; internet-delivered BA reduces depressive symptoms with g ≈ −0.49 post-" +
+      "treatment (apps specifically ≈ −0.39); unguided BA was not significant, and the effect was not sustained " +
+      "at 6-month follow-up (Alber et al., 2023; Jia et al., 2025, JMIR). See docs/NILA_AGENT_RESEARCH_BASIS.md.",
     forConcerns: [
       "no energy", "low energy", "no motivation", "pointless", "nothing matters", "what's the point",
       "whats the point", "can't get out of bed", "cant get out of bed", "stopped doing", "don't enjoy",
@@ -50,12 +51,18 @@ export const PROTOCOLS: Protocol[] = [
     steps: [
       { id: "ba-1", kind: "psychoed", title: "How this works",
         prompt: "When we're low, we naturally pull back from things — and less activity means fewer good moments, which quietly pulls us lower. Behavioral activation gently reverses that: we act first, in small ways, and the motivation tends to follow rather than lead. Want to try it together?" },
+      // TRAP→TRAC avoidance-pattern step, folded into ba-2 rather than a new step id (protocolProgress.test.ts /
+      // activeProtocolContext.test.ts hardcode BA's 5-step sequencing) — Jacobson, Martell & Dimidjian (2001),
+      // Depression in Context: naming the Trigger→Response→Avoidance-Pattern and choosing an Alternative Coping
+      // response instead is a defining, named BA component.
       { id: "ba-2", kind: "reflect", title: "Notice the pattern",
-        prompt: "No pressure — just curious: what's something you used to do, or enjoy, that you've been doing less of lately?" },
+        prompt: "No pressure — just curious: what's something you used to do, or enjoy, that you've been doing less of lately? Often there's a TRAP underneath: a Trigger (what set off the low feeling), a Response (the urge to avoid), and the Avoidance itself — which feels like relief but quietly keeps the low feeling going. The way out is TRAC: same Trigger and Response, but an Alternative Coping move instead of avoiding. What's the avoidance move you tend to make?" },
       { id: "ba-3", kind: "plan", title: "Pick something small",
         prompt: "Let's choose ONE small thing that used to matter or feel a little good — small enough that it's almost easy. What comes to mind?" },
+      // If-then implementation intentions (Gollwitzer & Sheeran, 2006, Adv Exp Soc Psychol: d=0.65 general,
+      // d+=0.99 in mental-health samples) + a one-line barrier plan — the cheapest evidence-backed win available.
       { id: "ba-4", kind: "exercise", title: "Schedule it",
-        prompt: "When could you do it — even for five minutes? A rough time is plenty. If you'd like, I can gently check in with you after." },
+        prompt: "Let's make it concrete — that's what makes plans actually happen. Try filling in: 'If [a time or place], then I will [the tiny action].' When could that be for you? And one more thing that helps: what might get in the way — and if it does, what's your backup move? If you'd like, I can gently check in with you after." },
       { id: "ba-5", kind: "reflect", title: "See how it went",
         prompt: "Whenever you've tried it: how did it go? Even a tiny bit counts — we're building momentum, not chasing perfection." },
     ],
@@ -64,8 +71,10 @@ export const PROTOCOLS: Protocol[] = [
     id: "worry-postponement",
     title: "Worry Postponement",
     basis:
-      "Stimulus-control / worry-postponement for GAD; internet CBT for GAD shows large effects (d ≈ −0.9, " +
-      "face-to-face-equivalent). See docs/NILA_AGENT_RESEARCH_BASIS.md.",
+      "Stimulus-control / worry-postponement, the specific isolated technique (not a full guided iCBT package): " +
+      "meta-analytic effects are small, d ≈ 0.19–0.31 (Richards, Richardson, Timulak & McElvaney, 2015, Internet " +
+      "Interventions; Dippel, Brosschot & Verkuil, 2024, Int'l J of Cognitive Therapy). See " +
+      "docs/NILA_AGENT_RESEARCH_BASIS.md.",
     forConcerns: [
       "worry", "worrying", "worried", "worries", "can't stop thinking", "cant stop thinking", "overthinking",
       "over-thinking", "anxious", "anxiety", "racing thoughts", "mind won't stop", "mind wont stop", "what if",
@@ -73,12 +82,18 @@ export const PROTOCOLS: Protocol[] = [
       "cant switch off", "restless mind", "keep going over",
     ],
     steps: [
+      // Real/solvable-vs-hypothetical-worry triage folded into wp-1 rather than a new step id
+      // (activeProtocolContext.test.ts hardcodes worry-postponement's 5-step sequencing, incl. wp-2 as
+      // literally the 2nd step) — Borkovec, Wilkinson, Folensbee & Lerman (1983): this triage is a
+      // load-bearing part of the original, tested protocol, not an optional add-on.
       { id: "wp-1", kind: "psychoed", title: "How this works",
-        prompt: "Worry feels like it's keeping you safe, so it shows up all day long. Worry-postponement gives it a scheduled place instead — and having a set time often loosens its grip on the rest of your day. Want to set it up?" },
+        prompt: "Worry feels like it's keeping you safe, so it shows up all day long. One quick check first: is this worry about something real and solvable right now — a decision you can actually act on? If so, tackling it directly (a quick problem-solving pass) often helps more than postponing it. But if it's the hypothetical, 'what if' kind — something you can't control or that hasn't happened — worry-postponement gives it a scheduled place instead, and having a set time often loosens its grip on the rest of your day. Want to set it up?" },
       { id: "wp-2", kind: "exercise", title: "Set a worry period",
         prompt: "Pick a daily 15-minute 'worry time' — same time and place each day, and not right before bed. When could that be for you?" },
+      // Reframed as a metacognitive behavioral experiment (Krzikalla et al., 2024, Clinical Psychology in
+      // Europe: d=0.82 for worry, larger than pure stimulus-control framing) rather than plain stimulus control.
       { id: "wp-3", kind: "plan", title: "Postpone in the moment",
-        prompt: "When a worry pops up during the day, you jot it down and tell it, gently, 'not now — I'll get to you at worry time,' then return to what you were doing. Does that feel doable?" },
+        prompt: "Here's the shift: postponing isn't just delaying — it's a live test of the belief 'I can't control when I worry.' When a worry pops up during the day, jot it down and tell it, gently, 'not now — I'll get to you at worry time,' then return to what you were doing. Each time the worry actually waits, that's evidence against 'I can't control this worry.' Does that feel doable?" },
       { id: "wp-4", kind: "exercise", title: "Use the worry period",
         prompt: "At worry time, look at your list and let yourself worry on purpose for those 15 minutes. Often the worries feel smaller by then — and some won't feel worth the time at all." },
       { id: "wp-5", kind: "reflect", title: "Notice what shifts",
@@ -203,8 +218,12 @@ export const PROTOCOLS: Protocol[] = [
         prompt: "Anger is usually a signal that something matters to us — a boundary, a value, a need. The trouble is when the heat drives the response. We can learn to feel the signal and still choose the next move. Sound useful?" },
       { id: "ag-2", kind: "reflect", title: "Find the early warning",
         prompt: "Before you snap, what shows up first? Tight jaw, raised voice, fast breathing, clenched fists, a hot thought? Noticing earlier gives you more choice." },
+      // Anti-rumination + reappraisal micro-step: rumination is the strongest anger amplifier (r=0.42) and
+      // venting/ruminative time-outs increase anger and aggression, while reappraisal is the best-performing
+      // in-the-moment anger strategy — Pop, Nechita, Miu & Szentágotai-Tătar (2025), Scientific Reports;
+      // Szasz, Szentagotai & Hofmann (2011), Behaviour Research and Therapy.
       { id: "ag-3", kind: "exercise", title: "Cool the body first",
-        prompt: "The body escalates before the words do. Try one cooling move: a slow exhale, cold water on wrists, or stepping away for 60 seconds. Which feels doable right now?" },
+        prompt: "The body escalates before the words do. Try one cooling move: a slow exhale, cold water on wrists, or stepping away for 60 seconds — but stepping away only helps if you're cooling down, not replaying the moment in your head, which actually feeds the anger. While you cool down, try one reappraisal: is there another way to see what just happened — could there be a reason behind it that isn't about attacking you? Which cooling move feels doable right now?" },
       { id: "ag-4", kind: "reflect", title: "What do you actually want here?",
         prompt: "Under the anger, what's the outcome you actually want? To be heard? To protect someone? To be fair? Naming it helps pick a response that gets you closer instead of further away." },
       { id: "ag-5", kind: "plan", title: "Choose the next sentence",

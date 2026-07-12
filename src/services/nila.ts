@@ -17,6 +17,7 @@ import { relevantSkillsBlock } from "./skillRetrieval";
 import { buildPersonalContext, activeProtocolContextBlock } from "./nilaContext";
 import { getLatestReflection } from "./asyncReflection";
 import { distortionSteer, safeSpotDistortions } from "./distortionSpotter"; // 🟡 Safety: distortion spotting now §9‑gated, needs review
+import { searchPsychoed } from "./psychoed";
 
 export interface NilaMessage {
   role: "user" | "assistant";
