@@ -525,7 +525,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           {messages.length > 0 && (
             <button
               onClick={() => setConfirmNewChat(true)}
-              className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500"
+              className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer focus-ring min-w-[44px] min-h-[44px] flex items-center justify-center"
               aria-label="New conversation"
             >
               <SquarePen className="w-4 h-4" />
@@ -533,7 +533,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           )}
           <button
             onClick={onOpenSettings}
-            className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500"
+            className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer focus-ring min-w-[44px] min-h-[44px] flex items-center justify-center"
             aria-label={t("settings")}
           >
             <Settings className="w-4 h-4" />
@@ -564,13 +564,13 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
             <div className="flex gap-2 pt-1">
               <button
                 onClick={() => setConfirmNewChat(false)}
-                className="flex-1 py-2 rounded-xl bg-slate-800 text-slate-200 text-sm cursor-pointer hover:bg-slate-700 transition-colors"
+                className="flex-1 py-3 rounded-xl bg-slate-800 text-slate-200 text-sm cursor-pointer hover:bg-slate-700 transition-colors min-h-[44px] focus-ring"
               >
                 Keep it
               </button>
               <button
                 onClick={startNewConversation}
-                className="flex-1 py-2 rounded-xl text-white text-sm cursor-pointer transition-opacity hover:opacity-90"
+                className="flex-1 py-3 rounded-xl text-white text-sm cursor-pointer transition-opacity hover:opacity-90 min-h-[44px] focus-ring"
                 style={{ backgroundColor: "#6b21a8" }}
               >
                 Start fresh
@@ -614,7 +614,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
             {!showQuickActions && (
               <button
                 onClick={() => setShowQuickActions(true)}
-                className="text-xs text-slate-500 hover:text-slate-300 flex items-center gap-1 transition-colors cursor-pointer"
+                className="text-xs text-slate-500 hover:text-slate-300 flex items-center gap-1 transition-colors cursor-pointer py-2 px-3 min-h-[44px] min-w-[44px] focus-ring"
               >
                 <span>More tools</span>
                 <span className="text-slate-600">+</span>
@@ -625,7 +625,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                 <QuickActions onAction={handleQuickAction} timeMode={mode.timeMode} userState={mode.userState} />
                 <button
                   onClick={() => setShowQuickActions(false)}
-                  className="text-xs text-slate-500 hover:text-slate-300 transition-colors cursor-pointer"
+                  className="text-xs text-slate-500 hover:text-slate-300 transition-colors cursor-pointer py-2 px-3 min-h-[44px] min-w-[44px] focus-ring"
                 >
                   Hide tools
                 </button>
@@ -659,10 +659,10 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                               setRatedMessages((prev) => new Set(prev).add(i));
                               hapticLight();
                             }}
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-slate-800/50 transition-colors cursor-pointer"
+                            className="p-2.5 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-slate-800/50 transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center focus-ring"
                             aria-label="Mark as helpful"
                           >
-                            <ThumbsUp className="w-3.5 h-3.5" />
+                            <ThumbsUp className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => {
@@ -670,10 +670,10 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                               setRatedMessages((prev) => new Set(prev).add(i));
                               hapticLight();
                             }}
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-slate-800/50 transition-colors cursor-pointer"
+                            className="p-2.5 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-slate-800/50 transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center focus-ring"
                             aria-label="Mark as not helpful"
                           >
-                            <ThumbsDown className="w-3.5 h-3.5" />
+                            <ThumbsDown className="w-4 h-4" />
                           </button>
                         </div>
                       )}
@@ -708,13 +708,13 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                   <div className="flex gap-2 mt-2">
                     <button
                       onClick={handleOpenSafetyPlan}
-                      className="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 font-medium transition-colors cursor-pointer"
+                      className="px-3 py-2 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 font-medium transition-colors cursor-pointer min-h-[44px] focus-ring"
                     >
                       Review plan
                     </button>
                     <button
                       onClick={handleMarkSafetyPlanReviewed}
-                      className="px-2.5 py-1 rounded-lg hover:bg-amber-500/15 text-amber-200/80 transition-colors cursor-pointer"
+                      className="px-3 py-2 rounded-lg hover:bg-amber-500/15 text-amber-200/80 transition-colors cursor-pointer min-h-[44px] focus-ring"
                     >
                       Looks good
                     </button>
@@ -735,20 +735,20 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                 <div className="flex-1">
                   <p className="font-medium">Safety plan — first follow-up (~48h)</p>
                   <p className="text-blue-200/70 mt-0.5">The first follow-up within ~48h is the most impactful part of the Stanley-Brown protocol. No pressure — just a gentle nudge if now feels like a good time.</p>
-                  <div className="flex gap-2 mt-2">
+<div className="flex gap-2 mt-2">
                     <button
                       onClick={handleOpenSafetyPlan}
-                      className="px-2.5 py-1 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-200 font-medium transition-colors cursor-pointer"
+                      className="px-3 py-2 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-200 font-medium transition-colors cursor-pointer min-h-[44px] focus-ring"
                     >
                       Review plan
                     </button>
                     <button
                       onClick={handleMarkSafetyPlanFollowUpDone}
-                      className="px-2.5 py-1 rounded-lg hover:bg-blue-500/15 text-blue-200/80 transition-colors cursor-pointer"
+                      className="px-3 py-2 rounded-lg hover:bg-blue-500/15 text-blue-200/80 transition-colors cursor-pointer min-h-[44px] focus-ring"
                     >
                       Done
                     </button>
-                  </div>
+</div>
                 </div>
               </div>
             </div>
@@ -766,20 +766,20 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                 <div className="flex-1">
                   <p className="font-medium">Sleep has been short lately</p>
                   <p className="text-amber-200/70 mt-0.5">{sleepProdromeNudge.detail}</p>
-                  <div className="flex gap-2 mt-2">
+<div className="flex gap-2 mt-2">
                     <button
                       onClick={() => onOpenWindDown?.()}
-                      className="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 font-medium transition-colors cursor-pointer"
+                      className="px-3 py-2 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 font-medium transition-colors cursor-pointer min-h-[44px] focus-ring"
                     >
                       Wind down
                     </button>
                     <button
                       onClick={() => setSleepProdromeNudge(null)}
-                      className="px-2.5 py-1 rounded-lg hover:bg-amber-500/15 text-amber-200/80 transition-colors cursor-pointer"
+                      className="px-3 py-2 rounded-lg hover:bg-amber-500/15 text-amber-200/80 transition-colors cursor-pointer min-h-[44px] focus-ring"
                     >
                       Not now
                     </button>
-                  </div>
+</div>
                 </div>
               </div>
             </div>
@@ -809,7 +809,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                           handleQuickAction(actionMap[jitaiNudge.suggestedTool!]);
                         }
                       }}
-                      className="px-2.5 py-1 rounded-lg bg-violet-500/20 hover:bg-violet-500/30 text-violet-200 font-medium transition-colors cursor-pointer mt-2"
+                      className="px-3 py-2 rounded-lg bg-violet-500/20 hover:bg-violet-500/30 text-violet-200 font-medium transition-colors cursor-pointer mt-2 min-h-[44px] focus-ring"
                     >
                       Try {jitaiNudge.suggestedTool}
                     </button>
@@ -819,10 +819,10 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
             </div>
 )}
 
-          {protocolCard && (
+{protocolCard && (
             <button
               onClick={handleProtocolTap}
-              className="w-full text-left px-3 py-2 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-300 text-xs font-medium hover:bg-blue-500/20 transition-colors cursor-pointer"
+              className="w-full text-left px-4 py-3 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-300 text-xs font-medium hover:bg-blue-500/20 transition-colors cursor-pointer min-h-[44px] focus-ring"
               id="protocol-card"
             >
               {protocolCard.label}
@@ -836,23 +836,23 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                 <MessageCircle className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" />
                 <div className="flex-1">
                   <p className="leading-relaxed">{welcomeBack}</p>
-                  <div className="flex gap-2 mt-2">
+<div className="flex gap-2 mt-2">
                     <button
                       onClick={() => {
                         try { (globalThis as any).localStorage?.setItem("nilamind_welcome_back_dismissed", new Date().toISOString().split("T")[0]); } catch { /* best-effort */ }
                         setWelcomeBack(null);
                       }}
-                      className="px-2.5 py-1 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-200 font-medium transition-colors cursor-pointer"
+                      className="px-3 py-2 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-200 font-medium transition-colors cursor-pointer min-h-[44px] focus-ring"
                     >
                       Got it
                     </button>
                     <button
                       onClick={() => { setWelcomeBack(null); }}
-                      className="px-2.5 py-1 rounded-lg hover:bg-blue-500/15 text-blue-200/80 transition-colors cursor-pointer"
+                      className="px-3 py-2 rounded-lg hover:bg-blue-500/15 text-blue-200/80 transition-colors cursor-pointer min-h-[44px] focus-ring"
                     >
                       Dismiss
                     </button>
-                  </div>
+</div>
                 </div>
               </div>
             </div>
@@ -879,13 +879,13 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           )}
 
           {/* Quick suggestion chips — tap to send */}
-          {messages.length <= 1 && !inputText && (
+{messages.length <= 1 && !inputText && (
             <div className="flex flex-wrap gap-2" id="chat-suggestions">
               {suggestions.map((chip) => (
                 <button
                   key={chip.id}
                   onClick={() => handleSendMessage(chip.text)}
-                  className="px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700 text-xs text-slate-300 hover:bg-slate-700 hover:text-slate-100 transition-colors cursor-pointer"
+                  className="px-4 py-2 rounded-full bg-slate-800 border border-slate-700 text-xs text-slate-300 hover:bg-slate-700 hover:text-slate-100 transition-colors cursor-pointer min-h-[44px] focus-ring"
                 >
                   {chip.emoji} {chip.text}
                 </button>
@@ -894,11 +894,11 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           )}
 
           <div className="flex items-center gap-2">
-            {showTextInput ? (
+{showTextInput ? (
               <>
                 <button
                   onClick={handleVoice}
-                  className={`p-3 rounded-full transition-colors cursor-pointer shrink-0 ${
+                  className={`p-3 rounded-full transition-colors cursor-pointer shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center focus-ring ${
                     listening
                       ? "bg-rose-500/20 text-rose-400 animate-pulse"
                       : "bg-slate-800 text-slate-400 hover:text-slate-200"
@@ -924,7 +924,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                 <button
                   onClick={() => handleSendMessage()}
                   disabled={!inputText.trim() || loading}
-                  className={`p-3 rounded-xl transition-colors cursor-pointer ${
+                  className={`p-3 rounded-xl transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center focus-ring ${
                     inputText.trim() && !loading
                       ? "bg-blue-500/20 text-blue-400 hover:bg-blue-500/30"
                       : "bg-slate-800 text-slate-500"
@@ -935,7 +935,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                 </button>
                 <button
                   onClick={() => { if (!listening) setShowTextInput(false); }}
-                  className="p-2 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors cursor-pointer shrink-0"
+                  className="p-3 rounded-xl bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors cursor-pointer shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center focus-ring"
                   aria-label="Hide keyboard, show voice"
                 >
                   <Mic className="w-5 h-5" />
@@ -945,7 +945,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
               <>
                 <button
                   onClick={handleVoice}
-                  className={`flex-1 flex items-center justify-center gap-3 py-4 rounded-2xl transition-all cursor-pointer ${
+                  className={`flex-1 flex items-center justify-center gap-3 py-4 rounded-2xl transition-all cursor-pointer min-h-[44px] focus-ring ${
                     listening
                       ? "bg-rose-500/20 text-rose-400 animate-pulse"
                       : "bg-slate-800 border border-slate-700 text-slate-300 hover:border-slate-600 hover:text-slate-100"
@@ -960,7 +960,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                 </button>
                 <button
                   onClick={() => setShowTextInput(true)}
-                  className="p-3 rounded-xl bg-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-700 transition-colors cursor-pointer shrink-0"
+                  className="p-3 rounded-xl bg-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-700 transition-colors cursor-pointer shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center focus-ring"
                   aria-label="Type a message"
                 >
                   <Keyboard className="w-5 h-5" />
