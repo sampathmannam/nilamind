@@ -41,7 +41,12 @@ const DISTORTIONS: DistortionDef[] = [
     label: "Mind reading",
     question: "We can't know what they're thinking for sure — want to check the facts?",
     patterns: [
-      /\b(they (all )?think i('?m| am) (stupid|incompetent|a failure|useless|annoying|pathetic)|everyone (is judging|thinks|hates|knows)|she thinks i('?m)|he thinks i('?m)|they must think)\b/i,
+      // "hates" requires a me/us object (bare "everyone hates" collides with "everyone hates the
+      // policy"); the other verbs keep adjacency-only since they were never ambiguous that way.
+      /\b(they (all )?think i('?m| am) (stupid|incompetent|a failure|useless|annoying|pathetic)|everyone (is judging|thinks|knows)|everyone hates (?:me|us)\b|she thinks i('?m)|he thinks i('?m)|they must think)\b/i,
+      // Gap-tolerant: adverbs between subject and verb, object must be me/us so "everyone hates
+      // the policy" stays clean (2026-07-12: "everyone secretly hates me" evaded adjacency form).
+      /\b(everyone|everybody|they all|all of them) (?:\w+ ){0,2}(hates?|despises?|is judging|are judging|thinks? (?:i|the worst of)) (?:me|us)\b/i,
     ],
   },
   {
@@ -81,7 +86,12 @@ const DISTORTIONS: DistortionDef[] = [
     label: "Labeling",
     question: "Would it be more accurate to describe the action instead of labeling yourself?",
     patterns: [
+      // Direct adjacency (original) …
       /\b(i('?m| am) (stupid|worthless|a failure|an idiot|ugly|pathetic|useless|a loser|broken|a burden|incompetent|weak|a mess))\b/i,
+      // …and gap-tolerant: up to two qualifier words ("complete", "total", "such a") between copula and
+      // label, with a negation lookahead so "i am not a failure" / "i am afraid of failure" stay clean
+      // (2026-07-12 device-QA: "i am a complete failure" evaded the adjacency form above).
+      /\bi('?m| am) (?!not\b|never\b|no longer\b|hardly\b|afraid of\b|scared of\b)(?:\w+ ){0,2}(?:a |an )?(?:complete |total |utter |absolute |massive |huge |worthless |useless )?(failure|idiot|loser|burden|mess|disappointment)\b/i,
     ],
   },
   {

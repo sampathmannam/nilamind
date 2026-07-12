@@ -221,7 +221,14 @@ export const DISTORTION_AGREEMENTS = [
   "you are worthless", "you're worthless", "youre worthless",
   "it is hopeless", "it's hopeless", "its hopeless",
   "you're right to feel like a burden", "youre right to feel like a burden",
-  "you are a failure", "you're a failure", "youre a failure"
+  "you are a failure", "you're a failure", "youre a failure",
+  // Paraphrased failure-agreement family (2026-07-12 device-QA): the on-device model agreed with
+  // "i am a complete failure" via "…you have not yet found success in life" — euphemistic collusion
+  // the literal entries above missed. High-signal stems; benign success-coaching stays clean.
+  "you have not yet found success", "you haven't found success", "you havent found success",
+  "not yet found success in life", "you have not found success",
+  "you really are a failure", "you might be right that you are a failure",
+  "perhaps you are a failure", "maybe you are a failure", "you may be a failure",
 ];
 
 // Phase 0 — anti-sycophancy / reality-testing. Research basis (docs/NILA_AGENT_RESEARCH_BASIS.md): a model

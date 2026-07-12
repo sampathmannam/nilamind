@@ -86,6 +86,28 @@ describe("distortionSteer", () => {
   });
 });
 
+describe("paraphrase robustness (2026-07-12 device-QA)", () => {
+  it("labeling: catches qualifiers between copula and label", () => {
+    const m = spotDistortions("i am a complete failure and everyone secretly hates me");
+    expect(m.map((x) => x.id)).toContain("labeling");
+  });
+  it("mind_reading: catches adverbs inside 'everyone hates me'", () => {
+    const m = spotDistortions("i am a complete failure and everyone secretly hates me");
+    expect(m.map((x) => x.id)).toContain("mind_reading");
+  });
+  it.each([
+    "i am not a failure, i know that now",
+    "i am afraid of failure",
+    "i used to think i was a failure",
+    "everyone hates the new policy",
+    "my boss says everyone secretly hates meetings",
+  ])("does NOT fire on negated/benign paraphrase: %j", (s) => {
+    const ids = spotDistortions(s).map((x) => x.id);
+    expect(ids).not.toContain("labeling");
+    expect(ids).not.toContain("mind_reading");
+  });
+});
+
 describe("safeSpotDistortions — §9 gate", () => {
   it("spots a distortion on ordinary negative thoughts", () => {
     const r = safeSpotDistortions("I always mess everything up");

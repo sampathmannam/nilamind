@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { trajectoryContextBlock, inflectionContextBlock } from "./nilaContext";
+import { trajectoryContextBlock, inflectionContextBlock, antiSycophancyContextBlock } from "./nilaContext";
 import type { SleepSignal } from "./healthConnect";
 import type { InflectionSignal } from "./nilaInflection";
 
@@ -42,5 +42,13 @@ describe("inflectionContextBlock — feeds a detected trajectory shift into Nila
   it("surfaces an improvement shift warmly without making them perform being okay", () => {
     const b = inflectionContextBlock(sig("improvement", "mood easing over the past week"));
     expect(b.toLowerCase()).toMatch(/eas|lighter|better|improv|up/);
+  });
+});
+
+describe("antiSycophancyContextBlock — depressive distortions (2026-07-12)", () => {
+  it("names harsh self-belief non-collusion, not just mania themes", () => {
+    const block = antiSycophancyContextBlock();
+    expect(block).toMatch(/failure|worthless/i);
+    expect(block).toMatch(/everyone hates/i);
   });
 });

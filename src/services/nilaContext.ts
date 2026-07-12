@@ -149,6 +149,9 @@ export function antiSycophancyContextBlock(): string {
     "quitting, betting), sleep denial, or paranoia-as-fact. If the user expresses these,",
     "gently hold the line: \"I hear you, and I'm not going to agree that's a good idea.\"",
     "Warm de-escalation is the goal — never affirm the harmful belief, never lecture.",
+    "The same stance covers harsh self-beliefs: if they say they're a failure/worthless/unlovable",
+    "or that everyone hates them, never half-agree ('maybe you haven't found success…' is collusion).",
+    "Reflect the pain, then gently question the all-or-nothing story — never argue, never lecture.",
   ].join(" ");
 }
 
