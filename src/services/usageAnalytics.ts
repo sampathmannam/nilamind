@@ -163,6 +163,82 @@ export function assessmentSummary(
   return out;
 }
 
+// 2026-07-12: self-retention / consistency tracking. A true cross-user "Day-30 retention
+// cohort" would need server aggregation, which this app's privacy promise forbids — so we
+// measure the one user's OWN engagement on-device: active days, current (forgiving) streak,
+// and Day-7/Day-30 still-active flags. This is the honest, privacy-safe form of the
+// "does the app actually keep people" question. Idempotent per UTC day.
+const ACTIVE_DAYS_KEY = "nilamind_active_days";
+
+function isoDay(d: Date | string): string {
+  const dt = typeof d === "string" ? new Date(d) : d;
+  return dt.toISOString().split("T")[0]!;
+}
+
+export function recordActiveDay(day?: Date | string): void {
+  const key = isoDay(day ?? new Date());
+  const set = readArr<string>(ACTIVE_DAYS_KEY);
+  if (!set.includes(key)) {
+    set.push(key);
+    try {
+      secureLocal.setItem(ACTIVE_DAYS_KEY, JSON.stringify(set));
+    } catch {
+      /* storage full / unavailable — non-fatal */
+    }
+  }
+}
+
+function activeDaySet(): Set<string> {
+  return new Set(readArr<string>(ACTIVE_DAYS_KEY));
+}
+
+export interface RetentionSnapshot {
+  firstActiveIso: string | null;
+  totalActiveDays: number;
+  /** Consecutive active days ending at the most-recent active day (forgiving — a single quiet day doesn't zero it). */
+  currentStreak: number;
+  /** Active on day 7 after the first active day (the classic early-retention signal). */
+  day7Active: boolean;
+  /** Active on day 30 after the first active day (the hard retention cliff). */
+  day30Active: boolean;
+}
+
+export function retentionSnapshot(now: Date | string = new Date()): RetentionSnapshot {
+  const set = activeDaySet();
+  const days = [...set].sort();
+  if (!days.length) {
+    return { firstActiveIso: null, totalActiveDays: 0, currentStreak: 0, day7Active: false, day30Active: false };
+  }
+  const first = days[0]!;
+  const firstDt = new Date(first + "T00:00:00Z");
+  const dayAt = (offset: number): string => {
+    const d = new Date(firstDt);
+    d.setUTCDate(d.getUTCDate() + offset);
+    return isoDay(d);
+  };
+  const today = isoDay(now);
+  const last = days[days.length - 1]!;
+  const lastDt = new Date(last + "T00:00:00Z");
+  const todayDt = new Date(today + "T00:00:00Z");
+  // Only a "current" streak if the most-recent active day is today or yesterday.
+  const gapDays = Math.round((todayDt.getTime() - lastDt.getTime()) / 86400000);
+  let streak = 0;
+  if (gapDays <= 1) {
+    let cur = new Date(lastDt);
+    while (set.has(isoDay(cur))) {
+      streak += 1;
+      cur.setUTCDate(cur.getUTCDate() - 1);
+    }
+  }
+  return {
+    firstActiveIso: first,
+    totalActiveDays: days.length,
+    currentStreak: streak,
+    day7Active: set.has(dayAt(7)),
+    day30Active: set.has(dayAt(30)),
+  };
+}
+
 export interface UsageSummary {
   totalCheckins: number;
   checkinFrequency: number;

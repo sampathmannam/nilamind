@@ -197,6 +197,11 @@ export function buildClinicianReport(input: ClinicianReportInput): string {
       lines.push(`  Avg sleep (from check-ins): ${u.avgSleepHours.toFixed(1)}h`);
     }
     lines.push(`  Features used: ${u.featuresUsed.length > 0 ? u.featuresUsed.join(", ").replace(/_/g, " ") : "none"}`);
+    if (u.retention) {
+      const r = u.retention;
+      lines.push(`  Consistency: ${r.totalActiveDays} active day(s), current streak ${r.currentStreak}`);
+      lines.push(`  Retention: Day-7 still active — ${r.day7Active ? "yes" : "no"}; Day-30 still active — ${r.day30Active ? "yes" : "no"}`);
+    }
     lines.push("");
   }
 

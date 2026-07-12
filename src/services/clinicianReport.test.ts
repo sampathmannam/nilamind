@@ -163,6 +163,13 @@ describe("buildClinicianReport", () => {
         nilaTurns: 12,
         avgSleepHours: 7.2,
         featuresUsed: ["values_snapshot", "diary_cards"],
+        retention: {
+          firstActiveIso: "2026-06-12",
+          totalActiveDays: 24,
+          currentStreak: 5,
+          day7Active: true,
+          day30Active: false,
+        },
       },
     };
     const report = buildClinicianReport(input);

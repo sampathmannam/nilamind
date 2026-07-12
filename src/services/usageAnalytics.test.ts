@@ -10,6 +10,8 @@ import {
   type UsageSummary,
   computeUsageSummary,
   sleepTrend,
+  recordActiveDay,
+  retentionSnapshot,
 } from "./usageAnalytics";
 
 const store = new Map<string, string>();
@@ -292,5 +294,59 @@ describe("computeUsageSummary", () => {
     expect(summary.totalCheckins).toBe(3);
     expect(summary.avgMood).toBeCloseTo(5.33, 1);
     expect(summary.features).toContain("thought_records");
+  });
+});
+
+describe("self-retention / consistency (2026-07-12)", () => {
+  const day = (s: string) => new Date(s + "T12:00:00Z");
+
+  it("empty store → zeroed snapshot, no first-active date", () => {
+    const r = retentionSnapshot(day("2026-03-10"));
+    expect(r).toEqual({
+      firstActiveIso: null,
+      totalActiveDays: 0,
+      currentStreak: 0,
+      day7Active: false,
+      day30Active: false,
+    });
+  });
+
+  it("records idempotent active days and computes streak + Day-7/30 flags", () => {
+    for (const d of ["2026-01-01", "2026-01-02", "2026-01-03"]) {
+      recordActiveDay(day(d));
+    }
+    const early = retentionSnapshot(day("2026-01-03"));
+    expect(early.firstActiveIso).toBe("2026-01-01");
+    expect(early.totalActiveDays).toBe(3);
+    expect(early.currentStreak).toBe(3); // 01-01..01-03 consecutive, ending at most-recent
+    expect(early.day7Active).toBe(false); // 01-08 not yet
+    expect(early.day30Active).toBe(false); // 01-31 not yet
+
+    // the user returns on day 7 and day 30, plus a duplicate (idempotency)
+    recordActiveDay(day("2026-01-08"));
+    recordActiveDay(day("2026-01-31"));
+    recordActiveDay(day("2026-01-01")); // duplicate — must not double-count
+
+    const later = retentionSnapshot(day("2026-02-01"));
+    expect(later.totalActiveDays).toBe(5);
+    expect(later.day7Active).toBe(true); // 01-08 recorded
+    expect(later.day30Active).toBe(true); // 01-31 recorded
+  });
+
+  it("is forgiving: a single quiet day doesn't zero a still-current streak", () => {
+    // active 01-01, 01-02, skip 01-03, active 01-04; evaluate on 01-04
+    for (const d of ["2026-01-01", "2026-01-02", "2026-01-04"]) {
+      recordActiveDay(day(d));
+    }
+    const r = retentionSnapshot(day("2026-01-04"));
+    expect(r.currentStreak).toBe(1); // only 01-04 (the gap broke the run)
+    expect(r.totalActiveDays).toBe(3);
+  });
+
+  it("streak is 0 when the most-recent active day is older than yesterday", () => {
+    recordActiveDay(day("2026-01-01"));
+    const r = retentionSnapshot(day("2026-01-05")); // 4-day gap
+    expect(r.currentStreak).toBe(0);
+    expect(r.totalActiveDays).toBe(1);
   });
 });
