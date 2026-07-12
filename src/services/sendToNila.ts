@@ -34,9 +34,14 @@ export interface NilaSendResult {
   reply: string;
   reachedAI: boolean;
   blocked?: boolean;
-  /** Which §9 floor caught it — only set when blocked===true. "keyword" = deterministic floor (full takeover,
-   *  unchanged). "classifier" = probabilistic-only upgrade (softer inline surface). 2026-07-12 Wave 3. */
+  /** Which §9 floor caught it — only set when blocked===true. "keyword" = deterministic floor. "classifier" =
+   *  a probabilistic-only hit (either tier — see crisisTier for which). 2026-07-12 Wave 3. */
   crisisSource?: "keyword" | "classifier";
+  /** Which UI surface this hit should render — only set when blocked===true. "full" = full-takeover
+   *  CrisisOverlay (unconditional for a keyword-floor hit; also a HIGH-CONFIDENCE classifier hit). "soft" =
+   *  inline SoftCrisisCard (a classifier hit that clears the base gate but not the higher-confidence bar).
+   *  2026-07-12 Bug 1 fix — this, NOT crisisSource, is what the UI must branch on. */
+  crisisTier?: "full" | "soft";
   navigate?: AgentView;
   openSkillId?: string;
 }
@@ -66,12 +71,21 @@ export async function sendToNila(
   const userText = lastUserText(history);
 
   // INVARIANT 1 — crisis scan before any model call, both modes. Keyword floor OR the on-device classifier
-  // (additive; classifier off by default until device-verified → identical to the keyword gate). Source-aware
-  // (2026-07-12 Wave 3) so ModeScreen can render the two-tier surface; ?? "keyword" is a fail-closed fallback
-  // — if `hit` is ever true with a null source, default to the MORE severe (full-takeover) tier, never less.
+  // (additive; classifier off by default until device-verified → identical to the keyword gate). Source- AND
+  // tier-aware (2026-07-12 Wave 3; retiered 2026-07-12 Bug 1 fix) so ModeScreen can render the two-tier
+  // surface off of `tier` (the field that actually reflects confidence — see crisisClassifier.ts's
+  // CrisisSource/CrisisTier docs for why source alone must never drive the UI decision). `?? "keyword"` /
+  // `?? "full"` are fail-closed fallbacks — if `hit` is ever true with a null source/tier, default to the
+  // MORE severe (full-takeover) surface, never less.
   const crisisSignal = await crisisSignalForSend(userText);
   if (crisisSignal.hit) {
-    return { reply: getCrisisReply(), reachedAI: false, blocked: true, crisisSource: crisisSignal.source ?? "keyword" };
+    return {
+      reply: getCrisisReply(),
+      reachedAI: false,
+      blocked: true,
+      crisisSource: crisisSignal.source ?? "keyword",
+      crisisTier: crisisSignal.tier ?? "full",
+    };
   }
 
   const outgoing = buildOutgoing(history); // INVARIANT 2 — synthetic turns stripped

@@ -41,10 +41,13 @@ export function shouldBlockForCrisisAsync(text: string): Promise<boolean> {
 }
 
 /**
- * The two-tier, SOURCE-AWARE crisis gate (2026-07-12 Wave 3): same detection as shouldBlockForCrisisAsync,
- * but also reports WHICH floor caught it ("keyword" | "classifier" | null) so the companion send path can
- * render a softer inline surface for a classifier-only hit while a keyword-floor hit keeps the exact same
- * full-takeover CrisisOverlay. Fail-closed exactly like detectCrisis — never worse than the boolean gate.
+ * The two-tier crisis gate (2026-07-12 Wave 3; retiered 2026-07-12 Bug 1 fix): same detection as
+ * shouldBlockForCrisisAsync, but also reports the CrisisSignal's `source` ("keyword" | "classifier" | null)
+ * AND `tier` ("full" | "soft" | null) so the companion send path can render a softer inline surface for a
+ * SOFT-tier hit while a "full" tier (every keyword-floor hit, plus any HIGH-CONFIDENCE classifier hit) keeps
+ * the exact same full-takeover CrisisOverlay. `tier` — not `source` — is the field callers must branch the UI
+ * on; see crisisClassifier.ts's CrisisSource/CrisisTier docs for why source alone is not a confidence signal.
+ * Fail-closed exactly like detectCrisis — never worse than the boolean gate.
  */
 export function crisisSignalForSend(text: string): Promise<CrisisSignal> {
   return detectCrisisSignal(text);

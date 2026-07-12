@@ -17,10 +17,12 @@ import { pipeline, env } from "@huggingface/transformers";
 import { resolve } from "node:path";
 import {
   detectCrisis,
+  detectCrisisSignal,
   scoreCrisis,
   setCrisisEmbedder,
   setCrisisClassifierEnabled,
   CRISIS_THRESHOLD,
+  CRISIS_HIGH_CONFIDENCE_THRESHOLD,
   type Embedder,
 } from "./crisisClassifier";
 
@@ -166,4 +168,74 @@ describe("crisisClassifier — REAL MiniLM end-to-end §9 regression", () => {
   it.each(REASSURANCE_MASKING_CRISIS)("STILL fires on reassurance masking crisis (recall preserved): %j", async (s) => {
     expect(await detectCrisis(s)).toBe(true);
   }, 60_000);
+});
+
+/**
+ * Two-tier surface REGRESSION (2026-07-12 Bug 1 fix): an adversarial review of Wave 3 found that
+ * ModeScreen.tsx branched the crisis surface (full takeover vs. soft inline card) on detection SOURCE
+ * ("keyword" vs "classifier") rather than confidence. That is wrong: "classifier-only" does not mean
+ * "low confidence" — it means "the deterministic keyword floor structurally cannot see this phrasing" (see
+ * this module's docstring, line 4-9). The fix makes tiering SCORE-based within classifier hits, gated on a
+ * new CRISIS_HIGH_CONFIDENCE_THRESHOLD placed empirically (see crisisClassifier.ts's comment above that
+ * constant for the full scoring methodology and the real-model scores that informed it). These tests re-run
+ * the exact same real-model harness above but assert `tier`, not just the boolean.
+ */
+describe("crisisClassifier — REAL MiniLM two-tier surface (2026-07-12 Bug 1 fix)", () => {
+  beforeAll(async () => {
+    setCrisisClassifierEnabled(true);
+    setCrisisEmbedder(realEmbedder);
+    await realEmbedder("warmup");
+  }, 120_000);
+
+  // THE PROOF CASE (adversarial review's confirmed regression): real-model score 0.8837, well above both
+  // CRISIS_THRESHOLD (0.5796) and CRISIS_HIGH_CONFIDENCE_THRESHOLD — a genuine indirect suicidal-ideation
+  // disclosure that MUST get the full takeover, not the soft card it wrongly got pre-fix.
+  it("THE PROOF CASE: 'everyone would be better off without me' resolves tier:'full'", async () => {
+    const s = await detectCrisisSignal("everyone would be better off without me");
+    expect(s.hit).toBe(true);
+    expect(s.source).toBe("classifier");
+    expect(s.tier).toBe("full");
+  }, 60_000);
+
+  it.each(EUPHEMISMS)("genuine euphemism resolves tier:'full': %j", async (s) => {
+    const sig = await detectCrisisSignal(s);
+    expect(sig.hit).toBe(true);
+    expect(sig.tier).toBe("full");
+  }, 60_000);
+
+  it.each(MED_PLUS_INTENT)("medication + lethal intent resolves tier:'full': %j", async (s) => {
+    const sig = await detectCrisisSignal(s);
+    expect(sig.hit).toBe(true);
+    expect(sig.tier).toBe("full");
+  }, 60_000);
+
+  it.each(FATIGUE_WORDED_CRISIS)("fatigue-worded real crisis resolves tier:'full' (recall AND tier both preserved): %j", async (s) => {
+    const sig = await detectCrisisSignal(s);
+    expect(sig.hit).toBe(true);
+    expect(sig.tier).toBe("full");
+  }, 60_000);
+
+  it.each(REASSURANCE_MASKING_CRISIS)("reassurance masking crisis resolves tier:'full': %j", async (s) => {
+    const sig = await detectCrisisSignal(s);
+    expect(sig.hit).toBe(true);
+    expect(sig.tier).toBe("full");
+  }, 60_000);
+
+  // Empirically-discovered genuinely marginal/ambiguous phrases (2026-07-12 threshold-placement probe,
+  // throwaway script run against this same bundled model) that clear the base CRISIS_THRESHOLD but are NOT
+  // explicit disclosures (generic discouragement, no despair/lethal/life-weariness framing) — these anchor
+  // CRISIS_HIGH_CONFIDENCE_THRESHOLD's placement and are the reason a sub-threshold split is meaningful at
+  // all. Real-model scores: 0.5852 and 0.6106 respectively (both classifier-only, no keyword-floor overlap).
+  const MARGINAL_SOFT_TIER = ["I feel like giving up on everything", "nothing feels worth it anymore"];
+  it.each(MARGINAL_SOFT_TIER)("genuinely marginal/ambiguous hit resolves tier:'soft' (not a clear disclosure): %j", async (s) => {
+    const sig = await detectCrisisSignal(s);
+    expect(sig.hit).toBe(true);
+    expect(sig.source).toBe("classifier");
+    expect(sig.tier).toBe("soft");
+  }, 60_000);
+
+  it("CRISIS_HIGH_CONFIDENCE_THRESHOLD sits strictly between the base threshold and the lowest genuine-disclosure score observed", () => {
+    expect(CRISIS_HIGH_CONFIDENCE_THRESHOLD).toBeGreaterThan(CRISIS_THRESHOLD);
+    expect(CRISIS_HIGH_CONFIDENCE_THRESHOLD).toBeLessThan(1);
+  });
 });

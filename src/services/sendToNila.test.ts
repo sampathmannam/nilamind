@@ -155,22 +155,46 @@ describe("sendToNila — crisisSource threading (2026-07-12 Wave 3, two-tier cri
     setCrisisEmbedder(null);
   });
 
-  it("blocked result carries crisisSource for a classifier-only hit", async () => {
+  it("blocked result carries crisisSource + crisisTier for a HIGH-CONFIDENCE classifier-only hit (2026-07-12 Bug 1 fix: tier is score-based, not source-based)", async () => {
     setCrisisClassifierEnabled(true);
-    setCrisisEmbedder(textAwareEmbedder);
+    setCrisisEmbedder(textAwareEmbedder); // scores ≈1 — well above CRISIS_HIGH_CONFIDENCE_THRESHOLD
     const rec = recordingBackend("unused");
     registerLocalLlmBackend(rec.backend);
     const r = await sendToNila([{ role: "user", content: "everyone would be better off without me" }], "companion", noopDelta);
     expect(r.blocked).toBe(true);
     expect(r.crisisSource).toBe("classifier");
+    expect(r.crisisTier).toBe("full"); // the proof case — a genuine disclosure, must NOT be soft
   });
 
-  it("blocked result carries crisisSource:'keyword' for a keyword-floor hit", async () => {
+  it("blocked result carries crisisSource:'keyword', crisisTier:'full' for a keyword-floor hit", async () => {
     const rec = recordingBackend("unused");
     registerLocalLlmBackend(rec.backend);
     const r = await sendToNila([{ role: "user", content: "i want to kill myself" }], "companion", noopDelta);
     expect(r.blocked).toBe(true);
     expect(r.crisisSource).toBe("keyword");
+    expect(r.crisisTier).toBe("full");
+  });
+
+  it("blocked result carries crisisTier:'soft' for a genuinely SUB-high-confidence classifier-only hit", async () => {
+    // A text-aware mock that scores a specific marginal phrase in the SOFT band (between CRISIS_THRESHOLD and
+    // CRISIS_HIGH_CONFIDENCE_THRESHOLD) using the same z-inversion algebra as crisisClassifier.test.ts's
+    // embedderForScore helper, so this test doesn't depend on the real bundled model's exact embedding.
+    const COEF = weights.coef as number[];
+    const BIAS = weights.bias as number;
+    const targetProb = 0.6; // empirically inside the soft band — see crisisClassifier.ts's threshold comment
+    const z = Math.log(targetProb / (1 - targetProb));
+    const sumSq = COEF.reduce((s, c) => s + c * c, 0);
+    const alpha = (z - BIAS) / sumSq;
+    const softEmbedder: Embedder = async (text: string) =>
+      text.includes("marginal phrase") ? COEF.map((c) => c * alpha) : zeros();
+    setCrisisClassifierEnabled(true);
+    setCrisisEmbedder(softEmbedder);
+    const rec = recordingBackend("unused");
+    registerLocalLlmBackend(rec.backend);
+    const r = await sendToNila([{ role: "user", content: "this is a marginal phrase" }], "companion", noopDelta);
+    expect(r.blocked).toBe(true);
+    expect(r.crisisSource).toBe("classifier");
+    expect(r.crisisTier).toBe("soft");
   });
 });
 

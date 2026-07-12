@@ -44,6 +44,22 @@ vi.mock("../services/notifications", () => ({
   suppressNudgesForCrisis: (...args: unknown[]) => suppressNudgesMock(...args),
 }));
 
+// Bug 3 fix test support (2026-07-12): the arm-request branch's §9 gate (shouldBlockForCrisisAsync) needs to
+// be held pending on demand to exercise the race window. `armGateRef.current` overrides it when set; every
+// other test leaves it null, which falls through to the REAL implementation (unchanged behavior for the
+// existing arm-request test above, which relies on the real keyword scanner).
+const { armGateRef } = vi.hoisted(() => ({
+  armGateRef: { current: null as ((text: string) => Promise<boolean>) | null },
+}));
+vi.mock("../services/nilaSend", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../services/nilaSend")>();
+  return {
+    ...actual,
+    shouldBlockForCrisisAsync: (text: string) =>
+      armGateRef.current ? armGateRef.current(text) : actual.shouldBlockForCrisisAsync(text),
+  };
+});
+
 // jsdom has no vibrate API — Capacitor's HapticsWeb rejects, which is unrelated noise for this UI-wiring test.
 vi.mock("../hooks/useHaptics", () => ({ hapticLight: async () => {}, hapticMedium: async () => {} }));
 
@@ -77,6 +93,7 @@ afterEach(() => {
   recordFeedbackMock.mockClear();
   attachSuggestionMock.mockReset();
   feedbackSeq = 0;
+  armGateRef.current = null; // never leak a held-open §9 gate into another test
 });
 
 function openTextInput() {
@@ -93,9 +110,9 @@ async function sendMessage(text: string) {
   fireEvent.click(screen.getByLabelText("Send"));
 }
 
-describe("ModeScreen — two-tier crisis surface wiring (2026-07-12 Wave 3, Task 1.3)", () => {
-  it("keyword-floor hit (crisisSource:'keyword') still opens the full CrisisOverlay via onOpenCrisis", async () => {
-    sendToNilaMock.mockResolvedValue({ reply: "crisis reply", reachedAI: false, blocked: true, crisisSource: "keyword" });
+describe("ModeScreen — two-tier crisis surface wiring (2026-07-12 Wave 3, Task 1.3; retiered 2026-07-12 Bug 1 fix)", () => {
+  it("keyword-floor hit (crisisTier:'full') still opens the full CrisisOverlay via onOpenCrisis", async () => {
+    sendToNilaMock.mockResolvedValue({ reply: "crisis reply", reachedAI: false, blocked: true, crisisSource: "keyword", crisisTier: "full" });
     const onOpenCrisis = vi.fn();
     render(<ModeScreen onOpenCrisis={onOpenCrisis} />);
     await sendMessage("i want to kill myself");
@@ -103,16 +120,32 @@ describe("ModeScreen — two-tier crisis surface wiring (2026-07-12 Wave 3, Task
     expect(document.getElementById("soft-crisis-card")).toBeNull();
   });
 
-  it("classifier-only hit (crisisSource:'classifier') shows SoftCrisisCard instead of the full overlay", async () => {
-    sendToNilaMock.mockResolvedValue({ reply: "crisis reply", reachedAI: false, blocked: true, crisisSource: "classifier" });
+  // 2026-07-12 Bug 1 FIX (adversarial-review regression — see AGENTS.md guardrails / commit message for why
+  // this is a correction, not a weakening): the UI decision must be driven by crisisTier, NOT crisisSource.
+  // A classifier-only hit that is nonetheless a HIGH-CONFIDENCE disclosure (tier:'full') must get the full
+  // takeover, exactly like a keyword hit — "classifier-only" is not a proxy for "low confidence".
+  it("classifier-only HIGH-CONFIDENCE hit (crisisTier:'full') opens the full CrisisOverlay, NOT the soft card", async () => {
+    sendToNilaMock.mockResolvedValue({ reply: "crisis reply", reachedAI: false, blocked: true, crisisSource: "classifier", crisisTier: "full" });
     const onOpenCrisis = vi.fn();
     render(<ModeScreen onOpenCrisis={onOpenCrisis} />);
+    // The proof case from the adversarial review: a genuine indirect disclosure that scores 0.8837 —
+    // well above CRISIS_HIGH_CONFIDENCE_THRESHOLD — so a real send would resolve crisisTier:'full' too;
+    // this test exercises the UI wiring directly via the mock, matching sendToNila.test.ts's real-gate proof.
     await sendMessage("everyone would be better off without me");
+    await waitFor(() => expect(onOpenCrisis).toHaveBeenCalled());
+    expect(document.getElementById("soft-crisis-card")).toBeNull();
+  });
+
+  it("classifier-only SOFT-tier hit (crisisTier:'soft') shows SoftCrisisCard instead of the full overlay", async () => {
+    sendToNilaMock.mockResolvedValue({ reply: "crisis reply", reachedAI: false, blocked: true, crisisSource: "classifier", crisisTier: "soft" });
+    const onOpenCrisis = vi.fn();
+    render(<ModeScreen onOpenCrisis={onOpenCrisis} />);
+    await sendMessage("nothing feels worth it anymore");
     await waitFor(() => expect(document.getElementById("soft-crisis-card")).toBeTruthy());
     expect(onOpenCrisis).not.toHaveBeenCalled();
   });
 
-  it("a blocked hit with NO crisisSource fails closed to the full CrisisOverlay (?? 'keyword' fallback)", async () => {
+  it("a blocked hit with NO crisisTier fails closed to the full CrisisOverlay (?? 'full' fallback)", async () => {
     sendToNilaMock.mockResolvedValue({ reply: "crisis reply", reachedAI: false, blocked: true });
     const onOpenCrisis = vi.fn();
     render(<ModeScreen onOpenCrisis={onOpenCrisis} />);
@@ -122,27 +155,27 @@ describe("ModeScreen — two-tier crisis surface wiring (2026-07-12 Wave 3, Task
   });
 
   it("escalating from the soft card opens the full CrisisOverlay", async () => {
-    sendToNilaMock.mockResolvedValue({ reply: "crisis reply", reachedAI: false, blocked: true, crisisSource: "classifier" });
+    sendToNilaMock.mockResolvedValue({ reply: "crisis reply", reachedAI: false, blocked: true, crisisSource: "classifier", crisisTier: "soft" });
     const onOpenCrisis = vi.fn();
     render(<ModeScreen onOpenCrisis={onOpenCrisis} />);
-    await sendMessage("everyone would be better off without me");
+    await sendMessage("nothing feels worth it anymore");
     await waitFor(() => expect(document.getElementById("soft-crisis-card")).toBeTruthy());
     fireEvent.click(screen.getByText(/i could use support right now/i));
     expect(onOpenCrisis).toHaveBeenCalledOnce();
   });
 
   it("every crisis hit (both tiers) unconditionally fires suppressNudgesForCrisis", async () => {
-    sendToNilaMock.mockResolvedValue({ reply: "crisis reply", reachedAI: false, blocked: true, crisisSource: "classifier" });
+    sendToNilaMock.mockResolvedValue({ reply: "crisis reply", reachedAI: false, blocked: true, crisisSource: "classifier", crisisTier: "soft" });
     render(<ModeScreen />);
-    await sendMessage("everyone would be better off without me");
+    await sendMessage("nothing feels worth it anymore");
     await waitFor(() => expect(document.getElementById("soft-crisis-card")).toBeTruthy());
     expect(suppressNudgesMock).toHaveBeenCalled();
   });
 
   it("dismissing the soft card does NOT un-latch hadCrisisRef — the session chat stays un-persisted on the next turn", async () => {
-    sendToNilaMock.mockResolvedValueOnce({ reply: "crisis reply", reachedAI: false, blocked: true, crisisSource: "classifier" });
+    sendToNilaMock.mockResolvedValueOnce({ reply: "crisis reply", reachedAI: false, blocked: true, crisisSource: "classifier", crisisTier: "soft" });
     render(<ModeScreen />);
-    await sendMessage("everyone would be better off without me");
+    await sendMessage("nothing feels worth it anymore");
     await waitFor(() => expect(document.getElementById("soft-crisis-card")).toBeTruthy());
 
     fireEvent.click(screen.getByText(/i'm okay, keep going/i));
@@ -163,6 +196,68 @@ describe("ModeScreen — two-tier crisis surface wiring (2026-07-12 Wave 3, Task
     await waitFor(() => expect(onOpenCrisis).toHaveBeenCalled());
     expect(document.getElementById("soft-crisis-card")).toBeNull();
     expect(sendToNilaMock).not.toHaveBeenCalled(); // arm-request short-circuits before sendToNila
+  });
+});
+
+// Bug 2 (MEDIUM, confirmed by the same adversarial review): a stale SoftCrisisCard from an earlier soft-tier
+// turn did not clear when a LATER message triggered the full takeover. Repro: soft card shows for message A
+// → message B is a full-tier hit → CrisisOverlay opens (visually covering the card) → user dismisses the
+// overlay → the STALE soft card reappeared underneath, re-asking "Can I pause here?" right after the user
+// just went through the full safety-plan flow. Fix: the full-takeover branch of openCrisis() must
+// unconditionally clear softCrisisCard first.
+describe("ModeScreen — Bug 2 fix: stale SoftCrisisCard clears on a later full-tier hit (2026-07-12)", () => {
+  it("a later keyword/full-tier hit clears an earlier stale soft card instead of leaving it stacked underneath the overlay", async () => {
+    sendToNilaMock.mockResolvedValueOnce({ reply: "soft reply", reachedAI: false, blocked: true, crisisSource: "classifier", crisisTier: "soft" });
+    const onOpenCrisis = vi.fn();
+    render(<ModeScreen onOpenCrisis={onOpenCrisis} />);
+    await sendMessage("nothing feels worth it anymore");
+    await waitFor(() => expect(document.getElementById("soft-crisis-card")).toBeTruthy());
+
+    // Message B, before the soft card is dismissed: a full-tier (keyword-floor) hit.
+    sendToNilaMock.mockResolvedValueOnce({ reply: "crisis reply", reachedAI: false, blocked: true, crisisSource: "keyword", crisisTier: "full" });
+    await sendMessage("i want to kill myself");
+    await waitFor(() => expect(onOpenCrisis).toHaveBeenCalled());
+
+    // The stale soft card must be gone — NOT stacked underneath the full-screen CrisisOverlay, and NOT
+    // waiting to reappear once the overlay is dismissed.
+    expect(document.getElementById("soft-crisis-card")).toBeNull();
+  });
+});
+
+// Bug 3 (narrower race condition, confirmed): the arm-request branch never called setLoading(true) before its
+// `await shouldBlockForCrisisAsync(msg)`, unlike the main send path. This left the Send button enabled during
+// that await window, so a second message could be sent concurrently and interleave with the still-pending §9
+// verdict. Fix: set the same loading lock before the arm-request branch's await, matching the main path.
+describe("ModeScreen — Bug 3 fix: arm-request branch sets loading before its async §9 check (2026-07-12)", () => {
+  it("the Send button is disabled while the arm-request's §9 gate is pending, blocking a concurrent second send", async () => {
+    // Hold the arm-request's §9 gate open indefinitely so we can observe the pending window.
+    let resolveGate!: (v: boolean) => void;
+    const pending = new Promise<boolean>((res) => { resolveGate = res; });
+    armGateRef.current = () => pending;
+
+    render(<ModeScreen />);
+    openTextInput();
+    const input = screen.getByPlaceholderText("Type a message...");
+
+    // Message A: an arm-request, whose §9 gate we hold pending.
+    fireEvent.change(input, { target: { value: "check on me tonight" } });
+    fireEvent.click(screen.getByLabelText("Send"));
+
+    // The user types a second message B while A's gate is still unresolved.
+    fireEvent.change(input, { target: { value: "message B" } });
+
+    // Without the fix, `loading` never became true during the arm-request branch's await, so the Send button
+    // (disabled={!inputText.trim() || loading}) would be enabled again as soon as inputText was non-empty —
+    // this is the exact race the bug describes. With the fix, it must stay disabled until A resolves.
+    expect((screen.getByLabelText("Send") as HTMLButtonElement).disabled).toBe(true);
+
+    // Attempting to send anyway must be a no-op: handleSendMessage's top-of-function `if (!msg || loading)
+    // return` guard must block re-entry, so message B must never appear in the transcript while A is pending.
+    fireEvent.click(screen.getByLabelText("Send"));
+    expect(screen.queryByText("message B")).toBeNull();
+
+    resolveGate(false); // let A resolve as "not a crisis" so the pending promise doesn't leak into other tests
+    await waitFor(() => expect((screen.getByLabelText("Send") as HTMLButtonElement).disabled).toBe(false));
   });
 });
 

@@ -106,18 +106,22 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   // the transcript is never persisted/restored (keying the clear on a transient boolean re-persisted it on dismiss).
   const hadCrisisRef = useRef(false);
   const crisisPendingRef = useRef(false); // #5-out (re-audit): a sent turn whose async §9 verdict is still pending
-  // openCrisis(detected, source): `detected` = the model/gate FLAGGED a §9 crisis in the user's turn. Only then
+  // openCrisis(detected, tier): `detected` = the model/gate FLAGGED a §9 crisis in the user's turn. Only then
   // do we latch "never persist" + wipe the transcript + clear self-help cards (§9 precedence) — UNCONDITIONAL
-  // on `detected`, NOT gated by source, so a classifier-only hit gets the identical protection as a keyword
-  // hit. A PROACTIVE open (the user tapping crisis resources) must NOT wipe their in-progress conversation
+  // on `detected`, NOT gated by tier, so a soft-tier hit gets the identical protection as a full-tier hit.
+  // A PROACTIVE open (the user tapping crisis resources) must NOT wipe their in-progress conversation
   // (#6 re-audit) nor offer nothing.
   //
-  // `source` (2026-07-12 Wave 3, two-tier crisis surface): "classifier" renders the SOFT inline SoftCrisisCard
-  // instead of the full-screen CrisisOverlay — the deterministic keyword floor (source:"keyword"), a null/
-  // unspecified source (proactive taps, the arm-request branch, ambiguous/fail-closed cases), and every other
-  // existing call site all fall through unchanged to onOpenCrisis?.() — bit-for-bit the same full takeover as
-  // today. Only the RENDERING SURFACE differs by source; every other invariant above stays unconditional.
-  const openCrisis = (detected = false, source: "keyword" | "classifier" | null = null) => {
+  // `tier` (2026-07-12 Wave 3, two-tier crisis surface; RETIERED 2026-07-12 Bug 1 fix — adversarial review
+  // found the original branch used `source === "classifier"`, which wrongly treated EVERY classifier-only
+  // hit as low-confidence, including genuine high-confidence disclosures the keyword floor structurally
+  // cannot see — e.g. "everyone would be better off without me" scores 0.8837. `tier` is the field that
+  // actually reflects confidence — see crisisClassifier.ts's CrisisTier docs): tier === "soft" renders the
+  // SOFT inline SoftCrisisCard instead of the full-screen CrisisOverlay. A null/unspecified tier (proactive
+  // taps, the arm-request branch, ambiguous/fail-closed cases), tier === "full", and every other existing call
+  // site all fall through unchanged to onOpenCrisis?.() — bit-for-bit the same full takeover as today. Only
+  // the RENDERING SURFACE differs by tier; every other invariant above stays unconditional.
+  const openCrisis = (detected = false, tier: "full" | "soft" | null = null) => {
     if (detected) {
       hadCrisisRef.current = true;
       clearSessionChat();      // the flagged crisis turn must never persist/restore
@@ -128,10 +132,16 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
     setPactNotice(null); // §9 takes precedence over the gentle pact surface either way
     setWelcomeBack(null); // §9 also clears the welcome-back card
     setCalmSafetyNudge(null); // §9 also clears the calm-moment safety-plan nudge (Task 1.5) — never crisis-adjacent
-    if (detected && source === "classifier") {
+    if (detected && tier === "soft") {
       setSoftCrisisCard(true); // soft tier — inline card, no full takeover
       return;
     }
+    // Bug 2 fix (2026-07-12, adversarial review): the full-takeover branch must unconditionally clear any
+    // STALE soft card from an earlier turn. Repro without this: soft card shows for message A → message B is
+    // a full-tier hit before the card is dismissed → CrisisOverlay opens on top of it → user dismisses the
+    // overlay → the stale card reappears underneath, re-asking "Can I pause here?" right after the user just
+    // went through the full safety-plan flow.
+    setSoftCrisisCard(false);
     onOpenCrisis?.();
   };
   const bottomRef = useRef<HTMLDivElement>(null); // #23: scroll-to-newest anchor
@@ -294,31 +304,40 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
 
     // Armed check-in is a deterministic, opt-in command — handle it before the model.
     if (looksLikeArmRequest(msg)) {
-      // #3 (audit): the arm path gates with keyword-only scanForCrisis, so a euphemistic crisis that also
-      // matches the arm-request regex ("check on me… the world would feel lighter without me") would get a
-      // cheerful check-in confirmation. Run the full classifier-backed §9 gate here first.
-      if (await shouldBlockForCrisisAsync(msg)) { openCrisis(true); return; }
-      crisisPendingRef.current = false; // arm request cleared the §9 gate — not a crisis, safe to persist
-      const armResult = requestArmedCheckin(msg, [...messages, userMsg]);
-      if (armResult.ok) {
-        setMessages((prev) => [
-          ...prev,
-          { role: "assistant", content: `Got it — I'll check in with you ${armResult.triggerLabel}.` },
-        ]);
-      } else if (armResult.reason === "crisis") {
-        openCrisis(true);
-      } else {
-        const reply =
-          armResult.reason === "elevation"
-            ? "Let's slow down a little before I set a check-in — what you're describing sounds elevated, and I don't want to nudge you at the wrong moment."
-            : armResult.reason === "quiet"
-            ? "I'll stay quiet — no check-ins unless you ask again."
-            : armResult.reason === "frequency"
-            ? "You already have a check-in set. I'll keep that one."
-            : null;
-        if (reply) {
-          setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
+      // Bug 3 fix (2026-07-12, adversarial review): this branch never set `loading` before its await below,
+      // unlike the main send path (setLoading(true) at the top of that try, further down). That left the
+      // Send button enabled during the pending §9 check, so a second message could be sent concurrently and
+      // interleave with this turn's still-pending verdict. Match the main path's re-entrancy guard.
+      setLoading(true);
+      try {
+        // #3 (audit): the arm path gates with keyword-only scanForCrisis, so a euphemistic crisis that also
+        // matches the arm-request regex ("check on me… the world would feel lighter without me") would get a
+        // cheerful check-in confirmation. Run the full classifier-backed §9 gate here first.
+        if (await shouldBlockForCrisisAsync(msg)) { openCrisis(true); return; }
+        crisisPendingRef.current = false; // arm request cleared the §9 gate — not a crisis, safe to persist
+        const armResult = requestArmedCheckin(msg, [...messages, userMsg]);
+        if (armResult.ok) {
+          setMessages((prev) => [
+            ...prev,
+            { role: "assistant", content: `Got it — I'll check in with you ${armResult.triggerLabel}.` },
+          ]);
+        } else if (armResult.reason === "crisis") {
+          openCrisis(true);
+        } else {
+          const reply =
+            armResult.reason === "elevation"
+              ? "Let's slow down a little before I set a check-in — what you're describing sounds elevated, and I don't want to nudge you at the wrong moment."
+              : armResult.reason === "quiet"
+              ? "I'll stay quiet — no check-ins unless you ask again."
+              : armResult.reason === "frequency"
+              ? "You already have a check-in set. I'll keep that one."
+              : null;
+          if (reply) {
+            setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
+          }
         }
+      } finally {
+        setLoading(false);
       }
       return;
     }
@@ -334,13 +353,15 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
         onDelta: (t: string) => {},
       });
       if (result.blocked) {
-        // §9 crisis: open the crisis surface (tappable lines + safety plan) — full takeover for a keyword hit,
-        // soft inline card for a classifier-only hit (2026-07-12 Wave 3). #7 (re-audit): RETURN so we never
-        // fall through to the coping-skill / protocol self-help cards below — offering "this might help" in
-        // reply to a suicidal disclosure softens the §9 stop-everything posture. openCrisis(true, ...) also
-        // latches "never persist" for this turn, unconditional on source. `?? "keyword"` fails closed to the
-        // full takeover if the source is ever ambiguous.
-        openCrisis(true, result.crisisSource ?? "keyword");
+        // §9 crisis: open the crisis surface (tappable lines + safety plan) — full takeover for tier:"full"
+        // (every keyword hit, plus any HIGH-CONFIDENCE classifier hit), soft inline card for tier:"soft"
+        // (2026-07-12 Wave 3; RETIERED 2026-07-12 Bug 1 fix — branching on crisisSource instead of crisisTier
+        // was the adversarial review's confirmed regression: "classifier-only" is not a confidence signal).
+        // #7 (re-audit): RETURN so we never fall through to the coping-skill / protocol self-help cards below
+        // — offering "this might help" in reply to a suicidal disclosure softens the §9 stop-everything
+        // posture. openCrisis(true, ...) also latches "never persist" for this turn, unconditional on tier.
+        // `?? "full"` fails closed to the full takeover if the tier is ever ambiguous.
+        openCrisis(true, result.crisisTier ?? "full");
         if (result.reply) setMessages((prev) => [...prev, { role: "assistant", content: result.reply }]);
         return;
       }

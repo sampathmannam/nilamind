@@ -77,16 +77,66 @@ export async function scoreCrisis(text: string): Promise<number | null> {
 /**
  * Two-tier crisis surface (2026-07-12 Wave 3): which floor caught the hit. "keyword" = the deterministic
  * scanner (the universal, model-independent floor — always full-takeover). "classifier" = the on-device
- * probabilistic upgrade of a keyword MISS (softer surface — see docs/superpowers/plans/2026-07-12-wave3-
- * technical-specs.md §4 for the PLOS Medicine / Frontiers in Psychology research grounding: probabilistic
- * crisis classifiers have realistic-prevalence PPV of 0.06-0.10%, so a soft-not-suppressed surface is the
- * right response, never a hard hijack). `null` = no hit.
+ * probabilistic upgrade of a keyword MISS (see docs/superpowers/plans/2026-07-12-wave3-technical-specs.md §4
+ * for the PLOS Medicine / Frontiers in Psychology research grounding: probabilistic crisis classifiers have
+ * realistic-prevalence PPV of 0.06-0.10%, so a soft-not-suppressed surface is the right DEFAULT posture for a
+ * probabilistic flag). `null` = no hit.
+ *
+ * IMPORTANT (2026-07-12 Bug 1 fix, adversarial-review regression): `source` alone must NEVER be used to pick
+ * the rendering surface. "classifier" does not mean "low confidence" — it means "the deterministic keyword
+ * floor structurally cannot see this phrasing" (this module's docstring, line 4-9). The classifier exists
+ * SPECIFICALLY to catch genuine indirect/euphemistic disclosures the keyword floor misses — many of those
+ * score very high (e.g. "everyone would be better off without me" scores 0.8837 against the real bundled
+ * model; see crisisClassifier.realmodel.test.ts). Wave 3 originally shipped ModeScreen.tsx branching the UI on
+ * `source === "classifier"`, which routed that exact high-confidence disclosure to the soft, one-tap-
+ * dismissible card instead of the full takeover it deserved. See `tier` below — the field that actually
+ * should drive the UI decision.
  */
 export type CrisisSource = "keyword" | "classifier" | null;
+/** Which surface a hit should render: "full" = full-screen CrisisOverlay takeover (unconditional for a
+ *  keyword-floor hit; also used for a HIGH-CONFIDENCE classifier hit). "soft" = inline SoftCrisisCard, reserved
+ *  for a classifier hit that clears the base CRISIS_THRESHOLD but NOT the higher-confidence bar (see
+ *  CRISIS_HIGH_CONFIDENCE_THRESHOLD below). `null` = no hit. */
+export type CrisisTier = "full" | "soft" | null;
 export interface CrisisSignal {
   hit: boolean;
   source: CrisisSource;
+  tier: CrisisTier;
 }
+
+/**
+ * Score-based sub-gate WITHIN classifier hits (2026-07-12 Bug 1 fix): a classifier hit (score >=
+ * CRISIS_THRESHOLD) only earns the full takeover if it ALSO clears this higher bar; otherwise it renders the
+ * softer inline card. A keyword-floor hit is ALWAYS tier:"full" regardless of this constant — it exists only
+ * to sub-divide classifier-only hits.
+ *
+ * HONESTY CHECK (matching this codebase's house style for uncalibrated defaults — see jitaiEngine.ts's
+ * cooldown-duration comments): this is an EMPIRICALLY-INFORMED ENGINEERING JUDGMENT CALL, not a formally
+ * validated statistical cutoff (no ROC/PR-curve optimization, no held-out label set for "how confident is
+ * confident enough"). It was placed by scoring real phrases against the shipped model (bundled MiniLM +
+ * this module's logistic head, 2026-07-12 threshold-placement probe) and looking for a natural gap between
+ * genuine disclosures and genuinely ambiguous non-disclosures within the population of texts that already
+ * clear CRISIS_THRESHOLD:
+ *   Genuinely marginal/ambiguous hits (generic discouragement, no despair/lethal/life-weariness framing) —
+ *     "I feel like giving up on everything" → 0.5852
+ *     "nothing feels worth it anymore" → 0.6106
+ *   Genuine disclosures / real crises (the classifier's whole reason to exist) — lowest observed was:
+ *     "I hope I just don't wake up tomorrow" → 0.7166 (an existing realmodel.test.ts euphemism fixture)
+ *   ...with the rest of the genuine-disclosure basket (the adversarial review's proof case "everyone would be
+ *   better off without me" 0.8837, "I won't be a burden much longer" 0.7533, "the world would be lighter
+ *   without me in it" 0.7597, "I just want the pain to stop forever" 0.8237, the realmodel.test.ts
+ *   REASSURANCE_MASKING_CRISIS basket 0.7295-0.9503, MED_PLUS_INTENT 0.9598-0.9847, and FATIGUE_WORDED_CRISIS
+ *   0.8700-0.9663) clustering well above that.
+ * That leaves a ~0.09-wide gap (0.6106 to 0.7166) between the two clusters. 0.65 sits in the middle of that
+ * gap: ~0.04 above the highest marginal-only score and ~0.07 below the lowest genuine-disclosure score, so
+ * moving the model's exact borderline output by a few hundredths on either side would not flip a real
+ * disclosure to soft. Per the app owner's explicit instruction: when the data doesn't cleanly separate, err
+ * toward the MORE PROTECTIVE choice — one constructed candidate ("I'm so tired of feeling this way" → 0.7035)
+ * sits ambiguously close to the genuine-disclosure floor and is deliberately left on the FULL side of 0.65
+ * rather than tuned to be soft, since its phrasing ("tired of feeling this way") echoes real passive
+ * suicidal-ideation language.
+ */
+export const CRISIS_HIGH_CONFIDENCE_THRESHOLD: number = 0.65;
 
 /**
  * The live §9 INPUT gate, SOURCE-AWARE: keyword scan OR (enabled classifier ≥ threshold). Always runs the
@@ -96,29 +146,34 @@ export interface CrisisSignal {
  * hit (vs. the unchanged full takeover for a keyword hit) should use this instead of the boolean.
  */
 export async function detectCrisisSignal(text: string): Promise<CrisisSignal> {
-  if (scanForCrisis(text)) return { hit: true, source: "keyword" }; // deterministic floor — always honored
-  if (!_enabled || !_embedder) return { hit: false, source: null }; // classifier off/absent → keyword result
+  // deterministic floor — always honored, always the full takeover regardless of any classifier score
+  // (2026-07-12 Bug 1 fix: tier is NOT derived from source — a keyword hit is unconditionally "full").
+  if (scanForCrisis(text)) return { hit: true, source: "keyword", tier: "full" };
+  if (!_enabled || !_embedder) return { hit: false, source: null, tier: null }; // classifier off/absent → keyword result
   // NEGATIVE GUARD (applied only AFTER the keyword floor missed): the MiniLM head embeds calm medication-
   // adherence talk near the overdose cluster and scores it above threshold ("take my pills exactly as
   // prescribed" → 0.62), which would fire a crisis surface on a benign statement. Suppress the SOFT
   // classifier upgrade for unambiguous adherence phrasing (never a keyword hit — those already returned
   // above; never a medication+lethal-intent disclosure — the guard vetoes those). See safety.ts.
-  if (isBenignMedicationAdherence(text)) return { hit: false, source: null };
+  if (isBenignMedicationAdherence(text)) return { hit: false, source: null, tier: null };
   // Same posture for common hyperbole/idiom the classifier over-fires on ("could sleep for a week", "could
   // murder a biryani") — only after the keyword floor missed, and vetoed by any lethal co-signal (2026-07-06 #8).
-  if (isBenignHyperbole(text)) return { hit: false, source: null };
+  if (isBenignHyperbole(text)) return { hit: false, source: null, tier: null };
   // Same posture for ordinary bad-day / heavy-fatigue distress the classifier over-fires on ("i had a really
   // rough day and i just feel exhausted" → 0.90) — a false crisis surface on a normal bad day is itself
   // harmful. Vetoed by any lethal co-signal OR life-weariness/despair phrasing, so real (often euphemistic)
   // disclosures still fire (device test 2026-07-10). See isBenignExhaustion in safety.ts.
-  if (isBenignExhaustion(text)) return { hit: false, source: null };
+  if (isBenignExhaustion(text)) return { hit: false, source: null, tier: null };
   // Same posture for self-soothing dismissal / reassurance the classifier over-fires on ("i'm okay for now" →
   // 0.63, "i think i'm okay now" → 0.81) — so a user's affirmative dismissal after a §9 surface clears instead
   // of re-tripping it. Vetoed by any lethal co-signal, life-weariness/despair, OR crisis-minimization cue
   // ("don't worry about me", "at peace", "said my goodbyes"), so real minimization still fires (2026-07-10).
-  if (isBenignOkayReassurance(text)) return { hit: false, source: null };
+  if (isBenignOkayReassurance(text)) return { hit: false, source: null, tier: null };
   const p = await scoreCrisis(text);
-  return p !== null && p >= CRISIS_THRESHOLD ? { hit: true, source: "classifier" } : { hit: false, source: null };
+  if (p === null || p < CRISIS_THRESHOLD) return { hit: false, source: null, tier: null };
+  // 2026-07-12 Bug 1 fix: tier is SCORE-based within classifier hits, not automatically "soft" just because
+  // the keyword floor missed it — see CRISIS_HIGH_CONFIDENCE_THRESHOLD's comment for the empirical basis.
+  return { hit: true, source: "classifier", tier: p >= CRISIS_HIGH_CONFIDENCE_THRESHOLD ? "full" : "soft" };
 }
 
 /**

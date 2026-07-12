@@ -7,6 +7,7 @@ import {
   setCrisisClassifierEnabled,
   crisisClassifierActive,
   CRISIS_THRESHOLD,
+  CRISIS_HIGH_CONFIDENCE_THRESHOLD,
   type Embedder,
 } from "./crisisClassifier";
 import weights from "./crisisClassifier.weights.json";
@@ -146,21 +147,71 @@ describe("detectCrisisSignal — two-tier (2026-07-12 Wave 3)", () => {
     setCrisisEmbedder(textAwareEmbedder);
   });
 
-  it("keyword-floor hit returns source:'keyword'", async () => {
+  it("keyword-floor hit returns source:'keyword', tier:'full'", async () => {
     const s = await detectCrisisSignal("i want to kill myself");
-    expect(s).toEqual({ hit: true, source: "keyword" });
+    expect(s).toEqual({ hit: true, source: "keyword", tier: "full" });
   });
-  it("classifier-only hit returns source:'classifier'", async () => {
+  // 2026-07-12 Bug 1 FIX (adversarial-review regression, NOT a weakening — see AGENTS.md guardrails / commit
+  // message): the pre-fix version of this test asserted only source:'classifier', which under the OLD buggy
+  // ModeScreen branch (`source === "classifier"` → soft card) implied a SOFT surface for this exact phrase.
+  // That was the confirmed bug: "everyone would be better off without me" is a genuine, high-confidence
+  // indirect suicidal-ideation disclosure (real-model score 0.8837, see crisisClassifier.realmodel.test.ts) —
+  // it must resolve tier:'full' (full-takeover CrisisOverlay), not tier:'soft'. source stays "classifier"
+  // (still true — the keyword floor still misses this phrase); tier is the corrected field.
+  it("classifier-only hit on a genuine high-confidence disclosure returns source:'classifier', tier:'full'", async () => {
     const s = await detectCrisisSignal("everyone would be better off without me");
     expect(s.hit).toBe(true);
     expect(s.source).toBe("classifier");
+    expect(s.tier).toBe("full");
   });
-  it("no hit returns hit:false, source:null", async () => {
+  it("no hit returns hit:false, source:null, tier:null", async () => {
     const s = await detectCrisisSignal("i had a good day today");
-    expect(s).toEqual({ hit: false, source: null });
+    expect(s).toEqual({ hit: false, source: null, tier: null });
   });
   it("detectCrisis() is byte-for-byte unchanged (regression guard)", async () => {
     expect(await detectCrisis("i want to kill myself")).toBe(true);
     expect(await detectCrisis("i had a good day today")).toBe(false);
+  });
+});
+
+describe("detectCrisisSignal — tier is SCORE-based within classifier hits (2026-07-12 Bug 1 fix)", () => {
+  // Builds a constant embedding along the shipped COEF direction that makes scoreCrisis() return EXACTLY
+  // `targetProb` against the real shipped weights — same z = bias + alpha*||coef||² algebra as the "LR head
+  // math is correct against the shipped weights" test above, solved for alpha. Deterministic, no real model.
+  const embedderForScore = (targetProb: number): Embedder => {
+    const z = Math.log(targetProb / (1 - targetProb));
+    const sumSq = COEF.reduce((s, c) => s + c * c, 0);
+    const alpha = (z - BIAS) / sumSq;
+    return async () => COEF.map((c) => c * alpha);
+  };
+
+  beforeEach(() => {
+    setCrisisClassifierEnabled(true);
+  });
+
+  it("a keyword-floor hit is tier:'full' regardless of the classifier score (source-independent tiering)", async () => {
+    // Rigged to score in what WOULD be the soft band if this were classifier-only — proves tiering for a
+    // keyword hit never even consults the classifier score.
+    setCrisisEmbedder(embedderForScore((CRISIS_THRESHOLD + CRISIS_HIGH_CONFIDENCE_THRESHOLD) / 2));
+    const s = await detectCrisisSignal(KEYWORD_CRISIS);
+    expect(s).toEqual({ hit: true, source: "keyword", tier: "full" });
+  });
+
+  it("a classifier score at/above CRISIS_HIGH_CONFIDENCE_THRESHOLD is tier:'full'", async () => {
+    setCrisisEmbedder(embedderForScore(Math.min(CRISIS_HIGH_CONFIDENCE_THRESHOLD + 0.05, 0.99)));
+    const s = await detectCrisisSignal(EUPHEMISM);
+    expect(s).toEqual({ hit: true, source: "classifier", tier: "full" });
+  });
+
+  it("a classifier score in the soft band (>= CRISIS_THRESHOLD, < CRISIS_HIGH_CONFIDENCE_THRESHOLD) is tier:'soft'", async () => {
+    setCrisisEmbedder(embedderForScore((CRISIS_THRESHOLD + CRISIS_HIGH_CONFIDENCE_THRESHOLD) / 2));
+    const s = await detectCrisisSignal(EUPHEMISM);
+    expect(s).toEqual({ hit: true, source: "classifier", tier: "soft" });
+  });
+
+  it("a classifier score below CRISIS_THRESHOLD is not a hit at all: tier:null", async () => {
+    setCrisisEmbedder(embedderForScore(Math.max(CRISIS_THRESHOLD - 0.1, 0.01)));
+    const s = await detectCrisisSignal(EUPHEMISM);
+    expect(s).toEqual({ hit: false, source: null, tier: null });
   });
 });
