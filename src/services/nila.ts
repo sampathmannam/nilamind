@@ -94,6 +94,27 @@ export const USE_SHORT_PERSONA = true;
  * so dumping the whole library just re-prefilled wasted tokens. (The episode path builds its own prompt in
  * episodePrompt.ts and is unaffected by this.)
  */
+/** A blunt, per-turn STANCE steer for "why/how" explainer questions. The persona already says "don't
+ *  lecture, reflect + ask", but buried in a long prompt a small model ignores it and defaults to a helpful
+ *  explanation/list. Appended LAST (most salient, right before generation) and specific to THIS turn, it
+ *  reliably flips even a strong instruction-follower (Qwen) into the companion move. Empty for non-explainer
+ *  messages. Diagnosed 2026-07-12: exemplar-RAG alone lost to Qwen's lecture default on "why" questions. */
+export function explainerQuestionSteer(lastUser: string): string {
+  const t = (lastUser || "").trim().toLowerCase();
+  const isExplainer =
+    /^(why|how)\b/.test(t) ||
+    /\b(why|how)\b[^.?!]*\b(do|does|did|is|are|can|could|should|would|make|makes|work|works|help|helps)\b/.test(t) ||
+    /\bwhat (makes|causes|is the (reason|point|cause))\b/.test(t);
+  if (!isExplainer) return "";
+  return (
+    "STANCE FOR THIS MESSAGE: they just asked a 'why'/'how' question. Do NOT answer it with an explanation " +
+    "or a list of reasons — that is the single thing to avoid here. In one or two short sentences, reflect " +
+    "the feeling underneath the question, then ask one gentle question back. If they clearly only want the " +
+    "fact, give it in a single plain sentence, then turn it back to them. Never a numbered list, never " +
+    "\"here are the reasons.\""
+  );
+}
+
 export function buildNilaSystem(query?: string): string {
   const base = USE_SHORT_PERSONA ? NILA_SYSTEM_PROMPT_SHORT : NILA_SYSTEM_PROMPT;
   const persona = base.replace("[REGION_CRISIS_LINES]", crisisLinesInline());
