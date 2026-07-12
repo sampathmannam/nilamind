@@ -7,6 +7,7 @@ import { generateCsvReport, buildTextReport, generatePdfBlob, saveReport, buildC
 import { computeRetention } from "../services/retentionMetrics";
 import { isPilotEnrolled, computePilotSummary } from "../services/pilotStudy";
 import { loadAssessments } from "../services/assessments";
+import { buildFhirBundle } from "../services/fhirExport";
 import { recordExportAudit, getExportAudit, type ExportAuditEntry } from "../services/exportAudit";
 
 // "Your data" (AUTOPILOT Phase 2): see exactly what's stored, export it (encrypted, user-controlled),
@@ -98,7 +99,7 @@ export default function YourDataScreen() {
     setReportBusy(true);
     try {
       const checkins = loadCheckins();
-      const text = buildTextReport(checkins, undefined, computeRetention(), isPilotEnrolled() ? computePilotSummary() ?? undefined : undefined);
+      const text = buildTextReport(checkins, undefined, computeRetention(), isPilotEnrolled() ? computePilotSummary() ?? undefined : undefined, loadAssessments());
       const blob = generatePdfBlob(text);
       if (blob) {
         await saveReport(blob, "nilamind-report.pdf", "application/pdf");
@@ -119,6 +120,19 @@ export default function YourDataScreen() {
       });
       await saveReport(json, "nilamind-data.json", "application/json");
       pushAudit({ kind: "json", scope: "Structured data export", destination: "device_download" });
+    } finally { setReportBusy(false); }
+  };
+
+  const handleExportFhir = async () => {
+    setReportBusy(true);
+    try {
+      const bundle = buildFhirBundle({
+        generatedAt: new Date().toISOString(),
+        subjectId: id?.userId ?? null,
+        assessments: loadAssessments(),
+      });
+      await saveReport(bundle, "nilamind-fhir-bundle.json", "application/fhir+json");
+      pushAudit({ kind: "fhir", scope: "FHIR R4 assessment bundle", destination: "device_download" });
     } finally { setReportBusy(false); }
   };
 
@@ -178,16 +192,19 @@ export default function YourDataScreen() {
       {/* Clinician-friendly report export */}
       <div className="glass rounded-2xl p-4 space-y-2">
         <h3 className="text-xs font-bold text-slate-100 uppercase tracking-wider flex items-center gap-1.5"><FileText className="w-3.5 h-3.5" /> Export Report</h3>
-        <p className="text-[11px] text-slate-500 leading-relaxed">A CSV or PDF of your check-in data to share with your doctor, or a structured JSON (assessment history, retention &amp; pilot summary) a clinician's system or a researcher can read. No encryption — saved to this device. Not a clinical or diagnostic tool.</p>
-        <div className="flex gap-2">
-          <button onClick={handleExportCsv} disabled={reportBusy} className="flex-1 bg-page border border-slate-800 hover:bg-raised text-slate-200 text-xs font-semibold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50">
+        <p className="text-[11px] text-slate-500 leading-relaxed">A CSV or PDF of your check-in data to share with your doctor, a structured JSON (assessment history, retention &amp; pilot summary) a researcher can read, or an experimental FHIR bundle (LOINC-coded screening scores) for a clinical system. No encryption — saved to this device. Not a clinical or diagnostic tool.</p>
+        <div className="flex flex-wrap gap-2">
+          <button onClick={handleExportCsv} disabled={reportBusy} className="flex-1 min-w-[64px] bg-page border border-slate-800 hover:bg-raised text-slate-200 text-xs font-semibold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50">
             {reportBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />} CSV
           </button>
-          <button onClick={handleExportPdf} disabled={reportBusy} className="flex-1 bg-page border border-slate-800 hover:bg-raised text-slate-200 text-xs font-semibold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50">
+          <button onClick={handleExportPdf} disabled={reportBusy} className="flex-1 min-w-[64px] bg-page border border-slate-800 hover:bg-raised text-slate-200 text-xs font-semibold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50">
             {reportBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />} PDF
           </button>
-          <button onClick={handleExportJson} disabled={reportBusy} id="export-json" className="flex-1 bg-page border border-slate-800 hover:bg-raised text-slate-200 text-xs font-semibold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50">
+          <button onClick={handleExportJson} disabled={reportBusy} id="export-json" className="flex-1 min-w-[64px] bg-page border border-slate-800 hover:bg-raised text-slate-200 text-xs font-semibold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50">
             {reportBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />} JSON
+          </button>
+          <button onClick={handleExportFhir} disabled={reportBusy} id="export-fhir" className="flex-1 min-w-[64px] bg-page border border-slate-800 hover:bg-raised text-slate-200 text-xs font-semibold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50">
+            {reportBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />} FHIR
           </button>
         </div>
       </div>

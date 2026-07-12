@@ -200,7 +200,7 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
     setExportBusy(true);
     setShowExportMenu(false);
     try {
-      const text = buildTextReport(checkins, assessments.length, computeRetention(), isPilotEnrolled() ? computePilotSummary() ?? undefined : undefined);
+      const text = buildTextReport(checkins, assessments.length, computeRetention(), isPilotEnrolled() ? computePilotSummary() ?? undefined : undefined, assessments);
       const blob = generatePdfBlob(text);
       if (!blob) return;
       await saveReport(blob, "nilamind-report.pdf", "application/pdf");

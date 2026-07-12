@@ -9,6 +9,7 @@ import {
   adherenceRate,
   type Medication,
 } from "../services/medicationAdherence";
+import { hapticLight } from "../hooks/useHaptics";
 import { syncMedicationReminders } from "../services/notifications";
 
 export default function MedicationAdherenceScreen() {
@@ -59,6 +60,7 @@ export default function MedicationAdherenceScreen() {
   const markTaken = (id: string) => {
     logMedication(id, true, []);
     setLogsToday((prev) => new Set([...prev, id]));
+    hapticLight();
   };
 
   const markSkipped = (id: string) => {

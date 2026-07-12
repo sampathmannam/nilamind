@@ -8,9 +8,10 @@ import { useReducedMotion } from "./hooks/useReducedMotion";
 
 // Eager — crisis path must never lazy-load
 import CrisisOverlay from "./components/CrisisOverlay";
+import CrisisPill from "./components/CrisisPill";
 import GroundingLibraryScreen from "./components/GroundingLibraryScreen";
 import ModeScreen from "./components/ModeScreen";
-import ToolsScreen from "./components/ToolsScreen";
+import TodayScreen from "./components/TodayScreen";
 import YouScreen from "./components/YouScreen";
 import ErrorBoundary from "./components/ErrorBoundary";
 
@@ -45,6 +46,8 @@ const RelapsePlanScreen = lazy(() => import("./components/RelapsePlanScreen"));
 const EpisodeSupportScreen = lazy(() => import("./components/EpisodeSupportScreen"));
 const EmaCheckInScreen = lazy(() => import("./components/EmaCheckIn"));
 const ArmedCheckInScreen = lazy(() => import("./components/ArmedCheckInScreen"));
+const AboutNilaScreen = lazy(() => import("./components/AboutNilaScreen"));
+const InsightsScreen = lazy(() => import("./components/InsightsScreen"));
 
 // Calm fallback while lazy chunks load
 import { Skeleton, SkeletonCard, SkeletonList, SkeletonChart } from "./components/Skeleton";
@@ -73,14 +76,16 @@ import { resolveNavTarget, type AuxView, type TabView } from "./services/nav";
 import { getArmedCheckin, armedCheckinBody } from "./services/armedCheckin";
 import { recordAppOpen } from "./services/retentionMetrics";
 import { getPilotState, markEndpointReminderScheduled, PILOT_ENDPOINT_REMINDER_BODY } from "./services/pilotStudy";
-import { MessageSquare, LayoutGrid, User } from "lucide-react";
+import { MessageSquare, LayoutGrid, User, X } from "lucide-react";
 import SheetContainer from "./components/SheetContainer";
 import { hapticLight } from "./hooks/useHaptics";
 
-type AppTab = "nila" | "tools" | "you";
+type AppTab = "nila" | "today" | "you";
 
 // ── Aux view label map for sheet headers ──
 const AUX_LABELS: Partial<Record<AuxView, string>> = {
+  about_nila: "About Nila",
+  insights: "Your patterns",
   thought_record: "Thought record",
   assessment: "Screenings",
   values_to_action: "Values to action",
@@ -113,6 +118,8 @@ function auxViewLabel(view: AuxView): string {
 // ── Aux view component renderers (module-scoped lazy imports — created once, not per render)
 function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () => void, onOpenGrounding: () => void) {
   switch (view) {
+    case "about_nila": return <AboutNilaScreen />;
+    case "insights": return <InsightsScreen onClose={onClose} />;
     case "thought_record": return <ThoughtRecordScreen />;
     case "assessment": return <AssessmentScreen onActivateCrisis={onActivateCrisis} />;
     case "values_to_action": return <ValuesToActionScreen />;
@@ -150,14 +157,25 @@ export default function App() {
   const [isMedicationOpen, setIsMedicationOpen] = useState(false);
   const [isCaregiverOpen, setIsCaregiverOpen] = useState(false);
   const [activeAuxView, setActiveAuxView] = useState<AuxView | null>(null);
-  const [activeTab, setActiveTab] = useState<AppTab>("nila");
+  const [closingAuxView, setClosingAuxView] = useState<AuxView | null>(null);
+  const [activeTab, setActiveTab] = useState<AppTab>("today");
   const [disableAnchorPulse, setDisableAnchorPulse] = useState(false);
   const [saveWarning, setSaveWarning] = useState(false);
   const [onboardingDone, setOnboardingDone] = useState(hasCompletedOnboarding());
   const [wakeListening, setWakeListening] = useState(false);
   const [phoneEnabled] = useState(false);
   const [modeScreenHasSheet, setModeScreenHasSheet] = useState(false);
-  const [, setLangTick] = useState(0); // audit 2.23 — bump to re-render t()-driven copy on a language switch
+  const [, setLangTick] = useState(0);
+  const closeSheet = useCallback((view: AuxView | null) => {
+    if (!view) return;
+    setClosingAuxView(view);
+    setActiveAuxView(null);
+    setTimeout(() => setClosingAuxView(null), 200);
+  }, []);
+
+  const closeActiveAux = useCallback(() => {
+    if (activeAuxView) closeSheet(activeAuxView);
+  }, [activeAuxView, closeSheet]);
 
   useEffect(() => onPersistError((failingKeys) => setSaveWarning(failingKeys.length > 0)), []);
 
@@ -251,7 +269,7 @@ export default function App() {
       // "diary" and "plan" are logical tabs that map to Nila or sheets, not our 3-tab bar.
       // Route them to Nila so the chat prompt handles them.
       if (res.tab === "plan") { setIsGroundingOpen(true); return; }
-      if (res.tab === "nila" || res.tab === "tools" || res.tab === "you") {
+      if (res.tab === "nila" || res.tab === "today" || res.tab === "you") {
         setActiveTab(res.tab as AppTab);
         return;
       }
@@ -362,10 +380,10 @@ export default function App() {
             />
           </ErrorBoundary>
         )}
-        {activeTab === "tools" && (
-          <ErrorBoundary name="tools" onError={(err: Error, info: React.ErrorInfo) => console.error("[ErrorBoundary:tools] caught:", err, info)}>
+        {activeTab === "today" && (
+          <ErrorBoundary name="today" onError={(err: Error, info: React.ErrorInfo) => console.error("[ErrorBoundary:today] caught:", err, info)}>
             <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-6" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
-              <ToolsScreen go={go} phoneEnabled={phoneEnabled} onEpisode={onEpisode} />
+              <TodayScreen go={go} phoneEnabled={phoneEnabled} onEpisode={onEpisode} />
             </div>
           </ErrorBoundary>
         )}
@@ -378,15 +396,24 @@ export default function App() {
         )}
       </main>
 
+      {/* Persistent crisis affordance — rendered on EVERY tab (§9: crisis always reachable). It sits in
+          the shell's bottom stack, outside every activeTab branch, so it can't collide with ModeScreen's
+          chat input (which lives inside <main>). The nav's border-t below separates it from the 3 tabs so
+          it never reads as a routine destination (ui-ux-pro-max destructive-nav-separation). */}
+      <div className="shrink-0 px-4 pt-2 pb-1 bg-page" id="shell-crisis-row">
+        <CrisisPill onActivate={activateCrisis} />
+      </div>
+
       {/* Bottom tab bar */}
-      <nav className="shrink-0 flex items-center justify-around border-t border-slate-800 bg-page/95 backdrop-blur pb-[max(8px,env(safe-area-inset-bottom))]" aria-label="Main navigation">
+      <nav className="shrink-0 flex items-center justify-around border-t border-slate-800 bg-page/95 backdrop-blur pb-[max(8px,env(safe-area-inset-bottom))]" role="tablist" aria-label="Main navigation">
         {([
           { id: "nila" as AppTab, label: "Nila", Icon: MessageSquare },
-          { id: "tools" as AppTab, label: t("tools"), Icon: LayoutGrid },
+          { id: "today" as AppTab, label: "Today", Icon: LayoutGrid },
           { id: "you" as AppTab, label: t("you"), Icon: User },
         ]).map(({ id, label, Icon }) => (
           <button
             key={id}
+            role="tab"
             onClick={() => { setActiveTab(id); hapticLight(); }}
             className={`flex flex-col items-center gap-0.5 py-2 px-4 rounded-lg transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] ${
               activeTab === id ? "text-blue-400" : "text-slate-500 hover:text-slate-300"
@@ -394,7 +421,7 @@ export default function App() {
             aria-label={label}
             aria-selected={activeTab === id}
           >
-            <Icon className="w-5 h-5" />
+            <Icon className="w-5 h-5" aria-hidden="true" />
             <span className="text-[10px] font-medium">{label}</span>
           </button>
         ))}
@@ -417,7 +444,7 @@ export default function App() {
         <div className="fixed inset-0 z-50 bg-page flex flex-col animate-slide-in" id="grounding-sheet">
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
             <span className="text-sm font-semibold text-slate-100">Grounding</span>
-            <button onClick={() => { setIsGroundingOpen(false); setGroundingExpandIndex(undefined); }} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center">✕</button>
+            <button onClick={() => { setIsGroundingOpen(false); setGroundingExpandIndex(undefined); }} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Close"><X className="w-4 h-4" aria-hidden="true" /></button>
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto">
             <GroundingLibraryScreen autoExpand={groundingExpandIndex} />
@@ -430,7 +457,7 @@ export default function App() {
         <div className="fixed inset-0 z-50 bg-page flex flex-col animate-slide-in" id="settings-sheet">
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
             <span className="text-sm font-semibold text-slate-100">{t("settings")}</span>
-            <button onClick={() => setIsSettingsOpen(false)} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center">✕</button>
+            <button onClick={() => setIsSettingsOpen(false)} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Close"><X className="w-4 h-4" aria-hidden="true" /></button>
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto">
             <Suspense fallback={<ScreenFallback />}>
@@ -445,7 +472,7 @@ export default function App() {
         <div className="fixed inset-0 z-50 bg-page flex flex-col animate-slide-in" id="dashboard-sheet">
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
             <span className="text-sm font-semibold text-slate-100">{t("dashboard")}</span>
-            <button onClick={() => setIsDashboardOpen(false)} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center">✕</button>
+            <button onClick={() => setIsDashboardOpen(false)} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Close"><X className="w-4 h-4" aria-hidden="true" /></button>
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto">
             <Suspense fallback={<ScreenFallback />}><DashboardScreen /></Suspense>
@@ -458,7 +485,7 @@ export default function App() {
         <div className="fixed inset-0 z-50 bg-page flex flex-col animate-slide-in" id="medication-sheet">
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
             <span className="text-sm font-semibold text-slate-100">{t("medications")}</span>
-            <button onClick={() => setIsMedicationOpen(false)} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center">✕</button>
+            <button onClick={() => setIsMedicationOpen(false)} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Close"><X className="w-4 h-4" aria-hidden="true" /></button>
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto p-4">
             <Suspense fallback={<ScreenFallback />}><MedicationAdherenceScreen /></Suspense>
@@ -471,7 +498,7 @@ export default function App() {
         <div className="fixed inset-0 z-50 bg-page flex flex-col animate-slide-in" id="caregiver-sheet">
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
             <span className="text-sm font-semibold text-slate-100">Share with a trusted person</span>
-            <button onClick={() => setIsCaregiverOpen(false)} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center">✕</button>
+            <button onClick={() => setIsCaregiverOpen(false)} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Close"><X className="w-4 h-4" aria-hidden="true" /></button>
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto p-4">
             <Suspense fallback={<ScreenFallback />}><CaregiverShareScreen /></Suspense>
@@ -480,14 +507,14 @@ export default function App() {
       )}
 
       {/* Generic aux view sheet — all other screens */}
-      {activeAuxView && (
-        <div className="fixed inset-0 z-50 bg-page flex flex-col animate-slide-in" id="aux-view-sheet">
+      {(activeAuxView || closingAuxView) && (
+        <div className={`fixed inset-0 z-50 bg-page flex flex-col ${closingAuxView ? "animate-slide-out" : "animate-slide-in"}`} id="aux-view-sheet">
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
-            <span className="text-sm font-semibold text-slate-100">{auxViewLabel(activeAuxView)}</span>
-            <button onClick={() => setActiveAuxView(null)} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center">✕</button>
+            <span className="text-sm font-semibold text-slate-100">{auxViewLabel(activeAuxView || closingAuxView!)}</span>
+            <button onClick={() => closeSheet(activeAuxView)} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Close"><X className="w-4 h-4" aria-hidden="true" /></button>
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto">
-            <Suspense fallback={<ScreenFallback />}>{renderAuxView(activeAuxView, activateCrisis, () => setActiveAuxView(null), () => setIsGroundingOpen(true))}</Suspense>
+            <Suspense fallback={<ScreenFallback />}>{renderAuxView((activeAuxView || closingAuxView)!, activateCrisis, closeActiveAux, () => setIsGroundingOpen(true))}</Suspense>
           </div>
         </div>
       )}

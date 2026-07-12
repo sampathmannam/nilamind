@@ -6,6 +6,7 @@ import { Check, Clipboard, Calendar, MessageSquare, Sparkles, Loader2 } from "lu
 import Markdown from "react-markdown";
 import { analyzeQuickNote } from "../services/coachAssist";
 import { useTypingSession } from "../hooks/useTypingSession";
+import { hapticMedium } from "../hooks/useHaptics";
 import CrisisCard from "./CrisisCard";
 
 export default function DiaryCardScreen() {
@@ -105,6 +106,7 @@ export default function DiaryCardScreen() {
     };
 
     secureLocal.setItem("nilamind_diary", JSON.stringify(entries));
+    hapticMedium();
     setIsSaved(true);
     setTimeout(() => setIsSaved(false), 2000);
   };
@@ -185,11 +187,12 @@ export default function DiaryCardScreen() {
                     <button
                       key={num}
                       onClick={() => handleEmotionChange(key as keyof typeof emotions, num)}
-                      className={`w-3.5 h-3.5 rounded-full text-[8px] font-bold flex items-center justify-center cursor-pointer transition-all ${
+                      className={`w-11 h-11 rounded-full text-xs font-bold flex items-center justify-center cursor-pointer transition-all ${
                         val === num
                           ? "bg-blue-600 text-white"
                           : "bg-page text-slate-500 border border-slate-800/80 hover:border-slate-700"
                       }`}
+                      aria-label={`${key} rating ${num}`}
                     >
                       {num}
                     </button>

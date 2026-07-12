@@ -377,5 +377,5 @@ export async function registerDownloadedBackend(model: CatalogModel): Promise<vo
     throw new Error(`Unsupported model runtime "${model.runtime}" — only "gguf" (llama.cpp) ships today.`);
   }
   const { createLlamaCppBackend } = await import("./llamaCppLlmAdapter");
-  registerLocalLlmBackend(createLlamaCppBackend(path));
+  registerLocalLlmBackend(createLlamaCppBackend(path, undefined, model.promptFormat));
 }

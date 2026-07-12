@@ -9,6 +9,8 @@ import {
   getGreeting,
   getNilaQuestion,
 } from "../services/modeEngine";
+import { clearChatElevation, noteChatElevation } from "../services/chatElevation";
+import { detectElevationRisk } from "../services/elevationGuard";
 import { hasCheckinToday, getSkipFlag } from "../services/checkin";
 import { t } from "../services/i18n";
 import { useTypingSession } from "../hooks/useTypingSession";
@@ -39,7 +41,10 @@ import { startVoiceSession, endVoiceSession } from "../services/voicePatterns";
 import LearnScreen from "./LearnScreen";
 import { parseSafetyPlan } from "../services/safetyPlan";
 import { shouldPromptReview, markSafetyPlanReviewed } from "../services/safetyPlanFollowUp";
-import { Settings, LifeBuoy, Mic, Send, MicOff, X, ShieldCheck, SquarePen } from "lucide-react";
+import { computeCompassionateStreak } from "../services/streaks";
+import { Settings, Mic, Send, MicOff, X, ShieldCheck, ThumbsUp, ThumbsDown, MessageCircle, SquarePen } from "lucide-react";
+import { hapticLight, hapticMedium } from "../hooks/useHaptics";
+import { recordFeedback } from "../services/nilaFeedback";
 
 interface ModeScreenProps {
   onOpenSettings?: () => void;
@@ -74,6 +79,9 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   const [skillOffer, setSkillOffer] = useState<Skill | null>(null);
   const [pactNotice, setPactNotice] = useState<PactNotice | null>(null); // #30: surfaced pact (the human bridge)
   const [confirmNewChat, setConfirmNewChat] = useState(false); // "new conversation" confirm dialog
+  const [welcomeBack, setWelcomeBack] = useState<string | null>(null);
+  const [ratedMessages, setRatedMessages] = useState<Set<number>>(new Set());
+  const [showQuickActions, setShowQuickActions] = useState(false);
   // #4 + #9 (audit): §9 crisis now routes through the App-level overlay (onOpenCrisis) so the Android hardware
   // back button closes it instead of exiting the app; a session that ever tripped §9 latches hadCrisisRef so
   // the transcript is never persisted/restored (keying the clear on a transient boolean re-persisted it on dismiss).
@@ -90,6 +98,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
       setProtocolCard(null);
     }
     setPactNotice(null); // §9 takes precedence over the gentle pact surface either way
+    setWelcomeBack(null); // §9 also clears the welcome-back card
     onOpenCrisis?.();
   };
   const bottomRef = useRef<HTMLDivElement>(null); // #23: scroll-to-newest anchor
@@ -143,6 +152,26 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
     try { setPactNotice(activePactNotice()); } catch { /* best-effort — pact surfacing is never a hard dependency */ }
   }, []);
 
+  // Welcome-back card: if the user hasn't checked in for >= 2 days and hasn't dismissed it today,
+  // show a gentle in-app nudge. Dismissed via plain localStorage (non-sensitive UI flag).
+  useEffect(() => {
+    if (hadCrisisRef.current) return;
+    try {
+      const streak = computeCompassionateStreak();
+      if (streak.daysSinceLast >= 2) {
+        const dismissed = (globalThis as any).localStorage?.getItem("nilamind_welcome_back_dismissed");
+        if (dismissed !== new Date().toISOString().split("T")[0]) {
+          const days = streak.daysSinceLast;
+          setWelcomeBack(days >= 7
+            ? "It's been a while — no pressure, no rush. I'm here whenever you want to talk."
+            : days >= 3
+            ? "Haven't seen you in a few days. Just a gentle check-in — I'm here."
+            : "Haven't seen you in a bit — I'm here whenever you're ready.");
+        }
+      }
+    } catch { /* best-effort */ }
+  }, []);
+
   // Persist the chat as it grows. INVARIANT: a §9 crisis turn is NEVER persisted — clear the store so a
   // crisis transcript can't be restored later (mirrors the old AiCoachScreen rule). asyncReflection and
   // armedCheckin read getSessionChat(), so this is also what makes those features see real conversations.
@@ -159,7 +188,9 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
 
   const handleCheckinLogged = (entry: CheckInEntry) => {
     setShowCheckin(false);
+    clearChatElevation(); // a fresh check-in supersedes any chat-detected elevation → relax the UI
     setMode(getCurrentMode());
+    hapticMedium();
     setMessages((prev) => [
       ...prev,
       { role: "assistant", content: `Thank you. I'll keep that in mind.` },
@@ -176,6 +207,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
 
     chatTyping.stop(msg.length);
     setInputText("");
+    hapticLight();
     const userMsg: NilaUiMessage = { role: "user", content: msg };
     crisisPendingRef.current = true; // #5-out: hold this turn out of sessionChat until its §9 verdict returns
     setMessages((prev) => [...prev, userMsg]);
@@ -231,6 +263,10 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
         return;
       }
       crisisPendingRef.current = false; // #5-out: §9 verdict is NOT a crisis → this turn may now persist
+      // Manic-first: if the user typed manic content this turn (deterministic, LLM-independent), latch it so
+      // the interface settles — the pixel-level half of the elevation guard (which also steers Nila's words).
+      // Not written on a §9 turn (that path returned above). Picked up by the setMode(getCurrentMode()) below.
+      noteChatElevation(detectElevationRisk(msg).level);
       if (result.reply) {
         setMessages((prev) => [...prev, { role: "assistant", content: result.reply }]);
         if (result.reachedAI) {
@@ -239,6 +275,9 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
       }
       // After Nila replies, refresh the protocol card (continue if active, else re-offer).
       setProtocolCard(protocolOfferCard(msg));
+      // Chat-detected elevation may have latched during this turn (localNila → noteChatElevation) — recompute
+      // the mode so the interface settles (orb slows, home thins) in response to what the user just typed.
+      setMode(getCurrentMode());
       // Suggest a relevant coping skill if the user expressed distress
       const suggestion = suggestSkill(msg);
       setSkillOffer(suggestion?.skill ?? null);
@@ -333,6 +372,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
     const steps = skill.steps?.length
       ? skill.steps.map((s, i) => `${i + 1}. ${s}`).join("\n")
       : skill.purpose;
+    hapticMedium();
     setMessages((prev) => [
       ...prev,
       { role: "assistant", content: `**${skill.name}** — ${skill.purpose}\n\n${steps}\n\nTake your time with this. Even a small try counts. 💙` },
@@ -418,6 +458,8 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
     setMessages([]);
     setSkillOffer(null);
     setPactNotice(null);
+    setWelcomeBack(null);
+    setRatedMessages(new Set());
     setProtocolCard(protocolOfferCard(""));
     hadCrisisRef.current = false;
     setConfirmNewChat(false);
@@ -447,13 +489,9 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           >
             <Settings className="w-4 h-4" />
           </button>
-          <button
-            onClick={() => openCrisis()}
-            className="p-2 rounded-full hover:bg-rose-500/10 text-rose-400 hover:text-rose-300 transition-colors cursor-pointer"
-            aria-label={t("crisisButton")}
-          >
-            <LifeBuoy className="w-4 h-4" />
-          </button>
+          {/* Crisis access is now the App-shell CrisisPill (persistent on every tab), so the redundant
+              icon-only LifeBuoy that used to live here was removed. §9 auto-detection still routes through
+              openCrisis() below — only the manual header button moved to the shell. */}
         </div>
       </div>
 
@@ -509,7 +547,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
               state={mode.userState}
               onClick={handleVoice}
               onLongPress={() => openCrisis()}
-              size={140}
+              size={160}
             />
 
             <div className="text-center space-y-2">
@@ -523,27 +561,73 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
               )}
             </div>
 
-            {/* Quick actions */}
-            <QuickActions onAction={handleQuickAction} timeMode={mode.timeMode} />
+            {/* Quick actions — hidden behind a toggle for a cleaner first impression */}
+            {!showQuickActions && (
+              <button
+                onClick={() => setShowQuickActions(true)}
+                className="text-xs text-slate-500 hover:text-slate-300 flex items-center gap-1 transition-colors cursor-pointer"
+              >
+                <span>More tools</span>
+                <span className="text-slate-600">+</span>
+              </button>
+            )}
+            {showQuickActions && (
+              <>
+                <QuickActions onAction={handleQuickAction} timeMode={mode.timeMode} userState={mode.userState} />
+                <button
+                  onClick={() => setShowQuickActions(false)}
+                  className="text-xs text-slate-500 hover:text-slate-300 transition-colors cursor-pointer"
+                >
+                  Hide tools
+                </button>
+              </>
+            )}
 
             {/* Messages — #23 (audit): render the FULL conversation (was slice(-5), so earlier turns became
                 unreachable) and auto-scroll to the newest reply via bottomRef below. */}
             {messages.length > 0 && (
-              <div className="w-full max-w-sm space-y-3 mt-4">
+              <div className="w-full max-w-sm space-y-3 mt-4" role="log" aria-live="polite">
                 {messages.map((m, i) => (
                   <div
                     key={i}
                     className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
                   >
-                    <div
-                      className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm text-white ${
-                        m.role === "user"
-                          ? ""
-                          : "bg-slate-800 text-slate-200"
-                      }`}
-                      style={m.role === "user" ? { backgroundColor: "#6b21a8" } : undefined}
-                    >
-                      {m.role === "user" ? m.content : stripChatMarkdown(m.content)}
+                    <div>
+                      <div
+                       className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${
+                         m.role === "user"
+                           ? "bg-purple-600/70 text-white"
+                           : "bg-slate-800/80 text-slate-200"
+                       }`}
+                      >
+                        {m.role === "user" ? m.content : stripChatMarkdown(m.content)}
+                      </div>
+                      {m.role === "assistant" && !ratedMessages.has(i) && (
+                        <div className="flex gap-1 mt-1">
+                          <button
+                            onClick={() => {
+                              recordFeedback(m.content, "up");
+                              setRatedMessages((prev) => new Set(prev).add(i));
+                              hapticLight();
+                            }}
+                            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-slate-800/50 transition-colors cursor-pointer"
+                            aria-label="Mark as helpful"
+                          >
+                            <ThumbsUp className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              recordFeedback(m.content, "down");
+                              setRatedMessages((prev) => new Set(prev).add(i));
+                              hapticLight();
+                            }}
+                            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-slate-800/50 transition-colors cursor-pointer"
+                            aria-label="Mark as not helpful"
+                          >
+                            <ThumbsDown className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -599,6 +683,35 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
               {protocolCard.label}
             </button>
            )}
+
+          {/* Welcome-back card — gentle nudge after inactivity (>= 2 days). §9 clears it. */}
+          {welcomeBack && (
+            <div className="w-full px-3 py-2.5 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-200 text-xs">
+              <div className="flex items-start gap-2">
+                <MessageCircle className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" />
+                <div className="flex-1">
+                  <p className="leading-relaxed">{welcomeBack}</p>
+                  <div className="flex gap-2 mt-2">
+                    <button
+                      onClick={() => {
+                        try { (globalThis as any).localStorage?.setItem("nilamind_welcome_back_dismissed", new Date().toISOString().split("T")[0]); } catch { /* best-effort */ }
+                        setWelcomeBack(null);
+                      }}
+                      className="px-2.5 py-1 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-200 font-medium transition-colors cursor-pointer"
+                    >
+                      Got it
+                    </button>
+                    <button
+                      onClick={() => { setWelcomeBack(null); }}
+                      className="px-2.5 py-1 rounded-lg hover:bg-blue-500/15 text-blue-200/80 transition-colors cursor-pointer"
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* #30 (audit): pact surface — the user's own letter + a tap-to-text handoff, when a real shift
               is noticed. §9 takes precedence (cleared in openCrisis). */}

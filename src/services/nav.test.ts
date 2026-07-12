@@ -11,7 +11,7 @@ describe("resolveNavTarget", () => {
   });
   it("maps each footer/sub tab to a tab resolution", () => {
     expect(resolveNavTarget("nila")).toEqual({ kind: "tab", tab: "nila" });
-    expect(resolveNavTarget("tools")).toEqual({ kind: "tab", tab: "tools" });
+    expect(resolveNavTarget("today")).toEqual({ kind: "tab", tab: "today" });
     expect(resolveNavTarget("you")).toEqual({ kind: "tab", tab: "you" });
     expect(resolveNavTarget("diary")).toEqual({ kind: "tab", tab: "diary" });
     expect(resolveNavTarget("plan")).toEqual({ kind: "tab", tab: "plan" });
@@ -21,17 +21,17 @@ describe("resolveNavTarget", () => {
     expect(resolveNavTarget("checkin")).toEqual({ kind: "unknown", target: "checkin" });
     expect(resolveNavTarget("console")).toEqual({ kind: "unknown", target: "console" });
   });
-  it("does NOT treat removed 'today' as a tab", () => {
-    expect(resolveNavTarget("today")).toEqual({ kind: "unknown", target: "today" });
+  it("treats unknown targets as unknown", () => {
+    expect(resolveNavTarget("oldtab")).toEqual({ kind: "unknown", target: "oldtab" });
   });
-  it("maps known aux views including the new values_to_action", () => {
+  it("maps known aux views including the new values_to_action and insights", () => {
     expect(resolveNavTarget("dashboard")).toEqual({ kind: "aux", view: "dashboard" });
     expect(resolveNavTarget("values_to_action")).toEqual({ kind: "aux", view: "values_to_action" });
     expect(resolveNavTarget("skills")).toEqual({ kind: "aux", view: "skills" });
     expect(resolveNavTarget("assessment")).toEqual({ kind: "aux", view: "assessment" });
+    expect(resolveNavTarget("insights")).toEqual({ kind: "aux", view: "insights" });
   });
   it("returns unknown (no-op) for removed/typo'd targets", () => {
-    expect(resolveNavTarget("insights")).toEqual({ kind: "unknown", target: "insights" });
     expect(resolveNavTarget("behavioural_activation")).toEqual({ kind: "unknown", target: "behavioural_activation" });
     expect(resolveNavTarget("values_compass")).toEqual({ kind: "unknown", target: "values_compass" });
     expect(resolveNavTarget("episode_agent")).toEqual({ kind: "unknown", target: "episode_agent" });
@@ -40,10 +40,11 @@ describe("resolveNavTarget", () => {
   });
   it("exposes stable allowlists", () => {
     expect(KNOWN_AUX_VIEWS).toContain("values_to_action");
-    expect(KNOWN_AUX_VIEWS).not.toContain("insights");
+    expect(KNOWN_AUX_VIEWS).toContain("insights");
     expect(KNOWN_AUX_VIEWS).not.toContain("nila_voice");
-    expect(TAB_TARGETS).not.toContain("today");
+    expect(TAB_TARGETS).toContain("today");
     expect(TAB_TARGETS).toContain("nila");
+    expect(TAB_TARGETS).not.toContain("tools");
   });
 });
 
@@ -89,5 +90,14 @@ describe("nav — reach_out aux view", () => {
   });
   it("lists reach_out in the allowlist", () => {
     expect(KNOWN_AUX_VIEWS).toContain("reach_out");
+  });
+});
+
+describe("nav — insights aux view", () => {
+  it("resolves insights to an aux view", () => {
+    expect(resolveNavTarget("insights")).toEqual({ kind: "aux", view: "insights" });
+  });
+  it("lists insights in the allowlist", () => {
+    expect(KNOWN_AUX_VIEWS).toContain("insights");
   });
 });

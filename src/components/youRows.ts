@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, ShieldCheck, Sparkles, Settings as SettingsIcon,
-  Brain, Compass, BookOpen, Users,
+  Brain, Compass, BookOpen, Users, Info, TrendingUp,
   type LucideIcon,
 } from "lucide-react";
 
@@ -29,6 +29,7 @@ export function buildYouGroups(): YouGroup[] {
     {
       title: "Manage",
       rows: [
+        { id: "about_nila", label: "About Nila", sub: "How Nila works, privacy, and boundaries", Icon: Info, iconClass: "w-5 h-5 text-blue-400" },
         { id: "dashboard", label: "Your dashboard", sub: "Streak, mood & score trends, recent Nila", Icon: LayoutDashboard, iconClass: "w-5 h-5 text-blue-400" },
         { id: "your_data", label: "Your data", sub: "Export everything, or delete it — your call", Icon: ShieldCheck, iconClass: "w-5 h-5 text-emerald-400" },
         { id: "nila_memory", label: "What Nila remembers", sub: "See, edit, or delete what she knows", Icon: Sparkles, iconClass: "w-5 h-5 text-fuchsia-400" },
@@ -42,6 +43,7 @@ export function buildYouGroups(): YouGroup[] {
         { id: "thought_record", label: "Thought record", sub: "CBT reframing workbook", Icon: Brain, iconClass: "w-5 h-5 text-blue-400" },
         { id: "values_to_action", label: "Values to action", sub: "What matters → small steps you take", Icon: Compass, iconClass: "w-5 h-5 text-blue-400" },
         { id: "learn", label: "Learn", sub: "Skills, explainers & research — one library", Icon: BookOpen, iconClass: "w-5 h-5 text-blue-400" },
+        { id: "insights", label: "Your patterns", sub: "Sleep, screen time, movement & mood", Icon: TrendingUp, iconClass: "w-5 h-5 text-emerald-400" },
       ],
     },
   ];

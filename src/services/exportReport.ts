@@ -37,12 +37,13 @@ export function generateCsvReport(checkins: CheckInEntry[]): string {
 
 const yesNo = (b: boolean) => (b ? "yes" : "no");
 
-/** Build a plain-text summary report. `retention`/`pilot` are optional so existing callers/tests are unaffected. */
+/** Build a plain-text summary report. `retention`/`pilot`/`assessments` are optional so existing callers/tests are unaffected. */
 export function buildTextReport(
   checkins: CheckInEntry[],
   assessmentCount?: number,
   retention?: RetentionSummary,
   pilot?: PilotSummary,
+  assessments?: AssessmentEntry[],
 ): string {
   const lines: string[] = [];
   lines.push("NilaMind Wellness Report");
@@ -65,9 +66,28 @@ export function buildTextReport(
     lines.push("No check-ins recorded yet.");
   }
 
-  if (assessmentCount && assessmentCount > 0) {
+  const asmts = assessments ?? [];
+  const asmtCount = assessments ? asmts.length : (assessmentCount ?? 0);
+  if (asmtCount > 0) {
     lines.push("");
-    lines.push(`Screenings completed: ${assessmentCount}`);
+    lines.push(`Screenings completed: ${asmtCount}`);
+  }
+  if (asmts.length > 0) {
+    lines.push("");
+    lines.push("Assessments over time (oldest to newest):");
+    const byInstrument = new Map<string, AssessmentEntry[]>();
+    for (const a of asmts) {
+      const arr = byInstrument.get(a.instrument) ?? [];
+      arr.push(a);
+      byInstrument.set(a.instrument, arr);
+    }
+    for (const [inst, entries] of byInstrument) {
+      const sorted = entries
+        .slice()
+        .sort((a, b) => a.date.localeCompare(b.date) || a.timestamp.localeCompare(b.timestamp))
+        .slice(-10); // bound the output to the 10 most recent per instrument
+      lines.push(`${inst}: ${sorted.map((e) => `${e.date} = ${e.total} (${e.severity})`).join("; ")}`);
+    }
   }
 
   if (retention && retention.totalActiveDays > 0) {
