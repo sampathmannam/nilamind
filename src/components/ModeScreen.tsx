@@ -27,6 +27,8 @@ import type { CheckInEntry } from "../types";
 import { secureLocal } from "../services/secureLocal";
 import { sendToNila } from "../services/sendToNila";
 import { NilaMode, NilaUiMessage, shouldBlockForCrisisAsync } from "../services/nilaSend";
+import { suppressNudgesForCrisis } from "../services/notifications";
+import SoftCrisisCard from "./SoftCrisisCard";
 import { getSessionChat, setSessionChat, clearSessionChat } from "../services/sessionChat";
 import { localLlmLoadState } from "../services/localLlm";
 import { safeDraftThoughtRecord, type ThoughtRecordDraft } from "../services/thoughtRecordDraft";
@@ -86,6 +88,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   const [sleepProdromeNudge, setSleepProdromeNudge] = useState<{ firing: boolean; detail: string } | null>(null);
   const [jitaiNudge, setJitaiNudge] = useState<JitaiDecision | null>(null);
   const [skillOffer, setSkillOffer] = useState<Skill | null>(null);
+  const [softCrisisCard, setSoftCrisisCard] = useState(false); // 2026-07-12 Wave 3: soft tier, classifier-only hits
   const [pactNotice, setPactNotice] = useState<PactNotice | null>(null); // #30: surfaced pact (the human bridge)
   const [confirmNewChat, setConfirmNewChat] = useState(false); // "new conversation" confirm dialog
   const [welcomeBack, setWelcomeBack] = useState<string | null>(null);
@@ -96,18 +99,31 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   // the transcript is never persisted/restored (keying the clear on a transient boolean re-persisted it on dismiss).
   const hadCrisisRef = useRef(false);
   const crisisPendingRef = useRef(false); // #5-out (re-audit): a sent turn whose async §9 verdict is still pending
-  // openCrisis(detected): `detected` = the model/gate FLAGGED a §9 crisis in the user's turn. Only then do we
-  // latch "never persist" + wipe the transcript + clear self-help cards (§9 precedence). A PROACTIVE open (the
-  // user tapping crisis resources) must NOT wipe their in-progress conversation (#6 re-audit) nor offer nothing.
-  const openCrisis = (detected = false) => {
+  // openCrisis(detected, source): `detected` = the model/gate FLAGGED a §9 crisis in the user's turn. Only then
+  // do we latch "never persist" + wipe the transcript + clear self-help cards (§9 precedence) — UNCONDITIONAL
+  // on `detected`, NOT gated by source, so a classifier-only hit gets the identical protection as a keyword
+  // hit. A PROACTIVE open (the user tapping crisis resources) must NOT wipe their in-progress conversation
+  // (#6 re-audit) nor offer nothing.
+  //
+  // `source` (2026-07-12 Wave 3, two-tier crisis surface): "classifier" renders the SOFT inline SoftCrisisCard
+  // instead of the full-screen CrisisOverlay — the deterministic keyword floor (source:"keyword"), a null/
+  // unspecified source (proactive taps, the arm-request branch, ambiguous/fail-closed cases), and every other
+  // existing call site all fall through unchanged to onOpenCrisis?.() — bit-for-bit the same full takeover as
+  // today. Only the RENDERING SURFACE differs by source; every other invariant above stays unconditional.
+  const openCrisis = (detected = false, source: "keyword" | "classifier" | null = null) => {
     if (detected) {
       hadCrisisRef.current = true;
       clearSessionChat();      // the flagged crisis turn must never persist/restore
       setSkillOffer(null);     // #7 (re-audit): don't offer coping-skill/protocol self-help in reply to a crisis
       setProtocolCard(null);
+      void suppressNudgesForCrisis(); // P6.4: latch no-nudge + yank queued pings, same as App.tsx's activateCrisis
     }
     setPactNotice(null); // §9 takes precedence over the gentle pact surface either way
     setWelcomeBack(null); // §9 also clears the welcome-back card
+    if (detected && source === "classifier") {
+      setSoftCrisisCard(true); // soft tier — inline card, no full takeover
+      return;
+    }
     onOpenCrisis?.();
   };
   const bottomRef = useRef<HTMLDivElement>(null); // #23: scroll-to-newest anchor
@@ -300,11 +316,13 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
         onDelta: (t: string) => {},
       });
       if (result.blocked) {
-        // §9 crisis: open the REAL crisis card (tappable lines + safety plan). #7 (re-audit): RETURN so we
-        // never fall through to the coping-skill / protocol self-help cards below — offering "this might help"
-        // in reply to a suicidal disclosure softens the §9 stop-everything posture. openCrisis(true) also
-        // latches "never persist" for this euphemistic (classifier-caught) turn.
-        openCrisis(true);
+        // §9 crisis: open the crisis surface (tappable lines + safety plan) — full takeover for a keyword hit,
+        // soft inline card for a classifier-only hit (2026-07-12 Wave 3). #7 (re-audit): RETURN so we never
+        // fall through to the coping-skill / protocol self-help cards below — offering "this might help" in
+        // reply to a suicidal disclosure softens the §9 stop-everything posture. openCrisis(true, ...) also
+        // latches "never persist" for this turn, unconditional on source. `?? "keyword"` fails closed to the
+        // full takeover if the source is ever ambiguous.
+        openCrisis(true, result.crisisSource ?? "keyword");
         if (result.reply) setMessages((prev) => [...prev, { role: "assistant", content: result.reply }]);
         return;
       }
@@ -699,6 +717,16 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
       {/* Input bar */}
       {!showCheckin && (
         <div className="px-4 py-3 border-t border-slate-800/50 space-y-2">
+{/* Soft crisis card (2026-07-12 Wave 3) — inline surface for a classifier-only §9 hit. Escalating opens the
+              REAL full-takeover CrisisOverlay directly; dismissing only clears this card — it does NOT un-latch
+              hadCrisisRef or restore the wiped transcript (one-way door, same as a keyword hit today). */}
+          {softCrisisCard && (
+            <SoftCrisisCard
+              onEscalate={() => { setSoftCrisisCard(false); onOpenCrisis?.(); }}
+              onDismiss={() => setSoftCrisisCard(false)}
+            />
+          )}
+
 {showSafetyPlanReview && (
             <div
               className="w-full px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs"
