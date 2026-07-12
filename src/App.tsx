@@ -39,7 +39,10 @@ const LearnScreen = lazy(() => import("./components/LearnScreen"));
 const CrisisRehearsalScreen = lazy(() => import("./components/CrisisRehearsalScreen"));
 const PeerSupportScreen = lazy(() => import("./components/PeerSupportScreen"));
 const ProblemSolvingScreen = lazy(() => import("./components/ProblemSolvingScreen"));
-const ValuesWorkScreen = lazy(() => import("./components/ValuesWorkScreen"));
+// Wave 3 Group B: ValuesWorkScreen (uncited duplicate) retired from navigation — its data was migrated
+// into values.ts and it's no longer reachable from any hub. The file/service/data are kept intact
+// (never deleted) so migrateValuesWorkToVlq() can always read from them.
+const ValuesToActionScreen = lazy(() => import("./components/ValuesToActionScreen"));
 const ExposureHierarchyScreen = lazy(() => import("./components/ExposureHierarchyScreen"));
 const RelapsePlanScreen = lazy(() => import("./components/RelapsePlanScreen"));
 const EpisodeSupportScreen = lazy(() => import("./components/EpisodeSupportScreen"));
@@ -76,6 +79,7 @@ import { getArmedCheckin, armedCheckinBody } from "./services/armedCheckin";
 import { recordAppOpen } from "./services/retentionMetrics";
 import { getPilotState, markEndpointReminderScheduled, PILOT_ENDPOINT_REMINDER_BODY } from "./services/pilotStudy";
 import { getUserState } from "./services/modeEngine";
+import { runValuesMigrationIfNeeded, type ValuesMigrationResult } from "./services/values";
 import { computeAdaptiveMode, getAdaptiveCssClass } from "./services/adaptiveTheme";
 import { warmVoskStt } from "./services/voskStt";
 import { MessageSquare, LayoutGrid, User, X } from "lucide-react";
@@ -102,7 +106,6 @@ const AUX_LABELS: Partial<Record<AuxView, string>> = {
   crisis_rehearsal: "Crisis rehearsal",
   peer_support: "Peer support",
   problem_solving: "Problem solving",
-  values_work: "Values work",
   exposure: "Exposure hierarchy",
   relapse_plan: "Relapse prevention",
   behaviour: "Phone patterns",
@@ -135,7 +138,6 @@ function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () 
     case "crisis_rehearsal": return <CrisisRehearsalScreen />;
     case "peer_support": return <PeerSupportScreen />;
     case "problem_solving": return <ProblemSolvingScreen />;
-    case "values_work": return <ValuesWorkScreen />;
     case "exposure": return <ExposureHierarchyScreen />;
     case "relapse_plan": return <RelapsePlanScreen />;
     case "behaviour": return <DashboardScreen />;
@@ -156,6 +158,10 @@ export default function App() {
   const [groundingExpandIndex, setGroundingExpandIndex] = useState<number | undefined>(undefined);
   const [isMedicationOpen, setIsMedicationOpen] = useState(false);
   const [isCaregiverOpen, setIsCaregiverOpen] = useState(false);
+  // Wave 3 Group B: values_to_action is deliberately NOT a nav.ts aux view (see toolsRows.ts's header
+  // comment / nav.test.ts) — it gets its own sheet, same pattern as dashboard/medication/caregiver.
+  const [isValuesToActionOpen, setIsValuesToActionOpen] = useState(false);
+  const [valuesMigrationSummary, setValuesMigrationSummary] = useState<ValuesMigrationResult | null>(null);
   const [activeAuxView, setActiveAuxView] = useState<AuxView | null>(null);
   const [closingAuxView, setClosingAuxView] = useState<AuxView | null>(null);
   const [activeTab, setActiveTab] = useState<AppTab>("today");
@@ -204,6 +210,16 @@ export default function App() {
   // Nothing is sent anywhere — the metric only leaves the device via the user-initiated export.
   useEffect(() => {
     recordAppOpen();
+  }, []);
+
+  // Wave 3 Group B one-time migration: fold valuesWork.ts (uncited duplicate) data into values.ts (the
+  // VLQ-cited tool), additive/merge-only, runs at most once per install (runValuesMigrationIfNeeded's own
+  // flag). Only surfaces the summary banner when there was actually something to report.
+  useEffect(() => {
+    const result = runValuesMigrationIfNeeded();
+    if (result && (result.migratedRatings > 0 || result.migratedActions > 0 || result.notMigrated.length > 0)) {
+      setValuesMigrationSummary(result);
+    }
   }, []);
 
   // If enrolled in the opt-in research pilot, schedule the single endpoint check-in reminder once. The body
@@ -288,6 +304,9 @@ export default function App() {
     if (res.kind === "unknown") {
       if (res.target === "caregiver") { setIsCaregiverOpen(true); return; }
       if (res.target === "grounding" || res.target === "breathing") { setIsGroundingOpen(true); return; }
+      // values_to_action resolves "unknown" here deliberately — it is NOT in nav.ts's KNOWN_AUX_VIEWS
+      // (see nav.test.ts, PLAN_OF_ACTION A6); it gets its own sheet instead of the generic aux system.
+      if (res.target === "values_to_action") { setIsValuesToActionOpen(true); return; }
     }
   }, [activateCrisis]);
 
@@ -304,13 +323,14 @@ export default function App() {
       if (isGroundingOpen) { setIsGroundingOpen(false); return; }
       if (isMedicationOpen) { setIsMedicationOpen(false); return; }
       if (isCaregiverOpen) { setIsCaregiverOpen(false); return; }
+      if (isValuesToActionOpen) { setIsValuesToActionOpen(false); return; }
       if (activeAuxView) { setActiveAuxView(null); return; }
       if (modeScreenHasSheet) { setModeScreenHasSheet(false); return; }
       if (activeTab !== "nila") { setActiveTab("nila"); return; }
       void CapApp.exitApp();
     }).then((h) => { handle = h; if (removed) h.remove(); });
     return () => { removed = true; handle?.remove(); };
-  }, [isCrisisOpen, isSettingsOpen, isDashboardOpen, isGroundingOpen, isMedicationOpen, isCaregiverOpen, activeAuxView, activeTab, modeScreenHasSheet]);
+  }, [isCrisisOpen, isSettingsOpen, isDashboardOpen, isGroundingOpen, isMedicationOpen, isCaregiverOpen, isValuesToActionOpen, activeAuxView, activeTab, modeScreenHasSheet]);
 
   // Route a tapped local notification to its screen via the existing go() router. Fires for EVERY tapped
   // notification (daily/med/armed/ema); we route ONLY on a recognised content-free {view} payload and no-op
@@ -381,6 +401,25 @@ export default function App() {
           <span className="font-semibold text-amber-300">Save issue:</span>
           <span>Some changes couldn't be saved.</span>
           <button onClick={() => setSaveWarning(false)} className="ml-auto text-amber-400 hover:text-amber-200 cursor-pointer">Dismiss</button>
+        </div>
+      )}
+
+      {/* Wave 3 Group B one-time values-migration summary */}
+      {valuesMigrationSummary && (
+        <div className="bg-violet-500/10 border-b border-violet-500/25 px-4 py-2.5 flex items-start gap-2 text-[11px] text-violet-200/90 z-40 shrink-0" id="values-migration-banner">
+          <span>
+            We combined your two values tools — {valuesMigrationSummary.migratedRatings} rating{valuesMigrationSummary.migratedRatings === 1 ? "" : "s"} carried over
+            {valuesMigrationSummary.notMigrated.length > 0
+              ? `, ${valuesMigrationSummary.notMigrated.length} item${valuesMigrationSummary.notMigrated.length === 1 ? "" : "s"} need a quick look`
+              : ""}.
+          </span>
+          <button
+            onClick={() => { setValuesMigrationSummary(null); setIsValuesToActionOpen(true); }}
+            className="ml-auto shrink-0 text-violet-300 hover:text-violet-100 cursor-pointer font-semibold"
+          >
+            View
+          </button>
+          <button onClick={() => setValuesMigrationSummary(null)} className="shrink-0 text-violet-400 hover:text-violet-200 cursor-pointer">Dismiss</button>
         </div>
       )}
 
@@ -527,6 +566,20 @@ export default function App() {
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto p-4">
             <Suspense fallback={<ScreenFallback />}><CaregiverShareScreen /></Suspense>
+          </div>
+        </div>
+      )}
+
+      {/* Values to Action sheet — wave 3 Group B; deliberately outside nav.ts's generic aux system
+          (see the go() unknown-branch comment above), same pattern as Dashboard/Medication/Caregiver. */}
+      {isValuesToActionOpen && (
+        <div className="fixed inset-0 z-50 bg-page flex flex-col animate-slide-in" id="values-to-action-sheet">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
+            <span className="text-sm font-semibold text-slate-100">Values to action</span>
+            <button onClick={() => setIsValuesToActionOpen(false)} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Close"><X className="w-4 h-4" aria-hidden="true" /></button>
+          </div>
+          <div className="flex-1 min-h-0 overflow-y-auto p-4">
+            <Suspense fallback={<ScreenFallback />}><ValuesToActionScreen /></Suspense>
           </div>
         </div>
       )}
