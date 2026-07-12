@@ -7,7 +7,7 @@
 // reachedAI:false so the caller shows the offline experience — it never silently falls back to the cloud
 // (that would break the user's on-device/privacy choice).
 
-import { buildNilaSystem, explainerQuestionSteer, type NilaMessage } from "./nila";
+import { buildNilaSystem, explainerQuestionSteer, consecutiveQuestionSteer, type NilaMessage } from "./nila";
 import { generateGuarded, isLocalLlmReady } from "./localLlm";
 import { detectElevationRisk, elevationGuardNote, elevationOutputNote, type ElevationLevel } from "./elevationGuard";
 import { emaElevationSignal } from "./ema";
@@ -83,6 +83,14 @@ export async function askNilaLocalStream(
   // reflects instead of lecturing. Exemplar-RAG alone lost to Qwen's lecture default on these (2026-07-12).
   const explainerSteer = explainerQuestionSteer(lastUser);
   if (explainerSteer) system += "\n\n" + explainerSteer;
+
+  // alliance-voice (2026-07-12 clinical research wave 2): consecutive-question cap. If Nila's own last two
+  // replies both ended in "?", steer THIS turn toward reflection only — see the GUARDRAIL comment on
+  // consecutiveQuestionSteer in nila.ts before treating this as a reflections:questions ratio (it isn't
+  // one; Magill et al. 2018 found the ratio itself isn't outcome-linked).
+  const recentNilaReplies = messages.filter((m) => m.role === "assistant").map((m) => m.content);
+  const questionCapSteer = consecutiveQuestionSteer(recentNilaReplies);
+  if (questionCapSteer) system += "\n\n" + questionCapSteer;
 
   try {
     // generateGuarded races a hang-timeout (Gate 6) so a true native deadlock still falls back to the

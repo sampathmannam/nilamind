@@ -100,3 +100,47 @@ describe("on-device transport — selection + §9 gates", () => {
     expect(r.reachedAI).toBe(false);
   });
 });
+
+// alliance-voice (2026-07-12 clinical research wave 2): consecutiveQuestionSteer is wired into the
+// real send path here (not just unit-tested as a pure function in nilaVoice.test.ts) — "wire what you
+// build" (AGENTS.md).
+describe("consecutive-question cap wired into the companion system prompt", () => {
+  it("steers toward reflection-only once Nila's own last two replies both ended in '?'", async () => {
+    let capturedSystem = "";
+    registerLocalLlmBackend({
+      id: "capture",
+      isReady: () => true,
+      generate: async ({ system, onToken }) => { capturedSystem = system; onToken("ok"); return "ok"; },
+    });
+    const history = [
+      { role: "user" as const, content: "hi" },
+      { role: "assistant" as const, content: "how are you feeling today?" },
+      { role: "user" as const, content: "not great" },
+      { role: "assistant" as const, content: "what's been the hardest part?" },
+      { role: "user" as const, content: "just tired" },
+    ];
+    const r = await sendToNila(history, "companion", noop);
+    expect(r.reachedAI).toBe(true);
+    expect(capturedSystem.toLowerCase()).toContain("stance for this message");
+    expect(capturedSystem.toLowerCase()).toMatch(/do not ask another question/);
+  });
+
+  it("stays silent (no cap steer) when Nila's last reply was NOT a question", async () => {
+    let capturedSystem = "";
+    registerLocalLlmBackend({
+      id: "capture",
+      isReady: () => true,
+      generate: async ({ system, onToken }) => { capturedSystem = system; onToken("ok"); return "ok"; },
+    });
+    const history = [
+      { role: "user" as const, content: "hi" },
+      { role: "assistant" as const, content: "how are you feeling today?" },
+      { role: "user" as const, content: "not great" },
+      { role: "assistant" as const, content: "that sounds heavy. I'm glad you told me." },
+      { role: "user" as const, content: "just tired" },
+    ];
+    const r = await sendToNila(history, "companion", noop);
+    expect(r.reachedAI).toBe(true);
+    expect(capturedSystem.toLowerCase()).not.toMatch(/do not ask another question/);
+  });
+});

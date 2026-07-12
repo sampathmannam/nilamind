@@ -143,10 +143,21 @@ export function spotDistortions(text: string): DistortionMatch[] {
   return matches;
 }
 
+/** alliance-voice (2026-07-12 clinical research wave 2): sequence VALIDATE first, challenge SECOND, and
+ *  ask AT MOST ONE question — even when several distortions matched in one message. Invalidation-first
+ *  replies raise arousal where validation lowers it, per Shenk & Fruzzetti (2011), J Social and Clinical
+ *  Psychology; the challenging QUESTION itself carries the evidence (Socratic questioning predicts
+ *  next-session symptom change), so one well-placed question beats a stacked checklist, per Braun,
+ *  Strunk, Sasso & Cooper (2015), Behaviour Research and Therapy. Only the FIRST matched distortion is
+ *  surfaced as the question — the rest stay unmentioned this turn rather than piling on. */
 export function distortionSteer(matches: DistortionMatch[]): string {
   if (matches.length === 0) return "";
-  const suggestions = matches.map((m) => `- ${m.label}: "${m.phrase}" → ${m.question}`);
-  return ["GENTLE NOTICE — you spotted some thinking patterns (hold lightly, never as a verdict):", ...suggestions].join("\n");
+  const top = matches[0];
+  return [
+    "GENTLE NOTICE — their message touched a thinking pattern common under stress (hold lightly, never as a verdict).",
+    "VALIDATE the feeling first, in your own words, before anything else.",
+    `Only after they feel heard, you may offer AT MOST ONE gentle question to test the thought — never stack more than one, even if several patterns are present: "${top.label}": "${top.phrase}" → ${top.question}`,
+  ].join("\n");
 }
 
 export type SafeSpotResult =

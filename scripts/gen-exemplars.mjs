@@ -20,7 +20,12 @@ const rows = readFileSync(SRC, "utf8")
     if (!o.id || !o.tag || !o.user || !o.nila) {
       throw new Error(`seed.jsonl line ${i + 1} missing id/tag/user/nila`);
     }
-    return { id: o.id, tag: o.tag, user: o.user, nila: o.nila };
+    // move/register are optional alliance-voice metadata (2026-07-12 wave 2) — pass through when present,
+    // omit the key entirely otherwise so older rows without them stay byte-identical.
+    const row = { id: o.id, tag: o.tag, user: o.user, nila: o.nila };
+    if (o.move) row.move = o.move;
+    if (o.register) row.register = o.register;
+    return row;
   });
 
 const body = rows.map((r) => "  " + JSON.stringify(r) + ",").join("\n");
@@ -35,6 +40,11 @@ const out =
   `  /** situation type (taxonomy) */\n  tag: string;\n` +
   `  /** the user turn — the retrieval key (embedded) */\n  user: string;\n` +
   `  /** the gold reply — injected as the example to imitate */\n  nila: string;\n` +
+  `  /** conversational move (e.g. "validate+challenge-one-question") — alliance-voice metadata, not yet\n` +
+  `   *  consumed by retrieval; forward-prep for the Wave-3 register-aware filter. Optional: older rows may lack it. */\n  move?: string;\n` +
+  `  /** intensity register (e.g. "mild"/"moderate"/"distressed") — alliance-voice metadata, not yet\n` +
+  `   *  consumed by retrieval; forward-prep for the Wave-3 register-aware filter, per Son, Koo, Zi, Jang &\n` +
+  `   *  Lim (2026), Expert Systems with Applications (register mismatch lowers perceived support). Optional. */\n  register?: string;\n` +
   `}\n\n` +
   `export const NILA_EXEMPLARS: NilaExemplar[] = [\n${body}\n];\n`;
 

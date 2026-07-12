@@ -5,6 +5,7 @@
 
 import { getCrisisLines, crisisDigits } from "./services/crisisResources";
 import { recordRule6Fire } from "./services/antiSycophancyMetrics";
+import { spotDistortions } from "./services/distortionSpotter";
 
 export const SUICIDAL_KEYWORDS = [
   "kill myself", "killing myself", "killed myself", // gerund/past: "thinking about KILLING myself" must trip
@@ -606,6 +607,13 @@ export function isBenignOkayReassurance(message: string): boolean {
 // instead of a genuinely good, anti-sycophantic reply.
 const CONTRAST_MARKERS = /\b(but|however|though|although|doesn'?t mean|does not mean|that doesn'?t|yet you|still,? (that|you))\b/i;
 
+// checkResponse Rule 7 (distortion-echo, 2026-07-12 alliance-voice): unqualified agreement openers — the
+// "you're right"/"that's true" family a reply uses to stealth-agree with a distortion the user just voiced.
+// Kept to open-ended agreement markers (not the specific distortion content itself, which varies by
+// paraphrase) so the rule generalizes beyond any fixed phrase list, per Au Yeung, Dalmasso, Foschini,
+// Dobson & Kraljevic (2025), arXiv preprint.
+const DISTORTION_AGREEMENT_OPENERS = /\b(you'?re (so |absolutely |completely |totally )?right|you are (so |absolutely |completely |totally )?right|that'?s (so |absolutely |completely |totally )?true|exactly right|100% right)\b/gi;
+
 /**
  * True if a contrast/refutation marker appears near a DISTORTION_AGREEMENTS match. Checked in BOTH
  * directions (not just after the match): a reframe can put the contrast BEFORE the closing restatement of
@@ -692,6 +700,22 @@ export function checkResponse(aiReply: string, userMessage: string, userInCrisis
     if (replyNorm.includes(affirmation)) {
       recordRule6Fire();
       return false;
+    }
+  }
+
+  // Rule 7: distortion-echo — stealth sycophantic agreement with a cognitive distortion the user's own
+  // message just displayed. A fixed phrase list (DISTORTION_AGREEMENTS/Rule 3) can't catch every paraphrase
+  // of "you're right — they never listen to you"; this rule instead re-runs the deterministic distortion
+  // detector on the USER's message and rejects a reply that opens with an unqualified agreement marker
+  // near the echo, unless a contrast/refutation marker is nearby (same rescue as Rule 3's
+  // hasNearbyContrast, so a genuine "you're right that it feels awful, but that doesn't mean..." reframe
+  // stays safe). Citing Au Yeung, Dalmasso, Foschini, Dobson & Kraljevic (2025), arXiv preprint: stealth
+  // sycophantic agreement is a documented LLM harm mechanism verbatim phrase lists structurally miss.
+  if (spotDistortions(userMessage).length > 0) {
+    const re = new RegExp(DISTORTION_AGREEMENT_OPENERS.source, DISTORTION_AGREEMENT_OPENERS.flags);
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(replyNorm)) !== null) {
+      if (!hasNearbyContrast(replyNorm, m.index, m.index + m[0].length)) return false;
     }
   }
 

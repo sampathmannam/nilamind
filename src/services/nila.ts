@@ -100,6 +100,31 @@ export const USE_SHORT_PERSONA = true;
  *  explanation/list. Appended LAST (most salient, right before generation) and specific to THIS turn, it
  *  reliably flips even a strong instruction-follower (Qwen) into the companion move. Empty for non-explainer
  *  messages. Diagnosed 2026-07-12: exemplar-RAG alone lost to Qwen's lecture default on "why" questions. */
+/** gad-worry synthesis item (moved into Task F — same file, same wave): when the "why/how" question is
+ *  specifically about anxiety, ground the ONE permitted plain-sentence fact in the app's own evidence-cited
+ *  `anxiety-alarm` psychoed card (searchPsychoed) instead of letting the small on-device model freely
+ *  paraphrase an uncontrolled explanation. Psychoeducation alone has only a small, anxiety-unproven effect,
+ *  so the one sentence we do allow should be anchored to cited content, not invented — citing Donker,
+ *  Griffiths, Cuijpers & Christensen (2009), BMC Medicine. Returns "" when the top psychoed match isn't the
+ *  anxiety-alarm card (i.e. this "why" question isn't about anxiety) — every other explainer topic keeps
+ *  the existing free-generation instruction above, unchanged. */
+// Tight gate mirroring the anxiety-alarm psychoed card's own tags (psychoed.ts) — deliberately NOT a
+// generic top-1-of-searchPsychoed pick: full-corpus lexical ranking on a short "why"/"what" query can be
+// won by an unrelated card sharing a high-weight title token (e.g. "why avoiding makes fear bigger" beats
+// "anxiety-alarm" on the word "makes" alone). The gate decides WHETHER this is an anxiety explainer
+// question; searchPsychoed still does the actual lookup of the card's evidence-cited content.
+const ANXIETY_EXPLAINER_RE = /\b(anxious|anxiety|nervous|racing heart|tight chest|panick?y|panicked)\b/i;
+
+function anxietyExplainerAnchor(lastUser: string): string {
+  if (!ANXIETY_EXPLAINER_RE.test(lastUser)) return "";
+  const card = searchPsychoed(lastUser).find((t) => t.id === "anxiety-alarm");
+  if (!card) return "";
+  return (
+    " If they clearly just want the one-sentence fact, ground it in this — don't invent a different " +
+    `explanation: ${card.summary} (${card.basis})`
+  );
+}
+
 export function explainerQuestionSteer(lastUser: string): string {
   const t = (lastUser || "").trim().toLowerCase();
   const isExplainer =
@@ -112,7 +137,29 @@ export function explainerQuestionSteer(lastUser: string): string {
     "or a list of reasons — that is the single thing to avoid here. In one or two short sentences, reflect " +
     "the feeling underneath the question, then ask one gentle question back. If they clearly only want the " +
     "fact, give it in a single plain sentence, then turn it back to them. Never a numbered list, never " +
-    "\"here are the reasons.\""
+    "\"here are the reasons.\"" +
+    anxietyExplainerAnchor(lastUser)
+  );
+}
+
+/** Consecutive-question cap: if Nila's own last TWO replies each ended with "?", steer THIS turn toward
+ *  reflection only. NOT because reflections:questions have a magic ratio — Magill et al. (2018), J
+ *  Consulting and Clinical Psychology, found the ratio itself isn't outcome-linked, and He, Basar, Wiers,
+ *  Antheunis & Krahmer (2022), BMC Public Health, found MI-style framing showed no engagement/alliance
+ *  advantage over a neutral chatbot. This is a burnout/interrogation guard (two questions in a row starts
+ *  to read as an interrogation, not a conversation), not a prescribed cadence.
+ *  GUARDRAIL — do NOT turn this into a hard-coded reflections:questions ratio, and do NOT add "MI-based"
+ *  marketing copy anywhere in the app on the strength of this function. A future contributor tempted to
+ *  "fix" this into a ratio should re-read Magill et al. (2018) first. */
+export function consecutiveQuestionSteer(recentNilaReplies: string[]): string {
+  const lastTwo = recentNilaReplies.slice(-2);
+  if (lastTwo.length < 2) return "";
+  const bothEndedInQuestion = lastTwo.every((r) => r.trim().endsWith("?"));
+  if (!bothEndedInQuestion) return "";
+  return (
+    "STANCE FOR THIS MESSAGE: your last two replies both ended in a question — that starts to feel like an " +
+    "interrogation, not a conversation. Do not ask another question this turn. Reflect what you're hearing " +
+    "instead, in your own words, and let it sit without a question mark."
   );
 }
 
@@ -157,13 +204,20 @@ const WELCOME_GREETING: Record<PartOfDay, string> = {
 
 /** PURE welcome composer (audit P2 #10). Returning users get a warm, shorter "good to see you again";
  *  first-timers get the full intro that names Nila. BOTH always disclose Nila is an AI, not a therapist —
- *  that honesty rail is non-negotiable (§9 / bot-disclosure law) and is never dropped for warmth. */
+ *  that honesty rail is non-negotiable (§9 / bot-disclosure law) and is never dropped for warmth.
+ *
+ *  alliance-voice (2026-07-12 clinical research wave 2): the first-time intro also sets a brief
+ *  expectation — being upfront that Nila is an AI, not hiding it, tends to make it easier to say the
+ *  honest thing. Known-machine status increases willingness to disclose, per Lucas, Gratch, King &
+ *  Morency (2014), Computers in Human Behavior; a working bond can form despite that disclosure within
+ *  ~5 days, per Darcy et al. (2021), JMIR Formative Research. We do NOT claim a bond is "sustained over
+ *  8 weeks" — that specific figure was checked against the synthesis and found unsupported; removed. */
 export function composeWelcome(ctx: { returning: boolean; part: PartOfDay }): string {
   const g = WELCOME_GREETING[ctx.part];
   if (ctx.returning) {
     return `${g} — really good to see you again. I'm still right here (an AI, not a therapist, but in your corner). How are you doing right now?`;
   }
-  return `${g} — I'm really glad you're here. I'm Nila. Think of me as a friend in your corner who gets this stuff (I'm an AI, not a therapist, but I'm here alongside you). No agenda — how are you doing right now?`;
+  return `${g} — I'm really glad you're here. I'm Nila. Think of me as a friend in your corner who gets this stuff (I'm an AI, not a therapist, but I'm here alongside you) — and for a lot of people, knowing that upfront makes it easier to say the honest thing. No agenda — how are you doing right now?`;
 }
 
 /** Live welcome: warm and varying — knows whether Nila has met this person before (any on-device history)
