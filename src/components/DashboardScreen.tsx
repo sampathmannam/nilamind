@@ -160,6 +160,57 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
       : `${base} — up ${r1(delta)} from last week. Be gentle with yourself; harder stretches happen.`;
   })();
 
+  // Monthly narrative — "your month in a word"
+  const monthlyNarrative = (() => {
+    if (mood.length < 7) return null;
+    const today = new Date();
+    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    const monthMood = mood.filter((m) => new Date(m.date + "T00:00:00") >= monthStart && m.intensity != null);
+    if (monthMood.length < 7) return null;
+    const intensities = monthMood.map((m) => m.intensity!);
+    const avgIntensity = r1(avg(intensities)!);
+    const minIntensity = Math.min(...intensities);
+    const maxIntensity = Math.max(...intensities);
+    
+    // Determine the "word" based on average
+    let word = "steady";
+    if (avgIntensity <= 3) word = "calm";
+    else if (avgIntensity <= 5) word = "steady";
+    else if (avgIntensity <= 7) word = "choppy";
+    else word = "rough";
+    
+    // Emotion variety
+    const checkins = readArr<CheckInEntry>("nilamind_checkins");
+    const monthCheckins = checkins.filter((c) => {
+      const d = new Date(c.date + "T00:00:00");
+      return d >= monthStart && d <= today;
+    });
+    const emotions: Record<string, number> = {};
+    for (const c of monthCheckins) {
+      const em = (c.emotion || "").replace(/\s*\(Nila\)/g, "").toLowerCase().trim();
+      if (em) emotions[em] = (emotions[em] || 0) + 1;
+    }
+    let topEmotion = "";
+    let topCount = 0;
+    for (const [em, count] of Object.entries(emotions)) {
+      if (count > topCount) { topCount = count; topEmotion = em; }
+    }
+    
+    const daysLogged = monthCheckins.length;
+    const totalDays = today.getDate();
+    
+    return {
+      word,
+      avgIntensity,
+      minIntensity,
+      maxIntensity,
+      topEmotion: topEmotion || null,
+      daysLogged,
+      totalDays,
+      checkinCount: monthCheckins.length,
+    };
+  })();
+
   const runDeepAssessment = async () => {
     setIsAssessing(true);
     setAssessmentResult(null);
@@ -241,13 +292,42 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
         <p className="text-xs text-slate-400 leading-relaxed">Your local sections stay only on your device. A picture of how you're doing over time.</p>
       </header>
 
-      {/* This-week summary */}
-      <div className="bg-blue-500/5 border border-blue-500/20 rounded-2xl p-4">
-        <div className="text-[10px] uppercase font-mono tracking-widest text-blue-400 mb-1">This week</div>
-        <p className="text-sm text-slate-200 leading-relaxed">{moodSummary}</p>
-      </div>
+{/* This-week summary */}
+       <div className="bg-blue-500/5 border border-blue-500/20 rounded-2xl p-4">
+         <div className="text-[10px] uppercase font-mono tracking-widest text-blue-400 mb-1">This week</div>
+         <p className="text-sm text-slate-200 leading-relaxed">{moodSummary}</p>
+       </div>
 
-      {/* Top stats */}
+       {/* Monthly narrative */}
+       {monthlyNarrative && (
+         <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4">
+           <div className="text-[10px] uppercase font-mono tracking-widest text-emerald-400 mb-1">Your month</div>
+           <p className="text-sm text-slate-200 leading-relaxed">
+             This month has been <span className="font-semibold text-slate-100">{monthlyNarrative.word}</span>{" "}
+             with mood averaging <span className="font-semibold text-slate-100">{monthlyNarrative.avgIntensity}/10</span> (
+             {monthlyNarrative.minIntensity}-{monthlyNarrative.maxIntensity}).{" "}
+             {monthlyNarrative.topEmotion && (
+               <>
+                 You've felt most often <span className="font-semibold text-slate-100">{monthlyNarrative.topEmotion}</span>{" "}
+                 ({monthlyNarrative.topEmotion === "calm" ? "peaceful moments" :
+                   monthlyNarrative.topEmotion === "anxious" ? "worried thoughts" :
+                   monthlyNarrative.topEmotion === "sad" ? "low feelings" :
+                   monthlyNarrative.topEmotion === "angry" ? "frustrated moments" :
+                   monthlyNarrative.topEmotion === "hopeful" ? "optimistic sparks" :
+                   monthlyNarrative.topEmotion}).
+               </>
+             )}
+             You've checked in {monthlyNarrative.daysLogged}/{monthlyNarrative.totalDays} days — {" "}
+             {monthlyNarrative.daysLogged >= 15
+               ? "strong consistency this month!"
+               : monthlyNarrative.daysLogged >= 8
+               ? "good momentum building."
+               : "every check-in adds clarity — keep going."}
+           </p>
+         </div>
+       )}
+
+       {/* Top stats */}
       <div className="grid grid-cols-3 gap-2">
         <Stat icon={<Flame className="w-4 h-4 text-amber-400" />} value={String(streak.current)} label="day streak" />
         <Stat icon={<CalendarCheck className="w-4 h-4 text-emerald-400" />} value={`${freq14}/14`} label="days logged" />

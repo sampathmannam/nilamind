@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, ShieldCheck, Sparkles, Settings as SettingsIcon,
-  Brain, Compass, BookOpen, Users, Info, TrendingUp,
+  Brain, BookOpen, Users, Info, TrendingUp,
   type LucideIcon,
 } from "lucide-react";
 
@@ -41,7 +41,6 @@ export function buildYouGroups(): YouGroup[] {
       title: "Resources",
       rows: [
         { id: "thought_record", label: "Thought record", sub: "CBT reframing workbook", Icon: Brain, iconClass: "w-5 h-5 text-blue-400" },
-        { id: "values_to_action", label: "Values to action", sub: "What matters → small steps you take", Icon: Compass, iconClass: "w-5 h-5 text-blue-400" },
         { id: "learn", label: "Learn", sub: "Skills, explainers & research — one library", Icon: BookOpen, iconClass: "w-5 h-5 text-blue-400" },
         { id: "insights", label: "Your patterns", sub: "Sleep, screen time, movement & mood", Icon: TrendingUp, iconClass: "w-5 h-5 text-emerald-400" },
       ],
