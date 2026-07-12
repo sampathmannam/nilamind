@@ -6,6 +6,7 @@ import { generateInsights, assessmentInsights, type Insight, type MoodPoint } fr
 import { detectInflections, type InflectionSignal, topFireableSignal } from "./nilaInflection";
 import { getInflectionEnabled } from "./inflectionPrefs";
 import { assessJitai, type JitaiDecision } from "./jitaiEngine";
+import { computeUsageSummary } from "./usageAnalytics";
 import { loadActivities, computeInsight, type BAActivityLog } from "./behaviouralActivation";
 import { computeCompassionateStreak } from "./streaks";
 import { detectElevationRisk } from "./elevationGuard";
@@ -124,6 +125,7 @@ export function runStateEngine(params: {
     moodHistory: params.mood,
     lastUserText: params.lastUserText,
     daysSinceLastCheckin: params.daysSinceLastCheckin,
+    usageAnalytics: computeUsageSummary(),
   });
 
   // ── 7. BA summary ─────────────────────────────────────────────────────────

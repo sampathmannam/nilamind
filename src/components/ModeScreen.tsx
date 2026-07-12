@@ -43,6 +43,7 @@ import { parseSafetyPlan } from "../services/safetyPlan";
 import { shouldPromptReview, isFirstFollowUpDue, markFirstFollowUpDone, markSafetyPlanReviewed } from "../services/safetyPlanFollowUp";
 import { selfReportSleepSignal } from "../services/sleepInsight";
 import { assessJitai, type JitaiDecision } from "../services/jitaiEngine";
+import { computeUsageSummary } from "../services/usageAnalytics";
 import { loadMoodHistory } from "../services/moodHistory";
 import { computeCompassionateStreak } from "../services/streaks";
 import { Settings, Mic, Send, MicOff, X, ShieldCheck, ThumbsUp, ThumbsDown, MessageCircle, Brain, Moon, SquarePen } from "lucide-react";
@@ -166,6 +167,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           moodHistory: moodHist,
           lastUserText: messages.filter(m => m.role === "user").pop()?.content,
           daysSinceLastCheckin,
+          usageAnalytics: computeUsageSummary(),
         });
         if (!cancelled) setJitaiNudge(jitai);
       } catch { /* best-effort */ }

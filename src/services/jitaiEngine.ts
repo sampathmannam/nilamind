@@ -3,6 +3,7 @@ import { loadMoodHistory } from "./moodHistory";
 import { safeSpotDistortions } from "./distortionSpotter"; // 🟡 Safety: Jitai now uses §9‑gated distortion check, needs review
 import { detectElevationRisk } from "./elevationGuard";
 import type { SleepSignal } from "./healthConnect";
+import type { UsageSummary } from "./usageAnalytics";
 
 export type JitaiTrigger =
   | "sleep_prodrome"
@@ -17,6 +18,8 @@ export interface JitaiDecision {
   severity: "gentle" | "noticeable" | "urgent";
   nudgeText: string;
   suggestedTool: string | null;
+  /** Recommended protocol id based on detected patterns, or null if none fits. */
+  protocolRecommendation: string | null;
 }
 
 const NUDGES: Record<JitaiTrigger, { text: string; tool: string | null; severity: "gentle" | "noticeable" | "urgent" }> = {
@@ -47,11 +50,76 @@ const NUDGES: Record<JitaiTrigger, { text: string; tool: string | null; severity
   },
 };
 
+/** Pick a protocol recommendation based on current triggers + usage pattern. */
+function recommendProtocol(
+  triggers: JitaiTrigger[],
+  lastUserText: string | undefined,
+  usageAnalytics: UsageSummary | undefined,
+): string | null {
+  if (!usageAnalytics || usageAnalytics.totalCheckins < 3) return null;
+
+  const text = (lastUserText || "").toLowerCase();
+  const features = usageAnalytics.features;
+
+  // Emotion dysregulation pattern → recommend DBT skills
+  if (
+    triggers.includes("mood_deterioration") ||
+    text.match(/intense|overwhelming|can't cope|cant cope|outburst|explosive|mood swing/i)
+  ) {
+    if (!features.includes("values_snapshot") || !features.includes("diary_cards")) {
+      return "dbt-skills-training";
+    }
+  }
+
+  // Stuck/avoidance/rumination pattern → recommend ACT
+  if (
+    triggers.includes("high_distortion") ||
+    text.match(/stuck|avoid|ruminat|overthink|fighting|can't accept|cant accept/i)
+  ) {
+    if (!features.includes("episode_records")) {
+      return "act-training";
+    }
+  }
+
+  return null;
+}
+
+/** Pick a personalised nudge text when usage data is available. */
+function personaliseNudge(
+  trigger: JitaiTrigger,
+  base: string,
+  usageAnalytics: UsageSummary | undefined,
+): string {
+  if (!usageAnalytics || usageAnalytics.totalCheckins < 3) return base;
+
+  const features = usageAnalytics.features;
+
+  if (trigger === "inactivity") {
+    if (features.includes("values_snapshot")) {
+      return "It's been a while — your Values Compass snapshot might be worth revisiting. What matters to you right now?";
+    }
+    if (usageAnalytics.checkinFrequency > 0.5) {
+      return "You've been checking in regularly — a quick mood check keeps your trend going. How's your day been?";
+    }
+  }
+
+  if (trigger === "mood_deterioration" && features.includes("values_snapshot")) {
+    return "Things feel heavier — and that can pull you away from what matters. A values check-in might help reconnect.";
+  }
+
+  if (trigger === "high_distortion" && usageAnalytics.topEmotion === "anxious") {
+    return "Anxiety has been common for you. When harsh self-talk shows up, checking the facts can loosen its grip.";
+  }
+
+  return base;
+}
+
 export function assessJitai(params: {
   sleep: SleepSignal | null;
   moodHistory: ReturnType<typeof loadMoodHistory>;
   lastUserText?: string;
   daysSinceLastCheckin: number;
+  usageAnalytics?: UsageSummary;
 }): JitaiDecision {
   const triggers: JitaiTrigger[] = [];
 
@@ -98,6 +166,7 @@ export function assessJitai(params: {
       severity: "gentle",
       nudgeText: "",
       suggestedTool: null,
+      protocolRecommendation: null,
     };
   }
 
@@ -109,8 +178,9 @@ export function assessJitai(params: {
     : "gentle";
 
   const primary = decisions[0];
-  const nudgeText = primary.text;
+  const nudgeText = personaliseNudge(triggers[0], primary.text, params.usageAnalytics);
   const suggestedTool = primary.tool;
+  const protocolRecommendation = recommendProtocol(triggers, params.lastUserText, params.usageAnalytics);
 
   return {
     shouldNudge: true,
@@ -118,5 +188,6 @@ export function assessJitai(params: {
     severity: maxSeverity as "gentle" | "noticeable" | "urgent",
     nudgeText,
     suggestedTool,
+    protocolRecommendation,
   };
 }

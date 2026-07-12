@@ -28,6 +28,7 @@ import { safetyPlanFollowUpContextBlock } from "./safetyPlanFollowUp";
 import { sleepHoursVariability, variabilityContextBlock } from "./sleepHoursVariability";
 import type { VariabilitySignal } from "./sleepHoursVariability";
 import { assessJitai } from "./jitaiEngine";
+import { computeUsageSummary } from "./usageAnalytics";
 // #8 (audit): these were pulled via CommonJS require() below, which throws "require is not defined" in the
 // ESM Capacitor WebView bundle and was swallowed by try/catch — so BA + proactive context silently never
 // reached Nila in production. Static ESM imports (no import cycle: neither module imports nilaContext).
@@ -258,7 +259,7 @@ export function buildPersonalContext(): string {
     if (moodHist.length > 0) {
       const lastCheckin = moodHist[moodHist.length - 1];
       const daysSinceLastCheckin = Math.max(0, Math.floor((Date.now() - new Date(lastCheckin.date).getTime()) / 86400000));
-      const jitai = assessJitai({ sleep: selfReportSleepSignal(), moodHistory: moodHist, daysSinceLastCheckin });
+      const jitai = assessJitai({ sleep: selfReportSleepSignal(), moodHistory: moodHist, daysSinceLastCheckin, usageAnalytics: computeUsageSummary() });
       if (jitai.shouldNudge) {
         jitaiNudge = `JUST-IN-TIME NUDGE (${jitai.severity}): ${jitai.nudgeText}`;
         if (jitai.suggestedTool) jitaiNudge += ` Suggested tool: ${jitai.suggestedTool}.`;
