@@ -18,7 +18,6 @@ import { loadInsights } from "../services/nilaInsights";
 import { loadRhythm, computeRhythmRegularity, parseTime, type RhythmEntry, type AnchorKey, type RhythmAnchors } from "../services/socialRhythm";
 import { loadMoodHistory } from "../services/moodHistory";
 import { computeCircadianFeedback } from "../services/circadianFeedback";
-import { getTodaySnapshot } from "../services/phoneBehaviour";
 import type { BehaviourSnapshot, AppCategory } from "../services/phoneBehaviour";
 import { loadMedications, loadMedicationLogs, adherenceRate, commonSideEffects } from "../services/medicationAdherence";
 import { nilaStats } from "../services/nilaSessions";
@@ -280,9 +279,9 @@ const handleExportFhir = async () => {
          }));
        // Return top 5 most recent
        return whatHelpedInsights.slice(0, 5);
-     } catch (error) {
-       console.error("Failed to load what_helps insights:", error);
-       return [];
+      } catch {
+        console.error("Failed to load what_helps insights");
+        return [];
      }
    };
 
@@ -403,17 +402,10 @@ anchorRegularity,
             locationVariety: number | null;
         };
     } => {
-        try {
-            // Try to get today's snapshot for basic data
-            getTodaySnapshot().then(snapshot => {
-                // Could use snapshot data here in future implementations
-            });
-        } catch {
-            // Silently handle - behavioral insights are optional
-        }
-        
-        // Return placeholder structure with null values
-        // indicating these would be computed with sufficient data
+        // Behavioral insights require longitudinal phone behaviour data (screen time, app usage,
+        // location variance) correlated with mood over time. The phoneBehaviour service currently
+        // only provides today's snapshot; historical correlations are not yet available.
+        // Returning nulls means the clinician report gracefully omits this section.
         return {
             screenTimeCorrelation: null,
             socialMediaCorrelation: null,
@@ -464,8 +456,8 @@ anchorRegularity,
                 contextInsights: grouped.contextInsights.slice(0, 3),
                 valuesClarified: grouped.valuesClarified.slice(0, 3)
             };
-        } catch (error) {
-            console.error("Failed to load user insights:", error);
+        } catch {
+            console.error("Failed to load user insights");
             return {
                 workingThrough: [],
                 patternsIdentified: [],

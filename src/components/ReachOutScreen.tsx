@@ -62,7 +62,7 @@ export default function ReachOutScreen() {
   function onDraftChange(v: string) {
     setDraft(v);
     if (crisisElevated) setCrisisElevated(false);
-    if (v.trim()) void detectCrisis(v).then((c) => { if (c) { setCrisisElevated(true); void suppressNudgesForCrisis(); } });
+    if (v.trim()) void detectCrisis(v).then((c) => { if (c) { setCrisisElevated(true); void suppressNudgesForCrisis(); } }).catch(() => { /* classifier unavailable — no crisis elevation */ });
   }
   function send() {
     const text = draft.trim();

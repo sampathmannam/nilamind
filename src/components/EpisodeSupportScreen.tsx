@@ -68,18 +68,26 @@ export default function EpisodeSupportScreen({
   const [guidedStep, setGuidedStep] = useState<"init" | "extreme_tipp_1" | "extreme_tipp_2" | "extreme_tipp_3" | "medium_racing" | "medium_harm" | "medium_shame" | "medium_panic" | "low_end">("init");
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Timer loop
   useEffect(() => {
-    let tInterval: any = null;
     if (timerActive) {
-      tInterval = setInterval(() => {
+      timerRef.current = setInterval(() => {
         setElapsedSeconds((prev) => prev + 1);
       }, 1000);
     } else {
-      if (tInterval) clearInterval(tInterval);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
     }
-    return () => clearInterval(tInterval);
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
   }, [timerActive]);
 
   // Scroll to bottom helper
@@ -315,7 +323,7 @@ export default function EpisodeSupportScreen({
             <CrisisLines tone="amber" />
             <button
               onClick={() => setEscalationShown(false)}
-              className="w-full bg-card border border-slate-800 text-xs text-slate-300 py-3 rounded-xl transition-all cursor-pointer hover:bg-slate-805 hover:bg-slate-800"
+              className="w-full bg-card border border-slate-800 text-xs text-slate-300 py-3 rounded-xl transition-all cursor-pointer hover:bg-slate-800"
             >
               Keep talking with Nila
             </button>
@@ -368,9 +376,9 @@ export default function EpisodeSupportScreen({
 
       {/* STAGE: ACTIVE CHAT VIEW */}
       {stage === "chat" && (
-        <div className="flex flex-col h-[76dvh] bg-page border border-slate-805 border-slate-800 rounded-2xl overflow-hidden relative" id="episode-chat-dock">
+        <div className="flex flex-col h-[76dvh] bg-page border border-slate-800 rounded-2xl overflow-hidden relative" id="episode-chat-dock">
           {/* Header Row */}
-          <div className="bg-card py-3.5 px-4 border-b border-slate-805 border-slate-800 flex justify-between items-center shrink-0">
+          <div className="bg-card py-3.5 px-4 border-b border-slate-800 flex justify-between items-center shrink-0">
             <button
               onClick={handleEndSession}
               className="text-xs text-slate-500 hover:text-slate-200 flex items-center gap-1 cursor-pointer transition-colors"
@@ -399,7 +407,7 @@ export default function EpisodeSupportScreen({
                   <div
                     className={`max-w-[85%] rounded-2xl px-4 py-3.5 text-sm leading-relaxed whitespace-pre-wrap ${
                       isUser
-                        ? "bg-card text-slate-200 border border-slate-805 border-slate-800"
+                        ? "bg-card text-slate-200 border border-slate-800"
                         : "bg-card text-slate-300 border-y border-r border-slate-850 border-l-4 border-l-amber-500 rounded-bl-none"
                     }`}
                   >
@@ -425,7 +433,7 @@ export default function EpisodeSupportScreen({
           </div>
 
           {/* Controls Segment */}
-          <div className="p-3 bg-card border-t border-slate-805 border-slate-800">
+          <div className="p-3 bg-card border-t border-slate-800">
             <div className="pb-2 space-y-1.5">
               <p className="text-[10px] text-slate-500 font-mono tracking-wider uppercase text-center">
                 Not a therapist. Not a diagnosis tool.
@@ -436,7 +444,7 @@ export default function EpisodeSupportScreen({
             </div>
             {isCrisisMode ? (
               <div className="space-y-2">
-                <div className="text-xs text-rose-450 text-rose-400 font-semibold text-center bg-rose-500/10 border border-rose-500/20 rounded-xl py-2 flex items-center justify-center gap-1.5">
+                <div className="text-xs text-rose-400 font-semibold text-center bg-rose-500/10 border border-rose-500/20 rounded-xl py-2 flex items-center justify-center gap-1.5">
                   <Shield className="w-3.5 h-3.5" /> Safety shielding active
                 </div>
                 <button
@@ -770,7 +778,7 @@ export default function EpisodeSupportScreen({
           </div>
 
           <div className="space-y-3">
-            <p className="text-xs text-slate-105 text-slate-300 font-bold block mb-1">
+            <p className="text-xs text-slate-300 font-bold block mb-1">
               What helped most during this session? Toggle helpers:
             </p>
             <div className="grid grid-cols-2 gap-2" id="debrief-skills-checklist">
@@ -822,14 +830,14 @@ export default function EpisodeSupportScreen({
             
             <div className="text-center space-y-1 border-l border-slate-800">
               <span className="text-[10px] text-slate-500 uppercase tracking-wide">Highest point</span>
-              <p className="text-4xl font-extrabold text-rose-450 text-rose-400 font-mono">
+              <p className="text-4xl font-extrabold text-rose-400 font-mono">
                 {Math.max(...intensityList, intensityList[0] || 8)}/10
               </p>
             </div>
           </div>
 
           <div className="space-y-3">
-            <p className="text-xs text-center text-slate-105 text-slate-200 font-bold">
+            <p className="text-xs text-center text-slate-200 font-bold">
               Where is your intensity rating ending up right now?
             </p>
             

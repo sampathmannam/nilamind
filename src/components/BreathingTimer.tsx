@@ -82,7 +82,7 @@ export default function BreathingTimer() {
   };
 
   const cfg = getBreathPattern(pattern);
-  const totalCycles = Math.floor(elapsed / (cfg.inhale + cfg.inhale2 + cfg.hold + cfg.exhale + cfg.hold2) / 1000 + 1);
+  const totalCycles = Math.floor(elapsed / ((cfg.inhale + cfg.inhale2 + cfg.hold + cfg.exhale + cfg.hold2) * 1000)) + 1;
   const targetReached = sessionTargetReached(elapsed);
 
   return (
