@@ -2,12 +2,13 @@ import { secureLocal } from "../services/secureLocal";
 import React, { useState, useEffect } from "react";
 import { DiaryCardEntry } from "../types";
 import { ALL_DIARY_DBT_SKILLS } from "../data";
-import { Check, Clipboard, Calendar, MessageSquare, Sparkles, Loader2 } from "lucide-react";
+import { Check, Clipboard, Calendar, MessageSquare, Sparkles, Loader2, Mic, MicOff } from "lucide-react";
 import Markdown from "react-markdown";
 import { analyzeQuickNote } from "../services/coachAssist";
 import { useTypingSession } from "../hooks/useTypingSession";
 import { hapticMedium } from "../hooks/useHaptics";
 import CrisisCard from "./CrisisCard";
+import { listenOnce, stopListening } from "../services/voice";
 
 export default function DiaryCardScreen() {
   const [selectedDate, setSelectedDate] = useState<string>(
@@ -30,6 +31,7 @@ export default function DiaryCardScreen() {
   const [isSaved, setIsSaved] = useState<boolean>(false);
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
+  const [voiceListening, setVoiceListening] = useState(false);
 
   const diaryTyping = useTypingSession("diary");
   const [crisis, setCrisis] = useState<boolean>(false);
@@ -262,6 +264,36 @@ export default function DiaryCardScreen() {
           <p className="text-[11px] text-slate-500">
             Jot down transient thoughts, observations, or brief reflections on your day.
           </p>
+          <button
+            onClick={async () => {
+              if (voiceListening) {
+                setVoiceListening(false);
+                stopListening();
+                return;
+              }
+              setVoiceListening(true);
+              try {
+                const text = await listenOnce();
+                if (text && text.trim()) {
+                  setQuickNotes((prev) => (prev ? prev + "\n" + text.trim() : text.trim()));
+                  setIsSaved(false);
+                }
+              } catch {
+                // best-effort
+              } finally {
+                setVoiceListening(false);
+              }
+            }}
+            className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium border cursor-pointer transition-all mb-2 ${
+              voiceListening
+                ? "bg-rose-500/20 border-rose-500/50 text-rose-300 animate-pulse"
+                : "border-slate-700 bg-card text-slate-400 hover:text-slate-200 hover:border-slate-600"
+            }`}
+            aria-label={voiceListening ? "Stop listening" : "Record a voice note"}
+          >
+            {voiceListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+            {voiceListening ? "Listening — tap to stop" : "Record voice note"}
+          </button>
           <textarea
             value={quickNotes}
             onChange={(e) => {

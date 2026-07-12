@@ -77,6 +77,7 @@ import { recordAppOpen } from "./services/retentionMetrics";
 import { getPilotState, markEndpointReminderScheduled, PILOT_ENDPOINT_REMINDER_BODY } from "./services/pilotStudy";
 import { getUserState } from "./services/modeEngine";
 import { computeAdaptiveMode, getAdaptiveCssClass } from "./services/adaptiveTheme";
+import { warmVoskStt } from "./services/voskStt";
 import { MessageSquare, LayoutGrid, User, X } from "lucide-react";
 import SheetContainer from "./components/SheetContainer";
 import { hapticLight } from "./hooks/useHaptics";
@@ -350,6 +351,10 @@ export default function App() {
       clearInterval(interval);
     };
   }, []);
+
+  // Phase 11: Warm the on-device Vosk STT model on app start so there's no delay
+  // on the first voice use. Fire-and-forget — errors are silently handled inside.
+  useEffect(() => { warmVoskStt(); }, []);
 
   return (
     <div className="relative isolate h-dvh bg-page text-slate-300 font-sans antialiased overflow-hidden flex flex-col">

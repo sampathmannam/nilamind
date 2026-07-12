@@ -46,7 +46,7 @@ import { assessJitai, type JitaiDecision } from "../services/jitaiEngine";
 import { computeUsageSummary } from "../services/usageAnalytics";
 import { loadMoodHistory } from "../services/moodHistory";
 import { computeCompassionateStreak } from "../services/streaks";
-import { Settings, Mic, Send, MicOff, X, ShieldCheck, ThumbsUp, ThumbsDown, MessageCircle, Brain, Moon, SquarePen } from "lucide-react";
+import { Settings, Mic, Send, MicOff, Keyboard, X, ShieldCheck, ThumbsUp, ThumbsDown, MessageCircle, Brain, Moon, SquarePen } from "lucide-react";
 import { hapticLight, hapticMedium } from "../hooks/useHaptics";
 import { recordFeedback } from "../services/nilaFeedback";
 
@@ -76,6 +76,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   const [inputText, setInputText] = useState(() => modeDraftCache); // #22: restore draft after a tab-switch remount
   const [loading, setLoading] = useState(false);
   const [listening, setListening] = useState(false);
+  const [showTextInput, setShowTextInput] = useState(false);
   const [auxView, setAuxView] = useState<"learn" | "thought_record" | "values_to_action" | "safety_plan" | null>(null);
   const [thoughtRecordDraft, setThoughtRecordDraft] = useState<ThoughtRecordDraft | undefined>();
   const [protocolCard, setProtocolCard] = useState<ProtocolCard | null>(() => protocolOfferCard(""));
@@ -336,11 +337,13 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   const handleVoice = async () => {
     if (listening) {
       setListening(false);
+      setShowTextInput(false);
       stopSpeaking();
       return;
     }
 
     setListening(true);
+    setShowTextInput(false);
     const vsId = startVoiceSession("chat");
     try {
       const text = await listenOnce();
@@ -891,43 +894,79 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           )}
 
           <div className="flex items-center gap-2">
-            <button
-              onClick={handleVoice}
-              className={`p-3 rounded-full transition-colors cursor-pointer ${
-                listening
-                  ? "bg-rose-500/20 text-rose-400 animate-pulse"
-                  : "bg-slate-800 text-slate-400 hover:text-slate-200"
-              }`}
-              aria-label={listening ? "Stop listening" : "Tap to talk"}
-            >
-              {listening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-            </button>
-            <input
-              type="text"
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              onKeyDown={(e) => {
-                chatTyping.onKeyDown(e);
-                if (e.key === "Enter") handleSendMessage();
-              }}
-              onKeyUp={chatTyping.onKeyUp}
-              onBlur={() => chatTyping.onBlur(inputText.length)}
-              onFocus={chatTyping.start}
-              placeholder="Type a message..."
-              className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500"
-            />
-            <button
-              onClick={() => handleSendMessage()}
-              disabled={!inputText.trim() || loading}
-              className={`p-3 rounded-xl transition-colors cursor-pointer ${
-                inputText.trim() && !loading
-                  ? "bg-blue-500/20 text-blue-400 hover:bg-blue-500/30"
-                  : "bg-slate-800 text-slate-500"
-              }`}
-              aria-label="Send"
-            >
-              <Send className="w-5 h-5" />
-            </button>
+            {showTextInput ? (
+              <>
+                <button
+                  onClick={handleVoice}
+                  className={`p-3 rounded-full transition-colors cursor-pointer shrink-0 ${
+                    listening
+                      ? "bg-rose-500/20 text-rose-400 animate-pulse"
+                      : "bg-slate-800 text-slate-400 hover:text-slate-200"
+                  }`}
+                  aria-label={listening ? "Stop listening" : "Tap to talk"}
+                >
+                  {listening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+                </button>
+                <input
+                  type="text"
+                  value={inputText}
+                  onChange={(e) => setInputText(e.target.value)}
+                  onKeyDown={(e) => {
+                    chatTyping.onKeyDown(e);
+                    if (e.key === "Enter") handleSendMessage();
+                  }}
+                  onKeyUp={chatTyping.onKeyUp}
+                  onBlur={() => chatTyping.onBlur(inputText.length)}
+                  onFocus={chatTyping.start}
+                  placeholder="Type a message..."
+                  className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                />
+                <button
+                  onClick={() => handleSendMessage()}
+                  disabled={!inputText.trim() || loading}
+                  className={`p-3 rounded-xl transition-colors cursor-pointer ${
+                    inputText.trim() && !loading
+                      ? "bg-blue-500/20 text-blue-400 hover:bg-blue-500/30"
+                      : "bg-slate-800 text-slate-500"
+                  }`}
+                  aria-label="Send"
+                >
+                  <Send className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={() => { if (!listening) setShowTextInput(false); }}
+                  className="p-2 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors cursor-pointer shrink-0"
+                  aria-label="Hide keyboard, show voice"
+                >
+                  <Mic className="w-5 h-5" />
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={handleVoice}
+                  className={`flex-1 flex items-center justify-center gap-3 py-4 rounded-2xl transition-all cursor-pointer ${
+                    listening
+                      ? "bg-rose-500/20 text-rose-400 animate-pulse"
+                      : "bg-slate-800 border border-slate-700 text-slate-300 hover:border-slate-600 hover:text-slate-100"
+                  }`}
+                  aria-label={listening ? "Tap to stop listening" : "Tap to speak"}
+                >
+                  {listening ? (
+                    <><MicOff className="w-6 h-6" /><span className="text-sm font-semibold">Listening — tap to stop</span></>
+                  ) : (
+                    <><Mic className="w-6 h-6" /><span className="text-sm font-semibold">Tap to speak</span></>
+                  )}
+                </button>
+                <button
+                  onClick={() => setShowTextInput(true)}
+                  className="p-3 rounded-xl bg-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-700 transition-colors cursor-pointer shrink-0"
+                  aria-label="Type a message"
+                >
+                  <Keyboard className="w-5 h-5" />
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}

@@ -27,7 +27,7 @@
  *   6. No double-writes: rapidly tapping context writes exactly one entry (doneRef guard).
  */
 
-import React, { useReducer, useRef, useMemo, useEffect } from "react";
+import React, { useReducer, useRef, useMemo, useEffect, useState } from "react";
 import type { CheckInEntry } from "../types";
 import {
   INITIAL_DRAFT,
@@ -39,6 +39,8 @@ import {
 } from "../services/nilaCheckinReducer";
 import { buildCheckinEntry, appendCheckin } from "../services/checkin";
 import { suggestGranularEmotions } from "../services/emotionGranularity";
+import { Mic, MicOff } from "lucide-react";
+import { listenOnce, stopListening } from "../services/voice";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -59,6 +61,7 @@ const STEP_LABELS = { mood: "How are you feeling?", intensity: "How strong is th
 export default function NilaCheckIn({ onLogged, onSkip }: NilaCheckInProps) {
   const [draft, dispatch] = useReducer(checkinReducer, INITIAL_DRAFT);
   const doneRef = useRef(false);
+  const [voiceListening, setVoiceListening] = useState(false);
 
   const suggestions = useMemo(
     () => (draft.step === "granularity" && draft.label ? suggestGranularEmotions(draft.label) : []),
@@ -92,6 +95,25 @@ export default function NilaCheckIn({ onLogged, onSkip }: NilaCheckInProps) {
     const resolved = resolveCheckin(draft, action);
     resolveAndPersist(resolved);
     dispatch(action);
+  };
+
+  const handleVoiceGranular = async () => {
+    if (voiceListening) {
+      setVoiceListening(false);
+      stopListening();
+      return;
+    }
+    setVoiceListening(true);
+    try {
+      const text = await listenOnce();
+      if (text && text.trim()) {
+        handleGranular(text.trim());
+      }
+    } catch {
+      // best-effort
+    } finally {
+      setVoiceListening(false);
+    }
   };
 
   // #10 (audit): the granularity step (and its only Skip button) renders nothing when there are no
@@ -234,13 +256,27 @@ export default function NilaCheckIn({ onLogged, onSkip }: NilaCheckInProps) {
                 </button>
               ))}
             </div>
-            <button
-              onClick={handleSkipGranular}
-              id="nila-checkin-skip-granular"
-              className="w-full py-2.5 rounded-xl text-sm font-medium border border-slate-800 bg-card text-slate-400 hover:text-slate-200 cursor-pointer transition-all"
-            >
-              Skip — &ldquo;{draft.label}&rdquo; is fine
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleVoiceGranular}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium border cursor-pointer transition-all ${
+                  voiceListening
+                    ? "bg-rose-500/20 border-rose-500/50 text-rose-300 animate-pulse"
+                    : "border-slate-700 bg-card text-slate-400 hover:text-slate-200 hover:border-slate-600"
+                }`}
+                aria-label={voiceListening ? "Stop listening" : "Say it in your own words"}
+              >
+                {voiceListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                {voiceListening ? "Listening — tap to stop" : "Say it"}
+              </button>
+              <button
+                onClick={handleSkipGranular}
+                id="nila-checkin-skip-granular"
+                className="py-2.5 px-4 rounded-xl text-sm font-medium border border-slate-800 bg-card text-slate-400 hover:text-slate-200 cursor-pointer transition-all"
+              >
+                Skip
+              </button>
+            </div>
           </div>
         )}
       </div>
