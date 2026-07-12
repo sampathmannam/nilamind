@@ -30,6 +30,7 @@ import { runDeepAssessment as runDeepAssessmentRequest } from "../services/coach
 import { generateCsvReport, buildTextReport, generatePdfBlob, saveReport } from "../services/exportReport";
 import { computeRetention } from "../services/retentionMetrics";
 import { computeUsageSummary } from "../services/usageAnalytics";
+import { buildWeeklyReport } from "../services/weeklyReport";
 import { isPilotEnrolled, computePilotSummary } from "../services/pilotStudy";
 import CrisisCard from "./CrisisCard";
 import { stripProvenance } from "../services/emotionParse";
@@ -269,6 +270,55 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
     }
   };
 
+  const handleWeeklyReport = async () => {
+    setExportBusy(true);
+    setShowExportMenu(false);
+    try {
+      const weekEnding = new Date();
+      const weekEndingStr = weekEnding.toISOString().split("T")[0];
+      const oneWeekAgo = new Date(weekEnding.getTime() - 7 * 86400000);
+      const weekCheckins = checkins.filter((c) => {
+        const d = new Date(c.date + "T00:00:00");
+        return d >= oneWeekAgo && d <= weekEnding;
+      });
+      const intensities = weekCheckins.map((c) => c.intensity).filter((n): n is number => typeof n === "number" && n > 0);
+      const sleepHours = weekCheckins.map((c) => c.sleepHours).filter((n): n is number => typeof n === "number" && n > 0);
+      const activeDays = new Set(weekCheckins.map((c) => c.date)).size;
+      const emotionFreq: Record<string, number> = {};
+      for (const c of weekCheckins) {
+        const em = (c.emotion || "").replace(/\s*\(Nila\)/g, "").toLowerCase().trim();
+        if (em) emotionFreq[em] = (emotionFreq[em] || 0) + 1;
+      }
+      let topEmotion: string | null = null;
+      let topCount = 0;
+      for (const [em, count] of Object.entries(emotionFreq)) {
+        if (count > topCount) { topCount = count; topEmotion = em; }
+      }
+
+      const text = buildWeeklyReport({
+        weekEnding: weekEndingStr,
+        totalCheckins: weekCheckins.length,
+        daysActive: activeDays,
+        avgIntensity: intensities.length ? intensities.reduce((a, b) => a + b, 0) / intensities.length : null,
+        minIntensity: intensities.length ? Math.min(...intensities) : null,
+        maxIntensity: intensities.length ? Math.max(...intensities) : null,
+        topEmotion,
+        avgSleepHours: sleepHours.length ? sleepHours.reduce((a, b) => a + b, 0) / sleepHours.length : null,
+        protocolsCompleted: usageSummary.protocols.completed,
+        nilaSessions: nila.last7,
+        currentStreak: streak.current,
+        longestStreak: streak.longest,
+        featuresUsed: usageSummary.features,
+        circadianScore: circadianFeedback?.combinedScore ?? null,
+      });
+      const blob = generatePdfBlob(text);
+      if (!blob) return;
+      await saveReport(blob, `nilamind-weekly-${weekEndingStr}.pdf`, "application/pdf");
+    } finally {
+      setExportBusy(false);
+    }
+  };
+
   return (
     <div className="space-y-5 max-w-md mx-auto" id="dashboard-screen">
       <header className="space-y-1">
@@ -293,6 +343,10 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
                 <button onClick={handleExportPdf} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-200 hover:bg-slate-700 text-left">
                   <FileText className="w-4 h-4 text-amber-400" />
                   <span>{t("exportPdf")}</span>
+                </button>
+                <button onClick={handleWeeklyReport} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-200 hover:bg-slate-700 text-left">
+                  <FileText className="w-4 h-4 text-blue-400" />
+                  <span>Weekly report</span>
                 </button>
               </div>
             )}
