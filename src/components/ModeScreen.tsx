@@ -15,6 +15,7 @@ import { hasCheckinToday, getSkipFlag } from "../services/checkin";
 import { t } from "../services/i18n";
 import { useTypingSession } from "../hooks/useTypingSession";
 import { getSuggestions, timeSlot } from "../services/chatSuggestions";
+import { stripChatMarkdown } from "../services/chatText";
 import { suggestSkill } from "../services/skillSuggest";
 import { filterSkills, type Skill } from "../services/skillsLibrary";
 import NilaCheckIn from "./NilaCheckIn";
@@ -44,7 +45,7 @@ import { selfReportSleepSignal } from "../services/sleepInsight";
 import { assessJitai, type JitaiDecision } from "../services/jitaiEngine";
 import { loadMoodHistory } from "../services/moodHistory";
 import { computeCompassionateStreak } from "../services/streaks";
-import { Settings, Mic, Send, MicOff, X, ShieldCheck, ThumbsUp, ThumbsDown, MessageCircle, Brain, Moon } from "lucide-react";
+import { Settings, Mic, Send, MicOff, X, ShieldCheck, ThumbsUp, ThumbsDown, MessageCircle, Brain, Moon, SquarePen } from "lucide-react";
 import { hapticLight, hapticMedium } from "../hooks/useHaptics";
 import { recordFeedback } from "../services/nilaFeedback";
 
@@ -82,7 +83,8 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   const [sleepProdromeNudge, setSleepProdromeNudge] = useState<{ firing: boolean; detail: string } | null>(null);
   const [jitaiNudge, setJitaiNudge] = useState<JitaiDecision | null>(null);
   const [skillOffer, setSkillOffer] = useState<Skill | null>(null);
-  const [pactNotice, setPactNotice] = useState<PactNotice | null>(null);
+  const [pactNotice, setPactNotice] = useState<PactNotice | null>(null); // #30: surfaced pact (the human bridge)
+  const [confirmNewChat, setConfirmNewChat] = useState(false); // "new conversation" confirm dialog
   const [welcomeBack, setWelcomeBack] = useState<string | null>(null);
   const [ratedMessages, setRatedMessages] = useState<Set<number>>(new Set());
   const [showQuickActions, setShowQuickActions] = useState(false);
@@ -492,6 +494,21 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   const chatTyping = useTypingSession("chat");
   const question = getNilaQuestion(mode.timeMode, mode.userState, mode.hasCheckedIn);
 
+  // Explicit "new conversation" — clears the transcript (memory + encrypted store) and resets the live UI so
+  // the on-device model is no longer fed the prior turns (which a small model imitates over its system prompt).
+  // Also lifts the crisis latch so the fresh chat persists normally again.
+  const startNewConversation = () => {
+    clearSessionChat();
+    setMessages([]);
+    setSkillOffer(null);
+    setPactNotice(null);
+    setWelcomeBack(null);
+    setRatedMessages(new Set());
+    setProtocolCard(protocolOfferCard(""));
+    hadCrisisRef.current = false;
+    setConfirmNewChat(false);
+  };
+
   return (
     <div className="flex flex-col h-full bg-page">
       {/* Header */}
@@ -500,6 +517,15 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           <span className="text-sm font-semibold text-slate-100">{greeting}</span>
         </div>
         <div className="flex items-center gap-2">
+          {messages.length > 0 && (
+            <button
+              onClick={() => setConfirmNewChat(true)}
+              className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500"
+              aria-label="New conversation"
+            >
+              <SquarePen className="w-4 h-4" />
+            </button>
+          )}
           <button
             onClick={onOpenSettings}
             className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500"
@@ -512,6 +538,42 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
               openCrisis() below — only the manual header button moved to the shell. */}
         </div>
       </div>
+
+      {/* New-conversation confirm — clearing a mental-health chat is destructive, so gate it behind a gentle ask */}
+      {confirmNewChat && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-6"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Start a new conversation"
+          onClick={() => setConfirmNewChat(false)}
+        >
+          <div
+            className="w-full max-w-xs rounded-2xl bg-slate-900 border border-slate-700 p-5 space-y-3"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-sm font-semibold text-slate-100">Start a new conversation?</p>
+            <p className="text-xs text-slate-400">
+              This clears the current chat from your device. Nila won't carry what was said here into the new one.
+            </p>
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={() => setConfirmNewChat(false)}
+                className="flex-1 py-2 rounded-xl bg-slate-800 text-slate-200 text-sm cursor-pointer hover:bg-slate-700 transition-colors"
+              >
+                Keep it
+              </button>
+              <button
+                onClick={startNewConversation}
+                className="flex-1 py-2 rounded-xl text-white text-sm cursor-pointer transition-opacity hover:opacity-90"
+                style={{ backgroundColor: "#6b21a8" }}
+              >
+                Start fresh
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main content — scrollable for chat messages */}
       <div className="flex-1 min-h-0 overflow-y-auto flex flex-col items-center justify-start p-4 space-y-6 pt-8">
@@ -582,7 +644,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                            : "bg-slate-800/80 text-slate-200"
                        }`}
                       >
-                        {m.content}
+                        {m.role === "user" ? m.content : stripChatMarkdown(m.content)}
                       </div>
                       {m.role === "assistant" && !ratedMessages.has(i) && (
                         <div className="flex gap-1 mt-1">

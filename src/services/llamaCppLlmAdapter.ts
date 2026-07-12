@@ -20,6 +20,8 @@ import { initLlama, type LlamaContext } from "llama-cpp-capacitor";
 import type { LocalLlmBackend, LocalGenParams } from "./localLlm";
 import type { PromptFormat } from "./modelCatalog";
 import { toGemmaPrompt, windowMessages } from "./gemmaPrompt";
+// Sentence-boundary trim + copied-speaker-label strip for the reply (pure, unit-tested).
+import { trimToLastSentence, stripSpeakerLabel } from "./chatText";
 import { toQwenPrompt, windowQwenMessages } from "./qwenPrompt";
 
 // Side-loaded GGUF in the app's own external files dir (adb push, mirrors the capgo .task path). The
@@ -124,7 +126,13 @@ export function createLlamaCppBackend(
         const res = await ctx.completion(
           {
             prompt,
-            n_predict: 220,
+            // Hard cap on reply length — a short, warm companion reply is 1-3 sentences (~60-90 tokens).
+            // 128 leaves headroom for the rare "one plain fact, then back to them" turn while making an
+            // essay hard even when the model ignores the persona's brevity ask; decode is the per-token CPU
+            // cost, so this also speeds replies up. trimToLastSentence() below cleans any reply that hits this
+            // cap so it never ends mid-thought. (Was 220 — sized before the companion persona + this cap.)
+            n_predict: 128,
+            // Low temp keeps replies briefer and more in-distribution.
             temperature: 0.4,
             top_k: 40,
             top_p: 0.95,
@@ -145,6 +153,15 @@ export function createLlamaCppBackend(
         let text = (res?.text || full).trim();
         const cut = text.search(fmt.turnPattern);
         if (cut !== -1) text = text.slice(0, cut).trim();
+        // A small model sometimes copies the few-shot 'Nila: "..."' framing into its own reply — strip it.
+        text = stripSpeakerLabel(text);
+        // If the length cap (not the stop token) ended the reply, it may dangle mid-sentence —
+        // trim back to the last complete sentence so Nila never trails off.
+        text = trimToLastSentence(text);
+        // No tokens streamed on-device (full empty) -> the streamed consumers (the voice-call speech
+        // queue, the live §9 stream guard, the progressive bubble render) never ran. Feed the finished
+        // reply through onToken ONCE so they all work: voice speaks it, the live guard scans it, it
+        // renders. Without this, a successful reply is silent in CallNilaScreen.
         if (!full && text) onToken(text);
         return text;
       } finally {
