@@ -11,6 +11,7 @@ import IdentitySection from "./settings/IdentitySection";
 import PrivacyLockSection from "./settings/PrivacyLockSection";
 import FeedbackSection from "./settings/FeedbackSection";
 import LanguageSection from "./settings/LanguageSection";
+import RegionSection from "./settings/RegionSection";
 import PilotSection from "./settings/PilotSection";
 import PerformanceDashboard from "./PerformanceDashboard";
 
@@ -33,6 +34,7 @@ export default function SettingsScreen({ disableAnchorPulse, onTogglePulse, onOp
 
       <AppearanceSection />
       <LanguageSection />
+      <RegionSection />
 
       {/* Sensory Overload — lives in the container because it's driven by app-level props. */}
       <div className="glass p-5 rounded-2xl space-y-4 shadow-lg">
