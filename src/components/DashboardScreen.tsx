@@ -15,7 +15,7 @@ import { loadMoodHistory } from "../services/moodHistory";
 import { t } from "../services/i18n";
 import { loadAssessments, latestFor, INSTRUMENTS, type InstrumentId } from "../services/assessments";
 import { assessmentInsights, generateInsights, daysOfData, type Insight } from "../services/patternInsights";
-import { computeStreak } from "../services/streaks";
+import { computeStreak, computeCompassionateStreak } from "../services/streaks";
 import { nilaStats } from "../services/nilaSessions";
 import { adherenceSummary } from "../services/medicationAdherence";
 import { getRecentMetrics, detectMoodSignal } from "../services/typingPatterns";
@@ -73,6 +73,7 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
     const mood = loadMoodHistory().sort((a, b) => a.date.localeCompare(b.date));
     const assessments = loadAssessments();
     const streak = computeStreak();
+    const compassionateStreak = computeCompassionateStreak();
     const nila = nilaStats();
 
     const checkins = readArr<CheckInEntry>("nilamind_checkins");
@@ -109,10 +110,10 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
       rhythmVariabilityMin: rhythmReg.overallVariabilityMin,
     }) : null;
 
-    return { mood, streak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian, nOf1, usageSummary, circadianFeedback, rhythmReg };
+    return { mood, streak, compassionateStreak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian, nOf1, usageSummary, circadianFeedback, rhythmReg };
   }, []);
 
-  const { mood, streak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian, nOf1, usageSummary, circadianFeedback, rhythmReg } = data;
+  const { mood, streak, compassionateStreak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian, nOf1, usageSummary, circadianFeedback, rhythmReg } = data;
 
   // Load behaviour snapshots async and compute daily-behaviour insights
   useEffect(() => {
@@ -390,14 +391,28 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
          </div>
        )}
 
+       {/* Compassionate streak — leads with the warm message, not the raw number. Gamification
+           elements show no measurable depression-outcome/adherence benefit, and a prominent
+           breakable-looking count is exactly the loss-aversion mechanism the forgiving-streak logic
+           in streaks.ts (freeze budget, never-zero-reset) was already built to defuse, per Six,
+           Byrne, Tibbett & Pericot-Valverde (2021), JMIR Mental Health; Kahneman & Tversky (1979),
+           Econometrica. The raw count is still shown, just demoted to small muted caption text
+           below rather than a big Flame+number stat tile. */}
+      <div className="glass rounded-2xl py-3 px-4 text-center flex items-center justify-center gap-2">
+        <span aria-hidden="true">{compassionateStreak.emoji}</span>
+        <p className="text-sm text-slate-200">{compassionateStreak.message}</p>
+      </div>
+
        {/* Top stats */}
-      <div className="grid grid-cols-3 gap-2">
-        <Stat icon={<Flame className="w-4 h-4 text-amber-400" />} value={String(streak.current)} label="day streak" />
+      <div className="grid grid-cols-2 gap-2">
         <Stat icon={<CalendarCheck className="w-4 h-4 text-emerald-400" />} value={`${freq14}/14`} label="days logged" />
         <Stat icon={<MessageSquare className="w-4 h-4 text-purple-400" />} value={String(nila.last7)} label="Nila chats (7d)" />
       </div>
       {streak.longest > 0 && (
-        <p className="text-[11px] text-slate-500 -mt-2 text-center">Longest streak: {streak.longest} days · {streak.totalActiveDays} active days all-time</p>
+        <p className="text-[11px] text-slate-500 -mt-2 text-center flex items-center justify-center gap-1">
+          <Flame className="w-3 h-3 text-amber-400/70" aria-hidden="true" />
+          {streak.current}-day streak · Longest: {streak.longest} days · {streak.totalActiveDays} active days all-time
+        </p>
       )}
 
       {/* Usage Analytics — on-device summary of all engagement */}

@@ -1,4 +1,15 @@
 // EMA preferences — opted in by default (EMA is low-friction and high-value).
+//
+// getEmaEnabled() defaulting to true (unset key) is safe precisely because it's not the only
+// gate: syncEmaCheckins() (notifications.ts) still requires OS notification permission before it
+// schedules anything, and App.tsx's boot-time call passes { request: false } — it only checks an
+// already-granted permission and never fires the native prompt on open. So a true default here
+// changes what the Settings toggle shows by default; it does not, on its own, start sending
+// notifications to anyone who hasn't already granted permission through some other route.
+//
+// The paired 2-3/day frequency default+cap (getEmaFrequency/setEmaFrequency below) already
+// matches the literature: nonclinical EMA compliance peaks at 2-3 prompts/day (91.7%) and drops at
+// higher frequency (74-75%), per Wen, Schneider, Stone & Spruijt-Metz (2017), JMIR.
 
 import { ls } from "./storageUtils";
 
@@ -10,7 +21,7 @@ export function getEmaEnabled(): boolean {
     const store = ls();
     if (!store) return false;
     const val = store.getItem(ENABLED_KEY);
-    return val === null ? false : val === "true";
+    return val === null ? true : val === "true";
   } catch {
     return false;
   }

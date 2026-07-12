@@ -54,17 +54,28 @@ export function derivedObservations(
       /* ignore unparseable date */
     }
   }
+  // Gate + soften the "worst weekday" callout: negative-emphasis framing risks disengagement, per
+  // Polhemus, Novak, Áine Ryan et al. (2022), JMIR Mental Health, so this should only surface on a
+  // real signal, stated gently — not a definitive-sounding read of one lucky/unlucky day. The
+  // specific thresholds below (min total logs, min samples in the leading day's own bucket) are a
+  // design safeguard, not numbers drawn from that citation: a day built from a single data point
+  // is statistical noise dressed up as a pattern, regardless of how the framing is worded.
+  const MIN_TOTAL_CHECKINS_FOR_WEEKDAY_CALLOUT = 5;
+  const MIN_SAMPLES_IN_LEADING_DAY = 2;
   let worstDay = "";
   let highestAvg = 0;
-  for (const [day, m] of Object.entries(dayScores)) {
-    const a = m.total / m.count;
-    if (a > highestAvg) {
-      highestAvg = a;
-      worstDay = day;
+  if (checkins.length >= MIN_TOTAL_CHECKINS_FOR_WEEKDAY_CALLOUT) {
+    for (const [day, m] of Object.entries(dayScores)) {
+      if (m.count < MIN_SAMPLES_IN_LEADING_DAY) continue;
+      const a = m.total / m.count;
+      if (a > highestAvg) {
+        highestAvg = a;
+        worstDay = day;
+      }
     }
   }
   if (worstDay) {
-    insights.push(`Your logged distress has been highest on average on ${worstDay}s over the tracked period.`);
+    insights.push(`${worstDay}s have tended to show up with more distress in what you've logged so far — worth noticing, not a fixed pattern.`);
   }
 
   // Most-used grounding skill from diary cards

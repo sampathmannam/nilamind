@@ -59,6 +59,15 @@ export interface Instrument {
   cutPoint: { score: number; note: string };
   // Index (0-based) of a safety-critical item that must trigger crisis routing if endorsed > 0.
   // Only PHQ-9 has one (item 9, self-harm ideation).
+  //
+  // Why ANY endorsement (>0), not a higher threshold: item-9 endorsement independently predicts
+  // suicide death, with stratified hazard ratios of 1.75 ("several days"), 2.15 ("more than half
+  // the days"), and 2.85 ("nearly every day") vs. non-endorsement — so routing at any level > 0 is
+  // the conservative, correct choice. But it is a real, LOW-SENSITIVITY signal, not a reliable
+  // catch-all: 71.6% of suicides in the same cohort occurred among people who answered "not at all"
+  // on item 9. That number justifies "always route on any endorsement" — it does NOT justify
+  // treating this flag as something that "reliably flags most at-risk users." Per Louzon, Bossarte,
+  // McCarthy & Katz (2016), Psychiatric Services.
   safetyItemIndex?: number;
   citation: string;
 }
@@ -305,4 +314,21 @@ export function daysSince(entry: AssessmentEntry | null): number | null {
   const now = new Date(new Date().toISOString().split("T")[0] + "T00:00:00").getTime();
   if (Number.isNaN(then)) return null;
   return Math.max(0, Math.floor((now - then) / DAY_MS));
+}
+
+// PHQ-9/GAD-7 both ask "over the last 2 weeks" (Kroenke, Spitzer & Williams, 2001; Spitzer,
+// Kroenke, Williams & Löwe, 2006) — that's recall-window logic taken straight from the
+// instruments' own published item stems, NOT a cadence-optimization study. A retake taken this
+// soon after the last one is mostly scoring the same 2-week window over again, so the two scores
+// will likely look alike — that's expected, not a sign anything is wrong. RECALL_WINDOW_GUARD_DAYS
+// is deliberately shorter than the full 14-day recall window (a same-week retake is the clearest
+// case); it's a soft, informational threshold, never a blocking one.
+export const RECALL_WINDOW_GUARD_DAYS = 7;
+
+/** True when the given prior entry is recent enough that a retake right now would mostly reflect
+ *  the same recall window as last time. Purely informational — callers must never use this to
+ *  block a retake, only to show a soft, dismissible heads-up (see AssessmentScreen.tsx menu). */
+export function isSameRecallWindowRetake(entry: AssessmentEntry | null): boolean {
+  const since = daysSince(entry);
+  return since !== null && since < RECALL_WINDOW_GUARD_DAYS;
 }

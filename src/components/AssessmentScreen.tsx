@@ -11,6 +11,7 @@ import {
   assessmentsFor,
   latestFor,
   daysSince,
+  isSameRecallWindowRetake,
 } from "../services/assessments";
 import {
   LineChart,
@@ -156,7 +157,8 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
           <p className="text-[11px] text-slate-400 leading-relaxed">
             These are <span className="text-slate-200 font-semibold">screening tools, not a diagnosis</span>.
             A high score is a reason to talk to a professional — not a verdict about who you are. They
-            ask about the last week or two, so taking them weekly or fortnightly is plenty; daily won't tell you more.
+            ask about the last week or two, so a retake mostly re-scores that same window — weekly or
+            fortnightly tends to show clearer movement than taking them every day.
           </p>
         </div>
 
@@ -179,10 +181,19 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
                 </div>
                 <p className="text-[11px] text-slate-400">{it.fullName}</p>
                 {last && tone ? (
-                  <p className="text-[11px] text-slate-500">
-                    Last: <span className={`font-semibold ${tone.text}`}>{last.total}/{it.maxScore} · {last.severity}</span>
-                    {since !== null && <span className="text-slate-600"> · {since === 0 ? "today" : `${since}d ago`}</span>}
-                  </p>
+                  <>
+                    <p className="text-[11px] text-slate-500">
+                      Last: <span className={`font-semibold ${tone.text}`}>{last.total}/{it.maxScore} · {last.severity}</span>
+                      {since !== null && <span className="text-slate-600"> · {since === 0 ? "today" : `${since}d ago`}</span>}
+                    </p>
+                    {isSameRecallWindowRetake(last) && (
+                      // Soft, non-blocking heads-up only — never disables the button below. PHQ-9/GAD-7's
+                      // 2-week recall window means a same-week retake mostly re-scores the last one.
+                      <p className="text-[10px] text-slate-600 italic">
+                        Taken this recently — a retake now will likely look similar, and that's expected.
+                      </p>
+                    )}
+                  </>
                 ) : (
                   <p className="text-[11px] text-slate-600">Not taken yet · ~{it.items.length * 8}s</p>
                 )}

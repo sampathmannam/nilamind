@@ -62,13 +62,64 @@ describe("derivedObservations", () => {
     expect(derivedObservations([], [])).toEqual([]);
   });
 
-  it("names the highest-average distress day of week", () => {
-    // 2026-06-15 is a Monday; give it the highest average
+  it("names the highest-average distress day of week once the minimum sample size is met", () => {
+    // 2026-06-15 and 2026-06-22 are both Mondays (>=2 samples in that bucket, >=5 total logs) —
+    // the sample-size floor exists so one lone extreme day can't masquerade as a pattern (Polhemus
+    // et al., 2022, JMIR Mental Health: negative-emphasis framing risks disengagement, so this
+    // should only fire on a real signal).
+    const out = derivedObservations(
+      [
+        ciOn("2026-06-15", 9),
+        ciOn("2026-06-22", 8),
+        ciOn("2026-06-16", 2),
+        ciOn("2026-06-17", 2),
+        ciOn("2026-06-18", 3),
+      ],
+      []
+    );
+    expect(out.some((s) => s.includes("Monday"))).toBe(true);
+  });
+
+  it("uses softened, non-absolute language for the worst-weekday callout (Polhemus et al., 2022)", () => {
+    const out = derivedObservations(
+      [
+        ciOn("2026-06-15", 9),
+        ciOn("2026-06-22", 8),
+        ciOn("2026-06-16", 2),
+        ciOn("2026-06-17", 2),
+        ciOn("2026-06-18", 3),
+      ],
+      []
+    );
+    const line = out.find((s) => s.includes("Monday"));
+    expect(line).toBeDefined();
+    // No longer an unqualified absolute claim ("has been highest on average ... over the tracked period").
+    expect(line).not.toMatch(/highest on average/i);
+  });
+
+  it("does not surface a worst-weekday callout below the minimum total sample size", () => {
+    // Only 2 total logs — same shape as the old under-powered fixture; too little data to name a day.
     const out = derivedObservations(
       [ciOn("2026-06-15", 9), ciOn("2026-06-16", 2)],
       []
     );
-    expect(out.some((s) => s.includes("Monday"))).toBe(true);
+    expect(out.some((s) => /Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday/.test(s))).toBe(false);
+  });
+
+  it("does not surface a worst-weekday callout when every weekday bucket is a single-sample outlier", () => {
+    // 5 total logs (meets the total floor) but every weekday bucket has exactly 1 sample —
+    // no bucket meets the per-day floor, so no day should be singled out.
+    const out = derivedObservations(
+      [
+        ciOn("2026-06-15", 9), // Mon
+        ciOn("2026-06-16", 2), // Tue
+        ciOn("2026-06-17", 2), // Wed
+        ciOn("2026-06-18", 3), // Thu
+        ciOn("2026-06-19", 3), // Fri
+      ],
+      []
+    );
+    expect(out.some((s) => /Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday/.test(s))).toBe(false);
   });
 
   it("names the most-used diary skill", () => {
