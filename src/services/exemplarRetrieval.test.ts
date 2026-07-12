@@ -19,6 +19,11 @@ const clusteredEmbedder: Embedder = async (text: string) => {
   if (/procrastinat|putting (things )?off|put (things )?off/.test(t)) vec[0] = 1;
   else if (/angry|furious|scream|rage|mad/.test(t)) vec[1] = 1;
   else if (/empty|numb|grey|gray/.test(t)) vec[2] = 1; // note: not "nothing" (appears in a good_news user)
+  // 2026-07-12 device-QA new registers — checked BEFORE the tax/deadline bucket below, since the playful
+  // query legitimately contains the word "deadline" too and must not fall into the unrelated cluster.
+  else if (/\bhaha\b|\blol\b|dead tired|died of embarrassment/.test(t)) vec[4] = 1; // playful_hyperbole
+  else if (/complete failure|secretly hates|always ruin everything/.test(t)) vec[5] = 1; // distortion_challenge
+  else if (/feel a bit better now|better now thanks/.test(t)) vec[6] = 1; // post_crisis_gentle
   else if (/tax|spreadsheet|deadline|quarterly/.test(t)) vec[3] = 1; // unrelated-to-corpus bucket
   else {
     let h = 0;
@@ -71,6 +76,24 @@ describe("retrieveExemplarsForQuery", () => {
     });
     resetExemplarIndex();
     expect(await retrieveExemplarsForQuery("why do I procrastinate", 2)).toEqual([]);
+  });
+});
+
+describe("new registers retrievable (2026-07-12 device-QA)", () => {
+  it("playful hyperbole query retrieves a playful exemplar", async () => {
+    const hits = await retrieveExemplarsForQuery("haha this deadline is killing me, i am dead tired", 2);
+    expect(hits.some((h) => h.tag === "playful_hyperbole")).toBe(true);
+  });
+  it("failure self-label query retrieves a distortion-challenge exemplar", async () => {
+    const hits = await retrieveExemplarsForQuery(
+      "i am a complete failure and everyone secretly hates me",
+      2,
+    );
+    expect(hits.some((h) => h.tag === "distortion_challenge")).toBe(true);
+  });
+  it("post-crisis recovery message retrieves the gentle-glad exemplar", async () => {
+    const hits = await retrieveExemplarsForQuery("i think i feel a bit better now thanks", 2);
+    expect(hits.some((h) => h.tag === "post_crisis_gentle")).toBe(true);
   });
 });
 
