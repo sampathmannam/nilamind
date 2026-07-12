@@ -2,6 +2,30 @@ import { App } from '@capacitor/app';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { AppLauncher } from '@capacitor/app-launcher';
 
+/**
+ * PRIVACY / SECURITY: by default this module makes NO network calls.
+ *
+ * The auto-update path (1) performs an OUTBOUND request to GitHub on every app
+ * launch, and (2) when a newer release exists, SILENTLY downloads the APK and
+ * auto-launches the Android installer intent — with NO signature verification
+ * against the installed app's signing certificate. That is a supply-chain /
+ * arbitrary-code-execution risk (a compromised release or account would push a
+ * malicious APK to every user) AND an egress that contradicts this app's
+ * "nothing leaves the device" promise.
+ *
+ * It is therefore OPT-IN and DISABLED BY DEFAULT. Re-enable ONLY after adding
+ * (a) APK signature verification against the installed cert and (b) an explicit
+ * user-confirmation step before install.
+ *
+ * FLAGGED 🟡 for human security review (AGENTS.md).
+ */
+let autoUpdateEnabled = false;
+
+/** Opt in to the GitHub auto-update check + install. OFF by default (privacy). */
+export function setAutoUpdateEnabled(v: boolean): void {
+  autoUpdateEnabled = v;
+}
+
 /** Simple semver compare – returns true if `latest` is newer than `current`. */
 function isNewerVersion(current: string, latest: string): boolean {
   const c = current.replace(/^v/, '').split('.').map(Number);
@@ -21,6 +45,7 @@ function isNewerVersion(current: string, latest: string): boolean {
  * error is logged but never blocks the UI.
  */
 export async function checkForGitHubUpdate(): Promise<void> {
+  if (!autoUpdateEnabled) return; // privacy: no egress / auto-install unless explicitly opted in
   try {
     const { version: installedVersion } = await App.getInfo();
     const owner = 'sampathmannam'; // <-- your GitHub username / org
