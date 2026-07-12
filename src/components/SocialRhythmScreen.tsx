@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Clock3 } from "lucide-react";
+import { Clock3, Sunrise } from "lucide-react";
 import {
   RHYTHM_ANCHORS,
   MIN_RHYTHM_DAYS,
@@ -12,6 +12,8 @@ import {
 } from "../services/socialRhythm";
 import { dayKey } from "../services/retentionMetrics";
 import { hapticLight } from "../hooks/useHaptics";
+import { computeCircadianFeedback } from "../services/circadianFeedback";
+import { loadMoodHistory } from "../services/moodHistory";
 
 const BAND_COPY: Record<RhythmBand, { label: string; cls: string }> = {
   regular: { label: "Steady rhythm", cls: "text-emerald-400" },
@@ -42,6 +44,20 @@ export default function SocialRhythmScreen() {
     setVersion((v) => v + 1);
     hapticLight();
   };
+
+  // Wake-time-lever insight, surfaced right at the point of logging rather than two screens away on the
+  // Dashboard. Wake time is the primary zeitgeber emphasized in the IPSRT clinical protocol (Frank et al.,
+  // 2005; Monk, Frank, Potts & Kupfer, 2002) — reuses circadianFeedback.ts's combined sleep+rhythm guidance,
+  // which already foregrounds a consistent wake time as the strongest single lever. Needs >=3 logged sleep
+  // readings (from check-ins) before it has anything to say — otherwise it stays silent rather than guessing.
+  const wakeInsight = useMemo(() => {
+    if (!saved) return null;
+    const sleeps = loadMoodHistory()
+      .filter((m) => typeof m.sleepHours === "number" && (m.sleepHours as number) > 0)
+      .map((m) => m.sleepHours as number);
+    return computeCircadianFeedback({ sleeps, rhythmVariabilityMin: reg.overallVariabilityMin });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [saved, version]);
 
   return (
     <div className="space-y-6 max-w-md mx-auto" id="social-rhythm-screen">
@@ -78,6 +94,20 @@ export default function SocialRhythmScreen() {
           {saved ? "Saved" : "Save today's rhythm"}
         </button>
       </div>
+
+      {/* Wake-time-lever insight — right at the point of logging */}
+      {wakeInsight && (
+        <div className="glass rounded-2xl p-4 space-y-2 border border-indigo-500/20" id="wake-time-insight">
+          <div className="text-sm font-semibold text-slate-200 flex items-center gap-2">
+            <Sunrise className="w-4 h-4 text-indigo-400" /> Wake-time insight
+          </div>
+          <p className="text-xs text-slate-400 leading-relaxed">{wakeInsight.guidance}</p>
+          <p className="text-[10px] text-slate-500 leading-relaxed">
+            Wake time is the anchor most emphasized in Interpersonal &amp; Social Rhythm Therapy (Frank et
+            al., 2005; Monk, Frank, Potts &amp; Kupfer, 2002).
+          </p>
+        </div>
+      )}
 
       {/* Regularity read */}
       <div className="glass rounded-2xl p-4 space-y-3">

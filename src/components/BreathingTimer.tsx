@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
-import { Play, Pause, RotateCcw, Wind } from "lucide-react";
+import { Play, Pause, RotateCcw, Wind, CheckCircle2 } from "lucide-react";
 import {
   breathState,
   cycleProgress,
@@ -13,9 +13,22 @@ const CIRCLE_R = 80;
 const CIRCLE_C = 100;
 const STROKE_W = 6;
 
+/** A single 5-minute slow-paced-breathing session produces vagal-activity gains statistically
+ *  indistinguishable from longer 10/15/20-minute sessions — so the timer offers a soft ~5-minute
+ *  target rather than pushing for a longer session, per You, Laborde, Zammit, Iskra & Borges et al.
+ *  (2021), Int'l J of Environmental Research and Public Health. It's a gentle stopping-point cue,
+ *  not a hard cutoff — the timer keeps running if you want to continue. */
+export const SESSION_TARGET_MS = 5 * 60 * 1000;
+
+/** Pure: has the soft session target been reached? Exported for testing. */
+export function sessionTargetReached(elapsedMs: number): boolean {
+  return elapsedMs >= SESSION_TARGET_MS;
+}
+
 function phaseColor(phase: BreathPhase): string {
   switch (phase) {
     case "inhale": return "#60A5FA"; // blue-400
+    case "inhale2": return "#60A5FA";
     case "hold": return "#F59E0B"; // amber-400
     case "exhale": return "#34D399"; // emerald-400
     case "hold2": return "#F59E0B";
@@ -42,7 +55,7 @@ export default function BreathingTimer() {
     if (!startTimeRef.current) startTimeRef.current = now;
     const t = now - startTimeRef.current;
     const p = getBreathPattern(pattern);
-    const totalMs = (p.inhale + p.hold + p.exhale + p.hold2) * 1000;
+    const totalMs = (p.inhale + p.inhale2 + p.hold + p.exhale + p.hold2) * 1000;
     const cyc = Math.floor(t / totalMs);
     setElapsed(t);
     setCycleIdx(cyc);
@@ -68,7 +81,9 @@ export default function BreathingTimer() {
     startTimeRef.current = 0;
   };
 
-  const totalCycles = Math.floor(elapsed / (getBreathPattern(pattern).inhale + getBreathPattern(pattern).hold + getBreathPattern(pattern).exhale + getBreathPattern(pattern).hold2) / 1000 + 1);
+  const cfg = getBreathPattern(pattern);
+  const totalCycles = Math.floor(elapsed / (cfg.inhale + cfg.inhale2 + cfg.hold + cfg.exhale + cfg.hold2) / 1000 + 1);
+  const targetReached = sessionTargetReached(elapsed);
 
   return (
     <div className="space-y-4" id="breathing-timer">
@@ -114,6 +129,15 @@ export default function BreathingTimer() {
             Cycle {totalCycles}
           </p>
         </div>
+
+        {/* Soft ~5-minute session-target completion cue — a gentle stopping point, not a hard cutoff
+            (You, Laborde, Zammit, Iskra & Borges et al. 2021). */}
+        {targetReached && (
+          <p className="flex items-center gap-1.5 text-[11px] text-emerald-400" role="status">
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            You've reached the ~5-minute mark — a good stopping point if you'd like, or keep going.
+          </p>
+        )}
       </div>
 
       {/* Controls */}
@@ -141,7 +165,11 @@ export default function BreathingTimer() {
         <p className="flex items-center justify-center gap-1.5">
           <Wind className="w-3 h-3" /> {getBreathPattern(pattern).name}
         </p>
-        <p>Inhale {getBreathPattern(pattern).inhale}s · Hold {getBreathPattern(pattern).hold}s · Exhale {getBreathPattern(pattern).exhale}s{getBreathPattern(pattern).hold2 > 0 ? ` · Hold ${getBreathPattern(pattern).hold2}s` : ""}</p>
+        <p>
+          Inhale {cfg.inhale}s{cfg.inhale2 > 0 ? ` · Inhale again ${cfg.inhale2}s` : ""}
+          {cfg.hold > 0 ? ` · Hold ${cfg.hold}s` : ""} · Exhale {cfg.exhale}s
+          {cfg.hold2 > 0 ? ` · Hold ${cfg.hold2}s` : ""}
+        </p>
       </div>
     </div>
   );

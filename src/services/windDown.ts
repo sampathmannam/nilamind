@@ -12,6 +12,29 @@ export interface SleepTip {
 // Invitation-framed, cited. Clinical-review guardrails are baked into the COPY: stimulus control is gentle +
 // qualified (sleep interruption isn't for everyone — destabilizing for some conditions), alcohol is stated factually
 // rather than as advice to avoid (AUD-aware), and a "limits" tip points to a clinician.
+// PERMANENT GUARD — never add sleep-restriction language (delaying bedtime, capping/cutting time in
+// bed, "sleep less" to build sleep pressure) to SLEEP_TIPS or any wind-down copy. Even clinician-
+// modified, monitored CBT-I-BP protocols in bipolar disorder logged manic-symptom adverse events
+// despite net benefit, per Harvey, Soehner, Kaplan et al. (2015), J Consulting and Clinical Psychology;
+// and sleep deprivation independently lowers seizure threshold, per Dell'Aquila & Soti (2022), Sleep
+// Science. NilaMind is manic-first/bipolar-aware — this module's guidance must stay duration-preserving
+// (steadying WHEN you sleep), never duration-restricting (cutting HOW LONG you're allowed to sleep).
+const SLEEP_RESTRICTION_PATTERNS: RegExp[] = [
+  /restrict(ing|ed)?\s+(your\s+)?time in bed/i,
+  /(go(ing)?|stay(ing)?)\s+to\s+bed\s+later/i,
+  /delay(ing|ed)?\s+(your\s+)?bedtime/i,
+  /stay(ing)?\s+up\s+later/i,
+  /(shorten(ing|ed)?|cut(ting)?|cap(ping)?|reduc(e|ing|ed))\s+(your\s+)?(time in bed|sleep window|hours? (of|in) (bed|sleep))/i,
+  /sleep\s+less/i,
+  /cut(ting)?\s+(back on|down (on)?)\s+(your\s+)?sleep/i,
+];
+
+/** True if `text` contains sleep-restriction language. SLEEP_TIPS content must NEVER match this —
+ *  see the permanent guard comment above. Additive, deterministic, no model. */
+export function containsSleepRestrictionLanguage(text: string): boolean {
+  return SLEEP_RESTRICTION_PATTERNS.some((re) => re.test(text));
+}
+
 export const SLEEP_TIPS: SleepTip[] = [
   {
     id: "wake-time",

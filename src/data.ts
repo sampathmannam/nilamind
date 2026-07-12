@@ -104,7 +104,7 @@ export const GROUNDING_EXERCISES = [
   {
     title: "5-4-3-2-1 Senses",
     subtitle: "Pull yourself into the present",
-    steps: "Name 5 things you can see. Then 4 things you can touch. Then 3 things you can hear. Then 2 things you can smell. Then 1 thing you can taste. This pulls your mind out of the spiral and into right now. (Grounded in Mindfulness-Based Cognitive Therapy - Segal, Z. V., et al., 2002)"
+    steps: "Name 5 things you can see. Then 4 things you can touch. Then 3 things you can hear. Then 2 things you can smell. Then 1 thing you can taste. This pulls your mind out of the spiral and into right now. (A widely-used grounding practice; not tied to a specific published trial.)"
   },
   {
     title: "Box Breathing",
