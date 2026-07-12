@@ -750,20 +750,19 @@ function replyMentionsCrisisResource(reply: string): boolean {
   );
 }
 
-/** The deterministic crisis reply, built from the user's region crisis lines (always ≥1). */
+/** The deterministic crisis reply — solution-forward: immediate coping actions first, then helplines. */
 export function getCrisisReply(): string {
-  const lines = getCrisisLines().map((l) => `📞 ${l.name}: ${l.display}`).join("\n");
-  return `What you just said matters more than anything else right now.
+  return `This moment is heavy. Let's find one thing to steady through it.
 
-I hear you. This kind of pain is real, and you should not be alone with it.
+→ Try 5-4-3-2-1 grounding: name 5 things you can see, 4 you can touch, 3 you can hear, 2 you can smell, 1 thing you can taste.
 
-This is a moment for a human — right now.
+→ Box breathing: inhale 4 seconds, hold 4, exhale 4, hold 4.
 
-${lines}
+Or reach for a human right now — trained listeners who know what this feels like:
 
-These are free, confidential, and answered by people trained for exactly this moment.
+${getCrisisLines().map((l) => `📞 ${l.name}: ${l.display}`).join("\n")}
 
-You can reach any of these lines right now — and your safety plan is one tap away, just below.`;
+These are free, confidential, available right now. Your safety plan is just below this screen.`;
 }
 
 /** Short fallback when an AI reply is judged unsafe — still points to a real crisis line. */

@@ -56,35 +56,32 @@ export default function CrisisOverlay({
           <ShieldAlert className="text-rose-500 w-12 h-12 stroke-[2.5]" />
         </div>
         <h1 id="crisis-overlay-heading" ref={headingRef} tabIndex={-1} className="text-xl font-semibold tracking-tight text-slate-100 mb-1 outline-none">
-          You reached for this.
+          You reached for this. Let's find something that helps.
         </h1>
         <p className="text-slate-400 text-sm max-w-md mx-auto leading-relaxed">
-          That is a strong thing to do. Take a breath. Your safety plan and immediate helps are right here.
+          That is a strong thing to do. Ground yourself first, or reach a trained listener.
         </p>
       </div>
 
       <div className="max-w-md mx-auto px-4 py-6 pb-24 space-y-6">
-        {/* Quick Help Tenders */}
+        {/* Quick solutions — grounding and breathing first */}
         <div className="space-y-3">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-            If you need someone right now
+            Try these first
           </h2>
-          
-          <CrisisLines tone="rose" />
-          <p className="text-[10px] text-slate-500 text-center">Crisis lines for your region — change in Settings.</p>
 
           <button
             onClick={() => {
               onClose();
               onNavigateToGrounding();
             }}
-            className="flex items-center gap-3 bg-card hover:bg-raised border border-slate-800 text-emerald-400 font-medium p-4 rounded-xl transition-all cursor-pointer w-full text-left"
+            className="flex items-center gap-3 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-medium p-5 rounded-xl transition-all cursor-pointer w-full text-left shadow-lg shadow-emerald-500/5"
             id="grounding-shortcut-btn"
           >
-            <Heart className="w-5 h-5" />
+            <Heart className="w-6 h-6" />
             <div>
-              <div className="font-semibold text-slate-200">Start 5-4-3-2-1 Grounding</div>
-              <div className="text-xs text-slate-500">Tactile present-moment focus</div>
+              <div className="font-semibold text-slate-100">5-4-3-2-1 Grounding</div>
+              <div className="text-xs text-slate-400">Notice what's around you to settle into the present moment</div>
             </div>
           </button>
 
@@ -93,21 +90,31 @@ export default function CrisisOverlay({
               onClose();
               onNavigateToBreathing();
             }}
-            className="flex items-center gap-3 bg-card hover:bg-raised border border-slate-800 text-emerald-400 font-medium p-4 rounded-xl transition-all cursor-pointer w-full text-left"
+            className="flex items-center gap-3 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-medium p-5 rounded-xl transition-all cursor-pointer w-full text-left shadow-lg shadow-emerald-500/5"
             id="breathing-shortcut-btn"
           >
-            <Wind className="w-5 h-5" />
+            <Wind className="w-6 h-6" />
             <div>
-              <div className="font-semibold text-slate-200">Box Breathing (4-4-4-4)</div>
-              <div className="text-xs text-slate-500">Paced nervous system regulation</div>
+              <div className="font-semibold text-slate-100">Box Breathing (4-4-4-4)</div>
+              <div className="text-xs text-slate-400">Paced breathing to calm your nervous system</div>
             </div>
           </button>
         </div>
 
-        {/* Safety Plan Display */}
+        {/* Crisis lines — secondary, always available */}
+        <div className="space-y-3">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+            Or speak with someone now
+          </h2>
+
+          <CrisisLines tone="rose" />
+          <p className="text-[10px] text-slate-500 text-center">Free, confidential helplines for your region — change in Settings.</p>
+        </div>
+
+        {/* Your coping plan */}
         <div className="space-y-4 pt-2">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-            Your safety plan
+            Your coping plan
           </h2>
 
           {/* Section 1 */}
@@ -182,7 +189,7 @@ export default function CrisisOverlay({
             id="close-crisis-overlay-btn"
           >
             <ArrowLeft className="w-5 h-5 text-slate-500" />
-            I'm okay for now
+            I feel steadier now
           </button>
         </div>
       </div>
