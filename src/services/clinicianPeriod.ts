@@ -6,7 +6,7 @@
 import { loadMoodHistory } from "./moodHistory";
 import { loadAppOpens } from "./retentionMetrics";
 import { loadNilaTurns, type NilaTurn } from "./nilaSessions";
-import { featureAdoption } from "./usageAnalytics";
+import { featureAdoption, retentionSnapshot, type RetentionSnapshot } from "./usageAnalytics";
 
 export type ReportPeriod = 7 | 30 | 90;
 
@@ -49,6 +49,8 @@ export interface ClinicianUsage {
   nilaTurns: number;
   avgSleepHours: number | null;
   featuresUsed: string[];
+  /** Self-retention / consistency (on-device only — no cross-user cohort, per privacy promise). */
+  retention: RetentionSnapshot;
 }
 
 /**
@@ -76,5 +78,6 @@ export function gatherClinicianUsage(
     nilaTurns: nilaTurnsInPeriod(loadNilaTurns(), cutoff),
     avgSleepHours,
     featuresUsed: featureAdoption(),
+    retention: retentionSnapshot(now),
   };
 }

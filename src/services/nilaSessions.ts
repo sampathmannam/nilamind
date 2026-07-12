@@ -5,6 +5,7 @@
 
 import { secureLocal } from "./secureLocal";
 import { DAY_MS } from "./storageUtils";
+import { recordActiveDay } from "./usageAnalytics";
 
 export interface NilaTurn {
   id: string;
@@ -28,6 +29,7 @@ export function loadNilaTurns(): NilaTurn[] {
 }
 
 export function logNilaTurn(surface: NilaTurn["surface"], userText: string): void {
+  recordActiveDay(); // consistency/retention signal (on-device only)
   const now = new Date();
   const turn: NilaTurn = {
     id: "sg_" + Date.now(),
