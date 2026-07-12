@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Mountain, Plus, X, CheckCircle } from "lucide-react";
-import { createHierarchy, addStep, removeStep, completeStep, loadHierarchy, saveHierarchy, completionRate, averageSudReduction, type ExposureHierarchy } from "../services/exposureHierarchy";
+import { createHierarchy, addStep, removeStep, completeStep, loadHierarchy, saveHierarchy, completionRate, averageSudReduction, inhibitoryLearningPrompts, type ExposureHierarchy } from "../services/exposureHierarchy";
 import { scanForCrisis } from "../safety";
 import { hapticSuccess } from "../hooks/useHaptics";
 import CrisisLines from "./CrisisLines";
@@ -122,11 +122,25 @@ export default function ExposureHierarchyScreen() {
               <label className="text-[10px] text-slate-500">SUDS after exposure: {postSuds}</label>
               <input type="range" min={0} max={100} value={postSuds} onChange={(e) => setPostSuds(+e.target.value)} className="w-full" />
             </div>
+            {/* Guided reflection: expectancy-violation prompts, the primary lever for durable exposure
+                learning per Craske, Treanor, Conway, Zbozinek & Vervliet (2014) — previously built but unused. */}
+            <div className="space-y-1.5">
+              <div className="text-[10px] text-slate-500">A few things worth reflecting on:</div>
+              <ul className="space-y-1 list-disc list-inside">
+                {inhibitoryLearningPrompts().map((prompt) => (
+                  <li key={prompt} className="text-[11px] text-slate-400 leading-relaxed">{prompt}</li>
+                ))}
+              </ul>
+            </div>
             <textarea value={learning} onChange={(e) => setLearning(e.target.value)} placeholder="What did you learn? (optional)" rows={2} className="w-full glass rounded-xl px-3 py-2 text-xs text-slate-200 placeholder-slate-600" />
             <div className="flex gap-2">
               <button onClick={() => handleCompleteStep(completingStep)} className="flex-1 glass rounded-xl py-2 text-xs text-emerald-300 cursor-pointer">Save</button>
               <button onClick={() => setCompletingStep(null)} className="glass rounded-xl px-3 py-2 text-xs text-slate-400 cursor-pointer">Cancel</button>
             </div>
+            <p className="text-[10px] text-slate-600 leading-relaxed">
+              Reflection prompts based on the inhibitory-learning model (Craske, Treanor, Conway, Zbozinek &amp; Vervliet, 2014) —
+              noticing what actually happened, versus what you predicted, is what research suggests makes exposure learning last.
+            </p>
           </div>
         ) : (
           <div className="space-y-2">

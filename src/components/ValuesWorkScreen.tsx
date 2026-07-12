@@ -89,6 +89,13 @@ export default function ValuesWorkScreen() {
         })}
         {domains.length === 0 && <p className="text-xs text-slate-500 text-center py-8">No values added yet. Start by naming what matters.</p>}
       </div>
+
+      {/* Honest basis + limit */}
+      <p className="text-[10px] text-slate-500 leading-relaxed px-1">
+        Self-compassion — treating yourself as you would a friend — may help when values work surfaces a gap
+        (Ferrari, Hunt, Harrysunker, Abbott, Beath &amp; Einstein, 2019; Neff, 2003). This is a reflection aid,
+        not therapy or a clinical measure.
+      </p>
     </div>
   );
 }
