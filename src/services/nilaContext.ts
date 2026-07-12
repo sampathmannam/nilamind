@@ -25,6 +25,7 @@ import { INSTRUMENTS } from "./assessments";
 import { DAY_MS } from "./storageUtils";
 import { parseSafetyPlan } from "./safetyPlan";
 import { safetyPlanFollowUpContextBlock } from "./safetyPlanFollowUp";
+import { generateMeansSafetyContextBlock } from "./lethalMeansCoaching";
 import { sleepHoursVariability, variabilityContextBlock } from "./sleepHoursVariability";
 import type { VariabilitySignal } from "./sleepHoursVariability";
 import { assessJitai } from "./jitaiEngine";
@@ -267,6 +268,17 @@ export function buildPersonalContext(): string {
     }
   } catch { /* best-effort, never block context assembly */ }
 
+  // Means safety coaching context — lets Nila know if the user has explored means safety (Phase 7).
+  // Read-only context flag: if the user brings it up, Nila can acknowledge gently. Never asked about unprompted.
+  let meansSafetyContext = "";
+  try {
+    const raw = secureLocal.getItem("nilamind_means_coaching");
+    if (raw) {
+      const progress = JSON.parse(raw);
+      meansSafetyContext = generateMeansSafetyContextBlock(progress);
+    }
+  } catch { /* best-effort */ }
+
   // JITAI nudge — just-in-time adaptive intervention. Only surfaces when signals indicate a tool would help.
   let jitaiNudge = "";
   try {
@@ -282,7 +294,7 @@ export function buildPersonalContext(): string {
     }
   } catch { /* best-effort */ }
 
-  if (lines.length === 0 && !memory && !insights && !profile && !trajectory && !inflection && !safetyPlanFollowUp && !sleepVariability && !jitaiNudge && !circadianBlock) return "";
+  if (lines.length === 0 && !memory && !insights && !profile && !trajectory && !inflection && !safetyPlanFollowUp && !sleepVariability && !jitaiNudge && !circadianBlock && !meansSafetyContext) return "";
 
   const out: string[] = [
     // Terse header only. HOW to use memory (gently, never recite, don't over-claim, trust the present) already
@@ -311,6 +323,10 @@ export function buildPersonalContext(): string {
   if (safetyPlanFollowUp) {
     out.push("Safety-plan follow-up (gentle invitation, never a push):");
     out.push(safetyPlanFollowUp);
+  }
+
+  if (meansSafetyContext) {
+    out.push(meansSafetyContext);
   }
 
   // #20 (audit): cap the per-turn context. It is re-prefilled every turn (no cross-turn KV reuse on this

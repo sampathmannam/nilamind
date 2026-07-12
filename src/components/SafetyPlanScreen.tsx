@@ -4,12 +4,29 @@ import { SafetyPlan } from "../types";
 import { INITIAL_SAFETY_PLAN } from "../data";
 import { parseSafetyPlan } from "../services/safetyPlan";
 import { getCrisisLines } from "../services/crisisResources";
-import { CheckCircle2, Save } from "lucide-react";
+import {
+  getMeansSafetyCategories,
+  generateSafeEnvironmentBlock,
+  type MeansCoachingProgress,
+} from "../services/lethalMeansCoaching";
+import { CheckCircle2, ChevronDown, ChevronRight, Save, Sparkles } from "lucide-react";
+
+const INITIAL_MEANS_PROGRESS: MeansCoachingProgress = {
+  startedAt: 0,
+  completedCategories: [],
+  selectedStrategies: {},
+  commitmentText: "",
+  completed: false,
+};
 
 export default function SafetyPlanScreen() {
   const [safetyPlan, setSafetyPlan] = useState<SafetyPlan>(INITIAL_SAFETY_PLAN);
   const [savedStatus, setSavedStatus] = useState<boolean>(false);
   const savedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [showCoaching, setShowCoaching] = useState(false);
+  const [expandedCat, setExpandedCat] = useState<string | null>(null);
+  const [meansProgress, setMeansProgress] = useState<MeansCoachingProgress>(INITIAL_MEANS_PROGRESS);
+  const [commitmentInput, setCommitmentInput] = useState("");
 
   useEffect(() => {
     const saved = secureLocal.getItem("nilamind_safetyplan");
@@ -19,6 +36,17 @@ export default function SafetyPlanScreen() {
       // Pre-fill the crisis-lines section with the user's region (editable, not yet persisted).
       const lines = getCrisisLines().map((l) => `${l.name}: ${l.display}`).join("\n");
       setSafetyPlan((p) => ({ ...p, professionals: lines }));
+    }
+
+    const savedCoaching = secureLocal.getItem("nilamind_means_coaching");
+    if (savedCoaching) {
+      try {
+        const parsed = JSON.parse(savedCoaching);
+        if (parsed && typeof parsed === "object" && typeof parsed.startedAt === "number") {
+          setMeansProgress(parsed);
+          if (parsed.startedAt > 0) setShowCoaching(true);
+        }
+      } catch { /* ignore corrupt data */ }
     }
 
     // Audit 2026-07-06 #7: the autosaved-status timeout was created inside an event handler and its cleanup
@@ -31,6 +59,11 @@ export default function SafetyPlanScreen() {
     };
   }, []);
 
+  const persistMeansProgress = (p: MeansCoachingProgress) => {
+    setMeansProgress(p);
+    secureLocal.setItem("nilamind_means_coaching", JSON.stringify(p));
+  };
+
   const updateSection = (field: keyof SafetyPlan, value: string) => {
     const updated = { ...safetyPlan, [field]: value, lastUpdatedAt: Date.now() };
     setSafetyPlan(updated);
@@ -42,6 +75,51 @@ export default function SafetyPlanScreen() {
       setSavedStatus(false);
     }, 1200);
   };
+
+  const toggleCoaching = () => {
+    if (!showCoaching) {
+      persistMeansProgress({ ...meansProgress, startedAt: meansProgress.startedAt || Date.now() });
+    }
+    setShowCoaching(!showCoaching);
+  };
+
+  const toggleCategory = (catId: string) => {
+    setExpandedCat(expandedCat === catId ? null : catId);
+    if (!meansProgress.completedCategories.includes(catId)) {
+      persistMeansProgress({
+        ...meansProgress,
+        completedCategories: [...meansProgress.completedCategories, catId],
+      });
+    }
+  };
+
+  const toggleStrategy = (catId: string, strategy: string) => {
+    const current = meansProgress.selectedStrategies[catId] || [];
+    const exists = current.includes(strategy);
+    const updated = exists
+      ? current.filter((s) => s !== strategy)
+      : [...current, strategy];
+    persistMeansProgress({
+      ...meansProgress,
+      selectedStrategies: { ...meansProgress.selectedStrategies, [catId]: updated },
+    });
+  };
+
+  const handleGenerateSafeEnvironment = () => {
+    const updatedProgress = {
+      ...meansProgress,
+      commitmentText: commitmentInput || meansProgress.commitmentText,
+      completed: true,
+    };
+    persistMeansProgress(updatedProgress);
+    const block = generateSafeEnvironmentBlock(updatedProgress);
+    updateSection("safeEnvironment", safetyPlan.safeEnvironment
+      ? safetyPlan.safeEnvironment + "\n\n" + block
+      : block
+    );
+  };
+
+  const categories = getMeansSafetyCategories();
 
   return (
     <div className="space-y-6 max-w-md mx-auto" id="safety-plan-screen">
@@ -161,7 +239,7 @@ export default function SafetyPlanScreen() {
         </div>
 
         {/* Section 6 */}
-        <div className="space-y-2 pb-12">
+        <div className="space-y-2">
           <label className="block">
             <span className="text-sm font-semibold text-slate-200">6. Making my space safer:</span>
             <span className="block text-xs text-slate-500 mt-0.5">
@@ -177,6 +255,110 @@ export default function SafetyPlanScreen() {
             id="sp-safeenvironment-input"
           />
         </div>
+      </div>
+
+      {/* Means safety coaching (Phase 7 — Lethal Means Counseling) */}
+      <div className="border-t border-slate-800/50 pt-4">
+        <button
+          onClick={toggleCoaching}
+          className="w-full flex items-center gap-2 text-left text-sm font-medium text-slate-200 hover:text-slate-100 transition-colors cursor-pointer"
+          id="sp-means-coaching-toggle"
+        >
+          {showCoaching ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+          <Sparkles className="w-4 h-4 text-violet-400" />
+          Means safety coaching (optional)
+          {meansProgress.completedCategories.length > 0 && (
+            <span className="ml-auto text-xs text-emerald-400">
+              {meansProgress.completedCategories.length} explored
+            </span>
+          )}
+        </button>
+
+        {showCoaching && (
+          <div className="mt-4 space-y-4">
+            <p className="text-xs text-slate-400 leading-relaxed">
+              A calm, no-pressure look at your home environment. The idea is simple: in a really tough moment,
+              having easy access to things that could cause harm can make things harder. This is about small
+              adjustments — not getting rid of things you need. Explore the categories below, one at a time.
+            </p>
+
+            {/* Category cards */}
+            <div className="space-y-2">
+              {categories.map((cat) => {
+                const isExpanded = expandedCat === cat.id;
+                const isDone = meansProgress.completedCategories.includes(cat.id);
+                const selectedStrat = meansProgress.selectedStrategies[cat.id] || [];
+                return (
+                  <div
+                    key={cat.id}
+                    className="bg-card border border-slate-800 rounded-xl overflow-hidden"
+                  >
+                    <button
+                      onClick={() => toggleCategory(cat.id)}
+                      className="w-full flex items-center gap-2 px-3 py-2.5 text-left text-sm text-slate-200 hover:bg-slate-800/30 transition-colors cursor-pointer"
+                    >
+                      {isExpanded ? <ChevronDown className="w-3.5 h-3.5 shrink-0" /> : <ChevronRight className="w-3.5 h-3.5 shrink-0" />}
+                      <span className="flex-1">{cat.label}</span>
+                      {isDone && <span className="text-xs text-emerald-400">Done</span>}
+                    </button>
+
+                    {isExpanded && (
+                      <div className="px-3 pb-3 space-y-3 text-xs text-slate-400">
+                        <p>{cat.description}</p>
+                        <div className="text-slate-500">
+                          <span className="text-slate-400">Examples: </span>
+                          {cat.examples.join(", ")}
+                        </div>
+                        <p className="text-slate-300 italic">{cat.collaborativePrompt}</p>
+
+                        {/* Strategies */}
+                        <div className="space-y-1.5 pt-1">
+                          <p className="text-slate-300 font-medium">Ideas that have helped others:</p>
+                          {cat.strategies.map((s) => (
+                            <label
+                              key={s}
+                              className="flex items-start gap-2 cursor-pointer hover:text-slate-200 transition-colors"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={selectedStrat.includes(s)}
+                                onChange={() => toggleStrategy(cat.id, s)}
+                                className="mt-0.5 accent-violet-500 cursor-pointer"
+                              />
+                              <span>{s}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Commitment */}
+            <div className="space-y-2">
+              <label className="block text-xs font-medium text-slate-300">
+                One small step I'd like to take (optional)
+              </label>
+              <textarea
+                value={commitmentInput || meansProgress.commitmentText}
+                onChange={(e) => setCommitmentInput(e.target.value)}
+                className="w-full h-16 bg-card border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-300 placeholder-slate-600 focus:outline-none focus:border-violet-500 transition-all resize-none"
+                placeholder="e.g. I'll ask my brother to hold my medication and give me a weekly supply."
+              />
+            </div>
+
+            {/* Generate section 6 block */}
+            <button
+              onClick={handleGenerateSafeEnvironment}
+              className="w-full px-3 py-2 rounded-xl bg-violet-500/20 hover:bg-violet-500/30 text-violet-200 text-sm font-medium transition-colors cursor-pointer"
+              id="sp-generate-safeenv-btn"
+            >
+              Add to section 6 above
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
