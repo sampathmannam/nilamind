@@ -600,6 +600,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
               onClick={handleVoice}
               onLongPress={() => openCrisis()}
               size={160}
+              isListening={listening}
             />
 
             <div className="text-center space-y-2">

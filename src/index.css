@@ -194,9 +194,16 @@ html, body, #root {
 /* The root surface + default text follow the active theme. */
 html, body { background-color: var(--color-page); color: var(--color-slate-100); }
 
-/* Nila's orb breathes slowly — a calm presence, not an attention-grab. */
-@keyframes nilaBreathe { 0%, 100% { transform: scale(1); opacity: 0.9; } 50% { transform: scale(1.06); opacity: 1; } }
-.nila-orb { animation: nilaBreathe 4.5s ease-in-out infinite; }
+/* Nila's orb animations — state-driven by nilaFaceMotion.ts, keyframes defined once here. */
+@keyframes nila-breathe {
+  0% { transform: scale(1); opacity: 0.6; animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1); }
+  50% { transform: scale(1.08); opacity: 1; animation-timing-function: cubic-bezier(0.6, 0, 0.8, 1); }
+  100% { transform: scale(1); opacity: 0.6; }
+}
+@keyframes nila-spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes nila-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+@keyframes nila-drift { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(2px, -2px); } }
+.nila-orb { animation: nila-breathe 4.5s ease-in-out infinite; }
 
 /* Calm motion: honour the OS "reduce motion" setting (trauma-informed). */
 @media (prefers-reduced-motion: reduce) {
