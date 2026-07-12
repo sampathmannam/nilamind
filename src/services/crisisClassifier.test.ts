@@ -132,6 +132,29 @@ describe("crisisClassifier — additive, fail-closed §9 gate", () => {
     expect(await detectCrisis("i'm okay now that i've decided to end it")).toBe(true);
     expect(await detectCrisis(EUPHEMISM)).toBe(true);
   });
+
+  // NEGATIVE GUARD wiring (2026-07-12 device-QA — CRITICAL false full-screen takeover): "whats/what's the
+  // point of going on a diet if i/I dont/don't stick to it" must NOT be upgraded even at score≈1. This is the
+  // guard for the reported bug: the deterministic keyword floor already treats this as benign
+  // (hasExistentialHopelessness's referent escape hatch, safety.ts), but the on-device MiniLM classifier
+  // independently scores it at 0.83-0.87 against the REAL model (crisisClassifier.realmodel.test.ts) — this
+  // test proves the guard's WIRING with a deterministic mock (the real-model end-to-end regression lives in
+  // crisisClassifier.realmodel.test.ts). Apostrophe-insensitive: the bug reproduced with and without them.
+  it("ON: isBenignExistentialReferent suppresses a high-scoring 'going on a diet' MISS (with and without apostrophes)", async () => {
+    setCrisisClassifierEnabled(true);
+    setCrisisEmbedder(constEmbedder([...COEF])); // score ≈ 1 ≥ threshold
+    expect(await detectCrisis("whats the point of going on a diet if i dont stick to it")).toBe(false);
+    expect(await detectCrisis("what's the point of going on a diet if I don't stick to it")).toBe(false);
+    expect(await detectCrisis("whats the point of going on vacation if my flight keeps getting delayed anyway")).toBe(false);
+    expect(await detectCrisis("theres no point in any of this meeting lets reschedule")).toBe(false);
+    expect(await detectCrisis("there's no point in any of this meeting, let's reschedule")).toBe(false);
+    expect(await detectCrisis("i just want it all to stop this rain is ruining my trip")).toBe(false);
+    // a phrase with NO referent/nuisance escape (genuine unescaped family member) is NOT suppressed by this
+    // guard — though in practice it already hits via the keyword floor before the classifier is ever consulted.
+    expect(await detectCrisis("whats the point of going on")).toBe(true);
+    // a genuine euphemism with no existential-family phrasing at all is untouched by this guard.
+    expect(await detectCrisis(EUPHEMISM)).toBe(true);
+  });
 });
 
 // A TEXT-AWARE mock embedder (unlike constEmbedder, which ignores the input entirely): scores high only for

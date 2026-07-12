@@ -23,7 +23,7 @@
  * device-verified — see crisisEmbedder.example.ts.
  */
 import weights from "./crisisClassifier.weights.json";
-import { scanForCrisis, isBenignMedicationAdherence, isBenignHyperbole, isBenignExhaustion, isBenignOkayReassurance } from "../safety";
+import { scanForCrisis, isBenignMedicationAdherence, isBenignHyperbole, isBenignExhaustion, isBenignOkayReassurance, isBenignExistentialReferent } from "../safety";
 
 /** Returns a NORMALIZED (L2) sentence embedding of `dim` floats. The head was trained on normalized MiniLM
  *  mean-pooled embeddings, so the embedder MUST mean-pool + L2-normalize (Transformers.js:
@@ -169,6 +169,15 @@ export async function detectCrisisSignal(text: string): Promise<CrisisSignal> {
   // of re-tripping it. Vetoed by any lethal co-signal, life-weariness/despair, OR crisis-minimization cue
   // ("don't worry about me", "at peace", "said my goodbyes"), so real minimization still fires (2026-07-10).
   if (isBenignOkayReassurance(text)) return { hit: false, source: null, tier: null };
+  // 2026-07-12 device-QA (CRITICAL false full-screen takeover): "whats/what's the point of going on a diet if
+  // i/I dont/don't stick to it" — the classifier scores this exact phrase at 0.83-0.87 against the real
+  // bundled model, well above CRISIS_HIGH_CONFIDENCE_THRESHOLD, regardless of apostrophes — even though the
+  // keyword floor's own escape hatch (hasExistentialHopelessness, safety.ts) already deems it benign. Same
+  // posture as the other four guards: only suppresses the classifier's contribution after a keyword-floor
+  // MISS, and it can only ever fire on a message the keyword floor's escape hatch itself already special-cased
+  // as benign (see isBenignExistentialReferent's docstring in safety.ts for the full root-cause story and the
+  // real-model scores).
+  if (isBenignExistentialReferent(text)) return { hit: false, source: null, tier: null };
   const p = await scoreCrisis(text);
   if (p === null || p < CRISIS_THRESHOLD) return { hit: false, source: null, tier: null };
   // 2026-07-12 Bug 1 fix: tier is SCORE-based within classifier hits, not automatically "soft" just because

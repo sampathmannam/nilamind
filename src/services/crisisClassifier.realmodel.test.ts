@@ -239,3 +239,101 @@ describe("crisisClassifier — REAL MiniLM two-tier surface (2026-07-12 Bug 1 fi
     expect(CRISIS_HIGH_CONFIDENCE_THRESHOLD).toBeLessThan(1);
   });
 });
+
+/**
+ * CRITICAL device-observed regression (2026-07-12 device-QA): typing "whats the point of going on a diet if i
+ * dont stick to it" via `adb shell input text` (no apostrophes — exactly how it lands on a real device with no
+ * autocorrect/smart-quotes) triggered the app's FULL-SCREEN crisis takeover on an ordinary diet complaint.
+ *
+ * Commit 32af858 ("fix(safety): close passive existential-SI recall gap") had ALREADY added an escape hatch
+ * (hasExistentialHopelessness's referent check) so scanForCrisis — the deterministic keyword floor — correctly
+ * treats this as benign, and that part works: scanForCrisis returns false for this phrase, with or without
+ * apostrophes (see the "does NOT trip on benign 'going on <referent>' control" tests in safety.test.ts).
+ *
+ * The apostrophe was a RED HERRING. The real bug is one layer up: the live send path (sendToNila.ts ->
+ * crisisSignalForSend -> detectCrisisSignal) always ALSO consults the on-device MiniLM classifier after a
+ * keyword-floor MISS, and — proven here against the REAL bundled model — the classifier independently scores
+ * this exact phrase family at 0.83-0.87 (well above CRISIS_HIGH_CONFIDENCE_THRESHOLD, 0.65), for BOTH the
+ * no-apostrophe device-typed form AND the apostrophe form, producing a classifier-source, tier:"full" hit —
+ * the exact full-screen takeover reported. Commit 32af858's own unit tests only ever called scanForCrisis()
+ * directly (bypassing the classifier entirely), so this real-pipeline regression was never actually caught —
+ * despite the commit's report claiming the apostrophe form "passed as a benign control."
+ *
+ * The fix is isBenignExistentialReferent (safety.ts), wired into detectCrisisSignal exactly like the other
+ * four negative guards. These assertions lock in: the model still SCORES the phrase high (we did NOT
+ * retrain/re-threshold), yet the end-to-end verdict (detectCrisisSignal) is now safe, while the genuine
+ * unescaped disclosure — no diet/meeting/rain referent — still fires at tier:"full" via the keyword floor.
+ */
+describe("crisisClassifier — REAL MiniLM regression: existential-referent classifier false positive (2026-07-12 device-QA)", () => {
+  beforeAll(async () => {
+    setCrisisClassifierEnabled(true);
+    setCrisisEmbedder(realEmbedder);
+    await realEmbedder("warmup");
+  }, 120_000);
+
+  it("the raw model STILL scores the diet phrase (no apostrophes, exact device-typed string) above CRISIS_HIGH_CONFIDENCE_THRESHOLD (fix is the guard, not the model)", async () => {
+    const p = await scoreCrisis("whats the point of going on a diet if i dont stick to it");
+    expect(p).not.toBeNull();
+    expect(p as number).toBeGreaterThan(CRISIS_HIGH_CONFIDENCE_THRESHOLD); // measured ~0.8312
+  }, 60_000);
+
+  it("the raw model STILL scores the diet phrase (with apostrophes) above CRISIS_HIGH_CONFIDENCE_THRESHOLD too — the apostrophe is NOT the variable", async () => {
+    const p = await scoreCrisis("what's the point of going on a diet if I don't stick to it");
+    expect(p).not.toBeNull();
+    expect(p as number).toBeGreaterThan(CRISIS_HIGH_CONFIDENCE_THRESHOLD); // measured ~0.8701
+  }, 60_000);
+
+  it("does NOT trigger the full-screen crisis takeover on the exact device-typed string (no apostrophes)", async () => {
+    const sig = await detectCrisisSignal("whats the point of going on a diet if i dont stick to it");
+    expect(sig).toEqual({ hit: false, source: null, tier: null });
+  }, 60_000);
+
+  it("does NOT trigger the full-screen crisis takeover on the apostrophe form either", async () => {
+    const sig = await detectCrisisSignal("what's the point of going on a diet if I don't stick to it");
+    expect(sig).toEqual({ hit: false, source: null, tier: null });
+  }, 60_000);
+
+  it.each([
+    "whats the point of going on vacation if my flight keeps getting delayed anyway",
+    "what's the point of going on vacation if my flight keeps getting delayed anyway",
+  ])("does NOT fire on the other 'going on <referent>' benign control (with/without apostrophes): %j", async (s) => {
+    const sig = await detectCrisisSignal(s);
+    expect(sig.hit).toBe(false);
+  }, 60_000);
+
+  // The other two escape-hatch families from the same commit, empirically re-checked end-to-end (both
+  // apostrophe forms) — these already score low against the real model (0.02-0.24) and were never broken,
+  // but are locked in here now that this describe block exists, per the "check every family, don't assume"
+  // instruction that produced this fix.
+  it.each([
+    "theres no point in any of this meeting lets reschedule",
+    "there's no point in any of this meeting, let's reschedule",
+    "theres no point in any of this paperwork the deadline already passed",
+    "there's no point in any of this paperwork, the deadline already passed",
+  ])("'no point in any of this <referent>' family does NOT fire, with or without apostrophes: %j", async (s) => {
+    const sig = await detectCrisisSignal(s);
+    expect(sig.hit).toBe(false);
+  }, 60_000);
+
+  it.each([
+    "i just want it all to stop this rain is ruining my trip",
+    "I just want it all to stop — this rain is ruining my trip",
+    "i just want it all to stop this construction noise outside my window is nonstop",
+    "I just want it all to stop, this construction noise outside my window is nonstop",
+  ])("'want it all to stop' + mundane-nuisance family does NOT fire, with or without apostrophes/punctuation: %j", async (s) => {
+    const sig = await detectCrisisSignal(s);
+    expect(sig.hit).toBe(false);
+  }, 60_000);
+
+  // Genuine, unescaped disclosures (no diet/meeting/rain referent) must STILL fire at the full takeover —
+  // recall is unchanged. These already hit via the KEYWORD floor (scanForCrisis), independent of this guard.
+  it.each([
+    "whats the point of going on",
+    "what's the point of going on",
+  ])("genuine unescaped disclosure still resolves tier:'full' (recall preserved): %j", async (s) => {
+    const sig = await detectCrisisSignal(s);
+    expect(sig.hit).toBe(true);
+    expect(sig.source).toBe("keyword");
+    expect(sig.tier).toBe("full");
+  }, 60_000);
+});

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isStreamingHarm, scanForCrisis, checkResponse, isBenignMedicationAdherence, isBenignHyperbole, isBenignExhaustion, isBenignOkayReassurance, METHOD_INTENT_PHRASES, SYCOPHANTIC_AFFIRMATIONS, ROMANIZED_IDEATION, SLANG_IDEATION } from "./safety";
+import { isStreamingHarm, scanForCrisis, checkResponse, isBenignMedicationAdherence, isBenignHyperbole, isBenignExhaustion, isBenignOkayReassurance, isBenignExistentialReferent, METHOD_INTENT_PHRASES, SYCOPHANTIC_AFFIRMATIONS, ROMANIZED_IDEATION, SLANG_IDEATION } from "./safety";
 
 // Phase 0 — anti-sycophancy / reality-testing gate. Research basis (docs/NILA_AGENT_RESEARCH_BASIS.md): sycophancy
 // — a model VALIDATING a harmful belief — is THE documented harm mechanism of LLM mental-health tools (OpenAI's
@@ -878,24 +878,93 @@ describe("scanForCrisis — passive existential-hopelessness recall (Wave 3 thre
   // Each family is AMBIGUOUS as a bare substring — it collides with ordinary complaints about something
   // concrete and named ("a diet", "this meeting", "this rain"), so precision requires an escape hatch (same
   // posture as AMBIGUOUS_NEGATION_PREFIXES / hasAmbiguousNegationIdeation above), not a plain .includes().
+  //
+  // 2026-07-12 device-QA (CRITICAL false full-screen takeover): "whats the point of going on a diet if i dont
+  // stick to it" — typed via `adb shell input text`, NO apostrophes, exactly how it landed on a real device
+  // with no autocorrect/smart-quotes — triggered the app's FULL-SCREEN crisis takeover. This describe block
+  // previously only ever asserted the WITH-apostrophe form of each family; the no-apostrophe device-typed
+  // form (a plausible real-user typing pattern, not just an adb quirk) had ZERO coverage. Empirically
+  // re-verifying every family here, both forms: scanForCrisis itself is confirmed CORRECT for all of
+  // them (hasReferentAfter/MUNDANE_NUISANCE_RE don't care about apostrophes at all — they only look at the
+  // characters immediately after the matched prefix). The device-observed bug was NOT here — it was the
+  // on-device MiniLM classifier independently scoring the "diet" family high with NO matching negative guard;
+  // see isBenignExistentialReferent below and crisisClassifier.realmodel.test.ts for the real root cause and
+  // fix (the classifier layer, not this keyword-floor escape hatch).
   it.each([
     "what's the point of going on a diet if I don't stick to it",
+    "whats the point of going on a diet if i dont stick to it", // exact device-typed string, no apostrophes
     "what's the point of going on vacation if my flight keeps getting delayed anyway",
-  ])("does NOT trip on benign 'going on <referent>' control: %j", (s) => {
+    "whats the point of going on vacation if my flight keeps getting delayed anyway",
+  ])("does NOT trip on benign 'going on <referent>' control, with or without apostrophes: %j", (s) => {
     expect(scanForCrisis(s)).toBe(false);
   });
 
   it.each([
     "there's no point in any of this meeting, let's reschedule",
+    "theres no point in any of this meeting lets reschedule",
     "there's no point in any of this paperwork, the deadline already passed",
-  ])("does NOT trip on benign 'no point in any of this <referent>' control: %j", (s) => {
+    "theres no point in any of this paperwork the deadline already passed",
+  ])("does NOT trip on benign 'no point in any of this <referent>' control, with or without apostrophes: %j", (s) => {
     expect(scanForCrisis(s)).toBe(false);
   });
 
   it.each([
     "I just want it all to stop — this rain is ruining my trip",
+    "i just want it all to stop this rain is ruining my trip",
     "I just want it all to stop, this construction noise outside my window is nonstop",
-  ])("does NOT trip on benign 'want it all to stop' + mundane-nuisance control: %j", (s) => {
+    "i just want it all to stop this construction noise outside my window is nonstop",
+  ])("does NOT trip on benign 'want it all to stop' + mundane-nuisance control, with or without apostrophes/punctuation: %j", (s) => {
     expect(scanForCrisis(s)).toBe(false);
+  });
+});
+
+// isBenignExistentialReferent — narrow negative guard for the semantic §9 gate, mirroring
+// isBenignMedicationAdherence/isBenignHyperbole/isBenignExhaustion/isBenignOkayReassurance above.
+//
+// ROOT CAUSE (2026-07-12 device-QA): the block above proves scanForCrisis (the deterministic keyword floor)
+// was ALREADY correct for the diet/vacation/meeting/paperwork/rain/construction benign controls, with or
+// without apostrophes. The reported full-screen crisis takeover came from a layer this file's Wave 3 fix
+// never touched: the live send path (sendToNila.ts -> crisisSignalForSend -> detectCrisisSignal) ALWAYS also
+// consults the on-device MiniLM classifier after a keyword-floor MISS, and the classifier independently
+// scores "whats/what's the point of going on a diet if i/I dont/don't stick to it" at 0.83-0.87 against the
+// REAL bundled model (crisisClassifier.realmodel.test.ts) — well above CRISIS_HIGH_CONFIDENCE_THRESHOLD
+// (0.65), for BOTH apostrophe forms. This guard closes that gap the same way the other four guards close
+// their own classifier false-positive families.
+describe("isBenignExistentialReferent — narrow negative guard for the semantic §9 gate (existential-referent classifier FP)", () => {
+  it.each([
+    "whats the point of going on a diet if i dont stick to it", // exact device-typed string
+    "what's the point of going on a diet if I don't stick to it",
+    "whats the point of going on vacation if my flight keeps getting delayed anyway",
+    "what's the point of going on vacation if my flight keeps getting delayed anyway",
+    "theres no point in any of this meeting lets reschedule",
+    "there's no point in any of this meeting, let's reschedule",
+    "theres no point in any of this paperwork the deadline already passed",
+    "there's no point in any of this paperwork, the deadline already passed",
+    "i just want it all to stop this rain is ruining my trip",
+    "I just want it all to stop — this rain is ruining my trip",
+    "i just want it all to stop this construction noise outside my window is nonstop",
+    "I just want it all to stop, this construction noise outside my window is nonstop",
+  ])("guards the existential-hopelessness + benign-referent/nuisance family, with or without apostrophes: %j", (s) => {
+    expect(isBenignExistentialReferent(s)).toBe(true);
+  });
+
+  // MUST NOT guard — a genuine unescaped disclosure (no referent/nuisance). In practice these already hit via
+  // the keyword floor (scanForCrisis) before the classifier/this guard is ever consulted, but the guard itself
+  // must still report false here so it never masks anything if the calling order ever changed.
+  it.each([
+    "whats the point of going on",
+    "what's the point of going on",
+    "there's no point in any of this",
+    "theres no point in any of this",
+    "I just want it all to stop",
+    "i just want it all to stop",
+  ])("does NOT guard a genuine unescaped existential-hopelessness disclosure: %j", (s) => {
+    expect(isBenignExistentialReferent(s)).toBe(false);
+  });
+
+  it("does NOT guard messages with no existential-hopelessness family phrasing at all, or empty input", () => {
+    expect(isBenignExistentialReferent("the world would be lighter without me in it")).toBe(false); // real euphemism, different family
+    expect(isBenignExistentialReferent("i had a nice walk this evening and felt pretty calm")).toBe(false); // positive
+    expect(isBenignExistentialReferent("")).toBe(false);
   });
 });
