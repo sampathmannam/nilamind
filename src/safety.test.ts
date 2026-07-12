@@ -735,8 +735,6 @@ describe("scanForCrisis — additional crisis phrases (2026-07-09 audit gap)", (
     "i just want to end the pain forever",
     "i can't do this anymore",
     "I can't do this any longer",
-    "no way out of this",
-    "i can't see a way out anymore",
   ])("trips on crisis phrasing: %j", (s) => {
     expect(scanForCrisis(s)).toBe(true);
   });
@@ -759,7 +757,16 @@ describe("scanForCrisis — expanded dissociation coverage (2026-07-09 audit)", 
     "i've been feeling depersonalized all day",
     "i feel disconnected from reality right now",
     "i don't feel real at all anymore",
-  ])("trips on expanded dissociation phrasing: %j", (s) => {
+    "voices telling me things i don't understand",
+  ])("2026-07-12 softening: soft-only dissociation does NOT open the takeover: %j", (s) => {
+    expect(scanForCrisis(s)).toBe(false);
+  });
+
+  it.each([
+    "voices telling me to end it all",
+    "i feel detached and i want to die",
+    "nothing feels real and i can't go on",
+  ])("2026-07-12 softening: dissociation + hard signal DOES trip: %j", (s) => {
     expect(scanForCrisis(s)).toBe(true);
   });
 
@@ -767,9 +774,33 @@ describe("scanForCrisis — expanded dissociation coverage (2026-07-09 audit)", 
     "i try to stay detached from gossip at work — it's healthier",
     "the painting looks so unreal, like a photograph",
     "i disconnected from the wifi and reconnected",
-    "the special effects in that movie didn't feel real",
+    "the special effects in that movie won't feel real",
   ])("does NOT false-positive on benign controls: %j", (s) => {
     expect(scanForCrisis(s)).toBe(false);
+  });
+});
+
+// 2026-07-12 product softening (FLAGGED for human safety review): indirect metaphors
+// ("no way out", "vanish", "be gone"…) are common in everyday hopelessness and are NOT by
+// themselves extreme. Under scanForCrisis they no longer open the full §9 takeover
+// ALONE — only when a HARD crisis signal co-occurs (the hard lists already returned
+// true at that point). Soft-only text still gets the warm companion + output gate.
+describe("scanForCrisis — 2026-07-12 softening: indirect metaphors NO LONGER trip alone", () => {
+  it.each([
+    "no way out of this",
+    "i can't see a way out anymore",
+    "i want to vanish",
+    "be gone",
+    "i feel like i could disappear without a trace",
+  ])("soft-only metaphor does NOT open the takeover: %j", (s) => {
+    expect(scanForCrisis(s)).toBe(false);
+  });
+
+  it.each([
+    "no way out of this, i want to die",
+    "i can't see a way out and i want to end it all",
+  ])("metaphor + hard signal DOES trip: %j", (s) => {
+    expect(scanForCrisis(s)).toBe(true);
   });
 });
 

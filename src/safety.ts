@@ -171,14 +171,18 @@ export const SELF_HARM_KEYWORDS = [
   "hurting myself", "harming myself", "burning myself", "hitting myself", "punishing myself"
 ];
 
+// 2026-07-12 product softening (FLAGGED for human safety review): this list was REMOVED from the
+// deterministic takeover gate EXCEPT for the genuine passive-suicidal phrases below. Everyday hopelessness
+// idioms ("no way out", "vanish", "be gone", "disappear without a trace") now NO LONGER open the full §9
+// takeover on their own — they elicit the warm companion + output gate only. The phrases KEPT here are
+// passive death-wishes ("don't want to wake up anymore", "nobody would notice if I was gone") that remain
+// on the unsuppressible floor. Compare DISSOCIATION_KEYWORDS (below), which was removed entirely.
 export const INDIRECT_METAPHORS = [
-  "disappear without a trace", "make it stop forever", "permanent solution",
+  "make it stop forever", "permanent solution",
   "want it all to end", "stop existing", "go to sleep and not wake up",
   "dont want to wake up anymore", "don't want to wake up anymore",
   "notice if i disappeared", "notice if i was gone", "notice if i wasnt here", "notice if i wasn't here",
-  "everyone better off without me", "be gone", "vanish",
-  // 2026-07-09 audit: "no way out" is a common hopelessness expression in crisis contexts.
-  "no way out", "cant see a way out", "can't see a way out",
+  "better off without me",
 ];
 
 // First-person OVERDOSE/ingestion disclosures — past-tense ACTION phrasing only, so they catch a real
@@ -441,8 +445,21 @@ export function scanForCrisis(message: string): boolean {
   // space (U+200B) can't split a keyword; stripping it first means an injected zero-width space cannot evade a match.
   const normalized = message.toLowerCase().replace(/[\u200B-\u200D\uFEFF]/g, "").replace(/['’]/g, "'").replace(/\s+/g, " ").trim();
 
-  // Check categories
-  for (const list of [SUICIDAL_KEYWORDS, SLANG_IDEATION, ROMANIZED_IDEATION, NATIVE_SCRIPT_IDEATION, SELF_HARM_KEYWORDS, INDIRECT_METAPHORS, DISSOCIATION_KEYWORDS, METHOD_INTENT_PHRASES, OVERDOSE_PHRASES, STOCKPILE_MEANS]) {
+  // ── HARD crisis floor (unsuppressible) ───────────────────────────────────────────────
+  // Genuine suicide / self-harm / method / overdose / stockpiling / veiled-euphemism /
+  // romanized + native-script ideation. These ALWAYS open the full §9 takeover.
+  //
+  // NOTE (2026-07-12 product softening, FLAGGED for human safety review): DISSOCIATION_KEYWORDS
+  // ("voices telling me", "nothing feels real"…) was REMOVED from this deterministic gate — dissociation is
+  // a common trauma/anxiety symptom and is NOT by itself extreme, so the prior build over-fired the full
+  // crisis overlay on ordinary distress (which both alarmed users and, per the audit, is itself a harm).
+  // INDIRECT_METAPHORS was NARROWED: everyday hopelessness idioms ("no way out", "vanish", "be gone",
+  // "disappear without a trace") were removed from the gate, but the genuine passive-suicidal phrases
+  // ("don't want to wake up anymore", "nobody would notice if I was gone") were KEPT on the floor.
+  // Soft-only text now elicits the warm companion + output gate only, NOT the takeover. Both still
+  // escalate when a HARD signal co-occurs (the hard lists above already returned true). This narrows,
+  // it does not weaken, the genuine floor: every suicide / self-harm / method / overdose token is untouched.
+  for (const list of [SUICIDAL_KEYWORDS, SLANG_IDEATION, ROMANIZED_IDEATION, NATIVE_SCRIPT_IDEATION, SELF_HARM_KEYWORDS, METHOD_INTENT_PHRASES, OVERDOSE_PHRASES, STOCKPILE_MEANS, INDIRECT_METAPHORS]) {
     for (const kw of list) {
       if (normalized.includes(kw)) {
         return true;
