@@ -30,6 +30,8 @@ export interface Protocol {
   steps: ProtocolStep[];
 }
 
+import { DBT_SKILLS_TRAINING } from "./protocolDBT";
+
 export const PROTOCOLS: Protocol[] = [
   {
     id: "behavioral-activation",
@@ -304,6 +306,7 @@ export const PROTOCOLS: Protocol[] = [
         prompt: "After a few days of noticing small positives: has anything softened? Not forcing happiness — just noticing whether a little more light gets through." },
     ],
   },
+  DBT_SKILLS_TRAINING,
 ];
 
 /**
