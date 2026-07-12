@@ -30,8 +30,8 @@ import { sleepHoursVariability, variabilityContextBlock } from "./sleepHoursVari
 import type { VariabilitySignal } from "./sleepHoursVariability";
 import { assessJitai } from "./jitaiEngine";
 import { computeUsageSummary } from "./usageAnalytics";
-import { computeCircadianFeedback } from "./circadianFeedback";
-import { computeRhythmRegularity } from "./socialRhythm";
+import { computeCircadianFeedback, computeSleepRegularityIndex } from "./circadianFeedback";
+import { computeRhythmRegularity, buildSleepWindows, loadRhythm } from "./socialRhythm";
 // #8 (audit): these were pulled via CommonJS require() below, which throws "require is not defined" in the
 // ESM Capacitor WebView bundle and was swallowed by try/catch — so BA + proactive context silently never
 // reached Nila in production. Static ESM imports (no import cycle: neither module imports nilaContext).
@@ -273,8 +273,16 @@ export function buildPersonalContext(): string {
       const rhythmReg = computeRhythmRegularity();
       const feedback = computeCircadianFeedback({ sleeps, rhythmVariabilityMin: rhythmReg.overallVariabilityMin });
       if (feedback && feedback.needsAttention) {
-        circadianBlock = `CIRCADIAN FEEDBACK: ${feedback.guidance} Combined score: ${feedback.combinedScore}/100.`;
+        circadianBlock = `CIRCADIAN FEEDBACK (sleep duration + routine-timing consistency proxy): ${feedback.guidance} Combined score: ${feedback.combinedScore}/100.`;
       }
+    }
+    // Real Sleep Regularity Index (Phillips et al. 2017) — a SEPARATE, genuinely timing-based metric from
+    // the duration-CV proxy above; only speaks up when the band is NOT "regular" (needs-attention parity
+    // with the block above). Health Connect timestamps aren't fetched here (async, off-by-default);
+    // buildSleepWindows() falls back to the Social Rhythm Metric's own bed/wake anchors.
+    const sri = computeSleepRegularityIndex(buildSleepWindows([], loadRhythm()));
+    if (sri && sri.band !== "regular") {
+      circadianBlock += `${circadianBlock ? " " : ""}SLEEP REGULARITY INDEX (real bed/wake timing, Phillips 2017): ${sri.guidance}`;
     }
   } catch { /* best-effort */ }
   // A detected trend shift — only when the user has opted into inflection awareness.

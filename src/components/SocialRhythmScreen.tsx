@@ -6,13 +6,14 @@ import {
   loadRhythm,
   recordRhythm,
   computeRhythmRegularity,
+  buildSleepWindows,
   type AnchorKey,
   type RhythmAnchors,
   type RhythmBand,
 } from "../services/socialRhythm";
 import { dayKey } from "../services/retentionMetrics";
 import { hapticLight } from "../hooks/useHaptics";
-import { computeCircadianFeedback } from "../services/circadianFeedback";
+import { computeCircadianFeedback, computeSleepRegularityIndex } from "../services/circadianFeedback";
 import { loadMoodHistory } from "../services/moodHistory";
 
 const BAND_COPY: Record<RhythmBand, { label: string; cls: string }> = {
@@ -32,6 +33,10 @@ export default function SocialRhythmScreen() {
 
   const reg = useMemo(() => computeRhythmRegularity(), [version]);
   const band = BAND_COPY[reg.band];
+
+  // Real Sleep Regularity Index (Phillips et al. 2017) — a SEPARATE, timing-based metric from the anchor
+  // variability read below (which is circular-SD across anchors, not per-epoch clock-time agreement).
+  const sri = useMemo(() => computeSleepRegularityIndex(buildSleepWindows([], loadRhythm())), [version]);
 
   const setAnchor = (key: AnchorKey, val: string) => {
     setAnchors((a) => ({ ...a, [key]: val }));
@@ -143,6 +148,24 @@ export default function SocialRhythmScreen() {
           </div>
         )}
       </div>
+
+      {/* Real Sleep Regularity Index (Phillips et al. 2017) — genuine bed/wake TIMING regularity, distinct
+          from the anchor-variability read above. Only renders once >=7 nights of bed+wake anchors exist. */}
+      {sri && (
+        <div className="glass rounded-2xl p-4 space-y-2" id="sleep-regularity-index">
+          <div className="flex items-center justify-between">
+            <div className="text-sm font-semibold text-slate-200">Sleep Regularity Index</div>
+            <span className={`text-sm font-semibold ${sri.band === "regular" ? "text-emerald-400" : sri.band === "moderately_irregular" ? "text-amber-400" : "text-rose-300"}`}>
+              {sri.sri}/100
+            </span>
+          </div>
+          <p className="text-xs text-slate-400 leading-relaxed">{sri.guidance}</p>
+          <p className="text-[10px] text-slate-500 leading-relaxed">
+            From {sri.nightsUsed} nights of bed/wake times (Phillips et al., 2017) — a different, timing-based
+            measure from the anchor variability above.
+          </p>
+        </div>
+      )}
 
       {/* Honest basis + limit */}
       <p className="text-[10px] text-slate-500 leading-relaxed px-1">

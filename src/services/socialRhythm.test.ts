@@ -7,10 +7,17 @@ import {
   computeRhythmRegularity,
   hasRhythmToday,
   loadTodayAnchors,
+  buildSleepWindows,
   MIN_RHYTHM_DAYS,
   type RhythmEntry,
   type RhythmAnchors,
 } from "./socialRhythm";
+import type { SleepNight } from "./healthConnect";
+
+// Pin the test process to UTC so buildSleepWindows' local-wall-clock bed/wake extraction (matches
+// healthConnect.ts's own local-day `ymd()` convention — correct on a real device, whose local TZ IS the
+// user's actual timezone) is deterministic here regardless of the machine running the suite.
+process.env.TZ = "UTC";
 
 // socialRhythm -> retentionMetrics -> identity, which spreads SENSITIVE_KEYS at import; provide it.
 const store = new Map<string, string>();
@@ -163,5 +170,56 @@ describe("computeRhythmRegularity", () => {
     expect(dinner.daysLogged).toBe(2);
     expect(r.overallVariabilityMin).toBe(0); // driven by wake only (dinner below floor)
     expect(MIN_RHYTHM_DAYS).toBe(5);
+  });
+});
+
+// Group C (real Sleep Regularity Index, Phillips et al. 2017): reconstruct a per-night {date, bedMin,
+// wakeMin} series — Health Connect's real session timestamps take priority per wake-day; the Social Rhythm
+// Metric's self-logged "bed"/"wake" anchors (prior day's bed + this day's wake) fill in every date Health
+// Connect doesn't cover. This is the exact input class (diary bed/wake clock times) the founding Phillips
+// 2017 study itself used — see circadianFeedback.ts's computeSleepRegularityIndex for the formula.
+describe("buildSleepWindows", () => {
+  it("uses Health Connect timestamps when available for a wake-day", () => {
+    const hc: SleepNight[] = [
+      { date: "2026-07-05", hours: 7.5, startTime: "2026-07-04T22:30:00Z", endTime: "2026-07-05T06:00:00Z" },
+    ];
+    const windows = buildSleepWindows(hc, []);
+    expect(windows).toHaveLength(1);
+    expect(windows[0].date).toBe("2026-07-05");
+    expect(windows[0].source).toBe("healthconnect");
+    expect(windows[0].bedMin).toBe(22 * 60 + 30);
+    expect(windows[0].wakeMin).toBe(6 * 60);
+  });
+
+  it("falls back to the prior day's bed anchor + this day's wake anchor when Health Connect has no data", () => {
+    const rhythm: RhythmEntry[] = [
+      { date: "2026-07-04", anchors: { bed: "23:00" } },
+      { date: "2026-07-05", anchors: { wake: "07:00" } },
+    ];
+    const windows = buildSleepWindows([], rhythm);
+    expect(windows).toEqual([{ date: "2026-07-05", bedMin: 23 * 60, wakeMin: 7 * 60, source: "rhythm" }]);
+  });
+
+  it("prefers Health Connect over the rhythm fallback for the same date", () => {
+    const hc: SleepNight[] = [
+      { date: "2026-07-05", hours: 8, startTime: "2026-07-04T22:00:00Z", endTime: "2026-07-05T06:00:00Z" },
+    ];
+    const rhythm: RhythmEntry[] = [
+      { date: "2026-07-04", anchors: { bed: "23:30" } },
+      { date: "2026-07-05", anchors: { wake: "07:30" } },
+    ];
+    const windows = buildSleepWindows(hc, rhythm);
+    expect(windows).toHaveLength(1);
+    expect(windows[0].source).toBe("healthconnect");
+  });
+
+  it("skips a wake day when the prior day's bed anchor is missing (no fabricated pairing)", () => {
+    const rhythm: RhythmEntry[] = [{ date: "2026-07-05", anchors: { wake: "07:00" } }];
+    expect(buildSleepWindows([], rhythm)).toEqual([]);
+  });
+
+  it("skips a Health Connect night with garbage/missing timestamps rather than crashing", () => {
+    const hc: SleepNight[] = [{ date: "2026-07-05", hours: 7.5 }]; // no startTime/endTime
+    expect(buildSleepWindows(hc, [])).toEqual([]);
   });
 });

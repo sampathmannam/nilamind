@@ -9,6 +9,7 @@
 
 import { secureLocal } from "./secureLocal";
 import { dayKey } from "./retentionMetrics";
+import type { SleepNight } from "./healthConnect";
 
 const RHYTHM_KEY = "nilamind_social_rhythm";
 /** Minimum distinct days before we surface a regularity read — below this it's noise (cf. patternInsights MIN_GROUP). */
@@ -170,4 +171,65 @@ export function computeRhythmRegularity(now: Date = new Date(), windowDays: numb
     overallVariabilityMin,
     band: bandFor(overallVariabilityMin, daysLogged),
   };
+}
+
+// ── Group C: real Sleep Regularity Index (Phillips et al. 2017) — per-night bed/wake reconstruction ──
+//
+// Phillips 2017's founding study itself used diary-reported bed/wake CLOCK TIMES (not actigraphy), so
+// combining Health Connect's real sleep-session timestamps with this file's self-logged "bed"/"wake"
+// anchors is not a lesser approximation — it's the same input class the original paper used. See
+// circadianFeedback.ts's computeSleepRegularityIndex for the formula that consumes this output.
+
+export interface SleepWindow {
+  date: string; // wake-day YYYY-MM-DD — same keying convention as healthConnect's SleepNight
+  bedMin: number; // clock-time minutes-since-midnight of the bedtime preceding this wake (0-1439)
+  wakeMin: number; // clock-time minutes-since-midnight of waking (0-1439)
+  source: "healthconnect" | "rhythm";
+}
+
+/** Previous/next UTC day key from a YYYY-MM-DD string — same UTC-day convention as computeRhythmRegularity
+ *  above and retentionMetrics.ts's dayKey/diffDays. */
+function shiftYmd(date: string, deltaDays: number): string {
+  const t = Date.parse(`${date}T00:00:00Z`) + deltaDays * 86_400_000;
+  return new Date(t).toISOString().slice(0, 10);
+}
+
+/**
+ * Reconstruct a per-night {date, bedMin, wakeMin} series for the real Sleep Regularity Index.
+ *
+ * Health Connect's actual sleep-session timestamps (`healthNights`, when the wearable + flag are on) take
+ * priority for any wake-day they cover. The Social Rhythm Metric's self-logged anchors (`rhythmEntries`)
+ * fill in every date Health Connect doesn't — pairing that DAY's "wake" anchor with the PRIOR day's "bed"
+ * anchor (they're logged as two anchors within one calendar day's row: "Out of bed" this morning, "To bed"
+ * tonight — so the night that ends in today's wake began with yesterday's bed entry). A date is skipped
+ * entirely (never fabricated) when either half of the pair is missing.
+ */
+export function buildSleepWindows(healthNights: SleepNight[], rhythmEntries: RhythmEntry[]): SleepWindow[] {
+  const byDate = new Map<string, SleepWindow>();
+
+  for (const n of healthNights || []) {
+    if (typeof n?.date !== "string" || typeof n.startTime !== "string" || typeof n.endTime !== "string") continue;
+    const start = new Date(n.startTime), end = new Date(n.endTime);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) continue;
+    const bedMin = start.getHours() * 60 + start.getMinutes();
+    const wakeMin = end.getHours() * 60 + end.getMinutes();
+    byDate.set(n.date, { date: n.date, bedMin, wakeMin, source: "healthconnect" });
+  }
+
+  const rhythmByDate = new Map((rhythmEntries || []).map((e) => [e.date, e]));
+  for (const entry of rhythmEntries || []) {
+    if (byDate.has(entry.date)) continue; // Health Connect already covers this wake day
+    const wakeStr = entry.anchors?.wake;
+    if (!wakeStr) continue;
+    const wakeMin = parseTime(wakeStr);
+    if (wakeMin === null) continue;
+    const prevEntry = rhythmByDate.get(shiftYmd(entry.date, -1));
+    const bedStr = prevEntry?.anchors?.bed;
+    if (!bedStr) continue;
+    const bedMin = parseTime(bedStr);
+    if (bedMin === null) continue;
+    byDate.set(entry.date, { date: entry.date, bedMin, wakeMin, source: "rhythm" });
+  }
+
+  return [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
 }

@@ -21,8 +21,8 @@ import { adherenceSummary } from "../services/medicationAdherence";
 import { getRecentMetrics, detectMoodSignal } from "../services/typingPatterns";
 import { voiceMoodSignal } from "../services/voicePatterns";
 import { computeCircadianInsight } from "../services/circadian";
-import { computeCircadianFeedback } from "../services/circadianFeedback";
-import { computeRhythmRegularity } from "../services/socialRhythm";
+import { computeCircadianFeedback, computeSleepRegularityIndex } from "../services/circadianFeedback";
+import { computeRhythmRegularity, buildSleepWindows, loadRhythm } from "../services/socialRhythm";
 import { computeNof1Ranking } from "../services/nOf1";
 import { PROTOCOLS } from "../services/protocols";
 import { secureLocal } from "../services/secureLocal";
@@ -109,11 +109,17 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
       sleeps: mood.filter((m) => typeof m.sleepHours === "number" && m.sleepHours > 0).map((m) => m.sleepHours as number),
       rhythmVariabilityMin: rhythmReg.overallVariabilityMin,
     }) : null;
+    // Real Sleep Regularity Index (Phillips et al. 2017) — a SEPARATE, timing-based metric from
+    // circadianFeedback above (which is duration-CV + rhythm-SD, kept as "sleep duration consistency").
+    // Health Connect timestamps aren't fetched here (async, off-by-default, near-zero current usage);
+    // buildSleepWindows() gracefully falls back to the Social Rhythm Metric's own bed/wake anchors, which
+    // is the same diary-clock-time input the founding Phillips 2017 study itself used.
+    const sleepRegularityIndex = computeSleepRegularityIndex(buildSleepWindows([], loadRhythm()));
 
-    return { mood, streak, compassionateStreak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian, nOf1, usageSummary, circadianFeedback, rhythmReg };
+    return { mood, streak, compassionateStreak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian, nOf1, usageSummary, circadianFeedback, rhythmReg, sleepRegularityIndex };
   }, []);
 
-  const { mood, streak, compassionateStreak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian, nOf1, usageSummary, circadianFeedback, rhythmReg } = data;
+  const { mood, streak, compassionateStreak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian, nOf1, usageSummary, circadianFeedback, rhythmReg, sleepRegularityIndex } = data;
 
   // Load behaviour snapshots async and compute daily-behaviour insights
   useEffect(() => {
@@ -523,7 +529,8 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
         </div>
       )}
 
-      {/* Fused circadian + social rhythm feedback loop */}
+      {/* Fused circadian + social rhythm feedback loop — duration consistency + rhythm-SD proxy. Separate
+          from the real timing-based Sleep Regularity Index card below (Group C correction, 2026-07-12). */}
       {circadianFeedback && (
         <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 flex items-start gap-3">
           <div className={`p-2 rounded-xl ${circadianFeedback.needsAttention ? "bg-amber-500/10 text-amber-400" : "bg-emerald-500/10 text-emerald-400"}`}>
@@ -537,6 +544,29 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
               </span>
             </div>
             <p className="text-[11px] text-slate-400 leading-relaxed mt-1">{circadianFeedback.guidance}</p>
+            <p className="text-[10px] text-slate-500 mt-1">Sleep-duration &amp; routine-timing consistency (a proxy, not the Sleep Regularity Index below).</p>
+          </div>
+        </div>
+      )}
+
+      {/* Real Sleep Regularity Index (Phillips et al. 2017) — genuine bed/wake TIMING regularity, distinct
+          from the duration/rhythm-SD proxy above. Only renders once >=7 nights of bed+wake anchors exist. */}
+      {sleepRegularityIndex && (
+        <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 flex items-start gap-3">
+          <div className={`p-2 rounded-xl ${sleepRegularityIndex.band === "regular" ? "bg-emerald-500/10 text-emerald-400" : "bg-amber-500/10 text-amber-400"}`}>
+            <Moon className="w-5 h-5" />
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-slate-100">Sleep Regularity Index</p>
+              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${sleepRegularityIndex.band === "regular" ? "bg-emerald-500/20 text-emerald-300" : "bg-amber-500/20 text-amber-300"}`}>
+                {sleepRegularityIndex.sri}/100
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-400 leading-relaxed mt-1">{sleepRegularityIndex.guidance}</p>
+            <p className="text-[10px] text-slate-500 mt-1">
+              Real bed/wake-timing regularity (Phillips et al., 2017) — from {sleepRegularityIndex.nightsUsed} nights of bed/wake times, computed entirely on your device.
+            </p>
           </div>
         </div>
       )}
