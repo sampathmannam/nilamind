@@ -53,7 +53,19 @@ export function selectQuickActions(timeMode: TimeMode, userState?: UserState | n
   if (userState === "elevated") {
     return ACTIONS.filter((a) => CALMING_WHEN_ELEVATED.includes(a.id));
   }
-  return ACTIONS.filter((a) => a.modes.includes(timeMode)).slice(0, 9);
+  const base = ACTIONS.filter((a) => a.modes.includes(timeMode));
+  // 2026-07-12 de-emphasis (user directive): the crisis shortcut is NOT a permanent home-grid tile —
+  // it must not be constantly visible. The real §9 safety net is the input gate (fires on any crisis
+  // message regardless of button), so this only changes prominence, not reachability. The shortcut
+  // re-surfaces precisely when the user is `low`/distressed (visible when needed).
+  const crisisVisible = userState === "low";
+  if (!crisisVisible) {
+    return base.filter((a) => a.id !== "crisis").slice(0, 9);
+  }
+  const withoutCrisis = base.filter((a) => a.id !== "crisis");
+  const crisisAction = ACTIONS.find((a) => a.id === "crisis");
+  if (!crisisAction) return withoutCrisis.slice(0, 9);
+  return [...withoutCrisis.slice(0, 8), crisisAction]; // crisis + up to 8 others = 9
 }
 
 export default function QuickActions({ onAction, timeMode, userState }: QuickActionsProps) {

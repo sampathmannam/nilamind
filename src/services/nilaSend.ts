@@ -9,6 +9,7 @@
 
 import { scanForCrisis, isStreamingHarm, checkResponse, getUnsafeFallbackReply } from "../safety";
 import { detectCrisis } from "./crisisClassifier";
+import type { InMomentInsight } from "./inMomentInsight";
 
 export type NilaMode = "companion" | "episode";
 
@@ -17,6 +18,8 @@ export interface NilaUiMessage {
   content: string;
   /** UI-only artifact (intensity prompt / "Logged current intensity"); never sent on the wire. */
   synthetic?: boolean;
+  /** UI-only in-moment insight (research explainer + skill suggestion); never sent on the wire. */
+  insight?: InMomentInsight;
 }
 
 export interface WireMessage {

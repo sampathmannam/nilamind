@@ -17,10 +17,12 @@ import { useTypingSession } from "../hooks/useTypingSession";
 import { getSuggestions, timeSlot } from "../services/chatSuggestions";
 import { stripChatMarkdown } from "../services/chatText";
 import { suggestSkill } from "../services/skillSuggest";
+import { deriveInMomentInsight } from "../services/inMomentInsight";
 import { filterSkills, type Skill } from "../services/skillsLibrary";
 import NilaCheckIn from "./NilaCheckIn";
 import ChatLoading from "./ChatLoading";
 import SkillOfferCard from "./SkillOfferCard";
+import InMomentInsightCard from "./InMomentInsightCard";
 import PactNoticeCard from "./PactNoticeCard";
 import { activePactNotice, dismissPactNoticeToday, type PactNotice } from "../services/pactNotice";
 import type { CheckInEntry } from "../types";
@@ -314,8 +316,9 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
       // the interface settles — the pixel-level half of the elevation guard (which also steers Nila's words).
       // Not written on a §9 turn (that path returned above). Picked up by the setMode(getCurrentMode()) below.
       noteChatElevation(detectElevationRisk(msg).level);
+      const insight = deriveInMomentInsight(msg, mode.userState);
       if (result.reply) {
-        setMessages((prev) => [...prev, { role: "assistant", content: result.reply }]);
+        setMessages((prev) => [...prev, { role: "assistant", content: result.reply, insight: insight ?? undefined }]);
         if (result.reachedAI) {
           speakIfEnabled(result.reply);
           if (document.hidden) void notifyReplyReady();
@@ -327,8 +330,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
       // the mode so the interface settles (orb slows, home thins) in response to what the user just typed.
       setMode(getCurrentMode());
       // Suggest a relevant coping skill if the user expressed distress
-      const suggestion = suggestSkill(msg);
-      setSkillOffer(suggestion?.skill ?? null);
+      setSkillOffer(insight?.skill?.skill ?? null);
     } catch {
       crisisPendingRef.current = false; // model error is not a §9 crisis — let the turn persist
       setMessages((prev) => [
@@ -682,9 +684,24 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                             <ThumbsDown className="w-4 h-4" />
                           </button>
                         </div>
-                      )}
+                        )}
+                        {m.role === "assistant" && m.insight && (
+                          <InMomentInsightCard
+                            explainerTitle={m.insight.explainer?.title ?? ""}
+                            explainerSummary={m.insight.explainer?.summary ?? ""}
+                            explainerBasis={m.insight.explainer?.basis ?? ""}
+                            skillEmoji={m.insight.skill?.emoji ?? ""}
+                            skillName={m.insight.skill?.skill.name ?? ""}
+                            skillReason={m.insight.skill?.reason ?? ""}
+                            onTrySkill={
+                              m.insight.skill
+                                ? () => handleTrySkill(m.insight!.skill!.skill)
+                                : undefined
+                            }
+                          />
+                        )}
+                      </div>
                     </div>
-                  </div>
                 ))}
               </div>
             )}
