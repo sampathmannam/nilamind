@@ -80,9 +80,9 @@ export const SKILLS: Skill[] = [
 
   // ── Mindfulness (DBT + adjacent) ──
   { id: "wise-mind", name: "Wise Mind", modality: "DBT", group: "mindfulness",
-    purpose: "Find the balance between raw emotion and cold logic.",
+    purpose: "Find the balance between raw emotion and cold logic. Honest expectation: brief mindfulness practices like this tend to help a little, with repetition — not a symptom treatment on their own.",
     steps: ["Notice if you're in Emotion Mind (driven by feeling) or Reasonable Mind (pure logic).", "Breathe into the space between them.", "Ask Wise Mind — the calm inner knowing — what fits both your values and the facts."],
-    basis: "Linehan 2015, DBT Skills Training Manual (Mindfulness)." },
+    basis: "Linehan 2015, DBT Skills Training Manual (Mindfulness). Effect-size honesty: brief-mindfulness effects are small (g=0.21, dropping to g=0.04 after publication-bias adjustment) — Schumer, Lindsay & Creswell, 2018, J Consulting and Clinical Psychology." },
   { id: "what-skills", name: "Observe, Describe, Participate", modality: "DBT", group: "mindfulness",
     purpose: "The 'what' skills — how to pay attention.",
     steps: ["Observe: notice the experience without words.", "Describe: put just the facts into words (\"my chest is tight\").", "Participate: throw yourself fully into the present activity."],
@@ -244,7 +244,12 @@ export function getSkill(id: string): Skill | undefined {
 // anger → a pause skill; low mood → behavioural activation; numbness → grounding; shame →
 // self-compassion. Best-effort and gentle, never prescriptive — the user can ignore it.
 const EMOTION_TO_SKILL: { match: RegExp; skill: string }[] = [
-  { match: /anx|panic|worr|overwhelm|stress|fear|scared|nervous/i, skill: "tipp" },
+  // Chronic/ordinary worry routes to a worry-specific tool, not TIPP (2026-07-12 wave-2 fix). TIPP is a
+  // crisis-intensity (8–10/10) DBT distress-tolerance skill, an intensity mismatch for ordinary GAD-style
+  // worry — per Borkovec, Wilkinson, Folensbee & Lerman (1983). Checked BEFORE the panic/tipp pattern below
+  // so "worried"/"worrying" don't fall through to the acute-arousal skill.
+  { match: /worr/i, skill: "worry-time" },
+  { match: /anx|panic|overwhelm|stress|fear|scared|nervous/i, skill: "tipp" },
   { match: /ang|mad|irrit|frustrat|rage/i, skill: "stop" },
   { match: /numb|dissoc|disconnect|blank/i, skill: "54321" },
   { match: /sham|guilt|self-?crit|worthless/i, skill: "self-compassion-break" },

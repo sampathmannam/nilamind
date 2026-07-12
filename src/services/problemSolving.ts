@@ -19,6 +19,11 @@ export interface ProblemSession {
   problem: string;
   solutions: Solution[];
   actionPlan: string[];
+  // If-then implementation intention + a barrier plan, per Gollwitzer & Sheeran (2006), Adv Exp Soc Psychol
+  // (d=0.65 general goal attainment, d+=0.99 in mental-health samples) — the cheapest evidence-backed win
+  // available wherever the app asks someone to plan an action. Optional: never fabricated if unset.
+  implementationIntention?: string;
+  barrierPlan?: string;
   completed: boolean;
   solved: boolean;
   learning: string;
@@ -62,8 +67,18 @@ export function chooseSolution(session: ProblemSession, solutionId: string): Pro
   };
 }
 
-export function setActionPlan(session: ProblemSession, steps: string[]): ProblemSession {
-  return { ...session, actionPlan: steps, step: "plan" };
+export function setActionPlan(
+  session: ProblemSession,
+  steps: string[],
+  opts?: { implementationIntention?: string; barrierPlan?: string },
+): ProblemSession {
+  return {
+    ...session,
+    actionPlan: steps,
+    step: "plan",
+    ...(opts?.implementationIntention ? { implementationIntention: opts.implementationIntention } : {}),
+    ...(opts?.barrierPlan ? { barrierPlan: opts.barrierPlan } : {}),
+  };
 }
 
 export function completeSession(session: ProblemSession, solved: boolean, learning: string): ProblemSession {

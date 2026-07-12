@@ -11,6 +11,8 @@ export default function ProblemSolvingScreen() {
   const [prosText, setProsText] = useState("");
   const [consText, setConsText] = useState("");
   const [actionSteps, setActionSteps] = useState("");
+  const [implementationIntention, setImplementationIntention] = useState("");
+  const [barrierPlan, setBarrierPlan] = useState("");
 
   const activeSession = sessions.find((s) => s.id === active);
 
@@ -53,10 +55,15 @@ export default function ProblemSolvingScreen() {
   function handleActionPlan() {
     if (!activeSession || !actionSteps.trim()) return;
     const steps = actionSteps.split("\n").map((s) => s.trim()).filter(Boolean);
-    const updated = setActionPlan(activeSession, steps);
+    const updated = setActionPlan(activeSession, steps, {
+      implementationIntention: implementationIntention.trim() || undefined,
+      barrierPlan: barrierPlan.trim() || undefined,
+    });
     saveSession(updated);
     refresh();
     setActionSteps("");
+    setImplementationIntention("");
+    setBarrierPlan("");
   }
 
   function handleComplete(solved: boolean) {
@@ -76,8 +83,17 @@ export default function ProblemSolvingScreen() {
         <h2 className="text-lg font-semibold text-slate-100">Problem-Solving</h2>
         <p className="text-sm text-slate-300 glass rounded-xl p-3">{activeSession.problem}</p>
 
+        <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-3">
+          <p className="text-[10px] text-slate-500 leading-relaxed">
+            Aim for at least 3 ideas before judging any of them — quantity first, evaluate later. Even ideas
+            that feel silly or unlikely can spark a better one. (Bell & D'Zurilla, 2009)
+          </p>
+        </div>
+
         <div className="space-y-2">
-          <div className="text-[10px] uppercase font-mono tracking-widest text-slate-500">Solutions</div>
+          <div className="text-[10px] uppercase font-mono tracking-widest text-slate-500">
+            Solutions{activeSession.solutions.length > 0 && activeSession.solutions.length < 3 ? ` · ${activeSession.solutions.length}/3+` : ""}
+          </div>
           {activeSession.solutions.map((sol) => (
             <div key={sol.id} className="glass rounded-xl p-3 space-y-2">
               <div className="flex items-center justify-between">
@@ -105,13 +121,21 @@ export default function ProblemSolvingScreen() {
 
         <div className="flex gap-2">
           <input value={solutionText} onChange={(e) => setSolutionText(e.target.value)} placeholder="Add a solution idea..." className="flex-1 glass rounded-xl px-3 py-2 text-xs text-slate-200 placeholder-slate-500" />
-          <button onClick={handleAddSolution} className="glass rounded-xl px-3 py-2 text-xs text-blue-300 cursor-pointer"><Plus className="w-4 h-4" /></button>
+          <button onClick={handleAddSolution} aria-label="Add solution" className="glass rounded-xl px-3 py-2 text-xs text-blue-300 cursor-pointer"><Plus className="w-4 h-4" /></button>
         </div>
 
         {activeSession.solutions.some((s) => s.chosen) && (
           <div className="space-y-2">
             <div className="text-[10px] uppercase font-mono tracking-widest text-slate-500">Action plan</div>
             <textarea value={actionSteps} onChange={(e) => setActionSteps(e.target.value)} placeholder="What steps will you take? (one per line)" rows={3} className="w-full glass rounded-xl px-3 py-2 text-xs text-slate-200 placeholder-slate-600" />
+            <div className="space-y-1">
+              <label htmlFor="pst-if-then" className="text-[10px] text-slate-500">Make it concrete (optional) — plans with an if-then are more likely to happen</label>
+              <input id="pst-if-then" value={implementationIntention} onChange={(e) => setImplementationIntention(e.target.value)} placeholder="If [time/place], then I will [action]..." className="w-full glass rounded-xl px-3 py-2 text-xs text-slate-200 placeholder-slate-600" />
+            </div>
+            <div className="space-y-1">
+              <label htmlFor="pst-barrier" className="text-[10px] text-slate-500">What might get in the way — and your backup move (optional)</label>
+              <input id="pst-barrier" value={barrierPlan} onChange={(e) => setBarrierPlan(e.target.value)} placeholder="What might get in the way, and what will you do?" className="w-full glass rounded-xl px-3 py-2 text-xs text-slate-200 placeholder-slate-600" />
+            </div>
             <button onClick={handleActionPlan} className="w-full glass rounded-xl py-2 text-xs text-blue-300 cursor-pointer">Save action plan</button>
           </div>
         )}
@@ -128,6 +152,13 @@ export default function ProblemSolvingScreen() {
     <div className="space-y-4 max-w-md mx-auto" id="problem-solving-screen">
       <h2 className="text-xl font-semibold text-slate-100 flex items-center gap-2"><Lightbulb className="w-5 h-5 text-amber-400" /> Problem-Solving</h2>
       <p className="text-xs text-slate-400 leading-relaxed">Break a problem into steps: define it, brainstorm solutions, pick one, and try it.</p>
+      <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-3">
+        <p className="text-[10px] text-slate-500 leading-relaxed">
+          Having a problem is a normal part of life, not a sign something's wrong with you — and most problems
+          have more than one workable solution. Coming at it with curiosity, rather than dread, is itself part
+          of what makes this work. (Bell & D'Zurilla, 2009)
+        </p>
+      </div>
 
       <div className="glass rounded-2xl p-4 space-y-3">
         <input value={problem} onChange={(e) => setProblem(e.target.value)} placeholder="What's the problem?" className="w-full glass rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-500" />

@@ -79,4 +79,39 @@ describe("problemSolving", () => {
     saveSession(s1); saveSession(s2); saveSession(s3);
     expect(solveRate(loadSessions())).toBe(50);
   });
+
+  // Clinical research upgrades wave 2 (2026-07-12), Task C — if-then implementation intentions + a barrier
+  // plan on PST action plans, per Gollwitzer & Sheeran (2006), Adv Exp Soc Psychol (d=0.65 general goal
+  // attainment, d+=0.99 in mental-health samples) — the cheapest evidence-backed win available.
+  describe("setActionPlan — implementation intentions + barrier plan", () => {
+    it("accepts an optional if-then implementation intention and barrier plan", () => {
+      let s = createSession("Work stress");
+      s = setActionPlan(s, ["Draft email"], {
+        implementationIntention: "If it's Monday 9am, then I will draft the email.",
+        barrierPlan: "If I freeze up, I'll ask my sister to read it over first.",
+      });
+      expect(s.implementationIntention).toBe("If it's Monday 9am, then I will draft the email.");
+      expect(s.barrierPlan).toBe("If I freeze up, I'll ask my sister to read it over first.");
+      expect(s.actionPlan).toEqual(["Draft email"]);
+    });
+
+    it("works without the optional fields (backward compatible)", () => {
+      let s = createSession("Work stress");
+      s = setActionPlan(s, ["Draft email"]);
+      expect(s.implementationIntention).toBeUndefined();
+      expect(s.barrierPlan).toBeUndefined();
+    });
+
+    it("round-trips implementation intention + barrier plan through save/load", () => {
+      let s = createSession("Test problem");
+      s = setActionPlan(s, ["Step one"], {
+        implementationIntention: "If I sit at my desk, then I will open the doc.",
+        barrierPlan: "If I get distracted, I'll set a 5-minute timer.",
+      });
+      saveSession(s);
+      const loaded = loadSessions();
+      expect(loaded[0].implementationIntention).toContain("desk");
+      expect(loaded[0].barrierPlan).toContain("timer");
+    });
+  });
 });

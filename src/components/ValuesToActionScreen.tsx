@@ -74,8 +74,11 @@ export default function ValuesToActionScreen() {
   const [picked, setPicked] = useState<ActivityIdea | null>(null);
   const [customTitle, setCustomTitle] = useState("");
   const [rating, setRating] = useState<
-    { title: string; category: BACategory; existingId?: string; mastery: number; pleasure: number; note: string } | null
+    { title: string; category: BACategory; existingId?: string; mastery: number; pleasure: number; moodAfter: number; note: string } | null
   >(null);
+  // Mood BEFORE the activity — the pre-rating half of BA's before/after mood loop (Jacobson, Martell &
+  // Dimidjian, 2001, Clin Psychol Sci Pract) — the ingredient most commercial apps omit.
+  const [moodBefore, setMoodBefore] = useState(5);
 
   useEffect(() => {
     const snap = loadValues();
@@ -135,17 +138,22 @@ export default function ValuesToActionScreen() {
       title: chosenTitle,
       category: chosenCategory,
       status: "planned",
+      moodBefore,
     };
     setActivities(upsertActivity(entry));
     hapticLight();
     resetChoice();
+    setMoodBefore(5);
   };
   const startRating = (title: string, category: BACategory, existingId?: string) => {
-    setRating({ title, category, existingId, mastery: 5, pleasure: 5, note: "" });
+    setRating({ title, category, existingId, mastery: 5, pleasure: 5, moodAfter: 5, note: "" });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
   const saveRating = () => {
     if (!rating) return;
+    // If this activity was already planned (has a moodBefore from planForLater), preserve it — never
+    // clobber the pre-rating with the picking-screen's current slider position.
+    const existing = rating.existingId ? activities.find((a) => a.id === rating.existingId) : undefined;
     const entry: BAActivityLog = {
       id: rating.existingId ?? "ba_" + Date.now(),
       date: todayStr(),
@@ -155,12 +163,15 @@ export default function ValuesToActionScreen() {
       status: "done",
       mastery: rating.mastery,
       pleasure: rating.pleasure,
+      moodAfter: rating.moodAfter,
+      moodBefore: existing?.moodBefore ?? (rating.existingId ? undefined : moodBefore),
       note: rating.note.trim() || undefined,
     };
     setActivities(upsertActivity(entry));
     hapticSuccess();
     setRating(null);
     resetChoice();
+    setMoodBefore(5);
   };
   const skipPlanned = (id: string) => {
     const a = activities.find((x) => x.id === id);
@@ -187,6 +198,7 @@ export default function ValuesToActionScreen() {
         </header>
         <RatingSlider label="Mastery" help="A sense of accomplishment or 'I did that' — even small." value={rating.mastery} onChange={(v) => setRating({ ...rating, mastery: v })} />
         <RatingSlider label="Pleasure" help="How enjoyable or soothing it felt, even slightly." value={rating.pleasure} onChange={(v) => setRating({ ...rating, pleasure: v })} />
+        <RatingSlider label="Mood after" help="How's your mood right now, after doing it? Comparing before/after is how BA actually works." value={rating.moodAfter} onChange={(v) => setRating({ ...rating, moodAfter: v })} />
         <div className="space-y-1.5">
           <label className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Note (optional)</label>
           <textarea aria-label="Note (optional)" value={rating.note} onChange={(e) => setRating({ ...rating, note: e.target.value })} placeholder="Anything you noticed…" className="w-full bg-page border border-slate-800 rounded-xl p-3 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-blue-500/50 min-h-[60px] resize-y" />
@@ -361,9 +373,18 @@ export default function ValuesToActionScreen() {
           </div>
           <input aria-label="Write your own activity" value={customTitle} onChange={(e) => { setCustomTitle(e.target.value); setPicked(null); }} placeholder="…or write your own" className="w-full bg-page border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-blue-500/50" />
           {chosenTitle && (
-            <div className="flex gap-2 pt-1">
-              <button onClick={planForLater} id="vta-plan-btn" className="flex-1 bg-raised border border-slate-700 hover:bg-slate-800 text-slate-200 font-semibold py-2.5 rounded-xl text-xs cursor-pointer flex items-center justify-center gap-1.5"><CalendarClock className="w-3.5 h-3.5" /> Plan for later</button>
-              <button onClick={() => startRating(chosenTitle, chosenCategory)} id="vta-did-btn" className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-xs cursor-pointer flex items-center justify-center gap-1.5"><Check className="w-3.5 h-3.5" /> I did this</button>
+            <div className="space-y-2.5 pt-1">
+              <div className="space-y-1">
+                <div className="flex justify-between text-[11px]">
+                  <span className="text-slate-400">How are you feeling right now? (optional)</span>
+                  <span className="font-mono text-slate-300">{moodBefore}/10</span>
+                </div>
+                <input aria-label="How are you feeling right now?" type="range" min={0} max={10} value={moodBefore} onChange={(e) => setMoodBefore(parseInt(e.target.value))} className="w-full h-1.5 rounded-lg bg-page accent-blue-500 cursor-pointer" />
+              </div>
+              <div className="flex gap-2">
+                <button onClick={planForLater} id="vta-plan-btn" className="flex-1 bg-raised border border-slate-700 hover:bg-slate-800 text-slate-200 font-semibold py-2.5 rounded-xl text-xs cursor-pointer flex items-center justify-center gap-1.5"><CalendarClock className="w-3.5 h-3.5" /> Plan for later</button>
+                <button onClick={() => startRating(chosenTitle, chosenCategory)} id="vta-did-btn" className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-xs cursor-pointer flex items-center justify-center gap-1.5"><Check className="w-3.5 h-3.5" /> I did this</button>
+              </div>
             </div>
           )}
         </div>
@@ -412,6 +433,9 @@ export default function ValuesToActionScreen() {
                 <div className="flex gap-3 mt-1.5 text-[10px]">
                   <span className="text-amber-300">Mastery {item.activity.mastery ?? "–"}/10</span>
                   <span className="text-purple-300">Pleasure {item.activity.pleasure ?? "–"}/10</span>
+                  {typeof item.activity.moodBefore === "number" && typeof item.activity.moodAfter === "number" && (
+                    <span className="text-blue-300">Mood {item.activity.moodBefore}→{item.activity.moodAfter}</span>
+                  )}
                 </div>
                 {item.activity.note && <p className="text-[11px] text-slate-400 mt-1.5 italic">"{item.activity.note}"</p>}
               </div>
