@@ -154,6 +154,12 @@ export const NATIVE_SCRIPT_IDEATION = [
   "చనిపోవాలని", "చనిపోవాలి", "చావాలని ఉంది", "బతకాలని లేదు", "ఆత్మహత్య",
   // Telugu (romanized) — Telugu had no coverage at all, even romanized
   "chanipovaalani", "chanipovali", "chavaalani undi", "bathakalani ledu", "aatmahatya cheskovali",
+  // 2026-07-12 Wave-2 (deferred device-QA gap; FLAGGED 🟡 for native-speaker review):
+  // Tamil/Telugu NEGATION-FIRST (subject-prefixed) ideation ("நான் வாழ விரும்பவில்லை" = "I don't
+  // want to live") is ALREADY caught — these phrases contain the high-precision roots above ("வாழ
+  // விரும்பவில்லை", "சாக வேண்டும்", "బతకాలనி లేదు", "చావాలని ఉంది"), so a subject prefix only
+  // NARROWS the match. The adversarial suite in safety.test.ts locks this. Broader ta/te idioms a
+  // native speaker would add are NOT here — this covers the validated-root surface only; review advised.
   // Negation-first Devanagari mirrors (2026-07-12 device-QA — see ROMANIZED_IDEATION comment)
   "मुझे नहीं जीना", "अब नहीं जीना", "और नहीं जीना", "बस नहीं जीना",
   "ज़िंदा नहीं रहना", "जिंदा नहीं रहना", "जीने की वजह नहीं", "जीने का कोई मतलब नहीं",

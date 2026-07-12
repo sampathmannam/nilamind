@@ -843,6 +843,36 @@ describe("scanForCrisis — 2026-07-12 softening: indirect metaphors NO LONGER t
   });
 });
 
+// 2026-07-12 Wave-2 (deferred device-QA gap; FLAGGED 🟡 for native-speaker review):
+// Tamil/Telugu NEGATION-FIRST (subject-prefixed) ideation. These inherit precision from the validated
+// roots already in NATIVE_SCRIPT_IDEATION ("வாழ விரும்பவில்லை", "சாக வேண்டும்",
+// "బతకాలని లేదు", "చావాలని ఉంది") — a subject prefix ("நான்"/"నాకు") only NARROWS the
+// match, so the positive counterpart ("வாழ வேண்டும்" = "want to live") stays false. No device run is
+// possible in CI; native-speaker review of BROADER ta/te idioms is still advised (this locks the
+// validated-root coverage only).
+describe("scanForCrisis — Tamil/Telugu negation-first ideation (Wave-2 gap)", () => {
+  it.each([
+    "நான் வாழ விரும்பவில்லை",                    // Tamil: "I don't want to live"
+    "இனி வாழ விரும்பவில்லை",                    // Tamil: "anymore I don't want to live"
+    "நான் சாக வேண்டும்",                         // Tamil: "I want to die"
+    "நான் சாகணும்",                             // Tamil: "I must die"
+    "నాకు బతకాలని లేదు",                      // Telugu: "I don't want to live"
+    "ఇక బతకాలని లేదు",                       // Telugu: "anymore I don't want to live"
+    "నాకు చావాలని ఉంది",                      // Telugu: "I want to die"
+  ])("trips on negation-first Tamil/Telugu ideation: %j", (s) => {
+    expect(scanForCrisis(s)).toBe(true);
+  });
+
+  it.each([
+    "நான் வாழ வேண்டும்",                         // Tamil: "I want to live" — positive, must stay false
+    "நான் நலமாக இருக்கிறேன்",                    // Tamil: "I'm well"
+    "నాకు బతకాలని కావాలి",                     // Telugu: "I want to live" — positive, must stay false
+    "నేను బాగున్నాను, ఈరోజు మంచి రోజు",         // Telugu: "I'm fine, good day"
+  ])("does NOT trip on benign Tamil/Telugu control: %j", (s) => {
+    expect(scanForCrisis(s)).toBe(false);
+  });
+});
+
 // 2026-07-10 SECOND audit — regression fixes for the 2026-07-09 fix pass.
 describe("§9 2026-07-10 re-audit regression fixes", () => {
   // #1 (P1 regression): the bare "kill my self" substring must NOT fire on "kill my self-<compound>" —
