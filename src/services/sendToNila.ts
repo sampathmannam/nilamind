@@ -26,7 +26,7 @@ import {
   NilaUiMessage,
   buildOutgoing,
   lastUserText,
-  shouldBlockForCrisisAsync,
+  crisisSignalForSend,
   createStreamGuard,
 } from "./nilaSend";
 
@@ -34,6 +34,9 @@ export interface NilaSendResult {
   reply: string;
   reachedAI: boolean;
   blocked?: boolean;
+  /** Which §9 floor caught it — only set when blocked===true. "keyword" = deterministic floor (full takeover,
+   *  unchanged). "classifier" = probabilistic-only upgrade (softer inline surface). 2026-07-12 Wave 3. */
+  crisisSource?: "keyword" | "classifier";
   navigate?: AgentView;
   openSkillId?: string;
 }
@@ -63,9 +66,12 @@ export async function sendToNila(
   const userText = lastUserText(history);
 
   // INVARIANT 1 — crisis scan before any model call, both modes. Keyword floor OR the on-device classifier
-  // (additive; classifier off by default until device-verified → identical to the keyword gate).
-  if (await shouldBlockForCrisisAsync(userText)) {
-    return { reply: getCrisisReply(), reachedAI: false, blocked: true };
+  // (additive; classifier off by default until device-verified → identical to the keyword gate). Source-aware
+  // (2026-07-12 Wave 3) so ModeScreen can render the two-tier surface; ?? "keyword" is a fail-closed fallback
+  // — if `hit` is ever true with a null source, default to the MORE severe (full-takeover) tier, never less.
+  const crisisSignal = await crisisSignalForSend(userText);
+  if (crisisSignal.hit) {
+    return { reply: getCrisisReply(), reachedAI: false, blocked: true, crisisSource: crisisSignal.source ?? "keyword" };
   }
 
   const outgoing = buildOutgoing(history); // INVARIANT 2 — synthetic turns stripped

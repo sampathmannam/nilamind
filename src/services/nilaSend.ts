@@ -8,7 +8,7 @@
 //   intensity: N/10.") so they never appear in a request body.
 
 import { scanForCrisis, isStreamingHarm, checkResponse, getUnsafeFallbackReply } from "../safety";
-import { detectCrisis } from "./crisisClassifier";
+import { detectCrisis, detectCrisisSignal, type CrisisSignal } from "./crisisClassifier";
 
 export type NilaMode = "companion" | "episode";
 
@@ -38,6 +38,16 @@ export function shouldBlockForCrisis(text: string): boolean {
  */
 export function shouldBlockForCrisisAsync(text: string): Promise<boolean> {
   return detectCrisis(text);
+}
+
+/**
+ * The two-tier, SOURCE-AWARE crisis gate (2026-07-12 Wave 3): same detection as shouldBlockForCrisisAsync,
+ * but also reports WHICH floor caught it ("keyword" | "classifier" | null) so the companion send path can
+ * render a softer inline surface for a classifier-only hit while a keyword-floor hit keeps the exact same
+ * full-takeover CrisisOverlay. Fail-closed exactly like detectCrisis — never worse than the boolean gate.
+ */
+export function crisisSignalForSend(text: string): Promise<CrisisSignal> {
+  return detectCrisisSignal(text);
 }
 
 /** The exact message array to send to the on-device model: synthetic turns removed, synthetic flag dropped. */

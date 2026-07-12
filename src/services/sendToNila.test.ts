@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeAll, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeAll, beforeEach, afterEach } from "vitest";
 
 // NilaMind is fully on-device. We register a fake LocalLlmBackend (the real seam) so both modes route
 // through the genuine §9 gates and the genuine on-device call — there is no cloud transport to mock.
@@ -12,6 +12,8 @@ import { sendToNila } from "./sendToNila";
 import { NilaUiMessage } from "./nilaSend";
 import { registerLocalLlmBackend, type LocalLlmBackend } from "./localLlm";
 import { getCrisisReply } from "../safety";
+import { setCrisisClassifierEnabled, setCrisisEmbedder, type Embedder } from "./crisisClassifier";
+import weights from "./crisisClassifier.weights.json";
 
 // Suppress the node ExperimentalWarning for localStorage; crisisResources may touch it at import time.
 beforeAll(() => {
@@ -136,6 +138,39 @@ describe("sendToNila — episode path (invariants #2 + #5, on-device)", () => {
     const res = await sendToNila([{ role: "user", content: "racing" }], "episode", noopDelta);
     expect(res.reachedAI).toBe(false);
     expect(res.reply).toBe("");
+  });
+});
+
+describe("sendToNila — crisisSource threading (2026-07-12 Wave 3, two-tier crisis surface)", () => {
+  const COEF = weights.coef as number[];
+  const zeros = () => new Array(COEF.length).fill(0);
+  // Text-aware mock embedder: only "everyone would be better off without me" scores above threshold, so
+  // ordinary text elsewhere in this test file (once the classifier is later disabled again) is unaffected.
+  const textAwareEmbedder: Embedder = async (text: string) =>
+    text.includes("better off without me") ? [...COEF] : zeros();
+
+  afterEach(() => {
+    // Never leak the classifier-on state into other tests/files — restore the shipped OFF default.
+    setCrisisClassifierEnabled(false);
+    setCrisisEmbedder(null);
+  });
+
+  it("blocked result carries crisisSource for a classifier-only hit", async () => {
+    setCrisisClassifierEnabled(true);
+    setCrisisEmbedder(textAwareEmbedder);
+    const rec = recordingBackend("unused");
+    registerLocalLlmBackend(rec.backend);
+    const r = await sendToNila([{ role: "user", content: "everyone would be better off without me" }], "companion", noopDelta);
+    expect(r.blocked).toBe(true);
+    expect(r.crisisSource).toBe("classifier");
+  });
+
+  it("blocked result carries crisisSource:'keyword' for a keyword-floor hit", async () => {
+    const rec = recordingBackend("unused");
+    registerLocalLlmBackend(rec.backend);
+    const r = await sendToNila([{ role: "user", content: "i want to kill myself" }], "companion", noopDelta);
+    expect(r.blocked).toBe(true);
+    expect(r.crisisSource).toBe("keyword");
   });
 });
 
