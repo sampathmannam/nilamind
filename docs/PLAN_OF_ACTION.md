@@ -147,3 +147,11 @@ When new priorities emerge, they should be added here with autonomy tags and res
 ---
 
 **Final note:** The original 2026-07-06 audit found NilaMind "feature-complete and well-engineered." This extended build queue (Phases 8–16) addressed the three structural problems it identified: dead wiring (features not reaching users), fragmentation (duplicate entry points), and engagement mechanics. All three are now resolved.
+
+---
+
+## Known gaps (2026-07-12 device QA, ZD2232FCR5)
+
+- **§9 Hinglish negation-first ideation** — `"mujhe nahi jeena"` bypassed the crisis gate entirely (keyword floor only had verb-first order; MiniLM scores romanized Hindi ~0.026 vs the 0.5796 threshold). Fixed on `fix/qa-2026-07-12-crisis-voice-analytics` (Task 1 of the QA-fixes-wave1 plan).
+- **Latency needs re-measurement** — the QA phone's reply-latency readings may reflect a pre-swap APK (the Qwen2.5-1.5B speed swap landed 2026-07-11); re-run latency probes only after confirming the deployed build actually contains the Qwen model, not a stale Gemma-3-1B install.
+- **Tamil/Telugu §9 adversarial suite is still open** — this wave only hardened Hindi/Devanagari romanized + native-script negation-first coverage. Tamil/Telugu equivalents are untested and deferred to Wave 2.

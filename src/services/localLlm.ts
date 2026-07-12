@@ -1,5 +1,8 @@
-// The on-device LLM runtime SEAM for Nila's brain — by default the stock Gemma-3-1B-it (~806 MB), shipped
-// as a GGUF; the fine-tuned Gemma-3-4B (V2) is an optional revert/side-load, not the default (2026-07-07 speed A/B).
+// The on-device LLM runtime SEAM for Nila's brain — by default Qwen2.5-1.5B-Instruct (~1.1 GB, prompt
+// format "qwen", n_ctx 2048), shipped as a GGUF (2026-07-11 speed swap, see modelCatalog.ts:29-41 for the
+// exact catalog entry). Gemma-3-1B-it (~806 MB) and the fine-tuned Gemma-3-4B (V2) are optional
+// revert/side-load catalog alternates, not the default (2026-07-12 QA: this comment was stale — it still
+// named Gemma-3-1B as default after the Qwen swap).
 //
 // The real binding (llama.cpp via llama-cpp-capacitor) is a NATIVE, device-only dependency that
 // cannot run in the web build or in node/test — so it is deliberately NOT imported here. Instead the
