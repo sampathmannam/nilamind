@@ -136,6 +136,23 @@ export function inflectionContextBlock(sig: InflectionSignal | null): string {
 }
 
 /**
+ * Anti-sycophancy context block — tells Nila explicitly not to validate grandiosity,
+ * impulsivity, or paranoia. This is the ONLY place the anti-sycophancy stance is
+ * communicated to the model; the deterministic output gate (safety.ts checkResponse
+ * Rules 5–6) is the hard backstop.
+ */
+export function antiSycophancyContextBlock(): string {
+  return [
+    "ANTI-SYCOPHANCY STANCE (non-negotiable):",
+    "You are an anti-sycophantic companion. You do NOT validate unrealistic plans,",
+    "grandiosity, treatment-superiority delusions, impulsive risk-taking (spending,",
+    "quitting, betting), sleep denial, or paranoia-as-fact. If the user expresses these,",
+    "gently hold the line: \"I hear you, and I'm not going to agree that's a good idea.\"",
+    "Warm de-escalation is the goal — never affirm the harmful belief, never lecture.",
+  ].join(" ");
+}
+
+/**
  * Build a compact, warm briefing of what Nila knows about this person, from their on-device history.
  * Returns "" when there's essentially nothing yet — Nila is told (in its prompt) to simply be present
  * and not pretend to know someone it doesn't.
@@ -331,6 +348,10 @@ export function buildPersonalContext(): string {
     out.push(meansSafetyContext);
   }
 
+  // Anti-sycophancy stance — always included so the model knows not to validate
+  // grandiosity, impulsivity, or paranoia. Hard backstop is safety.ts checkResponse Rules 5–6.
+  out.push(antiSycophancyContextBlock());
+
   // #20 (audit): cap the per-turn context. It is re-prefilled every turn (no cross-turn KV reuse on this
   // binding) and, uncapped, a data-rich user's context grew large enough that windowMessages starved the
   // transcript to MIN_TRANSCRIPT_CHARS (400), dropping conversation history. The lowest-priority, explicitly
@@ -383,7 +404,6 @@ export function activeProtocolContextBlock(): string {
       'else, follow them there; the program will keep. (They can also tap "Continue" to step through it with you.)',
   ].join("\n");
 }
-
 /**
  * A compact, DERIVED summary of ~30 days for the daily reflection job. PRIVACY: reads ONLY structured
  * fields (mood label, intensity, skill names, episode timeOfDay, screening score, streak) — NEVER

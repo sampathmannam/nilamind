@@ -63,6 +63,21 @@ export default function AboutNilaScreen() {
         </ul>
       </div>
 
+      {/* Anti-sycophancy: Nila won't always agree */}
+      <div className="glass rounded-2xl p-4 border-l-4 border-l-amber-500 space-y-2">
+        <h2 className="text-sm font-semibold text-slate-100 flex items-center gap-2">
+          <Sparkles className="w-4 h-4 text-amber-400" /> Nila won't always agree with you
+        </h2>
+        <p className="text-xs text-slate-400 leading-relaxed">
+          This is by design. If you're in a manic or elevated state — feeling like you don't need sleep,
+          that rules don't apply, that you should spend everything, quit your job, or that everyone is
+          against you — Nila will gently <strong className="text-slate-300">not validate</strong> those beliefs.
+          Sycophancy (an AI just agreeing with you) is a documented harm in mental-health AI.
+          Nila's job is to hold the line with warmth, not to make you feel good in the moment at the
+          cost of your safety.
+        </p>
+      </div>
+
       {/* Privacy */}
       <div className="glass rounded-2xl p-4 space-y-2">
         <h2 className="text-sm font-semibold text-slate-100 flex items-center gap-2">

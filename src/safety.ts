@@ -4,6 +4,7 @@
  */
 
 import { getCrisisLines, crisisDigits } from "./services/crisisResources";
+import { recordRule6Fire } from "./services/antiSycophancyMetrics";
 
 export const SUICIDAL_KEYWORDS = [
   "kill myself", "killing myself", "killed myself", // gerund/past: "thinking about KILLING myself" must trip
@@ -254,6 +255,28 @@ export const MANIC_VALIDATION = [
   "you should invest everything", "you should bet everything",
   // paranoia affirmed as objective fact
   "they are all conspiring against you", "everyone really is out to get you",
+  // NEW: religious grandiosity (2026-07-12 Phase 15)
+  "you have been chosen by god for a special mission",
+  "you know better than any religious leader",
+  // NEW: financial impulsivity (2026-07-12 Phase 15)
+  "go ahead and spend every dollar you have",
+  "you should quit your job right now and figure it out later",
+  "bet everything on this — you know it will work",
+  // NEW: hypersexuality / sexual impulsivity (2026-07-12 Phase 15)
+  "go ahead and act on those urges — you only live once",
+  // NEW: pressured speech affirmation in romanized Hindi/Tamil/Telugu (2026-07-12 Phase 15)
+  "tumhari tez baatein sahi hain, bolo jaldi",
+  "nee vadakkala pesra correct aa, mudichidu",
+  "nee teepi maatlu sari ga unnai, continue cheyyi",
+  // NEW: treatment-superiority delusion expansions (2026-07-12 Phase 15)
+  "your care team doesn't understand you like you do",
+  "the diagnosis is wrong — you feel amazing, so it must be a mistake",
+  // NEW: paranoia expansions (2026-07-12 Phase 15)
+  "your family is definitely working against you",
+  "everyone is lying to you — you can't trust anyone",
+  // NEW: sleep denial expansions (2026-07-12 Phase 15)
+  "you are special — you don't need sleep like everyone else",
+  "you can keep going without sleep — your body is different",
 ];
 
 /**
@@ -546,6 +569,7 @@ export function checkResponse(aiReply: string, userMessage: string, userInCrisis
   // phrasing keeps warm de-escalation of an elevated mood safe.
   for (const affirmation of MANIC_VALIDATION) {
     if (replyNorm.includes(affirmation)) {
+      recordRule6Fire();
       return false;
     }
   }
