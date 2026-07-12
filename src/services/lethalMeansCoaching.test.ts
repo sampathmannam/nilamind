@@ -50,6 +50,17 @@ describe("getMeansSafetyCategories", () => {
     const cats = getMeansSafetyCategories();
     expect(cats.some((c) => c.id === "sharp-objects")).toBe(true);
   });
+
+  it("includes a pesticides & household poisons category — a leading suicide method in India (Gunnell et al. 2017; Bonvoisin et al. 2020)", () => {
+    const cats = getMeansSafetyCategories();
+    const cat = cats.find((c) => c.id === "pesticides-poisons");
+    expect(cat).toBeTruthy();
+    expect(cat!.label).toMatch(/pesticide/i);
+    expect(cat!.collaborativePrompt).toBeTruthy();
+    expect(cat!.strategies.length).toBeGreaterThan(0);
+    expect(cat!.strategies.some((s) => /trusted person/i.test(s))).toBe(true);
+    expect(cat!.strategies.some((s) => /lock/i.test(s))).toBe(true);
+  });
 });
 
 describe("getCoachingSteps", () => {
@@ -75,6 +86,13 @@ describe("getCoachingSteps", () => {
       expect(s.content).not.toMatch(alarm);
       expect(s.prompt).not.toMatch(alarm);
     }
+  });
+
+  it("includes the time-and-distance framing in the intro step (Betz et al. 2020)", () => {
+    const steps = getCoachingSteps();
+    const intro = steps.find((s) => s.id === "intro");
+    expect(intro).toBeTruthy();
+    expect(intro!.content).toMatch(/time and distance/i);
   });
 });
 

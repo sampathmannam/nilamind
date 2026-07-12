@@ -106,6 +106,29 @@ export function getMeansSafetyCategories(): MeansCategory[] {
         "Park the vehicle at a trusted person's home for a few days",
       ],
     },
+    // Pesticides & household poisons: a leading suicide method in India, and means restriction for
+    // pesticides is among the best-evidenced population-level suicide interventions. Per the
+    // 2026-07-12 clinical research synthesis (crisis-safety §2): Gunnell et al. (2017), Lancet Global
+    // Health; Bonvoisin et al. (2020), BMC Public Health.
+    {
+      id: "pesticides-poisons",
+      label: "Pesticides & household poisons",
+      description:
+        "A calm look at pesticides and other household poisons stored around the home. During tough moments, having easy access can feel risky. This is about small adjustments — not judgment about how or why they're kept.",
+      examples: [
+        "pesticides or weedkiller in a shed or storeroom",
+        "rat poison or insecticide under a sink",
+        "industrial cleaning chemicals in the kitchen or bathroom",
+      ],
+      collaborativePrompt:
+        "Are there any pesticides or household chemicals in your home that could feel unsafe to have easy access to during a really hard moment? No right or wrong answers.",
+      strategies: [
+        "Ask a trusted person to hold pesticides or chemicals for a set period",
+        "Use a locked shed, cupboard, or storage box for pesticides and give the key to a trusted person",
+        "Keep only what's needed for the current task and safely dispose of the rest",
+        "Store pesticides at a neighbour's or trusted person's home during difficult periods",
+      ],
+    },
     {
       id: "alcohol-substances",
       label: "Alcohol & other substances",
@@ -135,8 +158,11 @@ export function getCoachingSteps(): CoachingStep[] {
       id: "intro",
       phase: "intro",
       title: "Gentle check-in on home safety",
+      // "Time and distance" framing: collaborative, autonomy-respecting wording validated as acceptable
+      // to suicidal adults. Per the 2026-07-12 clinical research synthesis (crisis-safety §3):
+      // Betz et al. (2020), JMIR; VA lethal-means-safety guidance; Harvard Means Matter.
       content:
-        "This is a calm, no-pressure look at your home environment. The idea is simple: in a really tough moment, having easy access to things that could cause harm can make things harder. By noticing them now — when you're calm — you can make a small plan that could help later.\n\nThis isn't about getting rid of things you need or use every day. It's about small adjustments that create a little more space between a tough feeling and a permanent action.\n\nYou can explore the categories below, one at a time. Skip any that don't apply. There's no right or wrong way to do this.",
+        "This is a calm, no-pressure look at your home environment. The idea is simple: in a really tough moment, having easy access to things that could cause harm can make things harder. By noticing them now — when you're calm — you can make a small plan that could help later.\n\nPutting a little time and distance between a hard moment and anything that could cause harm is one of the simplest, most well-supported things you can do — it gives an intense feeling a chance to pass.\n\nThis isn't about getting rid of things you need or use every day. It's about small adjustments that create a little more space between a tough feeling and a permanent action.\n\nYou can explore the categories below, one at a time. Skip any that don't apply. There's no right or wrong way to do this.",
       prompt:
         "Would you like to explore some areas of home safety together? You can go through as many or as few as you like.",
     },

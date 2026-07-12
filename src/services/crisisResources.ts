@@ -45,6 +45,11 @@ const REGIONS: Record<RegionCode, RegionResources> = {
     code: "IN",
     label: "India",
     lines: [
+      // Tele-MANAS listed first: free, 24/7, 20+ language Govt of India/MoHFW national line — unlike
+      // iCall below (Mon–Sat, 8am–10pm), it's reachable any time. Per the 2026-07-12 clinical research
+      // synthesis (crisis-safety §1): Govt of India/MoHFW Tele-MANAS program.
+      // Line status (all numbers below) should be spot-checked periodically — do not assume permanence.
+      { name: "Tele-MANAS", display: "14416 / 1-800-891-4416", tel: "14416", kind: "call", note: "24/7, 20+ languages" },
       { name: "iCall", display: "9152987821", tel: "9152987821", kind: "call", note: "Mon–Sat, 8am–10pm" },
       { name: "Vandrevala Foundation", display: "1860-2662-345", tel: "18602662345", kind: "call", note: "24/7" },
       { name: "KIRAN (Govt. of India)", display: "1800-599-0019", tel: "18005990019", kind: "call", note: "24/7, multi-language" },

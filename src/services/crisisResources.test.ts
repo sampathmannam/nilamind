@@ -30,6 +30,20 @@ describe("crisisResources", () => {
     expect(names).toContain("AASRA");
   });
 
+  it("lists Tele-MANAS first for India — free 24/7 national line, ahead of iCall's limited hours", () => {
+    setRegionCode("IN");
+    const lines = getCrisisLines();
+    expect(lines[0].name).toMatch(/Tele-MANAS/i);
+    expect(lines[0].display).toContain("14416");
+    expect(lines[0].note).toMatch(/24\/7/);
+  });
+
+  it("still includes KIRAN for India — never silently dropped", () => {
+    setRegionCode("IN");
+    const names = getCrisisLines().map((l) => l.name);
+    expect(names).toContain("KIRAN (Govt. of India)");
+  });
+
   it("lists all supported regions", () => {
     const codes = allRegions().map((r) => r.code);
     expect(codes).toEqual(["IN", "US", "GB", "CA", "AU", "international"]);
