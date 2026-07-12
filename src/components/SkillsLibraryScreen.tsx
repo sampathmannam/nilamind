@@ -3,6 +3,7 @@ import { BookOpen, Search, ChevronDown, X, LifeBuoy, Sparkles, ChevronRight } fr
 import { SKILLS, SKILL_GROUPS, groupMeta, skillForEmotion, type Skill } from "../services/skillsLibrary";
 import { searchSkills } from "../services/skillRetrieval";
 import { secureLocal } from "../services/secureLocal";
+import TIPPTool from "./TIPPTool";
 
 // Static class strings per group tone (Tailwind scans source — no dynamic class names).
 const TONE: Record<string, { chipOn: string; text: string; border: string; dot: string }> = {
@@ -180,14 +181,20 @@ function SkillCard({ skill, open, onToggle }: { skill: Skill; open: boolean; onT
 
       {open && (
         <div className="px-4 pb-4 -mt-1 space-y-3">
-          <ol className="space-y-1.5">
-            {skill.steps.map((step, i) => (
-              <li key={i} className="flex gap-2 text-xs text-slate-300 leading-relaxed">
-                <span className={`shrink-0 w-4 h-4 rounded-full ${tone.dot} text-[9px] font-bold text-[#171311] flex items-center justify-center mt-0.5`}>{i + 1}</span>
-                <span>{step}</span>
-              </li>
-            ))}
-          </ol>
+          {skill.interactive ? (
+            // 2026-07-12 Wave 3, Group E: interactive skills (currently only TIPP) mount their
+            // dedicated tool instead of a plain static steps list.
+            <TIPPTool />
+          ) : (
+            <ol className="space-y-1.5">
+              {skill.steps.map((step, i) => (
+                <li key={i} className="flex gap-2 text-xs text-slate-300 leading-relaxed">
+                  <span className={`shrink-0 w-4 h-4 rounded-full ${tone.dot} text-[9px] font-bold text-[#171311] flex items-center justify-center mt-0.5`}>{i + 1}</span>
+                  <span>{step}</span>
+                </li>
+              ))}
+            </ol>
+          )}
           <p className="text-[10px] text-slate-500 italic leading-relaxed border-t border-slate-800 pt-2">{skill.basis}</p>
         </div>
       )}

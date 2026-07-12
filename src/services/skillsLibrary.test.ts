@@ -31,6 +31,21 @@ describe("skillForEmotion — worry routes to a worry-specific tool, not TIPP (T
   });
 });
 
+// 2026-07-12 Wave 3, Group E — the "tipp" skill points at the unified interactive TIPPTool instead of
+// its old shallow 4-item static-string steps list (spec doc §3's consolidation).
+describe("skillsLibrary — tipp is marked interactive (Group E consolidation)", () => {
+  it("the tipp skill has interactive:true so SkillsLibraryScreen mounts TIPPTool instead of a static list", () => {
+    const tipp = getSkill("tipp");
+    expect(tipp).toBeTruthy();
+    expect(tipp!.interactive).toBe(true);
+  });
+
+  it("no other skill is marked interactive (TIPPTool is the only interactive skill so far)", () => {
+    const others = SKILLS.filter((s) => s.id !== "tipp" && s.interactive);
+    expect(others).toEqual([]);
+  });
+});
+
 describe("skillsLibrary — Wise Mind honest-expectation framing (Task E)", () => {
   it("Wise Mind states a small, repetition-dependent, never-symptom-treatment expectation (Schumer, Lindsay & Creswell, 2018)", () => {
     const wiseMind = SKILLS.find((s) => s.id === "wise-mind")!;

@@ -8,10 +8,7 @@ import {
   allBreathPatterns,
   getBreathPattern,
 } from "../services/breathPacer";
-
-const CIRCLE_R = 80;
-const CIRCLE_C = 100;
-const STROKE_W = 6;
+import CountdownRing from "./CountdownRing";
 
 /** A single 5-minute slow-paced-breathing session produces vagal-activity gains statistically
  *  indistinguishable from longer 10/15/20-minute sessions — so the timer offers a soft ~5-minute
@@ -35,10 +32,18 @@ function phaseColor(phase: BreathPhase): string {
   }
 }
 
+export interface BreathingTimerProps {
+  /** Initial selected pattern. Defaults to "box" — existing callers (e.g. GroundingLibraryScreen's
+   *  Box Breathing card) are unaffected. TIPP's Paced-breathing tab passes "cyclicSighing" so the tool
+   *  opens on the pattern already prioritized for the highest-intensity/acute-episode path (see
+   *  breathPacer.ts). The user can still switch patterns via the picker afterward. */
+  defaultPattern?: BreathPattern;
+}
+
 /** Animated SVG circle with breath pacing. Uses requestAnimationFrame for smooth rendering. */
-export default function BreathingTimer() {
+export default function BreathingTimer({ defaultPattern = "box" }: BreathingTimerProps = {}) {
   const [playing, setPlaying] = useState(false);
-  const [pattern, setPattern] = useState<BreathPattern>("box");
+  const [pattern, setPattern] = useState<BreathPattern>(defaultPattern);
   const [elapsed, setElapsed] = useState(0);
   const [cycleIdx, setCycleIdx] = useState(0);
   const rafRef = useRef<number>(0);
@@ -105,30 +110,16 @@ export default function BreathingTimer() {
 
       {/* Animated circle */}
       <div className="flex flex-col items-center gap-3">
-        <svg viewBox={`0 0 ${CIRCLE_C * 2} ${CIRCLE_C * 2}`} className="w-48 h-48 -rotate-90" aria-label={`Breathing exercise: ${state.label}`} role="img">
-          <circle cx={CIRCLE_C} cy={CIRCLE_C} r={CIRCLE_R} fill="none" stroke="#1E293B" strokeWidth={STROKE_W} />
-          <circle
-            cx={CIRCLE_C}
-            cy={CIRCLE_C}
-            r={CIRCLE_R}
-            fill="none"
-            stroke={phaseColor(state.phase)}
-            strokeWidth={STROKE_W}
-            strokeLinecap="round"
-            strokeDasharray={`${2 * Math.PI * CIRCLE_R}`}
-            strokeDashoffset={`${2 * Math.PI * CIRCLE_R * (1 - cycled)}`}
-            style={{ transition: "stroke 0.4s ease" }}
-          />
-        </svg>
+        <CountdownRing
+          progress={cycled}
+          label={state.label}
+          color={phaseColor(state.phase)}
+          ariaLabel={`Breathing exercise: ${state.label}`}
+        />
 
-        <div className="text-center space-y-1">
-          <p className="text-lg font-bold text-slate-100" style={{ color: phaseColor(state.phase) }}>
-            {state.label}
-          </p>
-          <p className="text-[11px] text-slate-400">
-            Cycle {totalCycles}
-          </p>
-        </div>
+        <p className="text-[11px] text-slate-400">
+          Cycle {totalCycles}
+        </p>
 
         {/* Soft ~5-minute session-target completion cue — a gentle stopping point, not a hard cutoff
             (You, Laborde, Zammit, Iskra & Borges et al. 2021). */}

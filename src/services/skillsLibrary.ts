@@ -37,6 +37,9 @@ export interface Skill {
   purpose: string; // when/why to reach for it
   steps: string[];
   basis: string;
+  /** When true, SkillsLibraryScreen mounts the skill's dedicated interactive component (currently
+   *  only "tipp" → TIPPTool, 2026-07-12 Wave 3 Group E) instead of a plain expandable steps list. */
+  interactive?: boolean;
 }
 
 export const SKILLS: Skill[] = [
@@ -44,7 +47,8 @@ export const SKILLS: Skill[] = [
   { id: "tipp", name: "TIPP", acronym: "Temperature · Intense exercise · Paced breathing · Paired muscle relaxation", modality: "DBT", group: "crisis",
     purpose: "Bring down extreme arousal fast (intensity 8–10) when the thinking brain is offline.",
     steps: ["Temperature: hold something cold / splash cold water on your face (triggers the dive reflex).", "Intense exercise: ~20 jumping jacks or run in place for 1 minute to burn off adrenaline.", "Paced breathing: breathe out longer than you breathe in (e.g. in 4, out 6).", "Paired muscle relaxation: tense, then release muscle groups as you exhale."],
-    basis: "Linehan 2015, DBT Skills Training Manual — crisis survival skills; cold/longer-exhale raise vagal tone (Thayer & Lane 2009)." },
+    basis: "Linehan 2015, DBT Skills Training Manual — crisis survival skills; cold/longer-exhale raise vagal tone (Thayer & Lane 2009).",
+    interactive: true },
   { id: "stop", name: "STOP", acronym: "Stop · Take a step back · Observe · Proceed mindfully", modality: "DBT", group: "crisis",
     purpose: "Interrupt an impulsive urge before you act on it.",
     steps: ["Stop — freeze, don't move or react.", "Take a step back — physically or mentally; breathe.", "Observe — what's happening inside and around you, just the facts.", "Proceed mindfully — choose the action that fits your goals."],

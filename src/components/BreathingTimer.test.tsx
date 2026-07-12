@@ -20,6 +20,20 @@ describe("BreathingTimer", () => {
   });
 });
 
+describe("BreathingTimer defaultPattern prop (2026-07-12 Wave 3, Group E — TIPP paced-breathing tab)", () => {
+  it("defaults to Box when no defaultPattern is given (zero behavior change for existing callers)", () => {
+    render(<BreathingTimer />);
+    const boxBtn = screen.getByText("Box");
+    expect(boxBtn.className).toMatch(/bg-blue-500\/20/);
+  });
+
+  it("opens on the given defaultPattern (e.g. cyclicSighing for TIPP)", () => {
+    render(<BreathingTimer defaultPattern="cyclicSighing" />);
+    const cyclicBtn = screen.getByText("Cyclic sighing");
+    expect(cyclicBtn.className).toMatch(/bg-blue-500\/20/);
+  });
+});
+
 describe("sessionTargetReached (~5-minute soft session target, You, Laborde, Zammit, Iskra & Borges et al. 2021)", () => {
   it("is a soft ~5-minute (300000ms) target", () => {
     expect(SESSION_TARGET_MS).toBe(5 * 60 * 1000);
