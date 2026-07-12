@@ -27,6 +27,7 @@ import { secureLocal } from "../services/secureLocal";
 import { runDeepAssessment as runDeepAssessmentRequest } from "../services/coachAssist";
 import { generateCsvReport, buildTextReport, generatePdfBlob, saveReport } from "../services/exportReport";
 import { computeRetention } from "../services/retentionMetrics";
+import { computeUsageSummary } from "../services/usageAnalytics";
 import { isPilotEnrolled, computePilotSummary } from "../services/pilotStudy";
 import CrisisCard from "./CrisisCard";
 import { stripProvenance } from "../services/emotionParse";
@@ -98,11 +99,12 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
     const medSummary = adherenceSummary();
     const circadian = computeCircadianInsight(mood);
     const nOf1 = computeNof1Ranking();
+    const usageSummary = computeUsageSummary();
 
-    return { mood, streak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian, nOf1 };
+    return { mood, streak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian, nOf1, usageSummary };
   }, []);
 
-  const { mood, streak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian, nOf1 } = data;
+  const { mood, streak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian, nOf1, usageSummary } = data;
 
   // Load behaviour snapshots async and compute daily-behaviour insights
   useEffect(() => {
@@ -335,6 +337,40 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
       </div>
       {streak.longest > 0 && (
         <p className="text-[11px] text-slate-500 -mt-2 text-center">Longest streak: {streak.longest} days · {streak.totalActiveDays} active days all-time</p>
+      )}
+
+      {/* Usage Analytics — on-device summary of all engagement */}
+      {usageSummary.totalCheckins > 0 && (
+        <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 space-y-3">
+          <p className="text-[10px] uppercase font-mono tracking-widest text-slate-400 flex items-center gap-1.5">
+            <Activity className="w-3.5 h-3.5" /> Your usage
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-page p-2.5 rounded-xl text-center border border-slate-850">
+              <p className="text-lg font-bold text-slate-100 font-mono">{usageSummary.totalCheckins}</p>
+              <p className="text-[9px] text-slate-500 uppercase tracking-wide">check-ins</p>
+            </div>
+            <div className="bg-page p-2.5 rounded-xl text-center border border-slate-850">
+              <p className="text-lg font-bold text-slate-100 font-mono">{usageSummary.protocols.completed}</p>
+              <p className="text-[9px] text-slate-500 uppercase tracking-wide">programs done</p>
+            </div>
+            <div className="bg-page p-2.5 rounded-xl text-center border border-slate-850">
+              <p className="text-lg font-bold text-slate-100 font-mono">{Object.keys(usageSummary.assessments).length}</p>
+              <p className="text-[9px] text-slate-500 uppercase tracking-wide">assessments</p>
+            </div>
+            <div className="bg-page p-2.5 rounded-xl text-center border border-slate-850">
+              <p className="text-lg font-bold text-slate-100 font-mono">{usageSummary.features.length}</p>
+              <p className="text-[9px] text-slate-500 uppercase tracking-wide">features used</p>
+            </div>
+          </div>
+          {usageSummary.avgMood != null && (
+            <p className="text-[10px] text-slate-400 text-center">
+              Avg mood: <span className="font-mono text-slate-300">{usageSummary.avgMood.toFixed(1)}/10</span>
+              {usageSummary.topEmotion && <> · Top: <span className="text-slate-300 capitalize">{usageSummary.topEmotion}</span></>}
+              {usageSummary.features.includes("values_snapshot") && <> · <span className="text-emerald-400">Values set ✓</span></>}
+            </p>
+          )}
+        </div>
       )}
 
       {/* Medication adherence summary */}

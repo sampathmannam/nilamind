@@ -1,7 +1,7 @@
 # NilaMind — Plan of Action (the build queue)
 
 **This is the single source of truth for what to build next and how.** Read it with `AGENTS.md` (golden
-rules + reward-hacking guardrails). Written 2026-07-06 from a full product/safety audit + strategy brainstorm.
+rules + reward-hacking guardrails). Written 2026-07-06; updated 2026-07-12.
 
 **Autonomy legend:**
 - 🟢 **Autonomous** — build it, `npm run guard` green, commit. No sign-off needed.
@@ -37,39 +37,136 @@ insight-aware nudge · unified episode voice · sleep-prodrome UI · real passth
 time/returning-aware opener · 18+ age-gate · de-frag (dead screens removed) · unified `searchLearn` logic ·
 async overnight reflection (§9-gated) · weekly synthesis · emotion-granularity check-in · crisis button in nav.
 
----
+### 🟢 Built and wired (previous queue — complete)
+| Item | Module | Status |
+|------|--------|--------|
+| A1 | Learn screen (unified reading library) | ✅ Done |
+| A2 | thoughtRecordDraft → ThoughtRecordScreen | ✅ Done |
+| A5 | Phone-behaviour insights surfaced | ✅ Done |
+| A6 | BA / self-compassion → shared in-chat protocol | ✅ Done |
+| B1 | Behavioral Activation loop hardened | ✅ Done |
+| B2 | State Engine (digest brain) consolidated | ✅ Done |
+| B4 | Embedding-RAG psychoeducation | ✅ Done |
+| C2 | Bundle-size cleanup | ✅ Done |
 
-## The queue
-
-### A — Finish the half-built + wire the dead code (do first)
-| # | Item | Tag |
-|---|---|---|
-| A1 | **Learn screen** — one screen consuming `searchLearn`; retire the 3 reading-library rows (Skills/Understand/Why → 1). | 🟢 |
-| A2 | **Wire `thoughtRecordDraft`** into `ThoughtRecordScreen` (auto-draft from venting text). *Built, currently unwired.* | 🟢 |
-| A3 | **Wire `distortionSpotter`** — **MUST be §9-gated** (never "spot a distortion" on a crisis disclosure) and framed "hold lightly, never a verdict." *Built, unwired — needs the gate.* | 🟡 |
-| A4 | **Wire `armedCheckin` (between-session presence)** — **ONLY user-armed** (a pull: "check on me later"), **opt-in**, **crisis + elevation-gated**, **frequency-capped**. Mixed-state safety blocker: never push a check-in during a manic peak or when the user asked for quiet. *Built, unwired — needs the gates.* | 🟡 |
-| A5 | **Surface phone-behaviour insights** (`patternInsights`) on a real screen — computed today but flag-gated/invisible. | 🟢 |
-| A6 | **BA / self-compassion → shared in-chat protocol progress** — retire the duplicate standalone screens. | 🟢 |
-
-### B — The differentiating core
-| # | Item | Tag |
-|---|---|---|
-| B1 | **Behavioral Activation loop** — the LLM-free protocol spine (g≈0.69). Harden/complete what exists (`behaviouralActivation`, `protocols`, `ValuesToAction`); don't duplicate. | 🟢 |
-| B2 | **State Engine (digest brain)** on EXISTING signals — an evidence-linked state estimate feeding the chat. Much exists (`patternInsights`/`nilaInflection`/`sleepInsight`) — **consolidate + strengthen, do not rebuild.** | 🟢 |
-| B3 | **Safety-plan follow-up loop** (Stanley-Brown — the check-in *after* the plan; the follow-up is the tested ingredient). | 🟡 |
-| B4 | **Embedding-RAG psychoeducation** — retrieve-and-quote vetted content; MiniLM is the retriever; kills hallucination on clinical facts. | 🟢 |
-
-### C — Holistic / moat / boundaries
-| # | Item | Tag |
-|---|---|---|
-| C1 | **On-device sleep sensing** polish — self-report works; Health Connect seam. Soft-signal *nudge only*; circadian regularity, **not** naive sleep-restriction (mania risk). | 🟡 |
-| C2 | **Bundle-size cleanup** — code-split the heavy chunks (recharts/jspdf/vosk); guard-gated. | 🟢 |
-| C3 | **Tier-2 cloud insight synthesis** — **DROPPED.** The audit proved the quality gap was *wiring, not the model.* Do **not** build a cloud layer. | 🔴 |
-| C4 | **Freemium** (pricing/paywall/BYOK) — business decision. | 🔴 |
-| C5 | **Legal review** (WA MHMDA / the wellness line) — human/attorney; not code. | 🔴 |
-| C6 | **Felt-quality verification** — human judgment, on the phone. | 🔴 |
+### 🟡 Built, flagged for human review before merge
+| Item | Module | Diffs |
+|------|--------|-------|
+| A3 | distortionSpotter §9-gated in ThoughtRecordScreen | §9 gate: `safeSpotDistortions` returns `{ok:false}` on crisis → crisis overlay. `distortionSteer` adds "hold lightly, not a verdict" disclaimer. |
+| A4 | armedCheckin wired with crisis+elevation+frequency+quiet gates | Crisis: `scanForCrisis`; elevation: `detectElevationRisk`; quiet: `QUIET_RE` regex (dnd/leave me alone); frequency: 24h cap. User arms via explicit phrase only. |
+| B3 | safetyPlanFollowUp Stanley-Brown SPI+ loop | 48h first follow-up + 14-day periodic. Pure/deterministic, no push. Two UI cards in ModeScreen. |
+| C1 | sleep sensing nudge (prodrome + JITAI cards) | `selfReportSleepSignal()` works today; Health Connect fallback automatic. Nudge-only (no sleep restriction). Amber prodrome + violet JITAI card in ModeScreen. |
 
 ---
 
-## Definition of done (every 🟢/🟡 item)
+## Research basis (2026-07-12)
+
+### Literature scan for next feature candidates
+
+| Candidate | Evidence | Fit |
+|-----------|----------|-----|
+| **CBT-I (insomnia protocol)** | d=1.46-1.94 insomnia, d=0.66-0.78 depression — strongest effect of any digital MH intervention | ⚠️ Sleep **restriction** excluded (mania trigger). Only the circadian/stimulus-control subset is safe. Already partially covered by `sleep-wind-down` + `sleep-rhythm` protocols. |
+| **Personalized treatment selection (POT)** | RESiLIENT trial N=4,469: +35% over average-best via ML-personalized protocol matching | Partial fit. Routing exists (`routeToProtocol`) but is lexical, not ML. |
+| **JITAI with reinforcement learning** | StayWell trial: RL-powered message selection improved mild depression outcomes | Narrow fit. `assessJitai` exists but is rule-based. |
+| **Circadian rhythm stabilization** | CRM app RCT: 3.39× recurrence reduction for MDD/BD — strongest bipolar-specific evidence | Strong fit. `sleepHoursVariability.ts` + `socialRhythm.ts` exist. No feedback loop. |
+| **DBT skills training pathway** | eDBT RCT: IRR=0.69 binge eating reduction; DBT Coach feasibility for self-harm | Strong fit. Some DBT elements exist but no structured training pathway. |
+| **ACT protocol** | Growing chatbot evidence; perinatal ACT RCTs underway | Moderate fit. Values work exists but no full ACT pathway. |
+| **Assertion training** | RESiLIENT: top-recommended skill for mild depression | New — not present at all. |
+| **Lethal means counseling** | Stanley-Brown step 6; emphasized in 2025 systematic review | Partial — structural step in safety plan but no coaching flow. |
+
+### Key negative finding
+SmartBipolar trial (2026, N=201, JAMA Psychiatry-level): **zero effect** of smartphone monitoring + feedback for progressed bipolar disorder. Structured, protocol-driven intervention beats passive monitoring. NilaMind's protocol-first approach is validated by this negative result.
+
+### Competitive landscape
+- **Wysa** (CBT+DBT+ACT chatbot, FDA Breakthrough Device, strongest public consumer option)
+- **Woebot** (CBT-focussed, most published research, now enterprise-only — no public app since June 2025)
+- **Headspace Ebb** (meditation + AI companion, less clinical depth)
+- **Flourish** (CBT+ACT, 2 RCTs, gamified)
+- NilaMind's differentiators: **manic-first**, **privacy-first (nothing leaves device)**, **on-device LLM**, **deterministic §9 safety**, **bipolar-aware protocols**
+
+### A/B data available on-device
+NilaMind stores 30+ encrypted keys in `secureLocal`. Never transmitted. Analyzable today:
+- App opens → D1/D7/D14/D30 retention curves
+- Mood check-ins → frequency, emotion distribution, sleep/social correlations
+- Assessments → PHQ-9/GAD-7/WHO-5 longitudinal scores
+- Feature adoption → which protocols and tools used
+- Chat feedback → thumbs up/down rate
+- Social rhythm → daily anchor regularity
+- Phone behaviour → screen time, app categories (Android)
+- Voice patterns → speaking rate proxy for mood
+- EMA compliance → micro-check-in frequency
+- Inflection events → mood trajectory changes
+
+---
+
+## Build queue — sequenced properly
+
+### Phase 1 🟢: On-device usage analytics aggregator
+Build a local analytics layer that computes usage patterns from existing secureLocal data and surfaces them in-app. Zero safety risk. Enables every subsequent phase.
+
+**What it includes:**
+- `usageAnalytics.ts` — pure functions reading from all secureLocal keys to compute:
+  - Retention stats (active days/7, active days/30, current/longest streak, D1/D7 retention)
+  - Engagement depth (check-in frequency, EMA compliance, protocol completions)
+  - Mood trajectory (average intensity, sleep correlation, inflection count)
+  - Feature adoption (which protocols started, which tools used)
+- `AnalyticsScreen.tsx` — tab/screen showing these metrics in a dashboard
+- `InsightsDashboard` card in `DashboardScreen.tsx` — top-level summary
+- TDD: new test file `usageAnalytics.test.ts`
+
+### Phase 2 🟢: Structured DBT skills training pathway
+Build a multi-week DBT skills training program (mindfulness → distress tolerance → emotion regulation → interpersonal effectiveness), modeled on the eDBT app structure.
+
+**What it includes:**
+- `protocolDBT.ts` — structured DBT skills training with modules, skills, and diary card
+- DBT protocol entry in `protocols.ts` (safe for all populations)
+- UI pathway in ModeScreen for skill practice + diary card logging
+- Tests: `protocolDBT.test.ts`
+
+### Phase 3 🟢: ACT protocol expansion
+Add full ACT pathway (acceptance, defusion, values-based committed action) building on existing `values.ts` work.
+
+**What it includes:**
+- `protocolACT.ts` — structured ACT protocol
+- ACT protocol entry in `protocols.ts`
+- Expansion of values work into committed action planning + tracking
+- Tests: `protocolACT.test.ts`
+
+### Phase 4 🟡: JITAI with adaptive personalization
+Upgrade `assessJitai` from rule-based to personalized via usage analytics data + reinforcement learning signal.
+
+**What it includes:**
+- Upgrade `jitaiEngine.ts` to consume `usageAnalytics` output
+- Personalized nudge timing and content selection
+- Protocol recommendation surface (suggesting DBT when emotion dysregulation detected, etc.)
+- **🟡 Flagged**: proactive outreach path — safety review required
+
+### Phase 5 🟡: Circadian rhythm stabilization feedback loop
+Build a circadian feedback system (inspired by CRM app) that shows the user their sleep regularity trend and offers structured rhythm-stabilization guidance.
+
+**What it includes:**
+- Circadian regularity score computed from sleep data + social rhythm
+- Visual feedback in sleep-rhythm protocol
+- Structured rhythm-stabilization guidance (no sleep restriction)
+- **🟡 Flagged**: sleep-related proactive nudging — safety review required
+
+### Phase 6 🟢: Assertion training protocol
+Add assertion training protocol (evidence from RESiLIENT trial).
+
+**What it includes:**
+- `protocolAssertion.ts` — structured AT protocol
+- AT protocol entry in `protocols.ts`
+- Tests: `protocolAssertion.test.ts`
+
+### Phase 7 🟡: Lethal means counseling coaching flow
+Add a gentle, collaborative lethal means safety coaching flow within the safety plan module.
+
+**What it includes:**
+- Structured coaching conversation in `SafetyPlanScreen`
+- Means safety education + collaborative strategy
+- **🟡 Flagged**: touches safety plan — mandatory human review
+
+---
+
+## Definition of done (every phase)
 Tested (TDD) · `npm run guard` green · **WIRED to a user surface** · safety diffs flagged for review · no dead code.
