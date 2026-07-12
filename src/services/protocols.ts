@@ -32,6 +32,7 @@ export interface Protocol {
 
 import { DBT_SKILLS_TRAINING } from "./protocolDBT";
 import { ACT_TRAINING } from "./protocolACT";
+import { ASSERTION_TRAINING } from "./protocolAssertion";
 
 export const PROTOCOLS: Protocol[] = [
   {
@@ -309,6 +310,7 @@ export const PROTOCOLS: Protocol[] = [
   },
   DBT_SKILLS_TRAINING,
   ACT_TRAINING,
+  ASSERTION_TRAINING,
 ];
 
 /**
