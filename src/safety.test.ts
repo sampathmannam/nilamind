@@ -854,3 +854,48 @@ describe("§9 2026-07-10 re-audit regression fixes", () => {
     expect(scanForCrisis("I've been making a noose")).toBe(true);
   });
 });
+
+// 2026-07-12 Wave 3: recall-gap fix, surfaced while empirically calibrating a confidence threshold for a
+// different fix (see commit b7e3747). Three natural passive-suicidal-ideation phrasings scored WELL BELOW
+// the classifier threshold (0.5796) against the real bundled MiniLM model — "there's no point in any of
+// this anymore" -> 0.1097, "I just want it all to stop" -> 0.4611, "what's the point of going on" -> 0.2632
+// — meaning they currently get ZERO crisis response, not even the soft card. These are abstract/existential
+// phrasings with no concrete despair vocabulary ("die"/"suicide"/"hurt myself"), which MiniLM apparently
+// can't reliably associate with crisis content — a genuine recall gap, not an edge case.
+describe("scanForCrisis — passive existential-hopelessness recall (Wave 3 threshold-calibration probe)", () => {
+  it.each([
+    "there's no point in any of this anymore",  // MiniLM: 0.1097
+    "I just want it all to stop",               // MiniLM: 0.4611
+    "what's the point of going on",              // MiniLM: 0.2632
+    // close variants
+    "what's the point of going on anymore",
+    "there's no point in any of this",
+    "I want it all to stop",
+  ])("trips the deterministic floor: %j", (s) => {
+    expect(scanForCrisis(s)).toBe(true);
+  });
+
+  // Each family is AMBIGUOUS as a bare substring — it collides with ordinary complaints about something
+  // concrete and named ("a diet", "this meeting", "this rain"), so precision requires an escape hatch (same
+  // posture as AMBIGUOUS_NEGATION_PREFIXES / hasAmbiguousNegationIdeation above), not a plain .includes().
+  it.each([
+    "what's the point of going on a diet if I don't stick to it",
+    "what's the point of going on vacation if my flight keeps getting delayed anyway",
+  ])("does NOT trip on benign 'going on <referent>' control: %j", (s) => {
+    expect(scanForCrisis(s)).toBe(false);
+  });
+
+  it.each([
+    "there's no point in any of this meeting, let's reschedule",
+    "there's no point in any of this paperwork, the deadline already passed",
+  ])("does NOT trip on benign 'no point in any of this <referent>' control: %j", (s) => {
+    expect(scanForCrisis(s)).toBe(false);
+  });
+
+  it.each([
+    "I just want it all to stop — this rain is ruining my trip",
+    "I just want it all to stop, this construction noise outside my window is nonstop",
+  ])("does NOT trip on benign 'want it all to stop' + mundane-nuisance control: %j", (s) => {
+    expect(scanForCrisis(s)).toBe(false);
+  });
+});

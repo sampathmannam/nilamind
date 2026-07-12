@@ -135,6 +135,63 @@ function hasAmbiguousNegationIdeation(normalized: string): boolean {
   return false;
 }
 
+// Passive/existential suicidal ideation — abstract phrasings (2026-07-12 Wave 3: closed via empirical
+// threshold-calibration probe against the real bundled MiniLM model, surfaced while calibrating a
+// confidence threshold for a different fix — see commit b7e3747). Three natural English passive-SI
+// phrasings scored WELL BELOW the classifier threshold (0.5796): "there's no point in any of this anymore"
+// -> 0.1097, "I just want it all to stop" -> 0.4611, "what's the point of going on" -> 0.2632 — meaning they
+// got ZERO crisis response, not even the soft card. MiniLM apparently can't reliably associate abstract/
+// existential phrasing (no concrete despair vocabulary — no "die"/"suicide"/"hurt myself") with crisis
+// content.
+//
+// Each family is AMBIGUOUS as a bare substring — "what's the point of going on A DIET", "no point in any of
+// this MEETING", "want it all to stop — THIS RAIN is ruining my trip" are all common, harmless complaints
+// about something concrete and named. So — exactly like AMBIGUOUS_NEGATION_PREFIXES/
+// hasAmbiguousNegationIdeation above — these are checked via a targeted escape-hatch function, not a bare
+// .includes(), while remaining fully part of the unsuppressible keyword floor (the escape only makes the
+// PATTERN itself more precise; it is not a suppression path layered on top of a match). Kept OUT of
+// INDIRECT_METAPHORS deliberately: every entry in that array is a plain substring checked via .includes()
+// with near-zero benign collision on its own, which these three families are not.
+const EXISTENTIAL_GOING_ON_PREFIXES = ["what's the point of going on", "whats the point of going on"];
+const EXISTENTIAL_NO_POINT_PREFIXES = ["no point in any of this"];
+const EXISTENTIAL_WANT_TO_STOP_PHRASES = ["want it all to stop"];
+
+// A concrete referent immediately following "going on" / "no point in any of this" — a named activity, plan,
+// or object ("...going on A DIET", "...any of this MEETING") — flips the phrase from existential hopelessness
+// to an ordinary complaint about something specific. "anymore" is the one exception: it's a temporal
+// intensifier, not a referent, so "...going on anymore" / "...any of this anymore" still fire.
+function hasReferentAfter(normalized: string, idx: number, matchLen: number): boolean {
+  const after = normalized.slice(idx + matchLen);
+  const rest = after.replace(/^\s*anymore\b/, "");
+  return /^\s*[a-z]/.test(rest);
+}
+
+// A mundane external nuisance (weather/noise/notifications/a meeting) named near "want it all to stop" flips
+// it from existential despair to an ordinary complaint ("...want it all to stop — this RAIN is ruining my
+// trip", "...want it all to stop, this construction NOISE outside my window"). Checked in a window either
+// side of the match (mirrors hasNearbyContrast below), since the nuisance can be named before or after.
+const MUNDANE_NUISANCE_RE =
+  /\b(rain|raining|weather|snow|heat|humidity|noise|traffic|construction|drilling|honking|barking|alarm|notifications?|spam|ads?|meeting|lecture)\b/;
+
+function hasExistentialHopelessness(normalized: string): boolean {
+  for (const p of EXISTENTIAL_GOING_ON_PREFIXES) {
+    const idx = normalized.indexOf(p);
+    if (idx !== -1 && !hasReferentAfter(normalized, idx, p.length)) return true;
+  }
+  for (const p of EXISTENTIAL_NO_POINT_PREFIXES) {
+    const idx = normalized.indexOf(p);
+    if (idx !== -1 && !hasReferentAfter(normalized, idx, p.length)) return true;
+  }
+  for (const p of EXISTENTIAL_WANT_TO_STOP_PHRASES) {
+    const idx = normalized.indexOf(p);
+    if (idx === -1) continue;
+    const windowStart = Math.max(0, idx - 60);
+    const windowEnd = idx + p.length + 60;
+    if (!MUNDANE_NUISANCE_RE.test(normalized.slice(windowStart, windowEnd))) return true;
+  }
+  return false;
+}
+
 // NATIVE-SCRIPT crisis phrasing (2026-07-08 audit 1.B). The app now ships a hi/ta/te language switcher and
 // greets users in Devanagari/Tamil/Telugu script, so users WILL type in-script — but scanForCrisis is a
 // substring match and the MiniLM classifier is English-only, so native-script disclosures had ZERO
@@ -456,6 +513,9 @@ export function scanForCrisis(message: string): boolean {
   // phrases, checked with a reside-sense/devotion-sense escape instead of a bare substring — see
   // hasAmbiguousNegationIdeation() above. Still the unsuppressible keyword floor, still deterministic.
   if (hasAmbiguousNegationIdeation(normalized)) return true;
+
+  // 2026-07-12 Wave 3: passive existential-hopelessness recall gap — see hasExistentialHopelessness above.
+  if (hasExistentialHopelessness(normalized)) return true;
 
   if (scanForEuphemism(normalized)) return true;
 
