@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import {
   detectCrisis,
+  detectCrisisSignal,
   scoreCrisis,
   setCrisisEmbedder,
   setCrisisClassifierEnabled,
@@ -129,5 +130,37 @@ describe("crisisClassifier — additive, fail-closed §9 gate", () => {
     expect(await detectCrisis("i'm okay, don't worry about me")).toBe(true);
     expect(await detectCrisis("i'm okay now that i've decided to end it")).toBe(true);
     expect(await detectCrisis(EUPHEMISM)).toBe(true);
+  });
+});
+
+// A TEXT-AWARE mock embedder (unlike constEmbedder, which ignores the input entirely): scores high only for
+// text containing the euphemism substring below, and near-zero for everything else. Needed because the two-tier
+// tests below exercise BOTH a classifier-only hit AND a genuine no-hit in the same describe block — a constant
+// embedder can't distinguish them.
+const textAwareEmbedder: Embedder = async (text: string) =>
+  text.includes("better off without me") ? [...COEF] : zeros();
+
+describe("detectCrisisSignal — two-tier (2026-07-12 Wave 3)", () => {
+  beforeEach(() => {
+    setCrisisClassifierEnabled(true);
+    setCrisisEmbedder(textAwareEmbedder);
+  });
+
+  it("keyword-floor hit returns source:'keyword'", async () => {
+    const s = await detectCrisisSignal("i want to kill myself");
+    expect(s).toEqual({ hit: true, source: "keyword" });
+  });
+  it("classifier-only hit returns source:'classifier'", async () => {
+    const s = await detectCrisisSignal("everyone would be better off without me");
+    expect(s.hit).toBe(true);
+    expect(s.source).toBe("classifier");
+  });
+  it("no hit returns hit:false, source:null", async () => {
+    const s = await detectCrisisSignal("i had a good day today");
+    expect(s).toEqual({ hit: false, source: null });
+  });
+  it("detectCrisis() is byte-for-byte unchanged (regression guard)", async () => {
+    expect(await detectCrisis("i want to kill myself")).toBe(true);
+    expect(await detectCrisis("i had a good day today")).toBe(false);
   });
 });
