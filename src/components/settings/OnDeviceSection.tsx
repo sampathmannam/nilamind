@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Cpu } from "lucide-react";
+import { Capacitor } from "@capacitor/core";
 import { localLlmId } from "../../services/localLlm";
 
 export default function OnDeviceSection() {
   const [modelId, setModelId] = useState<string | null>(null);
+  // 2026-07-12 device-QA (F11): "On desktop (dev) this uses Ollama…" / "Desktop: run ollama serve" shipped
+  // verbatim to real phone users — that copy only makes sense on the web/dev path, never on-device.
+  const isNative = Capacitor.isNativePlatform();
 
   // On-device is no longer optional — it IS Nila's brain. Poll localLlmId() until the backend
   // registers (async probe in main.tsx) so we can show the live status (no toggle to flip).
@@ -25,9 +29,15 @@ export default function OnDeviceSection() {
           <Cpu className="w-4 h-4 text-violet-400" /> Nila Runs On Your Device
         </h2>
         <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
-          Nila's mind runs entirely on your phone — your conversations never leave the device and no
-          internet is needed to talk. On desktop (dev) this uses Ollama (<span className="font-mono">ollama serve</span> first);
-          on Android the on-device model loads automatically.
+          {isNative ? (
+            "Nila's mind runs entirely on your phone — your conversations never leave the device and no internet is needed to talk. The on-device model loads automatically."
+          ) : (
+            <>
+              Nila's mind runs entirely on your phone — your conversations never leave the device and no
+              internet is needed to talk. On desktop (dev) this uses Ollama (<span className="font-mono">ollama serve</span> first);
+              on Android the on-device model loads automatically.
+            </>
+          )}
         </p>
       </div>
 
@@ -48,8 +58,14 @@ export default function OnDeviceSection() {
       {!modelId && (
         <div className="border border-amber-500/30 bg-amber-500/10 rounded-xl p-3">
           <p className="text-[11px] text-amber-200/90 leading-relaxed">
-            Desktop: run <span className="font-mono text-amber-100">ollama serve</span> then refresh this page.
-            Android: the model downloads on first open.
+            {isNative ? (
+              "The model downloads on first open."
+            ) : (
+              <>
+                Desktop: run <span className="font-mono text-amber-100">ollama serve</span> then refresh this page.
+                Android: the model downloads on first open.
+              </>
+            )}
           </p>
         </div>
       )}
