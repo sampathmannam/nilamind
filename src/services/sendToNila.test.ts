@@ -4,6 +4,8 @@ import { describe, it, expect, vi, beforeAll, beforeEach } from "vitest";
 // through the genuine §9 gates and the genuine on-device call — there is no cloud transport to mock.
 vi.mock("./secureLocal", () => ({
   secureLocal: { getItem: () => null, setItem: () => {}, removeItem: () => {} },
+  SENSITIVE_KEYS: [],
+  flush: () => {},
 }));
 
 import { sendToNila } from "./sendToNila";

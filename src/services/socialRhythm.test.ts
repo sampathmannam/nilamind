@@ -5,6 +5,8 @@ import {
   loadRhythm,
   recordRhythm,
   computeRhythmRegularity,
+  hasRhythmToday,
+  loadTodayAnchors,
   MIN_RHYTHM_DAYS,
   type RhythmEntry,
   type RhythmAnchors,
@@ -83,6 +85,33 @@ describe("recordRhythm / loadRhythm", () => {
   it("tolerates corrupt storage", () => {
     store.set(KEY, "{bad json");
     expect(loadRhythm()).toEqual([]);
+  });
+});
+
+describe("hasRhythmToday", () => {
+  it("returns false when no entries exist", () => {
+    expect(hasRhythmToday(at("2026-07-11T10:00:00Z"))).toBe(false);
+  });
+
+  it("returns true when today's entry exists", () => {
+    seed({ date: "2026-07-11", anchors: { wake: "07:00" } });
+    expect(hasRhythmToday(at("2026-07-11T10:00:00Z"))).toBe(true);
+  });
+
+  it("returns false for yesterday's entry only", () => {
+    seed({ date: "2026-07-10", anchors: { wake: "07:00" } });
+    expect(hasRhythmToday(at("2026-07-11T10:00:00Z"))).toBe(false);
+  });
+});
+
+describe("loadTodayAnchors", () => {
+  it("returns null when no entry for today", () => {
+    expect(loadTodayAnchors(at("2026-07-11T10:00:00Z"))).toBeNull();
+  });
+
+  it("returns today's anchors when they exist", () => {
+    seed({ date: "2026-07-11", anchors: { wake: "07:00", bed: "23:00" } });
+    expect(loadTodayAnchors(at("2026-07-11T10:00:00Z"))).toEqual({ wake: "07:00", bed: "23:00" });
   });
 });
 

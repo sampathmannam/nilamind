@@ -84,6 +84,18 @@ function save(entries: RhythmEntry[]): void {
   try { secureLocal.setItem(RHYTHM_KEY, JSON.stringify(entries)); } catch { /* best-effort — never throw */ }
 }
 
+/** True if the user has logged at least one anchor today. */
+export function hasRhythmToday(now: Date = new Date()): boolean {
+  const date = dayKey(now);
+  return loadRhythm().some((e) => e.date === date);
+}
+
+/** Returns today's anchors if any, or null. */
+export function loadTodayAnchors(now: Date = new Date()): RhythmAnchors | null {
+  const date = dayKey(now);
+  return loadRhythm().find((e) => e.date === date)?.anchors ?? null;
+}
+
 /** Upsert today's anchors (merges with any already logged for the day). Empty/malformed times are ignored. */
 export function recordRhythm(anchors: RhythmAnchors, now: Date = new Date()): void {
   const date = dayKey(now);

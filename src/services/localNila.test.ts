@@ -5,6 +5,8 @@ import { describe, it, expect, vi, beforeAll, beforeEach } from "vitest";
 // stub of them. Storage is mocked for node; crisisResources reads region from localStorage.
 vi.mock("./secureLocal", () => ({
   secureLocal: { getItem: () => null, setItem: () => {}, removeItem: () => {} },
+  SENSITIVE_KEYS: [],
+  flush: () => {},
 }));
 
 beforeAll(() => {

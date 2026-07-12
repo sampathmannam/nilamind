@@ -31,6 +31,7 @@ import type { VariabilitySignal } from "./sleepHoursVariability";
 import { assessJitai } from "./jitaiEngine";
 import { computeUsageSummary } from "./usageAnalytics";
 import { computeCircadianFeedback } from "./circadianFeedback";
+import { computeRhythmRegularity } from "./socialRhythm";
 // #8 (audit): these were pulled via CommonJS require() below, which throws "require is not defined" in the
 // ESM Capacitor WebView bundle and was swallowed by try/catch — so BA + proactive context silently never
 // reached Nila in production. Static ESM imports (no import cycle: neither module imports nilaContext).
@@ -249,7 +250,8 @@ export function buildPersonalContext(): string {
       .filter((m) => typeof m.sleepHours === "number" && m.sleepHours > 0)
       .map((m) => m.sleepHours as number);
     if (sleeps.length >= 3) {
-      const feedback = computeCircadianFeedback({ sleeps });
+      const rhythmReg = computeRhythmRegularity();
+      const feedback = computeCircadianFeedback({ sleeps, rhythmVariabilityMin: rhythmReg.overallVariabilityMin });
       if (feedback && feedback.needsAttention) {
         circadianBlock = `CIRCADIAN FEEDBACK: ${feedback.guidance} Combined score: ${feedback.combinedScore}/100.`;
       }

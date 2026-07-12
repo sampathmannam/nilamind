@@ -8,7 +8,7 @@ import { loadEmaEntries } from "../services/ema";
 import {
   Flame, TrendingUp as TrendUpIcon, TrendingDown, Minus, Activity, MessageSquare,
   CalendarCheck, ClipboardCheck, Database, Sparkles, ShieldAlert, Clock, BrainCircuit,
-  Loader2, Tag, Lightbulb, Pill, Moon, Mic, Download, FileText,
+  Loader2, Tag, Lightbulb, Pill, Moon, Mic, Download, FileText, Clock3,
 } from "lucide-react";
 import Markdown from "react-markdown";
 import { loadMoodHistory } from "../services/moodHistory";
@@ -109,10 +109,10 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
       rhythmVariabilityMin: rhythmReg.overallVariabilityMin,
     }) : null;
 
-    return { mood, streak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian, nOf1, usageSummary, circadianFeedback };
+    return { mood, streak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian, nOf1, usageSummary, circadianFeedback, rhythmReg };
   }, []);
 
-  const { mood, streak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian, nOf1, usageSummary, circadianFeedback } = data;
+  const { mood, streak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian, nOf1, usageSummary, circadianFeedback, rhythmReg } = data;
 
   // Load behaviour snapshots async and compute daily-behaviour insights
   useEffect(() => {
@@ -523,6 +523,31 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
             </div>
             <p className="text-[11px] text-slate-400 leading-relaxed mt-1">{circadianFeedback.guidance}</p>
           </div>
+        </div>
+      )}
+
+      {/* Social rhythm per-anchor breakdown (Phase 10) */}
+      {rhythmReg && rhythmReg.daysLogged >= 3 && rhythmReg.anchors.some((a) => a.meanTime) && (
+        <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 space-y-2">
+          <p className="text-sm font-semibold text-slate-100 flex items-center gap-2">
+            <Clock3 className="w-4 h-4 text-blue-400" /> Anchor timing
+          </p>
+          <div className="space-y-1">
+            {rhythmReg.anchors.filter((a) => a.meanTime).map((a) => (
+              <div key={a.key} className="flex items-center justify-between text-[11px]">
+                <span className="text-slate-400">{a.label}</span>
+                <span className="text-slate-300 tabular-nums">
+                  ~{a.meanTime}
+                  {a.variabilityMin !== null && a.daysLogged >= 5 && (
+                    <span className="text-slate-500"> · ±{a.variabilityMin}m</span>
+                  )}
+                </span>
+              </div>
+            ))}
+          </div>
+          <p className="text-[10px] text-slate-500">
+            Over {rhythmReg.daysLogged} days · <span className="italic">Smaller ± is steadier</span>
+          </p>
         </div>
       )}
 

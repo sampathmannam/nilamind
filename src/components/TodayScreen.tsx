@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Wind, MessageCircle, Moon, LayoutGrid, Sparkles, ChevronRight, HeartHandshake, Sparkle } from "lucide-react";
+import { Wind, MessageCircle, Moon, LayoutGrid, Sparkles, ChevronRight, HeartHandshake, Sparkle, Clock3 } from "lucide-react";
 import { getTimeMode, getUserState, getGreeting } from "../services/modeEngine";
 import { hasCheckinToday } from "../services/checkin";
 import { secureLocal } from "../services/secureLocal";
 import { buildToolGroups } from "./toolsRows";
 import { loadInsights } from "../services/nilaInsights";
 import { getCapacityLevel } from "../services/capacitySignal";
+import { hasRhythmToday, loadTodayAnchors, RHYTHM_ANCHORS } from "../services/socialRhythm";
 import type { TimeMode, UserState } from "../types/modes";
 
 const MOOD_EMOJI: Record<string, string> = {
@@ -173,6 +174,36 @@ export default function TodayScreen({
         )}
         <ChevronRight className="w-5 h-5 text-slate-500 shrink-0 ml-auto" aria-hidden="true" />
       </button>
+
+      {/* Social rhythm card — anchor tracking alongside mood (Phase 10) */}
+      {(() => {
+        const rhythmLogged = hasRhythmToday();
+        const anchors = rhythmLogged ? loadTodayAnchors() : null;
+        const aWake = anchors?.wake;
+        const aBed = anchors?.bed;
+        const extraCount = anchors ? Object.keys(anchors).length - (aWake ? 1 : 0) - (aBed ? 1 : 0) : 0;
+        return (
+          <button onClick={() => go("social_rhythm")} className="w-full glass hover:brightness-125 p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left flex items-center gap-3">
+            <span className="shrink-0 text-blue-400"><Clock3 className="w-5 h-5" aria-hidden="true" /></span>
+            <span className="flex-1 min-w-0">
+              {rhythmLogged ? (
+                <>
+                  <span className="block text-sm font-semibold text-slate-100">
+                    {aWake ? `Wake ${aWake}` : ""}{aWake && aBed ? " · " : ""}{aBed ? `Bed ${aBed}` : ""}{extraCount > 0 ? ` · +${extraCount}` : ""}
+                  </span>
+                  <span className="block text-[11px] text-slate-400 mt-0.5">Tap to see all anchors</span>
+                </>
+              ) : (
+                <>
+                  <span className="block text-sm font-semibold text-slate-100">Log your daily rhythm</span>
+                  <span className="block text-[11px] text-slate-400 mt-0.5">Track wake, meals &amp; bed — anchor your routine</span>
+                </>
+              )}
+            </span>
+            <ChevronRight className="w-5 h-5 text-slate-500 shrink-0" aria-hidden="true" />
+          </button>
+        );
+      })()}
 
       {/* Weekly insight card — contextual data summary when there's check-in data */}
       {weekInsight && weekInsight.checkinCount > 0 && (

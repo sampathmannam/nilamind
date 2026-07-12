@@ -7,6 +7,8 @@ vi.mock("./secureLocal", () => ({
     setItem: (k: string, v: string) => { store.set(k, v); },
     removeItem: (k: string) => { store.delete(k); },
   },
+  SENSITIVE_KEYS: [],
+  flush: () => {},
 }));
 
 import { buildPersonalContext } from "./nilaContext";
