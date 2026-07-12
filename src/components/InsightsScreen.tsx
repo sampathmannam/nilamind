@@ -5,6 +5,7 @@ import { generateInsights, assessmentInsights, daysOfData, type Insight } from "
 import { getTodaySnapshot } from "../services/phoneBehaviour";
 import { loadMoodHistory } from "../services/moodHistory";
 import { loadAssessments, type AssessmentEntry } from "../services/assessments";
+import { getNo1Insights, type No1Insight } from "../services/nOf1";
 
 interface InsightsScreenProps {
   onClose?: () => void;
@@ -109,6 +110,7 @@ function LoadingState() {
 export default function InsightsScreen({ onClose }: InsightsScreenProps) {
   const [behaviourInsights, setBehaviourInsights] = useState<Insight[]>([]);
   const [assessmentInsightsList, setAssessmentInsights] = useState<Insight[]>([]);
+  const [no1Insights, setNo1Insights] = useState<No1Insight[]>([]);
   const [dataDays, setDataDays] = useState<number>(0);
   const [loading, setLoading] = useState(true);
 
@@ -139,9 +141,11 @@ export default function InsightsScreen({ onClose }: InsightsScreenProps) {
         const bInsights = generateInsights(snaps, mood);
         const aInsights = assessmentInsights(assessments, mood);
         const dDays = daysOfData(snaps, mood);
+        const n1 = getNo1Insights();
 
         setBehaviourInsights(bInsights);
         setAssessmentInsights(aInsights);
+        setNo1Insights(n1);
         setDataDays(dDays);
       } catch (e) {
         console.error("[InsightsScreen] Failed to load insights:", e);
@@ -214,7 +218,27 @@ export default function InsightsScreen({ onClose }: InsightsScreenProps) {
                 </section>
               )}
 
-              {dataDays > 0 && behaviourInsights.length === 0 && assessmentInsightsList.length === 0 && (
+              {/* N-of-1 personal correlations */}
+              {no1Insights.length > 0 && (
+                <section className="space-y-2 pt-2 border-t border-slate-800/50">
+                  <h2 className="text-[11px] font-mono uppercase tracking-widest text-slate-500 px-1 flex items-center gap-2">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-400" /> What affects you most
+                  </h2>
+                  <p className="text-[11px] text-slate-500 italic px-1">
+                    Patterns from your protocol completions — may not always hold, but worth noticing.
+                  </p>
+                  <div className="space-y-3">
+                    {no1Insights.map((insight, i) => (
+                      <div key={insight.protocolId} className="glass rounded-2xl p-4 border border-amber-500/20 space-y-1.5">
+                        <p className="text-xs font-medium text-amber-300">{insight.protocolName}</p>
+                        <p className="text-xs text-slate-300">{insight.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {dataDays > 0 && behaviourInsights.length === 0 && assessmentInsightsList.length === 0 && no1Insights.length === 0 && (
                 <div className="glass rounded-2xl p-4 border border-slate-700/50">
                   <p className="text-xs text-slate-400 text-center leading-relaxed">
                     You have <span className="text-slate-200 font-medium">{dataDays}</span> paired day{dataDays > 1 ? 's' : ''} of data.
