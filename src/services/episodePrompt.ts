@@ -10,7 +10,7 @@ import { crisisLinesInline } from "./crisisResources";
 import { skillsPromptBlock } from "./skillsLibrary";
 import { relevantSkillsBlock } from "./skillRetrieval";
 import { buildPersonalContext, activeProtocolContextBlock } from "./nilaContext";
-import { USE_SHORT_PERSONA, NILA_SYSTEM_PROMPT, NILA_SYSTEM_PROMPT_SHORT } from "./nila";
+import { USE_SHORT_PERSONA, NILA_SYSTEM_PROMPT, NILA_SYSTEM_PROMPT_SHORT, explainerQuestionSteer } from "./nila";
 import { EpisodeRecord } from "../types";
 
 // PRIVACY — deliberate divergence from buildReflectionDigest (nilaContext.ts), documented on purpose:
@@ -57,5 +57,9 @@ export function buildEpisodeSystem(episodes: EpisodeRecord[], query?: string): s
   const episodeHistory = buildEpisodeContextBlock(episodes);
   const relevant = query ? relevantSkillsBlock(query) : "";
   const skills = relevant || skillsPromptBlock();
-  return [persona, context, activeProtocol, steer, episodeHistory, skills].filter(Boolean).join("\n\n");
+  // Per-turn stance steer for "why/how" explainer questions — appended LAST (most salient), mirroring
+  // localNila.ts:82-85. The companion path already had this; the episode path was a footgun without it
+  // (2026-07-12 device-QA).
+  const explainerSteer = query ? explainerQuestionSteer(query) : "";
+  return [persona, context, activeProtocol, steer, episodeHistory, skills, explainerSteer].filter(Boolean).join("\n\n");
 }

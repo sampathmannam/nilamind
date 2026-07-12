@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { buildNilaSystem, explainerQuestionSteer } from "./nila";
+import { buildEpisodeSystem } from "./episodePrompt";
 
 describe("Nila voice (short companion persona)", () => {
   const sys = buildNilaSystem("why does staying calm help");
@@ -37,5 +38,29 @@ describe("explainerQuestionSteer", () => {
     for (const q of ["i feel so alone", "today was awful", "i'm just lazy and useless", "hi", ""]) {
       expect(explainerQuestionSteer(q), `should be empty for: ${q}`).toBe("");
     }
+  });
+
+  it("episode path also gets the explainer steer (footgun closed)", () => {
+    const sys = buildEpisodeSystem([], "why do i feel so anxious all the time");
+    expect(sys).toContain("STANCE FOR THIS MESSAGE");
+  });
+});
+
+describe("persona hardening (2026-07-12 device-QA)", () => {
+  const sys = buildNilaSystem("hello");
+  it("carries the name guard (Nila is YOUR name, never invent theirs)", () => {
+    expect(sys).toMatch(/Nila is your name/i);
+    expect(sys).toMatch(/never guess or invent (their|a) name/i);
+  });
+  it("bans the helpdesk register, not just the three openers", () => {
+    expect(sys).toMatch(/how may i assist/i);
+    expect(sys).toMatch(/anything else i can help/i);
+    expect(sys).toMatch(/don'?t hesitate to reach out/i);
+  });
+  it("bans step-by-step advice lists explicitly (not just markdown formatting)", () => {
+    expect(sys).toMatch(/never (give|structure) (advice|steps) as (a )?(numbered )?(list|steps)/i);
+  });
+  it("teaches playful-register matching for jokes/hyperbole", () => {
+    expect(sys).toMatch(/haha|joking|banter/i);
   });
 });

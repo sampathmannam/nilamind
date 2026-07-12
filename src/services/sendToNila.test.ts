@@ -138,3 +138,31 @@ describe("sendToNila — episode path (invariants #2 + #5, on-device)", () => {
     expect(res.reply).toBe("");
   });
 });
+
+describe("name-question trust guard (2026-07-12: model invented 'Nilah')", () => {
+  it("answers 'what is my name' honestly without reaching the model", async () => {
+    const rec = recordingBackend("SHOULD NEVER BE USED");
+    registerLocalLlmBackend(rec.backend);
+    const r = await sendToNila([{ role: "user", content: "what is my name" }], "companion", noopDelta);
+    expect(r.reachedAI).toBe(false);
+    expect(r.reply.toLowerCase()).toContain("haven't told me your name");
+    expect(rec.calls).toHaveLength(0);
+  });
+
+  it.each(["what's my name?", "do you know my name", "tell me my name"])(
+    "matches variants: %j",
+    async (q) => {
+      const rec = recordingBackend("X");
+      registerLocalLlmBackend(rec.backend);
+      const r = await sendToNila([{ role: "user", content: q }], "companion", noopDelta);
+      expect(r.reachedAI).toBe(false);
+    }
+  );
+
+  it("does NOT intercept ordinary name talk", async () => {
+    const rec = recordingBackend("normal reply");
+    registerLocalLlmBackend(rec.backend);
+    const r = await sendToNila([{ role: "user", content: "my name is Arjun by the way" }], "companion", noopDelta);
+    expect(r.reachedAI).toBe(true);
+  });
+});

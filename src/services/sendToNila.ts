@@ -38,6 +38,11 @@ export interface NilaSendResult {
   openSkillId?: string;
 }
 
+/** Matches "what is/'s my name", "do you know my name", "tell me my name" — the deterministic name
+ *  guard below (2026-07-12 device-QA: no name store exists, so the model fabricated one). Exported for
+ *  tests. */
+export const NAME_QUESTION_RE = /\b(what('s| is) my name|do you know my name|tell me my name)\b/i;
+
 /** Last 5 saved episodes, read from the encrypted store exactly as the old episode screen did. */
 function loadRecentEpisodes(): EpisodeRecord[] {
   try {
@@ -66,6 +71,18 @@ export async function sendToNila(
   const outgoing = buildOutgoing(history); // INVARIANT 2 — synthetic turns stripped
 
   if (mode === "companion") {
+    // Deterministic trust guard (2026-07-12 device-QA): with no name store in the app, the on-device model
+    // invented a user name ("Nilah") from a vocative "…, nila" and asserted it confidently. There is no
+    // mechanism by which Nila can legitimately know a name (no name field in nilaProfile), so "what is my
+    // name" gets a warm, honest, deterministic answer instead of a fabrication-prone generation.
+    if (NAME_QUESTION_RE.test(userText)) {
+      return {
+        reply: "You know, you haven't told me your name yet — I'd love to know what you'd like me to call you.",
+        reachedAI: false,
+        blocked: false,
+      };
+    }
+
     // Stream guard: suppress unsafe tokens LIVE (method + "how to") before they render. The broad
     // final gate (applyOutputSafety) still runs on the finished reply as the authority.
     const guard = createStreamGuard(opts.onDelta);
