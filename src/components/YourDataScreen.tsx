@@ -65,6 +65,7 @@ export default function YourDataScreen() {
   const [reportBusy, setReportBusy] = useState(false);
   const [audit, setAudit] = useState<ExportAuditEntry[]>(() => getExportAudit());
   const [lastExport, setLastExport] = useState<{ kind: ExportKind; scope: string; filename: string } | null>(null);
+  const [shareErr, setShareErr] = useState<string | null>(null);
   const rows = CATEGORIES.map((c) => ({ ...c, n: countFor(c.key) }));
   const total = rows.reduce((s, r) => s + r.n, 0);
   const id = loadIdentity();
@@ -77,13 +78,18 @@ export default function YourDataScreen() {
   /** Attempt to open/share a previously exported file via the native share sheet. */
   const handleShareExport = async (entry: ExportAuditEntry) => {
     if (!entry.filename) return;
+    setShareErr(null);
     try {
       const uriResult = await Filesystem.getUri({ path: entry.filename, directory: Directory.Documents });
       if (Capacitor.isNativePlatform()) {
         await Share.share({ url: uriResult.uri, title: entry.filename });
+      } else {
+        // On web the file was downloaded at export time; the history entry is a re-open affordance only.
+        setShareErr("On this browser the file was saved to your downloads when you exported it — check there.");
       }
-    } catch {
-      // file deleted or sharing unavailable — silently ignore
+    } catch (e) {
+      console.error("[YourData] share export failed:", e);
+      setShareErr("Couldn't open this report on your device. Try re-exporting from the buttons above, or open the app's Documents folder.");
     }
   };
 
@@ -749,6 +755,12 @@ const stats = nilaStats();
       <div className="glass rounded-2xl p-4 space-y-2">
         <h3 className="text-xs font-bold text-slate-100 uppercase tracking-wider flex items-center gap-1.5"><FileText className="w-3.5 h-3.5" /> Export history</h3>
         <p className="text-[11px] text-slate-500 leading-relaxed">A private log of every export you've made on this device. Nothing here is ever sent anywhere.</p>
+        {shareErr && (
+          <div className="flex items-start gap-2 text-[11px] text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2">
+            <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+            <span>{shareErr}</span>
+          </div>
+        )}
         {audit.length === 0 ? (
           <p className="text-[11px] text-slate-500 italic">No exports yet.</p>
         ) : (

@@ -27,7 +27,7 @@ export default function SettingsScreen({ onOpenCaregiver }: SettingsScreenProps)
         <h1 className="text-xl font-semibold text-slate-100 font-sans tracking-tight flex items-center gap-2">
           <SettingsIcon className="w-5 h-5 text-slate-400" /> Settings
         </h1>
-        <p className="text-xs text-slate-400 mt-1">Application preferences and sensory regulation.</p>
+        <p className="text-xs text-slate-400 mt-1">Application preferences — including a calm "Soften visuals" mode if bright or busy screens ever feel like too much.</p>
       </div>
 
       <AppearanceSection />

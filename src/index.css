@@ -210,6 +210,25 @@ html, body { background-color: var(--color-page); color: var(--color-slate-100);
   *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
 }
 
+/* Sensory comfort — user-requested calm mode (independent of the OS setting). Still all
+   ambient motion app-wide and add a faint warm dim so bright surfaces ease off for anyone
+   who gets overloaded. The class is toggled on <html> by useSensoryComfort(). */
+html.sensory-comfort *,
+html.sensory-comfort *::before,
+html.sensory-comfort *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+html.sensory-comfort body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 40;
+  background: rgba(8, 6, 4, 0.12); /* faint warm dim — below modals (z-60+) so crisis stays clear */
+}
+
 /* ── Sheet slide-in animation (200ms, ease-out) ── */
 @keyframes sheet-slide-in { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 .animate-slide-in { animation: sheet-slide-in 200ms ease-out; }

@@ -4,6 +4,7 @@
 import React, { useMemo, useEffect, useRef } from "react";
 import type { UserState } from "../types/modes";
 import { useReducedMotion } from "../hooks/useReducedMotion";
+import { useSensoryComfort } from "../hooks/useSensoryComfort";
 import { useIsLightTheme } from "../hooks/useIsLightTheme";
 import { hapticLight, hapticMedium } from "../hooks/useHaptics";
 import { faceMotion } from "./nilaFaceMotion";
@@ -83,7 +84,9 @@ export default function NilaFace({ state, onClick, onLongPress, size = 160, isLi
   // Listening state overrides with a faster pulse (halved breathe/shimmer) so the orb signals
   // active attention.
   const prefersReduced = useReducedMotion();
-  const baseMotion = useMemo(() => faceMotion(state, prefersReduced), [state, prefersReduced]);
+  const [sensoryComfort] = useSensoryComfort();
+  const reduced = prefersReduced || sensoryComfort;
+  const baseMotion = useMemo(() => faceMotion(state, reduced), [state, reduced]);
   const motion = useMemo(() => {
     if (isListening && baseMotion.animate) {
       return { ...baseMotion, breatheSec: baseMotion.breatheSec / 2, shimmerSec: baseMotion.shimmerSec / 2 };

@@ -77,6 +77,26 @@ void (async () => {
   } catch { /* best-effort — phone-behaviour capture is non-critical */ }
 })();
 
+// Populate "What Nila remembers" with durable, on-device memory consolidated from the
+// day's activity. runReflection (the durable-insight generator) was previously computed but
+// NEVER CALLED in production — so the reflection memory that makes that screen feel alive
+// was dead. Fire-and-forget at idle; it's throttled to once/local-day internally and tolerates
+// an unready model (retries later). Native-gated: the real model runs there; the web reflect
+// backend would only consume the day without producing real insights.
+void (async () => {
+  if (!Capacitor.isNativePlatform()) return;
+  try {
+    const [{ runReflection }, { buildReflectionDigest }] = await Promise.all([
+      import("./services/nilaInsights"),
+      import("./services/nilaContext"),
+    ]);
+    const reflect = () => { void runReflection(buildReflectionDigest()).catch(() => {}); };
+    const ric = (globalThis as { requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => void }).requestIdleCallback;
+    if (ric) ric(reflect, { timeout: 30000 });
+    else setTimeout(reflect, 20000);
+  } catch { /* best-effort — memory consolidation is non-critical */ }
+})();
+
 // Clean up the capture timer when the app is about to be unloaded (prevents leaks in dev HMR).
 window.addEventListener("beforeunload", () => { if (captureTimer) clearInterval(captureTimer); });
 

@@ -1,9 +1,11 @@
 import React, { useState } from "react";
-import { Sun, Moon, Monitor } from "lucide-react";
+import { Sun, Moon, Monitor, Leaf } from "lucide-react";
 import { getThemeChoice, setThemeChoice, type ThemeChoice } from "../../services/theme";
+import { useSensoryComfort } from "../../hooks/useSensoryComfort";
 
 export default function AppearanceSection() {
   const [choice, setChoice] = useState<ThemeChoice>(getThemeChoice());
+  const [sensory, setSensory] = useSensoryComfort();
   const opts: { id: ThemeChoice; label: string; icon: React.ReactNode }[] = [
     { id: "system", label: "System", icon: <Monitor className="w-4 h-4" /> },
     { id: "light", label: "Light", icon: <Sun className="w-4 h-4" /> },
@@ -34,6 +36,25 @@ export default function AppearanceSection() {
             {o.label}
           </button>
         ))}
+      </div>
+
+      <div className="border border-slate-800 rounded-xl p-3 flex items-center justify-between bg-page">
+        <div className="flex items-center gap-2 min-w-0">
+          <Leaf className="w-4 h-4 text-emerald-400 shrink-0" />
+          <div className="min-w-0">
+            <div className="text-sm font-medium text-slate-200">Soften visuals</div>
+            <div className="text-[11px] text-slate-500 leading-tight">Calm mode — stills motion and dims bright surfaces if they ever feel like too much.</div>
+          </div>
+        </div>
+        <button
+          onClick={() => setSensory(!sensory)}
+          role="switch"
+          aria-checked={sensory}
+          id="settings-sensory-comfort"
+          className={`shrink-0 w-11 h-6 rounded-full transition-colors cursor-pointer ${sensory ? "bg-emerald-500" : "bg-slate-700"}`}
+        >
+          <span className={`block w-5 h-5 rounded-full bg-white transition-transform ${sensory ? "translate-x-5" : "translate-x-0.5"}`} />
+        </button>
       </div>
     </div>
   );
