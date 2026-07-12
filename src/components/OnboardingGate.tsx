@@ -41,7 +41,14 @@ const SLIDES = [
   {
     id: "how_nila_helps",
     title: "How Nila helps",
-    body: "I can listen, suggest tools, and help you notice patterns — all based on what you share. Every feature is grounded in research you can explore anytime. I'm not a therapist and I don't diagnose — I'm a companion, not a replacement for care.",
+    // Expectancy/rationale sentence: knowing what to expect from a tool and why it's offered is linked to
+    // how people do afterward, not just whether they keep opening the app — credibility/expectancy are
+    // validated constructs that predict subsequent SYMPTOM outcome (Devilly & Borkovec 2000, J Behavior
+    // Therapy and Experimental Psychiatry), with effect-size grounding from Abd-Alrazaq et al. (2020, JMIR)
+    // and Sohn, Ha, Park et al. (2026, npj Digital Medicine). Deliberately NOT an adherence-correlation
+    // claim — an earlier "~0.35 adherence correlation" figure was found unsupported by the synthesis and
+    // removed; keep this hedged ("may help", "linked to") and free of any specific number.
+    body: "I can listen, suggest tools, and help you notice patterns — all based on what you share. Every feature is grounded in research you can explore anytime. Knowing what to expect from a tool and why it might help is itself linked to feeling better from it — so I'll always tell you the why, not just hand you an exercise. I'm not a therapist and I don't diagnose — I'm a companion, not a replacement for care.",
     icon: <MessageCircle className="w-10 h-10 text-blue-400" />,
   },
   {

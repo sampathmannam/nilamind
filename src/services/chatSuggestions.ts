@@ -2,6 +2,7 @@
 // India-first: suggestions include culturally-relevant entries. Pure logic, no side effects.
 
 import type { CheckInEntry } from "../types";
+import { secureLocal } from "./secureLocal";
 
 export interface SuggestionChip {
   id: string;
@@ -51,12 +52,58 @@ export function timeSlot(hour: number = new Date().getHours()): TimeSlot {
   return "night";
 }
 
-/** Get 3 suggestion chips for the current time slot, optionally adapting to recent mood. */
+const GOAL_KEY = "nilamind_user_goal";
+
+/** Reads the onboarding "what brings you here?" goal selection back out of storage.
+ *  Previously write-only (OnboardingGate.tsx wrote it, nothing read it — audit finding,
+ *  engagement-onboarding synthesis). This is the first reader. Tolerant of absent/corrupt storage. */
+export function getUserGoals(): string[] {
+  try {
+    const raw = secureLocal.getItem(GOAL_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter((g): g is string => typeof g === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+// Goal -> the chip ids (per slot) it should promote to the front, when present in that slot's list.
+// Customizable/relevant content is a named engagement facilitator — this closes the onboarding goal
+// picker's previously write-only loop by using the stated goal to lead with the most relevant chip,
+// per Borghouts, Eikey, Mark et al. (2021), J Med Internet Res.
+const GOAL_CHIP_PRIORITY: Record<string, string[]> = {
+  "Feeling low": ["am_mood", "day_flat", "eve_reflect", "nt_lonely"],
+  "Managing stress": ["day_breathing", "eve_wind", "nt_calm", "am_intention"],
+  "Managing anxiety": ["day_anxiety", "eve_racing", "nt_racing", "day_breathing"],
+  "Tracking moods": ["am_checkin", "day_checkin", "eve_checkin"],
+  "Building skills": ["am_intention", "day_breathing", "eve_reflect"],
+  "Just curious": [],
+};
+
+/** Reorders chips within a slot's list so goal-relevant ones lead, without changing membership. */
+function orderByGoal(chips: SuggestionChip[], goals: string[]): SuggestionChip[] {
+  const priorityIds = new Set<string>();
+  for (const goal of goals) {
+    for (const id of GOAL_CHIP_PRIORITY[goal] ?? []) priorityIds.add(id);
+  }
+  if (priorityIds.size === 0) return chips;
+  return [...chips].sort((a, b) => {
+    const aRank = priorityIds.has(a.id) ? 0 : 1;
+    const bRank = priorityIds.has(b.id) ? 0 : 1;
+    return aRank - bRank;
+  });
+}
+
+/** Get 3 suggestion chips for the current time slot, optionally adapting to recent mood and the
+ *  onboarding goal (defaults to reading the real stored goal — pass `[]` explicitly in tests to
+ *  opt out). Real-time mood state always wins the lead slot over a static onboarding goal. */
 export function getSuggestions(
   slot: TimeSlot,
   recentMood?: { intensity: number; emotion: string } | null,
+  goals: string[] = getUserGoals(),
 ): SuggestionChip[] {
-  const base = CHIPS[slot] ?? CHIPS.day;
+  const base = orderByGoal(CHIPS[slot] ?? CHIPS.day, goals);
   if (!recentMood) return base.slice(0, 3);
 
   // Swap one chip when recent mood is notably high (anxious/racing) or low
@@ -64,12 +111,12 @@ export function getSuggestions(
     const replacement = slot === "night" || slot === "evening"
       ? { id: "elevated", text: "I'm feeling really intense", emoji: "⚡" }
       : { id: "elevated", text: "Everything feels too fast", emoji: "⚡" };
-    return [replacement, ...base.slice(0, 2)];
+    return [replacement, ...base.filter((c) => c.id !== replacement.id).slice(0, 2)];
   }
 
   if (recentMood.intensity <= 3) {
     const replacement = { id: "low", text: "Finding it hard to do anything", emoji: "💙" };
-    return [replacement, ...base.slice(0, 2)];
+    return [replacement, ...base.filter((c) => c.id !== replacement.id).slice(0, 2)];
   }
 
   return base.slice(0, 3);

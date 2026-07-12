@@ -3,11 +3,44 @@ import { Wind, MessageCircle, Moon, LayoutGrid, Sparkles, ChevronRight, HeartHan
 import { getTimeMode, getUserState, getGreeting } from "../services/modeEngine";
 import { hasCheckinToday } from "../services/checkin";
 import { secureLocal } from "../services/secureLocal";
-import { buildToolGroups } from "./toolsRows";
+import { buildToolGroups, type ToolGroup } from "./toolsRows";
 import { loadInsights } from "../services/nilaInsights";
 import { getCapacityLevel } from "../services/capacitySignal";
 import { hasRhythmToday, loadTodayAnchors, RHYTHM_ANCHORS } from "../services/socialRhythm";
+import { getUserGoals } from "../services/chatSuggestions";
 import type { TimeMode, UserState } from "../types/modes";
+
+// Goal -> the tool row ids it should promote to the front of their group, when present in that group.
+// Same personalization rationale/citation as chatSuggestions.ts's GOAL_CHIP_PRIORITY: customizable/relevant
+// content is a named engagement facilitator, closing the onboarding goal picker's previously write-only
+// loop (nilamind_user_goal), per Borghouts, Eikey, Mark et al. (2021), J Med Internet Res.
+const GOAL_TOOL_PRIORITY: Record<string, string[]> = {
+  "Feeling low": ["problem_solving", "values_work", "diary"],
+  "Managing stress": ["plan", "winddown", "diary"],
+  "Managing anxiety": ["plan", "exposure", "diary"],
+  "Tracking moods": ["ema_checkin", "diary", "assessment", "social_rhythm"],
+  "Building skills": ["problem_solving", "peer_support", "exposure"],
+  "Just curious": [],
+};
+
+/** Reorders each group's rows so goal-relevant tools lead, without changing group titles, membership,
+ *  or row count. A no-op (returns groups unchanged, same array reference) when goals is empty or maps
+ *  to no known tools — safe default for "Just curious" / no onboarding selection made. */
+export function personalizeToolOrder(groups: ToolGroup[], goals: string[]): ToolGroup[] {
+  const priorityIds = new Set<string>();
+  for (const goal of goals) {
+    for (const id of GOAL_TOOL_PRIORITY[goal] ?? []) priorityIds.add(id);
+  }
+  if (priorityIds.size === 0) return groups;
+  return groups.map((g) => ({
+    ...g,
+    rows: [...g.rows].sort((a, b) => {
+      const aRank = priorityIds.has(a.id) ? 0 : 1;
+      const bRank = priorityIds.has(b.id) ? 0 : 1;
+      return aRank - bRank;
+    }),
+  }));
+}
 
 const MOOD_EMOJI: Record<string, string> = {
   calm: "😌", good: "😊", okay: "😐", fine: "😊", anxious: "😰",
@@ -114,7 +147,7 @@ export default function TodayScreen({
   const checkedIn = hasCheckinToday(new Date().toISOString().split("T")[0]);
   const todayMood = getTodayMood();
   const hero = getHeroAction(timeMode, userState);
-  const groups = buildToolGroups({ go, onEpisode, phoneEnabled });
+  const groups = personalizeToolOrder(buildToolGroups({ go, onEpisode, phoneEnabled }), getUserGoals());
   const weekInsight = getWeekInsight();
   const nilaReflection = getNilaReflection();
   const hasAnyCheckins = (() => {
