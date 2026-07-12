@@ -6,9 +6,17 @@ import { requireAuth } from "../services/biometricGate";
 import { generateCsvReport, buildTextReport, generatePdfBlob, saveReport, buildClinicalJson } from "../services/exportReport";
 import { computeRetention } from "../services/retentionMetrics";
 import { isPilotEnrolled, computePilotSummary } from "../services/pilotStudy";
-import { loadAssessments } from "../services/assessments";
+import { loadAssessments, assessmentsFor } from "../services/assessments";
 import { buildFhirBundle } from "../services/fhirExport";
 import { recordExportAudit, getExportAudit, type ExportAuditEntry } from "../services/exportAudit";
+import { buildClinicianReport, type ClinicianReportInput, type ClinicianMedication, type AssessmentTrajectory } from "../services/clinicianReport";
+import { loadMoodHistory } from "../services/moodHistory";
+import { computeCircadianFeedback } from "../services/circadianFeedback";
+import { loadRhythm, computeRhythmRegularity } from "../services/socialRhythm";
+import { loadMedications, loadMedicationLogs, adherenceRate, commonSideEffects } from "../services/medicationAdherence";
+import { nilaStats } from "../services/nilaSessions";
+import { featureAdoption } from "../services/usageAnalytics";
+import { episodePatterns } from "../services/dashboardInsights";
 
 // "Your data" (AUTOPILOT Phase 2): see exactly what's stored, export it (encrypted, user-controlled),
 // or delete everything. All on-device — this screen is the opposite of telemetry.
@@ -136,6 +144,115 @@ export default function YourDataScreen() {
     } finally { setReportBusy(false); }
   };
 
+  const handleExportClinicianPdf = async () => {
+    setReportBusy(true);
+    try {
+      const now = new Date();
+      const periodDays = 30;
+      const yyyymmdd = now.toISOString().slice(0, 10);
+      const periodLabel = `Month ending ${yyyymmdd}`;
+
+      const allCheckins = loadCheckins();
+      const cutoff = new Date(now);
+      cutoff.setDate(cutoff.getDate() - periodDays);
+      const periodCheckins = allCheckins.filter((c: any) => c.date >= cutoff.toISOString().slice(0, 10));
+
+      const uniqueDays = new Set(periodCheckins.map((c: any) => c.date));
+      const totalCheckins = periodCheckins.length;
+      const daysActive = uniqueDays.size;
+
+      const intensities = periodCheckins.map((c: any) => c.intensity).filter((n: any) => typeof n === "number");
+      const avgIntensity = intensities.length > 0 ? intensities.reduce((a: number, b: number) => a + b, 0) / intensities.length : null;
+
+      const moodHist = loadMoodHistory();
+      const recentMood = moodHist.slice(-periodDays);
+      const sleeps = recentMood.filter((m) => typeof m.sleepHours === "number" && m.sleepHours > 0).map((m) => m.sleepHours as number);
+      const avgSleepHours = sleeps.length > 0 ? sleeps.reduce((a, b) => a + b, 0) / sleeps.length : null;
+
+      let circadianScore: number | null = null;
+      if (sleeps.length >= 3) {
+        const rhythmReg = computeRhythmRegularity(now, periodDays);
+        const feedback = computeCircadianFeedback({ sleeps, rhythmVariabilityMin: rhythmReg.overallVariabilityMin ?? undefined });
+        circadianScore = feedback?.combinedScore ?? null;
+      }
+
+      const rhythmReg = computeRhythmRegularity(now, periodDays);
+      const socialRhythmVariability = rhythmReg.overallVariabilityMin;
+
+      const allAssessments = loadAssessments();
+      const assessmentTrajectories: AssessmentTrajectory[] = [];
+      for (const instrument of ["PHQ-9", "GAD-7"] as const) {
+        const entries = assessmentsFor(instrument, allAssessments)
+          .filter((e) => e.date >= cutoff.toISOString().slice(0, 10))
+          .map((e) => ({ date: e.date, total: e.total, severity: e.severity }));
+        if (entries.length > 0) {
+          assessmentTrajectories.push({ instrument, entries });
+        }
+      }
+
+      const allMeds = loadMedications();
+      const activeMeds = allMeds.filter((m) => m.active);
+      const medications: ClinicianMedication[] = activeMeds.map((m) => ({
+        name: m.name,
+        dose: m.dose,
+        adherenceRate: adherenceRate(m.id, periodDays),
+        commonSideEffects: commonSideEffects(m.id, periodDays).map((s) => s.symptom),
+      }));
+
+      const allEpisodes = (() => {
+        try {
+          const raw = secureLocal.getItem("nilamind_episodes");
+          if (!raw) return [];
+          const parsed = JSON.parse(raw);
+          return Array.isArray(parsed) ? parsed : [];
+        } catch { return []; }
+      })();
+      const periodEpisodes = allEpisodes.filter((e: any) => e.date >= cutoff.toISOString().slice(0, 10));
+      const ep = episodePatterns(periodEpisodes);
+      const byTimeOfDay = periodEpisodes.reduce((acc: Record<string, number>, e: any) => {
+        const tod = e.timeOfDay || "unknown";
+        acc[tod] = (acc[tod] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+      const byTimeOfDayStr = Object.entries(byTimeOfDay)
+        .sort(([, a], [, b]) => b - a)
+        .map(([k, v]) => `${k} (${v})`)
+        .join(", ");
+      const episodes = {
+        count: periodEpisodes.length,
+        avgDurationMin: ep?.avgDuration ?? null,
+        byTimeOfDay: byTimeOfDayStr,
+      };
+
+      const stats = nilaStats();
+      const featuresUsed = featureAdoption();
+
+      const input: ClinicianReportInput = {
+        periodLabel,
+        periodDays,
+        totalCheckins,
+        daysActive,
+        avgIntensity,
+        avgSleepHours,
+        circadianScore,
+        socialRhythmVariability,
+        assessmentTrajectories,
+        medications,
+        episodes,
+        protocolsCompleted: 0,
+        nilaSessions: stats.total,
+        featuresUsed,
+      };
+
+      const text = buildClinicianReport(input);
+      const blob = generatePdfBlob(text);
+      if (blob) {
+        await saveReport(blob, "nilamind-clinician-report.pdf", "application/pdf");
+        pushAudit({ kind: "pdf", scope: "Clinician report (30-day)", destination: "device_download" });
+      }
+    } finally { setReportBusy(false); }
+  };
+
   const wipeEverything = async () => {
     if (!(await requireAuth("Confirm it's you to permanently delete everything on this device."))) return;
     setBusy(true);
@@ -205,6 +322,17 @@ export default function YourDataScreen() {
           </button>
           <button onClick={handleExportFhir} disabled={reportBusy} id="export-fhir" className="flex-1 min-w-[64px] bg-page border border-slate-800 hover:bg-raised text-slate-200 text-xs font-semibold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50">
             {reportBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />} FHIR
+          </button>
+        </div>
+      </div>
+
+      {/* Clinician summary (structured PDF for psychiatrist) */}
+      <div className="glass rounded-2xl p-4 space-y-2">
+        <h3 className="text-xs font-bold text-slate-100 uppercase tracking-wider flex items-center gap-1.5"><FileText className="w-3.5 h-3.5" /> Share with your psychiatrist</h3>
+        <p className="text-[11px] text-slate-500 leading-relaxed">A structured 30-day summary your psychiatrist can read in 15 minutes — check-ins, sleep, PHQ‑9/GAD‑7 trajectories, medication adherence, episode logs, and engagement. Generated on-device. Not a clinical or diagnostic tool.</p>
+        <div className="flex flex-wrap gap-2">
+          <button onClick={handleExportClinicianPdf} disabled={reportBusy} id="export-clinician-pdf" className="flex-1 min-w-[64px] bg-blue-600/10 border border-blue-500/30 hover:bg-blue-600/20 text-blue-300 text-xs font-semibold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50">
+            {reportBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />} Generate report PDF
           </button>
         </div>
       </div>
