@@ -58,14 +58,81 @@ export const ROMANIZED_IDEATION = [
   // zero (0.026 measured vs 0.58 threshold) so the keyword floor is the ONLY Hinglish defence. Prefixed
   // pronoun/temporal forms keep precision — bare "nahi jeena" collides with the benign location sense
   // ("yahan nahi jeena" = "don't want to live HERE"). Spelling variants (jina/nhi) are common in typed Hinglish.
+  // NOTE: the negation-first prefixes ("mujhe nahi jeena" etc.) and the reason-noun phrases ("jeene ki
+  // wajah nahi" etc.) were MOVED OUT of this plain-substring array on 2026-07-12 (adversarial-review
+  // hardening, FIX SET 1) — they are still part of the unsuppressible keyword floor, just checked via
+  // hasAmbiguousNegationIdeation() below (regex-based, with a reside-sense/devotion-sense escape) instead
+  // of bare .includes(). See AMBIGUOUS_NEGATION_PREFIXES / AMBIGUOUS_REASON_NOUNS.
+  "ab nahi jee sakta", "ab nahi jee sakti", "aur nahi jee sakta", "aur nahi jee sakti",
+  "zinda nahi rehna", "zinda nahi rahna",
+  // 2026-07-12 adversarial-review hardening (FIX SET 2): natural variants the floor still missed —
+  // "kabhi"/"hi" word-insertion, "nhi"/"ni"/"nai"/"jine"/"jina" spelling variants, "chahat"/"ichha"
+  // (desire/wish) reason-nouns, gerund "thinking about dying" phrasing, and code-switched English. None
+  // of these are reside/devotion-ambiguous the way the prefixes/reason-nouns above are, so plain
+  // substrings are precise enough.
+  "mujhe kabhi nahi jeena", "ab kabhi nahi jeena",
+  "jeena hi nahi chahta",
+  "ab nhi jeena", "aur nhi jeena", "bas nhi jeena", "main nhi jeena", "zinda nhi rehna",
+  "mujhe ni jeena", "mujhe nai jeena",
+  "mujhe nahi jine", "jina nahi chahta",
+  "jeene ki chahat nahi", "jeene ki ichha nahi",
+  "marne ke baare mein soch raha hoon", "marne ke baare mein soch rahi hoon",
+  "marna sochta hoon", "marna sochti hoon",
+  "dont want to jeena anymore", "don't want to jeena anymore",
+  "dont wanna jeena anymore", "don't wanna jeena anymore",
+];
+
+// AMBIGUOUS negation-first prefixes (2026-07-12 adversarial-review hardening, FIX SET 1 — HIGH severity):
+// plain substring matching let "mujhe nahi jeena YAHAN IS SOCIETY MEIN, landlord bahut tang karta hai" (a
+// housing complaint) false-fire the unsuppressible §9 floor — "jeena" is ambiguous between the crisis sense
+// ("to exist/live") and the benign RESIDE sense ("to live/reside somewhere"). Converted from
+// ROMANIZED_IDEATION array membership to a regex + reside-sense escape via hasAmbiguousNegationIdeation()
+// below — still fully deterministic, still part of the unsuppressible keyword floor (NOT a soft-guard /
+// suppression path: the pattern itself is now more precise, preserving this file's invariant that the
+// keyword floor can never be suppressed).
+const AMBIGUOUS_NEGATION_PREFIXES = [
   "mujhe nahi jeena", "mujhe nahi jina", "mujhe nhi jeena", "mujhe nhi jina",
   "ab nahi jeena", "aur nahi jeena", "bas nahi jeena", "main nahi jeena",
   "mujhko nahi jeena", "mereko nahi jeena",
-  "ab nahi jee sakta", "ab nahi jee sakti", "aur nahi jee sakta", "aur nahi jee sakti",
-  "zinda nahi rehna", "zinda nahi rahna",
+];
+
+// A location/moving marker within a short window after a negation-first prefix flips it from crisis-sense
+// to the benign RESIDE-sense ("mujhe nahi jeena YAHAN" = "I don't want to live HERE", not ideation).
+const RESIDE_SENSE_RE =
+  /\b(yahan|yaha|yahaan|waha|wahan)\b|\b(is|us|isi|usi)\b(?:\s+\w+){0,2}\s+(society|pg|hostel|room|ghar|city|gaon|colony|building|flat|area|mohalla)\b|\b(shift|move)\b/;
+
+// Reason-noun phrases ("no reason/meaning/point to living") that collide with romantic hyperbole when a
+// "without you/him/her" devotion marker is present ANYWHERE in the message ("tere bina toh jeene ka koi
+// matlab nahi hai mere liye, i love you so much" — a love declaration, not ideation).
+const AMBIGUOUS_REASON_NOUNS = [
   "jeene ki wajah nahi", "jeene ki koi wajah nahi", "jeene ka koi matlab nahi",
   "jeene ka faida nahi", "jeene ka koi faida nahi",
 ];
+
+const DEVOTION_BINA_RE = /\b(tere|uske|iske|tumhare|unke) bina\b/;
+
+/**
+ * True if `normalized` contains one of the AMBIGUOUS_NEGATION_PREFIXES or AMBIGUOUS_REASON_NOUNS phrases
+ * in its genuine crisis sense (not the benign reside-sense or romantic-devotion-sense collision). Still
+ * part of the unsuppressible keyword floor — this only makes the PATTERNS more precise, it does not add a
+ * suppression path on top of a match (see scanForCrisis / this file's "keyword floor can never be
+ * suppressed" invariant). If a stronger unambiguous crisis phrase is present elsewhere in the message, that
+ * phrase independently trips one of the other keyword lists in scanForCrisis regardless of what this
+ * function returns, so a genuine disclosure that happens to also mention a location or a partner is never
+ * masked.
+ */
+function hasAmbiguousNegationIdeation(normalized: string): boolean {
+  for (const prefix of AMBIGUOUS_NEGATION_PREFIXES) {
+    const idx = normalized.indexOf(prefix);
+    if (idx === -1) continue;
+    const after = normalized.slice(idx + prefix.length, idx + prefix.length + 25);
+    if (!RESIDE_SENSE_RE.test(after)) return true;
+  }
+  for (const phrase of AMBIGUOUS_REASON_NOUNS) {
+    if (normalized.includes(phrase) && !DEVOTION_BINA_RE.test(normalized)) return true;
+  }
+  return false;
+}
 
 // NATIVE-SCRIPT crisis phrasing (2026-07-08 audit 1.B). The app now ships a hi/ta/te language switcher and
 // greets users in Devanagari/Tamil/Telugu script, so users WILL type in-script — but scanForCrisis is a
@@ -89,6 +156,9 @@ export const NATIVE_SCRIPT_IDEATION = [
   // Negation-first Devanagari mirrors (2026-07-12 device-QA — see ROMANIZED_IDEATION comment)
   "मुझे नहीं जीना", "अब नहीं जीना", "और नहीं जीना", "बस नहीं जीना",
   "ज़िंदा नहीं रहना", "जिंदा नहीं रहना", "जीने की वजह नहीं", "जीने का कोई मतलब नहीं",
+  // 2026-07-12 adversarial-review hardening (FIX SET 2): Devanagari mirror of the "kabhi"/"hi"
+  // word-insertion gap found in the romanized list — not reside/devotion-ambiguous, plain substrings.
+  "मुझे कभी नहीं जीना", "जीना ही नहीं चाहता",
 ];
 
 export const SELF_HARM_KEYWORDS = [
@@ -381,6 +451,11 @@ export function scanForCrisis(message: string): boolean {
 
   if (SUICIDAL_SPLIT_RE.test(normalized)) return true; // #1 (re-audit): boundary-anchored "kill my self"
 
+  // FIX SET 1 (2026-07-12 adversarial-review hardening): negation-first "jeena" prefixes and reason-noun
+  // phrases, checked with a reside-sense/devotion-sense escape instead of a bare substring — see
+  // hasAmbiguousNegationIdeation() above. Still the unsuppressible keyword floor, still deterministic.
+  if (hasAmbiguousNegationIdeation(normalized)) return true;
+
   if (scanForEuphemism(normalized)) return true;
 
   return false;
@@ -524,6 +599,28 @@ export function isBenignOkayReassurance(message: string): boolean {
   return !LETHAL_COSIGNAL.test(t) && !WEARY_DESPAIR_PATTERNS.test(t) && !MINIMIZATION_PATTERNS.test(t);
 }
 
+// Contrast/refutation markers (2026-07-12 adversarial-review hardening, FIX SET 4): Rule 3 previously did a
+// plain `replyNorm.includes(agreement)` with zero negation/contrast awareness, so a textbook CBT reframe —
+// "Maybe you are a failure at that specific task, but that doesn't make you a failure as a person." — was
+// WRONGLY rejected for containing the substring "maybe you are a failure", forcing a cold generic fallback
+// instead of a genuinely good, anti-sycophantic reply.
+const CONTRAST_MARKERS = /\b(but|however|though|although|doesn'?t mean|does not mean|that doesn'?t|yet you|still,? (that|you))\b/i;
+
+/**
+ * True if a contrast/refutation marker appears near a DISTORTION_AGREEMENTS match. Checked in BOTH
+ * directions (not just after the match): a reframe can put the contrast BEFORE the closing restatement of
+ * the agreement phrase ("...but that doesn't mean you're a failure" — the agreement phrase "you're a
+ * failure" is the LAST thing matched, with "but"/"doesn't mean" preceding it), or after it ("maybe you are
+ * a failure at that task, BUT that doesn't make you a failure as a person"). ~80 chars each way is enough
+ * for one clause of natural reframe phrasing without being so wide it rescues an unrelated "but" elsewhere
+ * in a long reply.
+ */
+function hasNearbyContrast(text: string, matchStart: number, matchEnd: number): boolean {
+  const windowStart = Math.max(0, matchStart - 80);
+  const windowEnd = matchEnd + 80;
+  return CONTRAST_MARKERS.test(text.slice(windowStart, windowEnd));
+}
+
 /**
  * Validates whether the AI's reply is safe to display.
  */
@@ -559,10 +656,12 @@ export function checkResponse(aiReply: string, userMessage: string, userInCrisis
     }
   }
 
-  // Rule 3: Validates cognitive distortions as objective facts
+  // Rule 3: Validates cognitive distortions as objective facts — UNLESS the reply is refuting/reframing the
+  // agreement (a contrast marker appears near the match), see hasNearbyContrast above.
   for (const agreement of DISTORTION_AGREEMENTS) {
     if (replyNorm.includes(agreement)) {
-      return false;
+      const idx = replyNorm.indexOf(agreement);
+      if (!hasNearbyContrast(replyNorm, idx, idx + agreement.length)) return false;
     }
   }
 

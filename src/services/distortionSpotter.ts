@@ -43,10 +43,17 @@ const DISTORTIONS: DistortionDef[] = [
     patterns: [
       // "hates" requires a me/us object (bare "everyone hates" collides with "everyone hates the
       // policy"); the other verbs keep adjacency-only since they were never ambiguous that way.
-      /\b(they (all )?think i('?m| am) (stupid|incompetent|a failure|useless|annoying|pathetic)|everyone (is judging|thinks|knows)|everyone hates (?:me|us)\b|she thinks i('?m)|he thinks i('?m)|they must think)\b/i,
+      // 2026-07-12 adversarial-review hardening: negative lookbehind on "everyone hates (me|us)" so
+      // "Not everyone hates me, just my ex's friends" doesn't false-fire (this alternative has no gap
+      // tolerance, so the guard only needs to check immediately before the subject).
+      /\b(they (all )?think i('?m| am) (stupid|incompetent|a failure|useless|annoying|pathetic)|everyone (is judging|thinks|knows)|(?<!not )(?<!no )everyone hates (?:me|us)\b|she thinks i('?m)|he thinks i('?m)|they must think)\b/i,
       // Gap-tolerant: adverbs between subject and verb, object must be me/us so "everyone hates
       // the policy" stays clean (2026-07-12: "everyone secretly hates me" evaded adjacency form).
-      /\b(everyone|everybody|they all|all of them) (?:\w+ ){0,2}(hates?|despises?|is judging|are judging|thinks? (?:i|the worst of)) (?:me|us)\b/i,
+      // 2026-07-12 adversarial-review hardening: (a) negative lookbehind excluding "not "/"no "
+      // immediately before the subject ("Not everyone hates me" is a benign correction, not mind-reading);
+      // (b) joke-marker words (jokingly/playfully/kidding/teasingly) excluded from the gap-filler so banter
+      // ("Everyone jokingly hates me for stealing the last donut") isn't absorbed as a plain adverb.
+      /\b(?<!not )(?<!no )(everyone|everybody|they all|all of them) (?:(?!jokingly\b|playfully\b|kidding\b|teasingly\b)\w+ ){0,2}(hates?|despises?|is judging|are judging|thinks? (?:i|the worst of)) (?:me|us)\b/i,
     ],
   },
   {
@@ -91,7 +98,12 @@ const DISTORTIONS: DistortionDef[] = [
       // …and gap-tolerant: up to two qualifier words ("complete", "total", "such a") between copula and
       // label, with a negation lookahead so "i am not a failure" / "i am afraid of failure" stay clean
       // (2026-07-12 device-QA: "i am a complete failure" evaded the adjacency form above).
-      /\bi('?m| am) (?!not\b|never\b|no longer\b|hardly\b|afraid of\b|scared of\b)(?:\w+ ){0,2}(?:a |an )?(?:complete |total |utter |absolute |massive |huge |worthless |useless )?(failure|idiot|loser|burden|mess|disappointment)\b/i,
+      // 2026-07-12 adversarial-review hardening: the front lookahead only inspected the token IMMEDIATELY
+      // after "i am"/"i'm", but the gap-tolerance group ran AFTER that check — so a single hedge word
+      // ("honestly", "truly") between "i am" and "not" defeated the guard entirely ("I'm honestly not a
+      // burden..." wrongly fired). The gap-filler itself now also excludes negation words, so they can't be
+      // absorbed as filler at any position, not just the immediate-next-token one.
+      /\bi('?m| am) (?!not\b|never\b|no longer\b|hardly\b|afraid of\b|scared of\b)(?:(?!not\b|never\b|no longer\b|hardly\b)\w+ ){0,2}(?:a |an )?(?:complete |total |utter |absolute |massive |huge |worthless |useless )?(failure|idiot|loser|burden|mess|disappointment)\b/i,
     ],
   },
   {

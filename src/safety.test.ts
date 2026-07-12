@@ -465,6 +465,26 @@ describe("checkResponse Rule 3 — paraphrase robustness (2026-07-12 device-QA)"
   ])("keeps benign success-talk: %j", (s) => {
     expect(checkResponse(s, "i am a complete failure and everyone secretly hates me")).toBe(true);
   });
+
+  // 2026-07-12 adversarial-review hardening (FIX SET 4): Rule 3 rejected a genuine CBT reframe because it
+  // did a plain substring check with zero negation/contrast awareness — "maybe you are a failure at that
+  // specific task, BUT that doesn't make you a failure as a person" contains the literal agreement phrase
+  // even though the sentence as a whole REFUTES it. A contrast-guard rescue checks a window around the
+  // match for a contrast marker (but/however/though/doesn't mean/...) before rejecting.
+  it.each([
+    "Maybe you are a failure at that specific task, but that doesn't make you a failure as a person.",
+    "You haven't found success yet in your career, but that doesn't mean you're a failure.",
+  ])("Rule 3 allows a reframe that contrasts the agreement phrase (2026-07-12 hardening): %j", (s) => {
+    // benign userMessage — Rule 1 (crisis-resource requirement) is not what's under test here.
+    expect(checkResponse(s, "i am a complete failure and everyone secretly hates me")).toBe(true);
+  });
+  // regression guard — unrefuted agreement must still be rejected
+  it.each([
+    "Or it may simply be that you have not yet found success in life.",
+    "You really are a failure.",
+  ])("still rejects unrefuted agreement (no regression): %j", (s) => {
+    expect(checkResponse(s, "i am a complete failure and everyone secretly hates me")).toBe(false);
+  });
 });
 
 describe("v1.1 §9 regression — ingestion phrases + the command-bypass floor", () => {
@@ -559,6 +579,52 @@ describe("scanForCrisis — Hindi/Tamil romanized ideation (audit hardening)", (
     "zinda hoon abhi, tension mat lo",                   // "I'm alive, don't worry"
   ])("does NOT trip on benign negation control: %j", (s) => {
     expect(scanForCrisis(s)).toBe(false);
+  });
+
+  // 2026-07-12 adversarial-review hardening (FIX SET 1, HIGH severity): the negation-first prefixes above
+  // ("mujhe nahi jeena" etc.) were plain substrings with zero context awareness — "jeena" is ambiguous
+  // between the crisis sense ("to exist/live") and the benign RESIDE sense ("to live/reside somewhere"),
+  // and the reason-noun phrases ("jeene ka koi matlab nahi") are ambiguous between despair and a common
+  // Hinglish romantic-devotion declaration ("without you there's no meaning to living"). Confirmed false
+  // positives on real housing/hostel complaints and romantic hyperbole; fixed via a reside-sense location
+  // escape and a devotion "bina" (without-someone) escape (see hasAmbiguousNegationIdeation in safety.ts).
+  it.each([
+    "mujhe nahi jeena yahan is society mein, landlord bahut tang karta hai",
+    "aur nahi jeena is PG mein yaar, dusra room dhoondna padega",
+    "mujhe nahi jeena is ghar mein, bahut ganda hai",
+    "ab nahi jeena is city mein, delhi shift karna hai",
+  ])("does NOT trip on reside-sense continuation: %j", (s) => {
+    expect(scanForCrisis(s)).toBe(false);
+  });
+  it.each([
+    "tere bina toh jeene ka koi matlab nahi hai mere liye, i love you so much",
+    "uske bina jeene ki wajah nahi bachi, kitna pyaar karta hoon usse",
+  ])("does NOT trip on romantic-devotion continuation: %j", (s) => {
+    expect(scanForCrisis(s)).toBe(false);
+  });
+  // true positives from 8d6a074 must still fire (regression guard)
+  it.each([
+    "mujhe nahi jeena", "ab nahi jeena", "aur nahi jeena", "bas nahi jeena",
+    "jeene ki wajah nahi", "jeene ka koi matlab nahi",
+  ])("still trips on the bare/unambiguous form (no regression): %j", (s) => {
+    expect(scanForCrisis(s)).toBe(true);
+  });
+
+  // 2026-07-12 adversarial-review hardening (FIX SET 2, MEDIUM severity): natural Hindi/Hinglish variants
+  // still missed by the keyword floor — word-insertion (kabhi/hi), spelling variants (nhi/ni/nai/jine/jina),
+  // desire/wish reason-nouns (chahat/ichha), gerund phrasing, and code-switched English. Not reside/devotion-
+  // ambiguous, so these are added as plain substrings (see ROMANIZED_IDEATION in safety.ts).
+  it.each([
+    "mujhe kabhi nahi jeena", "ab kabhi nahi jeena",
+    "ab jeena hi nahi chahta", "jeena hi nahi chahta ab",
+    "ab nhi jeena", "aur nhi jeena", "bas nhi jeena", "main nhi jeena", "zinda nhi rehna",
+    "mujhe ni jeena", "mujhe nai jeena",
+    "mujhe nahi jine", "jina nahi chahta",
+    "jeene ki chahat nahi", "jeene ki ichha nahi bachi",
+    "marne ke baare mein soch raha hoon", "marna sochta hoon",
+    "i dont want to jeena anymore", "i don't wanna jeena anymore",
+  ])("trips on natural variant: %j", (s) => {
+    expect(scanForCrisis(s)).toBe(true);
   });
 
   it("the list is non-empty and normalized lowercase", () => {
@@ -705,6 +771,12 @@ describe("scanForCrisis — expanded dissociation coverage (2026-07-09 audit)", 
       "मुझे नहीं जाना",                    // don't want to GO
     ])("does NOT trip on benign Devanagari control: %j", (s) => {
       expect(scanForCrisis(s)).toBe(false);
+    });
+
+    // FIX SET 2 (2026-07-12 adversarial-review hardening): Devanagari mirror of the kabhi/hi
+    // word-insertion gap found in the romanized list.
+    it.each(["मुझे कभी नहीं जीना", "जीना ही नहीं चाहता"])("trips on Devanagari variant: %j", (s) => {
+      expect(scanForCrisis(s)).toBe(true);
     });
   });
 

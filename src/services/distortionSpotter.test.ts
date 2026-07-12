@@ -106,6 +106,32 @@ describe("paraphrase robustness (2026-07-12 device-QA)", () => {
     expect(ids).not.toContain("labeling");
     expect(ids).not.toContain("mind_reading");
   });
+
+  // 2026-07-12 adversarial-review hardening: the negative lookahead after "i am"/"i'm" only inspected the
+  // TOKEN IMMEDIATELY after the copula, but the gap-tolerance group runs AFTER that check — so a single
+  // hedge word ("honestly", "truly") between "i am" and "not" defeated the guard entirely. Similarly
+  // mind_reading had NO negation guard at all, and its own gap-tolerance let joke-markers ("jokingly") get
+  // absorbed as filler, causing banter to wrongly fire.
+  it.each([
+    "I'm honestly not a burden to my friends",
+    "I am truly not a failure, no matter what he says",
+    "I am honestly never a failure at trying new things",
+    "Not everyone hates me, just my ex's friends",
+    "Everyone jokingly hates me for stealing the last donut at the office",
+    "lol everyone playfully hates me for my music taste",
+  ])("does NOT fire on negated/banter paraphrase (hedge-word bypass, 2026-07-12 hardening): %j", (s) => {
+    const ids = spotDistortions(s).map((x) => x.id);
+    expect(ids).not.toContain("labeling");
+    expect(ids).not.toContain("mind_reading");
+  });
+  // regression guard — the original paraphrase catches from 0a1c834 must still work
+  it.each([
+    "i am a complete failure and everyone secretly hates me",
+  ])("still catches the original paraphrase target (no regression): %j", (s) => {
+    const ids = spotDistortions(s).map((x) => x.id);
+    expect(ids).toContain("labeling");
+    expect(ids).toContain("mind_reading");
+  });
 });
 
 describe("safeSpotDistortions — §9 gate", () => {
