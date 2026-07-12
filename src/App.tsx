@@ -75,6 +75,8 @@ import { resolveNavTarget, type AuxView, type TabView } from "./services/nav";
 import { getArmedCheckin, armedCheckinBody } from "./services/armedCheckin";
 import { recordAppOpen } from "./services/retentionMetrics";
 import { getPilotState, markEndpointReminderScheduled, PILOT_ENDPOINT_REMINDER_BODY } from "./services/pilotStudy";
+import { getUserState } from "./services/modeEngine";
+import { computeAdaptiveMode, getAdaptiveCssClass } from "./services/adaptiveTheme";
 import { MessageSquare, LayoutGrid, User, X } from "lucide-react";
 import SheetContainer from "./components/SheetContainer";
 import { hapticLight } from "./hooks/useHaptics";
@@ -327,6 +329,27 @@ export default function App() {
       .catch((e) => console.error("[App] addListener(localNotificationActionPerformed) failed:", e));
     return () => { removed = true; handle?.remove(); };
   }, [go]);
+
+  // Phase 9: Episode-adaptive UI — watch user state and apply theme class on <html>.
+  // Polls every 30s and on visibility change (app foreground). Subtle CSS variable
+  // overrides adapt the visual tone: muted during elevation, warm during low.
+  useEffect(() => {
+    function applyAdaptive() {
+      const state = getUserState();
+      const mode = computeAdaptiveMode(state);
+      const cls = getAdaptiveCssClass(mode);
+      const html = document.documentElement;
+      html.classList.remove("theme-elevated", "theme-low");
+      if (cls) html.classList.add(cls);
+    }
+    applyAdaptive();
+    document.addEventListener("visibilitychange", applyAdaptive);
+    const interval = setInterval(applyAdaptive, 30000);
+    return () => {
+      document.removeEventListener("visibilitychange", applyAdaptive);
+      clearInterval(interval);
+    };
+  }, []);
 
   return (
     <div className="relative isolate h-dvh bg-page text-slate-300 font-sans antialiased overflow-hidden flex flex-col">

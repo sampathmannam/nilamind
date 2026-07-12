@@ -314,3 +314,34 @@ html, body { background-color: var(--color-page); color: var(--color-slate-100);
   border: 0;
 }
 
+/* ── Phase 9: Episode-adaptive UI ──
+   Subtle visual toning based on user state. Elevated → muted, desaturated
+   accents, slower animation. Low → warm palette, softer surfaces.
+   Applied as classes on <html> by adaptiveTheme.ts. */
+:root.theme-elevated {
+  --color-blue-400: #8B7EA5;
+  --color-blue-500: #7A6D94;
+  --color-blue-600: #695E83;
+  --color-emerald-400: #6A9B7A;
+  --color-emerald-500: #5A8B6A;
+  --color-purple-400: #9A8BB0;
+  --color-purple-500: #8879A0;
+  --color-peach-400: #C4A088;
+  --color-peach-500: #B89078;
+}
+:root.theme-elevated .nila-orb { animation-duration: 7s; }
+:root.theme-elevated .animate-slide-in,
+:root.theme-elevated .animate-slide-out,
+:root.theme-elevated .animate-tab-fade { animation-duration: 350ms; }
+
+:root.theme-low {
+  --color-blue-400: #C4A878;
+  --color-blue-500: #B89868;
+  --color-blue-600: #A88858;
+  --color-emerald-400: #8AAF7A;
+  --color-emerald-500: #7A9F6A;
+  --color-page: #1C1713;
+  --color-card: #241E19;
+  --color-raised: #2D2620;
+}
+
