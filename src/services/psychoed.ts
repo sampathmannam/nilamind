@@ -123,6 +123,98 @@ export const PSYCHOED_TOPICS: PsychoedTopic[] = [
     basis: "Hayes, Acceptance & Commitment Therapy (values as chosen life directions).",
     tags: ["values", "meaning", "direction", "purpose", "what matters", "motivation", "goals", "acceptance", "act", "lost"],
   },
+  {
+    id: "stress-hpa-axis",
+    title: "Why stress builds in the body",
+    summary:
+      "When pressure keeps arriving without a real break, the body's stress system can stay switched on past when it is needed — and that has a cost.",
+    body:
+      "The body has a finely tuned stress response: the sympathetic system revs up to meet a challenge, then the parasympathetic system brings it back down. This works well for short, sharp demands. The difficulty comes when demands are constant — financial worry, relationship strain, long hours — because the 'off' switch gets less use. Over time, the system can stay in a state of low-grade activation (sometimes called allostatic load), which tends to drain energy, disturb sleep, and leave less buffer for the next hard thing. Many people find that even short daily practices that signal safety to the body — slow breathing, a warm bath, gentle movement — help reset the system bit by bit.",
+    basis: "McEwen 2007, Physiol. Rev. (allostasis and allostatic load); Sapolsky 2004, Why Zebras Don't Get Ulcers; chronic stress dysregulates HPA-axis feedback (Herman et al. 2016, Compr. Physiol.).",
+    tags: ["stress", "stressed", "burnout", "pressure", "overwhelmed", "hpa axis", "cortisol", "allostatic load", "chronic", "adrenal", "tense", "on edge", "can't relax"],
+    emergencyCaveat: EMERGENCY_CAVEAT,
+  },
+  {
+    id: "neuroplasticity",
+    title: "The brain can change at any age",
+    summary:
+      "The brain keeps rewiring itself throughout life — every experience, and every new habit of attention, leaves a physical trace.",
+    body:
+      "For a long time, scientists thought the brain stopped changing after childhood. We now know that neurons build new connections and strengthen or prune existing ones every day (neuroplasticity). This means that repeatedly practising a new thought pattern or a coping skill literally builds a more well-worn neural path for it — and the old path grows fainter with disuse. Many people find it encouraging: the way you respond now is not fixed; every time you choose a different response, you are retraining the brain, even if it does not feel like it at first.",
+    basis: "Davidson & McEwen 2012, Soc. Cogn. Affect. Neurosci. (experience-dependent plasticity in meditation); Merzenich et al. 2014, Soft-Wired (brain plasticity throughout the lifespan); Maguire et al. 2000, Proc. Natl. Acad. Sci. (hippocampal plasticity in taxi drivers).",
+    tags: ["neuroplasticity", "brain", "change", "rewire", "habit", "practice", "learning", "pattern", "neurogenesis", "plasticity"],
+  },
+  {
+    id: "negativity-bias",
+    title: "Why bad sticks more than good",
+    summary:
+      "The brain naturally pays more attention to negative experiences than positive ones — it is a survival reflex, not a personality flaw.",
+    body:
+      "It is not just you. Evolution shaped the brain to prioritise threats over opportunities: missing a threat could be fatal, while missing a pleasant moment is merely a missed chance. This negativity bias means that one criticism can outweigh ten compliments, a single worry can crowd out a dozen calm moments. Many people find it freeing to know that this is how the brain is built, not a sign of something wrong. Deliberately savouring good moments (even small ones) for a few seconds longer has been shown to help the brain gradually learn to hold onto the positive, too.",
+    basis: "Baumeister et al. 2001, Rev. Gen. Psychol. ('bad is stronger than good' — meta-analysis covering attention, memory, and emotion); Rozin & Royzman 2001, Perspect. Psychol. Sci. (four mechanisms of negativity dominance).",
+    tags: ["negativity bias", "negative", "good", "bad", "pessimism", "pessimistic", "stuck", "can't see the positive", "optimism", "savouring", "rosenthal"],
+  },
+  {
+    id: "gratitude-science",
+    title: "Noticing what is going well",
+    summary:
+      "Deliberately tuning in to what is good, even briefly and even on hard days, has been shown to shift how people feel over time.",
+    body:
+      "It can feel artificial — or even invalidating — to 'think positive' when things are genuinely hard. What research suggests, however, is not forced positivity but a specific practice: taking a minute each day to note one or two things that went reasonably well, or that you are grateful for, even if small. (The coffee was hot, a friend replied, you made it to work.) This practice has been found in several studies to increase well-being and reduce depressive symptoms over a few weeks. It seems to work partly by retraining the brain's attention filter — after a while, you start automatically spotting more of what is going right, not because the bad has vanished, but because your brain has learned to hold both.",
+    basis: "Emmons & McCullough 2003, J. Pers. Soc. Psychol. (weekly gratitude lists increased well-being vs hassles or neutral); Seligman et al. 2005, Am. Psychol. (gratitude visit as a positive intervention); Jackowska et al. 2016, J. Psychosom. Res. (gratitude journaling improves sleep).",
+    tags: ["gratitude", "thankful", "grateful", "positive", "appreciation", "appreciate", "good things", "well-being", "happiness", "optimism", "positivity", "count blessings"],
+  },
+  {
+    id: "motivation-action",
+    title: "Motivation usually follows action, not the other way around",
+    summary:
+      "Waiting until you feel like doing something is one of the surest ways to stay stuck — for many people, a small step comes first and the motivation shows up along the way.",
+    body:
+      "It feels natural to think: first I need to feel motivated, then I will act. But low mood and anxiety weaken that 'felt sense' of wanting to do anything, and waiting for it often backfires — the longer you wait, the heavier the task feels. Behavioural activation theory suggests flipping the order: pick a small, concrete action (stand up, wash one dish, walk to the end of the road, open the email), do it without waiting to feel ready, and then pause to notice any shift. More often than not, the action itself nudges the engine. It isn't magic — it is about breaking the loop where avoidance drains motivation further.",
+    basis: "Martell, Addis & Jacobson 2001, Depression in Context (behavioral activation for depression); Dimidjian et al. 2006, J. Consult. Clin. Psychol. (BA as effective as medication for major depression); Lejuez et al. 2011, BRAT (brief BA — 10–12 sessions, strong effect size).",
+    tags: ["motivation", "motivated", "action", "do", "doing", "procrastination", "procrastinating", "start", "can't get going", "stuck", "inertia", "behavioural activation", "behavioral activation", "task", "small steps"],
+  },
+  {
+    id: "circadian-bipolar",
+    title: "Why daily rhythms matter for mood",
+    summary:
+      "When sleep, meals, and activity happen at roughly the same time each day, the brain's internal clock runs more smoothly — and that tends to steady mood.",
+    body:
+      "The body runs on a ~24-hour clock (the circadian rhythm) that regulates sleep, energy, appetite, and hormone release. When this clock is disrupted — through late nights, irregular meals, or schedule chaos — mood becomes more vulnerable to both low and high swings. This is especially true for people who experience bipolar-like mood shifts. Interpersonal and Social Rhythm Therapy (IPSRT), a well-studied treatment, focuses on stabilising daily routines (when you wake, eat, sleep) as a way to stabilise mood. Many people find that aiming for a consistent wake time (even on weekends) is the single most effective rhythm anchor.",
+    basis: "Frank et al. 2000, Arch. Gen. Psychiatry (IPSRT prevents relapse in bipolar); Harvey et al. 2011, Dialogues Clin. Neurosci. (circadian rhythm disruption in mood disorders); Murray & Harvey 2010, Curr. Psychiatry Rep. (social rhythms and circadian timing).",
+    tags: ["circadian", "rhythm", "routine", "daily", "sleep", "wake", "regular", "clock", "bipolar", "mood swings", "schedule", "routine", "stability"],
+  },
+  {
+    id: "trauma-body",
+    title: "How difficult experiences live in the body",
+    summary:
+      "Intense or overwhelming events can leave a physical trace — a lasting sense of alertness, tension, or numbness, even long after the event is over.",
+    body:
+      "When something overwhelming happens, the body's survival systems do what they were designed to do: mobilise for fight, flight, or freeze. If the threat passes fully, the system settles back down. When it doesn't — when the threat was inescapable, repeated, or too much for the system to process — the body can stay in a state of incomplete response. This can show up as unexplained tension, a low sense of threat in safe situations, or a feeling of being cut off from the body entirely. Many people find that inviting the body back into the conversation — through slow, safe, grounding practices — helps the system gradually complete the response it was stuck in. It is not about reliving the memory; it is about giving the body a chance to learn it is safe now.",
+    basis: "van der Kolk 2014, The Body Keeps the Score (trauma as a physiological imprint); Ogden & Minton 2000, Sensorimotor Psychotherapy (window of tolerance and body-based intervention); Levine 1997, Waking the Tiger (somatic experiencing).",
+    tags: ["trauma", "traumatic", "ptsd", "body", "tension", "numb", "triggers", "flashback", "hypervigilant", "on guard", "unsafe", "somatic", "nervous system", "grounding", "safe"],
+    emergencyCaveat: EMERGENCY_CAVEAT,
+  },
+  {
+    id: "attachment",
+    title: "How we learn to relate",
+    summary:
+      "The way we connect with others is shaped by early relationships — and the brain can learn new, safer ways to relate at any stage of life.",
+    body:
+      "Attachment theory describes how the emotional bonds we formed with early caregivers tend to shape our expectations of relationships later: whether we feel safe depending on people, whether we push closeness away, or whether we worry about being abandoned. Our style is not destiny — it is a learned pattern, and like all learned patterns, it can be updated with new relational experiences. Many people find that simply understanding their attachment pattern (secure, anxious-preoccupied, dismissive-avoidant, or fearful-disorganised) shifts it from 'something wrong with me' to 'something my brain learned early, which can be relearned.'",
+    basis: "Bowlby 1969, Attachment and Loss (attachment theory foundations); Ainsworth et al. 1978, Strange Situation procedure; Mikulincer & Shaver 2016, Attachment in Adulthood (meta-analytic evidence that attachment patterns are modifiable through new experiences).",
+    tags: ["attachment", "relationships", "connection", "trust", "closeness", "abandonment", "rejection", "intimacy", "childhood", "relating", "anxious", "avoidant", "social", "secure"],
+  },
+  {
+    id: "self-compassion-resilience",
+    title: "How self-compassion builds resilience",
+    summary:
+      "Being kind to yourself when things go wrong — rather than harsh or critical — has been consistently linked to greater emotional strength, not softness.",
+    body:
+      "One of the strongest findings in modern psychology is that self-compassion (treating yourself with the same warmth and care you would offer a friend) predicts better mental health across many domains: lower anxiety and depression, less shame, greater motivation, and faster recovery after setbacks. It is not the same as self-esteem (which depends on feeling above average) — self-compassion is available even at your lowest. The three components — mindfulness (acknowledging the pain without over-identifying), common humanity (remembering struggle is universal), and self-kindness (active warmth) — together form a skill that can be trained. Multiple meta-analyses show that even brief self-compassion interventions reduce distress with medium-to-large effect sizes.",
+    basis: "Neff 2003, Self and Identity (self-compassion construct and measurement); Gilbert 2009, The Compassionate Mind (compassion-focused therapy); meta-analyses: Zessin et al. 2015, PLoS One (self-compassion → well-being, r=0.47); MacBeth & Gumley 2012, Clin. Psychol. Rev. (self-compassion → lower psychopathology, large effect); Ferrari et al. 2019, Mindfulness (self-compassion interventions reduce depression and anxiety, g=0.68).",
+    tags: ["self-compassion", "self compassion", "self care", "self-care", "kindness", "kind to myself", "resilience", "resilient", "bounce back", "inner critic", "shame", "hard on myself", "struggle", "neff", "gilbert", "cft", "strength", "vulnerability"],
+  },
 ];
 
 // ── Lexical search (mirrors the S3 skillRetrieval idiom; body is indexed at weight 1 for recall) ──

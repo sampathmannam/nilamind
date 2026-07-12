@@ -2,7 +2,7 @@ import { secureLocal, appendToSecureArray } from "./secureLocal";
 
 const TYPING_KEY = "nilamind_typing_sessions";
 
-export type KeyClass = "backspace" | "space" | "enter" | "char";
+type KeyClass = "backspace" | "space" | "enter" | "char";
 
 export interface KeystrokeEvent {
   ts: number;
@@ -42,14 +42,12 @@ export interface TypingMetrics {
   sessionDuration: number;
 }
 
-/** Record a keystroke event (called from input handlers). NO-OP by design (audit 2.17): the events were
- * written to a "_events" store that nothing ever read (computeMetrics reads session.events, which is never
- * populated) — so this was pure dead work that also re-encrypted the whole array on every keypress (input
- * lag). We keep the coarse `keyClass` shape and this entry point so the timing feature can be revived
- * PROPERLY (buffer per-session in memory, attach on endTypingSession) without re-introducing a keylog.
- * Until then it persists nothing. */
+/** Record a keystroke event (called from input handlers). Buffered in-memory by the hook and
+ *  attached to the session on endTypingSession — never persisted per-keystroke (that caused
+ *  re-encryption on every keypress, creating input lag). The coarse keyClass shape (backspace/
+ *  space/enter/char) ensures timing analysis without ever storing the literal character typed. */
 export function recordKeystroke(_event: KeystrokeEvent): void {
-  /* intentionally does nothing — see above */
+  /* no-op — events are buffered in-memory by useTypingSession and passed to endTypingSession */
 }
 
 /** Start a new typing session for a given target (e.g., "chat", "diary"). */
@@ -67,8 +65,9 @@ export function startTypingSession(targetId: string): string {
   return sessionId;
 }
 
-/** End a typing session and compute metrics. */
-export function endTypingSession(sessionId: string, finalTextLength: number): TypingMetrics | null {
+/** End a typing session and compute metrics. Optionally attach keystroke events buffered in-memory
+ *  by the hook (perf: never re-encrypt on every keypress). */
+export function endTypingSession(sessionId: string, finalTextLength: number, events?: KeystrokeEvent[]): TypingMetrics | null {
   try {
     const raw = secureLocal.getItem(TYPING_KEY);
     if (!raw) return null;
@@ -78,6 +77,7 @@ export function endTypingSession(sessionId: string, finalTextLength: number): Ty
     const session = sessions[idx];
     session.endedAt = Date.now();
     session.textLength = finalTextLength;
+    if (events && events.length > 0) session.events = events;
     sessions[idx] = session;
     secureLocal.setItem(TYPING_KEY, JSON.stringify(sessions));
 

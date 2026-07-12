@@ -4,7 +4,7 @@
 // Layout mirrors How We Feel's progressive-disclosure approach: coarse (mood tap) → specific
 // (granular pick). Intensity ranges are approximate and guide which family surfaces first.
 
-export interface EmotionFamily {
+interface EmotionFamily {
   family: string;
   base: string;
   words: string[];

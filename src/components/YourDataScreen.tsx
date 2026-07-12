@@ -1,5 +1,8 @@
 import React, { useState } from "react";
-import { Database, Download, Trash2, ShieldCheck, Loader2, AlertTriangle, Check, FileText } from "lucide-react";
+import { Database, Download, Trash2, ShieldCheck, Loader2, AlertTriangle, Check, FileText, Share2 } from "lucide-react";
+import { Capacitor } from "@capacitor/core";
+import { Filesystem, Directory } from "@capacitor/filesystem";
+import { Share } from "@capacitor/share";
 import { secureLocal } from "../services/secureLocal";
 import { loadIdentity, exportBackup } from "../services/identity";
 import { requireAuth } from "../services/biometricGate";
@@ -8,7 +11,7 @@ import { computeRetention } from "../services/retentionMetrics";
 import { isPilotEnrolled, computePilotSummary } from "../services/pilotStudy";
 import { loadAssessments, assessmentsFor } from "../services/assessments";
 import { buildFhirBundle } from "../services/fhirExport";
-import { recordExportAudit, getExportAudit, type ExportAuditEntry } from "../services/exportAudit";
+import { recordExportAudit, getExportAudit, type ExportAuditEntry, type ExportKind } from "../services/exportAudit";
 import { buildClinicianReport, type ClinicianReportInput, type ClinicianMedication, type AssessmentTrajectory } from "../services/clinicianReport";
 import { assessTemporalRisk } from "../services/temporalRiskAssessment";
 import { CrisisMetricsTracker } from "../services/crisisSafetyValidation";
@@ -60,6 +63,7 @@ export default function YourDataScreen() {
   const [confirmWipe, setConfirmWipe] = useState(false);
   const [reportBusy, setReportBusy] = useState(false);
   const [audit, setAudit] = useState<ExportAuditEntry[]>(() => getExportAudit());
+  const [lastExport, setLastExport] = useState<{ kind: ExportKind; scope: string; filename: string } | null>(null);
   const rows = CATEGORIES.map((c) => ({ ...c, n: countFor(c.key) }));
   const total = rows.reduce((s, r) => s + r.n, 0);
   const id = loadIdentity();
@@ -67,6 +71,25 @@ export default function YourDataScreen() {
   const pushAudit = (e: Omit<ExportAuditEntry, "timestamp">) => {
     recordExportAudit(e);
     setAudit(getExportAudit());
+  };
+
+  /** Attempt to open/share a previously exported file via the native share sheet. */
+  const handleShareExport = async (entry: ExportAuditEntry) => {
+    if (!entry.filename) return;
+    try {
+      const uriResult = await Filesystem.getUri({ path: entry.filename, directory: Directory.Documents });
+      if (Capacitor.isNativePlatform()) {
+        await Share.share({ url: uriResult.uri, title: entry.filename });
+      }
+    } catch {
+      // file deleted or sharing unavailable — silently ignore
+    }
+  };
+
+  /** Build a timestamped filename to avoid overwrites. */
+  const makeExportFilename = (base: string): string => {
+    const ts = new Date().toISOString().slice(0, 19).replace(/[T:]/g, "-");
+    return `${ts}-${base}`;
   };
 
   const doExport = async () => {
@@ -99,31 +122,42 @@ export default function YourDataScreen() {
 
   const handleExportCsv = async () => {
     setReportBusy(true);
+    setLastExport(null);
     try {
       const checkins = loadCheckins();
       const csv = generateCsvReport(checkins);
       if (csv) {
-        await saveReport(csv, "nilamind-report.csv", "text/csv");
-        pushAudit({ kind: "csv", scope: "Check-in report", destination: "device_download" });
+        const filename = makeExportFilename("nilamind-report.csv");
+        const result = await saveReport(csv, filename, "text/csv");
+        if (result) {
+          pushAudit({ kind: "csv", scope: "Check-in report", filename, destination: "device_download" });
+          setLastExport({ kind: "csv", scope: "Check-in report", filename });
+        }
       }
     } finally { setReportBusy(false); }
   };
 
   const handleExportPdf = async () => {
     setReportBusy(true);
+    setLastExport(null);
     try {
       const checkins = loadCheckins();
       const text = buildTextReport(checkins, undefined, computeRetention(), isPilotEnrolled() ? computePilotSummary() ?? undefined : undefined, loadAssessments());
       const blob = generatePdfBlob(text);
       if (blob) {
-        await saveReport(blob, "nilamind-report.pdf", "application/pdf");
-        pushAudit({ kind: "pdf", scope: "Check-in report", destination: "device_download" });
+        const filename = makeExportFilename("nilamind-report.pdf");
+        const result = await saveReport(blob, filename, "application/pdf");
+        if (result) {
+          pushAudit({ kind: "pdf", scope: "Check-in report", filename, destination: "device_download" });
+          setLastExport({ kind: "pdf", scope: "Check-in report", filename });
+        }
       }
     } finally { setReportBusy(false); }
   };
 
   const handleExportJson = async () => {
     setReportBusy(true);
+    setLastExport(null);
     try {
       const json = buildClinicalJson({
         generatedAt: new Date().toISOString(),
@@ -132,21 +166,30 @@ export default function YourDataScreen() {
         retention: computeRetention(),
         pilot: isPilotEnrolled() ? computePilotSummary() ?? undefined : undefined,
       });
-      await saveReport(json, "nilamind-data.json", "application/json");
-      pushAudit({ kind: "json", scope: "Structured data export", destination: "device_download" });
+      const filename = makeExportFilename("nilamind-data.json");
+      const result = await saveReport(json, filename, "application/json");
+      if (result) {
+        pushAudit({ kind: "json", scope: "Structured data export", filename, destination: "device_download" });
+        setLastExport({ kind: "json", scope: "Structured data export", filename });
+      }
     } finally { setReportBusy(false); }
   };
 
 const handleExportFhir = async () => {
      setReportBusy(true);
+     setLastExport(null);
      try {
        const bundle = buildFhirBundle({
          generatedAt: new Date().toISOString(),
          subjectId: id?.userId ?? null,
          assessments: loadAssessments(),
        });
-       await saveReport(bundle, "nilamind-fhir-bundle.json", "application/fhir+json");
-       pushAudit({ kind: "fhir", scope: "FHIR R4 assessment bundle", destination: "device_download" });
+       const filename = makeExportFilename("nilamind-fhir-bundle.json");
+       const result = await saveReport(bundle, filename, "application/fhir+json");
+       if (result) {
+         pushAudit({ kind: "fhir", scope: "FHIR R4 assessment bundle", filename, destination: "device_download" });
+         setLastExport({ kind: "fhir", scope: "FHIR R4 assessment bundle", filename });
+       }
      } finally { setReportBusy(false); }
    };
 
@@ -598,8 +641,12 @@ const stats = nilaStats();
       const text = buildClinicianReport(input);
       const blob = generatePdfBlob(text);
       if (blob) {
-        await saveReport(blob, "nilamind-clinician-report.pdf", "application/pdf");
-        pushAudit({ kind: "pdf", scope: "Clinician report (30-day)", destination: "device_download" });
+        const filename = makeExportFilename("nilamind-clinician-report.pdf");
+        const result = await saveReport(blob, filename, "application/pdf");
+        if (result) {
+          pushAudit({ kind: "pdf", scope: "Clinician report (30-day)", filename, destination: "device_download" });
+          setLastExport({ kind: "pdf", scope: "Clinician report (30-day)", filename });
+        }
       }
     } finally { setReportBusy(false); }
   };
@@ -675,6 +722,12 @@ const stats = nilaStats();
             {reportBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />} FHIR
           </button>
         </div>
+        {lastExport && (
+          <div className="flex items-center gap-2 text-[11px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-3 py-2">
+            <Check className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Saved as <span className="font-mono">{lastExport.filename}</span> — tap it in Export history below to open or share</span>
+          </div>
+        )}
       </div>
 
       {/* Clinician summary (structured PDF for psychiatrist) */}
@@ -697,12 +750,24 @@ const stats = nilaStats();
         ) : (
           <div className="divide-y divide-slate-800/70">
             {[...audit].reverse().map((e, i) => (
-              <div key={i} className="flex items-center justify-between py-2">
-                <div className="min-w-0">
+              <div
+                key={i}
+                onClick={() => handleShareExport(e)}
+                className={`flex items-center justify-between py-2 ${e.filename ? "cursor-pointer hover:bg-slate-800/40 rounded-lg px-1 -mx-1 transition-colors" : ""}`}
+                role={e.filename ? "button" : undefined}
+                tabIndex={e.filename ? 0 : undefined}
+                onKeyDown={e.filename ? (ev) => { if (ev.key === "Enter" || ev.key === " ") handleShareExport(e); } : undefined}
+                aria-label={e.filename ? `Open ${e.filename}` : undefined}
+              >
+                <div className="min-w-0 flex-1">
                   <div className="text-xs text-slate-200 capitalize">{e.kind} · {e.scope}</div>
                   <div className="text-[10px] text-slate-500">{new Date(e.timestamp).toLocaleString()}</div>
+                  {e.filename && <div className="text-[9px] font-mono text-slate-600 truncate max-w-[260px]">{e.filename}</div>}
                 </div>
-                <span className="text-[10px] font-mono text-slate-400 shrink-0 ml-2">{e.destination}</span>
+                <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                  <span className="text-[10px] font-mono text-slate-400">{e.destination}</span>
+                  {e.filename && <Share2 className="w-3 h-3 text-slate-500" />}
+                </div>
               </div>
             ))}
           </div>

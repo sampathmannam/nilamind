@@ -56,8 +56,7 @@ function readArr<T>(key: string): T[] {
   }
 }
 
-// The USER's own private analytics. Local sections never leave the device. The single off-device
-// feature — Nila's Deep Evaluation — is user-initiated and explicitly disclosed.
+// The USER's own private analytics. Local sections never leave the device.
 export default function DashboardScreen({ onManageData }: { onManageData?: () => void }) {
   const [timeRange, setTimeRange] = useState<"7d" | "30d">("30d");
   const [chartTab, setChartTab] = useState<"emotion" | "context">("emotion");

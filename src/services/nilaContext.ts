@@ -32,6 +32,7 @@ import { assessJitai } from "./jitaiEngine";
 import { computeUsageSummary } from "./usageAnalytics";
 import { computeCircadianFeedback } from "./circadianFeedback";
 import { computeRhythmRegularity } from "./socialRhythm";
+import { runStateEngine } from "./stateEngine";
 // #8 (audit): these were pulled via CommonJS require() below, which throws "require is not defined" in the
 // ESM Capacitor WebView bundle and was swallowed by try/catch — so BA + proactive context silently never
 // reached Nila in production. Static ESM imports (no import cycle: neither module imports nilaContext).
@@ -316,7 +317,43 @@ export function buildPersonalContext(): string {
     }
   } catch { /* best-effort */ }
 
-  if (lines.length === 0 && !memory && !insights && !profile && !trajectory && !inflection && !safetyPlanFollowUp && !sleepVariability && !jitaiNudge && !circadianBlock && !meansSafetyContext) return "";
+  // Consolidated state-engine signal summary — surfaces the synthesized mood state and any
+  // risk/protective signals the deterministic engines detect (sleep prodrome, circadian,
+  // JITAI, BA, streak, social). Complements the per-block context above. Best-effort.
+  let stateEngineBlock = "";
+  try {
+    const engineCheckins = readArray("nilamind_checkins");
+    const engineMood = loadMoodHistory();
+    const engineAssessments = readArray("nilamind_assessments");
+    const engineDiary = readArray("nilamind_diary");
+    const engineEpisodes = readArray("nilamind_episodes");
+    const engineSnaps: import("./phoneBehaviour").BehaviourSnapshot[] = [];
+    const engineDaysSinceLast = engineMood.length > 0
+      ? Math.max(0, Math.floor((Date.now() - new Date(engineMood[engineMood.length - 1].date).getTime()) / 86400000))
+      : 999;
+    const engine = runStateEngine({
+      checkins: engineCheckins,
+      mood: engineMood,
+      assessments: engineAssessments,
+      diary: engineDiary,
+      episodes: engineEpisodes,
+      snaps: engineSnaps,
+      daysSinceLastCheckin: engineDaysSinceLast,
+    });
+    const seLines: string[] = [];
+    if (engine.moodState && engine.moodConfidence >= 0.4) {
+      seLines.push(`Synthesised state: ${engine.moodState} (confidence ${Math.round(engine.moodConfidence * 100)}%).`);
+    }
+    for (const sig of engine.protectiveSignals) {
+      seLines.push(`Protective: ${sig.label} — ${sig.detail}`);
+    }
+    for (const sig of engine.riskSignals) {
+      seLines.push(`Watch: ${sig.label} — ${sig.detail}`);
+    }
+    if (seLines.length > 0) stateEngineBlock = seLines.join("\n");
+  } catch { /* best-effort — state engine is optional context */ }
+
+  if (lines.length === 0 && !memory && !insights && !profile && !trajectory && !inflection && !safetyPlanFollowUp && !sleepVariability && !jitaiNudge && !circadianBlock && !meansSafetyContext && !stateEngineBlock) return "";
 
   const out: string[] = [
     // Terse header only. HOW to use memory (gently, never recite, don't over-claim, trust the present) already
@@ -349,6 +386,13 @@ export function buildPersonalContext(): string {
 
   if (meansSafetyContext) {
     out.push(meansSafetyContext);
+  }
+
+  // Consolidated state-engine signal summary (mood state + risk/protective signals).
+  // Included when non-empty — gives Nila the synthesized picture from all deterministic engines.
+  if (stateEngineBlock) {
+    out.push("STATE SIGNALS (from all data):");
+    out.push(stateEngineBlock);
   }
 
   // Anti-sycophancy stance — always included so the model knows not to validate

@@ -52,6 +52,34 @@ void (async () => {
   } catch { /* best-effort — pruning is not critical */ }
 })();
 
+// Capture a daily phone-behaviour snapshot (screen-time, app categories, location variance) and persist
+// it to IndexedDB. Runs after idle at app start, then every 4 hours while the app is alive, so the
+// pattern-insights engine (patternInsights.ts) has data to correlate against mood. Gracefully handles
+// non-Android / permission-missing — the snapshot always returns a valid object with nulls for
+// unavailable signals. Best-effort, never blocks the UI.
+const CAPTURE_INTERVAL_MS = 4 * 3600_000;
+let captureTimer: ReturnType<typeof setInterval> | null = null;
+void (async () => {
+  try {
+    const [{ getTodaySnapshot }, { saveSnapshot }] = await Promise.all([
+      import("./services/phoneBehaviour"),
+      import("./db/behaviourDb"),
+    ]);
+    const capture = async () => {
+      try {
+        const snapshot = await getTodaySnapshot();
+        await saveSnapshot(snapshot);
+      } catch { /* best-effort — capture failure is non-critical */ }
+    };
+    const ric = (globalThis as { requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => void }).requestIdleCallback;
+    if (ric) ric(() => { void capture(); captureTimer = setInterval(capture, CAPTURE_INTERVAL_MS); }, { timeout: 8000 });
+    else setTimeout(() => { void capture(); captureTimer = setInterval(capture, CAPTURE_INTERVAL_MS); }, 6000);
+  } catch { /* best-effort — phone-behaviour capture is non-critical */ }
+})();
+
+// Clean up the capture timer when the app is about to be unloaded (prevents leaks in dev HMR).
+window.addEventListener("beforeunload", () => { if (captureTimer) clearInterval(captureTimer); });
+
 // Dev-only: register the Ollama backend so the on-device path can be tested on desktop without
 // the phone. Vite tree-shakes this entire block out of production builds (import.meta.env.DEV
 // resolves to `false` at build time, so the dynamic import is never bundled).

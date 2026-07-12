@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Settings as SettingsIcon, EyeOff, Users, Shield, ExternalLink, Gauge } from "lucide-react";
+import { Settings as SettingsIcon, Users, Shield, ExternalLink, Gauge } from "lucide-react";
 import AppearanceSection from "./settings/AppearanceSection";
 import VoiceSection from "./settings/VoiceSection";
 import RemindersSection from "./settings/RemindersSection";
@@ -16,12 +16,10 @@ import PilotSection from "./settings/PilotSection";
 import PerformanceDashboard from "./PerformanceDashboard";
 
 interface SettingsScreenProps {
-  disableAnchorPulse: boolean;
-  onTogglePulse: (val: boolean) => void;
   onOpenCaregiver?: () => void;
 }
 
-export default function SettingsScreen({ disableAnchorPulse, onTogglePulse, onOpenCaregiver }: SettingsScreenProps) {
+export default function SettingsScreen({ onOpenCaregiver }: SettingsScreenProps) {
   const [showPerf, setShowPerf] = useState(false);
   return (
     <div className="space-y-6 max-w-md mx-auto text-slate-100" id="settings-view">
@@ -36,43 +34,7 @@ export default function SettingsScreen({ disableAnchorPulse, onTogglePulse, onOp
       <LanguageSection />
       <RegionSection />
 
-      {/* Sensory Overload — lives in the container because it's driven by app-level props. */}
-      <div className="glass p-5 rounded-2xl space-y-4 shadow-lg">
-        <div>
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
-            <EyeOff className="w-4 h-4 text-emerald-400" /> Sensory Overload
-          </h2>
-          <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
-            Adjust visual pacing or limit distractions if animations are overstimulating.
-          </p>
-        </div>
-
-        <div className="border border-slate-800 rounded-xl p-3 flex items-center justify-between bg-page">
-          <div className="space-y-0.5">
-            <div className="text-sm font-medium text-slate-200">Pause Anchor Pulse</div>
-            <div className="text-[10px] text-slate-500">Stops the rhythmic pulse on the emergency button.</div>
-          </div>
-
-          <button
-            onClick={() => onTogglePulse(!disableAnchorPulse)}
-            className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-page transition-colors ${
-              disableAnchorPulse ? "bg-emerald-500" : "bg-slate-700"
-            }`}
-            role="switch"
-            aria-checked={disableAnchorPulse}
-          >
-            <span className="sr-only">Pause anchor pulse</span>
-            <span
-              aria-hidden="true"
-              className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                disableAnchorPulse ? "translate-x-2.5" : "-translate-x-2.5"
-              }`}
-            />
-          </button>
-        </div>
-      </div>
-
-<VoiceSection />
+      <VoiceSection />
 <RemindersSection />
 <EmaSection />
 <InflectionSection />

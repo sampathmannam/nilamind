@@ -78,7 +78,7 @@ import { getUserState } from "./services/modeEngine";
 import { computeAdaptiveMode, getAdaptiveCssClass } from "./services/adaptiveTheme";
 import { warmVoskStt } from "./services/voskStt";
 import { MessageSquare, LayoutGrid, User, X } from "lucide-react";
-import SheetContainer from "./components/SheetContainer";
+
 import { hapticLight } from "./hooks/useHaptics";
 
 type AppTab = "nila" | "today" | "you";
@@ -158,7 +158,6 @@ export default function App() {
   const [activeAuxView, setActiveAuxView] = useState<AuxView | null>(null);
   const [closingAuxView, setClosingAuxView] = useState<AuxView | null>(null);
   const [activeTab, setActiveTab] = useState<AppTab>("today");
-  const [disableAnchorPulse, setDisableAnchorPulse] = useState(false);
   const [saveWarning, setSaveWarning] = useState(false);
   const [onboardingDone, setOnboardingDone] = useState(hasCompletedOnboarding());
   const [wakeListening, setWakeListening] = useState(false);
@@ -183,14 +182,6 @@ export default function App() {
     const h = () => setLangTick((n) => n + 1);
     window.addEventListener(LANGUAGE_CHANGED_EVENT, h);
     return () => window.removeEventListener(LANGUAGE_CHANGED_EVENT, h);
-  }, []);
-
-  // Load saved animation preference
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem("nilamind_disable_anchor_pulse");
-      if (saved === "true") setDisableAnchorPulse(true);
-    } catch { /* ignore */ }
   }, []);
 
   // Sync daily reminders
@@ -477,7 +468,7 @@ export default function App() {
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto">
             <Suspense fallback={<ScreenFallback />}>
-              <SettingsScreen disableAnchorPulse={disableAnchorPulse} onTogglePulse={(val) => setDisableAnchorPulse(val)} onOpenCaregiver={() => setIsCaregiverOpen(true)} />
+              <SettingsScreen onOpenCaregiver={() => setIsCaregiverOpen(true)} />
             </Suspense>
           </div>
         </div>

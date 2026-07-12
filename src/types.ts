@@ -68,30 +68,6 @@ export interface ThoughtRecord {
   reRatedIntensity: number; // 1-100
 }
 
-export interface CriticEntry {
-  id: string;
-  date: string;
-  criticalVoice: string;
-  trigger: string;
-  friendResponse: string;
-}
-
-export interface CompassionateLetter {
-  id: string;
-  date: string;
-  content: string;
-}
-
-export interface ShameReflectEntry {
-  id: string;
-  date: string;
-  shameName: string;
-  shameOrigin: string;
-  shameProtection: string;
-  kinderView: string;
-}
-
-/** Ecological Momentary Assessment — a micro-check-in (<10s). Multiple per day. */
 export interface EmaEntry {
   id: string;
   date: string; // YYYY-MM-DD
