@@ -9,7 +9,7 @@
 //   ACT — Hayes, S. C., Strosahl, K. D., & Wilson, K. G. (2011). Acceptance and Commitment Therapy.
 //   CFT — Gilbert, P. (2009). The Compassionate Mind; Neff, K. (2011). Self-Compassion.
 
-type Modality = "DBT" | "CBT" | "ACT" | "CFT";
+type Modality = "DBT" | "CBT" | "ACT" | "CFT" | "MBCT" | "BA";
 
 interface SkillGroup {
   id: string;
@@ -285,6 +285,14 @@ export const SKILLS: Skill[] = [
     purpose: "Catch the self-critical voice and offer a compassionate alternative. The inner critic usually wants to protect you — respond with wisdom, not more criticism.",
     steps: ["Notice the self-critical thought: \"I'm such a failure.\"", "Reframe with a compassionate perspective: \"I'm struggling right now — that's hard, not a character verdict.\"", "Offer what you'd say to a dear friend in this same situation.", "Write both the critic's voice and the compassionate reframe side by side."],
     basis: "CFT differentiates the self-critic's protective intent from its harmful effect (Gilbert 2009; Gilbert et al. 2004, Psychol. Psychother.); compassionate reframing reduces amygdala reactivity to self-criticism (Longe et al. 2010, NeuroImage)." },
+  { id: "breathing-space", name: "3-Minute Breathing Space", modality: "MBCT", group: "mindfulness",
+    purpose: "A short, portable pause to step out of autopilot and back to the present — useful when the mind is scattered or spinning.",
+    steps: ["Acknowledge: what is my experience right now — thoughts, feelings, body? Just note it, no need to fix it.", "Gather: bring attention to the breath, feeling it move in and out for a few breaths.", "Expand: open to the whole body and let the moment be as it is, then continue with the day."],
+    basis: "Segal, Williams & Teasdale 2002/2013, Mindfulness-Based Cognitive Therapy for Depression (Guilford) — the 3-minute breathing space as the 'heart' practice of MBCT; meta-analysis: Kuyken et al. 2016, JAMA Psychiatry (MBCT prevents depressive relapse)." },
+  { id: "accumulate-positive", name: "Accumulate Pleasant Events", acronym: "Pleasant events", modality: "BA", group: "emotion",
+    purpose: "Re-introduce small, genuine positives so low mood has something to feed on — action before motivation.",
+    steps: ["List a handful of tiny things you actually like (a warm drink, a song, sunlight, a message from a friend).", "Schedule one or two into today — concretely, not 'if I feel like it'.", "Afterwards, notice what it was like — let the good register, even briefly."],
+    basis: "Lewinsohn & MacPhillamy 1974, Pleasant Events Schedule; Martell, Addis & Jacobson 2001, Behavioral Activation for Depression (pleasant-events scheduling); Cuijpers et al. 2007, J. Affect. Disord. (activity scheduling reduces depression)." },
 ];
 
 /** Filter by group and/or a free-text query (matches name, acronym, purpose, modality). */

@@ -57,7 +57,7 @@ describe("embeddingSearchPsychoed", () => {
   it("returns all topics for empty query (browse mode)", async () => {
     setPsychoedEmbedder(mockEmbedder);
     const results = await embeddingSearchPsychoed("");
-    expect(results).toHaveLength(19); // full corpus
+    expect(results).toHaveLength(22); // full corpus
   });
 
   it("respects limit option", async () => {

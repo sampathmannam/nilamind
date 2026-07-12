@@ -75,5 +75,20 @@ describe("suggestSkill", () => {
       const s = suggestSkill("what if something bad happens, worst case scenario");
       expect(s!.skill.id).toBe("worry-time");
     });
+
+    it("routes low-energy / scattered cues to Accumulate Pleasant Events (BA)", () => {
+      const s = suggestSkill("i can't get started on anything, i feel so worn out");
+      expect(s!.skill.id).toBe("accumulate-positive");
+    });
+
+    it("routes scattered / can't-settle cues to the 3-Minute Breathing Space (MBCT)", () => {
+      const s = suggestSkill("my mind is scattered and i feel off task");
+      expect(s!.skill.id).toBe("breathing-space");
+    });
+
+    it("routes loneliness / disconnection cues to the compassionate-self skill", () => {
+      const s = suggestSkill("i feel so lonely and disconnected from everyone");
+      expect(s!.skill.id).toBe("compassionate-self");
+    });
   });
 });

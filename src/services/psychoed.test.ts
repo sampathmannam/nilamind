@@ -7,8 +7,8 @@ import {
 } from "./psychoed";
 
 describe("PSYCHOED_TOPICS corpus", () => {
-  it("has exactly 19 topics, each fully populated + cited", () => {
-    expect(PSYCHOED_TOPICS).toHaveLength(19);
+  it("has exactly 22 topics, each fully populated + cited", () => {
+    expect(PSYCHOED_TOPICS).toHaveLength(22);
     const ids = new Set<string>();
     for (const t of PSYCHOED_TOPICS) {
       expect(t.id).toBeTruthy();
@@ -49,7 +49,7 @@ describe("searchPsychoed", () => {
 
   it("empty query returns all topics in corpus order", () => {
     const all = searchPsychoed("");
-    expect(all).toHaveLength(19);
+    expect(all).toHaveLength(22);
     expect(all.map((t) => t.id)).toEqual(PSYCHOED_TOPICS.map((t) => t.id));
     expect(searchPsychoed("   ").map((t) => t.id)).toEqual(PSYCHOED_TOPICS.map((t) => t.id));
   });
@@ -57,8 +57,14 @@ describe("searchPsychoed", () => {
   it("returns only relevant topics for a specific query (drops zero-score)", () => {
     const res = searchPsychoed("avoiding things i'm scared of");
     expect(res.length).toBeGreaterThan(0);
-    expect(res.length).toBeLessThan(19);
+    expect(res.length).toBeLessThan(22);
     expect(res.map((t) => t.id)).toContain("avoidance-grows-fear");
+  });
+
+  it("new research-cited explainers rank first for their colloquial cues", () => {
+    expect(searchPsychoed("I feel so lonely and disconnected")[0].id).toBe("social-connection-and-mood");
+    expect(searchPsychoed("I have no energy to get started")[0].id).toBe("behavioral-activation-basics");
+    expect(searchPsychoed("after a bad night's sleep I'm on edge and wired")[0].id).toBe("sleep-debt-and-anxiety");
   });
 });
 

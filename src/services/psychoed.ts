@@ -213,7 +213,41 @@ export const PSYCHOED_TOPICS: PsychoedTopic[] = [
     body:
       "One of the strongest findings in modern psychology is that self-compassion (treating yourself with the same warmth and care you would offer a friend) predicts better mental health across many domains: lower anxiety and depression, less shame, greater motivation, and faster recovery after setbacks. It is not the same as self-esteem (which depends on feeling above average) — self-compassion is available even at your lowest. The three components — mindfulness (acknowledging the pain without over-identifying), common humanity (remembering struggle is universal), and self-kindness (active warmth) — together form a skill that can be trained. Multiple meta-analyses show that even brief self-compassion interventions reduce distress with medium-to-large effect sizes.",
     basis: "Neff 2003, Self and Identity (self-compassion construct and measurement); Gilbert 2009, The Compassionate Mind (compassion-focused therapy); meta-analyses: Zessin et al. 2015, PLoS One (self-compassion → well-being, r=0.47); MacBeth & Gumley 2012, Clin. Psychol. Rev. (self-compassion → lower psychopathology, large effect); Ferrari et al. 2019, Mindfulness (self-compassion interventions reduce depression and anxiety, g=0.68).",
-    tags: ["self-compassion", "self compassion", "self care", "self-care", "kindness", "kind to myself", "resilience", "resilient", "bounce back", "inner critic", "shame", "hard on myself", "struggle", "neff", "gilbert", "cft", "strength", "vulnerability"],
+      tags: ["self-compassion", "self compassion", "self care", "self-care", "kindness", "kind to myself", "resilience", "resilient", "bounce back", "inner critic", "shame", "hard on myself", "struggle", "neff", "gilbert", "cft", "strength", "vulnerability"],
+  },
+
+  {
+    id: "social-connection-and-mood",
+    title: "Why connection buffers low mood",
+    summary:
+      "Feeling close to people — even briefly — is one of the strongest protective factors for mood. Isolation reliably makes low periods worse; reaching out is not a luxury but part of recovery.",
+    body:
+      "A large body of research ties social connection to mental and physical health. Holt-Lunstad and colleagues' meta-analyses found that larger social networks and lower loneliness are associated with markedly lower mortality risk, and loneliness itself predicts worse health outcomes independently of objective isolation. For mood specifically, supportive contact reduces the body's stress response (lower cortisol and blood pressure during conflict tasks) and buffers against depressive relapse. This is why a single short, genuine connection — a reply, a call, a shared laugh — can shift a hard day more than another hour of analysis. Connection is not a reward you earn after you feel better; it is one of the things that helps you get there.",
+    basis:
+      "Holt-Lunstad, Smith & Layton 2010, PLoS Medicine (social relationships & mortality — 148 studies, ~300k participants); Holt-Lunstad 2015, Perspectives on Psychological Science (loneliness & social isolation as mortality risk factors); meta-analysis: Hackett et al. 2019, Heart (social isolation & incident CVD); Cohen 2004, Ann. NY Acad. Sci. (social ties buffer stress reactivity).",
+    tags: ["connection", "connected", "connect", "lonely", "loneliness", "isolated", "isolation", "reach out", "reach out to", "belong", "belonging", "friend", "friends", "support"],
+  },
+  {
+    id: "behavioral-activation-basics",
+    title: "Why action can come before motivation",
+    summary:
+      "When you wait to feel like doing things, low periods can stretch on. Behavioral activation works the other way: small, planned actions first — and the lift in mood often follows the action, not the other way round.",
+    body:
+      "Depression reliably narrows activity and pulls people toward withdrawal, which then confirms the 'nothing matters / I can't' story. Behavioral activation (BA) reverses the order: rather than waiting for motivation to arrive, you schedule small, concrete, rewarding actions and let mood catch up. A consistent finding across trials is that increasing engagement with valued, pleasant, or mastery activities reduces depressive symptoms — and that action predicts later mood better than mood predicts later action. The bar is deliberately low: one tiny step (a shower, a message, a walk to the corner) counts. The point is not productivity; it is re-opening the loop between doing and feeling.",
+    basis:
+      "Martell, Addis & Jacobson 2001, Behavioral Activation for Depression (Guilford) — activation as the core change mechanism; Lejuez et al. 2006/2011, Behavior Therapy / Behavior Research and Therapy (Brief BA, multiple RCTs); meta-analysis: Cuijpers et al. 2007, J. Affect. Disord. (BA effective for depression, d≈0.7).",
+    tags: ["motivation", "no motivation", "no energy", "can't get started", "cant get up", "stuck", "withdraw", "withdrawal", "do nothing", "action", "do things", "get going", "behavioral activation", "ba", "small steps", "momentum"],
+  },
+  {
+    id: "sleep-debt-and-anxiety",
+    title: "Why poor sleep amplifies anxiety",
+    summary:
+      "After short or broken sleep, the brain's threat system runs hotter and the calming brake is weaker — so ordinary worries feel sharper and harder to settle. This is chemistry, not weakness.",
+    body:
+      "Sleep is not passive recovery; it resets the emotional brain. Studies using brain imaging show that after a night of lost sleep, the amygdala (threat centre) reacts more strongly to negative signals while the prefrontal regions that put feelings in context go quiet — so the same stressor feels bigger and harder to regulate. Across people, shorter and more fragmented sleep tracks with higher next-day anxiety, and a single bad night can lift state anxiety the following evening. This is why 'I'm fine when I've slept' is not you being dramatic — it is a real, measurable shift in how the brain handles threat. The lever is unglamorous: protecting sleep is one of the highest-yield things for steady mood.",
+    basis:
+      "Yoo et al. 2007, Current Biology ('A deficit in the ability to form new human memories without sleep' — next-day amygdala reactivity to negative images after sleep deprivation); Walker & van der Helm 2009, Trends Cogn. Sci. (overnight therapy / memory reprocessing); Walker 2017, Why We Sleep (consolidated account of sleep, affect regulation & psychiatric risk).",
+    tags: ["sleep", "slept", "tired", "exhausted", "wired", "worn out", "edge", "edgy", "anxious", "anxiety", "irritable", "short fuse", "mood", "reactive"],
   },
 ];
 

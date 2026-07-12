@@ -39,3 +39,17 @@ describe("skillsLibrary — Wise Mind honest-expectation framing (Task E)", () =
     expect(text).not.toMatch(/treats|cures|proven to (reduce|fix)/);
   });
 });
+
+describe("skillsLibrary — expanded research-cited skills (Task #11)", () => {
+  it("the 3-Minute Breathing Space and Accumulate Pleasant Events exist and cite their lineages", () => {
+    const bs = getSkill("breathing-space")!;
+    expect(bs).toBeTruthy();
+    expect(bs.group).toBe("mindfulness");
+    expect((bs.basis + " " + bs.steps.join(" ")).toLowerCase()).toContain("mbct");
+
+    const ap = getSkill("accumulate-positive")!;
+    expect(ap).toBeTruthy();
+    expect(ap.group).toBe("emotion");
+    expect((ap.basis + " " + ap.steps.join(" ")).toLowerCase()).toContain("behavioral activation");
+  });
+});
