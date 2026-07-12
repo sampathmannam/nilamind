@@ -2,17 +2,15 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, cleanup, fireEvent } from "@testing-library/react";
 
-// The in-app persistent crisis affordance. Before this, crisis was reachable ONLY from the Nila tab
-// (ModeScreen's icon-only header LifeBuoy) — Tools and You had no one-tap crisis (§9 "crisis always
-// reachable"). CrisisPill lives in the app shell, outside every tab branch, so it persists on all tabs.
-// Unlike CrisisHelpButton (the pre-app gate affordance with its own offline panel), this routes to the
-// App-level CrisisOverlay via onActivate → activateCrisis (which also latches the 24h no-nudge window).
+// Crisis affordance component. Used on pre-app gate screens where the app-level CrisisOverlay isn't
+// available yet. Routes to the App-level CrisisOverlay via onActivate → activateCrisis (which also
+// latches the 24h no-nudge window).
 import CrisisPill from "./CrisisPill";
 import { t } from "../services/i18n";
 
 afterEach(cleanup);
 
-describe("CrisisPill — persistent in-app crisis affordance", () => {
+describe("CrisisPill — crisis affordance component", () => {
   it("renders a single tappable button", () => {
     render(<CrisisPill onActivate={() => {}} />);
     expect(screen.getAllByRole("button").length).toBe(1);

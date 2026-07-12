@@ -8,7 +8,6 @@ import { useReducedMotion } from "./hooks/useReducedMotion";
 
 // Eager — crisis path must never lazy-load
 import CrisisOverlay from "./components/CrisisOverlay";
-import CrisisPill from "./components/CrisisPill";
 import GroundingLibraryScreen from "./components/GroundingLibraryScreen";
 import ModeScreen from "./components/ModeScreen";
 import TodayScreen from "./components/TodayScreen";
@@ -420,14 +419,6 @@ export default function App() {
           </ErrorBoundary>
         )}
       </main>
-
-      {/* Persistent crisis affordance — rendered on EVERY tab (§9: crisis always reachable). It sits in
-          the shell's bottom stack, outside every activeTab branch, so it can't collide with ModeScreen's
-          chat input (which lives inside <main>). The nav's border-t below separates it from the 3 tabs so
-          it never reads as a routine destination (ui-ux-pro-max destructive-nav-separation). */}
-      <div className="shrink-0 px-4 pt-2 pb-1 bg-page" id="shell-crisis-row">
-        <CrisisPill onActivate={activateCrisis} />
-      </div>
 
       {/* Bottom tab bar */}
       <nav className="shrink-0 flex items-center justify-around border-t border-slate-800 bg-page/95 backdrop-blur pb-[max(8px,env(safe-area-inset-bottom))]" role="tablist" aria-label="Main navigation">

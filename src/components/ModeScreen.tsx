@@ -542,9 +542,8 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           >
             <Settings className="w-4 h-4" />
           </button>
-          {/* Crisis access is now the App-shell CrisisPill (persistent on every tab), so the redundant
-              icon-only LifeBuoy that used to live here was removed. §9 auto-detection still routes through
-              openCrisis() below — only the manual header button moved to the shell. */}
+          {/* Crisis auto-detection routes through openCrisis() below. No persistent crisis button in the
+              header — the app no longer shows a constant crisis affordance on every screen. */}
         </div>
       </div>
 
