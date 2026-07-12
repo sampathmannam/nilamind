@@ -29,6 +29,7 @@ import { generateMeansSafetyContextBlock } from "./lethalMeansCoaching";
 import { sleepHoursVariability, variabilityContextBlock } from "./sleepHoursVariability";
 import type { VariabilitySignal } from "./sleepHoursVariability";
 import { assessJitai } from "./jitaiEngine";
+import { logAndGateJitaiDecision } from "./jitaiDecisionLog";
 import { computeUsageSummary } from "./usageAnalytics";
 import { computeCircadianFeedback, computeSleepRegularityIndex } from "./circadianFeedback";
 import { computeRhythmRegularity, buildSleepWindows, loadRhythm } from "./socialRhythm";
@@ -321,6 +322,11 @@ export function buildPersonalContext(): string {
         jitaiNudge = `JUST-IN-TIME NUDGE (${jitai.severity}): ${jitai.nudgeText}`;
         if (jitai.suggestedTool) jitaiNudge += ` Suggested tool: ${jitai.suggestedTool}.`;
       }
+      // 2026-07-12 Wave 3 §6: log the decision point (surface: "chat_context" — this is the second of the two
+      // sites that actually deliver something to the user, per spec doc §6; stateEngine.ts's internal
+      // aggregation is deliberately skipped). Gated on the same receptivity cooldown as ModeScreen.tsx's
+      // in_app_card site — doesn't change what's injected into the prompt above, only the decision log.
+      logAndGateJitaiDecision(jitai, "chat_context");
     }
   } catch { /* best-effort */ }
 

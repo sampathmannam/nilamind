@@ -46,13 +46,14 @@ import { parseSafetyPlan } from "../services/safetyPlan";
 import { shouldPromptReview, isFirstFollowUpDue, markFirstFollowUpDone, markSafetyPlanReviewed } from "../services/safetyPlanFollowUp";
 import { selfReportSleepSignal } from "../services/sleepInsight";
 import { assessJitai, type JitaiDecision } from "../services/jitaiEngine";
+import { logAndGateJitaiDecision } from "../services/jitaiDecisionLog";
 import { calmSafetyPlanNudge, dismissCalmSafetyPlanNudge } from "../services/proactiveEngine";
 import { computeUsageSummary } from "../services/usageAnalytics";
 import { loadMoodHistory } from "../services/moodHistory";
 import { computeCompassionateStreak } from "../services/streaks";
 import { Settings, Mic, Send, MicOff, Keyboard, X, ShieldCheck, ThumbsUp, ThumbsDown, MessageCircle, Brain, Moon, SquarePen } from "lucide-react";
 import { hapticLight, hapticMedium } from "../hooks/useHaptics";
-import { recordFeedback } from "../services/nilaFeedback";
+import { recordFeedback, attachSuggestion } from "../services/nilaFeedback";
 
 interface ModeScreenProps {
   onOpenSettings?: () => void;
@@ -95,6 +96,10 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   const [confirmNewChat, setConfirmNewChat] = useState(false); // "new conversation" confirm dialog
   const [welcomeBack, setWelcomeBack] = useState<string | null>(null);
   const [ratedMessages, setRatedMessages] = useState<Set<number>>(new Set());
+  // 2026-07-12 Wave 3, Group F: completes the already-built-but-unwired attachSuggestion() flow — a one-tap,
+  // optional, dismissable "what would've helped?" follow-up after a thumbs-down. Never forced.
+  const [suggestionPrompt, setSuggestionPrompt] = useState<{ index: number; feedbackId: string } | null>(null);
+  const [suggestionText, setSuggestionText] = useState("");
   const [showQuickActions, setShowQuickActions] = useState(false);
   // #4 + #9 (audit): §9 crisis now routes through the App-level overlay (onOpenCrisis) so the Android hardware
   // back button closes it instead of exiting the app; a session that ever tripped §9 latches hadCrisisRef so
@@ -191,6 +196,11 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           usageAnalytics: computeUsageSummary(),
         });
         if (!cancelled) setJitaiNudge(jitai);
+        // 2026-07-12 Wave 3 §6: log the decision point + apply the receptivity gate. De-dupes the 5-min
+        // polling loop — a repeated identical trigger within its cooldown writes fired:false instead of a
+        // fresh identical entry. Does NOT change what's rendered (jitaiNudge above stays the live signal,
+        // same as before) — only wiring the decision LOG per spec doc §6's task scope.
+        if (!cancelled) logAndGateJitaiDecision(jitai, "in_app_card");
       } catch { /* best-effort */ }
 
       // Task 1.5 (2026-07-12 Wave 3): calm-moment-only safety-plan nudge — never during/adjacent to a crisis.
@@ -696,15 +706,55 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                           </button>
                           <button
                             onClick={() => {
-                              recordFeedback(m.content, "down");
+                              const entry = recordFeedback(m.content, "down");
                               setRatedMessages((prev) => new Set(prev).add(i));
                               hapticLight();
+                              setSuggestionText("");
+                              setSuggestionPrompt({ index: i, feedbackId: entry.id });
                             }}
                             className="p-2.5 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-slate-800/50 transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center focus-ring"
                             aria-label="Mark as not helpful"
                           >
                             <ThumbsDown className="w-4 h-4" />
                           </button>
+                        </div>
+                      )}
+                      {/* 2026-07-12 Wave 3, Group F: one-tap, dismissable "what would've helped?" follow-up —
+                          completes the already-built attachSuggestion() flow. Optional, never forced; a bare
+                          thumbs-down alone is still a complete, valid piece of feedback. */}
+                      {suggestionPrompt?.index === i && (
+                        <div
+                          id="feedback-suggestion-prompt"
+                          className="mt-1.5 p-2.5 rounded-lg bg-slate-800/50 border border-slate-700 text-xs space-y-2 max-w-[85%]"
+                        >
+                          <p className="text-slate-300">What would've helped?</p>
+                          <input
+                            type="text"
+                            value={suggestionText}
+                            onChange={(e) => setSuggestionText(e.target.value)}
+                            placeholder="What would've helped? (optional)"
+                            className="w-full px-2.5 py-2 rounded-md bg-slate-900/70 border border-slate-700 text-slate-200 placeholder:text-slate-500 focus-ring"
+                          />
+                          <div className="flex gap-2 justify-end">
+                            <button
+                              onClick={() => { setSuggestionPrompt(null); setSuggestionText(""); }}
+                              className="px-3 py-2 rounded-md text-slate-400 hover:text-slate-200 hover:bg-slate-700/50 transition-colors cursor-pointer min-h-[36px] focus-ring"
+                              aria-label="Not now"
+                            >
+                              Not now
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (suggestionText.trim()) attachSuggestion(suggestionPrompt.feedbackId, suggestionText);
+                                setSuggestionPrompt(null);
+                                setSuggestionText("");
+                              }}
+                              className="px-3 py-2 rounded-md bg-violet-500/20 hover:bg-violet-500/30 text-violet-200 font-medium transition-colors cursor-pointer min-h-[36px] focus-ring"
+                              aria-label="Share what would help"
+                            >
+                              Share
+                            </button>
+                          </div>
                         </div>
                       )}
                     </div>

@@ -47,13 +47,36 @@ vi.mock("../services/notifications", () => ({
 // jsdom has no vibrate API — Capacitor's HapticsWeb rejects, which is unrelated noise for this UI-wiring test.
 vi.mock("../hooks/useHaptics", () => ({ hapticLight: async () => {}, hapticMedium: async () => {} }));
 
+// sessionChat.ts keeps an in-memory `transcript` cache at module scope, independent of the mocked secureLocal
+// `store` above — clearing `store` alone doesn't reset it. The existing crisis tests never noticed because every
+// one of them ends by tripping hadCrisisRef, which itself calls clearSessionChat(). Non-crisis tests (the
+// feedback-suggestion UI describe below) don't, so without an explicit reset a prior test's transcript leaks
+// into the next test's freshly-mounted ModeScreen via getSessionChat() on mount.
+import { clearSessionChat } from "../services/sessionChat";
+
+// Feedback-suggestion UI (2026-07-12 Wave 3, Group F) — recordFeedback's returned id is what the follow-up
+// prompt must pass to attachSuggestion, so the mock returns a deterministic id rather than the real uid().
+let feedbackSeq = 0;
+const recordFeedbackMock = vi.fn((reply: string, rating: string) => ({
+  id: `fb_test_${++feedbackSeq}`, at: "2026-07-12", rating, reply,
+}));
+const attachSuggestionMock = vi.fn();
+vi.mock("../services/nilaFeedback", () => ({
+  recordFeedback: (...args: unknown[]) => recordFeedbackMock(...(args as [string, string])),
+  attachSuggestion: (...args: unknown[]) => attachSuggestionMock(...(args as [string, string])),
+}));
+
 import ModeScreen from "./ModeScreen";
 
 afterEach(() => {
   cleanup();
   store.clear();
+  clearSessionChat();
   sendToNilaMock.mockReset();
   suppressNudgesMock.mockReset();
+  recordFeedbackMock.mockClear();
+  attachSuggestionMock.mockReset();
+  feedbackSeq = 0;
 });
 
 function openTextInput() {
@@ -140,5 +163,51 @@ describe("ModeScreen — two-tier crisis surface wiring (2026-07-12 Wave 3, Task
     await waitFor(() => expect(onOpenCrisis).toHaveBeenCalled());
     expect(document.getElementById("soft-crisis-card")).toBeNull();
     expect(sendToNilaMock).not.toHaveBeenCalled(); // arm-request short-circuits before sendToNila
+  });
+});
+
+// Feedback-suggestion UI (2026-07-12 Wave 3, Group F) — completes the already-built-but-unwired
+// attachSuggestion() flow: the 👎 button already calls recordFeedback(m.content, "down"); this adds a
+// lightweight, dismissable, one-tap "What would've helped?" follow-up that attaches the typed suggestion
+// to the SAME feedback entry (never a forced second step).
+describe("ModeScreen — feedback-suggestion UI (2026-07-12 Wave 3, Group F)", () => {
+  async function sendAndGetReply(replyText: string) {
+    sendToNilaMock.mockResolvedValueOnce({ reply: replyText, reachedAI: true, blocked: false });
+    render(<ModeScreen />);
+    await sendMessage("hello");
+    await waitFor(() => expect(screen.getByText(replyText)).toBeTruthy());
+  }
+
+  it("tapping thumbs-down on a reply shows a one-tap 'what would've helped' prompt", async () => {
+    await sendAndGetReply("a reply");
+    expect(document.getElementById("feedback-suggestion-prompt")).toBeNull();
+    fireEvent.click(screen.getByLabelText("Mark as not helpful"));
+    expect(recordFeedbackMock).toHaveBeenCalledWith("a reply", "down");
+    expect(document.getElementById("feedback-suggestion-prompt")).toBeTruthy();
+  });
+
+  it("tapping thumbs-up does NOT show the suggestion prompt (only a down-rating asks what would help)", async () => {
+    await sendAndGetReply("a good reply");
+    fireEvent.click(screen.getByLabelText("Mark as helpful"));
+    expect(document.getElementById("feedback-suggestion-prompt")).toBeNull();
+  });
+
+  it("submitting a typed suggestion calls attachSuggestion with the exact feedback id, then closes the prompt", async () => {
+    await sendAndGetReply("a reply");
+    fireEvent.click(screen.getByLabelText("Mark as not helpful"));
+    const input = screen.getByPlaceholderText(/what would.*helped/i);
+    fireEvent.change(input, { target: { value: "be gentler" } });
+    fireEvent.click(screen.getByLabelText("Share what would help"));
+    expect(attachSuggestionMock).toHaveBeenCalledWith("fb_test_1", "be gentler");
+    expect(document.getElementById("feedback-suggestion-prompt")).toBeNull();
+  });
+
+  it("dismissing without submitting never calls attachSuggestion and closes the prompt (optional, not forced)", async () => {
+    await sendAndGetReply("a reply");
+    fireEvent.click(screen.getByLabelText("Mark as not helpful"));
+    expect(document.getElementById("feedback-suggestion-prompt")).toBeTruthy();
+    fireEvent.click(screen.getByLabelText("Not now"));
+    expect(attachSuggestionMock).not.toHaveBeenCalled();
+    expect(document.getElementById("feedback-suggestion-prompt")).toBeNull();
   });
 });
