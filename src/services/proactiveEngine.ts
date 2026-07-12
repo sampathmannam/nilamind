@@ -7,6 +7,9 @@ import { hasCheckinToday, getSkipFlag } from "./checkin";
 import { secureLocal } from "./secureLocal";
 import { DAY_MS } from "./storageUtils";
 import type { NilaCard } from "./nilaOrchestration";
+import { getUserState } from "./modeEngine";
+import { isSafetySuppressed } from "./notificationSuppress";
+import { parseSafetyPlan } from "./safetyPlan";
 
 const DISMISS_PREFIX = "nilamind_proactive_dismiss_";
 const COOLDOWN_MS = 24 * DAY_MS; // 24 hours between same-type offers
@@ -241,6 +244,48 @@ export function computeProactiveMoment(): ProactiveMoment | null {
   // Return the highest-priority (lowest number) moment
   moments.sort((a, b) => a.priority - b.priority);
   return moments[0];
+}
+
+const SAFETY_PLAN_NUDGE_KEY = "safety_plan_nudge";
+const SAFETY_PLAN_NUDGE_COOLDOWN_MS = 7 * DAY_MS; // matches computeProactiveMoment()'s weekly_summary precedent
+
+/** True if any of the 6 safety-plan sections is still blank (never written, or written then cleared). */
+function hasBlankSafetyPlanSection(): boolean {
+  try {
+    const plan = parseSafetyPlan(secureLocal.getItem("nilamind_safetyplan"));
+    return [
+      plan.warningSigns, plan.internalCoping, plan.socialDistractors,
+      plan.trustedPeople, plan.professionals, plan.safeEnvironment,
+    ].some((s) => !s || !s.trim());
+  } catch {
+    return false; // fail-closed on the SURFACE side — never nag on a read error
+  }
+}
+
+/**
+ * Calm-moment safety-plan nudge (2026-07-12 Wave 3, Task 1.5) — a gentle, NEVER-crisis-moment invitation to
+ * fill in a blank safety-plan section. Deliberately a standalone pure check (not folded into
+ * computeProactiveMoment()'s moments array, whose NilaCard output is only ever consumed as LLM system-prompt
+ * context today, not rendered as a UI card) so a real surfacing component can call it directly. Reuses
+ * existing infra rather than inventing new plumbing:
+ *  - "mostly calm" mood signal: modeEngine.ts's getUserState() === "calm" — the same derived state ModeScreen
+ *    already reads, never a new mood-detection path.
+ *  - "no recent crisis": notificationSuppress.ts's isSafetySuppressed() — the SAME 24h crisis/elevation latch
+ *    P6.4 already uses to gate every other "how are you?" nudge (EMA, daily reminders).
+ *  - cooldown: isProactiveDismissed/dismissProactive, this module's existing per-trigger-key primitive.
+ * 7-day cooldown once dismissed, matching this file's existing weekly_summary precedent (not a new number).
+ */
+export function calmSafetyPlanNudge(): { show: boolean; label: string } | null {
+  if (getUserState() !== "calm") return null;
+  if (isSafetySuppressed()) return null;
+  if (!hasBlankSafetyPlanSection()) return null;
+  if (isProactiveDismissed(SAFETY_PLAN_NUDGE_KEY, SAFETY_PLAN_NUDGE_COOLDOWN_MS)) return null;
+  return { show: true, label: "A calm moment — want to fill in a bit more of your safety plan?" };
+}
+
+/** Dismiss the calm-moment safety-plan nudge for the standard 7-day cooldown (reuses dismissProactive). */
+export function dismissCalmSafetyPlanNudge(): void {
+  dismissProactive(SAFETY_PLAN_NUDGE_KEY);
 }
 
 /**

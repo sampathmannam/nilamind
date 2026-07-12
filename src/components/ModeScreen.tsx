@@ -46,6 +46,7 @@ import { parseSafetyPlan } from "../services/safetyPlan";
 import { shouldPromptReview, isFirstFollowUpDue, markFirstFollowUpDone, markSafetyPlanReviewed } from "../services/safetyPlanFollowUp";
 import { selfReportSleepSignal } from "../services/sleepInsight";
 import { assessJitai, type JitaiDecision } from "../services/jitaiEngine";
+import { calmSafetyPlanNudge, dismissCalmSafetyPlanNudge } from "../services/proactiveEngine";
 import { computeUsageSummary } from "../services/usageAnalytics";
 import { loadMoodHistory } from "../services/moodHistory";
 import { computeCompassionateStreak } from "../services/streaks";
@@ -87,6 +88,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   const [showSafetyPlanFollowUp, setShowSafetyPlanFollowUp] = useState(false);
   const [sleepProdromeNudge, setSleepProdromeNudge] = useState<{ firing: boolean; detail: string } | null>(null);
   const [jitaiNudge, setJitaiNudge] = useState<JitaiDecision | null>(null);
+  const [calmSafetyNudge, setCalmSafetyNudge] = useState<{ show: boolean; label: string } | null>(null); // Task 1.5
   const [skillOffer, setSkillOffer] = useState<Skill | null>(null);
   const [softCrisisCard, setSoftCrisisCard] = useState(false); // 2026-07-12 Wave 3: soft tier, classifier-only hits
   const [pactNotice, setPactNotice] = useState<PactNotice | null>(null); // #30: surfaced pact (the human bridge)
@@ -120,6 +122,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
     }
     setPactNotice(null); // §9 takes precedence over the gentle pact surface either way
     setWelcomeBack(null); // §9 also clears the welcome-back card
+    setCalmSafetyNudge(null); // §9 also clears the calm-moment safety-plan nudge (Task 1.5) — never crisis-adjacent
     if (detected && source === "classifier") {
       setSoftCrisisCard(true); // soft tier — inline card, no full takeover
       return;
@@ -188,6 +191,11 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           usageAnalytics: computeUsageSummary(),
         });
         if (!cancelled) setJitaiNudge(jitai);
+      } catch { /* best-effort */ }
+
+      // Task 1.5 (2026-07-12 Wave 3): calm-moment-only safety-plan nudge — never during/adjacent to a crisis.
+      try {
+        if (!cancelled) setCalmSafetyNudge(hadCrisisRef.current ? null : calmSafetyPlanNudge());
       } catch { /* best-effort */ }
     };
     checkSignals();
@@ -781,6 +789,37 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                       Done
                     </button>
 </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Calm-moment safety-plan nudge (Task 1.5, 2026-07-12 Wave 3) — only when mood is calm, no recent
+              crisis, and a section is still blank. Never shown crisis-adjacent (cleared in openCrisis). */}
+          {calmSafetyNudge?.show && (
+            <div
+              key="calm-safety-plan-nudge"
+              className="w-full px-3 py-2 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-200 text-xs"
+              id="calm-safety-plan-nudge-card"
+            >
+              <div className="flex items-start gap-2">
+                <ShieldCheck className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" />
+                <div className="flex-1">
+                  <p className="font-medium">{calmSafetyNudge.label}</p>
+                  <div className="flex gap-2 mt-2">
+                    <button
+                      onClick={handleOpenSafetyPlan}
+                      className="px-3 py-2 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-200 font-medium transition-colors cursor-pointer min-h-[44px] focus-ring"
+                    >
+                      Fill it in
+                    </button>
+                    <button
+                      onClick={() => { dismissCalmSafetyPlanNudge(); setCalmSafetyNudge(null); }}
+                      className="px-3 py-2 rounded-lg hover:bg-blue-500/15 text-blue-200/80 transition-colors cursor-pointer min-h-[44px] focus-ring"
+                    >
+                      Not now
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
