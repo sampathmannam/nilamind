@@ -32,9 +32,11 @@ export interface ClinicianEpisodeSummary {
   avgDurationMin: number | null;
 }
 
+import type { ClinicianUsage } from "./clinicianPeriod";
+
 export interface ClinicianReportInput {
   periodLabel: string; // e.g. "Week ending 2026-07-12" or "Month ending 2026-07-12"
-  periodDays: number; // 7 or 30
+  periodDays: number; // 7, 30 or 90
   totalCheckins: number;
   daysActive: number;
   avgIntensity: number | null;
@@ -47,6 +49,8 @@ export interface ClinicianReportInput {
   protocolsCompleted: number;
   nilaSessions: number;
   featuresUsed: string[];
+  /** On-device usage + sleep signals for the window (no OS-level call logs — privacy promise). */
+  usage?: ClinicianUsage;
   crisisMetrics?: CrisisMetrics; // Optional crisis detection performance metrics
   temporalRiskAssessment?: RiskAssessment; // Optional temporal risk assessment
   // Enhanced phenomenological summaries for better clinical insight
@@ -181,6 +185,20 @@ export function buildClinicianReport(input: ClinicianReportInput): string {
     lines.push(`  Features used: ${input.featuresUsed.join(", ").replace(/_/g, " ")}`);
   }
   lines.push("");
+
+  // App & conversation usage (on-device only — no OS-level call/app logs)
+  if (input.usage) {
+    const u = input.usage;
+    lines.push("App & Conversation Usage (on-device)");
+    lines.push(`  Active check-in days: ${u.daysActive}/${u.periodDays}`);
+    lines.push(`  App-open days: ${u.appOpenDays}/${u.periodDays}`);
+    lines.push(`  Nila conversation turns: ${u.nilaTurns}`);
+    if (u.avgSleepHours != null) {
+      lines.push(`  Avg sleep (from check-ins): ${u.avgSleepHours.toFixed(1)}h`);
+    }
+    lines.push(`  Features used: ${u.featuresUsed.length > 0 ? u.featuresUsed.join(", ").replace(/_/g, " ") : "none"}`);
+    lines.push("");
+  }
 
 // Crisis Detection Performance (if available)
    if (input.crisisMetrics) {

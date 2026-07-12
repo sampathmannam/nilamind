@@ -151,4 +151,31 @@ describe("buildClinicianReport", () => {
     const report = buildClinicianReport(input);
     expect(report).toContain("No episodes");
   });
+
+  it("renders the on-device App & Conversation Usage section when usage is provided", () => {
+    const input: ClinicianReportInput = {
+      ...baseInput,
+      usage: {
+        periodDays: 30,
+        cutoff: "2026-06-12",
+        daysActive: 28,
+        appOpenDays: 21,
+        nilaTurns: 12,
+        avgSleepHours: 7.2,
+        featuresUsed: ["values_snapshot", "diary_cards"],
+      },
+    };
+    const report = buildClinicianReport(input);
+    expect(report).toContain("App & Conversation Usage (on-device)");
+    expect(report).toContain("Active check-in days: 28/30");
+    expect(report).toContain("App-open days: 21/30");
+    expect(report).toContain("Nila conversation turns: 12");
+    expect(report).toContain("Avg sleep (from check-ins): 7.2h");
+    expect(report).toContain("values snapshot, diary cards");
+  });
+
+  it("omits the usage section when usage is absent", () => {
+    const report = buildClinicianReport(baseInput);
+    expect(report).not.toContain("App & Conversation Usage");
+  });
 });

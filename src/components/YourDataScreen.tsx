@@ -14,6 +14,7 @@ import { loadAssessments, assessmentsFor } from "../services/assessments";
 import { buildFhirBundle } from "../services/fhirExport";
 import { recordExportAudit, getExportAudit, type ExportAuditEntry, type ExportKind } from "../services/exportAudit";
 import { buildClinicianReport, type ClinicianReportInput, type ClinicianMedication, type AssessmentTrajectory } from "../services/clinicianReport";
+import { gatherClinicianUsage, protocolsCompletedInPeriod, periodCutoffIso, type ReportPeriod } from "../services/clinicianPeriod";
 import { assessTemporalRisk } from "../services/temporalRiskAssessment";
 import { CrisisMetricsTracker } from "../services/crisisSafetyValidation";
 import type { CrisisMetrics } from "../services/crisisSafetyValidation";
@@ -63,6 +64,7 @@ export default function YourDataScreen() {
   const [backup, setBackup] = useState<string | null>(null);
   const [confirmWipe, setConfirmWipe] = useState(false);
   const [reportBusy, setReportBusy] = useState(false);
+  const [reportPeriod, setReportPeriod] = useState<ReportPeriod>(30);
   const [audit, setAudit] = useState<ExportAuditEntry[]>(() => getExportAudit());
   const [lastExport, setLastExport] = useState<{ kind: ExportKind; scope: string; filename: string } | null>(null);
   const [shareErr, setShareErr] = useState<string | null>(null);
@@ -520,30 +522,29 @@ valuesClarified: []
          }
       };
 
-     const handleExportClinicianPdf = async () => {
-    setReportBusy(true);
-    try {
-      const now = new Date();
-      const periodDays = 30;
-      const yyyymmdd = now.toISOString().slice(0, 10);
-      const periodLabel = `Month ending ${yyyymmdd}`;
+      const handleExportClinicianPdf = async () => {
+        setReportBusy(true);
+        try {
+          const now = new Date();
+          const periodDays = reportPeriod;
+          const yyyymmdd = now.toISOString().slice(0, 10);
+          const periodLabel = `${periodDays === 7 ? "Week" : periodDays === 90 ? "90 days" : "Month"} ending ${yyyymmdd}`;
+          const cutoff = periodCutoffIso(periodDays);
 
-      const allCheckins = loadCheckins();
-      const cutoff = new Date(now);
-      cutoff.setDate(cutoff.getDate() - periodDays);
-      const periodCheckins = allCheckins.filter((c: any) => c.date >= cutoff.toISOString().slice(0, 10));
+          const allCheckins = loadCheckins();
+          const periodCheckins = allCheckins.filter((c: any) => c.date >= cutoff);
 
-      const uniqueDays = new Set(periodCheckins.map((c: any) => c.date));
-      const totalCheckins = periodCheckins.length;
-      const daysActive = uniqueDays.size;
+          const uniqueDays = new Set(periodCheckins.map((c: any) => c.date));
+          const totalCheckins = periodCheckins.length;
+          const daysActive = uniqueDays.size;
 
-      const intensities = periodCheckins.map((c: any) => c.intensity).filter((n: any) => typeof n === "number");
-      const avgIntensity = intensities.length > 0 ? intensities.reduce((a: number, b: number) => a + b, 0) / intensities.length : null;
+          const intensities = periodCheckins.map((c: any) => c.intensity).filter((n: any) => typeof n === "number");
+          const avgIntensity = intensities.length > 0 ? intensities.reduce((a: number, b: number) => a + b, 0) / intensities.length : null;
 
-      const moodHist = loadMoodHistory();
-      const recentMood = moodHist.slice(-periodDays);
-      const sleeps = recentMood.filter((m) => typeof m.sleepHours === "number" && m.sleepHours > 0).map((m) => m.sleepHours as number);
-      const avgSleepHours = sleeps.length > 0 ? sleeps.reduce((a, b) => a + b, 0) / sleeps.length : null;
+          const moodHist = loadMoodHistory();
+          const recentMood = moodHist.filter((m) => m.date >= cutoff);
+          const sleeps = recentMood.filter((m) => typeof m.sleepHours === "number" && m.sleepHours > 0).map((m) => m.sleepHours as number);
+          const avgSleepHours = sleeps.length > 0 ? sleeps.reduce((a, b) => a + b, 0) / sleeps.length : null;
 
       let circadianScore: number | null = null;
       if (sleeps.length >= 3) {
@@ -559,7 +560,7 @@ valuesClarified: []
       const assessmentTrajectories: AssessmentTrajectory[] = [];
       for (const instrument of ["PHQ-9", "GAD-7"] as const) {
         const entries = assessmentsFor(instrument, allAssessments)
-          .filter((e) => e.date >= cutoff.toISOString().slice(0, 10))
+          .filter((e) => e.date >= cutoff)
           .map((e) => ({ date: e.date, total: e.total, severity: e.severity }));
         if (entries.length > 0) {
           assessmentTrajectories.push({ instrument, entries });
@@ -583,7 +584,7 @@ valuesClarified: []
           return Array.isArray(parsed) ? parsed : [];
         } catch { return []; }
       })();
-      const periodEpisodes = allEpisodes.filter((e: any) => e.date >= cutoff.toISOString().slice(0, 10));
+      const periodEpisodes = allEpisodes.filter((e: any) => e.date >= cutoff);
       const ep = episodePatterns(periodEpisodes);
       const byTimeOfDay = periodEpisodes.reduce((acc: Record<string, number>, e: any) => {
         const tod = e.timeOfDay || "unknown";
@@ -600,8 +601,16 @@ valuesClarified: []
         byTimeOfDay: byTimeOfDayStr,
       };
 
-const stats = nilaStats();
-       const featuresUsed = featureAdoption();
+      const stats = nilaStats();
+      const featuresUsed = featureAdoption();
+
+      // Protocol completions within the window (was hardcoded to 0).
+      const completionsRaw = secureLocal.getItem("nilamind_protocol_completions");
+      const allCompletions = completionsRaw ? JSON.parse(completionsRaw) : [];
+      const protocolsCompleted = protocolsCompletedInPeriod(allCompletions, cutoff);
+
+      // On-device usage + sleep for the window (no OS-level call logs — privacy promise).
+      const usage = gatherClinicianUsage(periodDays, now);
        
        // Get crisis metrics for the reporting period
        const crisisTracker = new CrisisMetricsTracker();
@@ -634,9 +643,10 @@ const stats = nilaStats();
          assessmentTrajectories,
          medications,
          episodes,
-         protocolsCompleted: 0,
-         nilaSessions: stats.total,
-         featuresUsed,
+          protocolsCompleted,
+          nilaSessions: usage.nilaTurns,
+          featuresUsed,
+          usage,
           crisisMetrics, // Add crisis metrics to the report
           temporalRiskAssessment, // Add temporal risk assessment to the report
           emotionalStateSummary,
@@ -654,8 +664,8 @@ const stats = nilaStats();
         const filename = makeExportFilename("nilamind-clinician-report.pdf");
         const result = await saveReport(blob, filename, "application/pdf");
         if (result) {
-          pushAudit({ kind: "pdf", scope: "Clinician report (30-day)", filename, destination: "device_download" });
-          setLastExport({ kind: "pdf", scope: "Clinician report (30-day)", filename });
+          pushAudit({ kind: "pdf", scope: `Clinician report (${periodDays}-day)`, filename, destination: "device_download" });
+          setLastExport({ kind: "pdf", scope: `Clinician report (${periodDays}-day)`, filename });
         }
       }
     } finally { setReportBusy(false); }
@@ -743,7 +753,23 @@ const stats = nilaStats();
       {/* Clinician summary (structured PDF for psychiatrist) */}
       <div className="glass rounded-2xl p-4 space-y-2">
         <h3 className="text-xs font-bold text-slate-100 uppercase tracking-wider flex items-center gap-1.5"><FileText className="w-3.5 h-3.5" /> Share with your psychiatrist</h3>
-        <p className="text-[11px] text-slate-500 leading-relaxed">A structured 30-day summary your psychiatrist can read in 15 minutes — check-ins, sleep, PHQ‑9/GAD‑7 trajectories, medication adherence, episode logs, and engagement. Generated on-device. Not a clinical or diagnostic tool.</p>
+        <p className="text-[11px] text-slate-500 leading-relaxed">A structured summary your psychiatrist can read — check-ins, sleep, PHQ‑9/GAD‑7 trajectories, medication adherence, episode logs, and on-device app/conversation usage. Choose a time window below. Generated on-device. Not a clinical or diagnostic tool.</p>
+        <div className="flex items-center gap-1" id="clinician-period">
+          {([7, 30, 90] as ReportPeriod[]).map((d) => (
+            <button
+              key={d}
+              onClick={() => setReportPeriod(d)}
+              aria-pressed={reportPeriod === d}
+              className={`flex-1 text-xs font-semibold py-1.5 rounded-lg cursor-pointer transition-colors ${
+                reportPeriod === d
+                  ? "bg-blue-600/30 text-blue-200 border border-blue-500/40"
+                  : "bg-page border border-slate-800 text-slate-400 hover:bg-raised"
+              }`}
+            >
+              {d === 7 ? "Week" : d === 30 ? "Month" : "90 days"}
+            </button>
+          ))}
+        </div>
         <div className="flex flex-wrap gap-2">
           <button onClick={handleExportClinicianPdf} disabled={reportBusy} id="export-clinician-pdf" className="flex-1 min-w-[64px] bg-blue-600/10 border border-blue-500/30 hover:bg-blue-600/20 text-blue-300 text-xs font-semibold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50">
             {reportBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />} Generate report PDF
