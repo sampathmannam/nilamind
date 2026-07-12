@@ -197,6 +197,74 @@ describe("protocolProgress — completions log (2026-07-12 QA: finishing a progr
   });
 });
 
+describe("protocolProgress — cyclical restart (2026-07-12 Wave 3, Group H)", () => {
+  // Verified via a read of protocolProgress.ts before writing this: startProtocol() has NO check against
+  // prior completions — advanceProtocol() simply clears `active` to null on finish (see recordCompletion
+  // call site) and startProtocol() unconditionally re-arms `active` for any known protocol id. So restart
+  // was NEVER blocked; this is a regression guard proving that stays true, not a bug fix.
+  it("restarting the SAME protocol after completion already works — no blocking state (regression guard)", async () => {
+    const m = await load();
+    m.startProtocol("behavioral-activation");
+    while (m.getActiveProgress()) m.advanceProtocol(); // run it to completion
+    const restarted = m.startProtocol("behavioral-activation");
+    expect(restarted?.step.id).toBe("ba-1");
+    expect(restarted?.stepIndex).toBe(0);
+    expect(restarted?.total).toBe(5);
+  });
+
+  it("a protocol can be completed, restarted, and completed again — repeatable indefinitely", async () => {
+    const m = await load();
+    for (let round = 0; round < 3; round++) {
+      m.startProtocol("worry-postponement");
+      while (m.getActiveProgress()) m.advanceProtocol();
+    }
+    const raw = JSON.parse(store["nilamind_protocol_completions"]);
+    expect(raw.filter((r: { protocolId: string }) => r.protocolId === "worry-postponement")).toHaveLength(3);
+  });
+
+  it("completionCountFor returns 0 for a protocol never completed", async () => {
+    const m = await load();
+    expect(m.completionCountFor("behavioral-activation")).toBe(0);
+  });
+
+  it("completionCountFor counts only completions matching the given protocol id", async () => {
+    const m = await load();
+    m.startProtocol("worry-postponement");
+    while (m.getActiveProgress()) m.advanceProtocol();
+    m.startProtocol("behavioral-activation");
+    while (m.getActiveProgress()) m.advanceProtocol();
+    expect(m.completionCountFor("behavioral-activation")).toBe(1);
+    expect(m.completionCountFor("worry-postponement")).toBe(1);
+    expect(m.completionCountFor("self-compassion")).toBe(0);
+  });
+
+  it("completionCountFor increments across repeated completions of the same protocol", async () => {
+    const m = await load();
+    m.startProtocol("behavioral-activation");
+    while (m.getActiveProgress()) m.advanceProtocol();
+    m.startProtocol("behavioral-activation");
+    while (m.getActiveProgress()) m.advanceProtocol();
+    expect(m.completionCountFor("behavioral-activation")).toBe(2);
+  });
+
+  it("startProtocol surfaces priorCompletions so a caller can show an 'Nth time' framing on restart", async () => {
+    const m = await load();
+    const first = m.startProtocol("behavioral-activation");
+    expect(first?.priorCompletions).toBe(0);
+    while (m.getActiveProgress()) m.advanceProtocol();
+    const second = m.startProtocol("behavioral-activation");
+    expect(second?.priorCompletions).toBe(1);
+  });
+
+  it("getActiveProgress also carries priorCompletions for the in-flight program", async () => {
+    const m = await load();
+    m.startProtocol("behavioral-activation");
+    while (m.getActiveProgress()) m.advanceProtocol();
+    m.startProtocol("behavioral-activation");
+    expect(m.getActiveProgress()?.priorCompletions).toBe(1);
+  });
+});
+
 describe("BA engine — activity logging and insight", () => {
   async function makeBA() {
     vi.resetModules();
