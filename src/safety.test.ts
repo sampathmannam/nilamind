@@ -507,6 +507,41 @@ describe("scanForCrisis — Hindi/Tamil romanized ideation (audit hardening)", (
     expect(scanForCrisis(s)).toBe(false);
   });
 
+  // 2026-07-12 device-QA: negation-FIRST word order ("nahi jeena") was missed — the list only covered
+  // verb-first order ("jeena nahi chahta"). MiniLM scores romanized Hindi near zero (0.026 measured on
+  // device), so the keyword floor is the ONLY line of defence for Hinglish. Prefixed forms keep precision
+  // (bare "nahi jeena" collides with the location sense: "yahan nahi jeena" = don't want to live HERE).
+  it.each([
+    "mujhe nahi jeena",
+    "Mujhe nahi jeena yaar, bas ho gaya",
+    "ab nahi jeena",
+    "aur nahi jeena mujhse",
+    "bas nahi jeena ab",
+    "mujhe nahi jina",
+    "mujhe nhi jeena",
+    "ab nahi jee sakta",
+    "ab nahi jee sakti main",
+    "aur nahi jee sakta",
+    "zinda nahi rehna",
+    "mujhe zinda nahi rehna hai",
+    "jeene ki wajah nahi",
+    "jeene ki koi wajah nahi bachi",
+    "jeene ka koi matlab nahi",
+  ])("trips on negation-first Hindi ideation: %j", (s) => {
+    expect(scanForCrisis(s)).toBe(true);
+  });
+
+  it.each([
+    "yahan nahi jeena chahta, mumbai shift hona hai",   // location sense — benign
+    "mujhe nahi jaana us party mein",                    // "don't want to GO" — one letter from jeena
+    "mujhe nahi pata kya karna hai",                     // "I don't know"
+    "ab nahi karna yeh kaam",                            // "don't want to do this anymore"
+    "jeene ki wajah mil gayi yaar",                      // "FOUND a reason to live" — positive
+    "zinda hoon abhi, tension mat lo",                   // "I'm alive, don't worry"
+  ])("does NOT trip on benign negation control: %j", (s) => {
+    expect(scanForCrisis(s)).toBe(false);
+  });
+
   it("the list is non-empty and normalized lowercase", () => {
     expect(ROMANIZED_IDEATION.length).toBeGreaterThan(10);
     for (const p of ROMANIZED_IDEATION) expect(p).toBe(p.toLowerCase());
@@ -629,6 +664,30 @@ describe("scanForCrisis — expanded dissociation coverage (2026-07-09 audit)", 
     expect(scanForCrisis(s)).toBe(false);
   });
 });
+
+  // 2026-07-12 device-QA: negation-first Devanagari mirrors of the Hinglish gap above (see
+  // ROMANIZED_IDEATION comment) — "मुझे नहीं जीना" was missed the same way "mujhe nahi jeena" was.
+  describe("scanForCrisis — negation-first Devanagari ideation (device-QA 2026-07-12)", () => {
+    it.each([
+      "मुझे नहीं जीना",
+      "अब नहीं जीना",
+      "और नहीं जीना",
+      "बस नहीं जीना",
+      "ज़िंदा नहीं रहना",
+      "जिंदा नहीं रहना",
+      "जीने की वजह नहीं",
+      "जीने का कोई मतलब नहीं",
+    ])("trips on negation-first Devanagari ideation: %j", (s) => {
+      expect(scanForCrisis(s)).toBe(true);
+    });
+
+    it.each([
+      "यहाँ नहीं जीना, दिल्ली जाना है",   // location sense
+      "मुझे नहीं जाना",                    // don't want to GO
+    ])("does NOT trip on benign Devanagari control: %j", (s) => {
+      expect(scanForCrisis(s)).toBe(false);
+    });
+  });
 
   it("does NOT false-positive on benign native-script messages (precision controls)", () => {
     expect(scanForCrisis("मैं ठीक हूँ, आज अच्छा दिन है")).toBe(false);    // Hindi: "I'm fine, good day"

@@ -53,6 +53,18 @@ export const ROMANIZED_IDEATION = [
   "saaganum", "saga poren", "saaga poren", "uyir vaazha maaten",
   // Tamil: additional crisis-ideation phrasing (2026-07-06 audit)
   "vaazha vendaam", "saavukku poyida poren", "saaganum da",
+  // Negation-FIRST death-wish word order (2026-07-12 device-QA): "mujhe nahi jeena" was missed — the
+  // entries above only cover verb-first order ("jeena nahi chahta"). MiniLM embeds romanized Hindi near
+  // zero (0.026 measured vs 0.58 threshold) so the keyword floor is the ONLY Hinglish defence. Prefixed
+  // pronoun/temporal forms keep precision — bare "nahi jeena" collides with the benign location sense
+  // ("yahan nahi jeena" = "don't want to live HERE"). Spelling variants (jina/nhi) are common in typed Hinglish.
+  "mujhe nahi jeena", "mujhe nahi jina", "mujhe nhi jeena", "mujhe nhi jina",
+  "ab nahi jeena", "aur nahi jeena", "bas nahi jeena", "main nahi jeena",
+  "mujhko nahi jeena", "mereko nahi jeena",
+  "ab nahi jee sakta", "ab nahi jee sakti", "aur nahi jee sakta", "aur nahi jee sakti",
+  "zinda nahi rehna", "zinda nahi rahna",
+  "jeene ki wajah nahi", "jeene ki koi wajah nahi", "jeene ka koi matlab nahi",
+  "jeene ka faida nahi", "jeene ka koi faida nahi",
 ];
 
 // NATIVE-SCRIPT crisis phrasing (2026-07-08 audit 1.B). The app now ships a hi/ta/te language switcher and
@@ -74,6 +86,9 @@ export const NATIVE_SCRIPT_IDEATION = [
   "చనిపోవాలని", "చనిపోవాలి", "చావాలని ఉంది", "బతకాలని లేదు", "ఆత్మహత్య",
   // Telugu (romanized) — Telugu had no coverage at all, even romanized
   "chanipovaalani", "chanipovali", "chavaalani undi", "bathakalani ledu", "aatmahatya cheskovali",
+  // Negation-first Devanagari mirrors (2026-07-12 device-QA — see ROMANIZED_IDEATION comment)
+  "मुझे नहीं जीना", "अब नहीं जीना", "और नहीं जीना", "बस नहीं जीना",
+  "ज़िंदा नहीं रहना", "जिंदा नहीं रहना", "जीने की वजह नहीं", "जीने का कोई मतलब नहीं",
 ];
 
 export const SELF_HARM_KEYWORDS = [
