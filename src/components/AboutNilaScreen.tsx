@@ -30,9 +30,9 @@ export default function AboutNilaScreen() {
           <Cpu className="w-4 h-4 text-emerald-400" /> How it works
         </h2>
         <p className="text-xs text-slate-400 leading-relaxed">
-          Nila's brain is a small language model that runs entirely on your device — there is no cloud,
+          Nila's brain is an on-device language model (Qwen2.5-1.5B) that runs entirely on your phone — there is no cloud,
           no server, no internet round-trip. Everything you type is processed locally and stored encrypted.
-          When you check in, Nila adapts her suggestions to your state and the time of day.
+          Nila adapts her responses to your state, time of day, and what she remembers from past conversations.
         </p>
       </div>
 
@@ -44,9 +44,10 @@ export default function AboutNilaScreen() {
         <ul className="text-xs text-slate-400 leading-relaxed space-y-1.5 list-disc list-inside">
           <li>Listen and respond with empathy, anytime</li>
           <li>Suggest evidence-based coping tools (grounding, breathing, thought records, and more)</li>
-          <li>Help you notice patterns in mood, sleep, and behaviour</li>
-          <li>Guide you through structured protocols (behavioural activation, self-compassion)</li>
+          <li>Help you notice patterns in mood, sleep, behaviour, and social rhythm</li>
+          <li>Guide you through structured protocols (behavioural activation, social rhythm therapy, self-compassion, ACT, and more)</li>
           <li>Adapt to your state — calming when elevated, gentle when low</li>
+          <li>Reflect back what Nila remembers so your history isn't forgotten between conversations</li>
         </ul>
       </div>
 
@@ -59,7 +60,7 @@ export default function AboutNilaScreen() {
           <li>Nila is <strong className="text-slate-300">not a therapist, doctor, or crisis service</strong></li>
           <li>She cannot diagnose, treat, or prescribe</li>
           <li>She cannot replace professional mental health care</li>
-          <li>If you're in crisis, please use the crisis resources — always reachable at the bottom of every screen</li>
+          <li>If you're in crisis, use the crisis resources in the Learn or Reach Out screens</li>
         </ul>
       </div>
 
@@ -70,8 +71,9 @@ export default function AboutNilaScreen() {
         </h2>
         <p className="text-xs text-slate-400 leading-relaxed">
           This is by design. If you're in a manic or elevated state — feeling like you don't need sleep,
-          that rules don't apply, that you should spend everything, quit your job, or that everyone is
-          against you — Nila will gently <strong className="text-slate-300">not validate</strong> those beliefs.
+          that rules don't apply, that everyone is against you, or that you should make big impulsive
+          decisions — Nila will gently <strong className="text-slate-300">not validate</strong> those beliefs.
+          The same holds for harsh self-beliefs: calling yourself a failure or saying everyone hates you.
           Sycophancy (an AI just agreeing with you) is a documented harm in mental-health AI.
           Nila's job is to hold the line with warmth, not to make you feel good in the moment at the
           cost of your safety.
@@ -97,8 +99,8 @@ export default function AboutNilaScreen() {
         </h2>
         <p className="text-xs text-slate-400 leading-relaxed">
           Every tool and feature in NilaMind is grounded in peer-reviewed research — CBT, DBT, behavioural
-          activation, social rhythm therapy, and more. You can explore the full evidence base and citations
-          in the Learn section.
+          activation, social rhythm therapy, ACT, self-compassion, and more. You can explore the full
+          evidence base and citations in the Learn section.
         </p>
       </div>
 

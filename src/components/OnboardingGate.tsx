@@ -23,7 +23,7 @@ const SLIDES = [
   {
     id: "welcome",
     title: "Hi, I'm Nila",
-    body: "I'm a private, on-device AI companion for the harder moments. Nothing you share leaves your phone. I'm not a therapist or a doctor, and not a crisis service — I'm here alongside you, never a replacement for real support.",
+    body: "I'm a private, on-device AI companion for the harder moments. Nothing you share leaves your phone, and I work fully offline. I'm not a therapist or a doctor — I'm here alongside you, never a replacement for real support.",
     icon: <HeartHandshake className="w-10 h-10 text-blue-400" />,
   },
   {
