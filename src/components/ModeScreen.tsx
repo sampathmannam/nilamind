@@ -36,6 +36,7 @@ import SafetyPlanScreen from "./SafetyPlanScreen";
 import { looksLikeArmRequest, requestArmedCheckin } from "../services/armedCheckin";
 import { protocolOfferCard, startProtocolChat, continueProtocolChat, type ProtocolCard } from "../services/protocolChat";
 import { abandonProtocol } from "../services/protocolProgress";
+import { logNilaTurn } from "../services/nilaSessions";
 import { speakIfEnabled, speak, listenOnce, stopSpeaking } from "../services/voice";
 import { startVoiceSession, endVoiceSession } from "../services/voicePatterns";
 import LearnScreen from "./LearnScreen";
@@ -253,6 +254,9 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
     const userMsg: NilaUiMessage = { role: "user", content: msg };
     crisisPendingRef.current = true; // #5-out: hold this turn out of sessionChat until its §9 verdict returns
     setMessages((prev) => [...prev, userMsg]);
+    logNilaTurn("coach", msg); // dashboard "Nila chats" — was never wired for the main tab (2026-07-12 QA).
+    // Counted BEFORE the §9 gate below: a crisis-blocked message is still a real turn the user reached out
+    // with. Only the user's own text is stored (never the AI reply), same as the Episode surface.
 
     // Armed check-in is a deterministic, opt-in command — handle it before the model.
     if (looksLikeArmRequest(msg)) {

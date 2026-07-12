@@ -83,16 +83,27 @@ export interface ProtocolStats {
 }
 
 export function protocolCompletions(): ProtocolStats {
+  let started = 0;
   try {
     const raw = secureLocal.getItem("nilamind_protocol_progress");
-    if (!raw) return { started: 0, completed: 0, rate: 0 };
-    const parsed = JSON.parse(raw);
-    const started = parsed?.protocolId ? 1 : 0;
-    const completed = 0;
-    return { started, completed, rate: 0 };
+    const parsed = raw ? JSON.parse(raw) : null;
+    started = parsed?.protocolId ? 1 : 0;
   } catch {
-    return { started: 0, completed: 0, rate: 0 };
+    started = 0;
   }
+  // 2026-07-12 QA (F14): this used to be a hardcoded `completed = 0` stub — finishing a program left no
+  // trace anywhere the dashboard could read. protocolProgress.advanceProtocol() now appends a completion
+  // record to this append-only log on every finish; read the real count here.
+  let completed = 0;
+  try {
+    const raw = secureLocal.getItem("nilamind_protocol_completions");
+    const parsed = raw ? JSON.parse(raw) : [];
+    completed = Array.isArray(parsed) ? parsed.length : 0;
+  } catch {
+    completed = 0;
+  }
+  const rate = started + completed > 0 ? completed / (started + completed) : 0;
+  return { started, completed, rate };
 }
 
 export function featureAdoption(): string[] {
@@ -106,6 +117,9 @@ export function featureAdoption(): string[] {
     ["nilamind_episodes", "episode_records"],
     ["nilamind_assessments", "assessments"],
     ["nilamind_diary", "diary_cards"],
+    // 2026-07-12 QA (F14): a completed guided program (protocolProgress.ts's completions log) is a real,
+    // meaningful feature-use signal — it was missing from adoption tracking entirely.
+    ["nilamind_protocol_completions", "guided_programs"],
   ];
   for (const [key, name] of checks) {
     try {

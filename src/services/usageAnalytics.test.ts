@@ -179,6 +179,23 @@ describe("protocolCompletions", () => {
     const result = protocolCompletions();
     expect(result).toBeTruthy();
   });
+
+  it("reads real counts from the completions log (2026-07-12 QA: stub always returned 0)", () => {
+    store.set(
+      "nilamind_protocol_completions",
+      JSON.stringify([
+        { protocolId: "behavioral-activation", at: "2026-07-12T00:00:00Z" },
+        { protocolId: "worry-postponement", at: "2026-07-12T01:00:00Z" },
+      ]),
+    );
+    const result = protocolCompletions();
+    expect(result.completed).toBe(2);
+  });
+
+  it("returns completed: 0 when the completions log is empty/absent", () => {
+    const result = protocolCompletions();
+    expect(result.completed).toBe(0);
+  });
 });
 
 describe("featureAdoption", () => {
@@ -215,6 +232,15 @@ describe("featureAdoption", () => {
     store.set("nilamind_exposure_hierarchy", JSON.stringify({ steps: [{ id: "e_1" }] }));
     const features = featureAdoption();
     expect(features).toContain("exposure_hierarchy");
+  });
+
+  it("counts a guided-program completion as a used feature (2026-07-12 QA)", () => {
+    store.set(
+      "nilamind_protocol_completions",
+      JSON.stringify([{ protocolId: "cooling-anger", at: "2026-07-12T00:00:00Z" }]),
+    );
+    const features = featureAdoption();
+    expect(features).toContain("guided_programs");
   });
 });
 

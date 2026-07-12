@@ -6,6 +6,27 @@ import { secureLocal } from "./secureLocal";
 import { getProtocol, routeToProtocol, type Protocol, type ProtocolStep } from "./protocols";
 
 const KEY = "nilamind_protocol_progress";
+// Append-only completion log (2026-07-12 QA: dashboard analytics dead-counters, F14). Separate from KEY above —
+// KEY is the single-slot "where am I now" pointer and is CLEARED on completion; this is a durable record of
+// every finished program so usageAnalytics.protocolCompletions() has real data instead of a hardcoded 0.
+const COMPLETIONS_KEY = "nilamind_protocol_completions";
+
+interface CompletionRecord {
+  protocolId: string;
+  at: string; // ISO timestamp
+}
+
+function recordCompletion(protocolId: string): void {
+  try {
+    const raw = secureLocal.getItem(COMPLETIONS_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    const list: CompletionRecord[] = Array.isArray(parsed) ? parsed : [];
+    list.push({ protocolId, at: new Date().toISOString() });
+    secureLocal.setItem(COMPLETIONS_KEY, JSON.stringify(list));
+  } catch {
+    /* best-effort — a failed completion-log write must never block the program from finishing */
+  }
+}
 
 interface Progress {
   protocolId: string;
@@ -81,6 +102,9 @@ export function advanceProtocol(): ActiveStep | { done: true; protocol: Protocol
   }
   const next = a.stepIndex + 1;
   if (next >= p.steps.length) {
+    // Persist a completion record (2026-07-12 QA: finishing a program left ZERO trace — the single-slot
+    // pointer was simply removed, and usageAnalytics.protocolCompletions() was a hardcoded-0 stub).
+    recordCompletion(a.protocolId);
     active = null;
     persist();
     return { done: true, protocol: p };

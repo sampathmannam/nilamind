@@ -152,6 +152,51 @@ describe("BA protocol integration — BA engine wired to protocol steps", () => 
   });
 });
 
+describe("protocolProgress — completions log (2026-07-12 QA: finishing a program left no trace)", () => {
+  it("completing the final step appends to nilamind_protocol_completions", async () => {
+    const m = await load();
+    m.startProtocol("behavioral-activation");
+    while (m.getActiveProgress()) m.advanceProtocol();
+    const raw = JSON.parse(store["nilamind_protocol_completions"]);
+    expect(raw).toHaveLength(1);
+    expect(raw[0].protocolId).toBe("behavioral-activation");
+    expect(typeof raw[0].at).toBe("string");
+  });
+
+  it("does NOT append a completion record when the program is merely abandoned", async () => {
+    const m = await load();
+    m.startProtocol("behavioral-activation");
+    m.abandonProtocol();
+    expect(store["nilamind_protocol_completions"]).toBeUndefined();
+  });
+
+  it("completing two different protocols appends two ordered records", async () => {
+    const m = await load();
+    m.startProtocol("worry-postponement");
+    while (m.getActiveProgress()) m.advanceProtocol();
+    m.startProtocol("behavioral-activation");
+    while (m.getActiveProgress()) m.advanceProtocol();
+    const raw = JSON.parse(store["nilamind_protocol_completions"]);
+    expect(raw).toHaveLength(2);
+    expect(raw.map((x: { protocolId: string }) => x.protocolId)).toEqual([
+      "worry-postponement",
+      "behavioral-activation",
+    ]);
+  });
+
+  it("the completions log persists across a simulated app restart", async () => {
+    const first = await load();
+    first.startProtocol("behavioral-activation");
+    while (first.getActiveProgress()) first.advanceProtocol();
+
+    const afterRestart = await load();
+    const raw = JSON.parse(store["nilamind_protocol_completions"]);
+    expect(raw).toHaveLength(1);
+    // sanity: the fresh module instance still sees the same disk-backed log
+    expect(afterRestart.getActiveProgress()).toBeNull();
+  });
+});
+
 describe("BA engine — activity logging and insight", () => {
   async function makeBA() {
     vi.resetModules();
