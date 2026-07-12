@@ -8,6 +8,7 @@ import { Shield, Save, LogOut } from "lucide-react";
 import { EpisodeRecord } from "../types";
 import { sendToNila } from "../services/sendToNila";
 import { NilaUiMessage } from "../services/nilaSend";
+import { notifyReplyReady } from "../services/notifications";
 
 interface EpisodeSupportScreenProps {
   onSessionEnded: () => void;
@@ -179,6 +180,7 @@ export default function EpisodeSupportScreen({
 
     setConnectedLive(true);
     setMessages((prev) => [...prev, { role: "assistant", content: result.reply }]);
+    if (document.hidden) void notifyReplyReady();
   };
 
   const handleSendChat = async (e?: React.FormEvent) => {
@@ -249,6 +251,7 @@ export default function EpisodeSupportScreen({
 
     setConnectedLive(true);
     setMessages((prev) => [...prev, { role: "assistant", content: result.reply }]);
+    if (document.hidden) void notifyReplyReady();
   };
 
   const handleEndSession = () => {

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { LifeBuoy, ChevronRight, ChevronLeft, Shield, Globe, HeartHandshake, MessageCircle, Check } from "lucide-react";
+import { LocalNotifications } from "@capacitor/local-notifications";
 import {
   completeOnboarding,
   getOnboardingRegion,
@@ -89,6 +90,7 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
 
   const finish = () => {
     try { secureLocal.setItem("nilamind_user_goal", JSON.stringify(selectedGoals)); } catch { /* best-effort */ }
+    try { LocalNotifications.requestPermissions(); } catch { /* best-effort — user can deny */ }
     completeOnboarding();
     onComplete();
   };

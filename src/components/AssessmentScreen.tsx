@@ -52,6 +52,12 @@ const TONE: Record<
 // Static Tailwind grid classes per response-scale width (PHQ/GAD=4, PSS-4=5, WHO-5=6).
 const COLS: Record<number, string> = { 4: "grid-cols-4", 5: "grid-cols-5", 6: "grid-cols-6" };
 
+// Resolve the response anchors for a given item. Most instruments share one anchor set across items,
+// but a few (e.g. ASRM's sleep item) override per-item via `itemResponseOptions`.
+function optionsFor(inst: Instrument, idx: number): string[] {
+  return inst.itemResponseOptions?.[idx] ?? inst.responseOptions;
+}
+
 // Scroll to top when moving between assessment phases. Honour the OS "reduce motion" setting
 // (trauma-informed / vestibular): smooth-scroll only when motion is allowed, else jump instantly.
 function scrollToTop(): void {
@@ -241,8 +247,8 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
         {/* Anchor legend — maps each answer digit to its meaning; the answer buttons below show only the
             digit, so this legend is what makes them understandable. Bumped 8px → 11px (8px is unreadable)
             and lightened the label to slate-400 so it clears contrast at that size. */}
-        <div className={`grid ${COLS[inst.responseOptions.length] ?? "grid-cols-4"} gap-1.5 sticky top-0 bg-page py-2 z-10`}>
-          {inst.responseOptions.map((a, i) => (
+        <div className={`grid ${COLS[optionsFor(inst, 0).length] ?? "grid-cols-4"} gap-1.5 sticky top-0 bg-page py-2 z-10`}>
+          {optionsFor(inst, 0).map((a, i) => (
             <div key={i} className="text-center">
               <div className="text-[11px] font-mono font-semibold text-slate-300">{i}</div>
               <div className="text-[11px] text-slate-400 leading-tight">{a}</div>
@@ -264,8 +270,8 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
                   <span className="text-[11px] font-mono text-slate-600 shrink-0">{idx + 1}.</span>
                   <p className={`text-xs leading-relaxed ${isSafety ? "text-slate-200" : "text-slate-300"}`}>{item}</p>
                 </div>
-                <div className={`grid ${COLS[inst.responseOptions.length] ?? "grid-cols-4"} gap-1.5`}>
-                  {inst.responseOptions.map((opt, val) => {
+                <div className={`grid ${COLS[optionsFor(inst, idx).length] ?? "grid-cols-4"} gap-1.5`}>
+                  {optionsFor(inst, idx).map((opt, val) => {
                     const selected = responses[idx] === val;
                     return (
                       <button

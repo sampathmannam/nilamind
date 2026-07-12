@@ -14,7 +14,7 @@ export interface ReminderPrefs {
 }
 import { ls } from "./storageUtils";
 
-const DEFAULTS: ReminderPrefs = { enabled: false, windowStart: "10:00", windowEnd: "20:00", quietStart: "22:00", quietEnd: "08:00" };
+const DEFAULTS: ReminderPrefs = { enabled: true, windowStart: "10:00", windowEnd: "20:00", quietStart: "22:00", quietEnd: "08:00" };
 
 export function getReminderPrefs(): ReminderPrefs {
   try { const raw = ls()?.getItem(KEY); return raw ? { ...DEFAULTS, ...JSON.parse(raw) } : DEFAULTS; } catch { return DEFAULTS; }

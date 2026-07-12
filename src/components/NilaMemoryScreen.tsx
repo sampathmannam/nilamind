@@ -6,8 +6,8 @@ import {
 } from "../services/nilaInsights";
 import { latestInflectionsForLog, dismissLoggedSignal, type InflectionSignal } from "../services/nilaInflection";
 import { loadFacts, removeFact, loadFoci, removeFocus, type ProfileFact, type ActiveFocus } from "../services/nilaProfile";
-import { feedbackSummary, clearFeedback, type FeedbackSummary } from "../services/nilaFeedback";
-import { donationCount, clearDonations } from "../services/nilaContributions";
+import { feedbackSummary, clearFeedback, pendingContributions, type FeedbackSummary, type ReplyFeedback } from "../services/nilaFeedback";
+import { donationCount, clearDonations, buildDonationPreview, confirmDonation, revokeDonation, isDonated, type DonationPreview } from "../services/nilaContributions";
 
 export const KIND_LABELS: Record<InsightKind, string> = {
   working_through: "What you're working through",
@@ -31,6 +31,22 @@ export default function NilaMemoryScreen() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const refresh = () => setAll(loadInsights());
+  // Donation flow: pending contributions (feedback with suggestions) that can be donated.
+  const [pendings, setPendings] = useState<ReplyFeedback[]>(() => pendingContributions());
+  const [previewId, setPreviewId] = useState<string | null>(null);
+  const [preview, setPreview] = useState<DonationPreview | null>(null);
+  const openPreview = (entry: ReplyFeedback) => { setPreviewId(entry.id); setPreview(buildDonationPreview(entry)); };
+  const closePreview = () => { setPreviewId(null); setPreview(null); };
+  const handleDonate = (entry: ReplyFeedback) => {
+    const ok = confirmDonation(entry);
+    if (ok) { setDonations(donationCount()); setPendings(pendingContributions()); }
+    closePreview();
+  };
+  const handleRevoke = (id: string) => {
+    revokeDonation(id);
+    setDonations(donationCount());
+    setPendings(pendingContributions());
+  };
 
   const startEdit = (i: Insight) => { setEditingId(i.id); setDraft(i.text); };
   const cancelEdit = () => { setEditingId(null); setDraft(""); };
@@ -197,13 +213,56 @@ export default function NilaMemoryScreen() {
               </button>
             </div>
           )}
+          {pendings.length > 0 && (
+            <div className="glass rounded-2xl p-4 space-y-3" id="memory-pending-donations">
+              <p className="text-sm text-slate-200 leading-relaxed">
+                You have <strong>{pendings.length}</strong> {pendings.length === 1 ? "reply" : "replies"} where you suggested a better wording — each can be donated to help train Nila.
+              </p>
+              {pendings.map((p) => (
+                <div key={p.id} className="bg-slate-900/40 rounded-xl p-3 space-y-2">
+                  <p className="text-xs text-slate-300 line-clamp-2">{p.suggestion}</p>
+                  <div className="flex items-center gap-2">
+                    {previewId === p.id && preview ? (
+                      <div className="space-y-2 w-full">
+                        <div className="bg-slate-950/60 rounded-lg p-2 text-xs text-slate-300">
+                          <span className="text-slate-500">Nila said:</span> {preview.nilaReply || "(empty)"}
+                        </div>
+                        <div className="bg-slate-950/60 rounded-lg p-2 text-xs text-slate-300">
+                          <span className="text-slate-500">Your suggestion:</span> {preview.betterReply || "(none)"}
+                        </div>
+                        {preview.blockedByCrisis ? (
+                          <p className="text-[10px] text-rose-400">This can't be shared — it contains crisis content.</p>
+                        ) : (
+                          <div className="flex gap-2 justify-end">
+                            <button onClick={closePreview} className="text-[11px] text-slate-400 hover:text-slate-200 cursor-pointer px-2 py-1">Cancel</button>
+                            <button onClick={() => handleDonate(p)} className="text-[11px] font-semibold text-emerald-400 hover:text-emerald-300 cursor-pointer px-2 py-1">Confirm donate</button>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <>
+                        {isDonated(p.id) ? (
+                          <button onClick={() => handleRevoke(p.id)} className="text-[11px] text-slate-400 hover:text-rose-400 cursor-pointer">Withdraw</button>
+                        ) : (
+                          <button onClick={() => openPreview(p)} className="text-[11px] font-semibold text-fuchsia-400 hover:text-fuchsia-300 cursor-pointer">Preview & donate</button>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+              ))}
+              <p className="text-[10px] text-slate-500 leading-relaxed">
+                Each donation is only Nila's reply + your suggested wording — scrubbed of emails, phone numbers, and links. Nothing leaves your phone until a future upload step.
+              </p>
+            </div>
+          )}
           {donations > 0 && (
             <div className="glass rounded-2xl p-4 space-y-2" id="memory-donations">
               <p className="text-sm text-slate-200 leading-relaxed">
                 You've chosen to share <strong>{donations}</strong> {donations === 1 ? "example" : "examples"} to help train Nila.
               </p>
               <p className="text-[10px] text-slate-500 leading-relaxed">
-                Each is only Nila's reply + your suggested wording — never your conversation. Nothing has left your phone, and you can withdraw any time.
+                Nothing has left your phone. You can withdraw any time.
               </p>
               <button onClick={withdrawAll} className="text-[11px] font-semibold text-slate-400 hover:text-rose-400 cursor-pointer">
                 Withdraw all

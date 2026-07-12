@@ -50,6 +50,7 @@ import { computeCompassionateStreak } from "../services/streaks";
 import { Settings, Mic, Send, MicOff, Keyboard, X, ShieldCheck, ThumbsUp, ThumbsDown, MessageCircle, Brain, Moon, SquarePen } from "lucide-react";
 import { hapticLight, hapticMedium } from "../hooks/useHaptics";
 import { recordFeedback } from "../services/nilaFeedback";
+import { notifyReplyReady } from "../services/notifications";
 
 interface ModeScreenProps {
   onOpenSettings?: () => void;
@@ -317,6 +318,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
         setMessages((prev) => [...prev, { role: "assistant", content: result.reply }]);
         if (result.reachedAI) {
           speakIfEnabled(result.reply);
+          if (document.hidden) void notifyReplyReady();
         }
       }
       // After Nila replies, refresh the protocol card (continue if active, else re-offer).

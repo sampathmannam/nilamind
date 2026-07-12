@@ -23,7 +23,7 @@ import { DAY_MS } from "./storageUtils";
 // a disorder. The UI must say this plainly, and PHQ-9 item 9 (self-harm ideation) must always
 // route to crisis support when endorsed at all.
 
-export type InstrumentId = "PHQ-2" | "PHQ-9" | "GAD-7" | "WHO-5" | "PSS-4";
+export type InstrumentId = "PHQ-2" | "PHQ-9" | "GAD-7" | "WHO-5" | "PSS-4" | "ASRM";
 
 export interface SeverityBand {
   min: number; // inclusive
@@ -46,6 +46,9 @@ export interface Instrument {
   items: string[];
   // The response anchors, in order (index === per-item score, 0..responseOptions.length-1).
   responseOptions: string[];
+  // Optional per-item anchors, used when an item's response wording differs from the rest
+  // (e.g. the ASRM sleep item). `itemResponseOptions[i]` overrides `responseOptions` for item i.
+  itemResponseOptions?: string[][];
   maxScore: number; // max TOTAL score (after any multiplier)
   // 0-based item indices that are reverse-scored (score = maxPerItem - response) — e.g. PSS-4 items 2 & 3.
   reverseItems?: number[];
@@ -215,12 +218,47 @@ export const PSS4: Instrument = {
   citation: "Cohen & Williamson (1988); validation: Warttig, Forshaw, South & White (2013), J. Health Psychol. 18(12):1617–1628.",
 };
 
+// ASRM — Altman Self-Rating Mania Scale. The field-standard, validated brief screen for (hypo)mania.
+// This app is "manic-first" (bipolar-aware), yet shipped without any mania-specific instrument — every
+// other screen here measures depression/anxiety/wellbeing/stress. ASRM closes that gap. 5 items, each
+// 0–4, summed to 0–20; a cut-point of ≥6 flags possible (hypo)mania. Items and anchors are verbatim
+// from the validation paper — not reworded, so the published operating characteristics hold.
+//   Altman, E. G., Hedeker, D., Peterson, J. L., & Davis, J. M. (1997). "The Altman Self-Rating
+//   Mania Scale." Biol. Psychiatry, 42(11), 948–955. (Public domain, like the PHQ/GAD family.)
+const ASRM_SHARED = ["No", "Yes — mild", "Yes — moderate", "Yes — severe", "Yes — extreme"];
+const ASRM_SLEEP = ["No change", "Slightly less than usual", "Markedly less than usual", "Much less than usual", "Enormously less than usual"];
+export const ASRM: Instrument = {
+  id: "ASRM",
+  name: "ASRM",
+  fullName: "Altman Self-Rating Mania Scale",
+  measures: "Mania / elevated mood",
+  prompt: "Over the last week, have you had any of the following experiences? Answer as honestly as you can.",
+  items: [
+    "Have people ever told you that you were so cheerful and optimistic that they thought you must be \"high\" on something?",
+    "Have you often felt much more self-confident than usual?",
+    "Have you felt much less need to sleep than usual?",
+    "Have you been much more talkative than usual?",
+    "Have you had much more energy and been much more active than usual?",
+  ],
+  responseOptions: ASRM_SHARED,
+  itemResponseOptions: [ASRM_SHARED, ASRM_SHARED, ASRM_SLEEP, ASRM_SHARED, ASRM_SHARED],
+  maxScore: 20,
+  bands: [
+    { min: 0, max: 5, label: "Below screen", tone: "emerald", interpretation: "Below the screening cut-off for elevated mood right now. You can re-check any time." },
+    { min: 6, max: 11, label: "Possible hypomania", tone: "amber", interpretation: "At or above the screening cut-off for (hypo)mania. A conversation with a doctor or therapist is genuinely worth having — this screen is a signal, not a diagnosis." },
+    { min: 12, max: 20, label: "Likely mania", tone: "rose", interpretation: "A high score on this screen. Please consider reaching out to a doctor, therapist, or a helpline soon — effective, stabilising support is available." },
+  ],
+  cutPoint: { score: 6, note: "A score of 6 or more is the ASRM screening cut-point for possible (hypo)mania (reported sensitivity ≈ 85.5%, specificity ≈ 86.6%; Altman et al., 1997)." },
+  citation: "Altman, Hedeker, Peterson & Davis (1997), Biol. Psychiatry 42(11):948–955.",
+};
+
 export const INSTRUMENTS: Record<InstrumentId, Instrument> = {
   "PHQ-2": PHQ2,
   "PHQ-9": PHQ9,
   "GAD-7": GAD7,
   "WHO-5": WHO5,
   "PSS-4": PSS4,
+  "ASRM": ASRM,
 };
 
 export interface ScoredResult {

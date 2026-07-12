@@ -445,6 +445,14 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
               {usageSummary.features.includes("values_snapshot") && <> · <span className="text-emerald-400">Values set ✓</span></>}
             </p>
           )}
+          {usageSummary.moodSleepCorrelation && (
+            <p className="text-[10px] text-slate-500 text-center">
+              Sleep: {usageSummary.moodSleepCorrelation.highSleepMood.toFixed(1)}/10 with ≥7h sleep · {usageSummary.moodSleepCorrelation.lowSleepMood.toFixed(1)}/10 with &lt;7h
+              {usageSummary.sleepTrend && (
+                <> · Last 3-check-in avg: <span className={usageSummary.sleepTrend.recentAvg >= usageSummary.sleepTrend.olderAvg ? "text-emerald-400" : "text-amber-400"}>{usageSummary.sleepTrend.recentAvg.toFixed(1)}h</span></>
+              )}
+            </p>
+          )}
         </div>
       )}
 

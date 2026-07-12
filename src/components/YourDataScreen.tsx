@@ -7,6 +7,7 @@ import { secureLocal } from "../services/secureLocal";
 import { loadIdentity, exportBackup } from "../services/identity";
 import { requireAuth } from "../services/biometricGate";
 import { generateCsvReport, buildTextReport, generatePdfBlob, saveReport, buildClinicalJson } from "../services/exportReport";
+import { feedbackSummary } from "../services/nilaFeedback";
 import { computeRetention } from "../services/retentionMetrics";
 import { isPilotEnrolled, computePilotSummary } from "../services/pilotStudy";
 import { loadAssessments, assessmentsFor } from "../services/assessments";
@@ -142,7 +143,8 @@ export default function YourDataScreen() {
     setLastExport(null);
     try {
       const checkins = loadCheckins();
-      const text = buildTextReport(checkins, undefined, computeRetention(), isPilotEnrolled() ? computePilotSummary() ?? undefined : undefined, loadAssessments());
+      const fb = feedbackSummary();
+      const text = buildTextReport(checkins, undefined, computeRetention(), isPilotEnrolled() ? computePilotSummary() ?? undefined : undefined, loadAssessments(), fb.total > 0 ? fb : undefined);
       const blob = generatePdfBlob(text);
       if (blob) {
         const filename = makeExportFilename("nilamind-report.pdf");
@@ -159,12 +161,14 @@ export default function YourDataScreen() {
     setReportBusy(true);
     setLastExport(null);
     try {
+      const fb = feedbackSummary();
       const json = buildClinicalJson({
         generatedAt: new Date().toISOString(),
         checkins: loadCheckins(),
         assessments: loadAssessments(),
         retention: computeRetention(),
         pilot: isPilotEnrolled() ? computePilotSummary() ?? undefined : undefined,
+        feedback: fb.total > 0 ? fb : undefined,
       });
       const filename = makeExportFilename("nilamind-data.json");
       const result = await saveReport(json, filename, "application/json");
