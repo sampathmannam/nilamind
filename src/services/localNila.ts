@@ -7,7 +7,7 @@
 // reachedAI:false so the caller shows the offline experience — it never silently falls back to the cloud
 // (that would break the user's on-device/privacy choice).
 
-import { buildNilaSystem, explainerQuestionSteer, consecutiveQuestionSteer, type NilaMessage } from "./nila";
+import { buildNilaSystem, explainerQuestionSteer, consecutiveQuestionSteer, registerSteer, type NilaMessage } from "./nila";
 import { generateGuarded, isLocalLlmReady } from "./localLlm";
 import { detectElevationRisk, elevationGuardNote, elevationOutputNote, type ElevationLevel } from "./elevationGuard";
 import { emaElevationSignal } from "./ema";
@@ -83,6 +83,14 @@ export async function askNilaLocalStream(
   // reflects instead of lecturing. Exemplar-RAG alone lost to Qwen's lecture default on these (2026-07-12).
   const explainerSteer = explainerQuestionSteer(lastUser);
   if (explainerSteer) system += "\n\n" + explainerSteer;
+
+  // Per-turn register belt (2026-07-13 on-device verification): bare check-ins, should-I decisions, physical
+  // panic, grief, and boundary-testing each fell back to Qwen's stock-assistant voice on device — exemplar-RAG
+  // alone couldn't steer them (same failure class as the why/how case above). Blunt LAST-position stance,
+  // first-match-wins, empty for ordinary venting. Appended after explainerSteer so at most one register/explainer
+  // steer dominates the tail; both are narrow enough not to fire on the same message in practice.
+  const regSteer = registerSteer(lastUser);
+  if (regSteer) system += "\n\n" + regSteer;
 
   // alliance-voice (2026-07-12 clinical research wave 2): consecutive-question cap. If Nila's own last two
   // replies both ended in "?", steer THIS turn toward reflection only — see the GUARDRAIL comment on

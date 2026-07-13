@@ -10,7 +10,7 @@ import { crisisLinesInline } from "./crisisResources";
 import { skillsPromptBlock } from "./skillsLibrary";
 import { relevantSkillsBlock } from "./skillRetrieval";
 import { buildPersonalContext, activeProtocolContextBlock } from "./nilaContext";
-import { USE_SHORT_PERSONA, NILA_SYSTEM_PROMPT, NILA_SYSTEM_PROMPT_SHORT, explainerQuestionSteer } from "./nila";
+import { USE_SHORT_PERSONA, NILA_SYSTEM_PROMPT, NILA_SYSTEM_PROMPT_SHORT, explainerQuestionSteer, registerSteer } from "./nila";
 import { EpisodeRecord } from "../types";
 
 // PRIVACY — deliberate divergence from buildReflectionDigest (nilaContext.ts), documented on purpose:
@@ -61,5 +61,11 @@ export function buildEpisodeSystem(episodes: EpisodeRecord[], query?: string): s
   // localNila.ts:82-85. The companion path already had this; the episode path was a footgun without it
   // (2026-07-12 device-QA).
   const explainerSteer = query ? explainerQuestionSteer(query) : "";
-  return [persona, context, activeProtocol, steer, episodeHistory, skills, explainerSteer].filter(Boolean).join("\n\n");
+  // Per-turn register belt — same footgun as the explainer steer: without it, the episode path falls back to
+  // Qwen's stock-assistant voice on bare check-ins / should-I decisions / panic / grief / boundary-testing
+  // (2026-07-13 device verification). Mirrors localNila.ts.
+  const regSteer = query ? registerSteer(query) : "";
+  return [persona, context, activeProtocol, steer, episodeHistory, skills, explainerSteer, regSteer]
+    .filter(Boolean)
+    .join("\n\n");
 }

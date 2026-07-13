@@ -161,3 +161,43 @@ Keep a running tally as the corpus grows; rebalance when any bucket gets fat:
 - **P3 (done):** wire exemplar-RAG (embed `user`, retrieve top-2, inject) + the per-turn steer.
 - **P4 (partial):** on-device sample verification done for a handful of new-tag messages (see below); full held-out LLM-judge eval not yet run.
 - **P5 (later):** QLoRA fine-tune on the corpus.
+
+---
+
+## On-device verification + the register steer belt (2026-07-13, device ZD2232FCR5, Qwen2.5-1.5B "fast")
+
+After the Ash-calibrated corpus expansion (42 → 138 exemplars) I probed the on-device model with three
+diverse new-tag messages. **The corpus expansion alone did not move the raw generation** — all three fell
+back to Qwen's stock-assistant voice. Exemplar-RAG was firing (deterministic scaffolding routed perfectly:
+panic research card, TIPP skill, chips), but on the small model the injected few-shot lost to the instruct
+default — exactly the failure that made `explainerQuestionSteer` necessary for why/how questions (PR#31).
+
+| Probe | Tag | BEFORE (corpus only) | Verdict |
+|---|---|---|---|
+| "should i quit my job or stick it out" | advice_seeking | 8-sentence generic advice list ("talk to someone you trust… seek professional help… explore resources") | ❌ stock voice |
+| "my chest feels tight and i cant breathe" | physical_symptoms | 7-sentence medicalized lecture ("you may be experiencing an anxiety attack… seek assessment and treatment") | ❌ stock voice |
+| "hey you there" | short_check_in | "Hello! How can I assist you today?" (verbatim helpdesk) | ❌ stock voice |
+
+**Fix — `registerSteer` (`nila.ts`):** a blunt LAST-position per-turn stance belt, same pattern as
+`explainerQuestionSteer`, for the five registers where the small model's default is worst: bare check-ins,
+should-I decisions, physical panic, grief/loss, and boundary-testing ("are you even real"). First-match-wins,
+empty for ordinary venting so it never mutes a normal reply, never matches crisis phrasing (§9 runs upstream).
+Wired into both `localNila.ts` and `episodePrompt.ts` (episode path was the same footgun the explainer steer
+already had to close).
+
+**AFTER (steer belt live, fresh conversation to avoid history bias):**
+
+| Probe | Tag | AFTER | Verdict |
+|---|---|---|---|
+| "should i quit my job or stick it out" | advice_seeking | "That's not a quick-answer question. What's actually pulling you back—is it about them, or about how alone this feels right now?" | ✅ 2 sentences, no advice list, reflect + turn back |
+
+Clean before/after: the same message went from an 8-sentence generic advice dump to a sharp reflect-and-
+turn-back in the companion voice. (Probes 2–3 not re-run on device — the phone was picked up mid-session and
+I stopped automating to avoid interfering; the mechanism is identical across all five registers via the same
+`registerSteer` → system-prompt injection path, and unit tests in `nilaVoice.test.ts` prove each register
+fires its steer.)
+
+**Lesson (reinforces [[nilamind-companion-voice-corpus]]):** on Qwen-1.5B, corpus + exemplar-RAG is necessary
+but NOT sufficient — every high-frequency register needs a per-turn STEER belt to beat the instruct default.
+The corpus supplies the *voice*; the belt makes the small model actually *use* it. Full held-out LLM-judge
+eval across all five registers + Tamil/Telugu/Hinglish variants is still owed.
