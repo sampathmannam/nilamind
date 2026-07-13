@@ -86,7 +86,37 @@ async overnight reflection (§9-gated) · weekly synthesis · emotion-granularit
 | 15 | Anti-sycophancy measurement & hardening | 🟡 | ✅ Done |
 | 16 | N-of-1 personalization surface | 🟢 | ✅ Done |
 
-**Build queue: CLEARED.** No further phases defined.
+**Build queue: CLEARED** for the original 7 + 8–16. One new phase added 2026-07-13 (see below).
+
+---
+
+## Phase 17 — Longitudinal Wellbeing Tracking 🟢 (added 2026-07-13)
+
+**Why:** The validated **WHO-5 Well-Being Index** already exists (`assessments.ts` → `AssessmentScreen`,
+with trend + reliable-change + clinician-PDF wiring). But it is ad-hoc: there is **no cadence**, **no
+dedicated long-view surface**, and **no Dashboard presence**. Bipolar is chronic — users + clinicians
+benefit from the *long view*, not just daily swings. SmartBipolar (2026) found passive logging alone
+does nothing; a *brief, structured, periodic* measure is the validated alternative (WHO-5 is the
+field-standard wellbeing scale). We reuse the validated instrument — we never invent clinical items.
+
+**Research basis:** WHO-5 (Topp et al., 2015) is the most-validated brief wellbeing index; a fortnightly
+cadence matches the instrument's 2-week recall window; measurement-based care feedback improves outcomes
+(Lambert et al., 2003, d≈0.24, up to 0.70 when deterioration is flagged early).
+
+### What to build
+| # | Item | Tag |
+|---|------|-----|
+| P17.1 | `wellbeingTrack.ts` — cadence (14-day) + longitudinal summary over WHO-5 history (reuses `assessments` + `reliableChange`) | 🟢 |
+| P17.2 | `wellbeingTrack.test.ts` — TDD: due logic, cadence countdown, trajectory, summary | 🟢 |
+| P17.3 | `WellbeingScreen.tsx` (You hub) — dedicated "Wellbeing over time" long-view + take button + cadence | 🟢 |
+| P17.4 | `WellbeingTrendCard.tsx` — Dashboard card: latest score + trend + sparkline + next-due | 🟢 |
+| P17.5 | Today due-card when `isWellbeingDue` (gentle, links to Screenings) | 🟢 |
+| P17.6 | Feed a one-line wellbeing summary into `nilaContext` (🟡 — touches flagged file, review) | 🟡 |
+
+**Wire to:** `youRows` (You hub) + `nav.ts`/`App.tsx` auxView `wellbeing`, `DashboardScreen`, `TodayScreen`, `nilaContext.ts`.
+**Invariants:** on-device only; wellness never therapy ("pattern", not "diagnosis"); reuses validated WHO-5, no new clinical items.
+
+**Definition of done:** TDD · `npm run guard` green · wired to a user surface · nilaContext diff flagged.
 
 ---
 

@@ -16,11 +16,14 @@ describe("latestScreeningBand reads the real AssessmentEntry shape", () => {
     const ctx = buildPersonalContext();
     expect(ctx.toLowerCase()).toContain("screening");
   });
-  it("ignores non-PHQ/GAD instruments", () => {
+  it("includes a longitudinal wellbeing line for WHO-5 but no PHQ/GAD screening band", () => {
     store.set("nilamind_assessments", JSON.stringify([
       { id: "w", date: "2026-06-01", timestamp: "t", instrument: "WHO-5", responses: [], total: 40, severity: "x", safetyFlag: false },
     ]));
-    // WHO-5 alone produces no screening band line; buildPersonalContext returns "" when nothing else is present.
-    expect(buildPersonalContext()).toBe("");
+    const ctx = buildPersonalContext();
+    // WHO-5 alone still produces no PHQ/GAD screening band line…
+    expect(ctx.toLowerCase()).not.toContain("screening");
+    // …but Phase 17 now surfaces a gentle, wellness-framed wellbeing line.
+    expect(ctx.toLowerCase()).toContain("wellbeing");
   });
 });

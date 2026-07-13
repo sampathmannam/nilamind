@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { Wind, MessageCircle, Moon, LayoutGrid, Sparkles, ChevronRight, HeartHandshake, Sparkle, Clock3 } from "lucide-react";
+import { Wind, MessageCircle, Moon, LayoutGrid, Sparkles, ChevronRight, HeartHandshake, Sparkle, Clock3, LineChart } from "lucide-react";
 import { getTimeMode, getUserState, getGreeting } from "../services/modeEngine";
 import { hasCheckinToday } from "../services/checkin";
 import { secureLocal } from "../services/secureLocal";
 import { buildToolGroups, type ToolGroup } from "./toolsRows";
-import { useLanguage } from "../services/i18n";
+import { useLanguage, t } from "../services/i18n";
 import { loadInsights } from "../services/nilaInsights";
+import { loadAssessments } from "../services/assessments";
+import { isWellbeingDue } from "../services/wellbeingTrack";
 import { getCapacityLevel } from "../services/capacitySignal";
 import { hasRhythmToday, loadTodayAnchors, RHYTHM_ANCHORS } from "../services/socialRhythm";
 import { getUserGoals } from "../services/chatSuggestions";
@@ -160,6 +162,7 @@ export default function TodayScreen({
       return Array.isArray(list) && list.length > 0;
     } catch { return false; }
   })();
+  const wellbeingDue = isWellbeingDue(loadAssessments());
 
   return (
     <div className="space-y-5 max-w-md mx-auto" id="today-hub">
@@ -180,6 +183,24 @@ export default function TodayScreen({
             Everything here stays on your device. Start with a check-in — it takes two taps.
             Nila will suggest tools based on how you're feeling.
           </p>
+        </div>
+       )}
+
+      {/* Longitudinal wellbeing — gentle fortnightly cadence prompt */}
+      {wellbeingDue && (
+        <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-2xl p-4 space-y-2">
+          <div className="flex items-center gap-2">
+            <LineChart className="w-4 h-4 text-emerald-400" />
+            <p className="text-sm font-semibold text-slate-100">{t("wellbeing_due_title")}</p>
+          </div>
+          <p className="text-[11px] text-slate-400 leading-relaxed">{t("wellbeing_due_sub")}</p>
+          <button
+            onClick={() => go("assessment")}
+            id="today-wellbeing-due"
+            className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-sm cursor-pointer transition-colors"
+          >
+            {t("wellbeing_take")}
+          </button>
         </div>
       )}
 

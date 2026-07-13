@@ -35,6 +35,7 @@ import { assessDisengagementRisk } from "../services/disengagementPredictor";
 import { buildWeeklyReport } from "../services/weeklyReport";
 import { isPilotEnrolled, computePilotSummary } from "../services/pilotStudy";
 import CrisisCard from "./CrisisCard";
+import WellbeingTrendCard from "./WellbeingTrendCard";
 import { stripProvenance } from "../services/emotionParse";
 import {
   emotionDistribution, derivedObservations, episodePatterns, quickNoteTags,
@@ -59,7 +60,7 @@ function readArr<T>(key: string): T[] {
 }
 
 // The USER's own private analytics. Local sections never leave the device.
-export default function DashboardScreen({ onManageData }: { onManageData?: () => void }) {
+export default function DashboardScreen({ onManageData, onOpenView }: { onManageData?: () => void; onOpenView?: (target: string) => void }) {
   const [timeRange, setTimeRange] = useState<"7d" | "30d">("30d");
   const [chartTab, setChartTab] = useState<"emotion" | "context" | "energy" | "sleep-mood">("emotion");
   const [isAssessing, setIsAssessing] = useState(false);
@@ -442,7 +443,10 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
       <div className="glass rounded-2xl py-3 px-4 text-center flex items-center justify-center gap-2">
         <span aria-hidden="true">{compassionateStreak.emoji}</span>
         <p className="text-sm text-slate-200">{compassionateStreak.message}</p>
-      </div>
+       </div>
+
+       {/* Longitudinal wellbeing — fortnightly WHO-5 trend + cadence */}
+       <WellbeingTrendCard onOpen={() => onOpenView?.("wellbeing")} />
 
        {/* Top stats */}
       <div className="grid grid-cols-2 gap-2">

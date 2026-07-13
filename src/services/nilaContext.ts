@@ -21,7 +21,8 @@ import { loadMoodHistory } from "./moodHistory";
 import type { SleepSignal } from "./healthConnect";
 import { topFireableSignal, type InflectionSignal } from "./nilaInflection";
 import { getInflectionEnabled } from "./inflectionPrefs";
-import { INSTRUMENTS } from "./assessments";
+import { INSTRUMENTS, type AssessmentEntry } from "./assessments";
+import { wellbeingLongitudinal } from "./wellbeingTrack";
 import { DAY_MS } from "./storageUtils";
 import { parseSafetyPlan } from "./safetyPlan";
 import { safetyPlanFollowUpContextBlock } from "./safetyPlanFollowUp";
@@ -160,6 +161,22 @@ export function antiSycophancyContextBlock(): string {
 }
 
 /**
+ * Longitudinal wellbeing (Phase 17). Surfaces the validated WHO-5 trend to Nila as a gentle,
+ * wellness-framed pattern over time — never a diagnosis. (🟡 touches a flagged file; review before merge.)
+ */
+export function wellbeingContextBlock(history?: AssessmentEntry[]): string {
+  const wb = wellbeingLongitudinal(history);
+  if (!wb.taken) return "";
+  const trend =
+    wb.trajectory === "reliably_improved"
+      ? "been improving"
+      : wb.trajectory === "reliably_deteriorated"
+        ? "been drifting downward"
+        : "been steady";
+  return `- Their wellbeing (WHO-5) over time has ${trend}${wb.isDue ? "; their fortnightly check is due" : ""}.`;
+}
+
+/**
  * Build a compact, warm briefing of what Nila knows about this person, from their on-device history.
  * Returns "" when there's essentially nothing yet — Nila is told (in its prompt) to simply be present
  * and not pretend to know someone it doesn't.
@@ -228,6 +245,14 @@ export function buildPersonalContext(): string {
         lines.push(`- Their most common state has been "${topQ}" — a combination of mood and energy.`);
       }
     }
+  }
+
+  // ── Longitudinal wellbeing (Phase 17) ──────────────────────────────────────
+  // Reuses the validated WHO-5 history. Wellness framing only — a pattern over time, never a
+  // diagnosis. (🟡 touches a flagged file; reviewed before merge.)
+  {
+    const wbBlock = wellbeingContextBlock();
+    if (wbBlock) lines.push(wbBlock);
   }
 
   // ── What has helped (episodes + diary) ────────────────────────────────────

@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, ShieldCheck, Sparkles, Settings as SettingsIcon,
-  Brain, BookOpen, Users, Info, TrendingUp,
+  Brain, BookOpen, Users, Info, TrendingUp, LineChart,
   type LucideIcon,
 } from "lucide-react";
 import { t } from "../services/i18n";
@@ -44,6 +44,7 @@ export function buildYouGroups(): YouGroup[] {
         { id: "thought_record", label: t("you_thought_record_label"), sub: t("you_thought_record_sub"), Icon: Brain, iconClass: "w-5 h-5 text-blue-400" },
         { id: "learn", label: t("you_learn_label"), sub: t("you_learn_sub"), Icon: BookOpen, iconClass: "w-5 h-5 text-blue-400" },
         { id: "insights", label: t("you_insights_label"), sub: t("you_insights_sub"), Icon: TrendingUp, iconClass: "w-5 h-5 text-emerald-400" },
+        { id: "wellbeing", label: t("you_wellbeing_label"), sub: t("you_wellbeing_sub"), Icon: LineChart, iconClass: "w-5 h-5 text-emerald-400" },
       ],
     },
   ];

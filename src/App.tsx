@@ -44,6 +44,7 @@ const RelapsePlanScreen = lazy(() => import("./components/RelapsePlanScreen"));
 const EpisodeSupportScreen = lazy(() => import("./components/EpisodeSupportScreen"));
 const EmaCheckInScreen = lazy(() => import("./components/EmaCheckIn"));
 const ArmedCheckInScreen = lazy(() => import("./components/ArmedCheckInScreen"));
+const WellbeingScreen = lazy(() => import("./components/WellbeingScreen"));
 const AboutNilaScreen = lazy(() => import("./components/AboutNilaScreen"));
 const InsightsScreen = lazy(() => import("./components/InsightsScreen"));
 
@@ -112,6 +113,7 @@ const AUX_LABELS: Partial<Record<AuxView, string>> = {
   episode: "Episode support",
   armed_checkin: "Armed check‑in",
   ema_checkin: "Quick check‑in",
+  wellbeing: "Wellbeing over time",
 };
 
 function auxViewLabel(view: AuxView): string {
@@ -119,7 +121,7 @@ function auxViewLabel(view: AuxView): string {
 }
 
 // ── Aux view component renderers (module-scoped lazy imports — created once, not per render)
-function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () => void, onOpenGrounding: () => void) {
+function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () => void, onOpenGrounding: () => void, onOpenView: (target: string) => void) {
   switch (view) {
     case "about_nila": return <AboutNilaScreen />;
     case "insights": return <InsightsScreen onClose={onClose} />;
@@ -140,11 +142,12 @@ function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () 
     case "values_work": return <ValuesWorkScreen />;
     case "exposure": return <ExposureHierarchyScreen />;
     case "relapse_plan": return <RelapsePlanScreen />;
-    case "behaviour": return <DashboardScreen />;
+    case "behaviour": return <DashboardScreen onOpenView={onOpenView} />;
     case "diary": return <DiaryCardScreen />;
     case "episode": return <EpisodeSupportScreen onSessionEnded={onClose} onNavigateToGrounding={() => { onClose(); onOpenGrounding(); }} onNavigateToBreathing={() => { onClose(); onOpenGrounding(); }} />;
     case "armed_checkin": return <ArmedCheckInScreen onClose={onClose} />;
     case "ema_checkin": return <EmaCheckInScreen onCrisis={() => { onClose(); onActivateCrisis(); }} />;
+    case "wellbeing": return <WellbeingScreen onClose={onClose} onActivateCrisis={onActivateCrisis} onTake={() => onOpenView("assessment")} />;
     default: return <div className="p-6 text-slate-400 text-sm text-center">Not available</div>;
   }
 }
@@ -533,7 +536,7 @@ export default function App() {
             <button onClick={() => closeSheet(activeAuxView)} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Close"><X className="w-4 h-4" aria-hidden="true" /></button>
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto">
-            <Suspense fallback={<ScreenFallback />}>{renderAuxView((activeAuxView || closingAuxView)!, activateCrisis, closeActiveAux, () => setIsGroundingOpen(true))}</Suspense>
+            <Suspense fallback={<ScreenFallback />}>{renderAuxView((activeAuxView || closingAuxView)!, activateCrisis, closeActiveAux, () => setIsGroundingOpen(true), go)}</Suspense>
           </div>
         </div>
       )}

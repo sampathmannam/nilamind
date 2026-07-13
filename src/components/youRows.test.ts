@@ -31,7 +31,7 @@ describe("You hub rows (redesign §2)", () => {
     const rendered = buildYouGroups().flatMap((g) => g.rows.map((r) => r.id));
     expect(rendered).toEqual([
       "about_nila", "dashboard", "your_data", "nila_memory", "settings", "caregiver",
-      "thought_record", "learn", "insights",
+      "thought_record", "learn", "insights", "wellbeing",
     ]);
     expect(YOU_ROW_IDS).toEqual(rendered);
   });

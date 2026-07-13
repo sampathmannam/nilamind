@@ -185,7 +185,21 @@ export type I18nKey =
   | "sec_privacy_lock"
   | "sec_feedback"
   | "sec_region"
-  | "sec_pilot";
+  | "sec_pilot"
+  // Phase 17 — Longitudinal wellbeing
+  | "you_wellbeing_label"
+  | "you_wellbeing_sub"
+  | "wellbeing_screen_intro"
+  | "wellbeing_take"
+  | "wellbeing_due_title"
+  | "wellbeing_due_sub"
+  | "wellbeing_next_due_prefix"
+  | "wellbeing_days"
+  | "wellbeing_due_now"
+  | "wellbeing_none"
+  | "wellbeing_improving"
+  | "wellbeing_deteriorating"
+  | "wellbeing_steady";
 
 export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
   en: {
@@ -344,6 +358,19 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     sec_feedback: "Feedback & about",
     sec_region: "Crisis lines & region",
     sec_pilot: "Research pilot",
+    you_wellbeing_label: "Wellbeing over time",
+    you_wellbeing_sub: "Your long-view trend",
+    wellbeing_screen_intro: "A fortnightly check of how you've been. The long view matters more than any single day.",
+    wellbeing_take: "Take the 2-week check",
+    wellbeing_due_title: "Your fortnightly wellbeing check is due",
+    wellbeing_due_sub: "A 2-minute check helps you see the long view, not just daily swings.",
+    wellbeing_next_due_prefix: "Next check in",
+    wellbeing_days: "days",
+    wellbeing_due_now: "Due now",
+    wellbeing_none: "No checks yet — take your first one.",
+    wellbeing_improving: "Improving",
+    wellbeing_deteriorating: "Drifting down",
+    wellbeing_steady: "Steady",
   },
   hi: {
     appName: "NilaMind",
@@ -501,6 +528,19 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     sec_feedback: "प्रतिक्रिया और बारे में",
     sec_region: "संकट लाइनें और क्षेत्र",
     sec_pilot: "अनुसंधान पायलट",
+    you_wellbeing_label: "समय के साथ कल्याण",
+    you_wellbeing_sub: "आपकी दीर्घकालिक प्रवृत्ति",
+    wellbeing_screen_intro: "एक पखवाड़े में एक बार यह जाँच कि आप कैसे रहे हैं। लंबा नज़रिया किसी एक दिन से ज़्यादा मायने रखता है।",
+    wellbeing_take: "2-सप्ताह की जाँच लें",
+    wellbeing_due_title: "आपकी पखवाड़े वाली कल्याण जाँच देय है",
+    wellbeing_due_sub: "2 मिनट की जाँच आपको लंबा नज़रिया दिखाती है, न कि बस रोज़ के उतार-चढ़ाव।",
+    wellbeing_next_due_prefix: "अगली जाँच",
+    wellbeing_days: "दिन में",
+    wellbeing_due_now: "अभी देय",
+    wellbeing_none: "अभी तक कोई जाँच नहीं — पहली लें।",
+    wellbeing_improving: "सुधार",
+    wellbeing_deteriorating: "गिरावट",
+    wellbeing_steady: "स्थिर",
   },
   ta: {
     appName: "NilaMind",
@@ -658,6 +698,19 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     sec_feedback: "கருத்து & பற்றி",
     sec_region: "நெருக்கடி வரிகள் & பகுதி",
     sec_pilot: "ஆராய்ச்சி பைலட்",
+    you_wellbeing_label: "காலப்போக்கில் நலன்",
+    you_wellbeing_sub: "உங்கள் நீண்டகால போக்கு",
+    wellbeing_screen_intro: "நீங்கள் எப்படி இருந்தீர்கள் என்பதை இரு வாரங்களுக்கு ஒருமுறை சரிபார்க்கவும். ஒரு நாளைக்கும் மேலாக நீண்ட பார்வை முக்கியம்.",
+    wellbeing_take: "2-வார சோதனையை எடுக்கவும்",
+    wellbeing_due_title: "உங்கள் இரு-வார நலன் சோதனை நிலுவையில் உள்ளது",
+    wellbeing_due_sub: "2 நிமிடச் சோதனை நீண்ட பார்வையைக் காட்டும், தினசரி ஏற்றத்தாழ்வுகளை அல்ல.",
+    wellbeing_next_due_prefix: "அடுத்த சோதனை",
+    wellbeing_days: "நாட்களில்",
+    wellbeing_due_now: "இப்போது நிலுவை",
+    wellbeing_none: "இதுவரை சோதனைகள் இல்லை — முதலை எடுங்கள்.",
+    wellbeing_improving: "மேம்படுகிறது",
+    wellbeing_deteriorating: "சரியாகிறது",
+    wellbeing_steady: "நிலையான",
   },
   te: {
     appName: "NilaMind",
@@ -815,6 +868,19 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     sec_feedback: "ఫీడ్‌బ్యాక్ & గురించి",
     sec_region: "సంక్షోభ లైన్‌లు & ప్రాంతం",
     sec_pilot: "పరిశోధన పైలట్",
+    you_wellbeing_label: "కాలక్రమంలో శ్రేయస్సు",
+    you_wellbeing_sub: "మీ దీర్ఘకాలిక ధోరణి",
+    wellbeing_screen_intro: "మీరు ఎలా ఉన్నారో ప్రతి పక్షానికి ఒకసారి చెక్ చేయండి. ఏక రోజు కంటే దీర్ఘకాలిక దృష్టి ముఖ్యం.",
+    wellbeing_take: "2-వారాల చెక్ తీసుకోండి",
+    wellbeing_due_title: "మీ పాక్షిక శ్రేయస్సు చెక్ డ్యూ అయ్యింది",
+    wellbeing_due_sub: "2 నిమిషాల చెక్ దీర్ఘకాలిక దృష్టిని చూపుతుంది, రోజువారీ హెచ్చుతగ్గులను కాదు.",
+    wellbeing_next_due_prefix: "తదుపరి చెక్",
+    wellbeing_days: "రోజులలో",
+    wellbeing_due_now: "ఇప్పుడు డ్యూ",
+    wellbeing_none: "ఇంకా చెక్‌లు లేవు — మొదటిది తీసుకోండి.",
+    wellbeing_improving: "మెరుగుపడుతోంది",
+    wellbeing_deteriorating: "తగ్గుతోంది",
+    wellbeing_steady: "స్థిరం",
   },
 };
 

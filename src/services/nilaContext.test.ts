@@ -1,7 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { trajectoryContextBlock, inflectionContextBlock, antiSycophancyContextBlock } from "./nilaContext";
+import { trajectoryContextBlock, inflectionContextBlock, antiSycophancyContextBlock, wellbeingContextBlock } from "./nilaContext";
 import type { SleepSignal } from "./healthConnect";
 import type { InflectionSignal } from "./nilaInflection";
+import type { AssessmentEntry } from "./assessments";
 
 // Audit finding (2026-07-06): the short-sleep manic-prodrome signal — the earliest warning a MANIC-FIRST app
 // has — reached the user on ZERO surfaces, and the chat never saw it. This block feeds that signal into
@@ -42,6 +43,27 @@ describe("inflectionContextBlock — feeds a detected trajectory shift into Nila
   it("surfaces an improvement shift warmly without making them perform being okay", () => {
     const b = inflectionContextBlock(sig("improvement", "mood easing over the past week"));
     expect(b.toLowerCase()).toMatch(/eas|lighter|better|improv|up/);
+  });
+});
+
+describe("wellbeingContextBlock — longitudinal WHO-5 trend (Phase 17)", () => {
+  const who5 = (date: string, total: number): AssessmentEntry => ({
+    id: "w_" + date, date, timestamp: "10:00:00", instrument: "WHO-5", responses: [], total, severity: "Good wellbeing", safetyFlag: false,
+  });
+  it("returns '' when there is no WHO-5 history", () => {
+    expect(wellbeingContextBlock([])).toBe("");
+  });
+  it("surfaces an improving trend as a gentle, wellness-framed pattern (never a diagnosis)", () => {
+    const h = [who5("2026-01-01", 40), who5("2026-01-15", 70), who5("2026-02-01", 88)];
+    const b = wellbeingContextBlock(h);
+    expect(b).toContain("wellbeing");
+    expect(b.toLowerCase()).toContain("improving");
+    expect(b).not.toMatch(/diagnos|disorder|clinical/i);
+  });
+  it("notes when the fortnightly check is due", () => {
+    const h = [who5("2026-01-01", 60), who5("2026-01-15", 65)];
+    const b = wellbeingContextBlock(h); // today is well past 14 days
+    expect(b.toLowerCase()).toContain("due");
   });
 });
 
