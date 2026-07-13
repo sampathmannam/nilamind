@@ -216,7 +216,33 @@ export type I18nKey =
   | "em_phase_elevated"
   | "em_phase_depressed"
   | "em_phase_mixed"
-  | "em_phase_stable";
+  | "em_phase_stable"
+  // Phase 19 — Family/Caregiver mode
+  | "you_caregiver_settings_label"
+  | "you_caregiver_settings_sub"
+  | "cg_add_contact"
+  | "cg_name"
+  | "cg_phone_or_email"
+  | "cg_relationship"
+  | "cg_remove"
+  | "cg_share_categories"
+  | "cg_category_mood"
+  | "cg_category_phase"
+  | "cg_category_sleep"
+  | "cg_category_medication"
+  | "cg_category_wellbeing"
+  | "cg_category_checkins"
+  | "cg_auto_alert"
+  | "cg_auto_alert_desc"
+  | "cg_threshold_days"
+  | "cg_min_intensity"
+  | "cg_preview"
+  | "cg_no_contacts"
+  | "cg_consent_title"
+  | "cg_consent_body"
+  | "cg_save"
+  | "cg_alert_nudge"
+  | "cg_alert_reason";
 
 export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
   en: {
@@ -404,6 +430,32 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     em_phase_depressed: "Depressed",
     em_phase_mixed: "Mixed",
     em_phase_stable: "Steady",
+    // P19 caregiver
+    you_caregiver_settings_label: "Caregiver settings",
+    you_caregiver_settings_sub: "Manage trusted contacts & sharing",
+    cg_add_contact: "Add trusted person",
+    cg_name: "Name",
+    cg_phone_or_email: "Phone or email",
+    cg_relationship: "Relationship (optional)",
+    cg_remove: "Remove",
+    cg_share_categories: "What to share",
+    cg_category_mood: "Mood trend",
+    cg_category_phase: "Phase markers",
+    cg_category_sleep: "Sleep pattern",
+    cg_category_medication: "Medication adherence",
+    cg_category_wellbeing: "Wellbeing trajectory",
+    cg_category_checkins: "Check-in frequency",
+    cg_auto_alert: "Auto-alert threshold",
+    cg_auto_alert_desc: "Nudge me to share if I've been struggling",
+    cg_threshold_days: "Consecutive days",
+    cg_min_intensity: "Min distress level (1–10)",
+    cg_preview: "Preview snapshot",
+    cg_no_contacts: "No trusted contacts added yet",
+    cg_consent_title: "Before you share",
+    cg_consent_body: "This will share a wellness snapshot with your trusted person. They won't see your private conversations with Nila — only the categories you selected below.",
+    cg_save: "Save preferences",
+    cg_alert_nudge: "Share a wellness update with",
+    cg_alert_reason: "You've had a tough stretch — your caregiver might want to know",
   },
   hi: {
     appName: "NilaMind",
@@ -590,6 +642,31 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     em_phase_depressed: "उदास",
     em_phase_mixed: "मिश्रित",
     em_phase_stable: "स्थिर",
+    you_caregiver_settings_label: "देखभालकर्ता सेटिंग्स",
+    you_caregiver_settings_sub: "विश्वसनीय संपर्क और साझाकरण प्रबंधित करें",
+    cg_add_contact: "विश्वसनीय व्यक्ति जोड़ें",
+    cg_name: "नाम",
+    cg_phone_or_email: "फ़ोन या ईमेल",
+    cg_relationship: "रिश्ता (वैकल्पिक)",
+    cg_remove: "हटाएं",
+    cg_share_categories: "क्या साझा करें",
+    cg_category_mood: "भावना रुझान",
+    cg_category_phase: "चरण मार्कर",
+    cg_category_sleep: "नींद पैटर्न",
+    cg_category_medication: "दवा पालन",
+    cg_category_wellbeing: "कल्याण रुझान",
+    cg_category_checkins: "चेक-इन आवृत्ति",
+    cg_auto_alert: "ऑटो-अलर्ट सीमा",
+    cg_auto_alert_desc: "संघर्ष होने पर साझा करने की याद दिलाएं",
+    cg_threshold_days: "लगातार दिन",
+    cg_min_intensity: "न्यूनतम तीव्रता (1–10)",
+    cg_preview: "स्नैपशॉट पूर्वावलोकन",
+    cg_no_contacts: "अभी तक कोई विश्वसनीय संपर्क नहीं",
+    cg_consent_title: "साझा करने से पहले",
+    cg_consent_body: "यह आपके विश्वसनीय व्यक्ति के साथ एक कल्याण स्नैपशॉट साझा करेगा। वे Nila के साथ आपकी निजी बातचीत नहीं देखेंगे — केवल नीचे चुनी गई श्रेणियां।",
+    cg_save: "प्राथमिकताएं सहेजें",
+    cg_alert_nudge: "कल्याण अपडेट साझा करें",
+    cg_alert_reason: "आपका कठिन समय रहा है — आपका देखभालकर्ता जानना चाह सकता है",
   },
   ta: {
     appName: "NilaMind",
@@ -776,6 +853,31 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     em_phase_depressed: "சோகம்",
     em_phase_mixed: "கலவை",
     em_phase_stable: "நிலையான",
+    you_caregiver_settings_label: "பராமரிப்பாளர் அமைப்புகள்",
+    you_caregiver_settings_sub: "நம்பகமான தொடர்புகள் மற்றும் பகிர்வை நிர்வகிக்கவும்",
+    cg_add_contact: "நம்பகமான நபரைச் சேர்க்கவும்",
+    cg_name: "பெயர்",
+    cg_phone_or_email: "தொலைபேசி அல்லது மின்னஞ்சல்",
+    cg_relationship: "உறவு (விரும்பினால்)",
+    cg_remove: "அகற்று",
+    cg_share_categories: "எதைப் பகிர்வது",
+    cg_category_mood: "மனநிலைப் போக்கு",
+    cg_category_phase: "கட்ட குறிப்பான்கள்",
+    cg_category_sleep: "தூக்க முறை",
+    cg_category_medication: "மருந்து பின்பற்றுதல்",
+    cg_category_wellbeing: "நலன் போக்கு",
+    cg_category_checkins: "சரிபார்ப்பு அதிர்வெண்",
+    cg_auto_alert: "தானியங்கி எச்சரிக்கை வரம்பு",
+    cg_auto_alert_desc: "சிரமப்பட்டால் பகிர நினைவூட்டு",
+    cg_threshold_days: "தொடர் நாட்கள்",
+    cg_min_intensity: "குறைந்தபட்ச தீவிரம் (1–10)",
+    cg_preview: "முன்னோட்டம்",
+    cg_no_contacts: "இதுவரை நம்பகமான தொடர்புகள் இல்லை",
+    cg_consent_title: "பகிர்வதற்கு முன்",
+    cg_consent_body: "இது உங்கள் நம்பகமான நபருடன் ஒரு நலன் சுருக்கத்தைப் பகிரும். Nila உடனான உங்கள் தனிப்பட்ட உரையாடல்களை அவர்கள் பார்க்க மாட்டார்கள் — கீழே தேர்ந்தெடுத்த வகைகள் மட்டுமே.",
+    cg_save: "விருப்பங்களைச் சேமி",
+    cg_alert_nudge: "நலன் புதுப்பிப்பைப் பகிரவும்",
+    cg_alert_reason: "உங்களுக்குக் கடினமான நாட்கள் — உங்கள் பராமரிப்பாளர் தெரிந்துகொள்ள விரும்பலாம்",
   },
   te: {
     appName: "NilaMind",
@@ -962,6 +1064,31 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     em_phase_depressed: "నిరాశ",
     em_phase_mixed: "మిశ్రమం",
     em_phase_stable: "స్థిరం",
+    you_caregiver_settings_label: "సంరక్షకుని సెట్టింగ్‌లు",
+    you_caregiver_settings_sub: "నమ్మకమైన పరిచయాలు మరియు షేరింగ్‌ని నిర్వహించండి",
+    cg_add_contact: "నమ్మకమైన వ్యక్తిని జోడించండి",
+    cg_name: "పేరు",
+    cg_phone_or_email: "ఫోన్ లేదా ఇమెయిల్",
+    cg_relationship: "సంబంధం (ఐచ్ఛికం)",
+    cg_remove: "తొలగించు",
+    cg_share_categories: "ఏమి షేర్ చేయాలి",
+    cg_category_mood: "మూడ్ ధోరణి",
+    cg_category_phase: "దశ మార్కర్లు",
+    cg_category_sleep: "నిద్ర విధానం",
+    cg_category_medication: "మందుల పాటింపు",
+    cg_category_wellbeing: "శ్రేయస్సు ధోరణి",
+    cg_category_checkins: "చెక్-ఇన్ ఫ్రీక్వెన్సీ",
+    cg_auto_alert: "ఆటో-అలర్ట్ థ్రెషోల్డ్",
+    cg_auto_alert_desc: "కష్టపడుతుంటే షేర్ చేయడానికి గుర్తు చేయి",
+    cg_threshold_days: "వరుస రోజులు",
+    cg_min_intensity: "కనీస తీవ్రత (1–10)",
+    cg_preview: "స్నాప్‌షాట్ ముందస్తు వీక్షణ",
+    cg_no_contacts: "ఇంకా నమ్మకమైన పరిచయాలు లేవు",
+    cg_consent_title: "షేర్ చేయడానికి ముందు",
+    cg_consent_body: "ఇది మీ నమ్మకమైన వ్యక్తితో వెల్‌నెస్ స్నాప్‌షాట్‌ని షేర్ చేస్తుంది. వారు Nilaతో మీ వ్యక్తిగత సంభాషణలను చూడలేరు — మీరు క్రింద ఎంచుకున్న వర్గాలు మాత్రమే.",
+    cg_save: "ప్రాధాన్యతలను సేవ్ చేయి",
+    cg_alert_nudge: "వెల్‌నెస్ అప్‌డేట్ షేర్ చేయండి",
+    cg_alert_reason: "మీకు కష్టమైన రోజులు — మీ సంరక్షకుడు తెలుసుకోవాలనుకోవచ్చు",
   },
 };
 

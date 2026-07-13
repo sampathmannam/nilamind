@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { trajectoryContextBlock, inflectionContextBlock, antiSycophancyContextBlock, wellbeingContextBlock, episodeMarkerContextBlock } from "./nilaContext";
+import { trajectoryContextBlock, inflectionContextBlock, antiSycophancyContextBlock, wellbeingContextBlock, episodeMarkerContextBlock, caregiverContextBlock } from "./nilaContext";
 import type { SleepSignal } from "./healthConnect";
 import type { InflectionSignal } from "./nilaInflection";
 import type { AssessmentEntry } from "./assessments";
@@ -107,5 +107,31 @@ describe("episodeMarkerContextBlock — user-owned phase tag (Phase 18)", () => 
     const b = episodeMarkerContextBlock();
     expect(b).toContain("mixed");
     expect(b.toLowerCase()).not.toMatch(/diagnos|disorder|clinical/i);
+  });
+});
+
+describe("caregiverContextBlock — trusted-person sharing (Phase 19)", () => {
+  beforeEach(() => emStore.clear());
+  it("returns '' when no contacts exist", () => {
+    expect(caregiverContextBlock()).toBe("");
+  });
+  it("notes one trusted person when a single contact is stored", () => {
+    emStore.set("nilamind_caregiver_contacts", JSON.stringify([
+      { id: "cg_1", name: "Priya", phoneOrEmail: "p@x.com", relationship: "Sister", addedAt: "2026-07-13T10:00:00" },
+    ]));
+    const b = caregiverContextBlock();
+    expect(b).toContain("Priya");
+    expect(b).toContain("one trusted person");
+    expect(b.toLowerCase()).not.toMatch(/diagnos|disorder|clinical/i);
+  });
+  it("notes multiple trusted people when several contacts exist", () => {
+    emStore.set("nilamind_caregiver_contacts", JSON.stringify([
+      { id: "cg_1", name: "Priya", phoneOrEmail: "p@x.com", relationship: "Sister", addedAt: "2026-07-13T10:00:00" },
+      { id: "cg_2", name: "Raj", phoneOrEmail: "r@x.com", relationship: "Brother", addedAt: "2026-07-13T10:00:00" },
+    ]));
+    const b = caregiverContextBlock();
+    expect(b).toContain("2 trusted people");
+    expect(b).toContain("Priya");
+    expect(b).toContain("Raj");
   });
 });

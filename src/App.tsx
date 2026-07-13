@@ -46,6 +46,7 @@ const EmaCheckInScreen = lazy(() => import("./components/EmaCheckIn"));
 const ArmedCheckInScreen = lazy(() => import("./components/ArmedCheckInScreen"));
 const WellbeingScreen = lazy(() => import("./components/WellbeingScreen"));
 const EpisodeMarkerScreen = lazy(() => import("./components/EpisodeMarkerScreen"));
+const CaregiverSettingsScreen = lazy(() => import("./components/CaregiverSettingsScreen"));
 const AboutNilaScreen = lazy(() => import("./components/AboutNilaScreen"));
 const InsightsScreen = lazy(() => import("./components/InsightsScreen"));
 
@@ -116,6 +117,7 @@ const AUX_LABELS: Partial<Record<AuxView, string>> = {
   ema_checkin: "Quick check‑in",
   wellbeing: "Wellbeing over time",
   episode_marker: "Episode markers",
+  caregiver_settings: "Caregiver settings",
 };
 
 function auxViewLabel(view: AuxView): string {
@@ -123,7 +125,7 @@ function auxViewLabel(view: AuxView): string {
 }
 
 // ── Aux view component renderers (module-scoped lazy imports — created once, not per render)
-function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () => void, onOpenGrounding: () => void, onOpenView: (target: string) => void) {
+function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () => void, onOpenGrounding: () => void, onOpenView: (target: string) => void, onOpenCaregiverShare?: (contactId: string) => void) {
   switch (view) {
     case "about_nila": return <AboutNilaScreen />;
     case "insights": return <InsightsScreen onClose={onClose} />;
@@ -151,6 +153,7 @@ function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () 
     case "ema_checkin": return <EmaCheckInScreen onCrisis={() => { onClose(); onActivateCrisis(); }} />;
     case "wellbeing": return <WellbeingScreen onClose={onClose} onActivateCrisis={onActivateCrisis} onTake={() => onOpenView("assessment")} />;
     case "episode_marker": return <EpisodeMarkerScreen onClose={onClose} />;
+    case "caregiver_settings": return <CaregiverSettingsScreen onClose={onClose} onOpenCaregiverShare={onOpenCaregiverShare} />;
     default: return <div className="p-6 text-slate-400 text-sm text-center">Not available</div>;
   }
 }
@@ -164,6 +167,7 @@ export default function App() {
   const [groundingExpandIndex, setGroundingExpandIndex] = useState<number | undefined>(undefined);
   const [isMedicationOpen, setIsMedicationOpen] = useState(false);
   const [isCaregiverOpen, setIsCaregiverOpen] = useState(false);
+  const [selectedCaregiverContactId, setSelectedCaregiverContactId] = useState<string | undefined>();
   const [activeAuxView, setActiveAuxView] = useState<AuxView | null>(null);
   const [closingAuxView, setClosingAuxView] = useState<AuxView | null>(null);
   const [activeTab, setActiveTab] = useState<AppTab>("today");
@@ -526,7 +530,7 @@ export default function App() {
             <button onClick={() => setIsCaregiverOpen(false)} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Close"><X className="w-4 h-4" aria-hidden="true" /></button>
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto p-4">
-            <Suspense fallback={<ScreenFallback />}><CaregiverShareScreen /></Suspense>
+            <Suspense fallback={<ScreenFallback />}><CaregiverShareScreen selectedContactId={selectedCaregiverContactId} /></Suspense>
           </div>
         </div>
       )}
@@ -539,7 +543,7 @@ export default function App() {
             <button onClick={() => closeSheet(activeAuxView)} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Close"><X className="w-4 h-4" aria-hidden="true" /></button>
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto">
-            <Suspense fallback={<ScreenFallback />}>{renderAuxView((activeAuxView || closingAuxView)!, activateCrisis, closeActiveAux, () => setIsGroundingOpen(true), go)}</Suspense>
+            <Suspense fallback={<ScreenFallback />}>{renderAuxView((activeAuxView || closingAuxView)!, activateCrisis, closeActiveAux, () => setIsGroundingOpen(true), go, (cid) => { setSelectedCaregiverContactId(cid); setIsCaregiverOpen(true); })}</Suspense>
           </div>
         </div>
       )}

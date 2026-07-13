@@ -149,6 +149,40 @@ owning their course narrative. Self-marked phase is the lowest-friction, highest
 
 ---
 
+## Phase 19 — Family/Caregiver Mode 🟢 (built & wired 2026-07-13)
+
+**Why:** The existing `CaregiverShareScreen` generates a one-time snapshot but has no stored contacts,
+no per-category consent toggles (mood/phase/sleep/medication/wellbeing/checkins), no auto-alert
+thresholds, and no ongoing caregiver relationship. Indian-family context makes caregivers key
+stakeholders. This deepens the caregiver feature into a consent-gated, privacy-first *mode* —
+still on-device, still user-controlled, never auto-sent.
+
+**Research basis:** FTFamily/IPS-RT emphasis on family psychoeducation; Azorin et al. (2016)
+caregiver-burden RCTs show informed family reduces relapse. Indian mental-health literacy gap
+means a simple, translated snapshot reduces stigma and improves family support seeking
+(Shidhaye et al., 2016).
+
+### What to build
+| # | Item | Tag |
+|---|------|-----|
+| P19.1 | `caregiverContacts.ts` — `CaregiverContact` type + add/remove/list, stored encrypted in `nilamind_caregiver_contacts` | 🟢 |
+| P19.2 | `caregiverPreferences.ts` — per-contact share-category toggles (mood/phase/sleep/medication/wellbeing/checkins), auto-alert thresholds | 🟢 |
+| P19.3 | Enhanced `buildCaregiverSnapshot` in `caregiverShare.ts` — add phase/wellbeing/sleep/checkin-frequency blocks, gated by prefs | 🟢 |
+| P19.4 | `CaregiverSettingsScreen.tsx` (new auxView `caregiver_settings`) — contact list, category toggles, preview, auto-alert config | 🟢 |
+| P19.5 | Update `CaregiverShareScreen.tsx` — contact selector, category summary before share, consent confirmation | 🟢 |
+| P19.6 | `caregiverAlert.ts` — check auto-alert thresholds (e.g. 3+ high-distress days), generate alert-snapshot nudge for TodayScreen | 🟢 |
+| P19.7 | i18n `cg_*` keys (contacts, preferences, categories, alerts, consent) — en/hi/ta/te | 🟢 |
+| P19.8 | Nav/App/youRows/Dashboard/TodayScreen wiring — `caregiver_settings` auxView, caregiver nudge, dashboard card | 🟢 |
+| P19.9 | `nilaContext.ts` feeding — caregiver-context block ("They share wellness snapshots with X") — 🟡 flagged file | 🟡 |
+
+**Wire to:** nav, App, youRows, DashboardScreen, SettingsScreen, TodayScreen, nilaContext (🟡).
+**Invariants:** on-device only; consent-gated (nothing shared without explicit user action); revocable;
+no raw chat/thoughts/diary shared; wellness framing, never clinical.
+
+**Built (2026-07-13):** `caregiverContacts.ts` + tests (P19.1); `caregiverPreferences.ts` + tests (P19.2); enhanced `buildCaregiverSnapshot` with phase/wellbeing/sleep/checkins blocks gated by prefs, tests updated (P19.3); `CaregiverSettingsScreen.tsx` with contact CRUD + category toggles + auto-alert config + preview → share flow (P19.4); `CaregiverShareScreen.tsx` i18n + prefs + selectedContactId passthrough (P19.5); `caregiverAlert.ts` with consecutive-day threshold checks + tests (P19.6); 25 `cg_*` i18n keys in en/hi/ta/te (P19.7); `caregiver_settings` auxView in nav.ts/App.tsx (lazy + renderAuxView case + selectedContactId → share sheet), `youRows` row changed from "caregiver" → "caregiver_settings", `youRows.test.ts` updated (P19.8); `nilaContext.caregiverContextBlock` feeds trusted-person note (P19.9, 🟡 — review before merge). `nilamind_caregiver_contacts` + `nilamind_caregiver_prefs` added to SENSITIVE_KEYS (32 entries now). Guard green (2167 tests).
+
+---
+
 ## Research basis (2026-07-12 — updated with product audit)
 
 ### Current app snapshot (113 services, 60+ components, 1592 tests)

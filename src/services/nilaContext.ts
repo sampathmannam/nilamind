@@ -24,6 +24,7 @@ import { getInflectionEnabled } from "./inflectionPrefs";
 import { INSTRUMENTS, type AssessmentEntry } from "./assessments";
 import { wellbeingLongitudinal } from "./wellbeingTrack";
 import { episodeMarkerSummary } from "./episodeMarker";
+import { listCaregiverContacts } from "./caregiverContacts";
 import { DAY_MS } from "./storageUtils";
 import { parseSafetyPlan } from "./safetyPlan";
 import { safetyPlanFollowUpContextBlock } from "./safetyPlanFollowUp";
@@ -186,6 +187,17 @@ export function episodeMarkerContextBlock(): string {
 }
 
 /**
+ * Caregiver contacts (Phase 19). Notes whether the user shares wellness snapshots with trusted
+ * people — a gentle, relational signal, never a clinical note. (🟡 flagged file; review before merge.)
+ */
+export function caregiverContextBlock(): string {
+  const contacts = listCaregiverContacts();
+  if (contacts.length === 0) return "";
+  const names = contacts.map((c) => c.name).join(", ");
+  return `- They share wellness snapshots with ${contacts.length === 1 ? "one trusted person" : contacts.length + " trusted people"} (${names}).`;
+}
+
+/**
  * Build a compact, warm briefing of what Nila knows about this person, from their on-device history.
  * Returns "" when there's essentially nothing yet — Nila is told (in its prompt) to simply be present
  * and not pretend to know someone it doesn't.
@@ -270,6 +282,14 @@ export function buildPersonalContext(): string {
   {
     const emBlock = episodeMarkerContextBlock();
     if (emBlock) lines.push(emBlock);
+  }
+
+  // ── Caregiver contacts (Phase 19) ──────────────────────────────────────────
+  // Notes whether the user shares wellness snapshots with trusted people — a gentle,
+  // relational signal. (🟡 touches a flagged file; reviewed before merge.)
+  {
+    const cgBlock = caregiverContextBlock();
+    if (cgBlock) lines.push(cgBlock);
   }
 
   // ── What has helped (episodes + diary) ────────────────────────────────────

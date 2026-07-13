@@ -74,6 +74,8 @@ export const SENSITIVE_KEYS = [
   // Episode-phase markers — longitudinal bipolar-phase tagging (elevated/depressed/mixed/stable),
   // user-owned, encrypted at rest (see episodeMarker.ts).
   "nilamind_episode_markers",
+  "nilamind_caregiver_contacts",
+  "nilamind_caregiver_prefs",
 ];
 const MIGRATION_VERSION = 2; // v2: encrypt nilamind_ema (previously stored in plaintext localStorage)
 

@@ -23,6 +23,7 @@ describe("You hub rows (redesign §2)", () => {
     expect(YOU_ROW_IDS).not.toContain("values_to_action");
     expect(YOU_ROW_IDS).not.toContain("behavioural_activation");
     expect(YOU_ROW_IDS).not.toContain("values_compass");
+    expect(YOU_ROW_IDS).not.toContain("caregiver");
   });
   it("includes the What Nila remembers row", () => {
     expect(YOU_ROW_IDS).toContain("nila_memory");
@@ -30,7 +31,7 @@ describe("You hub rows (redesign §2)", () => {
   it("renders exactly the expected hub rows in order (catches accidental add/remove/reorder)", () => {
     const rendered = buildYouGroups().flatMap((g) => g.rows.map((r) => r.id));
     expect(rendered).toEqual([
-      "about_nila", "dashboard", "your_data", "nila_memory", "settings", "caregiver",
+      "about_nila", "dashboard", "your_data", "nila_memory", "settings", "caregiver_settings",
       "thought_record", "learn", "insights", "wellbeing", "episode_marker",
     ]);
     expect(YOU_ROW_IDS).toEqual(rendered);

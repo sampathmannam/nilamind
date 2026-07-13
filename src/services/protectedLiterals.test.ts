@@ -55,6 +55,8 @@ const SENSITIVE_KEYS = [
   "nilamind_pilot",
   "nilamind_social_rhythm",
   "nilamind_episode_markers",
+  "nilamind_caregiver_contacts",
+  "nilamind_caregiver_prefs",
 ];
 
 describe("protected literals (privacy/encryption invariants — never change)", () => {
@@ -64,14 +66,14 @@ describe("protected literals (privacy/encryption invariants — never change)", 
   });
 
 
-  it("secureLocal.ts SENSITIVE_KEYS contains exactly the 30 expected entries", () => {
+  it("secureLocal.ts SENSITIVE_KEYS contains exactly the 32 expected entries", () => {
     const src = read("services/secureLocal.ts");
     // Pull the array body out of `export const SENSITIVE_KEYS = [ ... ];`
     const m = src.match(/export const SENSITIVE_KEYS\s*=\s*\[([\s\S]*?)\]/);
     expect(m, "SENSITIVE_KEYS array literal not found").toBeTruthy();
     const found = [...m![1].matchAll(/"([^"]+)"/g)].map((x) => x[1]);
     expect(found).toEqual(SENSITIVE_KEYS);
-    expect(found).toHaveLength(30);
+    expect(found).toHaveLength(32);
     // The reflection throttle flag is a non-sensitive date-only value in plain localStorage.
     expect(found).not.toContain("nilamind_last_reflected");
     // Phase 2 inflection: the toggle + throttle + daily-cap are non-sensitive flag/date values.
