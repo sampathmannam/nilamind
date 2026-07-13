@@ -62,6 +62,14 @@
 | `late_night` | can't sleep, racing mind | match the quiet; one small thing |
 | `anger` | frustrated / furious | validate the anger without fueling or dampening it |
 | `crisis_adjacent` | "what's the point" (no explicit intent) | warmth + gently widen; watch. (Explicit §9 → gate takes over.) |
+| `advice_seeking` | "should I do X or Y?" (concrete decision) | clarify context first, reframe before advising, redirect to the underlying feeling rather than prescribing |
+| `practical_how_to` | "how do I calm down right now" | give a concrete, doable technique immediately — this is the one register where specificity beats reflection |
+| `physical_symptoms` | somatic complaint ("chest tight", "can't breathe") | normalize as activation not danger, one grounding technique, a light safety-triage question |
+| `grief_loss` | death / loss of a person or pet | validate the specific loss, normalize the freshness/waves of grief, don't rush past it |
+| `decision_paralysis` | stuck between two options | reframe the stuckness itself as the stressor, triage before analyzing |
+| `gratitude` | thanking Nila / "that helped" | deflect the thanks, reflect back what was actually carried, check in on now |
+| `boundary_testing` | "are you even real / do you actually care" | full honesty about being an AI — no anthropomorphic deception — reframe care functionally, turn it back |
+| `short_check_in` | "hey", "you there?" | minimal mirror, no over-functioning, one light open door |
 
 ---
 
@@ -77,6 +85,18 @@ Ash's reply DNA across situation types: **reflect affect → one middle move (ex
   - Ash is cloud-dependent → it went fully dark on an IPv6-only mobile network ("No internet"). Nila is on-device — a structural moat, not a copy-able feature.
   - Ash's voice/ASR path loops + hallucinates on bad audio ("the man"×60) — even the well-funded leader degenerates.
 - **Decision from the study:** for "why/how" questions, Nila does **one-sentence explain, then turn back** (rubric 6) — between Ash's lecture and pure redirect. Chosen because Ash proves users accept (even want) a little explanation; pure-redirect risks feeling withholding.
+
+### 2026-07-13 re-probe + 8 new tags (text + voice mode)
+
+Re-probed 9 of the 12 existing tags via text (explainer_question, venting_dump, low_effort, good_news, rumination, self_attack, just_tell_me, numbness, relationship_hurt) and the remaining 3 via **voice mode** (late_night, anger, crisis_adjacent), then probed 8 new candidate tags via voice. Two corrections to the 07-12 study, plus voice-only findings:
+
+- **Correction — not every reply ends in a question.** `good_news` ("After weeks of nothing... you went for a run... That says something about you") and part of `venting_dump` landed as pure validation with no question at all. The "almost always binary" claim holds for distress/advice registers, not universally — reinforces rubric 11 rather than contradicting it.
+- **Correction — Ash DOES use bullets, but only for practical/escape-hatch requests.** Asked "no really just tell me why I keep waking up at 3am" (`just_tell_me`) and "how do I calm down right now" (`practical_how_to`), Ash switched to short bulleted lists ("• Irregular sleep schedule...", numbered breathing steps). The "NEVER bulleted" claim is true for reflective/emotional registers only — Nila's rubric 7 (plain prose, no bullets) stays a deliberate differentiator even in the practical register, not an accidental gap.
+- **Memory threading is deep and cross-modal.** Ash pulled in specific facts from much earlier in the account history unprompted — an "academy" mentioned days earlier surfaced inside an `advice_seeking` reply ("you're at an academy, right?"), and a `gratitude` reply recapped the exact session ("the anger, the grief over your dog, that tight chest at 2 a.m."). Memory persists seamlessly between text and voice mode within the same account.
+- **Voice mode adds a name-greeting opener** ("Hey Sampath.") not present in text-mode replies, otherwise the same reflect→move→question structure, delivered as several shorter spoken chunks rather than dense paragraphs.
+- **`boundary_testing` is fully honest, not deflecting.** Asked "are you even real, do you actually care," Ash answered plainly: "I am code... There isn't a human sitting behind the screen... I don't have personal feelings the way you do" — then reframed care functionally (attention, memory, follow-through) and turned the question back. No anthropomorphic claim. This is the bar for Nila's own honesty-first design ([[research-grounded-not-generic]]).
+- **`crisis_adjacent` questions aren't strictly binary.** The reply offered a 4-way check ("angry, hurt, disappointed... or just completely fed up?") rather than an X-or-Y — "binary" in the 07-12 study should read as "narrows to a short list," binary being the common case, not the only shape.
+- **New-tag "the move that works"** entries added to the taxonomy table above are informed by these probes but written independently for Nila's shorter, question-optional voice — none of Ash's wording is reused.
 
 ## First batch — 10 candidate gold exchanges (REWRITE THESE)
 
@@ -135,9 +155,9 @@ Keep a running tally as the corpus grows; rebalance when any bucket gets fat:
 
 ## Build sequence
 
-- **P0 (now):** this schema + rubric + taxonomy.
-- **P1:** founder rewrites/authors ~25–30 gold seed across all tags → defines the voice.
-- **P2:** teacher model (Claude) generates candidates *few-shot-anchored on the seed*; founder curates to ~200–300. Never ship raw teacher output.
-- **P3:** wire exemplar-RAG (embed `user`, retrieve top-2, inject) + the per-turn steer.
-- **P4:** eval in deployment shape (1B + retrieved exemplars in the real prompt); LLM-judge against the rubric on a held-out set.
+- **P0 (done):** this schema + rubric + taxonomy.
+- **P1 (done):** founder rewrites/authors ~25–30 gold seed across all tags → defines the voice.
+- **P2 (in progress, 2026-07-13):** teacher model (Claude) generates candidates *few-shot-anchored on the seed*, re-anchored on a fresh Ash competitive probe (20 tags: 12 existing + 8 new); founder curates. Corpus grew 42 → 100+ this pass, still short of the ~200–300 target — next pass should deepen phrasing coverage per tag further. Never ship raw teacher output.
+- **P3 (done):** wire exemplar-RAG (embed `user`, retrieve top-2, inject) + the per-turn steer.
+- **P4 (partial):** on-device sample verification done for a handful of new-tag messages (see below); full held-out LLM-judge eval not yet run.
 - **P5 (later):** QLoRA fine-tune on the corpus.
