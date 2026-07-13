@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# check-store-permissions.test.sh — fixture tests for check-store-permissions.sh.
+# Run: bash scripts/check-store-permissions.test.sh
+set -uo pipefail
+cd "$(dirname "$0")/.."
+
+tmpdir=$(mktemp -d)
+trap 'rm -rf "$tmpdir"' EXIT
+fail=0
+
+# Fixture 1: clean manifest (no active forbidden permissions) — must exit 0.
+cat > "$tmpdir/clean.xml" <<'EOF'
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" /> -->
+</manifest>
+EOF
+if bash scripts/check-store-permissions.sh "$tmpdir/clean.xml" >/tmp/check-store-permissions-test-out.txt 2>&1; then
+  echo "PASS: clean manifest exits 0"
+else
+  echo "FAIL: clean manifest should exit 0"; cat /tmp/check-store-permissions-test-out.txt; fail=1
+fi
+
+# Fixture 2: dirty manifest (active PACKAGE_USAGE_STATS) — must exit non-zero.
+cat > "$tmpdir/dirty-usage.xml" <<'EOF'
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" tools:ignore="ProtectedPermissions" />
+</manifest>
+EOF
+if bash scripts/check-store-permissions.sh "$tmpdir/dirty-usage.xml" >/tmp/check-store-permissions-test-out.txt 2>&1; then
+  echo "FAIL: dirty manifest (PACKAGE_USAGE_STATS active) should exit non-zero"; fail=1
+else
+  echo "PASS: PACKAGE_USAGE_STATS manifest correctly rejected"
+fi
+
+# Fixture 3: dirty manifest (active ACCESS_FINE_LOCATION) — must exit non-zero.
+cat > "$tmpdir/dirty-location.xml" <<'EOF'
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+</manifest>
+EOF
+if bash scripts/check-store-permissions.sh "$tmpdir/dirty-location.xml" >/tmp/check-store-permissions-test-out.txt 2>&1; then
+  echo "FAIL: dirty manifest (ACCESS_FINE_LOCATION active) should exit non-zero"; fail=1
+else
+  echo "PASS: ACCESS_FINE_LOCATION manifest correctly rejected"
+fi
+
+# Fixture 4: missing file — must exit non-zero, not crash.
+if bash scripts/check-store-permissions.sh "$tmpdir/does-not-exist.xml" >/tmp/check-store-permissions-test-out.txt 2>&1; then
+  echo "FAIL: missing manifest should exit non-zero"; fail=1
+else
+  echo "PASS: missing manifest correctly rejected"
+fi
+
+exit "$fail"

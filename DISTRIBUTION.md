@@ -76,6 +76,14 @@ permissions):
 Keep only what the app uses: `POST_NOTIFICATIONS` (reminders), `RECORD_AUDIO` (voice input). Nila
 runs on-device, so the AI needs no network.
 
+**Verify before building the AAB** — this is enforced, not just documented:
+```bash
+npm run check:store-permissions
+```
+Exits non-zero and names the offending permission if any of the three above are still active in the
+manifest. Run this right before step 2 (building the signed AAB); it's the guard against shipping a
+store build with sensitive permissions still declared.
+
 ### 2. Build a signed AAB
 With `android/key.properties` configured (see A):
 ```bash

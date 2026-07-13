@@ -15,7 +15,8 @@
     "guard": "bash scripts/guard.sh",
     "android": "bash scripts/run-android.sh",
     "postinstall": "patch-package; bash scripts/strip-native-libs.sh || true",
-    "strip-native": "bash scripts/strip-native-libs.sh"
+    "strip-native": "bash scripts/strip-native-libs.sh",
+    "check:store-permissions": "bash scripts/check-store-permissions.sh"
   },
   "dependencies": {
     "@aparajita/capacitor-biometric-auth": "^10.0.0",
