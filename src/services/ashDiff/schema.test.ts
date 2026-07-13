@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { validateAshDiff, type AshDiffRow } from "./schema";
+import { validateAshDiff, provenanceBreakdown, type AshDiffRow } from "./schema";
 
 function row(over: Partial<AshDiffRow> = {}): AshDiffRow {
   return {
@@ -60,5 +60,19 @@ describe("validateAshDiff", () => {
       row({ id: `id_${i}`, probe: `p${i}`, tag: `tag_${i}`, goldNila: "Ends in a question?" }),
     );
     expect(validateAshDiff(rows).warnings.some((w) => w.includes("question"))).toBe(true);
+  });
+});
+
+describe("provenanceBreakdown", () => {
+  it("counts device-captured vs illustrative, defaulting absent to illustrative", () => {
+    const rows: AshDiffRow[] = [
+      row({ id: "a", provenance: "device-captured" }),
+      row({ id: "b", provenance: "illustrative" }),
+      row({ id: "c" }), // absent → illustrative
+    ];
+    const b = provenanceBreakdown(rows);
+    expect(b.deviceCaptured).toBe(1);
+    expect(b.illustrative).toBe(2);
+    expect(b.total).toBe(3);
   });
 });
