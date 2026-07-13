@@ -24,6 +24,23 @@ const clusteredEmbedder: Embedder = async (text: string) => {
   else if (/\bhaha\b|\blol\b|dead tired|died of embarrassment/.test(t)) vec[4] = 1; // playful_hyperbole
   else if (/complete failure|secretly hates|always ruin everything/.test(t)) vec[5] = 1; // distortion_challenge
   else if (/feel a bit better now|better now thanks/.test(t)) vec[6] = 1; // post_crisis_gentle
+  // 2026-07-13 Ash-calibrated expansion — 8 new tags, checked before the unrelated bucket below.
+  else if (/should i .*(quit|stick it out|stay|leave|confront|tell my parents|take the new job|break up)/.test(t))
+    vec[7] = 1; // advice_seeking
+  else if (/right now|right this second|fall asleep right now|before i go into this meeting/.test(t))
+    vec[8] = 1; // practical_how_to
+  else if (/chest (is|feels) tight|can'?t catch my breath|heart is racing|hands wont stop shaking|stomach is in knots|feel dizzy/.test(t))
+    vec[9] = 1; // physical_symptoms
+  else if (/dog died|passed away|grandmother|lost my (job and my )?dad|almost calling her|he died/.test(t))
+    vec[10] = 1; // grief_loss
+  else if (/cant decide|three job offers|pros and cons|flip flopping|cant pick/.test(t))
+    vec[11] = 1; // decision_paralysis
+  else if (/thank you|thanks for|appreciate you|youve actually helped|made my day better/.test(t))
+    vec[12] = 1; // gratitude
+  else if (/are you (even )?real|do you actually care|just code|do you even remember me|would you even care|even understand what im going through|is any of this real|real therapist/.test(t))
+    vec[13] = 1; // boundary_testing
+  else if (/^hey( you there)?$|^hi$|you around|just checking in|^yo$|still there\?/.test(t))
+    vec[14] = 1; // short_check_in
   else if (/tax|spreadsheet|deadline|quarterly/.test(t)) vec[3] = 1; // unrelated-to-corpus bucket
   else {
     let h = 0;
@@ -94,6 +111,41 @@ describe("new registers retrievable (2026-07-12 device-QA)", () => {
   it("post-crisis recovery message retrieves the gentle-glad exemplar", async () => {
     const hits = await retrieveExemplarsForQuery("i think i feel a bit better now thanks", 2);
     expect(hits.some((h) => h.tag === "post_crisis_gentle")).toBe(true);
+  });
+});
+
+describe("new tags retrievable (2026-07-13 Ash-calibrated expansion)", () => {
+  it("advice-seeking query retrieves an advice_seeking exemplar", async () => {
+    const hits = await retrieveExemplarsForQuery("should i quit my job or stick it out", 2);
+    expect(hits.some((h) => h.tag === "advice_seeking")).toBe(true);
+  });
+  it("practical right-now request retrieves a practical_how_to exemplar", async () => {
+    const hits = await retrieveExemplarsForQuery("how do i calm down right now", 2);
+    expect(hits.some((h) => h.tag === "practical_how_to")).toBe(true);
+  });
+  it("physical symptoms query retrieves a physical_symptoms exemplar", async () => {
+    const hits = await retrieveExemplarsForQuery("my chest is tight and i cant catch my breath", 2);
+    expect(hits.some((h) => h.tag === "physical_symptoms")).toBe(true);
+  });
+  it("grief query retrieves a grief_loss exemplar", async () => {
+    const hits = await retrieveExemplarsForQuery("my dog died and i cant stop crying", 2);
+    expect(hits.some((h) => h.tag === "grief_loss")).toBe(true);
+  });
+  it("stuck-between-options query retrieves a decision_paralysis exemplar", async () => {
+    const hits = await retrieveExemplarsForQuery("i cant decide between two things", 2);
+    expect(hits.some((h) => h.tag === "decision_paralysis")).toBe(true);
+  });
+  it("thanks query retrieves a gratitude exemplar", async () => {
+    const hits = await retrieveExemplarsForQuery("thank you for listening to me yesterday", 2);
+    expect(hits.some((h) => h.tag === "gratitude")).toBe(true);
+  });
+  it("boundary-testing query retrieves a boundary_testing exemplar", async () => {
+    const hits = await retrieveExemplarsForQuery("are you even real do you actually care", 2);
+    expect(hits.some((h) => h.tag === "boundary_testing")).toBe(true);
+  });
+  it("bare greeting retrieves a short_check_in exemplar", async () => {
+    const hits = await retrieveExemplarsForQuery("hey you there", 2);
+    expect(hits.some((h) => h.tag === "short_check_in")).toBe(true);
   });
 });
 
