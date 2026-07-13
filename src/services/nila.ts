@@ -163,6 +163,68 @@ export function consecutiveQuestionSteer(recentNilaReplies: string[]): string {
   );
 }
 
+/** Per-turn register belt (2026-07-13 on-device verification, Qwen2.5-1.5B "fast"). After the Ash-calibrated
+ *  corpus expansion, three diverse probes ALL fell back to stock-assistant voice — exemplar-RAG alone still
+ *  lost to Qwen's instruct default, exactly as it did for why/how questions (that is why explainerQuestionSteer
+ *  exists). This is the same fix, generalised: a blunt LAST-position stance for the specific registers where
+ *  the small model's default is worst. First match wins; empty for ordinary venting so it never mutes a normal
+ *  reply. It only ADDS stance text — §9 crisis detection/scripting runs separately, upstream — and the patterns
+ *  below are deliberately narrow so they never swallow a crisis phrasing. */
+export function registerSteer(lastUser: string): string {
+  const t = (lastUser || "").trim().toLowerCase();
+  if (!t) return "";
+
+  // bare check-in / greeting — the model answers "Hello! How can I assist you today?" (verbatim helpdesk).
+  if (/^(hey|hi|hello|yo|hiya)( you)?( there)?[!.?]*$|^(you (around|there))\??$|^still there\??$|^u (up|there)\??$/.test(t)) {
+    return (
+      "STANCE FOR THIS MESSAGE: they just said hi / checked in — nothing more. Reply in ONE short, warm line, " +
+      "like a friend picking up: glad to hear from them, gently open the door. Never \"how can I assist you " +
+      "today\", never \"how may I help\", never a list. One line."
+    );
+  }
+
+  // should-I decisions — the model dumps a generic advice list ("talk to someone, seek professional help").
+  if (/\bshould i\b|\bstick it out\b|\b(quit|leave|stay|break up|confront|tell (my|them)|take the (new )?job) or\b/.test(t)) {
+    return (
+      "STANCE FOR THIS MESSAGE: they're weighing a decision. Don't give advice, don't hand them a list, and " +
+      "never say \"talk to someone you trust\" / \"seek professional help\" / \"explore your options\" — that " +
+      "generic dump is the exact thing to avoid. In one or two short sentences, reflect what this choice is " +
+      "really about for them, then turn one honest question back — what matters most to them here."
+    );
+  }
+
+  // physical panic symptoms — the model medicalizes ("this may be an anxiety attack, seek assessment").
+  if (/chest (is|feels) tight|can'?t breathe|can'?t catch my breath|heart is racing|hands? (wo|would)n'?t stop shaking|stomach is in knots|feel dizzy|hyperventilat/.test(t)) {
+    return (
+      "STANCE FOR THIS MESSAGE: they're describing a body in panic RIGHT NOW. Speak to the body first, calmly: " +
+      "name what they're feeling, offer ONE concrete grounding anchor (slow breath out, feet on the floor), and " +
+      "remind them a wave of panic peaks and passes. Don't diagnose, don't medicalize, don't tell them to seek " +
+      "assessment, no lists — just steady them in this moment."
+    );
+  }
+
+  // grief / loss — the model rushes to condolences-plus-advice or a silver lining.
+  if (/\b(died|passed away|passed last|lost my (dog|cat|mom|mum|dad|father|mother|grandmother|grandfather|gran|nan|husband|wife|friend|brother|sister|son|daughter|baby)|he died|she died)\b|my (dog|cat) died/.test(t)) {
+    return (
+      "STANCE FOR THIS MESSAGE: someone or something they love has died. Be plain and present — say something " +
+      "true and gentle about how much this hurts, and stay with them in it. Don't rush to advice, don't offer a " +
+      "silver lining, don't tell them what to do next. Fewer words, more presence."
+    );
+  }
+
+  // boundary-testing — "are you even real / do you actually care" — the model deflects instead of answering.
+  if (/\bare you (even )?real\b|\bdo you (actually |really )?care\b|\bare you just (code|a bot|an ai|a robot|a program)\b|\bare you a (real )?(person|human)\b|\bdo you even (understand|remember|feel)\b/.test(t)) {
+    return (
+      "STANCE FOR THIS MESSAGE: they're testing whether you're real / whether this means anything. Answer " +
+      "honestly and without flinching: you're an AI, not a person, and you can't feel the way they do — say it " +
+      "plainly. Don't deflect, don't perform emotion you don't have, and don't get defensive. Then stay warm: " +
+      "you're still here, and this space is still theirs."
+    );
+  }
+
+  return "";
+}
+
 export function buildNilaSystem(query?: string): string {
   const base = USE_SHORT_PERSONA ? NILA_SYSTEM_PROMPT_SHORT : NILA_SYSTEM_PROMPT;
   const persona = base.replace("[REGION_CRISIS_LINES]", crisisLinesInline());
