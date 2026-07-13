@@ -60,7 +60,7 @@ function ScreenFallback() {
   );
 }
 
-import { syncDailyReminders, scheduleReminderAt, syncEmaCheckins, suppressNudgesForCrisis } from "./services/notifications";
+import { syncDailyReminders, scheduleReminderAt, syncEmaCheckins, syncWeeklyDigest, suppressNudgesForCrisis } from "./services/notifications";
 import { recordEngagement } from "./services/notificationBudget";
 import { isCategoryEnabled } from "./services/notificationCategories";
 import { LocalNotifications } from "@capacitor/local-notifications";
@@ -189,6 +189,11 @@ export default function App() {
   // Sync daily reminders
   useEffect(() => {
     void syncDailyReminders();
+  }, []);
+
+  // P6.6 — re-arm the Sunday weekly-review digest on every app open (idempotent: cancels + reschedules).
+  useEffect(() => {
+    void syncWeeklyDigest({ request: false });
   }, []);
 
   // Record that the app was opened today (on-device retention instrumentation). Runs after SecureGate has

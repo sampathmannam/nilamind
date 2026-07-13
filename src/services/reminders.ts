@@ -11,10 +11,11 @@ export interface ReminderPrefs {
   windowEnd: string; // "HH:MM" — latest
   quietStart: string; // "HH:MM" — quiet hours begin (no nudges)
   quietEnd: string; // "HH:MM" — quiet hours end
+  weeklyDigest: boolean; // P6.6 — a Sunday weekly-review notification (independent of daily nudges)
 }
 import { ls } from "./storageUtils";
 
-const DEFAULTS: ReminderPrefs = { enabled: true, windowStart: "10:00", windowEnd: "20:00", quietStart: "22:00", quietEnd: "08:00" };
+const DEFAULTS: ReminderPrefs = { enabled: true, windowStart: "10:00", windowEnd: "20:00", quietStart: "22:00", quietEnd: "08:00", weeklyDigest: true };
 
 export function getReminderPrefs(): ReminderPrefs {
   try { const raw = ls()?.getItem(KEY); return raw ? { ...DEFAULTS, ...JSON.parse(raw) } : DEFAULTS; } catch { return DEFAULTS; }

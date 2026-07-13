@@ -56,6 +56,17 @@ export default function RemindersSection() {
             <span className="text-slate-400">Quiet hours</span>
             <div className="flex items-center gap-1"><TimeInput value={p.quietStart} on={(v) => up({ quietStart: v })} /><span className="text-slate-600">–</span><TimeInput value={p.quietEnd} on={(v) => up({ quietEnd: v })} /></div>
           </div>
+          <div className="flex items-center justify-between text-xs pt-1">
+            <span className="text-slate-400">Weekly review (Sundays)</span>
+            <button
+              onClick={() => up({ weeklyDigest: !p.weeklyDigest })}
+              id="settings-weekly-digest-toggle"
+              className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors ${p.weeklyDigest ? "bg-blue-500" : "bg-slate-700"}`}
+              role="switch" aria-checked={p.weeklyDigest}
+            >
+              <span aria-hidden="true" className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200 ease-in-out ${p.weeklyDigest ? "translate-x-2.5" : "-translate-x-2.5"}`} />
+            </button>
+          </div>
         </div>
       )}
     </div>

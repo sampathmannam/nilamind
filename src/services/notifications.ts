@@ -261,6 +261,56 @@ export async function clearDailyReminders(): Promise<void> {
   try { await LocalNotifications.cancel({ notifications: [{ id: DAILY_REMINDER_ID }] }); } catch (e) { console.error("[notifications] clearDailyReminders failed:", e); }
 }
 
+// P6.6 — weekly digest: a Sunday "week in review" notification, independent of the daily nudge. Distinct id
+// space so it never collides with the daily reminder or EMA pings.
+const WEEKLY_DIGEST_ID = 1002;
+
+export async function syncWeeklyDigest(opts: { request?: boolean } = { request: false }): Promise<SyncResult> {
+  try { await LocalNotifications.cancel({ notifications: [{ id: WEEKLY_DIGEST_ID }] }); } catch (e) { console.error("[notifications] syncWeeklyDigest cancel failed:", e); }
+  // Crisis/elevation + DND + category + frequency-cap gates mirror the daily nudge — the digest is a nudge.
+  if (isSafetySuppressed()) return { scheduled: false, reason: "unavailable" };
+  if (!isCategoryEnabled("insight")) return { scheduled: false, reason: "disabled" };
+  if (isDndActive()) return { scheduled: false, reason: "unavailable" };
+  if (skipActive() || peekRemaining() < 1) return { scheduled: false, reason: "unavailable" };
+  const prefs = getReminderPrefs();
+  if (!prefs.weeklyDigest) return { scheduled: false, reason: "disabled" };
+
+  let granted = false;
+  if (opts.request === false) {
+    try { granted = (await LocalNotifications.checkPermissions()).display === "granted"; } catch (e) { console.error("[notifications] checkPermissions failed:", e); granted = false; }
+  } else {
+    granted = await ensureNotificationPermission();
+  }
+  if (!granted) return { scheduled: false, reason: "denied" };
+
+  let [h, m] = prefs.windowStart.split(":").map(Number);
+  if (withinQuietHours(timeToday(h || 0, m || 0))) [h, m] = prefs.quietEnd.split(":").map(Number);
+  h = Math.min(23, Math.max(0, h || 0));
+  m = Math.min(59, Math.max(0, m || 0));
+
+  try {
+    await LocalNotifications.schedule({
+      notifications: [{
+        id: WEEKLY_DIGEST_ID,
+        title: "NilaMind",
+        body: "Your week in review is ready — tap to see how your mood and rhythm went.",
+        schedule: { on: { weekday: 1, hour: h, minute: m }, allowWhileIdle: true }, // Sundays
+        smallIcon: "ic_stat_icon_config_sample",
+      }],
+    });
+    commitClaim(1); // counts against the per-day non-crisis budget
+    return { scheduled: true, at: `${pad(h)}:${pad(m)}` };
+  } catch (e) {
+    console.error("[notifications] syncWeeklyDigest schedule failed:", e);
+    return { scheduled: false, reason: "unavailable" };
+  }
+}
+
+/** Turn the weekly digest off and clear its scheduled notification. */
+export async function clearWeeklyDigest(): Promise<void> {
+  try { await LocalNotifications.cancel({ notifications: [{ id: WEEKLY_DIGEST_ID }] }); } catch (e) { console.error("[notifications] clearWeeklyDigest failed:", e); }
+}
+
 // Medication reminders use a distinct id space so they don't collide with the daily nudge.
 const MED_REMINDER_ID_BASE = 200_000;
 
