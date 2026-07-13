@@ -14,7 +14,7 @@ Privacy by design:
 Nila's "brain" is a local language model. There is no cloud chat endpoint, no API key, and no network call to generate replies. The app collects nothing about you.
 
 First-run download:
-On first launch the app downloads its on-device language model (about 2.5 GB) over Wi-Fi. That model is provided under Google's Gemma license (which is not a free/open-source license) and is fetched from Hugging Face. After the one-time download, the app works fully offline.
+On first launch the app downloads its on-device language model (about 1.1 GB) over Wi-Fi. That model (Qwen2.5-1.5B-Instruct) is fetched from Hugging Face under the Apache-2.0 license. After the one-time download, the app works fully offline.
 
 Please read:
 NilaMind is an early research preview and a self-help support tool. It is not a medical device, not therapy, and not a substitute for professional care or human connection. If you are in crisis, please contact a local emergency number or a crisis line — Nila will say so too.
