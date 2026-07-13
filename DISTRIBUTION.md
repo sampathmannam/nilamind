@@ -94,7 +94,8 @@ Play App Signing will re-sign on upload; your `upload-keystore.jks` is the *uplo
 
 ### 3. Play Console
 - Create the app → **Internal testing** track first → upload the AAB → add testers → roll out.
-- Submit for review; iterate on any policy feedback.
+- Paste the reviewer notes from `REVIEWER_NOTES.md` into the review-notes field, then submit for
+  review; iterate on any policy feedback.
 - Bump `versionCode` (and `versionName`) in `android/app/build.gradle` for every upload.
 
 ### 4. Required policies & forms
