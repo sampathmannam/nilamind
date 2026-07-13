@@ -54,4 +54,30 @@ else
   echo "PASS: missing manifest correctly rejected"
 fi
 
+# Fixture 5: dirty manifest (active ACCESS_COARSE_LOCATION, single-quoted attribute) — must exit non-zero.
+cat > "$tmpdir/dirty-coarse-single-quote.xml" <<'EOF'
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name='android.permission.ACCESS_COARSE_LOCATION' />
+</manifest>
+EOF
+if bash scripts/check-store-permissions.sh "$tmpdir/dirty-coarse-single-quote.xml" >/tmp/check-store-permissions-test-out.txt 2>&1; then
+  echo "FAIL: dirty manifest (ACCESS_COARSE_LOCATION, single-quoted) should exit non-zero"; fail=1
+else
+  echo "PASS: ACCESS_COARSE_LOCATION (single-quoted) manifest correctly rejected"
+fi
+
+# Fixture 6: dirty manifest (active PACKAGE_USAGE_STATS, tag split across multiple lines) — must exit non-zero.
+cat > "$tmpdir/dirty-usage-multiline.xml" <<'EOF'
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission
+        android:name="android.permission.PACKAGE_USAGE_STATS"
+        tools:ignore="ProtectedPermissions" />
+</manifest>
+EOF
+if bash scripts/check-store-permissions.sh "$tmpdir/dirty-usage-multiline.xml" >/tmp/check-store-permissions-test-out.txt 2>&1; then
+  echo "FAIL: dirty manifest (PACKAGE_USAGE_STATS, multi-line tag) should exit non-zero"; fail=1
+else
+  echo "PASS: PACKAGE_USAGE_STATS (multi-line tag) manifest correctly rejected"
+fi
+
 exit "$fail"

@@ -20,11 +20,18 @@ if [ ! -f "$MANIFEST" ]; then
   exit 1
 fi
 
+# Strip XML comments (including ones that span multiple lines — a sed range-delete handles both
+# single-line and multi-line `<!-- ... -->` comments, unlike a line-anchored grep), then collapse
+# newlines so a `<uses-permission ... />` tag split across multiple lines still matches as one
+# unit under grep.
+flattened=$(sed '/<!--/,/-->/d' "$MANIFEST" | tr '\n' ' ')
+
 fail=0
 for perm in "${FORBIDDEN[@]}"; do
-  # Drop single-line-commented lines (this manifest's convention — see AndroidManifest.xml's
-  # commented-out PACKAGE_USAGE_STATS line) before checking for an active uses-permission tag.
-  if grep -v '^\s*<!--' "$MANIFEST" | grep -q "uses-permission[^>]*\"$perm\""; then
+  # Escape literal dots in the permission string so they match literally, not as regex wildcards.
+  escaped_perm=$(printf '%s' "$perm" | sed 's/\./\\./g')
+  # Accept either double- or single-quoted android:name attribute values.
+  if printf '%s' "$flattened" | grep -Eq "uses-permission[^>]*(\"$escaped_perm\"|'$escaped_perm')"; then
     echo "check-store-permissions: FORBIDDEN permission declared for store build: $perm" >&2
     fail=1
   fi
