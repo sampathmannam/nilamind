@@ -49,10 +49,17 @@ import { assessJitai, type JitaiDecision } from "../services/jitaiEngine";
 import { computeUsageSummary } from "../services/usageAnalytics";
 import { loadMoodHistory } from "../services/moodHistory";
 import { computeCompassionateStreak } from "../services/streaks";
-import { Settings, Mic, Send, MicOff, Keyboard, X, ShieldCheck, ThumbsUp, ThumbsDown, MessageCircle, Brain, Moon, SquarePen } from "lucide-react";
+import { Settings, Mic, Send, MicOff, Keyboard, X, ShieldCheck, ThumbsUp, ThumbsDown, MessageCircle, Brain, Moon, SquarePen, Heart } from "lucide-react";
 import { hapticLight, hapticMedium } from "../hooks/useHaptics";
 import { recordFeedback } from "../services/nilaFeedback";
 import { notifyReplyReady } from "../services/notifications";
+import {
+  recordCrisisEvent,
+  hasPendingAftercare,
+  markAftercareDone,
+  AFTERCARE_STEPS,
+  clearAftercareState,
+} from "../services/crisisAftercare";
 
 interface ModeScreenProps {
   onOpenSettings?: () => void;
@@ -92,6 +99,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   const [pactNotice, setPactNotice] = useState<PactNotice | null>(null); // #30: surfaced pact (the human bridge)
   const [confirmNewChat, setConfirmNewChat] = useState(false); // "new conversation" confirm dialog
   const [welcomeBack, setWelcomeBack] = useState<string | null>(null);
+  const [aftercareStep, setAftercareStep] = useState(-1);
   const [ratedMessages, setRatedMessages] = useState<Set<number>>(new Set());
   const [showQuickActions, setShowQuickActions] = useState(false);
   // #4 + #9 (audit): §9 crisis now routes through the App-level overlay (onOpenCrisis) so the Android hardware
@@ -105,12 +113,14 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   const openCrisis = (detected = false) => {
     if (detected) {
       hadCrisisRef.current = true;
+      recordCrisisEvent();     // persist timestamp for post-crisis aftercare protocol
       clearSessionChat();      // the flagged crisis turn must never persist/restore
       setSkillOffer(null);     // #7 (re-audit): don't offer coping-skill/protocol self-help in reply to a crisis
       setProtocolCard(null);
     }
     setPactNotice(null); // §9 takes precedence over the gentle pact surface either way
     setWelcomeBack(null); // §9 also clears the welcome-back card
+    setAftercareStep(-1); // §9 clears any aftercare-in-progress (new crisis supersedes)
     onOpenCrisis?.();
   };
   const bottomRef = useRef<HTMLDivElement>(null); // #23: scroll-to-newest anchor
@@ -188,6 +198,14 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   useEffect(() => {
     const saved = getSessionChat();
     if (saved.length) setMessages(saved);
+  }, []);
+
+  // Post-crisis aftercare: if there's a recent §9 event without completed follow-up,
+  // route into the aftercare protocol instead of greeting as normal.
+  useEffect(() => {
+    if (hasPendingAftercare() && messages.length === 0) {
+      setAftercareStep(0);
+    }
   }, []);
 
   // #30 (audit): surface the user's pact when there's an active, undismissed reason (a short-sleep run or a
@@ -329,8 +347,24 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
       // Chat-detected elevation may have latched during this turn (localNila → noteChatElevation) — recompute
       // the mode so the interface settles (orb slows, home thins) in response to what the user just typed.
       setMode(getCurrentMode());
-      // Suggest a relevant coping skill if the user expressed distress
-      setSkillOffer(insight?.skill?.skill ?? null);
+      // Advance aftercare protocol: after the model replies to a user response, show the next step.
+      // This keeps the conversation structured without routing crisis follow-up through the LLM.
+      if (aftercareStep >= 0) {
+        const nextStep = aftercareStep + 1;
+        if (nextStep < AFTERCARE_STEPS.length) {
+          setAftercareStep(nextStep);
+          setTimeout(() => {
+            setMessages((prev) => [...prev, { role: "assistant", content: AFTERCARE_STEPS[nextStep].prompt }]);
+          }, 600);
+        } else {
+          // All steps shown — mark aftercare as completed
+          markAftercareDone();
+          setAftercareStep(-1);
+        }
+      }
+      // Suggest a relevant coping skill if the user expressed distress (skip during aftercare — the
+      // structured follow-up replaces skill suggestions).
+      if (aftercareStep < 0) setSkillOffer(insight?.skill?.skill ?? null);
     } catch {
       crisisPendingRef.current = false; // model error is not a §9 crisis — let the turn persist
       setMessages((prev) => [
@@ -851,6 +885,45 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
               {protocolCard.label}
             </button>
            )}
+
+          {/* Post-crisis aftercare card — shown when a recent §9 event needs structured follow-up.
+              Stanley & Brown (2012) cohort: aftercare contact halves subsequent suicidal behaviour.
+              Shown only when the aftercare is pending and no conversation has started yet. */}
+          {aftercareStep === 0 && messages.length === 0 && (
+            <div
+              className="w-full px-3 py-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-200 text-xs"
+              id="aftercare-card"
+            >
+              <div className="flex items-start gap-2">
+                <Heart className="w-4 h-4 text-rose-400 mt-0.5 shrink-0" />
+                <div className="flex-1">
+                  <p className="font-medium">Gentle check-in</p>
+                  <p className="leading-relaxed mt-1 text-rose-200/80">
+                    {AFTERCARE_STEPS[0].prompt}
+                  </p>
+<div className="flex gap-2 mt-2">
+                    <button
+                      onClick={() => {
+                        setMessages((prev) => [...prev, { role: "assistant", content: AFTERCARE_STEPS[0].prompt }]);
+                      }}
+                      className="px-3 py-2 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 font-medium transition-colors cursor-pointer min-h-[44px] focus-ring"
+                    >
+                      Let's talk
+                    </button>
+                    <button
+                      onClick={() => {
+                        markAftercareDone();
+                        setAftercareStep(-1);
+                      }}
+                      className="px-3 py-2 rounded-lg hover:bg-rose-500/15 text-rose-200/80 transition-colors cursor-pointer min-h-[44px] focus-ring"
+                    >
+                      I'm okay now
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Welcome-back card — gentle nudge after inactivity (>= 2 days). §9 clears it. */}
           {welcomeBack && (
