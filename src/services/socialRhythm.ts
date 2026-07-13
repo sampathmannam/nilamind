@@ -171,3 +171,47 @@ export function computeRhythmRegularity(now: Date = new Date(), windowDays: numb
     band: bandFor(overallVariabilityMin, daysLogged),
   };
 }
+
+/** P5.4 — 7-day anchor timeline. Returns the last `days` calendar dates (oldest→newest) and, for each of the
+ *  five anchors, the time-of-day (minutes since midnight) logged that day, or null when not logged. Pure given
+ *  the clock so the dashboard timeline can be rendered and unit-tested without a live store beyond loadRhythm. */
+export interface RhythmTimelineAnchor {
+  key: AnchorKey;
+  label: string;
+  byDay: (number | null)[]; // minutes since midnight, oldest→newest; null = not logged
+}
+
+export interface RhythmTimeline {
+  days: string[]; // YYYY-MM-DD, oldest→newest
+  anchors: RhythmTimelineAnchor[];
+}
+
+export function buildRhythmTimeline(days = 7, now: Date = new Date()): RhythmTimeline {
+  const dates: string[] = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    dates.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`);
+  }
+  const byDate = new Map(loadRhythm().map((e) => [e.date, e.anchors]));
+  const anchors: RhythmTimelineAnchor[] = RHYTHM_ANCHORS.map(({ key, label }) => ({
+    key,
+    label,
+    byDay: dates.map((date) => {
+      const t = byDate.get(date)?.[key];
+      return t ? parseTime(t) : null;
+    }),
+  }));
+  return { days: dates, anchors };
+}
+
+/** Per-anchor min/max spread (minutes) across the timeline window — 0 when steady or insufficient data.
+ *  Used to draw variability bands on the timeline. */
+export function timelineSpread(timeline: RhythmTimeline): Record<AnchorKey, number> {
+  const out = {} as Record<AnchorKey, number>;
+  for (const a of timeline.anchors) {
+    const vals = a.byDay.filter((m): m is number => m !== null);
+    out[a.key] = vals.length >= 2 ? Math.max(...vals) - Math.min(...vals) : 0;
+  }
+  return out;
+}

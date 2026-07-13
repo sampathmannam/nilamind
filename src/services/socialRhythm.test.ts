@@ -7,6 +7,8 @@ import {
   computeRhythmRegularity,
   hasRhythmToday,
   loadTodayAnchors,
+  buildRhythmTimeline,
+  timelineSpread,
   MIN_RHYTHM_DAYS,
   type RhythmEntry,
   type RhythmAnchors,
@@ -163,5 +165,37 @@ describe("computeRhythmRegularity", () => {
     expect(dinner.daysLogged).toBe(2);
     expect(r.overallVariabilityMin).toBe(0); // driven by wake only (dinner below floor)
     expect(MIN_RHYTHM_DAYS).toBe(5);
+  });
+});
+
+describe("buildRhythmTimeline — P5.4", () => {
+  it("returns the last 7 dates oldest→newest and per-day anchor minutes", () => {
+    const now = at("2026-07-10T12:00:00Z");
+    seed(
+      { date: "2026-07-08", anchors: { wake: "07:00", bed: "23:00" } },
+      { date: "2026-07-09", anchors: { wake: "07:30" } },
+    );
+    const tl = buildRhythmTimeline(7, now);
+    expect(tl.days).toHaveLength(7);
+    expect(tl.days[0]).toBe("2026-07-04");
+    expect(tl.days[6]).toBe("2026-07-10");
+    const wake = tl.anchors.find((a) => a.key === "wake")!;
+    expect(wake.byDay[4]).toBe(420); // 07:00 on 07-08 (index 4)
+    expect(wake.byDay[5]).toBe(450); // 07:30 on 07-09
+    expect(wake.byDay[6]).toBeNull(); // 07-10 not logged
+    const bed = tl.anchors.find((a) => a.key === "bed")!;
+    expect(bed.byDay[4]).toBe(1380); // 23:00
+  });
+
+  it("timelineSpread reports the daily min/max range per anchor (0 when steady)", () => {
+    seed(
+      { date: "2026-07-08", anchors: { wake: "07:00" } },
+      { date: "2026-07-09", anchors: { wake: "08:00" } },
+      { date: "2026-07-10", anchors: { wake: "07:30" } },
+    );
+    const tl = buildRhythmTimeline(7, at("2026-07-10T12:00:00Z"));
+    const spread = timelineSpread(tl);
+    expect(spread.wake).toBe(60); // 07:00..08:00
+    expect(spread.bed).toBe(0); // never logged
   });
 });
