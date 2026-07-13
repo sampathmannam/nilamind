@@ -55,7 +55,7 @@ and compounding memory. Same NilaMind, same one rule: *help is the only metric.*
 
 **Or install the APK directly:** grab the latest signed APK from [**Releases**](https://github.com/sampathmannam/nilamind/releases), or visit the [**landing page**](https://sampathmannam.github.io/nilamind/).
 
-On first run the app downloads its on-device model (~806 MB, over Wi-Fi, integrity-verified) and then works fully offline. Requires **Android 7.0+ (arm64)**. Step-by-step: [`docs/wiki/Getting-Started.md`](docs/wiki/Getting-Started.md).
+On first run the app downloads its on-device model (~1.1 GB, over Wi-Fi, integrity-verified) and then works fully offline. Requires **Android 7.0+ (arm64)**. Step-by-step: [`docs/wiki/Getting-Started.md`](docs/wiki/Getting-Started.md).
 
 **Build it:** see *Build & run* below.
 
@@ -154,10 +154,11 @@ over Wi-Fi); developers can side-load any GGUF instead:
   [Ollama](https://ollama.com) model instead of a phone.
 
 **Reference model (⚠️ research preview):** the project's own therapy-tuned Gemma-3-4B is a research
-preview — **not** what the app installs by default. As of a 2026-07-07 speed A/B, the default in-app
-download is the **stock, un-fine-tuned Gemma-3-1B-it** (~806 MB, from
-[`unsloth/gemma-3-1b-it-GGUF`](https://huggingface.co/unsloth/gemma-3-1b-it-GGUF)); the 4B is restorable
-only via a one-line catalog revert or a developer side-load. The 4B is published at
+preview — **not** what the app installs by default. As of a 2026-07-11 speed swap, the default in-app
+download is **Qwen2.5-1.5B-Instruct** (~1.1 GB, Apache-2.0 license, from
+[`Qwen/Qwen2.5-1.5B-Instruct-GGUF`](https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF)); the earlier
+default, **Gemma-3-1B-it** (~806 MB), and the 4B research model are both restorable only via a one-line
+catalog revert or a developer side-load. The 4B is published at
 [`sampathmannam/nilamind-gemma-3-4b-GGUF`](https://huggingface.co/sampathmannam/nilamind-gemma-3-4b-GGUF).
 Its main practical limitation is **repetitive/formulaic phrasing** (which is exactly why the app splits
 the roles above — the tools carry the help), and it has **no built-in crisis-safety layer**. Read its
@@ -171,7 +172,7 @@ choose. Re-test the safety layer against your model before any real use.
 ## A note on speed
 
 Because the model runs **entirely on your phone**, the **first reply after a fresh
-start** can take a couple of minutes on a slower device — it's reading a ~806 MB
+start** can take a couple of minutes on a slower device — it's reading a ~1.1 GB
 model off storage, not "thinking." NilaMind keeps the model resident once loaded
 (a foreground service) so **every reply after that stays fast** until the phone
 reboots. On a phone with fast storage the wait is only a few seconds. Details and

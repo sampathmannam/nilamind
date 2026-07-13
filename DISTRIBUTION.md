@@ -76,6 +76,14 @@ permissions):
 Keep only what the app uses: `POST_NOTIFICATIONS` (reminders), `RECORD_AUDIO` (voice input). Nila
 runs on-device, so the AI needs no network.
 
+**Verify before building the AAB** — this is enforced, not just documented:
+```bash
+npm run check:store-permissions
+```
+Exits non-zero and names the offending permission if any of the three above are still active in the
+manifest. Run this right before step 2 (building the signed AAB); it's the guard against shipping a
+store build with sensitive permissions still declared.
+
 ### 2. Build a signed AAB
 With `android/key.properties` configured (see A):
 ```bash
@@ -86,7 +94,8 @@ Play App Signing will re-sign on upload; your `upload-keystore.jks` is the *uplo
 
 ### 3. Play Console
 - Create the app → **Internal testing** track first → upload the AAB → add testers → roll out.
-- Submit for review; iterate on any policy feedback.
+- Paste the reviewer notes from `REVIEWER_NOTES.md` into the review-notes field, then submit for
+  review; iterate on any policy feedback.
 - Bump `versionCode` (and `versionName`) in `android/app/build.gradle` for every upload.
 
 ### 4. Required policies & forms
@@ -121,8 +130,8 @@ NilaMind is Obtainium-ready **today** — you already publish signed APKs to Git
 FOSS credentials (relevant if you ever pursue a store that verifies them): Apache-2.0, no Google
 Services, no analytics, and — after removing `@capgo/capacitor-llm` — **zero proprietary
 dependencies** (the MediaPipe `tasks-genai` + `executorch` native libs are gone). The on-device model
-is still fetched at runtime under the **non-free Gemma license** (a "NonFreeNet" anti-feature to
-disclose anywhere that asks).
+is now Qwen2.5-1.5B-Instruct, fetched at runtime under the **Apache-2.0 license** — no `NonFreeNet`
+anti-feature applies (the earlier Gemma-based default did require that disclosure; it no longer ships).
 
 ---
 
@@ -160,9 +169,9 @@ separate, stricter matter — it builds from source and rejects the prebuilt `li
    at <https://apt.izzysoft.de/fdroid/>). Give the repo URL `https://github.com/sampathmannam/nilamind`.
    Their bot then auto-detects each new GitHub Release going forward.
 
-4. **Expect this anti-feature flag** on the listing (honest, disclosed in the description):
-   `NonFreeNet`/`NonFreeAssets` — the ~2.5 GB Gemma-licensed model downloaded on first run. (No
-   `NonFreeDep`: the app has no proprietary dependencies — the Google MLKit/Nano path was removed.)
+4. **No `NonFreeNet` flag needed** for the model itself — the ~1.1 GB Qwen2.5-1.5B-Instruct model
+   downloaded on first run is Apache-2.0 licensed, same as the app. (No `NonFreeDep` either: the app
+   has no proprietary dependencies — the Google MLKit/Nano path was removed.)
 
 Once accepted, users install NilaMind by adding the IzzyOnDroid repo
 (`https://apt.izzysoft.de/fdroid/repo`) in the F-Droid client, then searching for NilaMind.
@@ -180,7 +189,8 @@ IzzyOnDroid picks it up automatically. Always sign with the **same** keystore.
   (a fork / NDK build of the plugin). This is the main remaining blocker.
 - ⬜ **Drop the dead MediaPipe path** — `@capgo/capacitor-llm` is now unused (catalog is 4B-only);
   removing it deletes two more prebuilt `.so` files and shrinks the APK.
-- ◻️ **The model** stays a non-free (`NonFreeNet`) runtime download under the Gemma license.
+- ✅ **The model** is now a free (Apache-2.0) runtime download (Qwen2.5-1.5B-Instruct) — no longer a
+  mainline-F-Droid blocker. (Done 2026-07-11, the Qwen speed swap.)
 
 None of these block IzzyOnDroid — they're only relevant if you later pursue the main F-Droid repo.
 
