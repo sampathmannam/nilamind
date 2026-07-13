@@ -146,7 +146,31 @@ export type I18nKey =
   | "you_learn_label"
   | "you_learn_sub"
   | "you_insights_label"
-  | "you_insights_sub";
+  | "you_insights_sub"
+  // Do-Not-Disturb (quiet mode) — P6.7
+  | "dnd_3_hours"
+  | "dnd_tonight"
+  | "dnd_24_hours"
+  | "dnd_3_days"
+  | "dnd_until_off"
+  | "dnd_title"
+  | "dnd_on_aria"
+  | "dnd_off_aria"
+  | "dnd_on_note"
+  | "dnd_off_note"
+  | "new_conversation"
+  // Dashboard
+  | "dash_privacy"
+  | "weekly_report"
+  | "this_week"
+  | "your_month"
+  | "your_usage"
+  | "days_logged"
+  | "nila_chats_7d"
+  | "usage_checkins"
+  | "usage_programs"
+  | "usage_assessments"
+  | "usage_features";
 
 export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
   en: {
@@ -269,6 +293,28 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     you_learn_sub: "Skills, explainers & research — one library",
     you_insights_label: "Your patterns",
     you_insights_sub: "Sleep, screen time, movement & mood",
+    dnd_3_hours: "3 hours",
+    dnd_tonight: "Tonight",
+    dnd_24_hours: "24 hours",
+    dnd_3_days: "3 days",
+    dnd_until_off: "Until I turn it off",
+    dnd_title: "Quiet mode",
+    dnd_on_aria: "Quiet mode on — tap to change",
+    dnd_off_aria: "Turn on quiet mode",
+    dnd_on_note: "Quiet mode is on — non-critical nudges are paused.",
+    dnd_off_note: "Pause non-critical nudges for a while.",
+    new_conversation: "New conversation",
+    dash_privacy: "Your local sections stay only on your device. A picture of how you're doing over time.",
+    weekly_report: "Weekly report",
+    this_week: "This week",
+    your_month: "Your month",
+    your_usage: "Your usage",
+    days_logged: "days logged",
+    nila_chats_7d: "Nila chats (7d)",
+    usage_checkins: "check-ins",
+    usage_programs: "programs done",
+    usage_assessments: "assessments",
+    usage_features: "features used",
   },
   hi: {
     appName: "NilaMind",
@@ -390,6 +436,28 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     you_learn_sub: "कौशल, व्याख्याकार और अनुसंधान — एक पुस्तकालय",
     you_insights_label: "आपके पैटर्न",
     you_insights_sub: "नींद, स्क्रीन टाइम, गतिविधि और मूड",
+    dnd_3_hours: "3 घंटे",
+    dnd_tonight: "आज रात",
+    dnd_24_hours: "24 घंटे",
+    dnd_3_days: "3 दिन",
+    dnd_until_off: "जब तक मैं बंद न करूँ",
+    dnd_title: "शांत मोड",
+    dnd_on_aria: "शांत मोड चालू — बदलने के लिए टैप करें",
+    dnd_off_aria: "शांत मोड चालू करें",
+    dnd_on_note: "शांत मोड चालू है — गैर-ज़रूरी नड्ज रुके हुए हैं।",
+    dnd_off_note: "कुछ देर के लिए गैर-ज़रूरी नड्ज रोकें।",
+    new_conversation: "नई बातचीत",
+    dash_privacy: "आपके स्थानीय भाग केवल आपके डिवाइस पर रहते हैं। समय के साथ आप कैसे कर रहे हैं, इसकी एक तस्वीर।",
+    weekly_report: "साप्ताहिक रिपोर्ट",
+    this_week: "इस सप्ताह",
+    your_month: "आपका महीना",
+    your_usage: "आपका उपयोग",
+    days_logged: "दिन लॉग किए",
+    nila_chats_7d: "नीला चैट (7 दिन)",
+    usage_checkins: "चेक-इन",
+    usage_programs: "पूर्ण कार्यक्रम",
+    usage_assessments: "मूल्यांकन",
+    usage_features: "उपयोग किए गए फ़ीचर",
   },
   ta: {
     appName: "NilaMind",
@@ -511,6 +579,28 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     you_learn_sub: "திறன்கள், விளக்கங்கள் & ஆராய்ச்சி — ஒரு நூலகம்",
     you_insights_label: "உங்கள் முறைகள்",
     you_insights_sub: "தூக்கம், திரை நேரம், இயக்கம் & மனநிலை",
+    dnd_3_hours: "3 மணி நேரம்",
+    dnd_tonight: "இன்று இரவு",
+    dnd_24_hours: "24 மணி நேரம்",
+    dnd_3_days: "3 நாட்கள்",
+    dnd_until_off: "நான் அணைக்கும் வரை",
+    dnd_title: "அமைதி முறை",
+    dnd_on_aria: "அமைதி முறை இயக்கத்தில் — மாற்ற தட்டவும்",
+    dnd_off_aria: "அமைதி முறையை இயக்கு",
+    dnd_on_note: "அமைதி முறை இயக்கத்தில் — முக்கியமற்ற நடவடிக்கைகள் இடைநிறுத்தப்பட்டுள்ளன.",
+    dnd_off_note: "சிறிது நேரம் முக்கியமற்ற நடவடிக்கைகளை இடைநிறுத்து.",
+    new_conversation: "புதிய உரையாடல்",
+    dash_privacy: "உங்கள் உள்ளூர் பிரிவுகள் உங்கள் சாதனத்தில் மட்டுமே இருக்கும். நீங்கள் எப்படி செல்கிறீர்கள் என்பதன் காலப்போக்கு படம்.",
+    weekly_report: "வாராந்திர அறிக்கை",
+    this_week: "இந்த வாரம்",
+    your_month: "உங்கள் மாதம்",
+    your_usage: "உங்கள் பயன்பாடு",
+    days_logged: "நாட்கள் பதிவு செய்யப்பட்டன",
+    nila_chats_7d: "நீலா அரட்டைகள் (7 நாட்கள்)",
+    usage_checkins: "செக்-இன்கள்",
+    usage_programs: "முடிக்கப்பட்ட நிரல்கள்",
+    usage_assessments: "மதிப்பீடுகள்",
+    usage_features: "பயன்படுத்திய அம்சங்கள்",
   },
   te: {
     appName: "NilaMind",
@@ -632,6 +722,28 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     you_learn_sub: "నైపుణ్యాలు, వివరణలు & పరిశోధన — ఒక లైబ్రరీ",
     you_insights_label: "మీ ప్యాటర్న్‌లు",
     you_insights_sub: "నిద్ర, స్క్రీన్ టైం, కదలిక & మూడ్",
+    dnd_3_hours: "3 గంటలు",
+    dnd_tonight: "ఈ రాత్రి",
+    dnd_24_hours: "24 గంటలు",
+    dnd_3_days: "3 రోజులు",
+    dnd_until_off: "నేను ఆఫ్ చేసే వరకు",
+    dnd_title: "క్వైట్ మోడ్",
+    dnd_on_aria: "క్వైట్ మోడ్ ఆన్ — మార్చడానికి నొక్కండి",
+    dnd_off_aria: "క్వైట్ మోడ్ ఆన్ చేయి",
+    dnd_on_note: "క్వైట్ మోడ్ ఆన్‌లో ఉంది — క్లిష్టమైన నడుపులు నిలిపివేయబడ్డాయి.",
+    dnd_off_note: "క్లిష్టమైన నడుపులను కొంతకాలం నిలిపివేయి.",
+    new_conversation: "కొత్త సంభాషణ",
+    dash_privacy: "మీ స్థానిక విభాగాలు మీ పరికరంలోనే ఉంటాయి. కాలక్రమేణా మీరు ఎలా ఉన్నారో ఒక చిత్రం.",
+    weekly_report: "వారపు నివేదిక",
+    this_week: "ఈ వారం",
+    your_month: "మీ నెల",
+    your_usage: "మీ వినియోగం",
+    days_logged: "రోజులు నమోదు చేయబడ్డాయి",
+    nila_chats_7d: "నీలా చాట్‌లు (7రోజులు)",
+    usage_checkins: "చెక్-ఇన్‌లు",
+    usage_programs: "పూర్తి చేసిన ప్రోగ్రామ్‌లు",
+    usage_assessments: "అసెస్‌మెంట్‌లు",
+    usage_features: "ఉపయోగించిన ఫీచర్‌లు",
   },
 };
 
