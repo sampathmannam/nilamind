@@ -24,6 +24,7 @@
 import type { BehaviourSnapshot, AppCategory } from './phoneBehaviour';
 import { INSTRUMENTS, type AssessmentEntry, type InstrumentId } from './assessments';
 import { DAY_MS } from './storageUtils';
+import type { MedicationLog } from './medicationAdherence';
 
 /** Mood/lifestyle signal for a given day, joined to behaviour by date. */
 export interface MoodPoint {
@@ -263,6 +264,37 @@ function socialConnectionVsMood(_snaps: BehaviourSnapshot[], mood: MoodPoint[]):
     id: 'social-connection', title: 'Connection vs isolation', direction: 'protective', dataPoints: connected.length + isolated.length,
     finding: `On your more-connected days, distress averaged ${r1(avg(connected))}/10 — versus ${r1(avg(isolated))}/10 on isolated days.`,
     basis: 'Felt connection is among the strongest mood protectors: loneliness correlates with depression at r≈0.50, and weak social ties carry mortality risk on par with major risk factors (Erzen & Çıkrıkçı 2018, Int J Soc Psychiatry; Holt-Lunstad et al. 2010, PLOS Med).',
+  };
+}
+
+/** Medication adherence → same-day mood. Compares distress on fully-adherent days vs missed-dose days.
+ *  Requires ≥5 days in each group and a mean difference ≥1.0 to surface. */
+export function medicationMoodInsight(medLogs: MedicationLog[], mood: MoodPoint[]): Insight | null {
+  // Per-day: were ALL doses taken?
+  const perDay = new Map<string, { total: number; taken: number }>();
+  for (const log of medLogs) {
+    const prev = perDay.get(log.date) ?? { total: 0, taken: 0 };
+    prev.total++;
+    if (log.taken) prev.taken++;
+    perDay.set(log.date, prev);
+  }
+  const md = moodByDate(mood);
+  const taken: number[] = [];
+  const missed: number[] = [];
+  for (const [date, { total, taken: t }] of perDay) {
+    const m = md[date];
+    if (!m || m.intensity == null) continue;
+    if (t === total) taken.push(m.intensity);
+    else missed.push(m.intensity);
+  }
+  if (taken.length < MIN_GROUP || missed.length < MIN_GROUP) return null;
+  const diff = avg(missed) - avg(taken);
+  if (diff < 1.0) return null;
+  return {
+    id: 'medication-adherence', title: 'Medication & mood', direction: 'protective',
+    dataPoints: taken.length + missed.length,
+    finding: `On days you took all your medication, distress averaged ${r1(avg(taken))}/10 — versus ${r1(avg(missed))}/10 on days you missed a dose.`,
+    basis: 'Consistent medication adherence is associated with more stable mood. This is a personal pattern from your data, not clinical advice — always talk to your doctor before changing how you take medication.',
   };
 }
 

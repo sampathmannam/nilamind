@@ -1,5 +1,16 @@
-import { describe, it, expect } from "vitest";
-import { detectElevationRisk, elevationGuardNote, elevationOutputNote } from "./elevationGuard";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+
+let store: Record<string, string>;
+vi.mock("./secureLocal", () => ({
+  secureLocal: {
+    getItem: (k: string) => store[k] ?? null,
+    setItem: (k: string, v: string) => { store[k] = v; },
+  },
+}));
+
+import { detectElevationRisk, elevationGuardNote, elevationOutputNote, energyElevationSignal } from "./elevationGuard";
+
+beforeEach(() => { store = {}; });
 
 describe("detectElevationRisk — high-precision mania-risk detection", () => {
   it("none for ordinary, distressed, or empty text", () => {
@@ -170,5 +181,97 @@ describe("guard notes", () => {
     expect(elevationOutputNote("none")).toBe("");
     expect(elevationOutputNote("elevated")).toBe("");
     expect(elevationOutputNote("high")).toContain("your doctor");
+  });
+});
+
+describe("energyElevationSignal — check-in energy prodrome", () => {
+  const ymd = (d: Date = new Date()) => d.toISOString().slice(0, 10);
+
+  function setCheckins(entries: Array<{ date: string; energy: number }>) {
+    store["nilamind_checkins"] = JSON.stringify(
+      entries.map((e, i) => ({
+        id: `c${i}`,
+        date: e.date,
+        timestamp: `${e.date}T12:00:00.000Z`,
+        emotion: "neutral",
+        intensity: 5,
+        energy: e.energy,
+        context: "none",
+      }))
+    );
+  }
+
+  it("returns 'none' when no check-ins exist", () => {
+    expect(energyElevationSignal()).toBe("none");
+  });
+
+  it("returns 'none' when check-ins lack energy data", () => {
+    store["nilamind_checkins"] = JSON.stringify([
+      { id: "c1", date: ymd(), timestamp: "2026-07-10T12:00:00.000Z", emotion: "ok", intensity: 5, context: "none" },
+    ]);
+    expect(energyElevationSignal()).toBe("none");
+  });
+
+  it("returns 'none' when fewer than 3 check-ins have energy", () => {
+    setCheckins([
+      { date: ymd(new Date(Date.now() - 86400000 * 2)), energy: 2 },
+      { date: ymd(new Date(Date.now() - 86400000)), energy: 3 },
+    ]);
+    expect(energyElevationSignal()).toBe("none");
+  });
+
+  it("returns 'none' when energy is stable", () => {
+    setCheckins([
+      { date: ymd(new Date(Date.now() - 86400000 * 4)), energy: 2 },
+      { date: ymd(new Date(Date.now() - 86400000 * 2)), energy: 2 },
+      { date: ymd(), energy: 2 },
+    ]);
+    expect(energyElevationSignal()).toBe("none");
+  });
+
+  it("returns 'none' when energy is falling", () => {
+    setCheckins([
+      { date: ymd(new Date(Date.now() - 86400000 * 4)), energy: 4 },
+      { date: ymd(new Date(Date.now() - 86400000 * 2)), energy: 2 },
+      { date: ymd(), energy: 1 },
+    ]);
+    expect(energyElevationSignal()).toBe("none");
+  });
+
+  it("returns 'elevated' when energy rises notably and recent is ≥3", () => {
+    setCheckins([
+      { date: ymd(new Date(Date.now() - 86400000 * 4)), energy: 2 },
+      { date: ymd(new Date(Date.now() - 86400000 * 2)), energy: 3 },
+      { date: ymd(), energy: 4 },
+    ]);
+    expect(energyElevationSignal()).toBe("elevated");
+  });
+
+  it("returns 'high' when energy rises steeply and recent is ≥4", () => {
+    setCheckins([
+      { date: ymd(new Date(Date.now() - 86400000 * 4)), energy: 1 },
+      { date: ymd(new Date(Date.now() - 86400000 * 2)), energy: 2 },
+      { date: ymd(), energy: 4 },
+    ]);
+    expect(energyElevationSignal()).toBe("high");
+  });
+
+  it("returns 'none' when recent energy is < 3 despite rising", () => {
+    setCheckins([
+      { date: ymd(new Date(Date.now() - 86400000 * 4)), energy: 1 },
+      { date: ymd(new Date(Date.now() - 86400000 * 2)), energy: 2 },
+      { date: ymd(), energy: 2 },
+    ]);
+    expect(energyElevationSignal()).toBe("none");
+  });
+
+  it("ignores check-ins older than 7 days", () => {
+    setCheckins([
+      { date: ymd(new Date(Date.now() - 86400000 * 10)), energy: 1 },
+      { date: ymd(new Date(Date.now() - 86400000 * 8)), energy: 2 },
+      { date: ymd(new Date(Date.now() - 86400000 * 6)), energy: 2 },
+    ]);
+    // Only within 7 days counts, so fewer than 3 valid entries
+    expect(energyElevationSignal()).toBe("none");
   });
 });

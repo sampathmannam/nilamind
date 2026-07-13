@@ -189,8 +189,11 @@ describe("quickNoteTags", () => {
   });
 });
 
-import { moodTrend, contextTrend } from "./dashboardInsights";
+import { moodTrend, contextTrend, sleepMoodTrend, weeklyRhythmBars } from "./dashboardInsights";
 import type { MoodPoint } from "./patternInsights";
+function checkin(date: string, intensity: number): CheckInEntry {
+  return { id: "t", date, timestamp: `${date}T12:00:00.000Z`, emotion: "Low", intensity, context: "" };
+}
 
 const mp = (date: string, intensity: number | null, sleepHours: number | null = null, social: number | null = null): MoodPoint =>
   ({ date, intensity, shame: null, sleepHours, social });
@@ -226,5 +229,62 @@ describe("contextTrend", () => {
     const out = contextTrend([mp("2026-06-02", 5, 7, 8), mp("2026-06-01", 5, null, null)], "30d");
     expect(out[0]).toEqual({ date: "06-01", sleepHours: 0, social: 0 });
     expect(out[1]).toEqual({ date: "06-02", sleepHours: 7, social: 8 });
+  });
+});
+
+describe("weeklyRhythmBars", () => {
+  it("returns empty for no check-ins", () => {
+    expect(weeklyRhythmBars([])).toEqual([]);
+  });
+
+  it("groups by day-of-week and computes average", () => {
+    // 2026-01-05 is Monday; 2026-01-06 Tuesday
+    const out = weeklyRhythmBars([
+      checkin("2026-01-05", 4),
+      checkin("2026-01-05", 6),
+      checkin("2026-01-06", 3),
+    ]);
+    const monday = out.find((b) => b.day === "Monday");
+    expect(monday).toBeDefined();
+    expect(monday!.avg).toBe(5); // (4+6)/2
+    expect(monday!.count).toBe(2);
+    const tuesday = out.find((b) => b.day === "Tuesday");
+    expect(tuesday!.avg).toBe(3);
+    expect(tuesday!.count).toBe(1);
+  });
+
+  it("skips days with no data", () => {
+    const out = weeklyRhythmBars([checkin("2026-01-05", 5)]); // Monday
+    expect(out.length).toBe(1);
+    expect(out[0].day).toBe("Monday");
+  });
+
+  it("sorts by weekday order", () => {
+    const out = weeklyRhythmBars([
+      checkin("2026-01-09", 4), // Friday
+      checkin("2026-01-05", 5), // Monday
+      checkin("2026-01-06", 3), // Tuesday
+    ]);
+    expect(out.map((b) => b.day)).toEqual(["Monday", "Tuesday", "Friday"]);
+  });
+});
+
+describe("sleepMoodTrend", () => {
+  it("maps sleep+intensity, sorts ascending, slices to range", () => {
+    const out = sleepMoodTrend([
+      mp("2026-06-03", 8, 6),
+      mp("2026-06-01", 3, 9),
+      mp("2026-06-02", 5, 7),
+    ], "30d");
+    expect(out).toEqual([
+      { date: "06-01", sleepHours: 9, intensity: 3 },
+      { date: "06-02", sleepHours: 7, intensity: 5 },
+      { date: "06-03", sleepHours: 6, intensity: 8 },
+    ]);
+  });
+
+  it("falls back null intensity to null, sleep to 0", () => {
+    const out = sleepMoodTrend([mp("2026-06-01", null, null)], "30d");
+    expect(out[0]).toEqual({ date: "06-01", sleepHours: 0, intensity: null });
   });
 });

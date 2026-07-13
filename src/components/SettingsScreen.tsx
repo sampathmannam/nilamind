@@ -4,6 +4,7 @@ import AppearanceSection from "./settings/AppearanceSection";
 import VoiceSection from "./settings/VoiceSection";
 import RemindersSection from "./settings/RemindersSection";
 import EmaSection from "./settings/EmaSection";
+import NotificationCategoriesSection from "./settings/NotificationCategoriesSection";
 import InflectionSection from "./settings/InflectionSection";
 import HealthConnectSection from "./settings/HealthConnectSection";
 import OnDeviceSection from "./settings/OnDeviceSection";
@@ -37,6 +38,7 @@ export default function SettingsScreen({ onOpenCaregiver }: SettingsScreenProps)
       <VoiceSection />
 <RemindersSection />
 <EmaSection />
+<NotificationCategoriesSection />
 <InflectionSection />
 <HealthConnectSection />
       <OnDeviceSection />

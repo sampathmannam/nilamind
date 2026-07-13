@@ -14,10 +14,10 @@ import Markdown from "react-markdown";
 import { loadMoodHistory } from "../services/moodHistory";
 import { t } from "../services/i18n";
 import { loadAssessments, latestFor, INSTRUMENTS, type InstrumentId } from "../services/assessments";
-import { assessmentInsights, generateInsights, daysOfData, type Insight } from "../services/patternInsights";
+import { assessmentInsights, generateInsights, daysOfData, medicationMoodInsight, type Insight } from "../services/patternInsights";
 import { computeStreak, computeCompassionateStreak } from "../services/streaks";
 import { nilaStats } from "../services/nilaSessions";
-import { adherenceSummary } from "../services/medicationAdherence";
+import { adherenceSummary, loadMedicationLogs } from "../services/medicationAdherence";
 import { getRecentMetrics, detectMoodSignal } from "../services/typingPatterns";
 import { voiceMoodSignal } from "../services/voicePatterns";
 import { computeCircadianInsight } from "../services/circadian";
@@ -38,7 +38,7 @@ import CrisisCard from "./CrisisCard";
 import { stripProvenance } from "../services/emotionParse";
 import {
   emotionDistribution, derivedObservations, episodePatterns, quickNoteTags,
-  moodTrend, contextTrend,
+  moodTrend, contextTrend, sleepMoodTrend, weeklyRhythmBars,
 } from "../services/dashboardInsights";
 import { getRecentSnapshots } from "../db/behaviourDb";
 import type { CheckInEntry, DiaryCardEntry, EpisodeRecord } from "../types";
@@ -61,7 +61,7 @@ function readArr<T>(key: string): T[] {
 // The USER's own private analytics. Local sections never leave the device.
 export default function DashboardScreen({ onManageData }: { onManageData?: () => void }) {
   const [timeRange, setTimeRange] = useState<"7d" | "30d">("30d");
-  const [chartTab, setChartTab] = useState<"emotion" | "context" | "energy">("emotion");
+  const [chartTab, setChartTab] = useState<"emotion" | "context" | "energy" | "sleep-mood">("emotion");
   const [isAssessing, setIsAssessing] = useState(false);
   const [assessmentResult, setAssessmentResult] = useState<string | null>(null);
   const [assessmentCrisis, setAssessmentCrisis] = useState(false);
@@ -144,7 +144,11 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
       try {
         const snaps = await getRecentSnapshots(30);
         if (cancelled) return;
-        setBehaviourInsights(generateInsights(snaps, mood));
+        const insights = generateInsights(snaps, mood);
+        const medLogs = loadMedicationLogs();
+        const medInsight = medicationMoodInsight(medLogs, mood);
+        if (medInsight) insights.push(medInsight);
+        setBehaviourInsights(insights);
         setBehaviourDays(daysOfData(snaps, mood));
       } catch { /* fresh db or no permission */ }
     })();
@@ -164,6 +168,7 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
       }));
   }, [checkins, timeRange]);
   const emoBars = useMemo(() => emotionDistribution(checkins, stripProvenance), [checkins]);
+  const weeklyBars = useMemo(() => weeklyRhythmBars(checkins), [checkins]);
   const observations = useMemo(() => derivedObservations(checkins, diaryEntries), [checkins, diaryEntries]);
   const typingSignal = useMemo(() => {
     const metrics = getRecentMetrics("chat", 7);
@@ -182,6 +187,7 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
   const topTags = useMemo(() => quickNoteTags(diaryEntries), [diaryEntries]);
   const emotionTrend = useMemo(() => moodTrend(mood, timeRange), [mood, timeRange]);
   const ctxTrend = useMemo(() => contextTrend(mood, timeRange), [mood, timeRange]);
+  const sleepMoodTrendData = useMemo(() => sleepMoodTrend(mood, timeRange), [mood, timeRange]);
   const emaPoints = useMemo(() => {
     const entries = loadEmaEntries();
     const dateSet = new Set(emotionTrend.map(p => p.date));
@@ -192,7 +198,7 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
         intensity: Math.round(((e.valence + 3) / 6) * 9) + 1, // map -3..+3 to 1..10 roughly
       }));
   }, [emotionTrend]);
-  const trendLength = chartTab === "emotion" ? emotionTrend.length : chartTab === "energy" ? energyScatter.length : ctxTrend.length;
+  const trendLength = chartTab === "emotion" ? emotionTrend.length : chartTab === "energy" ? energyScatter.length : chartTab === "sleep-mood" ? sleepMoodTrendData.length : ctxTrend.length;
 
   const moodSummary = (() => {
     if (thisAvg == null) return "No check-ins yet this week — even a one-tap mood helps your trends grow.";
@@ -716,9 +722,11 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
                 className={`text-[10px] px-2 py-1 rounded-md font-medium transition-colors ${chartTab === "context" ? "bg-blue-500/20 text-blue-400" : "text-slate-500 hover:text-slate-300"}`}>Context</button>
               <button onClick={() => setChartTab("energy")} aria-label="Show mood vs energy scatter" aria-pressed={chartTab === "energy"}
                 className={`text-[10px] px-2 py-1 rounded-md font-medium transition-colors ${chartTab === "energy" ? "bg-amber-500/20 text-amber-400" : "text-slate-500 hover:text-slate-300"}`}>Energy</button>
+              <button onClick={() => setChartTab("sleep-mood")} aria-label="Show sleep vs mood correlation" aria-pressed={chartTab === "sleep-mood"}
+                className={`text-[10px] px-2 py-1 rounded-md font-medium transition-colors ${chartTab === "sleep-mood" ? "bg-emerald-500/20 text-emerald-400" : "text-slate-500 hover:text-slate-300"}`}>Sleep-Mood</button>
             </div>
           </div>
-          <div className="w-full h-48" role="img" aria-label={chartTab === "emotion" ? "Line chart showing emotional intensity trend over time. Lower values indicate calmer states." : chartTab === "energy" ? "Scatter plot of mood intensity vs energy level. Each dot is one check-in." : "Line chart showing sleep hours and social connection over time."}>
+          <div className="w-full h-48" role="img" aria-label={chartTab === "emotion" ? "Line chart showing emotional intensity trend over time. Lower values indicate calmer states." : chartTab === "energy" ? "Scatter plot of mood intensity vs energy level. Each dot is one check-in." : chartTab === "sleep-mood" ? "Dual-axis line chart showing sleep hours and mood intensity over time." : "Line chart showing sleep hours and social connection over time."}>
             <ResponsiveContainer width="100%" height="100%">
               {chartTab === "emotion" ? (
                 <ComposedChart data={emotionTrend}>
@@ -739,6 +747,17 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
                   <Tooltip contentStyle={{ backgroundColor: "#171311", borderColor: "#2E2922", borderRadius: "8px" }} labelFormatter={() => ""} wrapperStyle={{ fontSize: "12px" }} />
                   <Scatter data={energyScatter} dataKey="intensity" name="Distress" fill="#D8A657" stroke="#2E2922" strokeWidth={0.5} />
                 </ScatterChart>
+              ) : chartTab === "sleep-mood" ? (
+                <LineChart data={sleepMoodTrendData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#2E2922" vertical={false} />
+                  <XAxis dataKey="date" stroke="#948A7E" fontSize={10} tickLine={false} axisLine={false} />
+                  <YAxis yAxisId="left" stroke="#948A7E" fontSize={10} domain={[0, 14]} allowDecimals={false} tickLine={false} axisLine={false} orientation="left" />
+                  <YAxis yAxisId="right" stroke="#948A7E" fontSize={10} domain={[1, 10]} allowDecimals={false} tickLine={false} axisLine={false} orientation="right" />
+                  <Tooltip contentStyle={{ backgroundColor: "#171311", borderColor: "#2E2922", borderRadius: "8px", fontSize: "12px" }} labelStyle={{ color: "#ECE5DA" }} />
+                  <Legend wrapperStyle={{ fontSize: "10px", color: "#948A7E" }} verticalAlign="top" height={36} />
+                  <Line yAxisId="left" type="monotone" dataKey="sleepHours" name="Sleep (hrs)" stroke="#46735C" strokeWidth={3} dot={{ r: 3, fill: "#211C17" }} />
+                  <Line yAxisId="right" type="monotone" dataKey="intensity" name="Distress" stroke="#9479B0" strokeWidth={3} dot={{ r: 3, fill: "#211C17" }} />
+                </LineChart>
               ) : (
                 <LineChart data={ctxTrend}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#2E2922" vertical={false} />
@@ -753,7 +772,7 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
               )}
             </ResponsiveContainer>
           </div>
-          <p className="text-[10px] text-slate-600">{chartTab === "emotion" ? "Lower is calmer. Per-day average of your check-ins." : chartTab === "energy" ? "Each dot is one check-in. Lower distress + higher energy = Vibrant; higher distress + lower energy = Sluggish." : "Sleep hours and felt-connection, per day."}</p>
+          <p className="text-[10px] text-slate-600">{chartTab === "emotion" ? "Lower is calmer. Per-day average of your check-ins." : chartTab === "energy" ? "Each dot is one check-in. Lower distress + higher energy = Vibrant; higher distress + lower energy = Sluggish." : chartTab === "sleep-mood" ? "Sleep hours vs distress. Lower sleep often correlates with higher distress." : "Sleep hours and felt-connection, per day."}</p>
         </div>
       ) : (
         <EmptyCard text="Your trend will appear here after a couple of check-ins." />
@@ -774,6 +793,25 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
               </BarChart>
             </ResponsiveContainer>
           </div>
+        </div>
+      )}
+
+      {/* Weekly rhythm: per-day-of-week mood averages */}
+      {weeklyBars.length > 0 && (
+        <div className="glass rounded-2xl p-4 space-y-3">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500 font-mono">Weekly rhythm</h2>
+          <div className="w-full h-44" role="img" aria-label="Bar chart showing average mood intensity by day of week.">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={weeklyBars}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#2E2922" vertical={false} />
+                <XAxis dataKey="day" stroke="#948A7E" fontSize={9} tickLine={false} axisLine={false} />
+                <YAxis stroke="#948A7E" fontSize={9} domain={[1, 10]} allowDecimals={false} tickLine={false} axisLine={false} />
+                <Tooltip contentStyle={{ backgroundColor: "#171311", borderColor: "#2E2922", borderRadius: "8px" }} labelStyle={{ color: "#ECE5DA" }} />
+                <Bar dataKey="avg" name="Avg distress" fill="#D8A657" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <p className="text-[10px] text-slate-600">Average distress by day of week. Based on {weeklyBars.reduce((s, b) => s + b.count, 0)} check-ins.</p>
         </div>
       )}
 

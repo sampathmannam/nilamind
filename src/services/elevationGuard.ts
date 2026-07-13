@@ -1,3 +1,7 @@
+import { secureLocal } from "./secureLocal";
+import type { CheckInEntry } from "../types";
+import { getNaps, isLateLongNap } from "./napTracking";
+
 // Deterministic elevation / mania-risk guard — defends against the sycophancy → mania-amplification harm
 // (Østergaard 2023, Schizophr Bull). This is NOT §9 (acute crisis): it catches grandiose / high-risk MANIC
 // content and steers Nila to gently reality-anchor instead of validating or amplifying it.
@@ -121,4 +125,55 @@ export function elevationOutputNote(level: ElevationLevel): string {
   return level === "high"
     ? "And gently — before anything with your meds, please loop in your doctor or someone you trust. That's a big call to make alone, especially when things feel fast right now."
     : "";
+}
+
+/** Load check-in energy data and detect sustained elevation prodrome from rapidly rising energy.
+ *  Requires ≥3 check-ins with energy data within the last 7 days. Mirrors the approach used by
+ *  emaElevationSignal but for day-granular check-in self-reports. */
+export function energyElevationSignal(): ElevationLevel {
+  try {
+    const raw = secureLocal.getItem("nilamind_checkins");
+    if (!raw) return "none";
+    const all: CheckInEntry[] = JSON.parse(raw);
+    if (!Array.isArray(all) || all.length === 0) return "none";
+
+    const cutoff = Date.now() - 86400000 * 7;
+    const withEnergy = all
+      .filter((e) => e && typeof e.energy === "number" && e.date && new Date(e.date).getTime() >= cutoff)
+      .sort((a, b) => a.date.localeCompare(b.date)); // oldest first
+
+    if (withEnergy.length < 3) return "none";
+
+    const vals = withEnergy.map((e) => e.energy as number);
+    const half = Math.ceil(vals.length / 2);
+    const firstAvg = vals.slice(0, half).reduce((s, n) => s + n, 0) / half;
+    const secondAvg = vals.slice(-half).reduce((s, n) => s + n, 0) / half;
+    const diff = secondAvg - firstAvg;
+    const last = vals[vals.length - 1];
+
+    if (diff >= 1.5 && last >= 4) return "high";
+    if (diff >= 0.8 && last >= 3) return "elevated";
+    return "none";
+  } catch {
+    return "none";
+  }
+}
+
+/** Load logged naps and detect an elevation prodrome from frequent / late-long daytime napping.
+ *  Frequent long naps — especially after ~3pm — correlate with bipolar mood elevation and a disrupted
+ *  circadian rhythm (Milner & Cote 2014, J Sleep Res). Requires ≥3 naps in the last 14 days and at least
+ *  one "late-long" nap (the rhythm-disrupting kind) so a single quiet afternoon rest never fires. Mirrors
+ *  energyElevationSignal's stored-data, high-precision shape. */
+export function napElevationSignal(now: Date = new Date()): ElevationLevel {
+  const cutoff = now.getTime() - 86400000 * 14;
+  const naps = getNaps().filter((n) => {
+    const [y, m, d] = n.date.split("-").map(Number);
+    const t = new Date(y, (m || 1) - 1, d || 1).getTime();
+    return Number.isFinite(t) && t >= cutoff;
+  });
+  if (naps.length < 3) return "none";
+  const lateLong = naps.filter((n) => isLateLongNap(n.start, n.minutes)).length;
+  if (naps.length >= 5 && lateLong >= 2) return "high";
+  if (naps.length >= 3 && lateLong >= 1) return "elevated";
+  return "none";
 }

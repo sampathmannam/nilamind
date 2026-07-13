@@ -34,6 +34,7 @@ import { DBT_SKILLS_TRAINING } from "./protocolDBT";
 import { ACT_TRAINING } from "./protocolACT";
 import { ASSERTION_TRAINING } from "./protocolAssertion";
 import { CBTI_SLEEP } from "./protocolCBTI";
+import { SOCIAL_RHYTHM_PROTOCOL } from "./protocolSocialRhythm";
 
 export const PROTOCOLS: Protocol[] = [
   {
@@ -358,6 +359,7 @@ export const PROTOCOLS: Protocol[] = [
   ACT_TRAINING,
   ASSERTION_TRAINING,
   CBTI_SLEEP,
+  SOCIAL_RHYTHM_PROTOCOL,
 ];
 
 /**

@@ -11,14 +11,17 @@
 
 import { loadMoodHistory } from "./moodHistory";
 import { shortSleepSignal, readRecentSleep, type SleepNight, type SleepSignal } from "./healthConnect";
+import { manualSleepNights } from "./sleepLog";
 
 /** The user's self-reported sleep (check-in sleepHours), one night per logged day. Sync, on-device. */
 export function selfReportedSleepNights(): SleepNight[] {
-  const out: SleepNight[] = [];
+  const byDate = new Map<string, number>();
   for (const m of loadMoodHistory()) {
-    if (typeof m.sleepHours === "number" && m.sleepHours > 0) out.push({ date: m.date, hours: m.sleepHours });
+    if (typeof m.sleepHours === "number" && m.sleepHours > 0) byDate.set(m.date, m.sleepHours);
   }
-  return out;
+  // P8.1: a manual morning sleep-log entry takes precedence over the same day's check-in sleepHours.
+  for (const n of manualSleepNights()) byDate.set(n.date, n.hours);
+  return [...byDate.entries()].map(([date, hours]) => ({ date, hours }));
 }
 
 /** Sleep signal from SELF-REPORT only — sync, available today without any wearable. */

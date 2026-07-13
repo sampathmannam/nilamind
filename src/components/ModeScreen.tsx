@@ -28,6 +28,8 @@ import { activePactNotice, dismissPactNoticeToday, type PactNotice } from "../se
 import type { CheckInEntry } from "../types";
 import { secureLocal } from "../services/secureLocal";
 import { sendToNila } from "../services/sendToNila";
+import { cardsForCheckin } from "../services/nilaOrchestration";
+import { extractWeeklyFacts, shouldRunSynthesis, weeklySynthesisPrompt, recordSynthesisTimestamp } from "../services/weeklySynthesis";
 import { NilaMode, NilaUiMessage, shouldBlockForCrisisAsync } from "../services/nilaSend";
 import { getSessionChat, setSessionChat, clearSessionChat } from "../services/sessionChat";
 import { localLlmLoadState } from "../services/localLlm";
@@ -53,6 +55,11 @@ import { Settings, Mic, Send, MicOff, Keyboard, X, ShieldCheck, ThumbsUp, Thumbs
 import { hapticLight, hapticMedium } from "../hooks/useHaptics";
 import { recordFeedback } from "../services/nilaFeedback";
 import { notifyReplyReady } from "../services/notifications";
+import { isDndActive, getDndUntil, enableDndFor, clearDnd, DND_DURATIONS } from "../services/dnd";
+import { isCategoryEnabled } from "../services/notificationCategories";
+import { shouldPromptMorningSleepLog, logSleepNight, markMorningSleepDismissed } from "../services/sleepLog";
+import { logNap } from "../services/napTracking";
+import { isHealthConnectEnabled } from "../services/healthConnect";
 import {
   recordCrisisEvent,
   hasPendingAftercare,
@@ -90,7 +97,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   const [showTextInput, setShowTextInput] = useState(false);
   const [auxView, setAuxView] = useState<"learn" | "thought_record" | "values_to_action" | "safety_plan" | null>(null);
   const [thoughtRecordDraft, setThoughtRecordDraft] = useState<ThoughtRecordDraft | undefined>();
-  const [protocolCard, setProtocolCard] = useState<ProtocolCard | null>(() => protocolOfferCard(""));
+  const [protocolCard, setProtocolCard] = useState<ProtocolCard | null>(() => isCategoryEnabled("protocol") ? protocolOfferCard("") : null);
   const [showSafetyPlanReview, setShowSafetyPlanReview] = useState(false);
   const [showSafetyPlanFollowUp, setShowSafetyPlanFollowUp] = useState(false);
   const [sleepProdromeNudge, setSleepProdromeNudge] = useState<{ firing: boolean; detail: string } | null>(null);
@@ -102,6 +109,17 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   const [aftercareStep, setAftercareStep] = useState(-1);
   const [ratedMessages, setRatedMessages] = useState<Set<number>>(new Set());
   const [showQuickActions, setShowQuickActions] = useState(false);
+  const [dndOn, setDndOn] = useState<boolean>(() => isDndActive()); // P6.7: "give me space" latch
+  const [dndPickerOpen, setDndPickerOpen] = useState(false);
+  // P8.1: morning sleep-log prompt — surface on first open of the morning when there's no auto sleep source.
+  const [morningSleep, setMorningSleep] = useState<{ bedTime: string | null; wakeTime: string | null } | null>(() => {
+    const now = new Date();
+    return shouldPromptMorningSleepLog(now, isHealthConnectEnabled())
+      ? { bedTime: null, wakeTime: null }
+      : null;
+  });
+  // P8.4: nap logger modal state.
+  const [napModal, setNapModal] = useState<{ start: string | null; minutes: number | null } | null>(null);
   // #4 + #9 (audit): §9 crisis now routes through the App-level overlay (onOpenCrisis) so the Android hardware
   // back button closes it instead of exiting the app; a session that ever tripped §9 latches hadCrisisRef so
   // the transcript is never persisted/restored (keying the clear on a transient boolean re-persisted it on dismiss).
@@ -132,6 +150,18 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
 
   // #22 (audit): mirror the in-progress draft to the module cache so a tab-switch remount doesn't lose it.
   useEffect(() => { modeDraftCache = inputText; }, [inputText]);
+
+  // P6.7: keep the "give me space" badge honest — re-read the latch when the app refocuses (so it auto-clears
+  // when the chosen window passes) and close the picker if it expires.
+  useEffect(() => {
+    const refresh = () => setDndOn(isDndActive());
+    document.addEventListener("visibilitychange", refresh);
+    window.addEventListener("focus", refresh);
+    return () => {
+      document.removeEventListener("visibilitychange", refresh);
+      window.removeEventListener("focus", refresh);
+    };
+  }, []);
 
   // Refresh mode every 5 minutes
   useEffect(() => {
@@ -255,6 +285,26 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
     clearChatElevation(); // a fresh check-in supersedes any chat-detected elevation → relax the UI
     setMode(getCurrentMode());
     hapticMedium();
+    (async () => {
+      try {
+        if (!shouldRunSynthesis()) return;
+        const facts = extractWeeklyFacts();
+        if (facts.checkinCount === 0) return;
+        const recentCheckins: CheckInEntry[] = (() => { try { const r = secureLocal.getItem("nilamind_checkins"); return r ? JSON.parse(r) : []; } catch { return []; } })();
+        const cards = cardsForCheckin(entry, recentCheckins);
+        if (!cards.some((c) => c.kind === "weekly_synthesis")) return;
+        const prompt = weeklySynthesisPrompt(facts);
+        const result = await sendToNila(
+          [{ role: "user", content: prompt }],
+          "companion",
+          { onDelta: () => {} }
+        );
+        if (result.reply && !result.blocked) {
+          setMessages((prev) => [...prev, { role: "assistant", content: result.reply }]);
+        }
+        recordSynthesisTimestamp();
+      } catch { /* best-effort weekly synthesis */ }
+    })();
     setMessages((prev) => [
       ...prev,
       { role: "assistant", content: `Thank you. I'll keep that in mind.` },
@@ -521,6 +571,9 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
       case "wind_down":
         onOpenWindDown?.();
         break;
+      case "nap":
+        setNapModal({ start: null, minutes: null }); // P8.4: open the nap logger
+        break;
       default:
         break;
     }
@@ -580,6 +633,44 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           >
             <Settings className="w-4 h-4" />
           </button>
+          <button
+            onClick={() => setDndPickerOpen((v) => !v)}
+            className={`relative p-2 rounded-full transition-colors cursor-pointer focus-ring min-w-[44px] min-h-[44px] flex items-center justify-center ${dndOn ? "bg-amber-500/15 text-amber-300" : "hover:bg-slate-800 text-slate-400 hover:text-slate-200"}`}
+            aria-label={dndOn ? "Quiet mode on — tap to change" : "Turn on quiet mode"}
+            aria-pressed={dndOn}
+          >
+            <Moon className="w-4 h-4" />
+          </button>
+          {dndPickerOpen && (
+            <div
+              className="absolute right-3 top-14 z-50 w-56 rounded-xl border border-slate-700 bg-slate-900 p-2 shadow-xl"
+              role="menu"
+              aria-label="Quiet mode"
+            >
+              <p className="px-2 pt-1 pb-2 text-xs text-slate-400">
+                {dndOn ? "Quiet mode is on — non-critical nudges are paused." : "Pause non-critical nudges for a while."}
+              </p>
+              {DND_DURATIONS.map((d) => (
+                <button
+                  key={d.label}
+                  onClick={() => { enableDndFor(d.hours); setDndOn(true); setDndPickerOpen(false); }}
+                  className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-800 transition-colors cursor-pointer"
+                  role="menuitem"
+                >
+                  {d.label}
+                </button>
+              ))}
+              {dndOn && (
+                <button
+                  onClick={() => { clearDnd(); setDndOn(false); setDndPickerOpen(false); }}
+                  className="mt-1 w-full rounded-lg px-3 py-2 text-left text-sm text-amber-300 hover:bg-slate-800 transition-colors cursor-pointer"
+                  role="menuitem"
+                >
+                  Turn quiet mode off
+                </button>
+              )}
+            </div>
+          )}
           {/* Crisis auto-detection routes through openCrisis() below. No persistent crisis button in the
               header — the app no longer shows a constant crisis affordance on every screen. */}
         </div>
@@ -889,7 +980,76 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           {/* Post-crisis aftercare card — shown when a recent §9 event needs structured follow-up.
               Stanley & Brown (2012) cohort: aftercare contact halves subsequent suicidal behaviour.
               Shown only when the aftercare is pending and no conversation has started yet. */}
-          {aftercareStep === 0 && messages.length === 0 && (
+          {/* P8.1: morning sleep-log prompt — 2-tap entry shown on first open of the morning when there's no
+              automatic sleep source (Health Connect). Feeds the same short-sleep prodrome signal. */}
+          {morningSleep && messages.length === 0 && (
+            <div
+              className="w-full px-3 py-3 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-100 text-xs"
+              id="morning-sleep-card"
+            >
+              <p className="font-medium">Good morning — quick sleep check</p>
+              <p className="leading-relaxed mt-1 text-indigo-200/80">
+                What time did you go to sleep and wake up? Two taps is enough.
+              </p>
+              <div className="mt-2">
+                <div className="text-[11px] text-indigo-200/70 mb-1">Bedtime</div>
+                <div className="flex flex-wrap gap-1.5">
+                  {["21:00", "22:00", "23:00", "00:00", "01:00"].map((t) => (
+                    <button
+                      key={t}
+                      onClick={() => setMorningSleep((s) => s ? { ...s, bedTime: t } : s)}
+                      className={`px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-colors cursor-pointer min-h-[36px] focus-ring ${morningSleep.bedTime === t ? "bg-indigo-500/30 text-indigo-100 border border-indigo-400/50" : "bg-slate-800 text-slate-300 border border-slate-700"}`}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="mt-2">
+                <div className="text-[11px] text-indigo-200/70 mb-1">Wake time</div>
+                <div className="flex flex-wrap gap-1.5">
+                  {["05:00", "06:00", "07:00", "08:00", "09:00"].map((t) => (
+                    <button
+                      key={t}
+                      onClick={() => setMorningSleep((s) => s ? { ...s, wakeTime: t } : s)}
+                      className={`px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-colors cursor-pointer min-h-[36px] focus-ring ${morningSleep.wakeTime === t ? "bg-indigo-500/30 text-indigo-100 border border-indigo-400/50" : "bg-slate-800 text-slate-300 border border-slate-700"}`}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex gap-2 mt-3">
+                <button
+                  disabled={!morningSleep.bedTime || !morningSleep.wakeTime}
+                  onClick={() => {
+                    if (morningSleep.bedTime && morningSleep.wakeTime) {
+                      const now = new Date();
+                      const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+                      logSleepNight(today, morningSleep.bedTime, morningSleep.wakeTime);
+                      setMorningSleep(null);
+                    }
+                  }}
+                  className="px-3 py-2 rounded-lg bg-indigo-500/25 hover:bg-indigo-500/35 text-indigo-100 font-medium transition-colors cursor-pointer min-h-[44px] focus-ring disabled:opacity-40"
+                >
+                  Save
+                </button>
+                <button
+                  onClick={() => {
+                    const now = new Date();
+                    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+                    markMorningSleepDismissed(today);
+                    setMorningSleep(null);
+                  }}
+                  className="px-3 py-2 rounded-lg hover:bg-indigo-500/15 text-indigo-200/80 transition-colors cursor-pointer min-h-[44px] focus-ring"
+                >
+                  Not now
+                </button>
+              </div>
+            </div>
+          )}
+
+          {aftercareStep === 0 && messages.length === 0 && isCategoryEnabled("crisis_followup") && (
             <div
               className="w-full px-3 py-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-200 text-xs"
               id="aftercare-card"
@@ -949,6 +1109,71 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                       Dismiss
                     </button>
 </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* P8.4: nap logger modal — quick 2-tap entry (start time + length). */}
+          {napModal && (
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-6"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Log a nap"
+              onClick={() => setNapModal(null)}
+            >
+              <div className="w-full max-w-sm glass rounded-2xl p-5 space-y-4" onClick={(e) => e.stopPropagation()}>
+                <h2 className="text-sm font-semibold text-slate-100">Log a nap</h2>
+                <div>
+                  <div className="text-[11px] text-slate-400 mb-1">When did it start?</div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {["12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00"].map((t) => (
+                      <button
+                        key={t}
+                        onClick={() => setNapModal((m) => m ? { ...m, start: t } : m)}
+                        className={`px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-colors cursor-pointer min-h-[36px] focus-ring ${napModal.start === t ? "bg-amber-500/30 text-amber-100 border border-amber-400/50" : "bg-slate-800 text-slate-300 border border-slate-700"}`}
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[11px] text-slate-400 mb-1">How long?</div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {[20, 30, 45, 60, 90].map((d) => (
+                      <button
+                        key={d}
+                        onClick={() => setNapModal((m) => m ? { ...m, minutes: d } : m)}
+                        className={`px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-colors cursor-pointer min-h-[36px] focus-ring ${napModal.minutes === d ? "bg-amber-500/30 text-amber-100 border border-amber-400/50" : "bg-slate-800 text-slate-300 border border-slate-700"}`}
+                      >
+                        {d}m
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex gap-2 pt-1">
+                  <button
+                    disabled={!napModal.start || napModal.minutes === null}
+                    onClick={() => {
+                      if (napModal.start && napModal.minutes !== null) {
+                        const now = new Date();
+                        const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+                        logNap(today, napModal.start, napModal.minutes);
+                        setNapModal(null);
+                      }
+                    }}
+                    className="flex-1 px-3 py-2 rounded-lg bg-amber-500/25 hover:bg-amber-500/35 text-amber-100 font-medium transition-colors cursor-pointer min-h-[44px] focus-ring disabled:opacity-40"
+                  >
+                    Save nap
+                  </button>
+                  <button
+                    onClick={() => setNapModal(null)}
+                    className="px-3 py-2 rounded-lg hover:bg-slate-700/50 text-slate-300 transition-colors cursor-pointer min-h-[44px] focus-ring"
+                  >
+                    Cancel
+                  </button>
                 </div>
               </div>
             </div>

@@ -61,6 +61,8 @@ function ScreenFallback() {
 }
 
 import { syncDailyReminders, scheduleReminderAt, syncEmaCheckins, suppressNudgesForCrisis } from "./services/notifications";
+import { recordEngagement } from "./services/notificationBudget";
+import { isCategoryEnabled } from "./services/notificationCategories";
 import { LocalNotifications } from "@capacitor/local-notifications";
 import { t, LANGUAGE_CHANGED_EVENT } from "./services/i18n";
 import { wakeWord } from "./services/wakeWord";
@@ -161,7 +163,7 @@ export default function App() {
   const [saveWarning, setSaveWarning] = useState(false);
   const [onboardingDone, setOnboardingDone] = useState(hasCompletedOnboarding());
   const [wakeListening, setWakeListening] = useState(false);
-  const [phoneEnabled] = useState(false);
+  const [phoneEnabled] = useState(true);
   const [modeScreenHasSheet, setModeScreenHasSheet] = useState(false);
   const [, setLangTick] = useState(0);
   const closeSheet = useCallback((view: AuxView | null) => {
@@ -218,7 +220,7 @@ export default function App() {
   // disclosure (mirrors notifications.ts notifyReplyReady). The private context stays inside the app.
   useEffect(() => {
     const entry = getArmedCheckin();
-    if (entry) {
+    if (entry && isCategoryEnabled("armed")) { // P6.5: armed-check-in category toggle
       void scheduleReminderAt(new Date(entry.triggerAt), armedCheckinBody(), "NilaMind", { view: "armed_checkin" });
     }
   }, []);
@@ -311,7 +313,10 @@ export default function App() {
     LocalNotifications.addListener("localNotificationActionPerformed", (action) => {
       try {
         const view = action?.notification?.extra?.view;
-        if (typeof view === "string" && view) go(view);
+        if (typeof view === "string" && view) {
+          recordEngagement(); // P6.3: a tapped non-crisis nudge resets the progressive-cooldown streak
+          go(view);
+        }
       } catch (e) {
         console.error("[App] notification tap routing failed:", e);
       }

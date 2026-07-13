@@ -14,7 +14,7 @@ vi.mock("@capacitor/local-notifications", () => ({
 }));
 // notifications.ts imports ./reminders — stub it (unused by notifyReplyReady).
 // EMA + suppression + reminder deps — controllable via emaMocks (vi.hoisted so the mock factories can read it).
-const emaMocks = vi.hoisted(() => ({ enabled: true, frequency: 2, suppressed: false, elevation: "none" as string, times: [] as Date[], dailyEnabled: false, markSuppressCalls: 0 }));
+const emaMocks = vi.hoisted(() => ({ enabled: true, frequency: 2, suppressed: false, elevation: "none" as string, times: [] as Date[], dailyEnabled: false, markSuppressCalls: 0, dnd: false, skip: false, budget: 3, catCheckin: true, catInsight: true }));
 vi.mock("./reminders", () => ({
   withinQuietHours: () => false,
   getReminderPrefs: () => ({ enabled: emaMocks.dailyEnabled, windowStart: "10:00", windowEnd: "20:00", quietStart: "22:00", quietEnd: "08:00" }),
@@ -22,6 +22,16 @@ vi.mock("./reminders", () => ({
 vi.mock("./emaPrefs", () => ({ getEmaEnabled: () => emaMocks.enabled, getEmaFrequency: () => emaMocks.frequency }));
 vi.mock("./ema", () => ({ planEmaFireTimes: () => emaMocks.times, emaElevationSignal: () => emaMocks.elevation }));
 vi.mock("./notificationSuppress", () => ({ isSafetySuppressed: () => emaMocks.suppressed, markSafetySuppression: () => { emaMocks.markSuppressCalls++; } }));
+vi.mock("./dnd", () => ({ isDndActive: () => emaMocks.dnd }));
+vi.mock("./notificationBudget", () => ({
+  peekRemaining: () => emaMocks.budget,
+  commitClaim: () => {},
+  skipActive: () => emaMocks.skip,
+  recordNonCrisisSent: () => {},
+}));
+vi.mock("./notificationCategories", () => ({
+  isCategoryEnabled: (id: string) => (id === "checkin" ? emaMocks.catCheckin : id === "insight" ? emaMocks.catInsight : true),
+}));
 
 import { notifyReplyReady } from "./notifications";
 
@@ -48,6 +58,14 @@ describe("notifyReplyReady — the backgrounded 'Nila replied' ping", () => {
     checkPermissions.mockRejectedValue(new Error("no plugin"));
     await expect(notifyReplyReady()).resolves.toBeUndefined();
     expect(schedule).not.toHaveBeenCalled();
+  });
+
+  it("does NOT ping when the user is in DND 'give me space' mode", async () => {
+    emaMocks.dnd = true;
+    checkPermissions.mockResolvedValue({ display: "granted" });
+    await notifyReplyReady();
+    expect(schedule).not.toHaveBeenCalled();
+    emaMocks.dnd = false;
   });
 });
 
@@ -146,6 +164,41 @@ describe("syncEmaCheckins — randomized EMA quick check-ins", () => {
     expect(schedule).not.toHaveBeenCalled();
   });
 
+  it("bails (schedules nothing) when the user is in DND 'give me space' mode (P6.7)", async () => {
+    emaMocks.dnd = true;
+    const { syncEmaCheckins } = await import("./notifications");
+    const res = await syncEmaCheckins({ request: false });
+    expect(res.scheduled).toBe(false);
+    expect(schedule).not.toHaveBeenCalled();
+    emaMocks.dnd = false;
+  });
+
+  it("bails (schedules nothing) when the per-day budget is exhausted (P6.3)", async () => {
+    const now = new Date();
+    const t1 = new Date(now); t1.setHours(11, 0, 0, 0);
+    const t2 = new Date(now); t2.setHours(20, 0, 0, 0);
+    emaMocks.times = [t1, t2]; // both fire today → draw from today's budget
+    emaMocks.budget = 0;
+    const { syncEmaCheckins } = await import("./notifications");
+    const res = await syncEmaCheckins({ request: false });
+    expect(res.scheduled).toBe(false);
+    expect(schedule).not.toHaveBeenCalled();
+    emaMocks.budget = 3;
+  });
+
+  it("bails (schedules nothing) when the 'check-in' category is toggled off (P6.5)", async () => {
+    const now = new Date();
+    const t1 = new Date(now); t1.setHours(11, 0, 0, 0);
+    const t2 = new Date(now); t2.setHours(20, 0, 0, 0);
+    emaMocks.times = [t1, t2];
+    emaMocks.catCheckin = false;
+    const { syncEmaCheckins } = await import("./notifications");
+    const res = await syncEmaCheckins({ request: false });
+    expect(res.scheduled).toBe(false);
+    expect(schedule).not.toHaveBeenCalled();
+    emaMocks.catCheckin = true;
+  });
+
   it("startup (request:false) never prompts — denied ⇒ schedules nothing", async () => {
     checkPermissions.mockResolvedValue({ display: "denied" });
     const { syncEmaCheckins } = await import("./notifications");
@@ -187,5 +240,35 @@ describe("crisis suppression of nudges (P6.4)", () => {
     expect(res).toEqual({ scheduled: false, reason: "unavailable" });
     expect(schedule).not.toHaveBeenCalled();
     expect(cancel).toHaveBeenCalled(); // still clears the prior schedule first
+  });
+
+  it("syncDailyReminders bails cancel-only when the user is in DND 'give me space' mode (P6.7)", async () => {
+    emaMocks.dnd = true;
+    const { syncDailyReminders } = await import("./notifications");
+    const res = await syncDailyReminders();
+    expect(res).toEqual({ scheduled: false, reason: "unavailable" });
+    expect(schedule).not.toHaveBeenCalled();
+    expect(cancel).toHaveBeenCalled();
+    emaMocks.dnd = false;
+  });
+
+  it("syncDailyReminders bails (reason 'unavailable') when the per-day budget is exhausted (P6.3)", async () => {
+    emaMocks.budget = 0;
+    const { syncDailyReminders } = await import("./notifications");
+    const res = await syncDailyReminders();
+    expect(res).toEqual({ scheduled: false, reason: "unavailable" });
+    expect(schedule).not.toHaveBeenCalled();
+    expect(cancel).toHaveBeenCalled();
+    emaMocks.budget = 3;
+  });
+
+  it("syncDailyReminders bails (reason 'disabled') when the 'insight' category is toggled off (P6.5)", async () => {
+    emaMocks.catInsight = false;
+    const { syncDailyReminders } = await import("./notifications");
+    const res = await syncDailyReminders();
+    expect(res).toEqual({ scheduled: false, reason: "disabled" });
+    expect(schedule).not.toHaveBeenCalled();
+    expect(cancel).toHaveBeenCalled();
+    emaMocks.catInsight = true;
   });
 });

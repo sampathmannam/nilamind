@@ -15,6 +15,9 @@ import type { Medication } from "./medicationAdherence";
 import { getEmaEnabled, getEmaFrequency } from "./emaPrefs";
 import { planEmaFireTimes, emaElevationSignal } from "./ema";
 import { isSafetySuppressed, markSafetySuppression } from "./notificationSuppress";
+import { isDndActive } from "./dnd";
+import { peekRemaining, commitClaim, skipActive, recordNonCrisisSent } from "./notificationBudget";
+import { isCategoryEnabled } from "./notificationCategories";
 
 // Warm, low-pressure nudges (Phase 7). Never demanding, never guilt-laden — each is an invitation.
 export const WARM_NUDGES = [
@@ -162,6 +165,7 @@ const REPLY_READY_ID = 1002;
  */
 export async function notifyReplyReady(): Promise<void> {
   try {
+    if (isDndActive()) return; // P6.7: never ping someone who asked for space (never called for crisis replies anyway)
     const granted = (await LocalNotifications.checkPermissions()).display === "granted";
     if (!granted) return; // never prompt here; silently skip if notifications aren't already enabled
     await LocalNotifications.schedule({
@@ -181,6 +185,7 @@ export async function notifyReplyReady(): Promise<void> {
 /** Convenience used by Phase 7 reminders — schedule only if outside the user's quiet hours. */
 export async function scheduleIfAllowed(when: Date, body: string, title = "NilaMind", extra?: Record<string, unknown>): Promise<ScheduleResult> {
   if (withinQuietHours(when)) return { ok: false, reason: "unavailable", at: when };
+  if (isDndActive()) return { ok: false, reason: "unavailable", at: when }; // P6.7: user "give me space"
   return scheduleReminderAt(when, body, title, extra);
 }
 
@@ -204,6 +209,13 @@ export async function syncDailyReminders(opts: { request?: boolean } = { request
   // P6.4: the warm daily nudge is the same class of "how are you?" ping as EMA — never fire it inside a
   // crisis/elevation suppression window (medication reminders are exempt: health-critical, not a nudge).
   if (isSafetySuppressed()) return { scheduled: false, reason: "unavailable" };
+  // P6.5: category toggle — the daily nudge is the "insight nudge" category.
+  if (!isCategoryEnabled("insight")) return { scheduled: false, reason: "disabled" };
+  // P6.7: the user asked for space — the daily nudge is exactly the kind of ping DND suppresses.
+  if (isDndActive()) return { scheduled: false, reason: "unavailable" };
+  // P6.3: frequency cap — the daily nudge is 1 of the MAX_NON_CRISIS_PER_DAY budget; hold if the cap is hit
+  // or a progressive-cooldown window is active (crisis/medication paths are exempt and untouched above).
+  if (skipActive() || peekRemaining() < 1) return { scheduled: false, reason: "unavailable" };
 
   const prefs = getReminderPrefs();
   if (!prefs.enabled) return { scheduled: false, reason: "disabled" };
@@ -236,6 +248,7 @@ export async function syncDailyReminders(opts: { request?: boolean } = { request
         smallIcon: "ic_stat_icon_config_sample",
       }],
     });
+    commitClaim(1); // P6.3: count the daily nudge against the per-day budget
     return { scheduled: true, at: `${pad(h)}:${pad(m)}` };
   } catch (e) {
     console.error("[notifications] syncDailyReminders schedule failed:", e);
@@ -337,7 +350,10 @@ export async function syncEmaCheckins(opts: { request?: boolean } = { request: t
   await cancelEmaRange(); // clear before any decision so a bail leaves nothing scheduled
 
   if (!getEmaEnabled()) return { scheduled: false, reason: "disabled" };
+  if (!isCategoryEnabled("checkin")) return { scheduled: false, reason: "disabled" }; // P6.5: category toggle
   if (isSafetySuppressed() || emaElevationSignal() !== "none") return { scheduled: false, reason: "unavailable" };
+  if (isDndActive()) return { scheduled: false, reason: "unavailable" }; // P6.7: user "give me space"
+  if (skipActive()) return { scheduled: false, reason: "unavailable" }; // P6.3: progressive-cooldown hold
 
   let granted = false;
   if (opts.request === false) {
@@ -350,6 +366,11 @@ export async function syncEmaCheckins(opts: { request?: boolean } = { request: t
   const times = planEmaFireTimes({ frequency: getEmaFrequency(), days: EMA_HORIZON_DAYS, isQuiet: withinQuietHours });
   if (times.length === 0) return { scheduled: false, reason: "unavailable" };
 
+  // P6.3: only the slots firing TODAY draw from the per-day budget; the cap is shared with the daily nudge.
+  const startOfToday = new Date(); startOfToday.setHours(0, 0, 0, 0);
+  const todayCount = times.filter((t) => t.getTime() >= startOfToday.getTime()).length;
+  if (peekRemaining() < todayCount) return { scheduled: false, reason: "unavailable" }; // cap reached for today
+
   try {
     await LocalNotifications.schedule({
       notifications: times.map((at, i) => ({
@@ -361,6 +382,7 @@ export async function syncEmaCheckins(opts: { request?: boolean } = { request: t
         extra: { view: "ema_checkin" }, // content-free routing tag for the tap listener
       })),
     });
+    commitClaim(todayCount); // P6.3: count today's EMA nudges against the per-day budget
     return { scheduled: true, at: times[0].toISOString() };
   } catch (e) {
     console.error("[notifications] syncEmaCheckins schedule failed:", e);
