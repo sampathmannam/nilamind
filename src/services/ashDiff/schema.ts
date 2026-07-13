@@ -3,6 +3,10 @@
 // Validation mirrors nilaCorpusValidate.ts (schema + anti-collapse) but over the ash-diff dataset.
 import type { MoveKind, TurnKind } from "../moveEval/rubric";
 
+/** Where this row's competitor (ashReply) data came from. Eval integrity depends on never treating an
+ *  illustrative, hand-written Ash reply as if it were a real device capture. Defaults to "illustrative". */
+export type Provenance = "device-captured" | "illustrative";
+
 export interface AshDiffRow {
   id: string;
   tag: string;
@@ -15,6 +19,19 @@ export interface AshDiffRow {
   delta: string;
   /** the authored ideal Nila reply — the training/eval target. Never raw teacher output. */
   goldNila: string;
+  /** provenance of ashReply; absent === "illustrative" (the honest default). */
+  provenance?: Provenance;
+}
+
+/** Real-vs-illustrative breakdown, so a dataset never *looks* complete/real when it isn't. */
+export function provenanceBreakdown(rows: AshDiffRow[]): {
+  deviceCaptured: number;
+  illustrative: number;
+  total: number;
+} {
+  let deviceCaptured = 0;
+  for (const r of rows) if (r.provenance === "device-captured") deviceCaptured++;
+  return { deviceCaptured, illustrative: rows.length - deviceCaptured, total: rows.length };
 }
 
 export interface AshDiffReport {
