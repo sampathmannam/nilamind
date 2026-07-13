@@ -10,7 +10,7 @@ describe("Tools hub rows (redesign §2)", () => {
     expect(rowIds(false)).toEqual([
       "plan", "winddown", "reach_out", "crisis_rehearsal", "relapse_plan", "episode",
       "ema_checkin", "diary", "assessment", "medication", "social_rhythm",
-      "problem_solving", "values_work", "exposure", "peer_support",
+      "problem_solving", "values_to_action", "exposure", "peer_support",
     ]);
   });
 
@@ -61,5 +61,20 @@ describe("Tools hub rows (redesign §2)", () => {
     ]) {
       expect(all).not.toContain(gone);
     }
+  });
+
+  it("retired values_work (uncited duplicate) — values_to_action (VLQ-cited) took its place, wave 3 Group B", () => {
+    const all = rowIds(true);
+    expect(all).not.toContain("values_work");
+    expect(all).toContain("values_to_action");
+  });
+
+  it("routes the values_to_action row through go(), same as every other Skills & practice row", () => {
+    let routed: string | null = null;
+    const groups = buildToolGroups({ go: (t) => { routed = t; }, onEpisode: () => {}, phoneEnabled: false });
+    const row = groups.flatMap((g) => g.rows).find((r) => r.id === "values_to_action")!;
+    expect(row).toBeTruthy();
+    row.onTap();
+    expect(routed).toBe("values_to_action");
   });
 });

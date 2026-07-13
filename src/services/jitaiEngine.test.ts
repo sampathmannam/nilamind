@@ -1,5 +1,15 @@
-import { describe, it, expect } from "vitest";
-import { assessJitai } from "./jitaiEngine";
+import { describe, it, expect, beforeEach, vi } from "vitest";
+
+const { store } = vi.hoisted(() => ({ store: new Map<string, string>() }));
+vi.mock("./secureLocal", () => ({
+  secureLocal: {
+    getItem: (k: string) => (store.has(k) ? store.get(k)! : null),
+    setItem: (k: string, v: string) => { store.set(k, v); },
+    removeItem: (k: string) => { store.delete(k); },
+  },
+}));
+
+import { assessJitai, isJitaiCooldownActive, markJitaiShown } from "./jitaiEngine";
 import type { UsageSummary } from "./usageAnalytics";
 
 function mockMoods(intensities: number[]) {
@@ -173,5 +183,55 @@ describe("assessJitai", () => {
       expect(r.triggers).toContain("sleep_prodrome");
       expect(r.protocolRecommendation).toBeNull();
     });
+  });
+});
+
+// Receptivity gate (2026-07-12 Wave 3 §6) — reuses proactiveEngine.ts's per-trigger-key cooldown pattern.
+// Every duration below is an ENGINEERING DEFAULT, not literature-derived: Nahum-Shani et al. (2018) defines
+// receptivity qualitatively (match cooldown to how fast the tailoring variable can meaningfully change) but
+// specifies no number; van Genugten et al. (2025) found zero reviewed real-world MH JITAI implements any
+// cooldown/engagement-history suppression at all. 24h mirrors proactiveEngine.ts's existing default, 3-day
+// mirrors its inactivity_nudge value exactly (internal consistency, not new citations).
+describe("JITAI receptivity gate — engineering-default cooldowns (2026-07-12 Wave 3 §6)", () => {
+  beforeEach(() => {
+    store.clear();
+    vi.useRealTimers();
+  });
+
+  it("sleep_prodrome/mood_deterioration/high_distortion default to a 24h cooldown once shown", () => {
+    for (const trigger of ["sleep_prodrome", "mood_deterioration", "high_distortion"] as const) {
+      expect(isJitaiCooldownActive(trigger)).toBe(false);
+      markJitaiShown(trigger);
+      expect(isJitaiCooldownActive(trigger)).toBe(true);
+    }
+  });
+
+  it("inactivity uses a 3-day cooldown, matching proactiveEngine.ts's inactivity_nudge precedent", () => {
+    markJitaiShown("inactivity");
+    expect(isJitaiCooldownActive("inactivity")).toBe(true);
+    // Simulate 25h elapsed — inside the 3-day window, still on cooldown (distinguishes it from the 24h group).
+    const key = "nilamind_jitai_last_shown_inactivity";
+    store.set(key, String(Date.now() - 25 * 60 * 60 * 1000));
+    expect(isJitaiCooldownActive("inactivity")).toBe(true);
+  });
+
+  it("elevation_risk is exempt from cooldown gating entirely (safety-adjacent, override-only-forward)", () => {
+    markJitaiShown("elevation_risk");
+    expect(isJitaiCooldownActive("elevation_risk")).toBe(false);
+    markJitaiShown("elevation_risk");
+    expect(isJitaiCooldownActive("elevation_risk")).toBe(false);
+  });
+
+  it("different trigger types have independent cooldowns", () => {
+    markJitaiShown("sleep_prodrome");
+    expect(isJitaiCooldownActive("sleep_prodrome")).toBe(true);
+    expect(isJitaiCooldownActive("mood_deterioration")).toBe(false);
+    expect(isJitaiCooldownActive("inactivity")).toBe(false);
+  });
+
+  it("a cooldown expires once its window has elapsed", () => {
+    const key = "nilamind_jitai_last_shown_mood_deterioration";
+    store.set(key, String(Date.now() - 25 * 60 * 60 * 1000)); // 25h ago > 24h default
+    expect(isJitaiCooldownActive("mood_deterioration")).toBe(false);
   });
 });

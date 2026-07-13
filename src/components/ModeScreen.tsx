@@ -29,6 +29,8 @@ import type { CheckInEntry } from "../types";
 import { secureLocal } from "../services/secureLocal";
 import { sendToNila } from "../services/sendToNila";
 import { NilaMode, NilaUiMessage, shouldBlockForCrisisAsync } from "../services/nilaSend";
+import { suppressNudgesForCrisis, notifyReplyReady } from "../services/notifications";
+import SoftCrisisCard from "./SoftCrisisCard";
 import { getSessionChat, setSessionChat, clearSessionChat } from "../services/sessionChat";
 import { localLlmLoadState } from "../services/localLlm";
 import { safeDraftThoughtRecord, type ThoughtRecordDraft } from "../services/thoughtRecordDraft";
@@ -46,13 +48,14 @@ import { parseSafetyPlan } from "../services/safetyPlan";
 import { shouldPromptReview, isFirstFollowUpDue, markFirstFollowUpDone, markSafetyPlanReviewed } from "../services/safetyPlanFollowUp";
 import { selfReportSleepSignal } from "../services/sleepInsight";
 import { assessJitai, type JitaiDecision } from "../services/jitaiEngine";
+import { logAndGateJitaiDecision } from "../services/jitaiDecisionLog";
+import { calmSafetyPlanNudge, dismissCalmSafetyPlanNudge } from "../services/proactiveEngine";
 import { computeUsageSummary } from "../services/usageAnalytics";
 import { loadMoodHistory } from "../services/moodHistory";
 import { computeCompassionateStreak } from "../services/streaks";
 import { Settings, Mic, Send, MicOff, Keyboard, X, ShieldCheck, ThumbsUp, ThumbsDown, MessageCircle, Brain, Moon, SquarePen } from "lucide-react";
 import { hapticLight, hapticMedium } from "../hooks/useHaptics";
-import { recordFeedback } from "../services/nilaFeedback";
-import { notifyReplyReady } from "../services/notifications";
+import { recordFeedback, attachSuggestion } from "../services/nilaFeedback";
 
 interface ModeScreenProps {
   onOpenSettings?: () => void;
@@ -88,29 +91,59 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   const [showSafetyPlanFollowUp, setShowSafetyPlanFollowUp] = useState(false);
   const [sleepProdromeNudge, setSleepProdromeNudge] = useState<{ firing: boolean; detail: string } | null>(null);
   const [jitaiNudge, setJitaiNudge] = useState<JitaiDecision | null>(null);
+  const [calmSafetyNudge, setCalmSafetyNudge] = useState<{ show: boolean; label: string } | null>(null); // Task 1.5
   const [skillOffer, setSkillOffer] = useState<Skill | null>(null);
+  const [softCrisisCard, setSoftCrisisCard] = useState(false); // 2026-07-12 Wave 3: soft tier, classifier-only hits
   const [pactNotice, setPactNotice] = useState<PactNotice | null>(null); // #30: surfaced pact (the human bridge)
   const [confirmNewChat, setConfirmNewChat] = useState(false); // "new conversation" confirm dialog
   const [welcomeBack, setWelcomeBack] = useState<string | null>(null);
   const [ratedMessages, setRatedMessages] = useState<Set<number>>(new Set());
+  // 2026-07-12 Wave 3, Group F: completes the already-built-but-unwired attachSuggestion() flow — a one-tap,
+  // optional, dismissable "what would've helped?" follow-up after a thumbs-down. Never forced.
+  const [suggestionPrompt, setSuggestionPrompt] = useState<{ index: number; feedbackId: string } | null>(null);
+  const [suggestionText, setSuggestionText] = useState("");
   const [showQuickActions, setShowQuickActions] = useState(false);
   // #4 + #9 (audit): §9 crisis now routes through the App-level overlay (onOpenCrisis) so the Android hardware
   // back button closes it instead of exiting the app; a session that ever tripped §9 latches hadCrisisRef so
   // the transcript is never persisted/restored (keying the clear on a transient boolean re-persisted it on dismiss).
   const hadCrisisRef = useRef(false);
   const crisisPendingRef = useRef(false); // #5-out (re-audit): a sent turn whose async §9 verdict is still pending
-  // openCrisis(detected): `detected` = the model/gate FLAGGED a §9 crisis in the user's turn. Only then do we
-  // latch "never persist" + wipe the transcript + clear self-help cards (§9 precedence). A PROACTIVE open (the
-  // user tapping crisis resources) must NOT wipe their in-progress conversation (#6 re-audit) nor offer nothing.
-  const openCrisis = (detected = false) => {
+  // openCrisis(detected, tier): `detected` = the model/gate FLAGGED a §9 crisis in the user's turn. Only then
+  // do we latch "never persist" + wipe the transcript + clear self-help cards (§9 precedence) — UNCONDITIONAL
+  // on `detected`, NOT gated by tier, so a soft-tier hit gets the identical protection as a full-tier hit.
+  // A PROACTIVE open (the user tapping crisis resources) must NOT wipe their in-progress conversation
+  // (#6 re-audit) nor offer nothing.
+  //
+  // `tier` (2026-07-12 Wave 3, two-tier crisis surface; RETIERED 2026-07-12 Bug 1 fix — adversarial review
+  // found the original branch used `source === "classifier"`, which wrongly treated EVERY classifier-only
+  // hit as low-confidence, including genuine high-confidence disclosures the keyword floor structurally
+  // cannot see — e.g. "everyone would be better off without me" scores 0.8837. `tier` is the field that
+  // actually reflects confidence — see crisisClassifier.ts's CrisisTier docs): tier === "soft" renders the
+  // SOFT inline SoftCrisisCard instead of the full-screen CrisisOverlay. A null/unspecified tier (proactive
+  // taps, the arm-request branch, ambiguous/fail-closed cases), tier === "full", and every other existing call
+  // site all fall through unchanged to onOpenCrisis?.() — bit-for-bit the same full takeover as today. Only
+  // the RENDERING SURFACE differs by tier; every other invariant above stays unconditional.
+  const openCrisis = (detected = false, tier: "full" | "soft" | null = null) => {
     if (detected) {
       hadCrisisRef.current = true;
       clearSessionChat();      // the flagged crisis turn must never persist/restore
       setSkillOffer(null);     // #7 (re-audit): don't offer coping-skill/protocol self-help in reply to a crisis
       setProtocolCard(null);
+      void suppressNudgesForCrisis(); // P6.4: latch no-nudge + yank queued pings, same as App.tsx's activateCrisis
     }
     setPactNotice(null); // §9 takes precedence over the gentle pact surface either way
     setWelcomeBack(null); // §9 also clears the welcome-back card
+    setCalmSafetyNudge(null); // §9 also clears the calm-moment safety-plan nudge (Task 1.5) — never crisis-adjacent
+    if (detected && tier === "soft") {
+      setSoftCrisisCard(true); // soft tier — inline card, no full takeover
+      return;
+    }
+    // Bug 2 fix (2026-07-12, adversarial review): the full-takeover branch must unconditionally clear any
+    // STALE soft card from an earlier turn. Repro without this: soft card shows for message A → message B is
+    // a full-tier hit before the card is dismissed → CrisisOverlay opens on top of it → user dismisses the
+    // overlay → the stale card reappears underneath, re-asking "Can I pause here?" right after the user just
+    // went through the full safety-plan flow.
+    setSoftCrisisCard(false);
     onOpenCrisis?.();
   };
   const bottomRef = useRef<HTMLDivElement>(null); // #23: scroll-to-newest anchor
@@ -175,6 +208,16 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           usageAnalytics: computeUsageSummary(),
         });
         if (!cancelled) setJitaiNudge(jitai);
+        // 2026-07-12 Wave 3 §6: log the decision point + apply the receptivity gate. De-dupes the 5-min
+        // polling loop — a repeated identical trigger within its cooldown writes fired:false instead of a
+        // fresh identical entry. Does NOT change what's rendered (jitaiNudge above stays the live signal,
+        // same as before) — only wiring the decision LOG per spec doc §6's task scope.
+        if (!cancelled) logAndGateJitaiDecision(jitai, "in_app_card");
+      } catch { /* best-effort */ }
+
+      // Task 1.5 (2026-07-12 Wave 3): calm-moment-only safety-plan nudge — never during/adjacent to a crisis.
+      try {
+        if (!cancelled) setCalmSafetyNudge(hadCrisisRef.current ? null : calmSafetyPlanNudge());
       } catch { /* best-effort */ }
     };
     checkSignals();
@@ -263,31 +306,40 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
 
     // Armed check-in is a deterministic, opt-in command — handle it before the model.
     if (looksLikeArmRequest(msg)) {
-      // #3 (audit): the arm path gates with keyword-only scanForCrisis, so a euphemistic crisis that also
-      // matches the arm-request regex ("check on me… the world would feel lighter without me") would get a
-      // cheerful check-in confirmation. Run the full classifier-backed §9 gate here first.
-      if (await shouldBlockForCrisisAsync(msg)) { openCrisis(true); return; }
-      crisisPendingRef.current = false; // arm request cleared the §9 gate — not a crisis, safe to persist
-      const armResult = requestArmedCheckin(msg, [...messages, userMsg]);
-      if (armResult.ok) {
-        setMessages((prev) => [
-          ...prev,
-          { role: "assistant", content: `Got it — I'll check in with you ${armResult.triggerLabel}.` },
-        ]);
-      } else if (armResult.reason === "crisis") {
-        openCrisis(true);
-      } else {
-        const reply =
-          armResult.reason === "elevation"
-            ? "Let's slow down a little before I set a check-in — what you're describing sounds elevated, and I don't want to nudge you at the wrong moment."
-            : armResult.reason === "quiet"
-            ? "I'll stay quiet — no check-ins unless you ask again."
-            : armResult.reason === "frequency"
-            ? "You already have a check-in set. I'll keep that one."
-            : null;
-        if (reply) {
-          setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
+      // Bug 3 fix (2026-07-12, adversarial review): this branch never set `loading` before its await below,
+      // unlike the main send path (setLoading(true) at the top of that try, further down). That left the
+      // Send button enabled during the pending §9 check, so a second message could be sent concurrently and
+      // interleave with this turn's still-pending verdict. Match the main path's re-entrancy guard.
+      setLoading(true);
+      try {
+        // #3 (audit): the arm path gates with keyword-only scanForCrisis, so a euphemistic crisis that also
+        // matches the arm-request regex ("check on me… the world would feel lighter without me") would get a
+        // cheerful check-in confirmation. Run the full classifier-backed §9 gate here first.
+        if (await shouldBlockForCrisisAsync(msg)) { openCrisis(true); return; }
+        crisisPendingRef.current = false; // arm request cleared the §9 gate — not a crisis, safe to persist
+        const armResult = requestArmedCheckin(msg, [...messages, userMsg]);
+        if (armResult.ok) {
+          setMessages((prev) => [
+            ...prev,
+            { role: "assistant", content: `Got it — I'll check in with you ${armResult.triggerLabel}.` },
+          ]);
+        } else if (armResult.reason === "crisis") {
+          openCrisis(true);
+        } else {
+          const reply =
+            armResult.reason === "elevation"
+              ? "Let's slow down a little before I set a check-in — what you're describing sounds elevated, and I don't want to nudge you at the wrong moment."
+              : armResult.reason === "quiet"
+              ? "I'll stay quiet — no check-ins unless you ask again."
+              : armResult.reason === "frequency"
+              ? "You already have a check-in set. I'll keep that one."
+              : null;
+          if (reply) {
+            setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
+          }
         }
+      } finally {
+        setLoading(false);
       }
       return;
     }
@@ -303,11 +355,15 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
         onDelta: (t: string) => {},
       });
       if (result.blocked) {
-        // §9 crisis: open the REAL crisis card (tappable lines + safety plan). #7 (re-audit): RETURN so we
-        // never fall through to the coping-skill / protocol self-help cards below — offering "this might help"
-        // in reply to a suicidal disclosure softens the §9 stop-everything posture. openCrisis(true) also
-        // latches "never persist" for this euphemistic (classifier-caught) turn.
-        openCrisis(true);
+        // §9 crisis: open the crisis surface (tappable lines + safety plan) — full takeover for tier:"full"
+        // (every keyword hit, plus any HIGH-CONFIDENCE classifier hit), soft inline card for tier:"soft"
+        // (2026-07-12 Wave 3; RETIERED 2026-07-12 Bug 1 fix — branching on crisisSource instead of crisisTier
+        // was the adversarial review's confirmed regression: "classifier-only" is not a confidence signal).
+        // #7 (re-audit): RETURN so we never fall through to the coping-skill / protocol self-help cards below
+        // — offering "this might help" in reply to a suicidal disclosure softens the §9 stop-everything
+        // posture. openCrisis(true, ...) also latches "never persist" for this turn, unconditional on tier.
+        // `?? "full"` fails closed to the full takeover if the tier is ever ambiguous.
+        openCrisis(true, result.crisisTier ?? "full");
         if (result.reply) setMessages((prev) => [...prev, { role: "assistant", content: result.reply }]);
         return;
       }
@@ -674,9 +730,11 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                           </button>
                           <button
                             onClick={() => {
-                              recordFeedback(m.content, "down");
+                              const entry = recordFeedback(m.content, "down");
                               setRatedMessages((prev) => new Set(prev).add(i));
                               hapticLight();
+                              setSuggestionText("");
+                              setSuggestionPrompt({ index: i, feedbackId: entry.id });
                             }}
                             className="p-2.5 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-slate-800/50 transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center focus-ring"
                             aria-label="Mark as not helpful"
@@ -700,6 +758,44 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                             }
                           />
                         )}
+                        {/* 2026-07-12 Wave 3, Group F: one-tap, dismissable "what would've helped?" follow-up —
+                            completes the already-built attachSuggestion() flow. Optional, never forced; a bare
+                            thumbs-down alone is still a complete, valid piece of feedback. */}
+                        {suggestionPrompt?.index === i && (
+                          <div
+                            id="feedback-suggestion-prompt"
+                            className="mt-1.5 p-2.5 rounded-lg bg-slate-800/50 border border-slate-700 text-xs space-y-2 max-w-[85%]"
+                          >
+                            <p className="text-slate-300">What would've helped?</p>
+                            <input
+                              type="text"
+                              value={suggestionText}
+                              onChange={(e) => setSuggestionText(e.target.value)}
+                              placeholder="What would've helped? (optional)"
+                              className="w-full px-2.5 py-2 rounded-md bg-slate-900/70 border border-slate-700 text-slate-200 placeholder:text-slate-500 focus-ring"
+                            />
+                            <div className="flex gap-2 justify-end">
+                              <button
+                                onClick={() => { setSuggestionPrompt(null); setSuggestionText(""); }}
+                                className="px-3 py-2 rounded-md text-slate-400 hover:text-slate-200 hover:bg-slate-700/50 transition-colors cursor-pointer min-h-[36px] focus-ring"
+                                aria-label="Not now"
+                              >
+                                Not now
+                              </button>
+                              <button
+                                onClick={() => {
+                                  if (suggestionText.trim()) attachSuggestion(suggestionPrompt.feedbackId, suggestionText);
+                                  setSuggestionPrompt(null);
+                                  setSuggestionText("");
+                                }}
+                                className="px-3 py-2 rounded-md bg-violet-500/20 hover:bg-violet-500/30 text-violet-200 font-medium transition-colors cursor-pointer min-h-[36px] focus-ring"
+                                aria-label="Share what would help"
+                              >
+                                Share
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                 ))}
@@ -718,6 +814,16 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
       {/* Input bar */}
       {!showCheckin && (
         <div className="px-4 py-3 border-t border-slate-800/50 space-y-2">
+{/* Soft crisis card (2026-07-12 Wave 3) — inline surface for a classifier-only §9 hit. Escalating opens the
+              REAL full-takeover CrisisOverlay directly; dismissing only clears this card — it does NOT un-latch
+              hadCrisisRef or restore the wiped transcript (one-way door, same as a keyword hit today). */}
+          {softCrisisCard && (
+            <SoftCrisisCard
+              onEscalate={() => { setSoftCrisisCard(false); onOpenCrisis?.(); }}
+              onDismiss={() => setSoftCrisisCard(false)}
+            />
+          )}
+
 {showSafetyPlanReview && (
             <div
               className="w-full px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs"
@@ -772,6 +878,37 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                       Done
                     </button>
 </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Calm-moment safety-plan nudge (Task 1.5, 2026-07-12 Wave 3) — only when mood is calm, no recent
+              crisis, and a section is still blank. Never shown crisis-adjacent (cleared in openCrisis). */}
+          {calmSafetyNudge?.show && (
+            <div
+              key="calm-safety-plan-nudge"
+              className="w-full px-3 py-2 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-200 text-xs"
+              id="calm-safety-plan-nudge-card"
+            >
+              <div className="flex items-start gap-2">
+                <ShieldCheck className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" />
+                <div className="flex-1">
+                  <p className="font-medium">{calmSafetyNudge.label}</p>
+                  <div className="flex gap-2 mt-2">
+                    <button
+                      onClick={handleOpenSafetyPlan}
+                      className="px-3 py-2 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-200 font-medium transition-colors cursor-pointer min-h-[44px] focus-ring"
+                    >
+                      Fill it in
+                    </button>
+                    <button
+                      onClick={() => { dismissCalmSafetyPlanNudge(); setCalmSafetyNudge(null); }}
+                      className="px-3 py-2 rounded-lg hover:bg-blue-500/15 text-blue-200/80 transition-colors cursor-pointer min-h-[44px] focus-ring"
+                    >
+                      Not now
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

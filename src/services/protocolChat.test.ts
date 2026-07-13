@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { startProtocolChat, continueProtocolChat, protocolOfferCard } from "./protocolChat";
-import { abandonProtocol, getActiveProgress } from "./protocolProgress";
+import { abandonProtocol, getActiveProgress, completionCountFor } from "./protocolProgress";
 
 describe("protocolChat", () => {
   beforeEach(() => abandonProtocol());
@@ -60,5 +60,21 @@ describe("protocolChat", () => {
   it("does not offer a protocol on crisis text", () => {
     const card = protocolOfferCard("I want to die");
     expect(card).toBeNull();
+  });
+
+  // 2026-07-12 Wave 3, Group H completion-count surface: restarting a completed protocol already worked
+  // (protocolProgress.ts has no gating state) — this makes that repeat visible in the offer copy instead
+  // of silently invisible, using the same completions log usageAnalytics.ts already reads for "Programs done".
+  it("offer label surfaces a repeat framing once the protocol has been completed before", () => {
+    startProtocolChat("behavioral-activation");
+    while (getActiveProgress()) continueProtocolChat(); // finish it once
+    const count = completionCountFor("behavioral-activation");
+    expect(count).toBeGreaterThan(0);
+    const card = protocolOfferCard("no motivation to do anything lately");
+    expect(card).not.toBeNull();
+    expect(card?.protocolId).toBe("behavioral-activation");
+    expect(card?.active).toBe(false);
+    expect(card?.label).toContain("Behavioral Activation");
+    expect(card?.label.toLowerCase()).toContain("again");
   });
 });

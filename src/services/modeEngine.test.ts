@@ -13,7 +13,7 @@ vi.mock("./chatElevation", () => ({
   clearChatElevation: vi.fn(),
 }));
 
-import { foldElevation, getUserState } from "./modeEngine";
+import { foldElevation, getUserState, getNilaQuestion } from "./modeEngine";
 import { secureLocal } from "./secureLocal";
 import { emaElevationSignal } from "./ema";
 import { chatElevationSignal } from "./chatElevation";
@@ -94,5 +94,21 @@ describe("getUserState — folds the EMA elevation signal into the check-in stat
     );
     vi.mocked(chatElevationSignal).mockReturnValue("high");
     expect(getUserState()).toBe("low");
+  });
+});
+
+// Wave 3 Group I (2026-07-12) — "What's your intention for today?" used to be a free-text chat
+// question here, one of three independent, contradictory "intention" surfaces (synthesis finding).
+// It's now handled exclusively by the structured if-then DailyIntentionCard (TodayScreen.tsx), so
+// this chat-embedded prompt must no longer ask for it. Locks the surface-removal in so it can't
+// silently regress back into a duplicate, unstructured intention question.
+describe("getNilaQuestion — morning checked-in branch no longer asks the free-text intention question", () => {
+  it("does not return the old free-text intention prompt once checked in", () => {
+    const q = getNilaQuestion("morning", "calm", true);
+    expect(q).not.toMatch(/intention/i);
+  });
+
+  it("still asks about sleep before the day's check-in has happened", () => {
+    expect(getNilaQuestion("morning", null, false)).toBe("How did you sleep?");
   });
 });

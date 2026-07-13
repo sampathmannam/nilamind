@@ -22,6 +22,25 @@ describe("mapSleepSessions", () => {
     expect(mapSleepSessions([{ startTime: "x", endTime: "y" }])).toEqual([]);
     expect(mapSleepSessions([{ startTime: "2026-06-01T00:00:00Z", endTime: "2026-06-03T00:00:00Z" }])).toEqual([]);
   });
+
+  // Group C (real Sleep Regularity Index, Phillips et al. 2017): the ONLY source of actual bed/wake clock
+  // times is these Health Connect session timestamps — previously discarded entirely once summed into
+  // {date, hours}. Retaining them (additive fields; existing {date, hours} consumers unaffected) is the
+  // precondition for reconstructing a real per-night bed/wake series.
+  it("retains the earliest session start / latest session end per night (additive — for SRI reconstruction)", () => {
+    const out = mapSleepSessions([
+      { startTime: "2026-06-28T23:00:00Z", endTime: "2026-06-29T03:00:00Z" }, // 4h
+      { startTime: "2026-06-29T03:30:00Z", endTime: "2026-06-29T06:30:00Z" }, // 3h
+    ]);
+    expect(out).toHaveLength(1);
+    expect(out[0].date).toBe("2026-06-29");
+    expect(out[0].startTime).toBe("2026-06-28T23:00:00.000Z"); // earliest fragment start
+    expect(out[0].endTime).toBe("2026-06-29T06:30:00.000Z"); // latest fragment end
+  });
+
+  it("still returns no timestamp fields (and no crash) when there are no sessions", () => {
+    expect(mapSleepSessions([])).toEqual([]);
+  });
 });
 
 describe("shortSleepSignal — manic-prodrome short-sleep run", () => {

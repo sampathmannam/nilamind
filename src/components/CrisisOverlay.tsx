@@ -5,6 +5,7 @@ import { INITIAL_SAFETY_PLAN } from "../data";
 import { parseSafetyPlan } from "../services/safetyPlan";
 import { Heart, Wind, ShieldAlert, ArrowLeft } from "lucide-react";
 import CrisisLines from "./CrisisLines";
+import { offerPostCrisisCheckIn } from "../services/postCrisisCheckIn";
 
 interface CrisisOverlayProps {
   isOpen: boolean;
@@ -20,6 +21,9 @@ export default function CrisisOverlay({
   onNavigateToBreathing,
 }: CrisisOverlayProps) {
   const [safetyPlan, setSafetyPlan] = useState<SafetyPlan>(INITIAL_SAFETY_PLAN);
+  // 2026-07-12 Wave 3, Task 1.4: opt-in, unchecked-by-default post-crisis check-in toggle. Never scheduled
+  // silently — offerPostCrisisCheckIn() only fires if this is explicitly checked before "I feel steadier now".
+  const [wantsCheckIn, setWantsCheckIn] = useState(false);
   const headingRef = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
@@ -30,6 +34,7 @@ export default function CrisisOverlay({
       } catch {
         setSafetyPlan(INITIAL_SAFETY_PLAN);
       }
+      setWantsCheckIn(false); // every fresh open starts unchecked, never carries a stale "yes" forward
       headingRef.current?.focus();
       // Lock background scroll while crisis overlay is open — a person in crisis
       // should never accidentally scroll away from the safety surface.
@@ -182,9 +187,28 @@ export default function CrisisOverlay({
         </div>
 
         {/* Gentle non-abrupt Exit Footer */}
-        <div className="pt-4 text-center">
+        <div className="pt-4 text-center space-y-3">
+          {/* Opt-in, unchecked-by-default post-crisis check-in (2026-07-12 Wave 3, Task 1.4) — never scheduled
+              unless explicitly checked here BEFORE tapping "I feel steadier now" (which still closes immediately
+              either way, same single-tap dismiss as before). Content-free notification, no citation for the
+              exact timing — see postCrisisCheckIn.ts. */}
+          <label
+            id="post-crisis-checkin-toggle"
+            className="flex items-center justify-center gap-2 text-xs text-slate-400 cursor-pointer"
+          >
+            <input
+              type="checkbox"
+              checked={wantsCheckIn}
+              onChange={(e) => setWantsCheckIn(e.target.checked)}
+              className="accent-blue-500 cursor-pointer"
+            />
+            Want a gentle check-in from me in a few hours?
+          </label>
           <button
-            onClick={onClose}
+            onClick={() => {
+              if (wantsCheckIn) offerPostCrisisCheckIn();
+              onClose();
+            }}
             className="bg-card hover:bg-raised border border-slate-800 text-slate-300 font-medium px-8 py-3.5 rounded-full transition-all cursor-pointer w-full flex items-center justify-center gap-2"
             id="close-crisis-overlay-btn"
           >

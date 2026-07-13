@@ -37,6 +37,9 @@ export interface Skill {
   purpose: string; // when/why to reach for it
   steps: string[];
   basis: string;
+  /** When true, SkillsLibraryScreen mounts the skill's dedicated interactive component (currently
+   *  only "tipp" → TIPPTool, 2026-07-12 Wave 3 Group E) instead of a plain expandable steps list. */
+  interactive?: boolean;
 }
 
 export const SKILLS: Skill[] = [
@@ -44,7 +47,8 @@ export const SKILLS: Skill[] = [
   { id: "tipp", name: "TIPP", acronym: "Temperature · Intense exercise · Paced breathing · Paired muscle relaxation", modality: "DBT", group: "crisis",
     purpose: "Bring down extreme arousal fast (intensity 8–10) when the thinking brain is offline.",
     steps: ["Temperature: hold something cold / splash cold water on your face (triggers the dive reflex — lowers heart rate by ~10–15% within seconds).", "Intense exercise: ~20 jumping jacks or run in place for 1 minute to burn off adrenaline.", "Paced breathing: breathe out longer than you breathe in (e.g. in 4, out 6 — lengthening exhale activates vagal brake).", "Paired muscle relaxation: tense, then release muscle groups as you exhale."],
-    basis: "Linehan 2015, DBT Skills Training Manual — crisis survival skills; cold/longer-exhale raise vagal tone (Thayer & Lane 2009, Neurosci. Biobehav. Rev.; mammalian dive reflex: Kinoshita et al. 2021, Front. Physiol.)." },
+    basis: "Linehan 2015, DBT Skills Training Manual — crisis survival skills; cold/longer-exhale raise vagal tone (Thayer & Lane 2009, Neurosci. Biobehav. Rev.; mammalian dive reflex: Kinoshita et al. 2021, Front. Physiol.).",
+    interactive: true },
   { id: "temperature", name: "Temperature (TIPP)", modality: "DBT", group: "crisis",
     purpose: "Trigger the mammalian dive reflex to rapidly down-regulate physiological arousal.",
     steps: ["Fill a bowl with cold water (add ice if tolerable) or hold an ice pack to your face.", "Hold your breath and submerge your face for 10–15 seconds, or press the cold pack against your cheeks and forehead.", "The dive reflex slows your heart rate and increases parasympathetic tone within seconds.", "Repeat 2–3 times until you feel the physiological shift."],

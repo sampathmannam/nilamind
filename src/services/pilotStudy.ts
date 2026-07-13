@@ -6,7 +6,14 @@
 // NOTHING here changes a non-enrolled user's experience — it is gated entirely on getPilotState().enrolled.
 
 import { secureLocal } from "./secureLocal";
-import { loadAssessments, assessmentsFor, type AssessmentEntry, type InstrumentId } from "./assessments";
+import {
+  loadAssessments,
+  assessmentsFor,
+  classifyChange,
+  type AssessmentEntry,
+  type InstrumentId,
+  type ChangeClassification,
+} from "./assessments";
 import { dayKey } from "./retentionMetrics";
 
 const PILOT_KEY = "nilamind_pilot";
@@ -95,6 +102,12 @@ export interface PilotInstrumentResult {
   /** endpoint.total - baseline.total (raw). Interpret direction via higherIsBetter. */
   change: number | null;
   improved: boolean | null;
+  /** Reliable-change (MCID-based) classification of baseline -> endpoint, via the SAME
+   *  classifyChange() function AssessmentScreen.tsx's deterioration nudge uses — not a duplicated
+   *  calculation. Null when there's no baseline/endpoint pair, or the instrument has no established
+   *  threshold. Closes the gap between the pilot protocol's stated intent (report a reliable-change
+   *  band, not just a raw point estimate) and a bare delta number. */
+  reliableChange: ChangeClassification | null;
 }
 
 export interface PilotSummary {
@@ -138,11 +151,12 @@ export function computePilotSummary(now: Date = new Date()): PilotSummary | null
     const { baseline, endpoint } = pick(assessmentsFor(id, all), state);
     const change = baseline && endpoint ? endpoint.total - baseline.total : null;
     const improved = change === null ? null : (higherIsBetter ? change > 0 : change < 0);
+    const reliableChange = baseline && endpoint ? classifyChange(id, baseline.total, endpoint.total) : null;
     return {
       id, label, higherIsBetter,
       baseline: baseline ? { total: baseline.total, date: baseline.date } : null,
       endpoint: endpoint ? { total: endpoint.total, date: endpoint.date } : null,
-      change, improved,
+      change, improved, reliableChange,
     };
   });
 

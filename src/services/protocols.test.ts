@@ -150,3 +150,37 @@ describe("protocols — clinical upgrades wave 2 (Task C/D/E)", () => {
     expect(p.steps).toHaveLength(5);
   });
 });
+
+// Wave 3, Group D (2026-07-12) — Intolerance-of-Uncertainty single-session module. CORRECTED citation:
+// Daniels, Hasan & Schweizer (2025), Psychological Medicine 55, e377 — NOT Dugas et al. (2022), which is an
+// unrelated 12-week clinician-delivered RCT wrongly attributed in an earlier planning doc.
+// docs/superpowers/plans/2026-07-12-wave3-technical-specs.md §2.
+describe("protocols — Intolerance-of-Uncertainty (Wave 3, Group D)", () => {
+  it("registers a 7-step intolerance-of-uncertainty protocol with the corrected citation", () => {
+    const p = PROTOCOLS.find((pr) => pr.id === "intolerance-of-uncertainty");
+    expect(p).toBeTruthy();
+    expect(p!.steps).toHaveLength(7);
+    expect(p!.steps.map((s) => s.id)).toEqual([
+      "iu-1", "iu-2", "iu-3", "iu-4", "iu-5", "iu-6", "iu-7",
+    ]);
+    expect(p!.basis).toContain("Daniels, Hasan & Schweizer");
+    // the WRONG attribution from an earlier planning doc must not be used as the protocol's basis citation
+    expect(p!.basis).not.toContain("Dugas et al. (2022), Behavior Therapy");
+    expect(p!.basis).not.toMatch(/modeled on Dugas et al\. \(2022\)/i);
+  });
+
+  it("routes uncertainty-driven concern language to intolerance-of-uncertainty", () => {
+    const p = PROTOCOLS.find((pr) => pr.id === "intolerance-of-uncertainty")!;
+    expect(p.forConcerns).toContain("uncertain");
+    expect(p.forConcerns).toContain("uncertainty");
+    const routed = routeToProtocol("i hate not knowing what's going to happen, everything feels so uncertain");
+    expect(routed?.id).toBe("intolerance-of-uncertainty");
+  });
+
+  it("never schedules a follow-up / recurring cadence (single-session by design)", () => {
+    const p = PROTOCOLS.find((pr) => pr.id === "intolerance-of-uncertainty")!;
+    const last = p.steps[p.steps.length - 1];
+    expect(last.id).toBe("iu-7");
+    expect(last.prompt.toLowerCase()).not.toMatch(/tomorrow|next week|check in with you (again|later)|schedule (a|another) follow-up/);
+  });
+});

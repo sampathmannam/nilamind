@@ -9,6 +9,7 @@ import { EpisodeRecord } from "../types";
 import { sendToNila } from "../services/sendToNila";
 import { NilaUiMessage } from "../services/nilaSend";
 import { notifyReplyReady } from "../services/notifications";
+import TIPPTool from "./TIPPTool";
 
 interface EpisodeSupportScreenProps {
   onSessionEnded: () => void;
@@ -65,8 +66,12 @@ export default function EpisodeSupportScreen({
   // 20 minute alert flag
   const [escalationShown, setEscalationShown] = useState<boolean>(false);
 
-  // Offline Guided steps indexes (Doc 1 Step 5 path tracking)
-  const [guidedStep, setGuidedStep] = useState<"init" | "extreme_tipp_1" | "extreme_tipp_2" | "extreme_tipp_3" | "medium_racing" | "medium_harm" | "medium_shame" | "medium_panic" | "low_end">("init");
+  // Offline Guided steps indexes (Doc 1 Step 5 path tracking).
+  // 2026-07-12 Wave 3, Group E: the 8-10/extreme path used to be a 3-step static-text walkthrough
+  // (extreme_tipp_1/2/3, T→I→P only — it entirely omitted Paired Muscle Relaxation). It's now a
+  // single "extreme_tipp" step that mounts the full unified interactive TIPPTool (all 4 letters,
+  // user picks whichever fits — per DBT's "use whichever piece fits" guidance).
+  const [guidedStep, setGuidedStep] = useState<"init" | "extreme_tipp" | "medium_racing" | "medium_harm" | "medium_shame" | "medium_panic" | "low_end">("init");
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -539,7 +544,7 @@ export default function EpisodeSupportScreen({
                     onClick={() => {
                       setIntensityList([...intensityList, num]);
                       if (num >= 8) {
-                        setGuidedStep("extreme_tipp_1");
+                        setGuidedStep("extreme_tipp");
                       } else if (num >= 5) {
                         setGuidedStep("medium_racing"); // prompt question
                       } else {
@@ -555,82 +560,32 @@ export default function EpisodeSupportScreen({
             </div>
           )}
 
-          {/* Extreme paths (8-10): Walkthrough TIPP step by step */}
-          {guidedStep === "extreme_tipp_1" && (
-            <div className="space-y-4" id="tipp-step-1">
+          {/* Extreme path (8-10): the unified interactive TIPP tool — DBT's "use whichever piece
+              fits" guidance, so the person can jump straight to whatever helps rather than being
+              forced through a fixed T→I→P order (and, unlike the old 3-step walkthrough, PMR is no
+              longer skipped entirely — 2026-07-12 Wave 3, Group E). */}
+          {guidedStep === "extreme_tipp" && (
+            <div className="space-y-4" id="tipp-step-guided">
               <div className="p-4 bg-amber-500/10 border-y border-r border-slate-850 border-l-4 border-l-amber-500 rounded-r-xl">
                 <h4 className="text-sm font-bold text-slate-100 mb-1 font-sans">Biological shock reset</h4>
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  Your intensity is extreme. This means your thinking brain is offline. This is biology, not weakness. Let's start with TIPP temperature reset.
+                  Your intensity is extreme. This means your thinking brain is offline. This is biology, not weakness. Try whichever of these fits right now.
                 </p>
               </div>
 
-              <div className="bg-page p-4 rounded-xl border border-slate-800 space-y-2">
-                <p className="text-sm font-semibold text-slate-100">
-                  Step 1: Cold Shock (T)
-                </p>
-                <p className="text-xs text-slate-300 leading-relaxed italic">
-                  "Splash ice cold water on your face, hold an ice cube, or press something cold to your neck. Continue for 30 seconds."
-                </p>
-              </div>
+              <TIPPTool
+                onSubSkillComplete={() => {
+                  setSkillsSelected((prev) => (prev.includes("TIPP") ? prev : [...prev, "TIPP"]));
+                }}
+                onIntensityChange={(num) => setIntensityList((prev) => [...prev, num])}
+              />
 
               <button
-                onClick={() => setGuidedStep("extreme_tipp_2")}
+                onClick={() => setStage("debrief_1")}
                 className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-xl transition-all text-xs uppercase tracking-wider cursor-pointer text-center font-extrabold"
               >
-                Done — what's next
+                I'm ready to close out
               </button>
-            </div>
-          )}
-
-          {guidedStep === "extreme_tipp_2" && (
-            <div className="space-y-4" id="tipp-step-2">
-              <div className="bg-page p-4 rounded-xl border border-slate-800 space-y-2">
-                <p className="text-sm font-semibold text-slate-100">
-                  Step 2: Intense Exercise (I)
-                </p>
-                <p className="text-xs text-slate-300 leading-relaxed italic">
-                  "Let's move your body — it helps burn off some of that intense energy. Do 20 rapid jumping jacks or run in place vigorously for one minute."
-                </p>
-              </div>
-
-              <button
-                onClick={() => setGuidedStep("extreme_tipp_3")}
-                className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-xl transition-all text-xs uppercase tracking-wider cursor-pointer text-center font-extrabold"
-              >
-                Done — what's next
-              </button>
-            </div>
-          )}
-
-          {guidedStep === "extreme_tipp_3" && (
-            <div className="space-y-4" id="tipp-step-3">
-              <div className="bg-page p-4 rounded-xl border border-slate-800 space-y-2">
-                <p className="text-sm font-semibold text-slate-100">
-                  Step 3: Paced Breathing (P)
-                </p>
-                <p className="text-xs text-slate-300 leading-relaxed italic">
-                  "Breathe in for 4 seconds, out for 6 seconds. Do this slow cycling five times."
-                </p>
-              </div>
-
-              <div className="space-y-2 pt-2">
-                <p className="text-xs text-slate-500 text-center">Where is your intensity now?</p>
-                <div className="grid grid-cols-5 gap-2">
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
-                    <button
-                      key={num}
-                      onClick={() => {
-                        setIntensityList([...intensityList, num]);
-                        setStage("debrief_1");
-                      }}
-                      className="bg-page border border-slate-800 text-xs font-mono py-2 rounded-lg cursor-pointer hover:border-amber-500 transition-colors"
-                    >
-                      {num}
-                    </button>
-                  ))}
-                </div>
-              </div>
             </div>
           )}
 

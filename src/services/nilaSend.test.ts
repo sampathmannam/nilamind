@@ -6,6 +6,7 @@ import {
   NilaUiMessage,
   createStreamGuard,
   resolveStreamedVoiceReply,
+  crisisSignalForSend,
 } from "./nilaSend";
 import { getUnsafeFallbackReply } from "../safety";
 
@@ -21,6 +22,15 @@ describe("shouldBlockForCrisis", () => {
   });
   it("is false for empty input", () => {
     expect(shouldBlockForCrisis("")).toBe(false);
+  });
+});
+
+describe("crisisSignalForSend (2026-07-12 Wave 3 — two-tier crisis surface)", () => {
+  it("delegates to detectCrisisSignal: a keyword hit returns source:'keyword', tier:'full'", async () => {
+    expect(await crisisSignalForSend("I want to die")).toEqual({ hit: true, source: "keyword", tier: "full" });
+  });
+  it("delegates to detectCrisisSignal: no hit returns hit:false, source:null, tier:null", async () => {
+    expect(await crisisSignalForSend("I'm really anxious about work")).toEqual({ hit: false, source: null, tier: null });
   });
 });
 

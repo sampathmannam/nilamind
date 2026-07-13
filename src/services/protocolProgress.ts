@@ -28,6 +28,25 @@ function recordCompletion(protocolId: string): void {
   }
 }
 
+/**
+ * How many times has this exact protocol been finished before? (2026-07-12 Wave 3, Group H.) A read of
+ * startProtocol()/advanceProtocol() confirmed restarting a completed protocol was NEVER blocked — there is
+ * no gating state anywhere. So this is not a restart fix; it's the "completion-count surface" the plan
+ * scoped this task down to: a cheap read over the existing append-only completions log (recordCompletion
+ * above), so a caller can show a "you've done this before" / "Nth time" framing instead of restart being
+ * silently invisible.
+ */
+export function completionCountFor(protocolId: string): number {
+  try {
+    const raw = secureLocal.getItem(COMPLETIONS_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    const list: CompletionRecord[] = Array.isArray(parsed) ? parsed : [];
+    return list.filter((r) => r && r.protocolId === protocolId).length;
+  } catch {
+    return 0;
+  }
+}
+
 interface Progress {
   protocolId: string;
   stepIndex: number;
@@ -66,15 +85,18 @@ export interface ActiveStep {
   step: ProtocolStep;
   stepIndex: number;
   total: number;
+  /** Times this protocol was completed before THIS run (2026-07-12 Wave 3, Group H completion-count surface). */
+  priorCompletions: number;
 }
 
-/** Begin a protocol at its first step. Returns the first step, or null if the id is unknown. */
+/** Begin a protocol at its first step. Returns the first step, or null if the id is unknown. Restarting an
+ * already-completed protocol is, and always was, permitted — there is no completion-gating state. */
 export function startProtocol(id: string): ActiveStep | null {
   const p = getProtocol(id);
   if (!p) return null;
   active = { protocolId: id, stepIndex: 0 };
   persist();
-  return { protocol: p, step: p.steps[0], stepIndex: 0, total: p.steps.length };
+  return { protocol: p, step: p.steps[0], stepIndex: 0, total: p.steps.length, priorCompletions: completionCountFor(id) };
 }
 
 /** The current step of the active program, or null if none / stale. Self-heals an invalid stored state. */
@@ -87,7 +109,13 @@ export function getActiveProgress(): ActiveStep | null {
     persist(); // stored program points at a removed protocol / out-of-range step → clear it
     return null;
   }
-  return { protocol: p, step: p.steps[a.stepIndex], stepIndex: a.stepIndex, total: p.steps.length };
+  return {
+    protocol: p,
+    step: p.steps[a.stepIndex],
+    stepIndex: a.stepIndex,
+    total: p.steps.length,
+    priorCompletions: completionCountFor(a.protocolId),
+  };
 }
 
 /** Move to the next step. Returns the new step, or `{done:true, protocol}` when the program is complete (and clears it). */
@@ -111,7 +139,13 @@ export function advanceProtocol(): ActiveStep | { done: true; protocol: Protocol
   }
   active = { protocolId: a.protocolId, stepIndex: next };
   persist();
-  return { protocol: p, step: p.steps[next], stepIndex: next, total: p.steps.length };
+  return {
+    protocol: p,
+    step: p.steps[next],
+    stepIndex: next,
+    total: p.steps.length,
+    priorCompletions: completionCountFor(a.protocolId),
+  };
 }
 
 /** Drop the active program (explicit "stop"/"not now"). */

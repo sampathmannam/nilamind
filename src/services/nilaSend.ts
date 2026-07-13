@@ -8,7 +8,7 @@
 //   intensity: N/10.") so they never appear in a request body.
 
 import { scanForCrisis, isStreamingHarm, checkResponse, getUnsafeFallbackReply } from "../safety";
-import { detectCrisis } from "./crisisClassifier";
+import { detectCrisis, detectCrisisSignal, type CrisisSignal } from "./crisisClassifier";
 import type { InMomentInsight } from "./inMomentInsight";
 
 export type NilaMode = "companion" | "episode";
@@ -41,6 +41,19 @@ export function shouldBlockForCrisis(text: string): boolean {
  */
 export function shouldBlockForCrisisAsync(text: string): Promise<boolean> {
   return detectCrisis(text);
+}
+
+/**
+ * The two-tier crisis gate (2026-07-12 Wave 3; retiered 2026-07-12 Bug 1 fix): same detection as
+ * shouldBlockForCrisisAsync, but also reports the CrisisSignal's `source` ("keyword" | "classifier" | null)
+ * AND `tier` ("full" | "soft" | null) so the companion send path can render a softer inline surface for a
+ * SOFT-tier hit while a "full" tier (every keyword-floor hit, plus any HIGH-CONFIDENCE classifier hit) keeps
+ * the exact same full-takeover CrisisOverlay. `tier` — not `source` — is the field callers must branch the UI
+ * on; see crisisClassifier.ts's CrisisSource/CrisisTier docs for why source alone is not a confidence signal.
+ * Fail-closed exactly like detectCrisis — never worse than the boolean gate.
+ */
+export function crisisSignalForSend(text: string): Promise<CrisisSignal> {
+  return detectCrisisSignal(text);
 }
 
 /** The exact message array to send to the on-device model: synthetic turns removed, synthetic flag dropped. */

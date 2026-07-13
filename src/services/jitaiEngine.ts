@@ -2,6 +2,7 @@ import { selfReportSleepSignal } from "./sleepInsight";
 import { loadMoodHistory } from "./moodHistory";
 import { safeSpotDistortions } from "./distortionSpotter"; // 🟡 Safety: Jitai now uses §9‑gated distortion check, needs review
 import { detectElevationRisk } from "./elevationGuard";
+import { secureLocal } from "./secureLocal";
 import type { SleepSignal } from "./healthConnect";
 import type { UsageSummary } from "./usageAnalytics";
 
@@ -190,4 +191,55 @@ export function assessJitai(params: {
     suggestedTool,
     protocolRecommendation,
   };
+}
+
+// --- Receptivity gate (2026-07-12 Wave 3 §6) ---------------------------------------------------------------
+// Reuses proactiveEngine.ts's proven per-trigger-key cooldown pattern (isProactiveDismissed/dismissProactive,
+// secureLocal key nilamind_proactive_dismiss_<key>) rather than inventing new plumbing — same shape, a
+// dedicated key prefix so JITAI's cooldowns never collide with proactiveEngine's own dismissals.
+//
+// HONESTY CHECK (per spec doc §6): neither Nahum-Shani et al. (2018, Annals of Behavioral Medicine 52(6):
+// 446-462) nor van Genugten et al. (2025, Frontiers in Digital Health) specifies a cooldown duration.
+// van Genugten found NO reviewed real-world MH JITAI implements a cooldown/engagement-history-based
+// suppression at all. Every duration below is an ENGINEERING DEFAULT, not a citation:
+//  - 24h for sleep_prodrome/mood_deterioration/high_distortion — matches proactiveEngine.ts's existing
+//    COOLDOWN_MS default and the app's "one gentle nudge per day" principle; also consistent with
+//    Nahum-Shani's qualitative rule (match cooldown to how fast the tailoring variable can meaningfully
+//    change) — mood_deterioration is a 5-checkin rolling average, which cannot move meaningfully within hours.
+//  - 3 days for inactivity — matches proactiveEngine.ts's existing inactivity_nudge value EXACTLY (internal
+//    consistency, not new literature).
+//  - elevation_risk is exempt from gating entirely — safety-adjacent, fast-changing per-message signal;
+//    notificationSuppress.ts's existing crisis-suppression precedent treats safety signals as
+//    override-only-forward, never throttled. Gating this like a wellness nudge risks suppressing a genuine
+//    repeated safety signal.
+const JITAI_SHOWN_PREFIX = "nilamind_jitai_last_shown_";
+const HOUR_MS = 60 * 60 * 1000;
+const DAY_MS_LOCAL = 24 * HOUR_MS;
+
+const JITAI_COOLDOWN_MS: Record<JitaiTrigger, number | null> = {
+  sleep_prodrome: 24 * HOUR_MS,
+  mood_deterioration: 24 * HOUR_MS,
+  high_distortion: 24 * HOUR_MS,
+  inactivity: 3 * DAY_MS_LOCAL,
+  elevation_risk: null, // exempt — never gated
+};
+
+/** True if `trigger` was shown within its cooldown window (always false for the exempt elevation_risk). */
+export function isJitaiCooldownActive(trigger: JitaiTrigger): boolean {
+  const cooldownMs = JITAI_COOLDOWN_MS[trigger];
+  if (cooldownMs === null) return false;
+  try {
+    const raw = secureLocal.getItem(JITAI_SHOWN_PREFIX + trigger);
+    if (!raw) return false;
+    return Date.now() - Number(raw) < cooldownMs;
+  } catch {
+    return false; // fail-open on a read error — never silently suppress a nudge because storage hiccuped
+  }
+}
+
+/** Mark `trigger` as shown now, starting its cooldown window. No-op is harmless for the exempt elevation_risk. */
+export function markJitaiShown(trigger: JitaiTrigger): void {
+  try {
+    secureLocal.setItem(JITAI_SHOWN_PREFIX + trigger, String(Date.now()));
+  } catch { /* ignore */ }
 }

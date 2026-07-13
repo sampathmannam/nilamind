@@ -1,7 +1,7 @@
 // Protocol chat helpers — thin wrappers over protocolProgress that turn protocol starts/advances into
 // assistant-message shaped results. Pure, deterministic, §9-aware.
 
-import { startProtocol, advanceProtocol, getActiveProgress, protocolOffer } from "./protocolProgress";
+import { startProtocol, advanceProtocol, getActiveProgress, protocolOffer, completionCountFor } from "./protocolProgress";
 import { scanForCrisis } from "../safety";
 
 export type ProtocolChatResult =
@@ -53,5 +53,13 @@ export function protocolOfferCard(userText: string): ProtocolCard | null {
   }
   const offer = protocolOffer(userText);
   if (!offer) return null;
-  return { protocolId: offer.id, title: offer.title, label: `Try ${offer.title} with me`, active: false };
+  // 2026-07-12 Wave 3, Group H: restarting a completed protocol was never blocked (verified via a read of
+  // protocolProgress.ts before this change — no gating state exists), so this is purely a visibility fix —
+  // surface the completion count from the existing append-only log so a repeat isn't silently invisible.
+  const priorCompletions = completionCountFor(offer.id);
+  const label =
+    priorCompletions > 0
+      ? `Try ${offer.title} again — you've completed it ${priorCompletions} time${priorCompletions === 1 ? "" : "s"} before`
+      : `Try ${offer.title} with me`;
+  return { protocolId: offer.id, title: offer.title, label, active: false };
 }

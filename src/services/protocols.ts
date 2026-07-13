@@ -353,6 +353,48 @@ export const PROTOCOLS: Protocol[] = [
         prompt: "Pick the smallest action that fits that value — small enough it's almost easy: a message to someone you care about, five minutes on something you make, one honest thing said. What's the smallest version you could do today?" },
     ],
   },
+  {
+    id: "intolerance-of-uncertainty",
+    title: "Making Peace with Uncertainty",
+    basis:
+      "Self-guided single-session 'Uncertainty-Mindset Training' (N=259 RCT vs. psychoeducation + no-training " +
+      "controls): IU d=1.28 immediate post-training, d=0.86 at 1-month; anxiety (GAD-7) d=0.50 at 1-month; " +
+      "depression (PHQ-8) d=0.60 at 1-month; IU reduction partially mediates the gains. Built on Schleider et " +
+      "al.'s (2020) BEST framework and Yeager et al.'s (2022, Nature) synergistic-mindsets model. No " +
+      "functional-impairment advantage over controls — a known single-session-intervention limitation, flagged " +
+      "honestly. (Daniels, Hasan & Schweizer, 2025, Psychological Medicine 55, e377.) Classic intolerance-of-" +
+      "uncertainty theory traces to Freeston et al. (1994), Ladouceur, Gosselin & Dugas (2000), Buhr & Dugas " +
+      "(2002), and Dugas et al. (2005) — this module is the single-session mindset-training design, not a " +
+      "compression of the 12-session Dugas et al. (2022) behavioral-experiments protocol, which is unrelated. " +
+      "See docs/superpowers/plans/2026-07-12-wave3-technical-specs.md §2.",
+    forConcerns: [
+      "uncertain", "uncertainty", "don't know what's going to happen", "dont know what's going to happen",
+      "hate not knowing", "can't stand not knowing", "cant stand not knowing", "no control over what happens",
+      "everything feels uncertain", "future is uncertain", "unpredictable", "unknown", "ambiguous", "ambiguity",
+      "need certainty", "what if it goes wrong", "fear of the unknown",
+    ],
+    steps: [
+      { id: "iu-1", kind: "psychoed", title: "How this works",
+        prompt: "This is a single sitting, about 15 minutes — no daily practice, no return visit needed. We're going to look at how you relate to uncertainty, because that relationship is learnable, not fixed — the way your mind handles not-knowing can genuinely shift, even in one conversation. Want to give it a try?" },
+      { id: "iu-2", kind: "psychoed", title: "Uncertainty isn't the threat it feels like",
+        prompt: "Uncertainty often gets treated like a warning sign — something dangerous that needs resolving right now. But most uncertainty is just the normal cost of anything new or meaningful: a relationship, a decision, a future you actually care about. People who've learned to hold uncertainty a little more loosely often find that it stops running the show, even though nothing about the situation itself changed. Does that distinction land for you at all?" },
+      { id: "iu-3", kind: "reflect", title: "Your own evidence",
+        prompt: "Think of a real time uncertainty led somewhere okay, or even somewhere good — a time you didn't know how something would turn out, and it turned out fine, or you handled it. What happened? And if a friend were facing that same kind of not-knowing today, what would you tell them?" },
+      { id: "iu-4", kind: "psychoed", title: "Tolerance is a skill, not a trait",
+        prompt: "Here's the other piece: your capacity to sit with uncertainty isn't fixed at some level you're stuck with — it's more like a muscle. It strengthens each time you practice staying present with not-knowing instead of rushing to resolve it. That's true even if right now it feels weak or untested." },
+      // STAR acronym sourced from a press release quoting the study authors, not the peer-reviewed manuscript
+      // text itself (per spec doc §2 iu-5) — verify literal wording against OSF supplementary materials
+      // (https://osf.io/fztqr) before treating as verbatim. The underlying repetitive-negative-thinking
+      // cessation rationale is solid regardless of the mnemonic's exact wording (Buhr & Dugas, 2002;
+      // Ladouceur, Gosselin & Dugas, 2000; Dar, Iqbal & Mushtaq, 2017).
+      { id: "iu-5", kind: "exercise", title: "Learn STAR",
+        prompt: "Here's a small tool for when the spiral starts — STAR: STop (notice the spiral has started), Accept (let the uncertainty be there without fighting it), Re-think (swap the catastrophic 'what if' for a next thought you can actually work with). It's four small moves, not a fix — just a way to interrupt the loop. Want to walk through what each part might look like for you?" },
+      { id: "iu-6", kind: "exercise", title: "Try STAR on something real",
+        prompt: "Let's use it on something live rather than hypothetical — what's one uncertainty that's actually on your mind right now? Let's walk it through Stop, Accept, Re-think together, step by step." },
+      { id: "iu-7", kind: "plan", title: "One line to carry with you",
+        prompt: "Before we close — no follow-up, no homework, just this: if you had to compress what shifted for you today into one line you could carry with you, what would it be? That's the whole toolkit. Nothing else to schedule." },
+    ],
+  },
   DBT_SKILLS_TRAINING,
   ACT_TRAINING,
   ASSERTION_TRAINING,

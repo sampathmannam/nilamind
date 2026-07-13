@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { GROUNDING_EXERCISES } from "../data";
 import BreathingTimer from "./BreathingTimer";
+import TIPPTool from "./TIPPTool";
 
 interface Props {
   /** 0-based index of the exercise to auto-expand on mount */
@@ -29,6 +30,9 @@ export default function GroundingLibraryScreen({ autoExpand }: Props) {
         {GROUNDING_EXERCISES.map((ex, idx) => {
           const isExpanded = expandedIndex === idx;
           const isBoxBreathing = ex.title === "Box Breathing";
+          // 2026-07-12 Wave 3, Group E: the unified interactive TIPP tool replaces this card's old
+          // static paragraph (was a single shallow half-implementation of TIPP — see spec doc §3).
+          const isTipp = ex.title === "Cold Reset (TIPP)";
 
           return (
             <div
@@ -53,14 +57,23 @@ export default function GroundingLibraryScreen({ autoExpand }: Props) {
 
               {isExpanded && (
                 <div className="px-4 pb-5 border-t border-slate-800/80 pt-4 space-y-4">
-                  <p className="text-sm text-slate-300 leading-relaxed whitespace-pre-wrap">
-                    {ex.steps}
-                  </p>
+                  {!isTipp && (
+                    <p className="text-sm text-slate-300 leading-relaxed whitespace-pre-wrap">
+                      {ex.steps}
+                    </p>
+                  )}
 
                   {/* Interactive segment for Box Breathing */}
                   {isBoxBreathing && (
                     <div className="bg-page p-4 rounded-xl border border-slate-800">
                       <BreathingTimer />
+                    </div>
+                  )}
+
+                  {/* Interactive TIPP tool — consolidates the 3 shallow half-implementations into one. */}
+                  {isTipp && (
+                    <div className="bg-page p-4 rounded-xl border border-slate-800">
+                      <TIPPTool />
                     </div>
                   )}
 

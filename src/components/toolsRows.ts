@@ -8,9 +8,15 @@ import {
 // buildToolGroups() returns, so this file (and its test) guard the real, on-screen row set: focused
 // right-now tools grouped by intent. "In the moment" = grounding/breathing, wind-down for sleep,
 // episode support; "Log & track" = diary, screenings; "Patterns" = phone insights when enabled.
-// Re-homed rows (skills, thought_record, self_compassion, values_to_action) now live under
-// You → Resources; episode support is a Nila MODE reached via onEpisode(), not a route; the
-// "behaviour" row only appears when phone features are enabled (PHONE_FEATURES_ENABLED).
+// Re-homed rows (skills, thought_record, self_compassion) now live under You → Resources; episode
+// support is a Nila MODE reached via onEpisode(), not a route; the "behaviour" row only appears when
+// phone features are enabled (PHONE_FEATURES_ENABLED).
+// Wave 3 Group B (2026-07-12, see docs/superpowers/plans/2026-07-12-wave3-technical-specs.md §5):
+// "values_work" (uncited duplicate) is retired from this hub — its data was migrated into values.ts,
+// the actual VLQ-cited tool, and "values_to_action" now takes its place here. values_to_action does
+// NOT go through nav.ts's generic aux-view system (KNOWN_AUX_VIEWS deliberately excludes it — see
+// nav.test.ts, PLAN_OF_ACTION A6); App.tsx's go() special-cases the "unknown" resolution for this one
+// target and opens its own sheet, same pattern as "caregiver"/"grounding".
 // Kept as plain data (icon component refs, not JSX) so the row set stays unit-testable in a node env.
 
 export interface ToolRow {
@@ -60,7 +66,7 @@ export function buildToolGroups({ go, onEpisode, phoneEnabled }: ToolRowDeps): T
       title: "Skills & practice",
       rows: [
         { id: "problem_solving", label: "Problem-solving", sub: "Break a problem into steps and try a solution", Icon: Lightbulb, iconClass: "w-5 h-5 text-amber-400", onTap: () => go("problem_solving") },
-        { id: "values_work", label: "Values work", sub: "Clarify what matters and notice where you align", Icon: Compass, iconClass: "w-5 h-5 text-violet-400", onTap: () => go("values_work") },
+        { id: "values_to_action", label: "Values to action", sub: "What matters, where you've drifted, and one small step", Icon: Compass, iconClass: "w-5 h-5 text-violet-400", onTap: () => go("values_to_action") },
         { id: "exposure", label: "Exposure hierarchy", sub: "Build a fear ladder — work from the bottom up", Icon: Mountain, iconClass: "w-5 h-5 text-orange-400", onTap: () => go("exposure") },
         { id: "peer_support", label: "Peer support", sub: "Practice reaching out to people who get it", Icon: Users, iconClass: "w-5 h-5 text-emerald-400", onTap: () => go("peer_support") },
       ],

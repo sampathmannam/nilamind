@@ -9,6 +9,13 @@ vi.mock("../services/secureLocal", () => ({
   secureLocal: { getItem: () => null, setItem: () => {}, removeItem: () => {} },
 }));
 
+const offerPostCrisisCheckInMock = vi.fn();
+const declinePostCrisisCheckInMock = vi.fn();
+vi.mock("../services/postCrisisCheckIn", () => ({
+  offerPostCrisisCheckIn: (...args: unknown[]) => offerPostCrisisCheckInMock(...args),
+  declinePostCrisisCheckIn: (...args: unknown[]) => declinePostCrisisCheckInMock(...args),
+}));
+
 import CrisisOverlay from "./CrisisOverlay";
 
 afterEach(cleanup);
@@ -48,5 +55,31 @@ describe("CrisisOverlay — §9 crisis surface renders (audit #27)", () => {
     fireEvent.click(document.getElementById("grounding-shortcut-btn")!);
     expect(onGround).toHaveBeenCalledOnce();
     expect(onClose).toHaveBeenCalledOnce();
+  });
+});
+
+describe("CrisisOverlay — opt-in post-crisis check-in (2026-07-12 Wave 3, Task 1.4, never silent)", () => {
+  it("does NOT schedule a check-in when the toggle is left unchecked (default, unchecked-by-default)", () => {
+    const onClose = vi.fn();
+    render(<CrisisOverlay isOpen onClose={onClose} onNavigateToGrounding={noop} onNavigateToBreathing={noop} />);
+    fireEvent.click(screen.getByText(/steadier now/i));
+    expect(offerPostCrisisCheckInMock).not.toHaveBeenCalled();
+    expect(onClose).toHaveBeenCalledOnce(); // dismiss still closes immediately — unchanged behavior
+  });
+
+  it("schedules the opt-in check-in only when the toggle is explicitly checked before dismissing", () => {
+    const onClose = vi.fn();
+    render(<CrisisOverlay isOpen onClose={onClose} onNavigateToGrounding={noop} onNavigateToBreathing={noop} />);
+    const toggle = document.querySelector<HTMLInputElement>("#post-crisis-checkin-toggle input[type=checkbox]")!;
+    fireEvent.click(toggle);
+    fireEvent.click(screen.getByText(/steadier now/i));
+    expect(offerPostCrisisCheckInMock).toHaveBeenCalledOnce();
+    expect(onClose).toHaveBeenCalledOnce();
+  });
+
+  it("the toggle is unchecked by default on open", () => {
+    render(<CrisisOverlay isOpen onClose={noop} onNavigateToGrounding={noop} onNavigateToBreathing={noop} />);
+    const toggle = document.querySelector<HTMLInputElement>("#post-crisis-checkin-toggle input[type=checkbox]")!;
+    expect(toggle.checked).toBe(false);
   });
 });

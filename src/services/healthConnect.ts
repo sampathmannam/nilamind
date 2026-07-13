@@ -22,6 +22,12 @@ import { ls } from "./storageUtils";
 export interface SleepNight {
   date: string; // local YYYY-MM-DD of the night (keyed to wake day)
   hours: number;
+  /** Earliest fragment start / latest fragment end that contributed to this night, ISO — retained (not
+   *  collapsed away) so the real Sleep Regularity Index (Phillips et al. 2017; see circadianFeedback.ts's
+   *  computeSleepRegularityIndex + socialRhythm.ts's buildSleepWindows) can reconstruct actual bed/wake
+   *  clock times. Additive fields — existing {date, hours}-only consumers are unaffected. */
+  startTime?: string;
+  endTime?: string;
 }
 
 /** The minimal contract NilaMind needs — a native plugin (or adapter) fulfils this. */
@@ -45,16 +51,28 @@ const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart
 /** PURE: collapse raw Health Connect sleep sessions to one {date, hours} per night (keyed to the wake day,
  *  summing fragmented sessions). Exported for unit testing without the native side. */
 export function mapSleepSessions(sessions: Array<{ startTime: string; endTime: string }>): SleepNight[] {
-  const byDay = new Map<string, number>();
+  const byDay = new Map<string, { hours: number; start: number; end: number }>();
   for (const s of sessions || []) {
     const start = Date.parse(s?.startTime), end = Date.parse(s?.endTime);
     if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) continue;
     const hours = (end - start) / 3_600_000;
     if (hours <= 0 || hours > 24) continue; // guard garbage
     const wakeDay = ymd(new Date(end)); // key to the morning you woke
-    byDay.set(wakeDay, (byDay.get(wakeDay) ?? 0) + hours);
+    const prev = byDay.get(wakeDay);
+    if (prev) {
+      byDay.set(wakeDay, { hours: prev.hours + hours, start: Math.min(prev.start, start), end: Math.max(prev.end, end) });
+    } else {
+      byDay.set(wakeDay, { hours, start, end });
+    }
   }
-  return [...byDay.entries()].map(([date, hours]) => ({ date, hours: Math.round(hours * 10) / 10 })).sort((a, b) => a.date.localeCompare(b.date));
+  return [...byDay.entries()]
+    .map(([date, v]) => ({
+      date,
+      hours: Math.round(v.hours * 10) / 10,
+      startTime: new Date(v.start).toISOString(),
+      endTime: new Date(v.end).toISOString(),
+    }))
+    .sort((a, b) => a.date.localeCompare(b.date));
 }
 
 /** Read the last `days` of sleep from Health Connect. Returns [] on web, when the flag is off, when no

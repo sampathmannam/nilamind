@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeAll, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeAll, beforeEach, afterEach } from "vitest";
 
 // NilaMind is fully on-device. We register a fake LocalLlmBackend (the real seam) so both modes route
 // through the genuine §9 gates and the genuine on-device call — there is no cloud transport to mock.
@@ -12,6 +12,8 @@ import { sendToNila } from "./sendToNila";
 import { NilaUiMessage } from "./nilaSend";
 import { registerLocalLlmBackend, type LocalLlmBackend } from "./localLlm";
 import { getCrisisReply } from "../safety";
+import { setCrisisClassifierEnabled, setCrisisEmbedder, type Embedder } from "./crisisClassifier";
+import weights from "./crisisClassifier.weights.json";
 
 // Suppress the node ExperimentalWarning for localStorage; crisisResources may touch it at import time.
 beforeAll(() => {
@@ -136,6 +138,70 @@ describe("sendToNila — episode path (invariants #2 + #5, on-device)", () => {
     const res = await sendToNila([{ role: "user", content: "racing" }], "episode", noopDelta);
     expect(res.reachedAI).toBe(false);
     expect(res.reply).toBe("");
+  });
+});
+
+describe("sendToNila — crisisSource threading (2026-07-12 Wave 3, two-tier crisis surface)", () => {
+  const COEF = weights.coef as number[];
+  const zeros = () => new Array(COEF.length).fill(0);
+  // Text-aware mock embedder: only "I won't be a burden much longer" scores above threshold, so ordinary
+  // text elsewhere in this test file (once the classifier is later disabled again) is unaffected.
+  //
+  // MERGE NOTE (2026-07-12, main #34 reconciliation): was keyed on "better off without me" (matching
+  // "everyone would be better off without me"), but main independently narrowed INDIRECT_METAPHORS
+  // (safety.ts) so that exact substring now ALSO trips the keyword floor — a strictly stronger catch, not a
+  // regression — meaning that phrase no longer reaches the classifier at all and can't exercise this test's
+  // classifier-only path. Rekeyed to "burden much longer" — see crisisClassifier.realmodel.test.ts's THE
+  // PROOF CASE for the confirmed real-model score (0.7533) and keyword-floor miss.
+  const textAwareEmbedder: Embedder = async (text: string) =>
+    text.includes("burden much longer") ? [...COEF] : zeros();
+
+  afterEach(() => {
+    // Never leak the classifier-on state into other tests/files — restore the shipped OFF default.
+    setCrisisClassifierEnabled(false);
+    setCrisisEmbedder(null);
+  });
+
+  it("blocked result carries crisisSource + crisisTier for a HIGH-CONFIDENCE classifier-only hit (2026-07-12 Bug 1 fix: tier is score-based, not source-based)", async () => {
+    setCrisisClassifierEnabled(true);
+    setCrisisEmbedder(textAwareEmbedder); // scores ≈1 — well above CRISIS_HIGH_CONFIDENCE_THRESHOLD
+    const rec = recordingBackend("unused");
+    registerLocalLlmBackend(rec.backend);
+    const r = await sendToNila([{ role: "user", content: "I won't be a burden much longer" }], "companion", noopDelta);
+    expect(r.blocked).toBe(true);
+    expect(r.crisisSource).toBe("classifier");
+    expect(r.crisisTier).toBe("full"); // the proof case — a genuine disclosure, must NOT be soft
+  });
+
+  it("blocked result carries crisisSource:'keyword', crisisTier:'full' for a keyword-floor hit", async () => {
+    const rec = recordingBackend("unused");
+    registerLocalLlmBackend(rec.backend);
+    const r = await sendToNila([{ role: "user", content: "i want to kill myself" }], "companion", noopDelta);
+    expect(r.blocked).toBe(true);
+    expect(r.crisisSource).toBe("keyword");
+    expect(r.crisisTier).toBe("full");
+  });
+
+  it("blocked result carries crisisTier:'soft' for a genuinely SUB-high-confidence classifier-only hit", async () => {
+    // A text-aware mock that scores a specific marginal phrase in the SOFT band (between CRISIS_THRESHOLD and
+    // CRISIS_HIGH_CONFIDENCE_THRESHOLD) using the same z-inversion algebra as crisisClassifier.test.ts's
+    // embedderForScore helper, so this test doesn't depend on the real bundled model's exact embedding.
+    const COEF = weights.coef as number[];
+    const BIAS = weights.bias as number;
+    const targetProb = 0.6; // empirically inside the soft band — see crisisClassifier.ts's threshold comment
+    const z = Math.log(targetProb / (1 - targetProb));
+    const sumSq = COEF.reduce((s, c) => s + c * c, 0);
+    const alpha = (z - BIAS) / sumSq;
+    const softEmbedder: Embedder = async (text: string) =>
+      text.includes("marginal phrase") ? COEF.map((c) => c * alpha) : zeros();
+    setCrisisClassifierEnabled(true);
+    setCrisisEmbedder(softEmbedder);
+    const rec = recordingBackend("unused");
+    registerLocalLlmBackend(rec.backend);
+    const r = await sendToNila([{ role: "user", content: "this is a marginal phrase" }], "companion", noopDelta);
+    expect(r.blocked).toBe(true);
+    expect(r.crisisSource).toBe("classifier");
+    expect(r.crisisTier).toBe("soft");
   });
 });
 
