@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { t } from "../../services/i18n";
 import { Bell } from "lucide-react";
 import { getReminderPrefs, setReminderPrefs } from "../../services/reminders";
 import { syncDailyReminders, clearDailyReminders } from "../../services/notifications";
@@ -28,7 +29,7 @@ export default function RemindersSection() {
     <div className="glass p-5 rounded-2xl space-y-4 shadow-lg" id="settings-reminders">
       <div>
         <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
-          <Bell className="w-4 h-4 text-blue-400" /> Gentle Reminders
+          <Bell className="w-4 h-4 text-blue-400" /> {t("sec_reminders")}
         </h2>
         <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
           One gentle nudge a day — inside your window, never during quiet hours. No streak guilt, ever.

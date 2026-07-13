@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { t } from "../../services/i18n";
 import { Globe2 } from "lucide-react";
 import { allRegions, getRegionCode, setRegionCode, getCrisisLines, type RegionCode } from "../../services/crisisResources";
 
@@ -19,7 +20,7 @@ export default function RegionSection() {
     <div className="glass p-5 rounded-2xl space-y-4 shadow-lg" id="region-section">
       <div>
         <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
-          <Globe2 className="w-4 h-4 text-blue-400" /> Crisis lines & region
+          <Globe2 className="w-4 h-4 text-blue-400" /> {t("sec_region")}
         </h2>
         <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
           These are the helplines shown if you ever need them.

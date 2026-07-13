@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { t } from "../../services/i18n";
 import { BellRing } from "lucide-react";
 import { NOTIFICATION_CATEGORIES, getCategoryPrefs, setCategoryEnabled } from "../../services/notificationCategories";
 import { syncEmaCheckins } from "../../services/notifications";
@@ -20,7 +21,7 @@ export default function NotificationCategoriesSection() {
     <div className="glass p-5 rounded-2xl space-y-4 shadow-lg" id="settings-notif-categories">
       <div>
         <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
-          <BellRing className="w-4 h-4 text-purple-400" /> Notification types
+          <BellRing className="w-4 h-4 text-purple-400" /> {t("sec_notif_types")}
         </h2>
         <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
           Choose which kinds of nudges Nila may send. Turn any off and she'll stay quiet in that category.

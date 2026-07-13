@@ -171,7 +171,21 @@ export type I18nKey =
   | "usage_checkins"
   | "usage_programs"
   | "usage_assessments"
-  | "usage_features";
+  | "usage_features"
+  // Settings sub-section titles (Redesign §2 — Settings hub)
+  | "sec_appearance"
+  | "sec_voice"
+  | "sec_reminders"
+  | "sec_ema"
+  | "sec_notif_types"
+  | "sec_inflection"
+  | "sec_health_connect"
+  | "sec_on_device"
+  | "sec_identity"
+  | "sec_privacy_lock"
+  | "sec_feedback"
+  | "sec_region"
+  | "sec_pilot";
 
 export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
   en: {
@@ -317,6 +331,19 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     usage_programs: "programs done",
     usage_assessments: "assessments",
     usage_features: "features used",
+    sec_appearance: "Appearance",
+    sec_voice: "Soothing Voice",
+    sec_reminders: "Gentle Reminders",
+    sec_ema: "Quick Check-ins",
+    sec_notif_types: "Notification types",
+    sec_inflection: "Gentle Nudges from Nila",
+    sec_health_connect: "Sleep from Health Connect",
+    sec_on_device: "Nila Runs On Your Device",
+    sec_identity: "Account & Recovery",
+    sec_privacy_lock: "Privacy Lock",
+    sec_feedback: "Feedback & about",
+    sec_region: "Crisis lines & region",
+    sec_pilot: "Research pilot",
   },
   hi: {
     appName: "NilaMind",
@@ -461,6 +488,19 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     usage_programs: "पूर्ण कार्यक्रम",
     usage_assessments: "मूल्यांकन",
     usage_features: "उपयोग किए गए फ़ीचर",
+    sec_appearance: "दिखावट",
+    sec_voice: "सुखद आवाज़",
+    sec_reminders: "सौम्य रिमाइंडर",
+    sec_ema: "त्वरित चेक-इन",
+    sec_notif_types: "सूचना प्रकार",
+    sec_inflection: "नीला से सौम्य संकेत",
+    sec_health_connect: "हेल्थ कनेक्ट से नींद",
+    sec_on_device: "नीला आपके डिवाइस पर चलती है",
+    sec_identity: "खाता और रिकवरी",
+    sec_privacy_lock: "गोपनीयता लॉक",
+    sec_feedback: "प्रतिक्रिया और बारे में",
+    sec_region: "संकट लाइनें और क्षेत्र",
+    sec_pilot: "अनुसंधान पायलट",
   },
   ta: {
     appName: "NilaMind",
@@ -605,6 +645,19 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     usage_programs: "முடிக்கப்பட்ட நிரல்கள்",
     usage_assessments: "மதிப்பீடுகள்",
     usage_features: "பயன்படுத்திய அம்சங்கள்",
+    sec_appearance: "தோற்றம்",
+    sec_voice: "அமைதியான குரல்",
+    sec_reminders: "மென்மையான நினைவூட்டல்கள்",
+    sec_ema: "விரைவான செக்-இன்கள்",
+    sec_notif_types: "அறிவிப்பு வகைகள்",
+    sec_inflection: "நீலாவிடமிருந்து மென்மையான நடவடிக்கைகள்",
+    sec_health_connect: "ஹெல்த் கனெக்ட் வழியே தூக்கம்",
+    sec_on_device: "நீலா உங்கள் சாதனத்தில் இயங்குகிறது",
+    sec_identity: "கணக்கு மற்றும் மீட்பு",
+    sec_privacy_lock: "தனியுரிமை பூட்டு",
+    sec_feedback: "கருத்து & பற்றி",
+    sec_region: "நெருக்கடி வரிகள் & பகுதி",
+    sec_pilot: "ஆராய்ச்சி பைலட்",
   },
   te: {
     appName: "NilaMind",
@@ -749,6 +802,19 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     usage_programs: "పూర్తి చేసిన ప్రోగ్రామ్‌లు",
     usage_assessments: "అసెస్‌మెంట్‌లు",
     usage_features: "ఉపయోగించిన ఫీచర్‌లు",
+    sec_appearance: "రూపు",
+    sec_voice: "ప్రశాంతమైన స్వరం",
+    sec_reminders: "మృదువైన రిమైండర్లు",
+    sec_ema: "త్వరిత చెక్-ఇన్‌లు",
+    sec_notif_types: "నోటిఫికేషన్ రకాలు",
+    sec_inflection: "నీలా నుండి మృదువైన నడుపులు",
+    sec_health_connect: "హెల్త్ కనెక్ట్ నుండి నిద్ర",
+    sec_on_device: "నీలా మీ పరికరంపై నడుస్తుంది",
+    sec_identity: "ఖాతా & రికవరీ",
+    sec_privacy_lock: "ప్రైవసీ లాక్",
+    sec_feedback: "ఫీడ్‌బ్యాక్ & గురించి",
+    sec_region: "సంక్షోభ లైన్‌లు & ప్రాంతం",
+    sec_pilot: "పరిశోధన పైలట్",
   },
 };
 

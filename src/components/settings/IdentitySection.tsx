@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { t } from "../../services/i18n";
 import { EyeOff, Eye, KeyRound, Copy, Download, Check, Loader2 } from "lucide-react";
 import { loadIdentity, exportBackup } from "../../services/identity";
 import { requireAuth, isBiometricAvailable } from "../../services/biometricGate";
@@ -31,7 +32,7 @@ export default function IdentitySection() {
     <div className="glass p-5 rounded-2xl space-y-4 shadow-lg" id="settings-identity">
       <div>
         <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
-          <KeyRound className="w-4 h-4 text-blue-400" /> Account & Recovery
+          <KeyRound className="w-4 h-4 text-blue-400" /> {t("sec_identity")}
         </h2>
         <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
           No email or password — your space is recovered with a 12-word phrase only you hold.

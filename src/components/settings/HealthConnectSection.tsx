@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { t } from "../../services/i18n";
 import { Activity } from "lucide-react";
 import {
   getHealthConnectStatus,
@@ -47,7 +48,7 @@ export default function HealthConnectSection() {
     <div className="glass p-5 rounded-2xl space-y-4 shadow-lg" id="settings-health-connect">
       <div>
         <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
-          <Activity className="w-4 h-4 text-indigo-400" /> Sleep from Health Connect
+          <Activity className="w-4 h-4 text-indigo-400" /> {t("sec_health_connect")}
         </h2>
         <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
           Optional: let Nila read sleep hours from Health Connect (e.g. COROS, Fitbit, Garmin) instead of relying only on self-report.

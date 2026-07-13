@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { t } from "../../services/i18n";
 import { Bell } from "lucide-react";
 import { getEmaEnabled, setEmaEnabled, getEmaFrequency, setEmaFrequency } from "../../services/emaPrefs";
 import { syncEmaCheckins } from "../../services/notifications";
@@ -16,7 +17,7 @@ export default function EmaSection() {
     <div className="glass p-5 rounded-2xl space-y-4 shadow-lg" id="settings-ema">
       <div>
         <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
-          <Bell className="w-4 h-4 text-purple-400" /> Quick Check-ins
+          <Bell className="w-4 h-4 text-purple-400" /> {t("sec_ema")}
         </h2>
         <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
           Micro-check-ins throughout the day (&lt;10s each). Helps capture mood shifts that a single daily

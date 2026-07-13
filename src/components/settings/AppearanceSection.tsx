@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { t } from "../../services/i18n";
 import { Sun, Moon, Monitor, Leaf } from "lucide-react";
 import { getThemeChoice, setThemeChoice, type ThemeChoice } from "../../services/theme";
 import { useSensoryComfort } from "../../hooks/useSensoryComfort";
@@ -16,7 +17,7 @@ export default function AppearanceSection() {
     <div className="glass p-5 rounded-2xl space-y-3 shadow-lg" id="settings-appearance">
       <div>
         <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
-          <Sun className="w-4 h-4 text-amber-400" /> Appearance
+          <Sun className="w-4 h-4 text-amber-400" /> {t("sec_appearance")}
         </h2>
         <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
           Choose what's easiest on your eyes — there's no right answer, just what feels calmest for you.
