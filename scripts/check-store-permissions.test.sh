@@ -98,4 +98,18 @@ else
   echo "PASS: ACCESS_COARSE_LOCATION (between two single-line comments) manifest correctly rejected"
 fi
 
+# Fixture 8: unclosed HTML comment followed by active forbidden permission — must exit non-zero.
+# Regression: an unclosed `<!--` (no matching `-->` anywhere in the file) should NOT be stripped,
+# so the forbidden permission text after it is still correctly detected and the script exits non-zero.
+cat > "$tmpdir/unclosed-comment.xml" <<'EOF'
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+EOF
+if bash scripts/check-store-permissions.sh "$tmpdir/unclosed-comment.xml" >/tmp/check-store-permissions-test-out.txt 2>&1; then
+  echo "FAIL: unclosed comment with forbidden permission should exit non-zero"; fail=1
+else
+  echo "PASS: unclosed comment with forbidden permission correctly rejected"
+fi
+
 exit "$fail"

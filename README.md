@@ -55,7 +55,7 @@ and compounding memory. Same NilaMind, same one rule: *help is the only metric.*
 
 **Or install the APK directly:** grab the latest signed APK from [**Releases**](https://github.com/sampathmannam/nilamind/releases), or visit the [**landing page**](https://sampathmannam.github.io/nilamind/).
 
-On first run the app downloads its on-device model (~806 MB, over Wi-Fi, integrity-verified) and then works fully offline. Requires **Android 7.0+ (arm64)**. Step-by-step: [`docs/wiki/Getting-Started.md`](docs/wiki/Getting-Started.md).
+On first run the app downloads its on-device model (~1.1 GB, over Wi-Fi, integrity-verified) and then works fully offline. Requires **Android 7.0+ (arm64)**. Step-by-step: [`docs/wiki/Getting-Started.md`](docs/wiki/Getting-Started.md).
 
 **Build it:** see *Build & run* below.
 
@@ -172,7 +172,7 @@ choose. Re-test the safety layer against your model before any real use.
 ## A note on speed
 
 Because the model runs **entirely on your phone**, the **first reply after a fresh
-start** can take a couple of minutes on a slower device — it's reading a ~806 MB
+start** can take a couple of minutes on a slower device — it's reading a ~1.1 GB
 model off storage, not "thinking." NilaMind keeps the model resident once loaded
 (a foreground service) so **every reply after that stays fast** until the phone
 reboots. On a phone with fast storage the wait is only a few seconds. Details and
