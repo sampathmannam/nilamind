@@ -62,6 +62,7 @@ function ScreenFallback() {
 
 import { syncDailyReminders, scheduleReminderAt, syncEmaCheckins, syncWeeklyDigest, suppressNudgesForCrisis } from "./services/notifications";
 import { recordEngagement } from "./services/notificationBudget";
+import { recordNotificationOpen } from "./services/notificationEngagement";
 import { isCategoryEnabled } from "./services/notificationCategories";
 import { LocalNotifications } from "@capacitor/local-notifications";
 import { t, LANGUAGE_CHANGED_EVENT } from "./services/i18n";
@@ -320,6 +321,7 @@ export default function App() {
         const view = action?.notification?.extra?.view;
         if (typeof view === "string" && view) {
           recordEngagement(); // P6.3: a tapped non-crisis nudge resets the progressive-cooldown streak
+          recordNotificationOpen(); // P6.2: the tapped nudge is an engagement signal for the timing learner
           go(view);
         }
       } catch (e) {

@@ -13,11 +13,12 @@ import { DAY_MS } from "./storageUtils";
 import { computeCompassionateStreak } from "./streaks";
 import type { Medication } from "./medicationAdherence";
 import { getEmaEnabled, getEmaFrequency } from "./emaPrefs";
-import { planEmaFireTimes, emaElevationSignal } from "./ema";
+import { planEmaFireTimes, emaElevationSignal, EMA_WINDOWS, type EmaWindow } from "./ema";
 import { isSafetySuppressed, markSafetySuppression } from "./notificationSuppress";
 import { isDndActive } from "./dnd";
 import { peekRemaining, commitClaim, skipActive, recordNonCrisisSent } from "./notificationBudget";
 import { isCategoryEnabled } from "./notificationCategories";
+import { optimalFireHourNow } from "./notificationEngagement";
 
 // Warm, low-pressure nudges (Phase 7). Never demanding, never guilt-laden — each is an invitation.
 export const WARM_NUDGES = [
@@ -84,6 +85,12 @@ const DAILY_REMINDER_ID = 1001;
 
 const pad = (n: number) => String(n).padStart(2, "0");
 const timeToday = (h: number, m: number): Date => { const d = new Date(); d.setHours(h, m, 0, 0); return d; };
+/** Midpoint hour of an EMA window, for P6.2: sorting windows by distance to the learned hour. */
+const windowMid = (w: EmaWindow): number => {
+  const [sh, sm] = w.start.split(":").map(Number);
+  const [eh, em] = w.end.split(":").map(Number);
+  return ((sh || 0) * 60 + (sm || 0) + (eh || 0) * 60 + (em || 0)) / 2 / 60;
+};
 /** Pick a nudge that varies by day and gently adapts to the person's current on-device signals (read here,
  *  never sent anywhere). Inflection is consulted only when the user has opted into inflection awareness. */
 function nudgeForToday(): string {
@@ -231,7 +238,15 @@ export async function syncDailyReminders(opts: { request?: boolean } = { request
   if (!granted) return { scheduled: false, reason: "denied" };
 
   // Choose a fire time inside the window; if it lands in quiet hours, defer to quiet-hours end.
+  // P6.2: once we have a week of engagement signal, bias the fire hour toward when the person actually
+  // responds (clamped to their chosen window so we never nudge outside their stated bounds).
   let [h, m] = prefs.windowStart.split(":").map(Number);
+  const learned = optimalFireHourNow();
+  if (learned !== null) {
+    const [ws, we] = prefs.windowStart.split(":").map(Number);
+    const inWindow = learned >= (ws || 0) && learned <= (we || 23);
+    if (inWindow && !withinQuietHours(timeToday(learned, 0))) h = learned;
+  }
   if (withinQuietHours(timeToday(h || 0, m || 0))) {
     [h, m] = prefs.quietEnd.split(":").map(Number);
   }
@@ -413,7 +428,12 @@ export async function syncEmaCheckins(opts: { request?: boolean } = { request: t
   }
   if (!granted) return { scheduled: false, reason: "denied" };
 
-  const times = planEmaFireTimes({ frequency: getEmaFrequency(), days: EMA_HORIZON_DAYS, isQuiet: withinQuietHours });
+  // P6.2: bias EMA windows toward the learned responsive hour (windows nearest it get selected first).
+  const learned = optimalFireHourNow();
+  const emaWindows = learned !== null
+    ? [...EMA_WINDOWS].sort((a, b) => Math.abs(windowMid(a) - learned) - Math.abs(windowMid(b) - learned))
+    : EMA_WINDOWS;
+  const times = planEmaFireTimes({ frequency: getEmaFrequency(), days: EMA_HORIZON_DAYS, isQuiet: withinQuietHours, windows: emaWindows });
   if (times.length === 0) return { scheduled: false, reason: "unavailable" };
 
   // P6.3: only the slots firing TODAY draw from the per-day budget; the cap is shared with the daily nudge.
