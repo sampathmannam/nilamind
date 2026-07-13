@@ -80,4 +80,22 @@ else
   echo "PASS: PACKAGE_USAGE_STATS (multi-line tag) manifest correctly rejected"
 fi
 
+# Fixture 7: active ACCESS_COARSE_LOCATION sandwiched between two single-line comments — must exit
+# non-zero. Regression for the BSD-sed range-delete bug: `sed '/<!--/,/-->/d'` does not close a
+# range on a line that both opens and closes a comment, so it stays "in range" past that line and
+# keeps deleting forward until a LATER `-->` — silently swallowing an active forbidden permission
+# sitting between two complete single-line comments.
+cat > "$tmpdir/dirty-between-comments.xml" <<'EOF'
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- <uses-permission android:name="android.permission.SOME_BENIGN" /> -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <!-- <uses-permission android:name="android.permission.SOME_OTHER_BENIGN" /> -->
+</manifest>
+EOF
+if bash scripts/check-store-permissions.sh "$tmpdir/dirty-between-comments.xml" >/tmp/check-store-permissions-test-out.txt 2>&1; then
+  echo "FAIL: dirty manifest (ACCESS_COARSE_LOCATION between two single-line comments) should exit non-zero"; fail=1
+else
+  echo "PASS: ACCESS_COARSE_LOCATION (between two single-line comments) manifest correctly rejected"
+fi
+
 exit "$fail"

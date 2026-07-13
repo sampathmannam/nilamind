@@ -20,11 +20,18 @@ if [ ! -f "$MANIFEST" ]; then
   exit 1
 fi
 
-# Strip XML comments (including ones that span multiple lines — a sed range-delete handles both
-# single-line and multi-line `<!-- ... -->` comments, unlike a line-anchored grep), then collapse
-# newlines so a `<uses-permission ... />` tag split across multiple lines still matches as one
-# unit under grep.
-flattened=$(sed '/<!--/,/-->/d' "$MANIFEST" | tr '\n' ' ')
+# Strip XML comments (including ones that span multiple lines), then collapse newlines so a
+# `<uses-permission ... />` tag split across multiple lines still matches as one unit under grep.
+#
+# NOTE: this used to be `sed '/<!--/,/-->/d'`. On BSD sed (macOS default /usr/bin/sed) a range
+# address does not close on a line that both opens and closes the range — a line containing both
+# `<!--` and `-->` stays "in range" and the delete keeps running forward until a LATER `-->`,
+# silently deleting unrelated legitimate content between comments (verified: it ate 5 real
+# `<uses-permission>` tags from this repo's manifest, and separately swallowed an actively
+# declared forbidden permission sandwiched between two single-line comments). Perl's slurp mode
+# strips each `<!--...-->` pair independently via non-greedy matching, with no such range-closing
+# ambiguity.
+flattened=$(perl -0777 -pe 's/<!--.*?-->//gs' "$MANIFEST" | tr '\n' ' ')
 
 fail=0
 for perm in "${FORBIDDEN[@]}"; do
