@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { generateInsights, daysOfData, medicationMoodInsight, type MoodPoint } from "./patternInsights";
+import { generateInsights, daysOfData, medicationMoodInsight, seasonalMoodPattern, type MoodPoint } from "./patternInsights";
 import type { BehaviourSnapshot } from "./phoneBehaviour";
 import type { MedicationLog } from "./medicationAdherence";
 
@@ -158,5 +158,38 @@ describe("daysOfData", () => {
     const snaps = [snap({ date: "2026-01-01", screenTimeMinutes: 60 }), snap({ date: "2026-01-02", screenTimeMinutes: 90 })];
     const moodPoints = [mood({ date: "2026-01-01", intensity: 5 }), mood({ date: "2026-01-03", intensity: 6 })];
     expect(daysOfData(snaps, moodPoints)).toBe(1); // only Jan-01 overlaps
+  });
+});
+
+describe("seasonalMoodPattern — P2.6", () => {
+  const moodFor = (month: number, day: number, intensity: number): MoodPoint => ({
+    date: `2026-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`,
+    intensity,
+  });
+
+  it("returns null without enough cross-season data", () => {
+    const all = Array.from({ length: 6 }, (_, i) => moodFor(1, i + 1, 3)); // all January (winter)
+    expect(seasonalMoodPattern(all)).toBeNull();
+  });
+
+  it("surfaces a season whose mood differs from the rest of the year", () => {
+    const pts: MoodPoint[] = [];
+    // Winter (Dec/Jan/Feb): high distress
+    for (let d = 1; d <= 6; d++) pts.push(moodFor(1, d, 8));
+    for (let d = 1; d <= 6; d++) pts.push(moodFor(12, d, 8));
+    for (let d = 1; d <= 6; d++) pts.push(moodFor(2, d, 8));
+    // Rest of year: low distress
+    for (const mo of [4, 5, 7, 8, 10]) for (let d = 1; d <= 6; d++) pts.push(moodFor(mo, d, 3));
+    const insight = seasonalMoodPattern(pts);
+    expect(insight).not.toBeNull();
+    expect(insight!.id).toBe("seasonal-winter");
+    expect(insight!.direction).toBe("risk");
+    expect(insight!.finding).toMatch(/winter/i);
+  });
+
+  it("does not surface when seasonal differences are small", () => {
+    const pts: MoodPoint[] = [];
+    for (const mo of [1, 12, 2, 4, 5, 7, 8, 10]) for (let d = 1; d <= 6; d++) pts.push(moodFor(mo, d, 5));
+    expect(seasonalMoodPattern(pts)).toBeNull();
   });
 });
