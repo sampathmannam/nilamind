@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import Markdown from "react-markdown";
 import { loadMoodHistory } from "../services/moodHistory";
-import { t } from "../services/i18n";
+import { t, useLanguage } from "../services/i18n";
 import { loadAssessments, latestFor, INSTRUMENTS, type InstrumentId } from "../services/assessments";
 import { assessmentInsights, generateInsights, daysOfData, medicationMoodInsight, type Insight } from "../services/patternInsights";
 import { computeStreak, computeCompassionateStreak } from "../services/streaks";
@@ -67,6 +67,7 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
   const [assessmentCrisis, setAssessmentCrisis] = useState(false);
   const [behaviourInsights, setBehaviourInsights] = useState<Insight[]>([]);
   const [behaviourDays, setBehaviourDays] = useState(0);
+  useLanguage();
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [exportBusy, setExportBusy] = useState(false);
 
@@ -387,25 +388,25 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
                 </button>
                 <button onClick={handleWeeklyReport} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-200 hover:bg-slate-700 text-left">
                   <FileText className="w-4 h-4 text-blue-400" />
-                  <span>Weekly report</span>
+                  <span>{t("weekly_report")}</span>
                 </button>
               </div>
             )}
           </div>
         </h1>
-        <p className="text-xs text-slate-400 leading-relaxed">Your local sections stay only on your device. A picture of how you're doing over time.</p>
+        <p className="text-xs text-slate-400 leading-relaxed">{t("dash_privacy")}</p>
       </header>
 
 {/* This-week summary */}
        <div className="bg-blue-500/5 border border-blue-500/20 rounded-2xl p-4">
-         <div className="text-[10px] uppercase font-mono tracking-widest text-blue-400 mb-1">This week</div>
+          <div className="text-[10px] uppercase font-mono tracking-widest text-blue-400 mb-1">{t("this_week")}</div>
          <p className="text-sm text-slate-200 leading-relaxed">{moodSummary}</p>
        </div>
 
        {/* Monthly narrative */}
        {monthlyNarrative && (
          <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4">
-           <div className="text-[10px] uppercase font-mono tracking-widest text-emerald-400 mb-1">Your month</div>
+            <div className="text-[10px] uppercase font-mono tracking-widest text-emerald-400 mb-1">{t("your_month")}</div>
            <p className="text-sm text-slate-200 leading-relaxed">
              This month has been <span className="font-semibold text-slate-100">{monthlyNarrative.word}</span>{" "}
              with mood averaging <span className="font-semibold text-slate-100">{monthlyNarrative.avgIntensity}/10</span> (
@@ -445,8 +446,8 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
 
        {/* Top stats */}
       <div className="grid grid-cols-2 gap-2">
-        <Stat icon={<CalendarCheck className="w-4 h-4 text-emerald-400" />} value={`${freq14}/14`} label="days logged" />
-        <Stat icon={<MessageSquare className="w-4 h-4 text-purple-400" />} value={String(nila.last7)} label="Nila chats (7d)" />
+        <Stat icon={<CalendarCheck className="w-4 h-4 text-emerald-400" />} value={`${freq14}/14`} label={t("days_logged")} />
+        <Stat icon={<MessageSquare className="w-4 h-4 text-purple-400" />} value={String(nila.last7)} label={t("nila_chats_7d")} />
       </div>
       {streak.longest > 0 && (
         <p className="text-[11px] text-slate-500 -mt-2 text-center flex items-center justify-center gap-1">
@@ -458,25 +459,25 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
       {/* Usage Analytics — on-device summary of all engagement */}
       {usageSummary.totalCheckins > 0 && (
         <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 space-y-3">
-          <p className="text-[10px] uppercase font-mono tracking-widest text-slate-400 flex items-center gap-1.5">
-            <Activity className="w-3.5 h-3.5" /> Your usage
-          </p>
+            <p className="text-[10px] uppercase font-mono tracking-widest text-slate-400 flex items-center gap-1.5">
+              <Activity className="w-3.5 h-3.5" /> {t("your_usage")}
+            </p>
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-page p-2.5 rounded-xl text-center border border-slate-850">
               <p className="text-lg font-bold text-slate-100 font-mono">{usageSummary.totalCheckins}</p>
-              <p className="text-[9px] text-slate-500 uppercase tracking-wide">check-ins</p>
+              <p className="text-[9px] text-slate-500 uppercase tracking-wide">{t("usage_checkins")}</p>
             </div>
             <div className="bg-page p-2.5 rounded-xl text-center border border-slate-850">
               <p className="text-lg font-bold text-slate-100 font-mono">{usageSummary.protocols.completed}</p>
-              <p className="text-[9px] text-slate-500 uppercase tracking-wide">programs done</p>
+              <p className="text-[9px] text-slate-500 uppercase tracking-wide">{t("usage_programs")}</p>
             </div>
             <div className="bg-page p-2.5 rounded-xl text-center border border-slate-850">
               <p className="text-lg font-bold text-slate-100 font-mono">{Object.keys(usageSummary.assessments).length}</p>
-              <p className="text-[9px] text-slate-500 uppercase tracking-wide">assessments</p>
+              <p className="text-[9px] text-slate-500 uppercase tracking-wide">{t("usage_assessments")}</p>
             </div>
             <div className="bg-page p-2.5 rounded-xl text-center border border-slate-850">
               <p className="text-lg font-bold text-slate-100 font-mono">{usageSummary.features.length}</p>
-              <p className="text-[9px] text-slate-500 uppercase tracking-wide">features used</p>
+              <p className="text-[9px] text-slate-500 uppercase tracking-wide">{t("usage_features")}</p>
             </div>
           </div>
           {usageSummary.avgMood != null && (

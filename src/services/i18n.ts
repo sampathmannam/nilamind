@@ -158,6 +158,7 @@ export type I18nKey =
   | "dnd_off_aria"
   | "dnd_on_note"
   | "dnd_off_note"
+  | "dnd_turn_off"
   | "new_conversation"
   // Dashboard
   | "dash_privacy"
@@ -303,6 +304,7 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     dnd_off_aria: "Turn on quiet mode",
     dnd_on_note: "Quiet mode is on — non-critical nudges are paused.",
     dnd_off_note: "Pause non-critical nudges for a while.",
+    dnd_turn_off: "Turn quiet mode off",
     new_conversation: "New conversation",
     dash_privacy: "Your local sections stay only on your device. A picture of how you're doing over time.",
     weekly_report: "Weekly report",
@@ -446,6 +448,7 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     dnd_off_aria: "शांत मोड चालू करें",
     dnd_on_note: "शांत मोड चालू है — गैर-ज़रूरी नड्ज रुके हुए हैं।",
     dnd_off_note: "कुछ देर के लिए गैर-ज़रूरी नड्ज रोकें।",
+    dnd_turn_off: "शांत मोड बंद करें",
     new_conversation: "नई बातचीत",
     dash_privacy: "आपके स्थानीय भाग केवल आपके डिवाइस पर रहते हैं। समय के साथ आप कैसे कर रहे हैं, इसकी एक तस्वीर।",
     weekly_report: "साप्ताहिक रिपोर्ट",
@@ -589,6 +592,7 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     dnd_off_aria: "அமைதி முறையை இயக்கு",
     dnd_on_note: "அமைதி முறை இயக்கத்தில் — முக்கியமற்ற நடவடிக்கைகள் இடைநிறுத்தப்பட்டுள்ளன.",
     dnd_off_note: "சிறிது நேரம் முக்கியமற்ற நடவடிக்கைகளை இடைநிறுத்து.",
+    dnd_turn_off: "அமைதி முறையை அணை",
     new_conversation: "புதிய உரையாடல்",
     dash_privacy: "உங்கள் உள்ளூர் பிரிவுகள் உங்கள் சாதனத்தில் மட்டுமே இருக்கும். நீங்கள் எப்படி செல்கிறீர்கள் என்பதன் காலப்போக்கு படம்.",
     weekly_report: "வாராந்திர அறிக்கை",
@@ -732,6 +736,7 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     dnd_off_aria: "క్వైట్ మోడ్ ఆన్ చేయి",
     dnd_on_note: "క్వైట్ మోడ్ ఆన్‌లో ఉంది — క్లిష్టమైన నడుపులు నిలిపివేయబడ్డాయి.",
     dnd_off_note: "క్లిష్టమైన నడుపులను కొంతకాలం నిలిపివేయి.",
+    dnd_turn_off: "క్వైట్ మోడ్ ఆఫ్ చేయి",
     new_conversation: "కొత్త సంభాషణ",
     dash_privacy: "మీ స్థానిక విభాగాలు మీ పరికరంలోనే ఉంటాయి. కాలక్రమేణా మీరు ఎలా ఉన్నారో ఒక చిత్రం.",
     weekly_report: "వారపు నివేదిక",

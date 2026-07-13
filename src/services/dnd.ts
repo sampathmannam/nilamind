@@ -5,17 +5,18 @@
 // Non-sensitive UI pref → plain localStorage (sync, pre-gate safe), consistent with reminders.ts.
 
 import { ls } from "./storageUtils";
+import type { I18nKey } from "./i18n";
 
 const DND_KEY = "nilamind_dnd_until";
 
-export interface DndDuration { label: string; hours: number; }
+export interface DndDuration { label: string; hours: number; i18nKey: I18nKey; }
 
 export const DND_DURATIONS: DndDuration[] = [
-  { label: "3 hours", hours: 3 },
-  { label: "Tonight", hours: 12 },
-  { label: "24 hours", hours: 24 },
-  { label: "3 days", hours: 72 },
-  { label: "Until I turn it off", hours: 0 },
+  { label: "3 hours", hours: 3, i18nKey: "dnd_3_hours" },
+  { label: "Tonight", hours: 12, i18nKey: "dnd_tonight" },
+  { label: "24 hours", hours: 24, i18nKey: "dnd_24_hours" },
+  { label: "3 days", hours: 72, i18nKey: "dnd_3_days" },
+  { label: "Until I turn it off", hours: 0, i18nKey: "dnd_until_off" },
 ];
 
 /** Persist a DND window that ends at `untilMs`. `hours: 0` means "until turned off" (far-future timestamp). */

@@ -12,7 +12,7 @@ import {
 import { clearChatElevation, noteChatElevation } from "../services/chatElevation";
 import { detectElevationRisk } from "../services/elevationGuard";
 import { hasCheckinToday, getSkipFlag } from "../services/checkin";
-import { t } from "../services/i18n";
+import { t, useLanguage } from "../services/i18n";
 import { useTypingSession } from "../hooks/useTypingSession";
 import { getSuggestions, timeSlot } from "../services/chatSuggestions";
 import { stripChatMarkdown } from "../services/chatText";
@@ -111,6 +111,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   const [showQuickActions, setShowQuickActions] = useState(false);
   const [dndOn, setDndOn] = useState<boolean>(() => isDndActive()); // P6.7: "give me space" latch
   const [dndPickerOpen, setDndPickerOpen] = useState(false);
+  useLanguage();
   // P8.1: morning sleep-log prompt — surface on first open of the morning when there's no auto sleep source.
   const [morningSleep, setMorningSleep] = useState<{ bedTime: string | null; wakeTime: string | null } | null>(() => {
     const now = new Date();
@@ -621,7 +622,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
             <button
               onClick={() => setConfirmNewChat(true)}
               className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer focus-ring min-w-[44px] min-h-[44px] flex items-center justify-center"
-              aria-label="New conversation"
+              aria-label={t("new_conversation")}
             >
               <SquarePen className="w-4 h-4" />
             </button>
@@ -636,7 +637,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           <button
             onClick={() => setDndPickerOpen((v) => !v)}
             className={`relative p-2 rounded-full transition-colors cursor-pointer focus-ring min-w-[44px] min-h-[44px] flex items-center justify-center ${dndOn ? "bg-amber-500/15 text-amber-300" : "hover:bg-slate-800 text-slate-400 hover:text-slate-200"}`}
-            aria-label={dndOn ? "Quiet mode on — tap to change" : "Turn on quiet mode"}
+            aria-label={dndOn ? t("dnd_on_aria") : t("dnd_off_aria")}
             aria-pressed={dndOn}
           >
             <Moon className="w-4 h-4" />
@@ -645,19 +646,19 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
             <div
               className="absolute right-3 top-14 z-50 w-56 rounded-xl border border-slate-700 bg-slate-900 p-2 shadow-xl"
               role="menu"
-              aria-label="Quiet mode"
+              aria-label={t("dnd_title")}
             >
               <p className="px-2 pt-1 pb-2 text-xs text-slate-400">
-                {dndOn ? "Quiet mode is on — non-critical nudges are paused." : "Pause non-critical nudges for a while."}
+                {dndOn ? t("dnd_on_note") : t("dnd_off_note")}
               </p>
               {DND_DURATIONS.map((d) => (
                 <button
-                  key={d.label}
+                  key={d.i18nKey}
                   onClick={() => { enableDndFor(d.hours); setDndOn(true); setDndPickerOpen(false); }}
                   className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-800 transition-colors cursor-pointer"
                   role="menuitem"
                 >
-                  {d.label}
+                  {t(d.i18nKey)}
                 </button>
               ))}
               {dndOn && (
@@ -666,7 +667,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                   className="mt-1 w-full rounded-lg px-3 py-2 text-left text-sm text-amber-300 hover:bg-slate-800 transition-colors cursor-pointer"
                   role="menuitem"
                 >
-                  Turn quiet mode off
+                  {t("dnd_turn_off")}
                 </button>
               )}
             </div>
@@ -682,7 +683,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-6"
           role="dialog"
           aria-modal="true"
-          aria-label="Start a new conversation"
+          aria-label={t("new_conversation")}
           onClick={() => setConfirmNewChat(false)}
         >
           <div
