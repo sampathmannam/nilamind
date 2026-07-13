@@ -38,6 +38,7 @@ import { runStateEngine } from "./stateEngine";
 // reached Nila in production. Static ESM imports (no import cycle: neither module imports nilaContext).
 import { computeInsight, loadActivities } from "./behaviouralActivation";
 import { computeProactiveMoment, proactiveContextBlock } from "./proactiveEngine";
+import { loadAlliance } from "./allianceSignal";
 
 function readArray(key: string): any[] {
   try {
@@ -353,7 +354,17 @@ export function buildPersonalContext(): string {
     if (seLines.length > 0) stateEngineBlock = seLines.join("\n");
   } catch { /* best-effort — state engine is optional context */ }
 
-  if (lines.length === 0 && !memory && !insights && !profile && !trajectory && !inflection && !safetyPlanFollowUp && !sleepVariability && !jitaiNudge && !circadianBlock && !meansSafetyContext && !stateEngineBlock) return "";
+  // Therapeutic alliance proxy — passive behavioral estimate of bond/goals/tasks.
+  // Only included when there's enough data for a meaningful signal.
+  let allianceBlock = "";
+  try {
+    const state = loadAlliance();
+    if (state.current && state.trend !== "insufficient_data") {
+      allianceBlock = `ALLIANCE SIGNAL: bond ${state.current.bond}, goals ${state.current.goals}, tasks ${state.current.tasks} — trend: ${state.trend}.`;
+    }
+  } catch { /* best-effort */ }
+
+  if (lines.length === 0 && !memory && !insights && !profile && !trajectory && !inflection && !safetyPlanFollowUp && !sleepVariability && !jitaiNudge && !circadianBlock && !meansSafetyContext && !stateEngineBlock && !allianceBlock) return "";
 
   const out: string[] = [
     // Terse header only. HOW to use memory (gently, never recite, don't over-claim, trust the present) already
@@ -393,6 +404,12 @@ export function buildPersonalContext(): string {
   if (stateEngineBlock) {
     out.push("STATE SIGNALS (from all data):");
     out.push(stateEngineBlock);
+  }
+
+  // Therapeutic alliance proxy — passive behavioral estimate of how the user is engaging.
+  // Included when there's enough data (not "insufficient_data"). Used for tone awareness only.
+  if (allianceBlock) {
+    out.push(allianceBlock);
   }
 
   // Anti-sycophancy stance — always included so the model knows not to validate
