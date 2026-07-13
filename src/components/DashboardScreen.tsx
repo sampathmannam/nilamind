@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from "react";
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend,
-  Scatter, ComposedChart,
+  Scatter, ComposedChart, ScatterChart,
 } from "recharts";
 import { loadEmaEntries } from "../services/ema";
 import {
@@ -61,7 +61,7 @@ function readArr<T>(key: string): T[] {
 // The USER's own private analytics. Local sections never leave the device.
 export default function DashboardScreen({ onManageData }: { onManageData?: () => void }) {
   const [timeRange, setTimeRange] = useState<"7d" | "30d">("30d");
-  const [chartTab, setChartTab] = useState<"emotion" | "context">("emotion");
+  const [chartTab, setChartTab] = useState<"emotion" | "context" | "energy">("emotion");
   const [isAssessing, setIsAssessing] = useState(false);
   const [assessmentResult, setAssessmentResult] = useState<string | null>(null);
   const [assessmentCrisis, setAssessmentCrisis] = useState(false);
@@ -151,6 +151,18 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
     return () => { cancelled = true; };
   }, [mood]);
 
+  const energyScatter = useMemo(() => {
+    const range = timeRange === "7d" ? 7 : 30;
+    const cutoff = new Date(Date.now() - range * DAY_MS).toISOString().split("T")[0];
+    return checkins
+      .filter((c) => c.date >= cutoff && typeof c.intensity === "number" && typeof c.energy === "number")
+      .map((c) => ({
+        intensity: c.intensity,
+        energy: c.energy as number,
+        emotion: (c.emotion || "").replace(/\s*\(.*\)$/, ""),
+        date: c.date,
+      }));
+  }, [checkins, timeRange]);
   const emoBars = useMemo(() => emotionDistribution(checkins, stripProvenance), [checkins]);
   const observations = useMemo(() => derivedObservations(checkins, diaryEntries), [checkins, diaryEntries]);
   const typingSignal = useMemo(() => {
@@ -180,7 +192,7 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
         intensity: Math.round(((e.valence + 3) / 6) * 9) + 1, // map -3..+3 to 1..10 roughly
       }));
   }, [emotionTrend]);
-  const trendLength = chartTab === "emotion" ? emotionTrend.length : ctxTrend.length;
+  const trendLength = chartTab === "emotion" ? emotionTrend.length : chartTab === "energy" ? energyScatter.length : ctxTrend.length;
 
   const moodSummary = (() => {
     if (thisAvg == null) return "No check-ins yet this week — even a one-tap mood helps your trends grow.";
@@ -702,9 +714,11 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
                 className={`text-[10px] px-2 py-1 rounded-md font-medium transition-colors ${chartTab === "emotion" ? "bg-purple-500/20 text-purple-400" : "text-slate-500 hover:text-slate-300"}`}>Emotion</button>
               <button onClick={() => setChartTab("context")} aria-label="Show sleep and social context" aria-pressed={chartTab === "context"}
                 className={`text-[10px] px-2 py-1 rounded-md font-medium transition-colors ${chartTab === "context" ? "bg-blue-500/20 text-blue-400" : "text-slate-500 hover:text-slate-300"}`}>Context</button>
+              <button onClick={() => setChartTab("energy")} aria-label="Show mood vs energy scatter" aria-pressed={chartTab === "energy"}
+                className={`text-[10px] px-2 py-1 rounded-md font-medium transition-colors ${chartTab === "energy" ? "bg-amber-500/20 text-amber-400" : "text-slate-500 hover:text-slate-300"}`}>Energy</button>
             </div>
           </div>
-          <div className="w-full h-48" role="img" aria-label={chartTab === "emotion" ? "Line chart showing emotional intensity trend over time. Lower values indicate calmer states." : "Line chart showing sleep hours and social connection over time."}>
+          <div className="w-full h-48" role="img" aria-label={chartTab === "emotion" ? "Line chart showing emotional intensity trend over time. Lower values indicate calmer states." : chartTab === "energy" ? "Scatter plot of mood intensity vs energy level. Each dot is one check-in." : "Line chart showing sleep hours and social connection over time."}>
             <ResponsiveContainer width="100%" height="100%">
               {chartTab === "emotion" ? (
                 <ComposedChart data={emotionTrend}>
@@ -717,6 +731,14 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
                       LineChart recharts silently drops it. dataKey ties each dot to the shared date axis. */}
                   <Scatter data={emaPoints} dataKey="intensity" name="Quick check-in" fill="#D8A657" />
                 </ComposedChart>
+              ) : chartTab === "energy" ? (
+                <ScatterChart>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#2E2922" vertical={false} />
+                  <XAxis dataKey="energy" stroke="#948A7E" fontSize={10} tickLine={false} axisLine={false} domain={[0.5, 4.5]} ticks={[1, 2, 3, 4]} tickFormatter={(v: number) => ["", "Very low", "Low", "Moderate", "High"][v] || ""} />
+                  <YAxis stroke="#948A7E" fontSize={10} domain={[1, 10]} allowDecimals={false} tickLine={false} axisLine={false} label={{ value: "Distress", angle: -90, position: "insideLeft", style: { fill: "#948A7E", fontSize: 10 } }} />
+                  <Tooltip contentStyle={{ backgroundColor: "#171311", borderColor: "#2E2922", borderRadius: "8px" }} labelFormatter={() => ""} wrapperStyle={{ fontSize: "12px" }} />
+                  <Scatter data={energyScatter} dataKey="intensity" name="Distress" fill="#D8A657" stroke="#2E2922" strokeWidth={0.5} />
+                </ScatterChart>
               ) : (
                 <LineChart data={ctxTrend}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#2E2922" vertical={false} />
@@ -731,7 +753,7 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
               )}
             </ResponsiveContainer>
           </div>
-          <p className="text-[10px] text-slate-600">{chartTab === "emotion" ? "Lower is calmer. Per-day average of your check-ins." : "Sleep hours and felt-connection, per day."}</p>
+          <p className="text-[10px] text-slate-600">{chartTab === "emotion" ? "Lower is calmer. Per-day average of your check-ins." : chartTab === "energy" ? "Each dot is one check-in. Lower distress + higher energy = Vibrant; higher distress + lower energy = Sluggish." : "Sleep hours and felt-connection, per day."}</p>
         </div>
       ) : (
         <EmptyCard text="Your trend will appear here after a couple of check-ins." />
