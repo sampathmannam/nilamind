@@ -200,6 +200,34 @@ export function buildPersonalContext(): string {
       const distinct = [...new Set(granular)].slice(0, 4);
       lines.push(`- When they named their feelings precisely, they used words like: ${joinNatural(distinct)}.`);
     }
+
+    // Energy trend — rising/falling/stable over recent check-ins (Phase 1.4)
+    const withEnergy = checkins.filter((e) => typeof e.energy === "number");
+    if (withEnergy.length >= 3) {
+      const energies = withEnergy.map((e) => e.energy as number);
+      const half = Math.ceil(energies.length / 2);
+      const firstAvg = energies.slice(0, half).reduce((a, n) => a + n, 0) / half;
+      const secondAvg = energies.slice(-half).reduce((a, n) => a + n, 0) / half;
+      const diff = secondAvg - firstAvg;
+      const trend = diff > 0.5 ? "rising" : diff < -0.5 ? "falling" : "stable";
+      lines.push(`- Their energy has been ${trend} over recent check-ins.`);
+    }
+
+    // Prevailing state quadrant — Calm/Vibrant/Sluggish/Agitated (Phase 1.5)
+    const withBoth = checkins.filter((e) => typeof e.intensity === "number" && typeof e.energy === "number");
+    if (withBoth.length >= 3) {
+      const qCounts: Record<string, number> = {};
+      for (const e of withBoth) {
+        const d = e.intensity;
+        const en = e.energy as number;
+        const q = d <= 4 && en <= 2 ? "Calm" : d <= 4 && en >= 3 ? "Vibrant" : d >= 7 && en <= 2 ? "Sluggish" : d >= 7 && en >= 3 ? "Agitated" : "Mixed";
+        qCounts[q] = (qCounts[q] || 0) + 1;
+      }
+      const topQ = Object.entries(qCounts).sort((a, b) => b[1] - a[1])[0][0];
+      if (topQ !== "Mixed") {
+        lines.push(`- Their most common state has been "${topQ}" — a combination of mood and energy.`);
+      }
+    }
   }
 
   // ── What has helped (episodes + diary) ────────────────────────────────────
