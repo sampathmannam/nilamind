@@ -36,6 +36,7 @@ import { buildWeeklyReport } from "../services/weeklyReport";
 import { isPilotEnrolled, computePilotSummary } from "../services/pilotStudy";
 import CrisisCard from "./CrisisCard";
 import WellbeingTrendCard from "./WellbeingTrendCard";
+import EpisodeMarkerCard from "./EpisodeMarkerCard";
 import { stripProvenance } from "../services/emotionParse";
 import {
   emotionDistribution, derivedObservations, episodePatterns, quickNoteTags,
@@ -447,6 +448,9 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
 
        {/* Longitudinal wellbeing — fortnightly WHO-5 trend + cadence */}
        <WellbeingTrendCard onOpen={() => onOpenView?.("wellbeing")} />
+
+       {/* Episode-phase marker — current phase if active */}
+       <EpisodeMarkerCard onOpen={() => onOpenView?.("episode_marker")} />
 
        {/* Top stats */}
       <div className="grid grid-cols-2 gap-2">

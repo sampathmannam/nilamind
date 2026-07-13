@@ -35,7 +35,8 @@ export type AuxView =
   | "diary"
   | "social_rhythm"
   | "ema_checkin"
-  | "wellbeing";
+  | "wellbeing"
+  | "episode_marker";
 
 export const TAB_TARGETS: readonly TabView[] = [
   "diary", "plan", "nila", "today", "you",
@@ -50,6 +51,7 @@ export const KNOWN_AUX_VIEWS: readonly AuxView[] = [
       "armed_checkin",
       "ema_checkin",
       "wellbeing",
+      "episode_marker",
     ];
 
 export type NavResolution =

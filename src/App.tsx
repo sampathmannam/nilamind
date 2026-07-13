@@ -45,6 +45,7 @@ const EpisodeSupportScreen = lazy(() => import("./components/EpisodeSupportScree
 const EmaCheckInScreen = lazy(() => import("./components/EmaCheckIn"));
 const ArmedCheckInScreen = lazy(() => import("./components/ArmedCheckInScreen"));
 const WellbeingScreen = lazy(() => import("./components/WellbeingScreen"));
+const EpisodeMarkerScreen = lazy(() => import("./components/EpisodeMarkerScreen"));
 const AboutNilaScreen = lazy(() => import("./components/AboutNilaScreen"));
 const InsightsScreen = lazy(() => import("./components/InsightsScreen"));
 
@@ -114,6 +115,7 @@ const AUX_LABELS: Partial<Record<AuxView, string>> = {
   armed_checkin: "Armed check‑in",
   ema_checkin: "Quick check‑in",
   wellbeing: "Wellbeing over time",
+  episode_marker: "Episode markers",
 };
 
 function auxViewLabel(view: AuxView): string {
@@ -148,6 +150,7 @@ function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () 
     case "armed_checkin": return <ArmedCheckInScreen onClose={onClose} />;
     case "ema_checkin": return <EmaCheckInScreen onCrisis={() => { onClose(); onActivateCrisis(); }} />;
     case "wellbeing": return <WellbeingScreen onClose={onClose} onActivateCrisis={onActivateCrisis} onTake={() => onOpenView("assessment")} />;
+    case "episode_marker": return <EpisodeMarkerScreen onClose={onClose} />;
     default: return <div className="p-6 text-slate-400 text-sm text-center">Not available</div>;
   }
 }

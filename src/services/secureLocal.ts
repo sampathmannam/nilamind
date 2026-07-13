@@ -71,6 +71,9 @@ export const SENSITIVE_KEYS = [
   // Social Rhythm Metric log — daily routine-anchor times for the regularity read (encrypted at rest,
   // see socialRhythm.ts).
   "nilamind_social_rhythm",
+  // Episode-phase markers — longitudinal bipolar-phase tagging (elevated/depressed/mixed/stable),
+  // user-owned, encrypted at rest (see episodeMarker.ts).
+  "nilamind_episode_markers",
 ];
 const MIGRATION_VERSION = 2; // v2: encrypt nilamind_ema (previously stored in plaintext localStorage)
 

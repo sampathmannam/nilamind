@@ -23,6 +23,7 @@ import { topFireableSignal, type InflectionSignal } from "./nilaInflection";
 import { getInflectionEnabled } from "./inflectionPrefs";
 import { INSTRUMENTS, type AssessmentEntry } from "./assessments";
 import { wellbeingLongitudinal } from "./wellbeingTrack";
+import { episodeMarkerSummary } from "./episodeMarker";
 import { DAY_MS } from "./storageUtils";
 import { parseSafetyPlan } from "./safetyPlan";
 import { safetyPlanFollowUpContextBlock } from "./safetyPlanFollowUp";
@@ -177,6 +178,14 @@ export function wellbeingContextBlock(history?: AssessmentEntry[]): string {
 }
 
 /**
+ * Episode-phase markers (Phase 18). Surfaces the user's own bipolar-phase tag to Nila as a gentle,
+ * pattern-level note — never a diagnosis. (🟡 touches a flagged file; review before merge.)
+ */
+export function episodeMarkerContextBlock(): string {
+  return episodeMarkerSummary();
+}
+
+/**
  * Build a compact, warm briefing of what Nila knows about this person, from their on-device history.
  * Returns "" when there's essentially nothing yet — Nila is told (in its prompt) to simply be present
  * and not pretend to know someone it doesn't.
@@ -253,6 +262,14 @@ export function buildPersonalContext(): string {
   {
     const wbBlock = wellbeingContextBlock();
     if (wbBlock) lines.push(wbBlock);
+  }
+
+  // ── Episode-phase markers (Phase 18) ───────────────────────────────────────
+  // User-owned bipolar-phase tagging (elevated/depressed/mixed/stable). A pattern they noticed,
+  // never a diagnosis. (🟡 touches a flagged file; reviewed before merge.)
+  {
+    const emBlock = episodeMarkerContextBlock();
+    if (emBlock) lines.push(emBlock);
   }
 
   // ── What has helped (episodes + diary) ────────────────────────────────────

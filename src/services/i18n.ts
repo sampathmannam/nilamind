@@ -199,7 +199,24 @@ export type I18nKey =
   | "wellbeing_none"
   | "wellbeing_improving"
   | "wellbeing_deteriorating"
-  | "wellbeing_steady";
+  | "wellbeing_steady"
+  // Phase 18 — Episode-phase markers
+  | "you_episode_marker_label"
+  | "you_episode_marker_sub"
+  | "em_intro"
+  | "em_add_marker"
+  | "em_phase"
+  | "em_from"
+  | "em_to"
+  | "em_note_optional"
+  | "em_save"
+  | "em_current"
+  | "em_none"
+  | "em_past"
+  | "em_phase_elevated"
+  | "em_phase_depressed"
+  | "em_phase_mixed"
+  | "em_phase_stable";
 
 export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
   en: {
@@ -371,6 +388,22 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     wellbeing_improving: "Improving",
     wellbeing_deteriorating: "Drifting down",
     wellbeing_steady: "Steady",
+    you_episode_marker_label: "Episode markers",
+    you_episode_marker_sub: "Track mood phases over time",
+    em_intro: "Mark stretches of time by how your mood ran — elevated, depressed, mixed, or steady. A pattern over time, not a diagnosis.",
+    em_add_marker: "Add a marker",
+    em_phase: "Phase",
+    em_from: "From",
+    em_to: "To",
+    em_note_optional: "Note (optional)",
+    em_save: "Save marker",
+    em_current: "Current period",
+    em_none: "No markers yet — add your first one.",
+    em_past: "Past markers",
+    em_phase_elevated: "Elevated",
+    em_phase_depressed: "Depressed",
+    em_phase_mixed: "Mixed",
+    em_phase_stable: "Steady",
   },
   hi: {
     appName: "NilaMind",
@@ -541,6 +574,22 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     wellbeing_improving: "सुधार",
     wellbeing_deteriorating: "गिरावट",
     wellbeing_steady: "स्थिर",
+    you_episode_marker_label: "एपिसोड मार्कर",
+    you_episode_marker_sub: "समय के साथ मूड चरणों को ट्रैक करें",
+    em_intro: "यह चिह्नित करें कि समय के साथ आपका मूड कैसा रहा — उत्साहित, उदास, मिश्रित, या स्थिर। समय के साथ एक पैटर्न, निदान नहीं।",
+    em_add_marker: "मार्कर जोड़ें",
+    em_phase: "चरण",
+    em_from: "से",
+    em_to: "तक",
+    em_note_optional: "नोट (वैकल्पिक)",
+    em_save: "मार्कर सहेजें",
+    em_current: "वर्तमान अवधि",
+    em_none: "अभी तक कोई मार्कर नहीं — अपना पहला जोड़ें।",
+    em_past: "पिछले मार्कर",
+    em_phase_elevated: "उत्साहित",
+    em_phase_depressed: "उदास",
+    em_phase_mixed: "मिश्रित",
+    em_phase_stable: "स्थिर",
   },
   ta: {
     appName: "NilaMind",
@@ -711,6 +760,22 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     wellbeing_improving: "மேம்படுகிறது",
     wellbeing_deteriorating: "சரியாகிறது",
     wellbeing_steady: "நிலையான",
+    you_episode_marker_label: "அத்தியாய அடையாளங்கள்",
+    you_episode_marker_sub: "மனநிலை கட்டங்களைக் காலப்போக்கில் கண்காணிக்கவும்",
+    em_intro: "உங்கள் மனநிலை எப்படி இருந்தது என்பதைக் குறிக்கவும் — உற்சாகம், சோகம், கலவை, அல்லது நிலையான. காலப்போக்கில் ஒரு பாணி, நோயறிதல் அல்ல.",
+    em_add_marker: "அடையாளத்தைச் சேர்",
+    em_phase: "கட்டம்",
+    em_from: "இதிலிருந்து",
+    em_to: "வரை",
+    em_note_optional: "குறிப்பு (விருப்பம்)",
+    em_save: "அடையாளத்தைச் சேமி",
+    em_current: "தற்போதைய காலகட்டம்",
+    em_none: "இதுவரை அடையாளங்கள் இல்லை — உங்கள் முதலைச் சேர்.",
+    em_past: "முந்தைய அடையாளங்கள்",
+    em_phase_elevated: "உற்சாகம்",
+    em_phase_depressed: "சோகம்",
+    em_phase_mixed: "கலவை",
+    em_phase_stable: "நிலையான",
   },
   te: {
     appName: "NilaMind",
@@ -881,6 +946,22 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     wellbeing_improving: "మెరుగుపడుతోంది",
     wellbeing_deteriorating: "తగ్గుతోంది",
     wellbeing_steady: "స్థిరం",
+    you_episode_marker_label: "ఎపిసోడ్ మార్కర్లు",
+    you_episode_marker_sub: "కాలక్రమంలో మూడ్ దశలను ట్రాక్ చేయండి",
+    em_intro: "మీ మూడ్ ఎలా ఉందో సమయ వ్యవధిగా గుర్తించండి — ఉత్సాహం, నిరాశ, మిశ్రమం, లేదా స్థిరం. కాలక్రమంలో ఒక ప్యాటర్న్, నిర్ధారణ కాదు.",
+    em_add_marker: "మార్కర్ జోడించండి",
+    em_phase: "దశ",
+    em_from: "నుండి",
+    em_to: "వరకు",
+    em_note_optional: "నోట్ (ఐచ్ఛికం)",
+    em_save: "మార్కర్ సేవ్ చేయండి",
+    em_current: "ప్రస్తుత కాలం",
+    em_none: "ఇంకా మార్కర్లు లేవు — మొదటిది జోడించండి.",
+    em_past: "గత మార్కర్లు",
+    em_phase_elevated: "ఉత్సాహం",
+    em_phase_depressed: "నిరాశ",
+    em_phase_mixed: "మిశ్రమం",
+    em_phase_stable: "స్థిరం",
   },
 };
 

@@ -185,4 +185,23 @@ describe("buildClinicianReport", () => {
     const report = buildClinicianReport(baseInput);
     expect(report).not.toContain("App & Conversation Usage");
   });
+
+  it("renders self-logged bipolar phase markers (Phase 18) when present", () => {
+    const report = buildClinicianReport({
+      ...baseInput,
+      phaseMarkers: [
+        { id: "m1", startDate: "2026-06-01", endDate: "2026-06-30", phase: "elevated", note: "less sleep", createdAt: "2026-06-01T10:00:00" },
+        { id: "m2", startDate: "2026-07-05", endDate: "2026-07-05", phase: "depressed", note: "", createdAt: "2026-07-05T10:00:00" },
+      ],
+    });
+    expect(report).toContain("Bipolar Phase Markers (self-logged)");
+    expect(report).toContain("2026-06-01 – 2026-06-30: Elevated (less sleep)");
+    expect(report).toContain("2026-07-05: Depressed");
+    expect(report).toContain("not a clinical diagnosis");
+  });
+
+  it("omits the phase-marker section when none provided", () => {
+    const report = buildClinicianReport({ ...baseInput, phaseMarkers: [] });
+    expect(report).not.toContain("Bipolar Phase Markers");
+  });
 });

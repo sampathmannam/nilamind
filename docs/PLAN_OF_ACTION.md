@@ -120,6 +120,35 @@ cadence matches the instrument's 2-week recall window; measurement-based care fe
 
 ---
 
+## Phase 18 — Episode-phase Marker 🟢 (built & wired 2026-07-13)
+
+**Why:** NilaMind logs per-episode *distress* moments (`EpisodeRecord`: trigger, skills, intensity) but has
+**no longitudinal bipolar-phase tracker** — the thing bipolar users most want to see: "I ran elevated
+mid-March, then dipped in April." This is distinct from the distress log and from daily check-ins
+(intensity is momentary; a phase is a stretch). It gives the user (and their clinician, via the PDF)
+a readable course over time. Wellness framing throughout — a *pattern*, never a diagnosis.
+
+**Research basis:** Course-specifiers (Raphael et al., 2014; Azorin et al., 2016) show mixed/rapid-cycling
+course is the norm in BD and tracking phase flags it early; IPSRT/FTFamily emphasise the patient
+owning their course narrative. Self-marked phase is the lowest-friction, highest-ownership form.
+
+### What to build
+| # | Item | Tag |
+|---|------|-----|
+| P18.1 | `episodeMarker.ts` — `EpisodeMarker {startDate,endDate,phase,note}` + add/read/currentPhase/summary | 🟢 |
+| P18.2 | `episodeMarker.test.ts` — TDD: add/read round-trip, currentPhase containment, invalid-range guard, summary | 🟢 |
+| P18.3 | `EpisodeMarkerScreen.tsx` (You hub) — add marker (phase chips + dates + note) + past list | 🟢 |
+| P18.4 | `EpisodeMarkerCard.tsx` — Dashboard card: current phase if active | 🟢 |
+| P18.5 | Feed a one-line current-phase summary into `nilaContext` (🟡 — flagged file) | 🟡 |
+| P18.6 | Feed phase history into `clinicianReport.ts` (device-local PDF) | 🟢 |
+
+**Wire to:** `youRows` + `nav.ts`/`App.tsx` auxView `episode_marker`, `DashboardScreen`, `nilaContext.ts`, `clinicianReport.ts`.
+**Invariants:** on-device only; wellness never therapy ("phase", not "diagnosis"); user-owned tags, no auto-label.
+
+**Built (2026-07-13):** `episodeMarker.ts` + tests (P18.1/2); `EpisodeMarkerScreen.tsx` + `EpisodeMarkerCard.tsx` (P18.3/4); `nilaContext.episodeMarkerContextBlock` feeds current phase (P18.5, 🟡 flagged file — review before merge); `clinicianReport.ts` renders a "Bipolar Phase Markers (self-logged)" section fed from `YourDataScreen.tsx` (P18.6); `sec_*`/`wellbeing_*`/`em_*` i18n + hi/ta/te; `youRows` row (Activity icon), `nav.ts` auxView `episode_marker`, `App.tsx` lazy route; `nilamind_episode_markers` added to `SENSITIVE_KEYS`. Guard green (2142 tests).
+
+---
+
 ## Research basis (2026-07-12 — updated with product audit)
 
 ### Current app snapshot (113 services, 60+ components, 1592 tests)

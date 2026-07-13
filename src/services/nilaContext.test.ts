@@ -1,8 +1,27 @@
-import { describe, it, expect } from "vitest";
-import { trajectoryContextBlock, inflectionContextBlock, antiSycophancyContextBlock, wellbeingContextBlock } from "./nilaContext";
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { trajectoryContextBlock, inflectionContextBlock, antiSycophancyContextBlock, wellbeingContextBlock, episodeMarkerContextBlock } from "./nilaContext";
 import type { SleepSignal } from "./healthConnect";
 import type { InflectionSignal } from "./nilaInflection";
 import type { AssessmentEntry } from "./assessments";
+import type { EpisodeMarker } from "./episodeMarker";
+const emStore = new Map<string, string>();
+vi.mock("./secureLocal", async () => {
+  const actual = await vi.importActual<typeof import("./secureLocal")>("./secureLocal");
+  return {
+    ...actual,
+    secureLocal: {
+      getItem: (k: string) => (emStore.has(k) ? emStore.get(k)! : null),
+      setItem: (k: string, v: string) => void emStore.set(k, v),
+      removeItem: (k: string) => void emStore.delete(k),
+    },
+    appendToSecureArray: <T>(key: string, item: T) => {
+      const arr: T[] = emStore.has(key) ? JSON.parse(emStore.get(key)!) : [];
+      arr.push(item);
+      emStore.set(key, JSON.stringify(arr));
+      return arr;
+    },
+  };
+});
 
 // Audit finding (2026-07-06): the short-sleep manic-prodrome signal — the earliest warning a MANIC-FIRST app
 // has — reached the user on ZERO surfaces, and the chat never saw it. This block feeds that signal into
@@ -72,5 +91,21 @@ describe("antiSycophancyContextBlock — depressive distortions (2026-07-12)", (
     const block = antiSycophancyContextBlock();
     expect(block).toMatch(/failure|worthless/i);
     expect(block).toMatch(/everyone hates/i);
+  });
+});
+
+describe("episodeMarkerContextBlock — user-owned phase tag (Phase 18)", () => {
+  beforeEach(() => emStore.clear());
+  const em = (over: Partial<EpisodeMarker> = {}): EpisodeMarker => ({
+    id: "m1", startDate: "2020-01-01", endDate: "2099-12-31", phase: "mixed", note: "", createdAt: "2026-03-01T10:00:00", ...over,
+  });
+  it("returns '' when there are no markers", () => {
+    expect(episodeMarkerContextBlock()).toBe("");
+  });
+  it("surfaces the active phase as a pattern, never a diagnosis", () => {
+    emStore.set("nilamind_episode_markers", JSON.stringify([em({ phase: "mixed" })]));
+    const b = episodeMarkerContextBlock();
+    expect(b).toContain("mixed");
+    expect(b.toLowerCase()).not.toMatch(/diagnos|disorder|clinical/i);
   });
 });
