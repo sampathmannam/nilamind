@@ -8,6 +8,8 @@
 // All guidance is population-safe (manic-first, bipolar-aware).
 
 import { regularityFromStd } from "./circadian";
+import { loadMoodHistory } from "./moodHistory";
+import { computeRhythmRegularity } from "./socialRhythm";
 
 export interface CircadianFeedback {
   combinedScore: number; // 0–100, higher = more regular
@@ -83,4 +85,21 @@ export function computeCircadianFeedback(params: {
     needsAttention: combinedScore < 60,
     guidance: generateGuidance(sleepReg, rhythmReg, params.sleeps),
   };
+}
+
+/** Gather current sleep + social-rhythm data and return the fused feedback (null if <3 nights logged).
+ *  Mirrors the data-gathering already used in nilaContext.buildPersonalContext so the proactive engine and
+ *  Nila's chat context never diverge. */
+export function currentCircadianFeedback(): CircadianFeedback | null {
+  try {
+    const moodHist = loadMoodHistory();
+    const sleeps = moodHist
+      .filter((m) => typeof m.sleepHours === "number" && m.sleepHours > 0)
+      .map((m) => m.sleepHours as number);
+    if (sleeps.length < 3) return null;
+    const rhythm = computeRhythmRegularity();
+    return computeCircadianFeedback({ sleeps, rhythmVariabilityMin: rhythm.overallVariabilityMin });
+  } catch {
+    return null;
+  }
 }
