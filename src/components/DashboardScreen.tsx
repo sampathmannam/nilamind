@@ -30,6 +30,7 @@ import { runDeepAssessment as runDeepAssessmentRequest } from "../services/coach
 import { generateCsvReport, buildTextReport, generatePdfBlob, saveReport } from "../services/exportReport";
 import { computeRetention } from "../services/retentionMetrics";
 import { computeUsageSummary } from "../services/usageAnalytics";
+import { getAdherenceSummary } from "../services/protocolAdherence";
 import { buildWeeklyReport } from "../services/weeklyReport";
 import { isPilotEnrolled, computePilotSummary } from "../services/pilotStudy";
 import CrisisCard from "./CrisisCard";
@@ -103,16 +104,17 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
     const circadian = computeCircadianInsight(mood);
     const nOf1 = computeNof1Ranking();
     const usageSummary = computeUsageSummary();
+    const protocolAdherence = getAdherenceSummary();
     const rhythmReg = computeRhythmRegularity();
     const circadianFeedback = circadian ? computeCircadianFeedback({
       sleeps: mood.filter((m) => typeof m.sleepHours === "number" && m.sleepHours > 0).map((m) => m.sleepHours as number),
       rhythmVariabilityMin: rhythmReg.overallVariabilityMin,
     }) : null;
 
-    return { mood, streak, compassionateStreak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian, nOf1, usageSummary, circadianFeedback, rhythmReg };
+    return { mood, streak, compassionateStreak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian, nOf1, usageSummary, circadianFeedback, rhythmReg, protocolAdherence };
   }, []);
 
-  const { mood, streak, compassionateStreak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian, nOf1, usageSummary, circadianFeedback, rhythmReg } = data;
+  const { mood, streak, compassionateStreak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian, nOf1, usageSummary, circadianFeedback, rhythmReg, protocolAdherence } = data;
 
   // Load behaviour snapshots async and compute daily-behaviour insights
   useEffect(() => {
@@ -453,6 +455,45 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
               )}
             </p>
           )}
+        </div>
+      )}
+
+      {/* Protocol adherence — programs completed vs abandoned */}
+      {protocolAdherence.totalStarted > 0 && (
+        <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 space-y-2">
+          <p className="text-[10px] uppercase font-mono tracking-widest text-slate-400 flex items-center gap-1.5">
+            <ClipboardCheck className="w-3.5 h-3.5" /> Your programs
+          </p>
+          <div className="flex items-center justify-between">
+            <div className="flex gap-4">
+              <div>
+                <p className="text-lg font-bold text-slate-100 font-mono">{protocolAdherence.totalCompleted}</p>
+                <p className="text-[9px] text-slate-500 uppercase tracking-wide">completed</p>
+              </div>
+              <div>
+                <p className="text-lg font-bold text-slate-100 font-mono">{protocolAdherence.totalAbandoned}</p>
+                <p className="text-[9px] text-slate-500 uppercase tracking-wide">incomplete</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-xl font-bold text-slate-100">{Math.round(protocolAdherence.adherenceRate * 100)}%</p>
+              <p className="text-[9px] text-slate-500 uppercase tracking-wide">completion rate</p>
+            </div>
+          </div>
+          {protocolAdherence.perProtocol.filter((p) => p.started > 0).length > 0 && (
+            <div className="border-t border-slate-700/50 pt-2 mt-1 space-y-1">
+              {protocolAdherence.perProtocol.filter((p) => p.started > 0).slice(0, 4).map((p) => (
+                <div key={p.protocolId} className="flex items-center justify-between text-[11px]">
+                  <span className="text-slate-300 truncate max-w-[60%]">{p.title}</span>
+                  <span className="text-slate-400 tabular-nums">
+                    {p.completed}/{p.started}
+                    {p.avgStepsCompleted > 0 && <span className="text-slate-500"> · ~{p.avgStepsCompleted} steps</span>}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+          <p className="text-[10px] text-slate-500">Programs you've started and completed. Not a measure of you.</p>
         </div>
       )}
 

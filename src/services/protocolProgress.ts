@@ -4,6 +4,7 @@
 // Deliberately tiny: just {which protocol, which step}. Nila reads this to continue where the person left off.
 import { secureLocal } from "./secureLocal";
 import { getProtocol, routeToProtocol, type Protocol, type ProtocolStep } from "./protocols";
+import { markProtocolComplete, recordProtocolAbandon as recordAbandon, recordStepComplete as recordStepDone, recordStepStart } from "./protocolAdherence";
 
 const KEY = "nilamind_protocol_progress";
 // Append-only completion log (2026-07-12 QA: dashboard analytics dead-counters, F14). Separate from KEY above —
@@ -74,6 +75,7 @@ export function startProtocol(id: string): ActiveStep | null {
   if (!p) return null;
   active = { protocolId: id, stepIndex: 0 };
   persist();
+  recordStepStart(id, p.steps[0].id, 0);
   return { protocol: p, step: p.steps[0], stepIndex: 0, total: p.steps.length };
 }
 
@@ -104,11 +106,15 @@ export function advanceProtocol(): ActiveStep | { done: true; protocol: Protocol
   if (next >= p.steps.length) {
     // Persist a completion record (2026-07-12 QA: finishing a program left ZERO trace — the single-slot
     // pointer was simply removed, and usageAnalytics.protocolCompletions() was a hardcoded-0 stub).
+    recordStepDone(a.protocolId, p.steps[a.stepIndex].id);
+    markProtocolComplete(a.protocolId);
     recordCompletion(a.protocolId);
     active = null;
     persist();
     return { done: true, protocol: p };
   }
+  recordStepDone(a.protocolId, p.steps[a.stepIndex].id);
+  recordStepStart(a.protocolId, p.steps[next].id, next);
   active = { protocolId: a.protocolId, stepIndex: next };
   persist();
   return { protocol: p, step: p.steps[next], stepIndex: next, total: p.steps.length };
@@ -116,6 +122,8 @@ export function advanceProtocol(): ActiveStep | { done: true; protocol: Protocol
 
 /** Drop the active program (explicit "stop"/"not now"). */
 export function abandonProtocol(): void {
+  const a = hydrate();
+  if (a) recordAbandon(a.protocolId);
   active = null;
   persist();
 }
