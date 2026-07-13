@@ -31,6 +31,7 @@ import { generateCsvReport, buildTextReport, generatePdfBlob, saveReport } from 
 import { computeRetention } from "../services/retentionMetrics";
 import { computeUsageSummary } from "../services/usageAnalytics";
 import { getAdherenceSummary } from "../services/protocolAdherence";
+import { assessDisengagementRisk } from "../services/disengagementPredictor";
 import { buildWeeklyReport } from "../services/weeklyReport";
 import { isPilotEnrolled, computePilotSummary } from "../services/pilotStudy";
 import CrisisCard from "./CrisisCard";
@@ -105,16 +106,36 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
     const nOf1 = computeNof1Ranking();
     const usageSummary = computeUsageSummary();
     const protocolAdherence = getAdherenceSummary();
+    let disengagementRisk = null;
+    try {
+      const checkinDates = readArr<{ date: string }>("nilamind_checkins").map((c) => c.date).filter(Boolean);
+      const appOpenRaw = secureLocal.getItem("nilamind_app_opens");
+      const appOpenDays: string[] = appOpenRaw ? (JSON.parse(appOpenRaw).days ?? []) : [];
+      const lastCheckin = mood[mood.length - 1];
+      const daysSinceLastCheckin = lastCheckin ? Math.max(0, Math.floor((Date.now() - new Date(lastCheckin.date).getTime()) / 86400000)) : 999;
+      const lastOpenDay = appOpenDays.length > 0 ? appOpenDays[appOpenDays.length - 1] : null;
+      const daysSinceLastAppOpen = lastOpenDay ? Math.max(0, Math.floor((Date.now() - new Date(lastOpenDay + "T00:00:00").getTime()) / 86400000)) : 999;
+      disengagementRisk = assessDisengagementRisk({
+        checkinDates,
+        appOpenDays,
+        protocolAdherenceRate: protocolAdherence.adherenceRate,
+        allianceTrend: "insufficient_data",
+        daysSinceLastCheckin,
+        daysSinceLastAppOpen,
+        protocolCount: protocolAdherence.totalStarted,
+        featureCount: usageSummary.features.length,
+      });
+    } catch { /* best-effort */ }
     const rhythmReg = computeRhythmRegularity();
     const circadianFeedback = circadian ? computeCircadianFeedback({
       sleeps: mood.filter((m) => typeof m.sleepHours === "number" && m.sleepHours > 0).map((m) => m.sleepHours as number),
       rhythmVariabilityMin: rhythmReg.overallVariabilityMin,
     }) : null;
 
-    return { mood, streak, compassionateStreak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian, nOf1, usageSummary, circadianFeedback, rhythmReg, protocolAdherence };
+    return { mood, streak, compassionateStreak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian, nOf1, usageSummary, circadianFeedback, rhythmReg, protocolAdherence, disengagementRisk };
   }, []);
 
-  const { mood, streak, compassionateStreak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian, nOf1, usageSummary, circadianFeedback, rhythmReg, protocolAdherence } = data;
+  const { mood, streak, compassionateStreak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian, nOf1, usageSummary, circadianFeedback, rhythmReg, protocolAdherence, disengagementRisk } = data;
 
   // Load behaviour snapshots async and compute daily-behaviour insights
   useEffect(() => {
@@ -494,6 +515,32 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
             </div>
           )}
           <p className="text-[10px] text-slate-500">Programs you've started and completed. Not a measure of you.</p>
+        </div>
+      )}
+
+      {/* Engagement disengagement risk — early warning when usage declines */}
+      {disengagementRisk && disengagementRisk.riskLevel !== "low" && disengagementRisk.frequencyTrend !== "insufficient_data" && (
+        <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 flex items-start gap-3">
+          <div className={`p-2 rounded-xl ${disengagementRisk.riskLevel === "high" ? "bg-rose-500/10 text-rose-400" : disengagementRisk.riskLevel === "elevated" ? "bg-amber-500/10 text-amber-400" : "bg-blue-500/10 text-blue-400"}`}>
+            <Activity className="w-5 h-5" />
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-slate-100">Engagement trend</p>
+              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${disengagementRisk.riskLevel === "high" ? "bg-rose-500/20 text-rose-300" : disengagementRisk.riskLevel === "elevated" ? "bg-amber-500/20 text-amber-300" : "bg-blue-500/20 text-blue-300"}`}>
+                {disengagementRisk.score}/100
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-400 leading-relaxed mt-1">
+              {disengagementRisk.daysSinceLastCheckin >= 3
+                ? `It's been ${disengagementRisk.daysSinceLastCheckin} days since your last check-in. `
+                : ""}
+              {disengagementRisk.frequencyTrend === "declining"
+                ? "Your check-in frequency has been tapering off — no pressure, just noticing."
+                : "Your recent engagement has been lower — whenever you're ready."}
+            </p>
+            <p className="text-[10px] text-slate-500 mt-1">A gentle observation, not a measure of you.</p>
+          </div>
         </div>
       )}
 

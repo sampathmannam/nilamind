@@ -39,6 +39,8 @@ import { runStateEngine } from "./stateEngine";
 import { computeInsight, loadActivities } from "./behaviouralActivation";
 import { computeProactiveMoment, proactiveContextBlock } from "./proactiveEngine";
 import { loadAlliance } from "./allianceSignal";
+import { getDisengagementContextBlock } from "./disengagementPredictor";
+import { getAdherenceSummary } from "./protocolAdherence";
 
 function readArray(key: string): any[] {
   try {
@@ -364,7 +366,39 @@ export function buildPersonalContext(): string {
     }
   } catch { /* best-effort */ }
 
-  if (lines.length === 0 && !memory && !insights && !profile && !trajectory && !inflection && !safetyPlanFollowUp && !sleepVariability && !jitaiNudge && !circadianBlock && !meansSafetyContext && !stateEngineBlock && !allianceBlock) return "";
+  // Engagement disengagement risk — early warning when usage is declining.
+  let disengagementBlock = "";
+  try {
+    const moodHist = loadMoodHistory();
+    if (moodHist.length > 0) {
+      const checkinDates = readArray("nilamind_checkins").map((c: any) => c.date).filter(Boolean);
+      const appOpenDays: string[] = [];
+      try {
+        const raw = secureLocal.getItem("nilamind_app_opens");
+        if (raw) { const p = JSON.parse(raw); appOpenDays.push(...(Array.isArray(p.days) ? p.days : Array.isArray(p) ? p : [])); }
+      } catch { /* best-effort */ }
+      const lastCheckin = moodHist[moodHist.length - 1];
+      const daysSinceLastCheckin = Math.max(0, Math.floor((Date.now() - new Date(lastCheckin.date).getTime()) / 86400000));
+      const lastOpenDay = appOpenDays.length > 0 ? appOpenDays[appOpenDays.length - 1] : null;
+      const daysSinceLastAppOpen = lastOpenDay ? Math.max(0, Math.floor((Date.now() - new Date(lastOpenDay + "T00:00:00").getTime()) / 86400000)) : 999;
+      const adherence = getAdherenceSummary();
+      const alliance = loadAlliance();
+      const usage = computeUsageSummary();
+      const block = getDisengagementContextBlock({
+        checkinDates,
+        appOpenDays,
+        protocolAdherenceRate: adherence.adherenceRate,
+        allianceTrend: alliance.trend,
+        daysSinceLastCheckin,
+        daysSinceLastAppOpen,
+        protocolCount: adherence.totalStarted,
+        featureCount: usage.features.length,
+      });
+      if (block) disengagementBlock = block;
+    }
+  } catch { /* best-effort */ }
+
+  if (lines.length === 0 && !memory && !insights && !profile && !trajectory && !inflection && !safetyPlanFollowUp && !sleepVariability && !jitaiNudge && !circadianBlock && !meansSafetyContext && !stateEngineBlock && !allianceBlock && !disengagementBlock) return "";
 
   const out: string[] = [
     // Terse header only. HOW to use memory (gently, never recite, don't over-claim, trust the present) already
@@ -443,6 +477,12 @@ export function buildPersonalContext(): string {
     if (proactiveBlock) {
       out.push(proactiveBlock);
     }
+  }
+
+  // Engagement disengagement risk — early warning when usage patterns signal declining engagement.
+  // Only included when risk is moderate or higher and the budget allows. Used for tone awareness.
+  if (disengagementBlock && !overBudget()) {
+    out.push(disengagementBlock);
   }
 
   return out.join("\n");
