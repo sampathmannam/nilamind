@@ -4,6 +4,7 @@ import { getTimeMode, getUserState, getGreeting } from "../services/modeEngine";
 import { hasCheckinToday } from "../services/checkin";
 import { secureLocal } from "../services/secureLocal";
 import { buildToolGroups, type ToolGroup } from "./toolsRows";
+import { useLanguage } from "../services/i18n";
 import { loadInsights } from "../services/nilaInsights";
 import { getCapacityLevel } from "../services/capacitySignal";
 import { hasRhythmToday, loadTodayAnchors, RHYTHM_ANCHORS } from "../services/socialRhythm";
@@ -140,6 +141,7 @@ export default function TodayScreen({
   onEpisode: () => void;
 }) {
   const [showAllTools, setShowAllTools] = useState(false);
+  useLanguage();
   const timeMode = getTimeMode();
   const userState = getUserState();
   const capacity = getCapacityLevel(userState);

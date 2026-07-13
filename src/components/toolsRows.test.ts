@@ -1,5 +1,17 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { buildToolGroups, type ToolRowDeps } from "./toolsRows";
+
+const store = new Map<string, string>();
+vi.mock("../services/storageUtils", () => ({
+  ls: () => ({
+    getItem: (k: string) => store.get(k) ?? null,
+    setItem: (k: string, v: string) => { store.set(k, v); },
+    removeItem: (k: string) => { store.delete(k); },
+  }),
+  DAY_MS: 86_400_000,
+}));
+
+import { setLanguage, DICT } from "../services/i18n";
 
 const STUB: ToolRowDeps = { go: () => {}, onEpisode: () => {}, phoneEnabled: false };
 const rowIds = (phoneEnabled: boolean) =>
@@ -61,5 +73,20 @@ describe("Tools hub rows (redesign §2)", () => {
     ]) {
       expect(all).not.toContain(gone);
     }
+  });
+});
+
+describe("Tools hub localization", () => {
+  beforeEach(() => { store.clear(); setLanguage("en"); });
+
+  it("localizes group titles and row labels when language is set", () => {
+    setLanguage("hi");
+    const groups = buildToolGroups({ ...STUB, phoneEnabled: true });
+    expect(groups.map((g) => g.title)).toEqual([
+      DICT.hi.tool_group_moment, DICT.hi.tool_group_log, DICT.hi.tool_group_skills, DICT.hi.tool_group_patterns,
+    ]);
+    const plan = groups[0].rows.find((r) => r.id === "plan")!;
+    expect(plan.label).toBe(DICT.hi.tool_plan_label);
+    expect(plan.sub).toBe(DICT.hi.tool_plan_sub);
   });
 });

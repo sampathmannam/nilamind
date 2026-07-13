@@ -3,6 +3,7 @@ import {
   Brain, BookOpen, Users, Info, TrendingUp,
   type LucideIcon,
 } from "lucide-react";
+import { t } from "../services/i18n";
 
 // Redesign §2 — the single source of truth for the "You" hub rows (review / manage / learn in calmer
 // moments). YouScreen renders exactly what buildYouGroups() returns, so this file (and its test) guard
@@ -27,22 +28,22 @@ export interface YouGroup {
 export function buildYouGroups(): YouGroup[] {
   return [
     {
-      title: "Manage",
+      title: t("you_group_manage"),
       rows: [
-        { id: "about_nila", label: "About Nila", sub: "How Nila works, privacy, capabilities, and boundaries", Icon: Info, iconClass: "w-5 h-5 text-blue-400" },
-        { id: "dashboard", label: "Your dashboard", sub: "Streak, mood & score trends, recent Nila", Icon: LayoutDashboard, iconClass: "w-5 h-5 text-blue-400" },
-        { id: "your_data", label: "Your data", sub: "Export everything, or delete it — your call", Icon: ShieldCheck, iconClass: "w-5 h-5 text-emerald-400" },
-        { id: "nila_memory", label: "What Nila remembers", sub: "See, edit, or delete what she knows", Icon: Sparkles, iconClass: "w-5 h-5 text-fuchsia-400" },
-        { id: "settings", label: "Settings", sub: "Voice, reminders, recovery phrase", Icon: SettingsIcon, iconClass: "w-5 h-5 text-slate-300" },
-        { id: "caregiver", label: "Share with a trusted person", sub: "Build a snapshot for family support", Icon: Users, iconClass: "w-5 h-5 text-emerald-400" },
+        { id: "about_nila", label: t("you_about_nila_label"), sub: t("you_about_nila_sub"), Icon: Info, iconClass: "w-5 h-5 text-blue-400" },
+        { id: "dashboard", label: t("you_dashboard_label"), sub: t("you_dashboard_sub"), Icon: LayoutDashboard, iconClass: "w-5 h-5 text-blue-400" },
+        { id: "your_data", label: t("you_your_data_label"), sub: t("you_your_data_sub"), Icon: ShieldCheck, iconClass: "w-5 h-5 text-emerald-400" },
+        { id: "nila_memory", label: t("you_nila_memory_label"), sub: t("you_nila_memory_sub"), Icon: Sparkles, iconClass: "w-5 h-5 text-fuchsia-400" },
+        { id: "settings", label: t("you_settings_label"), sub: t("you_settings_sub"), Icon: SettingsIcon, iconClass: "w-5 h-5 text-slate-300" },
+        { id: "caregiver", label: t("you_caregiver_label"), sub: t("you_caregiver_sub"), Icon: Users, iconClass: "w-5 h-5 text-emerald-400" },
       ],
     },
     {
-      title: "Resources",
+      title: t("you_group_resources"),
       rows: [
-        { id: "thought_record", label: "Thought record", sub: "CBT reframing workbook", Icon: Brain, iconClass: "w-5 h-5 text-blue-400" },
-        { id: "learn", label: "Learn", sub: "Skills, explainers & research — one library", Icon: BookOpen, iconClass: "w-5 h-5 text-blue-400" },
-        { id: "insights", label: "Your patterns", sub: "Sleep, screen time, movement & mood", Icon: TrendingUp, iconClass: "w-5 h-5 text-emerald-400" },
+        { id: "thought_record", label: t("you_thought_record_label"), sub: t("you_thought_record_sub"), Icon: Brain, iconClass: "w-5 h-5 text-blue-400" },
+        { id: "learn", label: t("you_learn_label"), sub: t("you_learn_sub"), Icon: BookOpen, iconClass: "w-5 h-5 text-blue-400" },
+        { id: "insights", label: t("you_insights_label"), sub: t("you_insights_sub"), Icon: TrendingUp, iconClass: "w-5 h-5 text-emerald-400" },
       ],
     },
   ];

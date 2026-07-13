@@ -1,6 +1,7 @@
 import React from "react";
 import { ChevronRight, Sparkles, TrendingUp, Target, CheckCircle, X, Circle } from "lucide-react";
 import { buildYouGroups } from "./youRows";
+import { useLanguage } from "../services/i18n";
 import { computeCompassionateStreak } from "../services/streaks";
 import { secureLocal } from "../services/secureLocal";
 import { getIntention, setIntention, completeIntention, clearIntention, INTENTION_OPTIONS, isIntentionCompleted, getCompletionAck, markAckShown } from "../services/weeklyIntention";
@@ -93,6 +94,7 @@ function getActiveDaysInRange(): string[] {
 }
 
 export default function YouScreen({ go }: { go: (target: string) => void }) {
+  useLanguage();
   const groups = buildYouGroups();
   const weekSnapshot = getWeekSnapshot();
   const [intention, setIntentionState] = React.useState(getIntention());

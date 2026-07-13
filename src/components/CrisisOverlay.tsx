@@ -5,6 +5,7 @@ import { INITIAL_SAFETY_PLAN } from "../data";
 import { parseSafetyPlan } from "../services/safetyPlan";
 import { Heart, Wind, ShieldAlert, ArrowLeft } from "lucide-react";
 import CrisisLines from "./CrisisLines";
+import { t, useLanguage } from "../services/i18n";
 
 interface CrisisOverlayProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ export default function CrisisOverlay({
 }: CrisisOverlayProps) {
   const [safetyPlan, setSafetyPlan] = useState<SafetyPlan>(INITIAL_SAFETY_PLAN);
   const headingRef = useRef<HTMLHeadingElement>(null);
+  useLanguage();
 
   useEffect(() => {
     if (isOpen) {
@@ -56,10 +58,10 @@ export default function CrisisOverlay({
           <ShieldAlert className="text-rose-500 w-12 h-12 stroke-[2.5]" />
         </div>
         <h1 id="crisis-overlay-heading" ref={headingRef} tabIndex={-1} className="text-xl font-semibold tracking-tight text-slate-100 mb-1 outline-none">
-          You reached for this. Let's find something that helps.
+          {t("crisisHeading")}
         </h1>
         <p className="text-slate-400 text-sm max-w-md mx-auto leading-relaxed">
-          That is a strong thing to do. Ground yourself first, or reach a trained listener.
+          {t("crisisSub")}
         </p>
       </div>
 
@@ -67,7 +69,7 @@ export default function CrisisOverlay({
         {/* Quick solutions — grounding and breathing first */}
         <div className="space-y-3">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-            Try these first
+            {t("crisisTryFirst")}
           </h2>
 
           <button
@@ -80,8 +82,8 @@ export default function CrisisOverlay({
           >
             <Heart className="w-6 h-6" />
             <div>
-              <div className="font-semibold text-slate-100">5-4-3-2-1 Grounding</div>
-              <div className="text-xs text-slate-400">Notice what's around you to settle into the present moment</div>
+              <div className="font-semibold text-slate-100">{t("crisisGroundingLabel")}</div>
+              <div className="text-xs text-slate-400">{t("crisisGroundingSub")}</div>
             </div>
           </button>
 
@@ -95,8 +97,8 @@ export default function CrisisOverlay({
           >
             <Wind className="w-6 h-6" />
             <div>
-              <div className="font-semibold text-slate-100">Box Breathing (4-4-4-4)</div>
-              <div className="text-xs text-slate-400">Paced breathing to calm your nervous system</div>
+              <div className="font-semibold text-slate-100">{t("crisisBreathingLabel")}</div>
+              <div className="text-xs text-slate-400">{t("crisisBreathingSub")}</div>
             </div>
           </button>
         </div>
@@ -104,63 +106,63 @@ export default function CrisisOverlay({
         {/* Crisis lines — secondary, always available */}
         <div className="space-y-3">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-            Or speak with someone now
+            {t("crisisSpeakNow")}
           </h2>
 
           <CrisisLines tone="rose" />
-          <p className="text-[10px] text-slate-500 text-center">Free, confidential helplines for your region — change in Settings.</p>
+          <p className="text-[10px] text-slate-500 text-center">{t("crisisHelplineNote")}</p>
         </div>
 
         {/* Your coping plan */}
         <div className="space-y-4 pt-2">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-            Your coping plan
+            {t("crisisCopingPlan")}
           </h2>
 
           {/* Section 1 */}
           <div className="bg-card border border-slate-800 p-4 rounded-xl">
             <h3 className="text-slate-100 font-semibold text-sm mb-1">
-              1. Warning signs I notice:
+              {t("crisisWarnSigns")}
             </h3>
             <p className="text-slate-300 text-sm whitespace-pre-wrap">
-              {safetyPlan.warningSigns || "This part is still blank — and that's okay. You're here now, and that counts."}
+              {safetyPlan.warningSigns || t("crisisWarnSignsBlank")}
             </p>
           </div>
 
           {/* Section 2 */}
           <div className="bg-card border border-slate-800 p-4 rounded-xl">
             <h3 className="text-slate-100 font-semibold text-sm mb-1">
-              2. Things I can do on my own to cope:
+              {t("crisisInternalCoping")}
             </h3>
             <p className="text-slate-300 text-sm whitespace-pre-wrap">
-              {safetyPlan.internalCoping || "Nothing written here yet — that's okay."}
+              {safetyPlan.internalCoping || t("crisisInternalCopingBlank")}
             </p>
           </div>
 
           {/* Section 3 */}
           <div className="bg-card border border-slate-800 p-4 rounded-xl">
             <h3 className="text-slate-100 font-semibold text-sm mb-1">
-              3. People and places that distract me:
+              {t("crisisSocial")}
             </h3>
             <p className="text-slate-300 text-sm whitespace-pre-wrap">
-              {safetyPlan.socialDistractors || "Nothing here yet — that's okay."}
+              {safetyPlan.socialDistractors || t("crisisSocialBlank")}
             </p>
           </div>
 
           {/* Section 4 */}
           <div className="bg-card border border-slate-800 p-4 rounded-xl">
             <h3 className="text-slate-100 font-semibold text-sm mb-1">
-              4. People I can reach out to for help:
+              {t("crisisTrusted")}
             </h3>
             <p className="text-slate-300 text-sm whitespace-pre-wrap">
-              {safetyPlan.trustedPeople || "No names here yet — reaching even one person right now can help."}
+              {safetyPlan.trustedPeople || t("crisisTrustedBlank")}
             </p>
           </div>
 
           {/* Section 5 */}
           <div className="bg-card border border-slate-800 p-4 rounded-xl">
             <h3 className="text-slate-100 font-semibold text-sm mb-1">
-              5. Professionals and crisis lines:
+              {t("crisisProf")}
             </h3>
             <p className="text-slate-300 text-sm whitespace-pre-wrap">
               {safetyPlan.professionals}
@@ -173,10 +175,10 @@ export default function CrisisOverlay({
           {/* Section 6 */}
           <div className="bg-card border border-slate-800 p-4 rounded-xl">
             <h3 className="text-slate-100 font-semibold text-sm mb-1">
-              6. Making my space safer:
+              {t("crisisSafe")}
             </h3>
             <p className="text-slate-300 text-sm whitespace-pre-wrap">
-              {safetyPlan.safeEnvironment || "Nothing here yet — that's okay."}
+              {safetyPlan.safeEnvironment || t("crisisSafeBlank")}
             </p>
           </div>
         </div>
@@ -189,7 +191,7 @@ export default function CrisisOverlay({
             id="close-crisis-overlay-btn"
           >
             <ArrowLeft className="w-5 h-5 text-slate-500" />
-            I feel steadier now
+            {t("crisisSteadier")}
           </button>
         </div>
       </div>
