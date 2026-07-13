@@ -1,11 +1,13 @@
 import React, { useMemo, useState } from "react";
 import { Users, Copy, Share2, HeartHandshake } from "lucide-react";
 import { caregiverSummaryText, buildCaregiverSnapshot } from "../services/caregiverShare";
+import { getRegionCode } from "../services/crisisResources";
 
 export default function CaregiverShareScreen() {
   const [copied, setCopied] = useState(false);
   const snapshot = useMemo(() => buildCaregiverSnapshot(), []);
   const text = useMemo(() => caregiverSummaryText(), []);
+  const isIndia = getRegionCode() === "IN";
 
   const copy = async () => {
     try {
@@ -32,8 +34,9 @@ export default function CaregiverShareScreen() {
           <Users className="w-5 h-5 text-emerald-400" /> Share with a trusted person
         </h1>
         <p className="text-xs text-slate-400 leading-relaxed">
-          Family and friends often help in the Indian context. You're in control: Nila builds a plain-language
-          snapshot from your own progress and you hand it to someone you trust. Nothing is sent automatically.
+          {isIndia && "Family and friends often help in the Indian context. "}
+          You're in control: Nila builds a plain-language snapshot from your own progress and you hand it to
+          someone you trust. Nothing is sent automatically.
         </p>
       </header>
 
