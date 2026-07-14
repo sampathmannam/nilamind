@@ -14,6 +14,7 @@ import { loadAssessments, assessmentsFor } from "../services/assessments";
 import { buildFhirBundle } from "../services/fhirExport";
 import { recordExportAudit, getExportAudit, type ExportAuditEntry, type ExportKind } from "../services/exportAudit";
 import { buildClinicianReport, type ClinicianReportInput, type ClinicianMedication, type AssessmentTrajectory } from "../services/clinicianReport";
+import { readEpisodeMarkers } from "../services/episodeMarker";
 import { gatherClinicianUsage, protocolsCompletedInPeriod, periodCutoffIso, type ReportPeriod } from "../services/clinicianPeriod";
 import { assessTemporalRisk } from "../services/temporalRiskAssessment";
 import { CrisisMetricsTracker } from "../services/crisisSafetyValidation";
@@ -601,6 +602,10 @@ valuesClarified: []
         byTimeOfDay: byTimeOfDayStr,
       };
 
+      // Phase-18 bipolar-phase markers overlapping the window (self-logged, user-owned).
+      const allMarkers = readEpisodeMarkers();
+      const phaseMarkers = allMarkers.filter((m) => m.endDate >= cutoff);
+
       const stats = nilaStats();
       const featuresUsed = featureAdoption();
 
@@ -642,8 +647,9 @@ valuesClarified: []
          socialRhythmVariability,
          assessmentTrajectories,
          medications,
-         episodes,
-          protocolsCompleted,
+          episodes,
+           phaseMarkers,
+           protocolsCompleted,
           nilaSessions: usage.nilaTurns,
           featuresUsed,
           usage,

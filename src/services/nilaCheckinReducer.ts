@@ -1,14 +1,15 @@
-// Pure step-state machine for Nila's 3-tap opening check-in (mood -> intensity -> context).
+// Pure step-state machine for Nila's opening check-in (mood -> intensity -> energy -> context).
 // No I/O here: the component (NilaCheckIn.tsx) owns rendering and calls checkin.ts to persist.
 // Extracted so the redesign's gate-mapping and single-write-on-context-resolve are unit-tested
 // in the node Vitest env (the .tsx itself is verified manually).
 
-export type CheckinStep = "mood" | "intensity" | "context" | "granularity" | "done";
+export type CheckinStep = "mood" | "intensity" | "energy" | "context" | "granularity" | "done";
 
 export interface CheckinDraft {
   step: CheckinStep;
   label: string | null;
   intensity: number | null;
+  energy: number | null;
   contextTag: string | null;
   granularEmotion: string | null;
 }
@@ -16,12 +17,13 @@ export interface CheckinDraft {
 export type CheckinAction =
   | { type: "pickMood"; label: string }
   | { type: "pickIntensity"; intensity: number }
+  | { type: "pickEnergy"; energy: number }
   | { type: "pickContext"; tag: string | null }
   | { type: "pickGranular"; emotion: string }
   | { type: "skipGranular" };
 
 export type CheckinResolved =
-  | { label: string; intensity: number; contextTag: string | null; granularEmotion: string | null }
+  | { label: string; intensity: number; energy: number | null; contextTag: string | null; granularEmotion: string | null }
   | null;
 
 // Contract: the 7 redesign moods, in order.
@@ -43,6 +45,14 @@ export const INTENSITY_CHIPS: ReadonlyArray<{ label: string; value: number }> = 
   { label: "Intense", value: 9 },
 ];
 
+// Energy dimension: 4 levels between intensity and context per Phase 1.
+export const ENERGY_CHIPS: ReadonlyArray<{ label: string; value: number }> = [
+  { label: "Very low", value: 1 },
+  { label: "Low", value: 2 },
+  { label: "Moderate", value: 3 },
+  { label: "High", value: 4 },
+];
+
 // The 7 existing context tags (verbatim from CheckInScreen).
 export const CONTEXT_TAGS: readonly string[] = [
   "Sleep",
@@ -54,25 +64,28 @@ export const CONTEXT_TAGS: readonly string[] = [
   "Not sure",
 ];
 
-export const INITIAL_DRAFT: CheckinDraft = { step: "mood", label: null, intensity: null, contextTag: null, granularEmotion: null };
+export const INITIAL_DRAFT: CheckinDraft = { step: "mood", label: null, intensity: null, energy: null, contextTag: null, granularEmotion: null };
 
 export function checkinReducer(draft: CheckinDraft, action: CheckinAction): CheckinDraft {
   switch (action.type) {
     case "pickMood":
       if (draft.step !== "mood") return draft;
-      return { step: "intensity", label: action.label, intensity: null, contextTag: null, granularEmotion: null };
+      return { step: "intensity", label: action.label, intensity: null, energy: null, contextTag: null, granularEmotion: null };
     case "pickIntensity":
       if (draft.step !== "intensity" || draft.label === null) return draft;
-      return { step: "context", label: draft.label, intensity: action.intensity, contextTag: null, granularEmotion: null };
+      return { step: "energy", label: draft.label, intensity: action.intensity, energy: null, contextTag: null, granularEmotion: null };
+    case "pickEnergy":
+      if (draft.step !== "energy" || draft.label === null || draft.intensity === null) return draft;
+      return { step: "context", label: draft.label, intensity: draft.intensity, energy: action.energy, contextTag: null, granularEmotion: null };
     case "pickContext":
       if (draft.step !== "context" || draft.label === null || draft.intensity === null) return draft;
-      return { step: "granularity", label: draft.label, intensity: draft.intensity, contextTag: action.tag, granularEmotion: null };
+      return { step: "granularity", label: draft.label, intensity: draft.intensity, energy: draft.energy, contextTag: action.tag, granularEmotion: null };
     case "pickGranular":
       if (draft.step !== "granularity" || draft.label === null || draft.intensity === null) return draft;
-      return { step: "done", label: draft.label, intensity: draft.intensity, contextTag: draft.contextTag, granularEmotion: action.emotion };
+      return { step: "done", label: draft.label, intensity: draft.intensity, energy: draft.energy, contextTag: draft.contextTag, granularEmotion: action.emotion };
     case "skipGranular":
       if (draft.step !== "granularity" || draft.label === null || draft.intensity === null) return draft;
-      return { step: "done", label: draft.label, intensity: draft.intensity, contextTag: draft.contextTag, granularEmotion: null };
+      return { step: "done", label: draft.label, intensity: draft.intensity, energy: draft.energy, contextTag: draft.contextTag, granularEmotion: null };
     default:
       return draft;
   }
@@ -82,10 +95,10 @@ export function checkinReducer(draft: CheckinDraft, action: CheckinAction): Chec
 export function resolveCheckin(draft: CheckinDraft, action: CheckinAction): CheckinResolved {
   if (draft.step !== "granularity" || draft.label === null || draft.intensity === null) return null;
   if (action.type === "pickGranular") {
-    return { label: draft.label, intensity: draft.intensity, contextTag: draft.contextTag, granularEmotion: action.emotion };
+    return { label: draft.label, intensity: draft.intensity, energy: draft.energy, contextTag: draft.contextTag, granularEmotion: action.emotion };
   }
   if (action.type === "skipGranular") {
-    return { label: draft.label, intensity: draft.intensity, contextTag: draft.contextTag, granularEmotion: null };
+    return { label: draft.label, intensity: draft.intensity, energy: draft.energy, contextTag: draft.contextTag, granularEmotion: null };
   }
   return null;
 }

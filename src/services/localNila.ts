@@ -9,7 +9,7 @@
 
 import { buildNilaSystem, explainerQuestionSteer, consecutiveQuestionSteer, registerSteer, type NilaMessage } from "./nila";
 import { generateGuarded, isLocalLlmReady } from "./localLlm";
-import { detectElevationRisk, elevationGuardNote, elevationOutputNote, type ElevationLevel } from "./elevationGuard";
+import { detectElevationRisk, elevationGuardNote, elevationOutputNote, energyElevationSignal, napElevationSignal, type ElevationLevel } from "./elevationGuard";
 import { emaElevationSignal } from "./ema";
 import { suppressNudgesForCrisis } from "./notifications";
 import { retrievePsychoedForQuery, psychoedContextBlock } from "./psychoedRetrieval";
@@ -41,10 +41,21 @@ export async function askNilaLocalStream(
   // P3.7 — EMA elevation signal: rising valence+energy across today's micro-check-ins.
   // Used as a softer signal alongside text-based detection. If both fire, use the higher level.
   const emaLevel: ElevationLevel = emaElevationSignal();
+  // P1.6 — Check-in energy prodrome: sustained rapidly-rising energy across recent days.
+  const energyLevel: ElevationLevel = energyElevationSignal();
+  // P8.4 — Nap prodrome: frequent / late-long daytime napping as an elevation prodrome.
+  const napLevel: ElevationLevel = napElevationSignal();
   const levels: Record<ElevationLevel, number> = { none: 0, elevated: 1, high: 2 };
-  const combinedLevel: ElevationLevel = levels[textElevation.level] >= levels[emaLevel]
-    ? textElevation.level
-    : emaLevel;
+  const combinedLevel: ElevationLevel =
+    levels[textElevation.level] >= levels[emaLevel] &&
+    levels[textElevation.level] >= levels[energyLevel] &&
+    levels[textElevation.level] >= levels[napLevel]
+      ? textElevation.level
+      : levels[emaLevel] >= levels[energyLevel] && levels[emaLevel] >= levels[napLevel]
+        ? emaLevel
+        : levels[energyLevel] >= levels[napLevel]
+          ? energyLevel
+          : napLevel;
   // P6.4 — when this turn shows elevation, latch the 24h no-nudge window AND yank queued EMA/daily nudges
   // immediately (not just on the next sync). We don't push "how are you right now?" to someone escalating.
   if (combinedLevel !== "none") void suppressNudgesForCrisis();

@@ -24,6 +24,7 @@
 import type { BehaviourSnapshot, AppCategory } from './phoneBehaviour';
 import { INSTRUMENTS, type AssessmentEntry, type InstrumentId } from './assessments';
 import { DAY_MS } from './storageUtils';
+import type { MedicationLog } from './medicationAdherence';
 
 /** Mood/lifestyle signal for a given day, joined to behaviour by date. */
 export interface MoodPoint {
@@ -266,6 +267,80 @@ function socialConnectionVsMood(_snaps: BehaviourSnapshot[], mood: MoodPoint[]):
   };
 }
 
+// 8) Seasonal mood pattern (P2.6) — group check-ins by meteorological season and surface a season whose
+//    average mood differs meaningfully from the rest of the year. Requires ≥5 days in both the season and
+//    the remainder before it's honest; never a diagnosis — a reflection of the person's own yearly rhythm.
+const SEASONS: { name: string; months: number[] }[] = [
+  { name: "winter", months: [11, 0, 1] }, // Dec, Jan, Feb
+  { name: "spring", months: [2, 3, 4] }, // Mar, Apr, May
+  { name: "summer", months: [5, 6, 7] }, // Jun, Jul, Aug
+  { name: "autumn", months: [8, 9, 10] }, // Sep, Oct, Nov
+];
+
+export function seasonalMoodPattern(mood: MoodPoint[]): Insight | null {
+  const withMood = mood.filter((m) => m.date && typeof m.intensity === "number");
+  if (withMood.length < MIN_GROUP * 2) return null;
+  const monthOf = (d: string): number => new Date(d + "T00:00:00").getMonth();
+  const bySeason: Record<string, number[]> = {};
+  for (const m of withMood) {
+    const s = SEASONS.find((x) => x.months.includes(monthOf(m.date)))!;
+    (bySeason[s.name] ??= []).push(m.intensity as number);
+  }
+  const overall = avg(withMood.map((m) => m.intensity as number));
+  for (const s of SEASONS) {
+    const grp = bySeason[s.name];
+    if (!grp || grp.length < MIN_GROUP) continue;
+    const rest = withMood.filter((m) => !s.months.includes(monthOf(m.date))).map((m) => m.intensity as number);
+    if (rest.length < MIN_GROUP) continue;
+    const diff = avg(grp) - avg(rest);
+    if (Math.abs(diff) >= 1.0) {
+      const worse = diff > 0;
+      const cap = s.name[0].toUpperCase() + s.name.slice(1);
+      return {
+        id: `seasonal-${s.name}`,
+        title: `${cap} mood pattern`,
+        direction: worse ? "risk" : "protective",
+        dataPoints: grp.length + rest.length,
+        finding: `In ${s.name}, your distress averaged ${r1(avg(grp))}/10 — versus ${r1(avg(rest))}/10 across the rest of the year.`,
+        basis: "Seasonal mood variation is common and can track with light exposure, routine, and social-rhythm shifts through the year. This is a pattern in your own data, not a diagnosis.",
+      };
+    }
+  }
+  void overall;
+  return null;
+}
+
+/** Medication adherence → same-day mood. Compares distress on fully-adherent days vs missed-dose days.
+ *  Requires ≥5 days in each group and a mean difference ≥1.0 to surface. */
+export function medicationMoodInsight(medLogs: MedicationLog[], mood: MoodPoint[]): Insight | null {
+  // Per-day: were ALL doses taken?
+  const perDay = new Map<string, { total: number; taken: number }>();
+  for (const log of medLogs) {
+    const prev = perDay.get(log.date) ?? { total: 0, taken: 0 };
+    prev.total++;
+    if (log.taken) prev.taken++;
+    perDay.set(log.date, prev);
+  }
+  const md = moodByDate(mood);
+  const taken: number[] = [];
+  const missed: number[] = [];
+  for (const [date, { total, taken: t }] of perDay) {
+    const m = md[date];
+    if (!m || m.intensity == null) continue;
+    if (t === total) taken.push(m.intensity);
+    else missed.push(m.intensity);
+  }
+  if (taken.length < MIN_GROUP || missed.length < MIN_GROUP) return null;
+  const diff = avg(missed) - avg(taken);
+  if (diff < 1.0) return null;
+  return {
+    id: 'medication-adherence', title: 'Medication & mood', direction: 'protective',
+    dataPoints: taken.length + missed.length,
+    finding: `On days you took all your medication, distress averaged ${r1(avg(taken))}/10 — versus ${r1(avg(missed))}/10 on days you missed a dose.`,
+    basis: 'Consistent medication adherence is associated with more stable mood. This is a personal pattern from your data, not clinical advice — always talk to your doctor before changing how you take medication.',
+  };
+}
+
 const GENERATORS = [
   sleepVsMood,
   nightPhoneVsNextDayDistress,
@@ -274,6 +349,7 @@ const GENERATORS = [
   movementVsMood,
   stepsVsMood,
   socialConnectionVsMood,
+  seasonalMoodPattern,
 ];
 
 /** Run every correlation; return only those with enough data to be honest. */

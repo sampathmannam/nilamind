@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { t } from "../../services/i18n";
 import { Volume2, Play, Check } from "lucide-react";
 import { getVoicePrefs, setVoicePrefs, speak, listEnglishVoices, type TtsVoice } from "../../services/voice";
 import { afHeartAvailable, AF_HEART_ID } from "../../services/afHeartVoice";
@@ -33,7 +34,7 @@ export default function VoiceSection() {
     <div className="glass p-5 rounded-2xl space-y-4 shadow-lg" id="settings-voice">
       <div>
         <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
-          <Volume2 className="w-4 h-4 text-blue-400" /> Soothing Voice
+          <Volume2 className="w-4 h-4 text-blue-400" /> {t("sec_voice")}
         </h2>
         <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
           A calm voice can read Nila and your check-ins aloud, so you don't have to read — and you can speak instead of type.

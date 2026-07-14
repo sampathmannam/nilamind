@@ -14,21 +14,19 @@ vi.mock("../services/storageUtils", () => ({
 }));
 
 import CaregiverShareScreen from "./CaregiverShareScreen";
-import { setRegionCode } from "../services/crisisResources";
+import { setLanguage, t } from "../services/i18n";
 
 afterEach(() => { cleanup(); });
-beforeEach(() => { store.clear(); });
+beforeEach(() => { store.clear(); setLanguage("en"); });
 
-describe("CaregiverShareScreen — region-aware rationale copy", () => {
-  it("mentions the Indian context only when the user's region is India", () => {
-    setRegionCode("IN");
+describe("CaregiverShareScreen — i18n consent copy (Phase 19)", () => {
+  it("renders the i18n-ized consent body text instead of hardcoded Indian-context copy", () => {
     render(<CaregiverShareScreen />);
-    expect(screen.getByText(/Indian context/i)).toBeTruthy();
+    expect(screen.getByText(new RegExp(t("cg_consent_body").slice(0, 30)))).toBeTruthy();
   });
 
-  it("does not mention the Indian context when the user's region is not India", () => {
-    setRegionCode("GB");
+  it("renders the share title from i18n", () => {
     render(<CaregiverShareScreen />);
-    expect(screen.queryByText(/Indian context/i)).toBeNull();
+    expect(screen.getByText(t("shareTrustedTitle"))).toBeTruthy();
   });
 });

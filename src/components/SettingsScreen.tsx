@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { Settings as SettingsIcon, Users, Shield, ExternalLink, Gauge } from "lucide-react";
+import { t, useLanguage } from "../services/i18n";
 import AppearanceSection from "./settings/AppearanceSection";
 import VoiceSection from "./settings/VoiceSection";
 import RemindersSection from "./settings/RemindersSection";
 import EmaSection from "./settings/EmaSection";
+import NotificationCategoriesSection from "./settings/NotificationCategoriesSection";
 import InflectionSection from "./settings/InflectionSection";
 import HealthConnectSection from "./settings/HealthConnectSection";
 import OnDeviceSection from "./settings/OnDeviceSection";
@@ -21,13 +23,14 @@ interface SettingsScreenProps {
 
 export default function SettingsScreen({ onOpenCaregiver }: SettingsScreenProps) {
   const [showPerf, setShowPerf] = useState(false);
+  useLanguage();
   return (
     <div className="space-y-6 max-w-md mx-auto text-slate-100" id="settings-view">
       <div>
         <h1 className="text-xl font-semibold text-slate-100 font-sans tracking-tight flex items-center gap-2">
-          <SettingsIcon className="w-5 h-5 text-slate-400" /> Settings
+          <SettingsIcon className="w-5 h-5 text-slate-400" /> {t("settings")}
         </h1>
-        <p className="text-xs text-slate-400 mt-1">Application preferences — including a calm "Soften visuals" mode if bright or busy screens ever feel like too much.</p>
+        <p className="text-xs text-slate-400 mt-1">{t("settingsIntro")}</p>
       </div>
 
       <AppearanceSection />
@@ -37,6 +40,7 @@ export default function SettingsScreen({ onOpenCaregiver }: SettingsScreenProps)
       <VoiceSection />
 <RemindersSection />
 <EmaSection />
+<NotificationCategoriesSection />
 <InflectionSection />
 <HealthConnectSection />
       <OnDeviceSection />
@@ -49,10 +53,10 @@ export default function SettingsScreen({ onOpenCaregiver }: SettingsScreenProps)
           id="open-caregiver"
         >
           <span className="shrink-0 text-emerald-400"><Users className="w-5 h-5" /></span>
-          <span className="flex-1 min-w-0">
-            <span className="block text-sm font-bold text-slate-100">Share with a trusted person</span>
-            <span className="block text-[11px] text-slate-400">Build a wellness snapshot for family support</span>
-          </span>
+            <span className="flex-1 min-w-0">
+              <span className="block text-sm font-bold text-slate-100">{t("shareTrustedTitle")}</span>
+              <span className="block text-[11px] text-slate-400">{t("shareTrustedSub")}</span>
+            </span>
         </button>
       )}
 
@@ -65,10 +69,10 @@ export default function SettingsScreen({ onOpenCaregiver }: SettingsScreenProps)
         id="privacy-policy-link"
       >
         <span className="shrink-0 text-blue-400"><Shield className="w-5 h-5" /></span>
-        <span className="flex-1 min-w-0">
-          <span className="block text-sm font-bold text-slate-100">Privacy Policy</span>
-          <span className="block text-[11px] text-slate-400">How your data stays private — nothing leaves your device</span>
-        </span>
+          <span className="flex-1 min-w-0">
+            <span className="block text-sm font-bold text-slate-100">{t("privacyPolicy")}</span>
+            <span className="block text-[11px] text-slate-400">{t("privacyPolicySub")}</span>
+          </span>
         <ExternalLink className="w-4 h-4 text-slate-500 shrink-0" />
       </a>
 
@@ -82,10 +86,10 @@ export default function SettingsScreen({ onOpenCaregiver }: SettingsScreenProps)
         id="toggle-perf-dashboard"
       >
         <span className="shrink-0 text-blue-400"><Gauge className="w-5 h-5" /></span>
-        <span className="flex-1 min-w-0">
-          <span className="block text-sm font-bold text-slate-100">Performance &amp; Diagnostics</span>
-          <span className="block text-[11px] text-slate-400">Web vitals, LLM cache, crash log — on this device only</span>
-        </span>
+          <span className="flex-1 min-w-0">
+            <span className="block text-sm font-bold text-slate-100">{t("perfTitle")}</span>
+            <span className="block text-[11px] text-slate-400">{t("perfSub")}</span>
+          </span>
       </button>
       {showPerf && <PerformanceDashboard />}
     </div>

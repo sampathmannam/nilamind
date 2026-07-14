@@ -71,14 +71,12 @@ export const SENSITIVE_KEYS = [
   // Social Rhythm Metric log — daily routine-anchor times for the regularity read (encrypted at rest,
   // see socialRhythm.ts).
   "nilamind_social_rhythm",
-  // TIPP tool's one-time safety-gate checklist — cardiac arrhythmia/pacemaker, uncontrolled
-  // hypertension, HR meds, seizure disorder, ED/bradycardia history, pregnancy, cold sensitivity
-  // (health-condition data, encrypted at rest, see tippSafetyGate.ts).
+  // Episode-phase markers — longitudinal bipolar-phase tagging (elevated/depressed/mixed/stable),
+  // user-owned, encrypted at rest (see episodeMarker.ts).
+  "nilamind_episode_markers",
+  "nilamind_caregiver_contacts",
+  "nilamind_caregiver_prefs",
   "nilamind_tipp_safety",
-  // Values Work domain ratings/committed actions — security gap found during the wave 3 Group B
-  // values-migration audit: this key was absent from SENSITIVE_KEYS entirely, so it sat in plaintext
-  // localStorage indefinitely, unlike its siblings nilamind_values / nilamind_values_actions above
-  // (see valuesWork.ts).
   "nilamind_values_work",
 ];
 const MIGRATION_VERSION = 3; // v3: encrypt nilamind_values_work (previously stored in plaintext localStorage)

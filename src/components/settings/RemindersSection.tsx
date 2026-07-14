@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { t } from "../../services/i18n";
 import { Bell } from "lucide-react";
 import { getReminderPrefs, setReminderPrefs } from "../../services/reminders";
 import { syncDailyReminders, clearDailyReminders } from "../../services/notifications";
@@ -28,7 +29,7 @@ export default function RemindersSection() {
     <div className="glass p-5 rounded-2xl space-y-4 shadow-lg" id="settings-reminders">
       <div>
         <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
-          <Bell className="w-4 h-4 text-blue-400" /> Gentle Reminders
+          <Bell className="w-4 h-4 text-blue-400" /> {t("sec_reminders")}
         </h2>
         <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
           One gentle nudge a day — inside your window, never during quiet hours. No streak guilt, ever.
@@ -55,6 +56,17 @@ export default function RemindersSection() {
           <div className="flex items-center justify-between text-xs">
             <span className="text-slate-400">Quiet hours</span>
             <div className="flex items-center gap-1"><TimeInput value={p.quietStart} on={(v) => up({ quietStart: v })} /><span className="text-slate-600">–</span><TimeInput value={p.quietEnd} on={(v) => up({ quietEnd: v })} /></div>
+          </div>
+          <div className="flex items-center justify-between text-xs pt-1">
+            <span className="text-slate-400">Weekly review (Sundays)</span>
+            <button
+              onClick={() => up({ weeklyDigest: !p.weeklyDigest })}
+              id="settings-weekly-digest-toggle"
+              className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors ${p.weeklyDigest ? "bg-blue-500" : "bg-slate-700"}`}
+              role="switch" aria-checked={p.weeklyDigest}
+            >
+              <span aria-hidden="true" className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200 ease-in-out ${p.weeklyDigest ? "translate-x-2.5" : "-translate-x-2.5"}`} />
+            </button>
           </div>
         </div>
       )}

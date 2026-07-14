@@ -6,15 +6,34 @@ import {
   loadRhythm,
   recordRhythm,
   computeRhythmRegularity,
-  buildSleepWindows,
+  buildRhythmTimeline,
+  timelineSpread,
   type AnchorKey,
   type RhythmAnchors,
   type RhythmBand,
 } from "../services/socialRhythm";
 import { dayKey } from "../services/retentionMetrics";
 import { hapticLight } from "../hooks/useHaptics";
-import { computeCircadianFeedback, computeSleepRegularityIndex } from "../services/circadianFeedback";
+import { computeCircadianFeedback } from "../services/circadianFeedback";
 import { loadMoodHistory } from "../services/moodHistory";
+
+const WEEKDAY = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+const fmtMin = (min: number): string => {
+  const h = Math.floor(min / 60) % 24;
+  const m = Math.round(min) % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+};
+
+/** Pale→warm dot for a 1-10 mood intensity (null = no check-in that day). */
+const moodDot = (intensity: number | null): string =>
+  intensity === null
+    ? "transparent"
+    : intensity <= 3
+      ? "#38bdf8"
+      : intensity <= 6
+        ? "#94a3b8"
+        : "#fbbf24";
 
 const BAND_COPY: Record<RhythmBand, { label: string; cls: string }> = {
   regular: { label: "Steady rhythm", cls: "text-emerald-400" },
@@ -34,9 +53,18 @@ export default function SocialRhythmScreen() {
   const reg = useMemo(() => computeRhythmRegularity(), [version]);
   const band = BAND_COPY[reg.band];
 
-  // Real Sleep Regularity Index (Phillips et al. 2017) — a SEPARATE, timing-based metric from the anchor
-  // variability read below (which is circular-SD across anchors, not per-epoch clock-time agreement).
-  const sri = useMemo(() => computeSleepRegularityIndex(buildSleepWindows([], loadRhythm())), [version]);
+  // P5.4 — 7-day anchor timeline. Recomputed when a new day is saved.
+  const timeline = useMemo(() => buildRhythmTimeline(7), [version]);
+  const spread = useMemo(() => timelineSpread(timeline), [timeline]);
+  const moodByDay = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const m of loadMoodHistory()) {
+      if (!m.date || typeof m.intensity !== "number") continue;
+      const prev = map.get(m.date);
+      map.set(m.date, prev === undefined ? m.intensity : (prev + m.intensity) / 2);
+    }
+    return map;
+  }, [version]);
 
   const setAnchor = (key: AnchorKey, val: string) => {
     setAnchors((a) => ({ ...a, [key]: val }));
@@ -149,24 +177,6 @@ export default function SocialRhythmScreen() {
         )}
       </div>
 
-      {/* Real Sleep Regularity Index (Phillips et al. 2017) — genuine bed/wake TIMING regularity, distinct
-          from the anchor-variability read above. Only renders once >=7 nights of bed+wake anchors exist. */}
-      {sri && (
-        <div className="glass rounded-2xl p-4 space-y-2" id="sleep-regularity-index">
-          <div className="flex items-center justify-between">
-            <div className="text-sm font-semibold text-slate-200">Sleep Regularity Index</div>
-            <span className={`text-sm font-semibold ${sri.band === "regular" ? "text-emerald-400" : sri.band === "moderately_irregular" ? "text-amber-400" : "text-rose-300"}`}>
-              {sri.sri}/100
-            </span>
-          </div>
-          <p className="text-xs text-slate-400 leading-relaxed">{sri.guidance}</p>
-          <p className="text-[10px] text-slate-500 leading-relaxed">
-            From {sri.nightsUsed} nights of bed/wake times (Phillips et al., 2017) — a different, timing-based
-            measure from the anchor variability above.
-          </p>
-        </div>
-      )}
-
       {/* Honest basis + limit */}
       <p className="text-[10px] text-slate-500 leading-relaxed px-1">
         Based on the Social Rhythm Metric (Monk et al., 1990/1991) as used in Interpersonal &amp; Social
@@ -174,6 +184,58 @@ export default function SocialRhythmScreen() {
         disorder and rests on a small number of trials; the bands here are a self-reflection aid, not a
         clinical measure or a diagnosis. Computed entirely on your device.
       </p>
+
+      {/* P5.4 — 7-day anchor timeline: dots positioned by time-of-day, with a variability band and a
+          mood overlay so the user can see how steady rhythm tracks with how they felt. */}
+      <div className="glass rounded-2xl p-4 space-y-3" id="rhythm-timeline">
+        <div className="text-sm font-semibold text-slate-200">Last 7 days</div>
+        <div className="flex gap-1 items-end">
+          <div className="w-28 shrink-0 text-[10px] text-slate-500">Mood</div>
+          {timeline.days.map((d) => (
+            <div key={d} className="flex-1 flex flex-col items-center gap-1">
+              <span className="text-[9px] text-slate-500">{WEEKDAY[new Date(d + "T00:00:00").getDay()]}</span>
+              <span
+                className="h-2 w-2 rounded-full ring-1 ring-slate-700"
+                style={{ background: moodDot(moodByDay.get(d) ?? null) }}
+                aria-label={moodByDay.has(d) ? `mood ${Math.round(moodByDay.get(d)!)}` : "no check-in"}
+              />
+            </div>
+          ))}
+        </div>
+        {timeline.anchors.map((a) => {
+          const vals = a.byDay.filter((m): m is number => m !== null);
+          const min = vals.length >= 2 ? Math.min(...vals) : null;
+          const max = vals.length >= 2 ? Math.max(...vals) : null;
+          return (
+            <div key={a.key} className="flex gap-1 items-center">
+              <div className="w-28 shrink-0 text-[11px] text-slate-400 truncate" title={a.label}>{a.label}</div>
+              <div className="relative flex-1 h-5">
+                {min !== null && max !== null && (
+                  <div
+                    className="absolute top-1/2 -translate-y-1/2 h-1.5 rounded bg-slate-700/70"
+                    style={{ left: `${(min / 1440) * 100}%`, width: `${((max - min) / 1440) * 100}%` }}
+                  />
+                )}
+                {a.byDay.map((m, i) =>
+                  m === null ? null : (
+                    <span
+                      key={i}
+                      className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 h-2.5 w-2.5 rounded-full bg-indigo-400 ring-2 ring-page"
+                      style={{ left: `${(m / 1440) * 100}%` }}
+                      title={`${timeline.days[i]} ${fmtMin(m)}`}
+                      aria-label={`${a.label} at ${fmtMin(m)}`}
+                    />
+                  ),
+                )}
+              </div>
+            </div>
+          );
+        })}
+        <p className="text-[10px] text-slate-500 leading-relaxed">
+          Each dot is when that anchor happened that day. Dots close together = a steady rhythm; spread out = more
+          variation. The grey band shows the range across the week. The top row is how your mood averaged that day.
+        </p>
+      </div>
     </div>
   );
 }

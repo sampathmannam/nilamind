@@ -58,6 +58,14 @@ describe("buildCheckinEntry", () => {
   it("treats an empty-string contextTag as no tag", () => {
     expect(buildCheckinEntry("Low", 5, "").context).toBe("Nila check-in");
   });
+  it("includes energy when provided", () => {
+    const e = buildCheckinEntry("Calm", 3, "Work", undefined, 2);
+    expect(e.energy).toBe(2);
+  });
+  it("energy is null when not provided", () => {
+    const e = buildCheckinEntry("Calm", 3, "Work");
+    expect(e.energy).toBeNull();
+  });
 });
 
 describe("appendCheckin", () => {

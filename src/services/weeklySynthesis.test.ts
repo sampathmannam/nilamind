@@ -95,7 +95,7 @@ describe("weeklySynthesisPrompt", () => {
     const p = weeklySynthesisPrompt({
       checkinCount: 3, distinctEmotions: ["low", "anxious"], topEmotion: "low",
       avgIntensity: 5.2, skillsUsed: ["TIPP"], streak: 4, activeProtocol: null,
-      sleepFiring: false, episodes: 0, lastSynthesisDay: null,
+      sleepFiring: false, napNote: null, episodes: 0, lastSynthesisDay: null,
     });
     expect(p).toContain("3 times");
     expect(p).toContain("low");
@@ -107,7 +107,7 @@ describe("weeklySynthesisPrompt", () => {
     const p = weeklySynthesisPrompt({
       checkinCount: 0, distinctEmotions: [], topEmotion: null,
       avgIntensity: null, skillsUsed: [], streak: 0, activeProtocol: null,
-      sleepFiring: false, episodes: 0, lastSynthesisDay: null,
+      sleepFiring: false, napNote: null, episodes: 0, lastSynthesisDay: null,
     });
     expect(p).toContain("Here is what happened this week");
   });

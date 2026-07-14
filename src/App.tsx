@@ -38,15 +38,15 @@ const LearnScreen = lazy(() => import("./components/LearnScreen"));
 const CrisisRehearsalScreen = lazy(() => import("./components/CrisisRehearsalScreen"));
 const PeerSupportScreen = lazy(() => import("./components/PeerSupportScreen"));
 const ProblemSolvingScreen = lazy(() => import("./components/ProblemSolvingScreen"));
-// Wave 3 Group B: ValuesWorkScreen (uncited duplicate) retired from navigation — its data was migrated
-// into values.ts and it's no longer reachable from any hub. The file/service/data are kept intact
-// (never deleted) so migrateValuesWorkToVlq() can always read from them.
-const ValuesToActionScreen = lazy(() => import("./components/ValuesToActionScreen"));
+const ValuesWorkScreen = lazy(() => import("./components/ValuesWorkScreen"));
 const ExposureHierarchyScreen = lazy(() => import("./components/ExposureHierarchyScreen"));
 const RelapsePlanScreen = lazy(() => import("./components/RelapsePlanScreen"));
 const EpisodeSupportScreen = lazy(() => import("./components/EpisodeSupportScreen"));
 const EmaCheckInScreen = lazy(() => import("./components/EmaCheckIn"));
 const ArmedCheckInScreen = lazy(() => import("./components/ArmedCheckInScreen"));
+const WellbeingScreen = lazy(() => import("./components/WellbeingScreen"));
+const EpisodeMarkerScreen = lazy(() => import("./components/EpisodeMarkerScreen"));
+const CaregiverSettingsScreen = lazy(() => import("./components/CaregiverSettingsScreen"));
 const AboutNilaScreen = lazy(() => import("./components/AboutNilaScreen"));
 const InsightsScreen = lazy(() => import("./components/InsightsScreen"));
 
@@ -63,7 +63,10 @@ function ScreenFallback() {
   );
 }
 
-import { syncDailyReminders, scheduleReminderAt, syncEmaCheckins, suppressNudgesForCrisis } from "./services/notifications";
+import { syncDailyReminders, scheduleReminderAt, syncEmaCheckins, syncWeeklyDigest, suppressNudgesForCrisis } from "./services/notifications";
+import { recordEngagement } from "./services/notificationBudget";
+import { recordNotificationOpen } from "./services/notificationEngagement";
+import { isCategoryEnabled } from "./services/notificationCategories";
 import { LocalNotifications } from "@capacitor/local-notifications";
 import { t, LANGUAGE_CHANGED_EVENT } from "./services/i18n";
 import { wakeWord } from "./services/wakeWord";
@@ -78,7 +81,6 @@ import { getArmedCheckin, armedCheckinBody } from "./services/armedCheckin";
 import { recordAppOpen } from "./services/retentionMetrics";
 import { getPilotState, markEndpointReminderScheduled, PILOT_ENDPOINT_REMINDER_BODY } from "./services/pilotStudy";
 import { getUserState } from "./services/modeEngine";
-import { runValuesMigrationIfNeeded, type ValuesMigrationResult } from "./services/values";
 import { computeAdaptiveMode, getAdaptiveCssClass } from "./services/adaptiveTheme";
 import { warmVoskStt } from "./services/voskStt";
 import { MessageSquare, LayoutGrid, User, X } from "lucide-react";
@@ -105,6 +107,7 @@ const AUX_LABELS: Partial<Record<AuxView, string>> = {
   crisis_rehearsal: "Crisis rehearsal",
   peer_support: "Peer support",
   problem_solving: "Problem solving",
+  values_work: "Values work",
   exposure: "Exposure hierarchy",
   relapse_plan: "Relapse prevention",
   behaviour: "Phone patterns",
@@ -112,6 +115,9 @@ const AUX_LABELS: Partial<Record<AuxView, string>> = {
   episode: "Episode support",
   armed_checkin: "Armed check‑in",
   ema_checkin: "Quick check‑in",
+  wellbeing: "Wellbeing over time",
+  episode_marker: "Episode markers",
+  caregiver_settings: "Caregiver settings",
 };
 
 function auxViewLabel(view: AuxView): string {
@@ -119,7 +125,7 @@ function auxViewLabel(view: AuxView): string {
 }
 
 // ── Aux view component renderers (module-scoped lazy imports — created once, not per render)
-function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () => void, onOpenGrounding: () => void) {
+function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () => void, onOpenGrounding: () => void, onOpenView: (target: string) => void, onOpenCaregiverShare?: (contactId: string) => void) {
   switch (view) {
     case "about_nila": return <AboutNilaScreen />;
     case "insights": return <InsightsScreen onClose={onClose} />;
@@ -137,13 +143,17 @@ function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () 
     case "crisis_rehearsal": return <CrisisRehearsalScreen />;
     case "peer_support": return <PeerSupportScreen />;
     case "problem_solving": return <ProblemSolvingScreen />;
+    case "values_work": return <ValuesWorkScreen />;
     case "exposure": return <ExposureHierarchyScreen />;
     case "relapse_plan": return <RelapsePlanScreen />;
-    case "behaviour": return <DashboardScreen />;
+    case "behaviour": return <DashboardScreen onOpenView={onOpenView} />;
     case "diary": return <DiaryCardScreen />;
     case "episode": return <EpisodeSupportScreen onSessionEnded={onClose} onNavigateToGrounding={() => { onClose(); onOpenGrounding(); }} onNavigateToBreathing={() => { onClose(); onOpenGrounding(); }} />;
     case "armed_checkin": return <ArmedCheckInScreen onClose={onClose} />;
     case "ema_checkin": return <EmaCheckInScreen onCrisis={() => { onClose(); onActivateCrisis(); }} />;
+    case "wellbeing": return <WellbeingScreen onClose={onClose} onActivateCrisis={onActivateCrisis} onTake={() => onOpenView("assessment")} />;
+    case "episode_marker": return <EpisodeMarkerScreen onClose={onClose} />;
+    case "caregiver_settings": return <CaregiverSettingsScreen onClose={onClose} onOpenCaregiverShare={onOpenCaregiverShare} />;
     default: return <div className="p-6 text-slate-400 text-sm text-center">Not available</div>;
   }
 }
@@ -157,17 +167,14 @@ export default function App() {
   const [groundingExpandIndex, setGroundingExpandIndex] = useState<number | undefined>(undefined);
   const [isMedicationOpen, setIsMedicationOpen] = useState(false);
   const [isCaregiverOpen, setIsCaregiverOpen] = useState(false);
-  // Wave 3 Group B: values_to_action is deliberately NOT a nav.ts aux view (see toolsRows.ts's header
-  // comment / nav.test.ts) — it gets its own sheet, same pattern as dashboard/medication/caregiver.
-  const [isValuesToActionOpen, setIsValuesToActionOpen] = useState(false);
-  const [valuesMigrationSummary, setValuesMigrationSummary] = useState<ValuesMigrationResult | null>(null);
+  const [selectedCaregiverContactId, setSelectedCaregiverContactId] = useState<string | undefined>();
   const [activeAuxView, setActiveAuxView] = useState<AuxView | null>(null);
   const [closingAuxView, setClosingAuxView] = useState<AuxView | null>(null);
   const [activeTab, setActiveTab] = useState<AppTab>("today");
   const [saveWarning, setSaveWarning] = useState(false);
   const [onboardingDone, setOnboardingDone] = useState(hasCompletedOnboarding());
   const [wakeListening, setWakeListening] = useState(false);
-  const [phoneEnabled] = useState(false);
+  const [phoneEnabled] = useState(true);
   const [modeScreenHasSheet, setModeScreenHasSheet] = useState(false);
   const [, setLangTick] = useState(0);
   const closeSheet = useCallback((view: AuxView | null) => {
@@ -195,21 +202,16 @@ export default function App() {
     void syncDailyReminders();
   }, []);
 
+  // P6.6 — re-arm the Sunday weekly-review digest on every app open (idempotent: cancels + reschedules).
+  useEffect(() => {
+    void syncWeeklyDigest({ request: false });
+  }, []);
+
   // Record that the app was opened today (on-device retention instrumentation). Runs after SecureGate has
   // hydrated the encrypted store; idempotent per calendar day, so StrictMode's double mount-effect is safe.
   // Nothing is sent anywhere — the metric only leaves the device via the user-initiated export.
   useEffect(() => {
     recordAppOpen();
-  }, []);
-
-  // Wave 3 Group B one-time migration: fold valuesWork.ts (uncited duplicate) data into values.ts (the
-  // VLQ-cited tool), additive/merge-only, runs at most once per install (runValuesMigrationIfNeeded's own
-  // flag). Only surfaces the summary banner when there was actually something to report.
-  useEffect(() => {
-    const result = runValuesMigrationIfNeeded();
-    if (result && (result.migratedRatings > 0 || result.migratedActions > 0 || result.notMigrated.length > 0)) {
-      setValuesMigrationSummary(result);
-    }
   }, []);
 
   // If enrolled in the opt-in research pilot, schedule the single endpoint check-in reminder once. The body
@@ -234,7 +236,7 @@ export default function App() {
   // disclosure (mirrors notifications.ts notifyReplyReady). The private context stays inside the app.
   useEffect(() => {
     const entry = getArmedCheckin();
-    if (entry) {
+    if (entry && isCategoryEnabled("armed")) { // P6.5: armed-check-in category toggle
       void scheduleReminderAt(new Date(entry.triggerAt), armedCheckinBody(), "NilaMind", { view: "armed_checkin" });
     }
   }, []);
@@ -294,9 +296,6 @@ export default function App() {
     if (res.kind === "unknown") {
       if (res.target === "caregiver") { setIsCaregiverOpen(true); return; }
       if (res.target === "grounding" || res.target === "breathing") { setIsGroundingOpen(true); return; }
-      // values_to_action resolves "unknown" here deliberately — it is NOT in nav.ts's KNOWN_AUX_VIEWS
-      // (see nav.test.ts, PLAN_OF_ACTION A6); it gets its own sheet instead of the generic aux system.
-      if (res.target === "values_to_action") { setIsValuesToActionOpen(true); return; }
     }
   }, [activateCrisis]);
 
@@ -313,14 +312,13 @@ export default function App() {
       if (isGroundingOpen) { setIsGroundingOpen(false); return; }
       if (isMedicationOpen) { setIsMedicationOpen(false); return; }
       if (isCaregiverOpen) { setIsCaregiverOpen(false); return; }
-      if (isValuesToActionOpen) { setIsValuesToActionOpen(false); return; }
       if (activeAuxView) { setActiveAuxView(null); return; }
       if (modeScreenHasSheet) { setModeScreenHasSheet(false); return; }
       if (activeTab !== "nila") { setActiveTab("nila"); return; }
       void CapApp.exitApp();
     }).then((h) => { handle = h; if (removed) h.remove(); });
     return () => { removed = true; handle?.remove(); };
-  }, [isCrisisOpen, isSettingsOpen, isDashboardOpen, isGroundingOpen, isMedicationOpen, isCaregiverOpen, isValuesToActionOpen, activeAuxView, activeTab, modeScreenHasSheet]);
+  }, [isCrisisOpen, isSettingsOpen, isDashboardOpen, isGroundingOpen, isMedicationOpen, isCaregiverOpen, activeAuxView, activeTab, modeScreenHasSheet]);
 
   // Route a tapped local notification to its screen via the existing go() router. Fires for EVERY tapped
   // notification (daily/med/armed/ema); we route ONLY on a recognised content-free {view} payload and no-op
@@ -331,7 +329,11 @@ export default function App() {
     LocalNotifications.addListener("localNotificationActionPerformed", (action) => {
       try {
         const view = action?.notification?.extra?.view;
-        if (typeof view === "string" && view) go(view);
+        if (typeof view === "string" && view) {
+          recordEngagement(); // P6.3: a tapped non-crisis nudge resets the progressive-cooldown streak
+          recordNotificationOpen(); // P6.2: the tapped nudge is an engagement signal for the timing learner
+          go(view);
+        }
       } catch (e) {
         console.error("[App] notification tap routing failed:", e);
       }
@@ -391,25 +393,6 @@ export default function App() {
           <span className="font-semibold text-amber-300">Save issue:</span>
           <span>Some changes couldn't be saved.</span>
           <button onClick={() => setSaveWarning(false)} className="ml-auto text-amber-400 hover:text-amber-200 cursor-pointer">Dismiss</button>
-        </div>
-      )}
-
-      {/* Wave 3 Group B one-time values-migration summary */}
-      {valuesMigrationSummary && (
-        <div className="bg-violet-500/10 border-b border-violet-500/25 px-4 py-2.5 flex items-start gap-2 text-[11px] text-violet-200/90 z-40 shrink-0" id="values-migration-banner">
-          <span>
-            We combined your two values tools — {valuesMigrationSummary.migratedRatings} rating{valuesMigrationSummary.migratedRatings === 1 ? "" : "s"} carried over
-            {valuesMigrationSummary.notMigrated.length > 0
-              ? `, ${valuesMigrationSummary.notMigrated.length} item${valuesMigrationSummary.notMigrated.length === 1 ? "" : "s"} need a quick look`
-              : ""}.
-          </span>
-          <button
-            onClick={() => { setValuesMigrationSummary(null); setIsValuesToActionOpen(true); }}
-            className="ml-auto shrink-0 text-violet-300 hover:text-violet-100 cursor-pointer font-semibold"
-          >
-            View
-          </button>
-          <button onClick={() => setValuesMigrationSummary(null)} className="shrink-0 text-violet-400 hover:text-violet-200 cursor-pointer">Dismiss</button>
         </div>
       )}
 
@@ -547,21 +530,7 @@ export default function App() {
             <button onClick={() => setIsCaregiverOpen(false)} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Close"><X className="w-4 h-4" aria-hidden="true" /></button>
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto p-4">
-            <Suspense fallback={<ScreenFallback />}><CaregiverShareScreen /></Suspense>
-          </div>
-        </div>
-      )}
-
-      {/* Values to Action sheet — wave 3 Group B; deliberately outside nav.ts's generic aux system
-          (see the go() unknown-branch comment above), same pattern as Dashboard/Medication/Caregiver. */}
-      {isValuesToActionOpen && (
-        <div className="fixed inset-0 z-50 bg-page flex flex-col animate-slide-in" id="values-to-action-sheet">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
-            <span className="text-sm font-semibold text-slate-100">Values to action</span>
-            <button onClick={() => setIsValuesToActionOpen(false)} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Close"><X className="w-4 h-4" aria-hidden="true" /></button>
-          </div>
-          <div className="flex-1 min-h-0 overflow-y-auto p-4">
-            <Suspense fallback={<ScreenFallback />}><ValuesToActionScreen /></Suspense>
+            <Suspense fallback={<ScreenFallback />}><CaregiverShareScreen selectedContactId={selectedCaregiverContactId} /></Suspense>
           </div>
         </div>
       )}
@@ -574,7 +543,7 @@ export default function App() {
             <button onClick={() => closeSheet(activeAuxView)} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Close"><X className="w-4 h-4" aria-hidden="true" /></button>
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto">
-            <Suspense fallback={<ScreenFallback />}>{renderAuxView((activeAuxView || closingAuxView)!, activateCrisis, closeActiveAux, () => setIsGroundingOpen(true))}</Suspense>
+            <Suspense fallback={<ScreenFallback />}>{renderAuxView((activeAuxView || closingAuxView)!, activateCrisis, closeActiveAux, () => setIsGroundingOpen(true), go, (cid) => { setSelectedCaregiverContactId(cid); setIsCaregiverOpen(true); })}</Suspense>
           </div>
         </div>
       )}

@@ -1,4 +1,5 @@
 import React from "react";
+import { t } from "../../services/i18n";
 import { MessageSquare, ExternalLink } from "lucide-react";
 
 export default function FeedbackSection() {
@@ -7,7 +8,7 @@ export default function FeedbackSection() {
     <div className="glass p-5 rounded-2xl space-y-3 shadow-lg" id="settings-feedback">
       <div>
         <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
-          <MessageSquare className="w-4 h-4 text-purple-400" /> Feedback &amp; about
+          <MessageSquare className="w-4 h-4 text-purple-400" /> {t("sec_feedback")}
         </h2>
         <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
           NilaMind is an open-source research preview, and your feedback shapes it. Nothing is sent

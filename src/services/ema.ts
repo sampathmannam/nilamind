@@ -92,10 +92,11 @@ export function planEmaFireTimes(opts: {
   now?: Date;
   rng?: () => number;
   isQuiet?: (d: Date) => boolean;
+  windows?: EmaWindow[];
 }): Date[] {
   const { frequency, days = 3, now = new Date(), rng = Math.random, isQuiet = () => false } = opts;
   const times: Date[] = [];
-  const windows = generateEmaWindows(frequency, EMA_WINDOWS);
+  const windows = generateEmaWindows(frequency, opts.windows ?? EMA_WINDOWS);
   for (let dayOffset = 0; dayOffset < days; dayOffset++) {
     // Build each day from a fresh local midnight (not now + 24h*ms) so DST never slides the slot by an hour.
     const day = new Date(now.getFullYear(), now.getMonth(), now.getDate() + dayOffset, 0, 0, 0, 0);

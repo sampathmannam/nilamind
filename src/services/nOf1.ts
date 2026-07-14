@@ -1,5 +1,6 @@
 import { secureLocal } from "./secureLocal";
 import { loadMoodHistory } from "./moodHistory";
+import { getProtocol } from "./protocols";
 
 const COMPLETIONS_KEY = "nilamind_protocol_completions";
 
@@ -9,11 +10,23 @@ export interface ProtocolCompletion {
   stepIndex: number;
 }
 
+export type No1Confidence = "low" | "medium" | "high";
+
+export interface No1RankingEntry {
+  protocolId: string;
+  avgDelta: number; // negative = distress went down after completion
+  completions: number;
+  confidence: No1Confidence;
+  /** Average delta over a 3-day window post-completion (more robust). */
+  avgDeltaWindow3d: number | null;
+}
+
 export interface No1Insight {
   protocolId: string;
   protocolName: string;
-  avgDelta: number; // negative = distress went down after completion
+  avgDelta: number;
   completions: number;
+  confidence: No1Confidence;
   description: string;
 }
 
@@ -42,7 +55,6 @@ function writeCompletions(completions: ProtocolCompletion[]): void {
 export function recordProtocolCompletion(protocolId: string, date: string, stepIndex = -1): void {
   const completions = readCompletions();
   completions.push({ protocolId, date, stepIndex });
-  // Cap at 200 entries to avoid unbounded growth
   if (completions.length > 200) completions.splice(0, completions.length - 200);
   writeCompletions(completions);
 }
@@ -59,19 +71,34 @@ export function backfillNof1(): void {
   } catch { /* ignore */ }
 }
 
+function resolveProtocolName(protocolId: string): string {
+  const p = getProtocol(protocolId);
+  if (p) return p.title;
+  const fallback: Record<string, string> = {
+    "behavioural-activation": "Values to Action",
+    "self-compassion": "Self-Compassion",
+    "dbt": "DBT Skills",
+    "act": "ACT",
+    "worry": "Worry Time",
+    "assertion": "Assertion Training",
+  };
+  return fallback[protocolId] || protocolId;
+}
+
+function confidenceTier(completions: number): No1Confidence {
+  if (completions >= 7) return "high";
+  if (completions >= 4) return "medium";
+  return "low";
+}
+
 /** Compute average next-day distress delta for each protocol with >=2 completions. */
-function computeNof1RankingInternal(): Array<{
-  protocolId: string;
-  avgDelta: number;
-  completions: number;
-}> {
+function computeNof1RankingInternal(): No1RankingEntry[] {
   const completions = readCompletions();
   if (completions.length < 2) return [];
 
   const moodHist = loadMoodHistory();
   if (moodHist.length < 2) return [];
 
-  // Map date -> intensity
   const intensityByDate = new Map<string, number>();
   for (const m of moodHist) {
     if (typeof m.intensity === "number" && m.date) {
@@ -79,7 +106,6 @@ function computeNof1RankingInternal(): Array<{
     }
   }
 
-  // Group completions by protocol
   const byProtocol = new Map<string, ProtocolCompletion[]>();
   for (const c of completions) {
     if (!c.date) continue;
@@ -88,44 +114,66 @@ function computeNof1RankingInternal(): Array<{
     byProtocol.set(c.protocolId, arr);
   }
 
-  const results: Array<{ protocolId: string; avgDelta: number; completions: number }> = [];
+  const results: No1RankingEntry[] = [];
 
   for (const [protocolId, comps] of byProtocol) {
-    let totalDelta = 0;
-    let count = 0;
+    let totalDelta1d = 0;
+    let count1d = 0;
+    let totalDelta3d = 0;
+    let count3d = 0;
 
     for (const c of comps) {
       const todayIntensity = intensityByDate.get(c.date);
+      if (todayIntensity == null) continue;
+
+      // 1-day window
       const nextDay = new Date(c.date);
       nextDay.setDate(nextDay.getDate() + 1);
       const nextDayStr = nextDay.toISOString().split("T")[0];
       const nextIntensity = intensityByDate.get(nextDayStr);
+      if (nextIntensity != null) {
+        totalDelta1d += nextIntensity - todayIntensity;
+        count1d++;
+      }
 
-      if (todayIntensity != null && nextIntensity != null) {
-        totalDelta += nextIntensity - todayIntensity; // negative = improvement
-        count++;
+      // 3-day window: average of day+1, day+2, day+3
+      let sum3d = 0;
+      let count3 = 0;
+      for (let i = 1; i <= 3; i++) {
+        const d = new Date(c.date);
+        d.setDate(d.getDate() + i);
+        const ds = d.toISOString().split("T")[0];
+        const val = intensityByDate.get(ds);
+        if (val != null) { sum3d += val - todayIntensity; count3++; }
+      }
+      if (count3 > 0) {
+        totalDelta3d += sum3d / count3;
+        count3d++;
       }
     }
 
-    if (count >= 2) {
-      results.push({ protocolId, avgDelta: totalDelta / count, completions: count });
+    if (count1d >= 2) {
+      const avgDelta = totalDelta1d / count1d;
+      const avgDeltaWindow3d = count3d >= 2 ? totalDelta3d / count3d : null;
+      results.push({
+        protocolId,
+        avgDelta,
+        completions: count1d,
+        confidence: confidenceTier(comps.length),
+        avgDeltaWindow3d,
+      });
     }
   }
 
-  // Sort by avgDelta ascending (most improvement first)
   return results.sort((a, b) => a.avgDelta - b.avgDelta);
 }
 
-export { computeNof1RankingInternal as computeNof1Ranking };
+export const computeNof1Ranking = computeNof1RankingInternal;
 
 /** Return the protocol with strongest evidence of reducing distress, or null. */
 export function bestProtocolForUser(): string | null {
-  const ranking = computeNof1Ranking();
+  const ranking = computeNof1RankingInternal();
   return (ranking.length && ranking[0].avgDelta < 0) ? ranking[0].protocolId : null;
-}
-
-function computeNof1Ranking(): Array<{ protocolId: string; avgDelta: number; completions: number }> {
-  return computeNof1RankingInternal();
 }
 
 /** User-facing insights for InsightsScreen — top 3 with gentle framing. */
@@ -133,29 +181,22 @@ export function getNo1Insights(): No1Insight[] {
   const ranking = computeNof1Ranking();
   if (!ranking.length) return [];
 
-  const protocolNames: Record<string, string> = {
-    "behavioural-activation": "Values to Action",
-    "self-compassion": "Self-Compassion",
-    "dbt": "DBT Skills",
-    "act": "ACT",
-    "worry": "Worry Time",
-    "assertion": "Assertion Training",
-  };
-
   return ranking.slice(0, 3).map((r, idx) => {
-    const name = protocolNames[r.protocolId] || r.protocolId;
+    const name = resolveProtocolName(r.protocolId);
     const direction = r.avgDelta < 0 ? "lower" : "higher";
     const magnitude = Math.abs(r.avgDelta).toFixed(1);
+    const confidenceLabel = r.confidence === "high" ? "a reliable pattern" : r.confidence === "medium" ? "a tentative pattern" : "a weak signal (few data points)";
     const templates = [
-      `When you complete ${name}, your mood tends to be ${magnitude} points ${direction} the next day.`,
-      `A pattern we've noticed: after ${name}, your distress often shifts ${direction} by about ${magnitude} points.`,
-      `Your data suggests ${name} correlates with ${magnitude}-point ${direction} mood the following day.`,
+      `When you complete ${name}, your mood tends to be ${magnitude} points ${direction} the next day (${confidenceLabel}).`,
+      `A pattern we've noticed: after ${name}, your distress often shifts ${direction} by about ${magnitude} points (${confidenceLabel}).`,
+      `Your data suggests ${name} correlates with ${magnitude}-point ${direction} mood the following day (${confidenceLabel}).`,
     ];
     return {
       protocolId: r.protocolId,
       protocolName: name,
       avgDelta: r.avgDelta,
       completions: r.completions,
+      confidence: r.confidence,
       description: templates[idx % templates.length] +
         " This is a pattern from your data — it might not always hold, but it's worth being aware of.",
     };
@@ -173,12 +214,12 @@ export function getNo1DashboardCard(): No1DashboardCard | null {
 
   return {
     title: `What affects your mood most`,
-    insight: `After ${top.protocolName}, your mood is often ${magnitude} pts ${direction} the next day (${top.completions} sessions).`,
+    insight: `After ${top.protocolName}, your mood is often ${magnitude} pts ${direction} the next day (${top.completions} sessions, ${top.confidence} confidence).`,
     protocolId: top.protocolId,
   };
 }
 
-/** Context block for Nila — only includes top insight, gently framed. */
+/** Context block for Nila — includes top insight with confidence, gently framed. */
 export function no1ContextBlock(): string {
   const insights = getNo1Insights();
   if (!insights.length) return "";
@@ -189,7 +230,7 @@ export function no1ContextBlock(): string {
 
   return [
     "FOR THIS PERSON SPECIFICALLY (hold gently, may be out of date):",
-    `Their ${top.protocolName} sessions correlate with ${magnitude}-point ${direction} mood the next day (${top.completions} sessions).`,
+    `Their ${top.protocolName} sessions correlate with ${magnitude}-point ${direction} mood the next day (${top.completions} sessions, ${top.confidence} confidence).`,
     "If they mention this protocol, you can gently reflect: \"You've noticed that tends to help.\" Never present as fact.",
   ].join(" ");
 }

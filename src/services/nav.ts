@@ -34,7 +34,10 @@ export type AuxView =
   | "episode"
   | "diary"
   | "social_rhythm"
-  | "ema_checkin";
+  | "ema_checkin"
+  | "wellbeing"
+  | "episode_marker"
+  | "caregiver_settings";
 
 export const TAB_TARGETS: readonly TabView[] = [
   "diary", "plan", "nila", "today", "you",
@@ -46,9 +49,12 @@ export const KNOWN_AUX_VIEWS: readonly AuxView[] = [
    "learn", "crisis_rehearsal", "peer_support", "medication", "problem_solving", "values_work", "exposure", "relapse_plan", "caregiver", "episode",
    "diary",
      "social_rhythm",
-     "armed_checkin",
-     "ema_checkin",
-   ];
+      "armed_checkin",
+      "ema_checkin",
+      "wellbeing",
+      "episode_marker",
+  "caregiver_settings",
+    ];
 
 export type NavResolution =
   | { kind: "crisis" }

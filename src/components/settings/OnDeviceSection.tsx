@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { t } from "../../services/i18n";
 import { Cpu } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
 import { localLlmId } from "../../services/localLlm";
@@ -26,7 +27,7 @@ export default function OnDeviceSection() {
     <div className="glass p-5 rounded-2xl space-y-4 shadow-lg" id="settings-ondevice">
       <div>
         <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
-          <Cpu className="w-4 h-4 text-violet-400" /> Nila Runs On Your Device
+          <Cpu className="w-4 h-4 text-violet-400" /> {t("sec_on_device")}
         </h2>
         <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
           {isNative ? (

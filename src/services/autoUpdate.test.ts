@@ -27,7 +27,7 @@ vi.mock("@capacitor/app-launcher", () => ({
 import { App } from "@capacitor/app";
 import { Filesystem } from "@capacitor/filesystem";
 import { AppLauncher } from "@capacitor/app-launcher";
-import { checkForGitHubUpdate } from "./autoUpdate";
+import { checkForGitHubUpdate, setAutoUpdateEnabled } from "./autoUpdate";
 
 let originalFetch: any;
 
@@ -39,8 +39,10 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  // Restore the original fetch implementation.
+  // Restore the original fetch implementation and the default privacy posture.
   (global as any).fetch = originalFetch;
+  // Auto-update is OFF by default (no egress unless explicitly opted in).
+  setAutoUpdateEnabled(false);
 });
 
 /** Helper to stub global.fetch based on URL. */
@@ -67,7 +69,20 @@ function stubFetch(isNewer: boolean) {
 }
 
 describe("checkForGitHubUpdate – auto‑update flow", () => {
-  it("downloads and launches when a newer version is available", async () => {
+  it("performs NO network calls when auto-update is disabled (privacy default)", async () => {
+    vi.mocked(App.getInfo).mockResolvedValue({ version: "1.9.1" } as any);
+    stubFetch(true); // a newer version exists, but the flag is off
+
+    await checkForGitHubUpdate();
+
+    // Disabled by default -> no GitHub API call, no APK download, no install.
+    expect((global as any).fetch).not.toHaveBeenCalled();
+    expect(Filesystem.writeFile).not.toHaveBeenCalled();
+    expect(AppLauncher.launchApp).not.toHaveBeenCalled();
+  });
+
+  it("downloads and launches when a newer version is available AND opted in", async () => {
+    setAutoUpdateEnabled(true); // explicitly opt in for this test
     // Simulate an installed version older than the latest release.
     vi.mocked(App.getInfo).mockResolvedValue({ version: "1.9.1" } as any);
     stubFetch(true);
@@ -90,7 +105,8 @@ describe("checkForGitHubUpdate – auto‑update flow", () => {
     expect(launchArgs.mimeType).toBe("application/vnd.android.package-archive");
   });
 
-  it("does nothing when the installed version is up‑to‑date", async () => {
+  it("does nothing when the installed version is up‑to‑date (opted in)", async () => {
+    setAutoUpdateEnabled(true);
     vi.mocked(App.getInfo).mockResolvedValue({ version: "1.9.2" } as any);
     stubFetch(false);
 

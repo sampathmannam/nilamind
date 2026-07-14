@@ -4,6 +4,7 @@ export interface CheckInEntry {
   timestamp: string;
   emotion: string;
   intensity: number; // 1-10
+  energy?: number | null; // 1-4 (Very low / Low / Moderate / High) — optional for backward compat
   context: string;
   sleepHours?: number; // External factor: 0-24
   socialInteraction?: number; // External factor: 1-10 (1: isolated, 10: highly connected)

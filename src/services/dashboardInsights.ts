@@ -187,11 +187,52 @@ export function moodTrend(mood: MoodPoint[], range: "7d" | "30d"): TrendPoint[] 
   }));
 }
 
+export interface WeeklyBar {
+  day: string; // "Monday" … "Sunday"
+  avg: number; // average intensity
+  count: number;
+}
+
+/** Per-day-of-week mood averages from check-ins. Used by the weekly rhythm bar chart. */
+export function weeklyRhythmBars(checkins: CheckInEntry[]): WeeklyBar[] {
+  const dayScores: Record<string, { total: number; count: number }> = {};
+  for (const c of checkins) {
+    try {
+      const day = new Date(c.date + "T00:00:00").toLocaleDateString("en-US", { weekday: "long" });
+      (dayScores[day] ||= { total: 0, count: 0 });
+      dayScores[day].total += c.intensity;
+      dayScores[day].count += 1;
+    } catch { /* skip unparseable */ }
+  }
+  const order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  return order
+    .map((day) => {
+      const s = dayScores[day];
+      return s ? { day, avg: Math.round((s.total / s.count) * 10) / 10, count: s.count } : { day, avg: 0, count: 0 };
+    })
+    .filter((b) => b.count > 0);
+}
+
 /** Context-tab series: sleep hours + felt-connection, 0-fallback for missing days. */
 export function contextTrend(mood: MoodPoint[], range: "7d" | "30d"): ContextPoint[] {
   return sortedTail(mood, range).map((m) => ({
     date: m.date.slice(5),
     sleepHours: m.sleepHours ?? 0,
     social: m.social ?? 0,
+  }));
+}
+
+export interface SleepMoodPoint {
+  date: string;
+  sleepHours: number;
+  intensity: number | null;
+}
+
+/** Sleep-Mood tab series: sleep hours + mood intensity per day. Null days left as null. */
+export function sleepMoodTrend(mood: MoodPoint[], range: "7d" | "30d"): SleepMoodPoint[] {
+  return sortedTail(mood, range).map((m) => ({
+    date: m.date.slice(5),
+    sleepHours: m.sleepHours ?? 0,
+    intensity: m.intensity ?? null,
   }));
 }

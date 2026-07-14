@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { t } from "../../services/i18n";
 import { Lock, ShieldCheck, AlertTriangle, Loader2 } from "lucide-react";
 import { hasPin, setPin as setStorePin, removePin as removeStorePin } from "../../services/secureStore";
 import { isPassthrough } from "../../services/secureLocal";
@@ -50,7 +51,7 @@ export default function PrivacyLockSection() {
     <div className="glass p-5 rounded-2xl space-y-4 shadow-lg" id="settings-privacy">
       <div>
         <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
-          <Lock className="w-4 h-4 text-blue-400" /> Privacy Lock
+          <Lock className="w-4 h-4 text-blue-400" /> {t("sec_privacy_lock")}
         </h2>
         <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
           {/* #16 (audit): don't claim "always encrypted" in passthrough mode, where entries are stored in

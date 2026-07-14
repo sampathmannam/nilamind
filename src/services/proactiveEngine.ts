@@ -6,10 +6,32 @@ import { selfReportSleepSignal } from "./sleepInsight";
 import { hasCheckinToday, getSkipFlag } from "./checkin";
 import { secureLocal } from "./secureLocal";
 import { DAY_MS } from "./storageUtils";
+import { currentCircadianFeedback } from "./circadianFeedback";
 import type { NilaCard } from "./nilaOrchestration";
 import { getUserState } from "./modeEngine";
 import { isSafetySuppressed } from "./notificationSuppress";
 import { parseSafetyPlan } from "./safetyPlan";
+
+/** P8.3 — persist a per-day streak of low fused circadian/social-rhythm scores so we only nudge after a
+ *  sustained dip (≥3 consecutive days below 60), not a single off night. Counted at most once per calendar
+ *  day so repeated app opens don't inflate the streak. Returns the current streak length. */
+const RHYTHM_STREAK_KEY = "nilamind_rhythm_low_streak";
+
+function rhythmLowStreak(): number {
+  const today = new Date().toISOString().split("T")[0];
+  try {
+    const raw = secureLocal.getItem(RHYTHM_STREAK_KEY);
+    const prev = raw ? JSON.parse(raw) : null;
+    if (prev && prev.date === today) return prev.streak as number;
+    const feedback = currentCircadianFeedback();
+    const lowToday = !!feedback && feedback.combinedScore < 60;
+    const streak = lowToday ? (prev ? (prev.streak as number) + 1 : 1) : 0;
+    secureLocal.setItem(RHYTHM_STREAK_KEY, JSON.stringify({ date: today, streak }));
+    return streak;
+  } catch {
+    return 0;
+  }
+}
 
 const DISMISS_PREFIX = "nilamind_proactive_dismiss_";
 const COOLDOWN_MS = 24 * DAY_MS; // 24 hours between same-type offers
@@ -235,6 +257,28 @@ export function computeProactiveMoment(): ProactiveMoment | null {
         cooldownMs: 7 * DAY_MS,
         dismissKey: key,
         reason: "Weekly summary available",
+      });
+    }
+  }
+
+  // 8. Rhythm disruption — fused circadian + social-rhythm score below 60 for 3+ consecutive days.
+  // Gently offers the wind-down protocol to help re-anchor routine (never alarms; wellness language).
+  const rhythmStreak = rhythmLowStreak();
+  if (rhythmStreak >= 3) {
+    const key = "rhythm_drop";
+    if (!isProactiveDismissed(key, 3 * DAY_MS)) {
+      moments.push({
+        card: {
+          kind: "protocol",
+          protocolId: "sleep-wind-down",
+          label: "Your routine's been more varied lately. Want a gentle wind-down plan to steady it?",
+          inline: true,
+        },
+        trigger: "rhythm_drop",
+        priority: 5,
+        cooldownMs: 3 * DAY_MS,
+        dismissKey: key,
+        reason: `Rhythm regularity below 60 for ${rhythmStreak} days`,
       });
     }
   }

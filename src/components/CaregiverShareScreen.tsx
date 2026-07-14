@@ -1,13 +1,22 @@
 import React, { useMemo, useState } from "react";
 import { Users, Copy, Share2, HeartHandshake } from "lucide-react";
 import { caregiverSummaryText, buildCaregiverSnapshot } from "../services/caregiverShare";
-import { getRegionCode } from "../services/crisisResources";
+import { getCaregiverPreferences } from "../services/caregiverPreferences";
+import { listCaregiverContacts } from "../services/caregiverContacts";
+import { t, useLanguage } from "../services/i18n";
 
-export default function CaregiverShareScreen() {
+interface Props {
+  selectedContactId?: string;
+}
+
+export default function CaregiverShareScreen({ selectedContactId }: Props) {
+  useLanguage();
   const [copied, setCopied] = useState(false);
-  const snapshot = useMemo(() => buildCaregiverSnapshot(), []);
-  const text = useMemo(() => caregiverSummaryText(), []);
-  const isIndia = getRegionCode() === "IN";
+  const prefs = selectedContactId ? getCaregiverPreferences(selectedContactId) : undefined;
+  const contact = selectedContactId ? listCaregiverContacts().find((c) => c.id === selectedContactId) : undefined;
+
+  const snapshot = useMemo(() => buildCaregiverSnapshot(prefs), [selectedContactId]);
+  const text = useMemo(() => caregiverSummaryText(prefs), [selectedContactId]);
 
   const copy = async () => {
     try {
@@ -31,12 +40,11 @@ export default function CaregiverShareScreen() {
     <div className="space-y-5 max-w-md mx-auto" id="caregiver-share-screen">
       <header className="space-y-1">
         <h1 className="text-xl font-semibold text-slate-100 flex items-center gap-2">
-          <Users className="w-5 h-5 text-emerald-400" /> Share with a trusted person
+          <Users className="w-5 h-5 text-emerald-400" /> {t("shareTrustedTitle")}
+          {contact ? <span className="text-sm font-normal text-slate-400">— {contact.name}</span> : null}
         </h1>
         <p className="text-xs text-slate-400 leading-relaxed">
-          {isIndia && "Family and friends often help in the Indian context. "}
-          You're in control: Nila builds a plain-language snapshot from your own progress and you hand it to
-          someone you trust. Nothing is sent automatically.
+          {t("cg_consent_body")}
         </p>
       </header>
 

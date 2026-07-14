@@ -13,8 +13,12 @@ import { DAY_MS } from "./storageUtils";
 import { computeCompassionateStreak } from "./streaks";
 import type { Medication } from "./medicationAdherence";
 import { getEmaEnabled, getEmaFrequency } from "./emaPrefs";
-import { planEmaFireTimes, emaElevationSignal } from "./ema";
+import { planEmaFireTimes, emaElevationSignal, EMA_WINDOWS, type EmaWindow } from "./ema";
 import { isSafetySuppressed, markSafetySuppression } from "./notificationSuppress";
+import { isDndActive } from "./dnd";
+import { peekRemaining, commitClaim, skipActive, recordNonCrisisSent } from "./notificationBudget";
+import { isCategoryEnabled } from "./notificationCategories";
+import { optimalFireHourNow } from "./notificationEngagement";
 
 // Warm, low-pressure nudges (Phase 7). Never demanding, never guilt-laden — each is an invitation.
 export const WARM_NUDGES = [
@@ -81,6 +85,12 @@ const DAILY_REMINDER_ID = 1001;
 
 const pad = (n: number) => String(n).padStart(2, "0");
 const timeToday = (h: number, m: number): Date => { const d = new Date(); d.setHours(h, m, 0, 0); return d; };
+/** Midpoint hour of an EMA window, for P6.2: sorting windows by distance to the learned hour. */
+const windowMid = (w: EmaWindow): number => {
+  const [sh, sm] = w.start.split(":").map(Number);
+  const [eh, em] = w.end.split(":").map(Number);
+  return ((sh || 0) * 60 + (sm || 0) + (eh || 0) * 60 + (em || 0)) / 2 / 60;
+};
 /** Pick a nudge that varies by day and gently adapts to the person's current on-device signals (read here,
  *  never sent anywhere). Inflection is consulted only when the user has opted into inflection awareness. */
 function nudgeForToday(): string {
@@ -162,6 +172,7 @@ const REPLY_READY_ID = 1002;
  */
 export async function notifyReplyReady(): Promise<void> {
   try {
+    if (isDndActive()) return; // P6.7: never ping someone who asked for space (never called for crisis replies anyway)
     const granted = (await LocalNotifications.checkPermissions()).display === "granted";
     if (!granted) return; // never prompt here; silently skip if notifications aren't already enabled
     await LocalNotifications.schedule({
@@ -181,6 +192,7 @@ export async function notifyReplyReady(): Promise<void> {
 /** Convenience used by Phase 7 reminders — schedule only if outside the user's quiet hours. */
 export async function scheduleIfAllowed(when: Date, body: string, title = "NilaMind", extra?: Record<string, unknown>): Promise<ScheduleResult> {
   if (withinQuietHours(when)) return { ok: false, reason: "unavailable", at: when };
+  if (isDndActive()) return { ok: false, reason: "unavailable", at: when }; // P6.7: user "give me space"
   return scheduleReminderAt(when, body, title, extra);
 }
 
@@ -204,6 +216,13 @@ export async function syncDailyReminders(opts: { request?: boolean } = { request
   // P6.4: the warm daily nudge is the same class of "how are you?" ping as EMA — never fire it inside a
   // crisis/elevation suppression window (medication reminders are exempt: health-critical, not a nudge).
   if (isSafetySuppressed()) return { scheduled: false, reason: "unavailable" };
+  // P6.5: category toggle — the daily nudge is the "insight nudge" category.
+  if (!isCategoryEnabled("insight")) return { scheduled: false, reason: "disabled" };
+  // P6.7: the user asked for space — the daily nudge is exactly the kind of ping DND suppresses.
+  if (isDndActive()) return { scheduled: false, reason: "unavailable" };
+  // P6.3: frequency cap — the daily nudge is 1 of the MAX_NON_CRISIS_PER_DAY budget; hold if the cap is hit
+  // or a progressive-cooldown window is active (crisis/medication paths are exempt and untouched above).
+  if (skipActive() || peekRemaining() < 1) return { scheduled: false, reason: "unavailable" };
 
   const prefs = getReminderPrefs();
   if (!prefs.enabled) return { scheduled: false, reason: "disabled" };
@@ -219,7 +238,15 @@ export async function syncDailyReminders(opts: { request?: boolean } = { request
   if (!granted) return { scheduled: false, reason: "denied" };
 
   // Choose a fire time inside the window; if it lands in quiet hours, defer to quiet-hours end.
+  // P6.2: once we have a week of engagement signal, bias the fire hour toward when the person actually
+  // responds (clamped to their chosen window so we never nudge outside their stated bounds).
   let [h, m] = prefs.windowStart.split(":").map(Number);
+  const learned = optimalFireHourNow();
+  if (learned !== null) {
+    const [ws, we] = prefs.windowStart.split(":").map(Number);
+    const inWindow = learned >= (ws || 0) && learned <= (we || 23);
+    if (inWindow && !withinQuietHours(timeToday(learned, 0))) h = learned;
+  }
   if (withinQuietHours(timeToday(h || 0, m || 0))) {
     [h, m] = prefs.quietEnd.split(":").map(Number);
   }
@@ -236,6 +263,7 @@ export async function syncDailyReminders(opts: { request?: boolean } = { request
         smallIcon: "ic_stat_icon_config_sample",
       }],
     });
+    commitClaim(1); // P6.3: count the daily nudge against the per-day budget
     return { scheduled: true, at: `${pad(h)}:${pad(m)}` };
   } catch (e) {
     console.error("[notifications] syncDailyReminders schedule failed:", e);
@@ -246,6 +274,56 @@ export async function syncDailyReminders(opts: { request?: boolean } = { request
 /** Turn reminders off and clear the scheduled nudge. */
 export async function clearDailyReminders(): Promise<void> {
   try { await LocalNotifications.cancel({ notifications: [{ id: DAILY_REMINDER_ID }] }); } catch (e) { console.error("[notifications] clearDailyReminders failed:", e); }
+}
+
+// P6.6 — weekly digest: a Sunday "week in review" notification, independent of the daily nudge. Distinct id
+// space so it never collides with the daily reminder or EMA pings.
+const WEEKLY_DIGEST_ID = 1002;
+
+export async function syncWeeklyDigest(opts: { request?: boolean } = { request: false }): Promise<SyncResult> {
+  try { await LocalNotifications.cancel({ notifications: [{ id: WEEKLY_DIGEST_ID }] }); } catch (e) { console.error("[notifications] syncWeeklyDigest cancel failed:", e); }
+  // Crisis/elevation + DND + category + frequency-cap gates mirror the daily nudge — the digest is a nudge.
+  if (isSafetySuppressed()) return { scheduled: false, reason: "unavailable" };
+  if (!isCategoryEnabled("insight")) return { scheduled: false, reason: "disabled" };
+  if (isDndActive()) return { scheduled: false, reason: "unavailable" };
+  if (skipActive() || peekRemaining() < 1) return { scheduled: false, reason: "unavailable" };
+  const prefs = getReminderPrefs();
+  if (!prefs.weeklyDigest) return { scheduled: false, reason: "disabled" };
+
+  let granted = false;
+  if (opts.request === false) {
+    try { granted = (await LocalNotifications.checkPermissions()).display === "granted"; } catch (e) { console.error("[notifications] checkPermissions failed:", e); granted = false; }
+  } else {
+    granted = await ensureNotificationPermission();
+  }
+  if (!granted) return { scheduled: false, reason: "denied" };
+
+  let [h, m] = prefs.windowStart.split(":").map(Number);
+  if (withinQuietHours(timeToday(h || 0, m || 0))) [h, m] = prefs.quietEnd.split(":").map(Number);
+  h = Math.min(23, Math.max(0, h || 0));
+  m = Math.min(59, Math.max(0, m || 0));
+
+  try {
+    await LocalNotifications.schedule({
+      notifications: [{
+        id: WEEKLY_DIGEST_ID,
+        title: "NilaMind",
+        body: "Your week in review is ready — tap to see how your mood and rhythm went.",
+        schedule: { on: { weekday: 1, hour: h, minute: m }, allowWhileIdle: true }, // Sundays
+        smallIcon: "ic_stat_icon_config_sample",
+      }],
+    });
+    commitClaim(1); // counts against the per-day non-crisis budget
+    return { scheduled: true, at: `${pad(h)}:${pad(m)}` };
+  } catch (e) {
+    console.error("[notifications] syncWeeklyDigest schedule failed:", e);
+    return { scheduled: false, reason: "unavailable" };
+  }
+}
+
+/** Turn the weekly digest off and clear its scheduled notification. */
+export async function clearWeeklyDigest(): Promise<void> {
+  try { await LocalNotifications.cancel({ notifications: [{ id: WEEKLY_DIGEST_ID }] }); } catch (e) { console.error("[notifications] clearWeeklyDigest failed:", e); }
 }
 
 // Medication reminders use a distinct id space so they don't collide with the daily nudge.
@@ -337,7 +415,10 @@ export async function syncEmaCheckins(opts: { request?: boolean } = { request: t
   await cancelEmaRange(); // clear before any decision so a bail leaves nothing scheduled
 
   if (!getEmaEnabled()) return { scheduled: false, reason: "disabled" };
+  if (!isCategoryEnabled("checkin")) return { scheduled: false, reason: "disabled" }; // P6.5: category toggle
   if (isSafetySuppressed() || emaElevationSignal() !== "none") return { scheduled: false, reason: "unavailable" };
+  if (isDndActive()) return { scheduled: false, reason: "unavailable" }; // P6.7: user "give me space"
+  if (skipActive()) return { scheduled: false, reason: "unavailable" }; // P6.3: progressive-cooldown hold
 
   let granted = false;
   if (opts.request === false) {
@@ -347,8 +428,18 @@ export async function syncEmaCheckins(opts: { request?: boolean } = { request: t
   }
   if (!granted) return { scheduled: false, reason: "denied" };
 
-  const times = planEmaFireTimes({ frequency: getEmaFrequency(), days: EMA_HORIZON_DAYS, isQuiet: withinQuietHours });
+  // P6.2: bias EMA windows toward the learned responsive hour (windows nearest it get selected first).
+  const learned = optimalFireHourNow();
+  const emaWindows = learned !== null
+    ? [...EMA_WINDOWS].sort((a, b) => Math.abs(windowMid(a) - learned) - Math.abs(windowMid(b) - learned))
+    : EMA_WINDOWS;
+  const times = planEmaFireTimes({ frequency: getEmaFrequency(), days: EMA_HORIZON_DAYS, isQuiet: withinQuietHours, windows: emaWindows });
   if (times.length === 0) return { scheduled: false, reason: "unavailable" };
+
+  // P6.3: only the slots firing TODAY draw from the per-day budget; the cap is shared with the daily nudge.
+  const startOfToday = new Date(); startOfToday.setHours(0, 0, 0, 0);
+  const todayCount = times.filter((t) => t.getTime() >= startOfToday.getTime()).length;
+  if (peekRemaining() < todayCount) return { scheduled: false, reason: "unavailable" }; // cap reached for today
 
   try {
     await LocalNotifications.schedule({
@@ -361,6 +452,7 @@ export async function syncEmaCheckins(opts: { request?: boolean } = { request: t
         extra: { view: "ema_checkin" }, // content-free routing tag for the tap listener
       })),
     });
+    commitClaim(todayCount); // P6.3: count today's EMA nudges against the per-day budget
     return { scheduled: true, at: times[0].toISOString() };
   } catch (e) {
     console.error("[notifications] syncEmaCheckins schedule failed:", e);

@@ -86,7 +86,100 @@ async overnight reflection (§9-gated) · weekly synthesis · emotion-granularit
 | 15 | Anti-sycophancy measurement & hardening | 🟡 | ✅ Done |
 | 16 | N-of-1 personalization surface | 🟢 | ✅ Done |
 
-**Build queue: CLEARED.** No further phases defined.
+**Build queue: CLEARED** for the original 7 + 8–16. One new phase added 2026-07-13 (see below).
+
+---
+
+## Phase 17 — Longitudinal Wellbeing Tracking 🟢 (added 2026-07-13)
+
+**Why:** The validated **WHO-5 Well-Being Index** already exists (`assessments.ts` → `AssessmentScreen`,
+with trend + reliable-change + clinician-PDF wiring). But it is ad-hoc: there is **no cadence**, **no
+dedicated long-view surface**, and **no Dashboard presence**. Bipolar is chronic — users + clinicians
+benefit from the *long view*, not just daily swings. SmartBipolar (2026) found passive logging alone
+does nothing; a *brief, structured, periodic* measure is the validated alternative (WHO-5 is the
+field-standard wellbeing scale). We reuse the validated instrument — we never invent clinical items.
+
+**Research basis:** WHO-5 (Topp et al., 2015) is the most-validated brief wellbeing index; a fortnightly
+cadence matches the instrument's 2-week recall window; measurement-based care feedback improves outcomes
+(Lambert et al., 2003, d≈0.24, up to 0.70 when deterioration is flagged early).
+
+### What to build
+| # | Item | Tag |
+|---|------|-----|
+| P17.1 | `wellbeingTrack.ts` — cadence (14-day) + longitudinal summary over WHO-5 history (reuses `assessments` + `reliableChange`) | 🟢 |
+| P17.2 | `wellbeingTrack.test.ts` — TDD: due logic, cadence countdown, trajectory, summary | 🟢 |
+| P17.3 | `WellbeingScreen.tsx` (You hub) — dedicated "Wellbeing over time" long-view + take button + cadence | 🟢 |
+| P17.4 | `WellbeingTrendCard.tsx` — Dashboard card: latest score + trend + sparkline + next-due | 🟢 |
+| P17.5 | Today due-card when `isWellbeingDue` (gentle, links to Screenings) | 🟢 |
+| P17.6 | Feed a one-line wellbeing summary into `nilaContext` (🟡 — touches flagged file, review) | 🟡 |
+
+**Wire to:** `youRows` (You hub) + `nav.ts`/`App.tsx` auxView `wellbeing`, `DashboardScreen`, `TodayScreen`, `nilaContext.ts`.
+**Invariants:** on-device only; wellness never therapy ("pattern", not "diagnosis"); reuses validated WHO-5, no new clinical items.
+
+**Definition of done:** TDD · `npm run guard` green · wired to a user surface · nilaContext diff flagged.
+
+---
+
+## Phase 18 — Episode-phase Marker 🟢 (built & wired 2026-07-13)
+
+**Why:** NilaMind logs per-episode *distress* moments (`EpisodeRecord`: trigger, skills, intensity) but has
+**no longitudinal bipolar-phase tracker** — the thing bipolar users most want to see: "I ran elevated
+mid-March, then dipped in April." This is distinct from the distress log and from daily check-ins
+(intensity is momentary; a phase is a stretch). It gives the user (and their clinician, via the PDF)
+a readable course over time. Wellness framing throughout — a *pattern*, never a diagnosis.
+
+**Research basis:** Course-specifiers (Raphael et al., 2014; Azorin et al., 2016) show mixed/rapid-cycling
+course is the norm in BD and tracking phase flags it early; IPSRT/FTFamily emphasise the patient
+owning their course narrative. Self-marked phase is the lowest-friction, highest-ownership form.
+
+### What to build
+| # | Item | Tag |
+|---|------|-----|
+| P18.1 | `episodeMarker.ts` — `EpisodeMarker {startDate,endDate,phase,note}` + add/read/currentPhase/summary | 🟢 |
+| P18.2 | `episodeMarker.test.ts` — TDD: add/read round-trip, currentPhase containment, invalid-range guard, summary | 🟢 |
+| P18.3 | `EpisodeMarkerScreen.tsx` (You hub) — add marker (phase chips + dates + note) + past list | 🟢 |
+| P18.4 | `EpisodeMarkerCard.tsx` — Dashboard card: current phase if active | 🟢 |
+| P18.5 | Feed a one-line current-phase summary into `nilaContext` (🟡 — flagged file) | 🟡 |
+| P18.6 | Feed phase history into `clinicianReport.ts` (device-local PDF) | 🟢 |
+
+**Wire to:** `youRows` + `nav.ts`/`App.tsx` auxView `episode_marker`, `DashboardScreen`, `nilaContext.ts`, `clinicianReport.ts`.
+**Invariants:** on-device only; wellness never therapy ("phase", not "diagnosis"); user-owned tags, no auto-label.
+
+**Built (2026-07-13):** `episodeMarker.ts` + tests (P18.1/2); `EpisodeMarkerScreen.tsx` + `EpisodeMarkerCard.tsx` (P18.3/4); `nilaContext.episodeMarkerContextBlock` feeds current phase (P18.5, 🟡 flagged file — review before merge); `clinicianReport.ts` renders a "Bipolar Phase Markers (self-logged)" section fed from `YourDataScreen.tsx` (P18.6); `sec_*`/`wellbeing_*`/`em_*` i18n + hi/ta/te; `youRows` row (Activity icon), `nav.ts` auxView `episode_marker`, `App.tsx` lazy route; `nilamind_episode_markers` added to `SENSITIVE_KEYS`. Guard green (2142 tests).
+
+---
+
+## Phase 19 — Family/Caregiver Mode 🟢 (built & wired 2026-07-13)
+
+**Why:** The existing `CaregiverShareScreen` generates a one-time snapshot but has no stored contacts,
+no per-category consent toggles (mood/phase/sleep/medication/wellbeing/checkins), no auto-alert
+thresholds, and no ongoing caregiver relationship. Indian-family context makes caregivers key
+stakeholders. This deepens the caregiver feature into a consent-gated, privacy-first *mode* —
+still on-device, still user-controlled, never auto-sent.
+
+**Research basis:** FTFamily/IPS-RT emphasis on family psychoeducation; Azorin et al. (2016)
+caregiver-burden RCTs show informed family reduces relapse. Indian mental-health literacy gap
+means a simple, translated snapshot reduces stigma and improves family support seeking
+(Shidhaye et al., 2016).
+
+### What to build
+| # | Item | Tag |
+|---|------|-----|
+| P19.1 | `caregiverContacts.ts` — `CaregiverContact` type + add/remove/list, stored encrypted in `nilamind_caregiver_contacts` | 🟢 |
+| P19.2 | `caregiverPreferences.ts` — per-contact share-category toggles (mood/phase/sleep/medication/wellbeing/checkins), auto-alert thresholds | 🟢 |
+| P19.3 | Enhanced `buildCaregiverSnapshot` in `caregiverShare.ts` — add phase/wellbeing/sleep/checkin-frequency blocks, gated by prefs | 🟢 |
+| P19.4 | `CaregiverSettingsScreen.tsx` (new auxView `caregiver_settings`) — contact list, category toggles, preview, auto-alert config | 🟢 |
+| P19.5 | Update `CaregiverShareScreen.tsx` — contact selector, category summary before share, consent confirmation | 🟢 |
+| P19.6 | `caregiverAlert.ts` — check auto-alert thresholds (e.g. 3+ high-distress days), generate alert-snapshot nudge for TodayScreen | 🟢 |
+| P19.7 | i18n `cg_*` keys (contacts, preferences, categories, alerts, consent) — en/hi/ta/te | 🟢 |
+| P19.8 | Nav/App/youRows/Dashboard/TodayScreen wiring — `caregiver_settings` auxView, caregiver nudge, dashboard card | 🟢 |
+| P19.9 | `nilaContext.ts` feeding — caregiver-context block ("They share wellness snapshots with X") — 🟡 flagged file | 🟡 |
+
+**Wire to:** nav, App, youRows, DashboardScreen, SettingsScreen, TodayScreen, nilaContext (🟡).
+**Invariants:** on-device only; consent-gated (nothing shared without explicit user action); revocable;
+no raw chat/thoughts/diary shared; wellness framing, never clinical.
+
+**Built (2026-07-13):** `caregiverContacts.ts` + tests (P19.1); `caregiverPreferences.ts` + tests (P19.2); enhanced `buildCaregiverSnapshot` with phase/wellbeing/sleep/checkins blocks gated by prefs, tests updated (P19.3); `CaregiverSettingsScreen.tsx` with contact CRUD + category toggles + auto-alert config + preview → share flow (P19.4); `CaregiverShareScreen.tsx` i18n + prefs + selectedContactId passthrough (P19.5); `caregiverAlert.ts` with consecutive-day threshold checks + tests (P19.6); 25 `cg_*` i18n keys in en/hi/ta/te (P19.7); `caregiver_settings` auxView in nav.ts/App.tsx (lazy + renderAuxView case + selectedContactId → share sheet), `youRows` row changed from "caregiver" → "caregiver_settings", `youRows.test.ts` updated (P19.8); `nilaContext.caregiverContextBlock` feeds trusted-person note (P19.9, 🟡 — review before merge). `nilamind_caregiver_contacts` + `nilamind_caregiver_prefs` added to SENSITIVE_KEYS (32 entries now). Guard green (2167 tests).
 
 ---
 

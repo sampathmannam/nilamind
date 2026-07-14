@@ -14,14 +14,27 @@ vi.mock("@capacitor/local-notifications", () => ({
 }));
 // notifications.ts imports ./reminders — stub it (unused by notifyReplyReady).
 // EMA + suppression + reminder deps — controllable via emaMocks (vi.hoisted so the mock factories can read it).
-const emaMocks = vi.hoisted(() => ({ enabled: true, frequency: 2, suppressed: false, elevation: "none" as string, times: [] as Date[], dailyEnabled: false, markSuppressCalls: 0 }));
+const emaMocks = vi.hoisted(() => ({ enabled: true, frequency: 2, suppressed: false, elevation: "none" as string, times: [] as Date[], dailyEnabled: false, markSuppressCalls: 0, dnd: false, skip: false, budget: 3, catCheckin: true, catInsight: true, weeklyDigest: true, learnedHour: null as number | null }));
 vi.mock("./reminders", () => ({
   withinQuietHours: () => false,
-  getReminderPrefs: () => ({ enabled: emaMocks.dailyEnabled, windowStart: "10:00", windowEnd: "20:00", quietStart: "22:00", quietEnd: "08:00" }),
+  getReminderPrefs: () => ({ enabled: emaMocks.dailyEnabled, windowStart: "10:00", windowEnd: "20:00", quietStart: "22:00", quietEnd: "08:00", weeklyDigest: emaMocks.weeklyDigest }),
 }));
 vi.mock("./emaPrefs", () => ({ getEmaEnabled: () => emaMocks.enabled, getEmaFrequency: () => emaMocks.frequency }));
-vi.mock("./ema", () => ({ planEmaFireTimes: () => emaMocks.times, emaElevationSignal: () => emaMocks.elevation }));
+vi.mock("./ema", () => ({ planEmaFireTimes: () => emaMocks.times, emaElevationSignal: () => emaMocks.elevation, EMA_WINDOWS: [{ start: "10:00", end: "12:00" }, { start: "14:00", end: "16:00" }, { start: "18:00", end: "20:00" }] }));
 vi.mock("./notificationSuppress", () => ({ isSafetySuppressed: () => emaMocks.suppressed, markSafetySuppression: () => { emaMocks.markSuppressCalls++; } }));
+vi.mock("./dnd", () => ({ isDndActive: () => emaMocks.dnd }));
+vi.mock("./notificationBudget", () => ({
+  peekRemaining: () => emaMocks.budget,
+  commitClaim: () => {},
+  skipActive: () => emaMocks.skip,
+  recordNonCrisisSent: () => {},
+}));
+vi.mock("./notificationCategories", () => ({
+  isCategoryEnabled: (id: string) => (id === "checkin" ? emaMocks.catCheckin : id === "insight" ? emaMocks.catInsight : true),
+}));
+vi.mock("./notificationEngagement", () => ({
+  optimalFireHourNow: () => emaMocks.learnedHour,
+}));
 
 import { notifyReplyReady } from "./notifications";
 
@@ -48,6 +61,14 @@ describe("notifyReplyReady — the backgrounded 'Nila replied' ping", () => {
     checkPermissions.mockRejectedValue(new Error("no plugin"));
     await expect(notifyReplyReady()).resolves.toBeUndefined();
     expect(schedule).not.toHaveBeenCalled();
+  });
+
+  it("does NOT ping when the user is in DND 'give me space' mode", async () => {
+    emaMocks.dnd = true;
+    checkPermissions.mockResolvedValue({ display: "granted" });
+    await notifyReplyReady();
+    expect(schedule).not.toHaveBeenCalled();
+    emaMocks.dnd = false;
   });
 });
 
@@ -146,6 +167,41 @@ describe("syncEmaCheckins — randomized EMA quick check-ins", () => {
     expect(schedule).not.toHaveBeenCalled();
   });
 
+  it("bails (schedules nothing) when the user is in DND 'give me space' mode (P6.7)", async () => {
+    emaMocks.dnd = true;
+    const { syncEmaCheckins } = await import("./notifications");
+    const res = await syncEmaCheckins({ request: false });
+    expect(res.scheduled).toBe(false);
+    expect(schedule).not.toHaveBeenCalled();
+    emaMocks.dnd = false;
+  });
+
+  it("bails (schedules nothing) when the per-day budget is exhausted (P6.3)", async () => {
+    const now = new Date();
+    const t1 = new Date(now); t1.setHours(11, 0, 0, 0);
+    const t2 = new Date(now); t2.setHours(20, 0, 0, 0);
+    emaMocks.times = [t1, t2]; // both fire today → draw from today's budget
+    emaMocks.budget = 0;
+    const { syncEmaCheckins } = await import("./notifications");
+    const res = await syncEmaCheckins({ request: false });
+    expect(res.scheduled).toBe(false);
+    expect(schedule).not.toHaveBeenCalled();
+    emaMocks.budget = 3;
+  });
+
+  it("bails (schedules nothing) when the 'check-in' category is toggled off (P6.5)", async () => {
+    const now = new Date();
+    const t1 = new Date(now); t1.setHours(11, 0, 0, 0);
+    const t2 = new Date(now); t2.setHours(20, 0, 0, 0);
+    emaMocks.times = [t1, t2];
+    emaMocks.catCheckin = false;
+    const { syncEmaCheckins } = await import("./notifications");
+    const res = await syncEmaCheckins({ request: false });
+    expect(res.scheduled).toBe(false);
+    expect(schedule).not.toHaveBeenCalled();
+    emaMocks.catCheckin = true;
+  });
+
   it("startup (request:false) never prompts — denied ⇒ schedules nothing", async () => {
     checkPermissions.mockResolvedValue({ display: "denied" });
     const { syncEmaCheckins } = await import("./notifications");
@@ -187,5 +243,131 @@ describe("crisis suppression of nudges (P6.4)", () => {
     expect(res).toEqual({ scheduled: false, reason: "unavailable" });
     expect(schedule).not.toHaveBeenCalled();
     expect(cancel).toHaveBeenCalled(); // still clears the prior schedule first
+  });
+
+  it("syncDailyReminders bails cancel-only when the user is in DND 'give me space' mode (P6.7)", async () => {
+    emaMocks.dnd = true;
+    const { syncDailyReminders } = await import("./notifications");
+    const res = await syncDailyReminders();
+    expect(res).toEqual({ scheduled: false, reason: "unavailable" });
+    expect(schedule).not.toHaveBeenCalled();
+    expect(cancel).toHaveBeenCalled();
+    emaMocks.dnd = false;
+  });
+
+  it("syncDailyReminders bails (reason 'unavailable') when the per-day budget is exhausted (P6.3)", async () => {
+    emaMocks.budget = 0;
+    const { syncDailyReminders } = await import("./notifications");
+    const res = await syncDailyReminders();
+    expect(res).toEqual({ scheduled: false, reason: "unavailable" });
+    expect(schedule).not.toHaveBeenCalled();
+    expect(cancel).toHaveBeenCalled();
+    emaMocks.budget = 3;
+  });
+
+  it("syncDailyReminders bails (reason 'disabled') when the 'insight' category is toggled off (P6.5)", async () => {
+    emaMocks.catInsight = false;
+    const { syncDailyReminders } = await import("./notifications");
+    const res = await syncDailyReminders();
+    expect(res).toEqual({ scheduled: false, reason: "disabled" });
+    expect(schedule).not.toHaveBeenCalled();
+    expect(cancel).toHaveBeenCalled();
+    emaMocks.catInsight = true;
+  });
+});
+
+describe("syncWeeklyDigest — Sunday weekly-review nudge (P6.6)", () => {
+  beforeEach(() => {
+    checkPermissions.mockReset();
+    schedule.mockReset();
+    cancel.mockReset();
+    emaMocks.suppressed = false;
+    emaMocks.dnd = false;
+    emaMocks.skip = false;
+    emaMocks.budget = 3;
+    emaMocks.catInsight = true;
+    emaMocks.weeklyDigest = true;
+    checkPermissions.mockResolvedValue({ display: "granted" });
+  });
+
+  it("schedules a Sunday weekly digest when enabled and permitted", async () => {
+    const { syncWeeklyDigest } = await import("./notifications");
+    const res = await syncWeeklyDigest();
+    expect(res.scheduled).toBe(true);
+    const call = schedule.mock.calls[0][0];
+    expect(call.notifications[0].id).toBe(1002);
+    expect(call.notifications[0].schedule.on.weekday).toBe(1); // Sunday
+    expect(call.notifications[0].body).toMatch(/week in review/i);
+  });
+
+  it("does not schedule when weeklyDigest pref is off", async () => {
+    emaMocks.weeklyDigest = false;
+    const { syncWeeklyDigest } = await import("./notifications");
+    const res = await syncWeeklyDigest();
+    expect(res).toEqual({ scheduled: false, reason: "disabled" });
+    expect(schedule).not.toHaveBeenCalled();
+  });
+
+  it("bails inside a crisis/elevation suppression window", async () => {
+    emaMocks.suppressed = true;
+    const { syncWeeklyDigest } = await import("./notifications");
+    const res = await syncWeeklyDigest();
+    expect(res).toEqual({ scheduled: false, reason: "unavailable" });
+  });
+
+  it("bails when the user is in DND 'give me space' mode", async () => {
+    emaMocks.dnd = true;
+    const { syncWeeklyDigest } = await import("./notifications");
+    const res = await syncWeeklyDigest();
+    expect(res).toEqual({ scheduled: false, reason: "unavailable" });
+  });
+
+  it("bails when the per-day budget is exhausted", async () => {
+    emaMocks.budget = 0;
+    const { syncWeeklyDigest } = await import("./notifications");
+    const res = await syncWeeklyDigest();
+    expect(res).toEqual({ scheduled: false, reason: "unavailable" });
+  });
+});
+
+describe("optimal timing learner (P6.2)", () => {
+  beforeEach(() => {
+    checkPermissions.mockReset();
+    schedule.mockReset();
+    cancel.mockReset();
+    emaMocks.dnd = false;
+    emaMocks.suppressed = false;
+    emaMocks.skip = false;
+    emaMocks.budget = 3;
+    emaMocks.catInsight = true;
+    emaMocks.learnedHour = null;
+    checkPermissions.mockResolvedValue({ display: "granted" });
+  });
+
+  it("uses the learned hour for the daily nudge once enough signal exists", async () => {
+    emaMocks.learnedHour = 15; // person engages at 3pm; window is 10:00–20:00
+    const { syncDailyReminders } = await import("./notifications");
+    const res = await syncDailyReminders({ request: false });
+    expect(res.scheduled).toBe(true);
+    const call = schedule.mock.calls[0][0];
+    expect(call.notifications[0].schedule.on.hour).toBe(15);
+  });
+
+  it("ignores the learned hour when it falls outside the user's window", async () => {
+    emaMocks.learnedHour = 6; // before the 10:00 window start
+    const { syncDailyReminders } = await import("./notifications");
+    const res = await syncDailyReminders({ request: false });
+    expect(res.scheduled).toBe(true);
+    const call = schedule.mock.calls[0][0];
+    expect(call.notifications[0].schedule.on.hour).toBe(10); // falls back to windowStart
+  });
+
+  it("does not shift the daily nudge before enough engagement signal", async () => {
+    emaMocks.learnedHour = null;
+    const { syncDailyReminders } = await import("./notifications");
+    const res = await syncDailyReminders({ request: false });
+    expect(res.scheduled).toBe(true);
+    const call = schedule.mock.calls[0][0];
+    expect(call.notifications[0].schedule.on.hour).toBe(10); // windowStart default
   });
 });

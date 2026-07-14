@@ -24,6 +24,7 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from "recharts";
+import { outcomeStatus, reliableChangeThreshold } from "../services/reliableChange";
 import {
   ClipboardCheck,
   ChevronRight,
@@ -34,6 +35,10 @@ import {
   Check,
   Activity,
   Volume2,
+  TrendingUp,
+  TrendingDown,
+  TrendingUpDown,
+  ShieldCheck,
 } from "lucide-react";
 import CrisisLines from "./CrisisLines";
 import { speak } from "../services/voice";
@@ -450,7 +455,7 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
   return null;
 }
 
-// ── Trend chart for one instrument ────────────────────────────────────────────
+// ── Trend chart + RCI outcome feedback for one instrument ───────────────────────
 function TrendBlock({ instrumentId, history }: { instrumentId: InstrumentId; history: AssessmentEntry[] }) {
   const inst = INSTRUMENTS[instrumentId];
   const data = useMemo(() => {
@@ -460,7 +465,14 @@ function TrendBlock({ instrumentId, history }: { instrumentId: InstrumentId; his
     }));
   }, [instrumentId, history]);
 
+  const status = useMemo(() => outcomeStatus(instrumentId, history), [instrumentId, history]);
+
   if (data.length < 2) return null;
+
+  const trendIcon = status.current?.trend === "reliably_improved" ? TrendingUp
+    : status.current?.trend === "reliably_deteriorated" ? TrendingDown
+    : TrendingUpDown;
+  const TrendIcon = trendIcon;
 
   return (
     <div className="glass rounded-2xl p-4 space-y-2">
@@ -486,7 +498,32 @@ function TrendBlock({ instrumentId, history }: { instrumentId: InstrumentId; his
           </LineChart>
         </ResponsiveContainer>
       </div>
-      <p className="text-[10px] text-slate-600">Dashed line = screening threshold ({inst.cutPoint.score}). {inst.higherIsBetter ? "Higher is better." : "Lower is calmer."}</p>
+
+      {/* RCI outcome feedback (Jacobson-Truax reliable change) */}
+      {status.current && (
+        <div className={`flex items-center gap-1.5 text-[11px] ${
+          status.current.trend === "reliably_improved" ? "text-emerald-400"
+          : status.current.trend === "reliably_deteriorated" ? "text-rose-400"
+          : "text-slate-400"
+        }`}>
+          <TrendIcon className="w-3.5 h-3.5" />
+          <span>
+            {status.current.trend === "reliably_improved"
+              ? `Reliable improvement (Δ = ${status.current.difference > 0 ? "+" : ""}${status.current.difference})`
+              : status.current.trend === "reliably_deteriorated"
+              ? `Reliable deterioration (Δ = ${status.current.difference > 0 ? "+" : ""}${status.current.difference})`
+              : `No reliable change (Δ = ${status.current.difference > 0 ? "+" : ""}${status.current.difference})`
+            }
+          </span>
+          {status.recovery === "recovered" && (
+            <span className="flex items-center gap-1 text-emerald-400 ml-auto text-[10px]">
+              <ShieldCheck className="w-3 h-3" /> Below threshold
+            </span>
+          )}
+        </div>
+      )}
+
+      <p className="text-[10px] text-slate-600">Dashed line = screening threshold ({inst.cutPoint.score}). {inst.higherIsBetter ? "Higher is better." : "Lower is calmer."} RCI {inst.cutPoint.score > 0 ? "≥±" + Math.round(reliableChangeThreshold(instrumentId) * 10) / 10 : ""}</p>
     </div>
   );
 }

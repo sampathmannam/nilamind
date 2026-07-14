@@ -8,6 +8,8 @@
 // All guidance is population-safe (manic-first, bipolar-aware).
 
 import { regularityFromStd } from "./circadian";
+import { loadMoodHistory } from "./moodHistory";
+import { computeRhythmRegularity } from "./socialRhythm";
 import type { SleepWindow } from "./socialRhythm";
 
 export interface CircadianFeedback {
@@ -220,4 +222,18 @@ export function computeSleepRegularityIndex(windows: SleepWindow[]): SleepRegula
   const sri = Math.round(-100 + (200 * matchSum) / (SRI_BINS_PER_DAY * pairs));
   const band = sriBand(sri);
   return { sri, nightsUsed: nightsInPairs.size, pairsUsed: pairs, band, guidance: sriGuidance(sri, band) };
+}
+
+export function currentCircadianFeedback(): CircadianFeedback | null {
+  try {
+    const moodHist = loadMoodHistory();
+    const sleeps = moodHist
+      .filter((m) => typeof m.sleepHours === "number" && m.sleepHours > 0)
+      .map((m) => m.sleepHours as number);
+    if (sleeps.length < 3) return null;
+    const rhythm = computeRhythmRegularity();
+    return computeCircadianFeedback({ sleeps, rhythmVariabilityMin: rhythm.overallVariabilityMin });
+  } catch {
+    return null;
+  }
 }

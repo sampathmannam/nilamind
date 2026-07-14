@@ -1,5 +1,16 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { buildToolGroups, type ToolRowDeps } from "./toolsRows";
+
+const store = new Map<string, string>();
+vi.mock("../services/storageUtils", () => ({
+  ls: () => ({
+    getItem: (k: string) => store.get(k) ?? null,
+    setItem: (k: string, v: string) => { store.set(k, v); },
+    removeItem: (k: string) => { store.delete(k); },
+  }),
+  DAY_MS: 86_400_000,
+}));
+
 
 const STUB: ToolRowDeps = { go: () => {}, onEpisode: () => {}, phoneEnabled: false };
 const rowIds = (phoneEnabled: boolean) =>

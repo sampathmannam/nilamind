@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { t } from "../../services/i18n";
 import { FlaskConical } from "lucide-react";
 import {
   getPilotState,
@@ -21,7 +22,7 @@ export default function PilotSection() {
     <div className="glass p-5 rounded-2xl space-y-4 shadow-lg">
       <div>
         <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
-          <FlaskConical className="w-4 h-4 text-emerald-400" /> Research pilot
+          <FlaskConical className="w-4 h-4 text-emerald-400" /> {t("sec_pilot")}
           <span className="text-slate-500 normal-case font-sans text-[11px]">(optional)</span>
         </h2>
         <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">

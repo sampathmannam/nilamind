@@ -2,6 +2,7 @@ import { secureLocal } from "./secureLocal";
 import { computeCompassionateStreak } from "./streaks";
 import { getActiveProgress } from "./protocolProgress";
 import { selfReportSleepSignal } from "./sleepInsight";
+import { napDisruptionSignal } from "./napTracking";
 import { ls } from "./storageUtils";
 
 export interface WeeklyFacts {
@@ -13,6 +14,7 @@ export interface WeeklyFacts {
   streak: number;
   activeProtocol: string | null;
   sleepFiring: boolean;
+  napNote: string | null;
   episodes: number;
   lastSynthesisDay: number | null;
 }
@@ -99,6 +101,7 @@ export function extractWeeklyFacts(): WeeklyFacts {
   const streak = computeCompassionateStreak()?.current ?? 0;
   const active = getActiveProgress();
   const sleep = selfReportSleepSignal();
+  const nap = napDisruptionSignal();
 
   return {
     checkinCount: recent.length,
@@ -109,6 +112,7 @@ export function extractWeeklyFacts(): WeeklyFacts {
     streak,
     activeProtocol: active?.protocol.title ?? null,
     sleepFiring: sleep?.firing ?? false,
+    napNote: nap.firing ? nap.note : null,
     episodes: 0, // counted from nilamind_episodes in real version
     lastSynthesisDay: lastSynthesisTimestamp(),
   };
@@ -146,6 +150,9 @@ export function weeklySynthesisPrompt(facts: WeeklyFacts): string {
   }
   if (facts.sleepFiring) {
     parts.push(`Their sleep has been short — hold that gently, don't alarm.`);
+  }
+  if (facts.napNote) {
+    parts.push(`Nap pattern: ${facts.napNote}`);
   }
   return parts.join(" ");
 }

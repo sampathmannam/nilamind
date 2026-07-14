@@ -10,7 +10,7 @@ vi.mock("./storageUtils", () => ({
   DAY_MS: 86_400_000,
 }));
 
-import { t, getLanguage, setLanguage, LANGUAGES, currentLanguage } from "./i18n";
+import { t, getLanguage, setLanguage, LANGUAGES, currentLanguage, DICT } from "./i18n";
 
 describe("i18n core", () => {
   beforeEach(() => { store.clear(); });
@@ -41,5 +41,24 @@ describe("i18n core", () => {
 
   it("exposes the expected language options", () => {
     expect(LANGUAGES.map((l) => l.code)).toEqual(["en", "hi", "ta", "te"]);
+  });
+
+  it("has a complete translation for every key in English, Hindi, Tamil and Telugu", () => {
+    const keys = Object.keys(DICT.en) as Array<keyof typeof DICT["en"]>;
+    expect(keys.length).toBeGreaterThan(0);
+    for (const lang of ["en", "hi", "ta", "te"] as const) {
+      for (const key of keys) {
+        const value = DICT[lang][key];
+        expect(typeof value === "string" && value.trim().length > 0, `missing/empty ${lang}.${String(key)}`).toBe(true);
+      }
+    }
+  });
+
+  it("keeps English as the fallback source of truth for all keys", () => {
+    const keys = Object.keys(DICT.en);
+    for (const key of keys) {
+      // every non-English translation must be present (covered above); English must equal t() default.
+      expect(t(key as any, "en")).toBe(DICT.en[key as keyof typeof DICT.en]);
+    }
   });
 });

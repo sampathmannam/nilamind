@@ -21,7 +21,10 @@ import { loadMoodHistory } from "./moodHistory";
 import type { SleepSignal } from "./healthConnect";
 import { topFireableSignal, type InflectionSignal } from "./nilaInflection";
 import { getInflectionEnabled } from "./inflectionPrefs";
-import { INSTRUMENTS } from "./assessments";
+import { INSTRUMENTS, type AssessmentEntry } from "./assessments";
+import { wellbeingLongitudinal } from "./wellbeingTrack";
+import { episodeMarkerSummary } from "./episodeMarker";
+import { listCaregiverContacts } from "./caregiverContacts";
 import { DAY_MS } from "./storageUtils";
 import { parseSafetyPlan } from "./safetyPlan";
 import { safetyPlanFollowUpContextBlock } from "./safetyPlanFollowUp";
@@ -39,6 +42,9 @@ import { runStateEngine } from "./stateEngine";
 // reached Nila in production. Static ESM imports (no import cycle: neither module imports nilaContext).
 import { computeInsight, loadActivities } from "./behaviouralActivation";
 import { computeProactiveMoment, proactiveContextBlock } from "./proactiveEngine";
+import { loadAlliance } from "./allianceSignal";
+import { getDisengagementContextBlock } from "./disengagementPredictor";
+import { getAdherenceSummary } from "./protocolAdherence";
 
 function readArray(key: string): any[] {
   try {
@@ -158,6 +164,41 @@ export function antiSycophancyContextBlock(): string {
 }
 
 /**
+ * Longitudinal wellbeing (Phase 17). Surfaces the validated WHO-5 trend to Nila as a gentle,
+ * wellness-framed pattern over time — never a diagnosis. (🟡 touches a flagged file; review before merge.)
+ */
+export function wellbeingContextBlock(history?: AssessmentEntry[]): string {
+  const wb = wellbeingLongitudinal(history);
+  if (!wb.taken) return "";
+  const trend =
+    wb.trajectory === "reliably_improved"
+      ? "been improving"
+      : wb.trajectory === "reliably_deteriorated"
+        ? "been drifting downward"
+        : "been steady";
+  return `- Their wellbeing (WHO-5) over time has ${trend}${wb.isDue ? "; their fortnightly check is due" : ""}.`;
+}
+
+/**
+ * Episode-phase markers (Phase 18). Surfaces the user's own bipolar-phase tag to Nila as a gentle,
+ * pattern-level note — never a diagnosis. (🟡 touches a flagged file; review before merge.)
+ */
+export function episodeMarkerContextBlock(): string {
+  return episodeMarkerSummary();
+}
+
+/**
+ * Caregiver contacts (Phase 19). Notes whether the user shares wellness snapshots with trusted
+ * people — a gentle, relational signal, never a clinical note. (🟡 flagged file; review before merge.)
+ */
+export function caregiverContextBlock(): string {
+  const contacts = listCaregiverContacts();
+  if (contacts.length === 0) return "";
+  const names = contacts.map((c) => c.name).join(", ");
+  return `- They share wellness snapshots with ${contacts.length === 1 ? "one trusted person" : contacts.length + " trusted people"} (${names}).`;
+}
+
+/**
  * Build a compact, warm briefing of what Nila knows about this person, from their on-device history.
  * Returns "" when there's essentially nothing yet — Nila is told (in its prompt) to simply be present
  * and not pretend to know someone it doesn't.
@@ -198,6 +239,58 @@ export function buildPersonalContext(): string {
       const distinct = [...new Set(granular)].slice(0, 4);
       lines.push(`- When they named their feelings precisely, they used words like: ${joinNatural(distinct)}.`);
     }
+
+    // Energy trend — rising/falling/stable over recent check-ins (Phase 1.4)
+    const withEnergy = checkins.filter((e) => typeof e.energy === "number");
+    if (withEnergy.length >= 3) {
+      const energies = withEnergy.map((e) => e.energy as number);
+      const half = Math.ceil(energies.length / 2);
+      const firstAvg = energies.slice(0, half).reduce((a, n) => a + n, 0) / half;
+      const secondAvg = energies.slice(-half).reduce((a, n) => a + n, 0) / half;
+      const diff = secondAvg - firstAvg;
+      const trend = diff > 0.5 ? "rising" : diff < -0.5 ? "falling" : "stable";
+      lines.push(`- Their energy has been ${trend} over recent check-ins.`);
+    }
+
+    // Prevailing state quadrant — Calm/Vibrant/Sluggish/Agitated (Phase 1.5)
+    const withBoth = checkins.filter((e) => typeof e.intensity === "number" && typeof e.energy === "number");
+    if (withBoth.length >= 3) {
+      const qCounts: Record<string, number> = {};
+      for (const e of withBoth) {
+        const d = e.intensity;
+        const en = e.energy as number;
+        const q = d <= 4 && en <= 2 ? "Calm" : d <= 4 && en >= 3 ? "Vibrant" : d >= 7 && en <= 2 ? "Sluggish" : d >= 7 && en >= 3 ? "Agitated" : "Mixed";
+        qCounts[q] = (qCounts[q] || 0) + 1;
+      }
+      const topQ = Object.entries(qCounts).sort((a, b) => b[1] - a[1])[0][0];
+      if (topQ !== "Mixed") {
+        lines.push(`- Their most common state has been "${topQ}" — a combination of mood and energy.`);
+      }
+    }
+  }
+
+  // ── Longitudinal wellbeing (Phase 17) ──────────────────────────────────────
+  // Reuses the validated WHO-5 history. Wellness framing only — a pattern over time, never a
+  // diagnosis. (🟡 touches a flagged file; reviewed before merge.)
+  {
+    const wbBlock = wellbeingContextBlock();
+    if (wbBlock) lines.push(wbBlock);
+  }
+
+  // ── Episode-phase markers (Phase 18) ───────────────────────────────────────
+  // User-owned bipolar-phase tagging (elevated/depressed/mixed/stable). A pattern they noticed,
+  // never a diagnosis. (🟡 touches a flagged file; reviewed before merge.)
+  {
+    const emBlock = episodeMarkerContextBlock();
+    if (emBlock) lines.push(emBlock);
+  }
+
+  // ── Caregiver contacts (Phase 19) ──────────────────────────────────────────
+  // Notes whether the user shares wellness snapshots with trusted people — a gentle,
+  // relational signal. (🟡 touches a flagged file; reviewed before merge.)
+  {
+    const cgBlock = caregiverContextBlock();
+    if (cgBlock) lines.push(cgBlock);
   }
 
   // ── What has helped (episodes + diary) ────────────────────────────────────
@@ -367,7 +460,49 @@ export function buildPersonalContext(): string {
     if (seLines.length > 0) stateEngineBlock = seLines.join("\n");
   } catch { /* best-effort — state engine is optional context */ }
 
-  if (lines.length === 0 && !memory && !insights && !profile && !trajectory && !inflection && !safetyPlanFollowUp && !sleepVariability && !jitaiNudge && !circadianBlock && !meansSafetyContext && !stateEngineBlock) return "";
+  // Therapeutic alliance proxy — passive behavioral estimate of bond/goals/tasks.
+  // Only included when there's enough data for a meaningful signal.
+  let allianceBlock = "";
+  try {
+    const state = loadAlliance();
+    if (state.current && state.trend !== "insufficient_data") {
+      allianceBlock = `ALLIANCE SIGNAL: bond ${state.current.bond}, goals ${state.current.goals}, tasks ${state.current.tasks} — trend: ${state.trend}.`;
+    }
+  } catch { /* best-effort */ }
+
+  // Engagement disengagement risk — early warning when usage is declining.
+  let disengagementBlock = "";
+  try {
+    const moodHist = loadMoodHistory();
+    if (moodHist.length > 0) {
+      const checkinDates = readArray("nilamind_checkins").map((c: any) => c.date).filter(Boolean);
+      const appOpenDays: string[] = [];
+      try {
+        const raw = secureLocal.getItem("nilamind_app_opens");
+        if (raw) { const p = JSON.parse(raw); appOpenDays.push(...(Array.isArray(p.days) ? p.days : Array.isArray(p) ? p : [])); }
+      } catch { /* best-effort */ }
+      const lastCheckin = moodHist[moodHist.length - 1];
+      const daysSinceLastCheckin = Math.max(0, Math.floor((Date.now() - new Date(lastCheckin.date).getTime()) / 86400000));
+      const lastOpenDay = appOpenDays.length > 0 ? appOpenDays[appOpenDays.length - 1] : null;
+      const daysSinceLastAppOpen = lastOpenDay ? Math.max(0, Math.floor((Date.now() - new Date(lastOpenDay + "T00:00:00").getTime()) / 86400000)) : 999;
+      const adherence = getAdherenceSummary();
+      const alliance = loadAlliance();
+      const usage = computeUsageSummary();
+      const block = getDisengagementContextBlock({
+        checkinDates,
+        appOpenDays,
+        protocolAdherenceRate: adherence.adherenceRate,
+        allianceTrend: alliance.trend,
+        daysSinceLastCheckin,
+        daysSinceLastAppOpen,
+        protocolCount: adherence.totalStarted,
+        featureCount: usage.features.length,
+      });
+      if (block) disengagementBlock = block;
+    }
+  } catch { /* best-effort */ }
+
+  if (lines.length === 0 && !memory && !insights && !profile && !trajectory && !inflection && !safetyPlanFollowUp && !sleepVariability && !jitaiNudge && !circadianBlock && !meansSafetyContext && !stateEngineBlock && !allianceBlock && !disengagementBlock) return "";
 
   const out: string[] = [
     // Terse header only. HOW to use memory (gently, never recite, don't over-claim, trust the present) already
@@ -409,6 +544,12 @@ export function buildPersonalContext(): string {
     out.push(stateEngineBlock);
   }
 
+  // Therapeutic alliance proxy — passive behavioral estimate of how the user is engaging.
+  // Included when there's enough data (not "insufficient_data"). Used for tone awareness only.
+  if (allianceBlock) {
+    out.push(allianceBlock);
+  }
+
   // Anti-sycophancy stance — always included so the model knows not to validate
   // grandiosity, impulsivity, or paranoia. Hard backstop is safety.ts checkResponse Rules 5–6.
   out.push(antiSycophancyContextBlock());
@@ -440,6 +581,12 @@ export function buildPersonalContext(): string {
     if (proactiveBlock) {
       out.push(proactiveBlock);
     }
+  }
+
+  // Engagement disengagement risk — early warning when usage patterns signal declining engagement.
+  // Only included when risk is moderate or higher and the budget allows. Used for tone awareness.
+  if (disengagementBlock && !overBudget()) {
+    out.push(disengagementBlock);
   }
 
   return out.join("\n");

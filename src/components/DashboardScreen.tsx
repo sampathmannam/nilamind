@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from "react";
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend,
-  Scatter, ComposedChart,
+  Scatter, ComposedChart, ScatterChart,
 } from "recharts";
 import { loadEmaEntries } from "../services/ema";
 import {
@@ -12,17 +12,17 @@ import {
 } from "lucide-react";
 import Markdown from "react-markdown";
 import { loadMoodHistory } from "../services/moodHistory";
-import { t } from "../services/i18n";
+import { t, useLanguage } from "../services/i18n";
 import { loadAssessments, latestFor, INSTRUMENTS, type InstrumentId } from "../services/assessments";
-import { assessmentInsights, generateInsights, daysOfData, type Insight } from "../services/patternInsights";
+import { assessmentInsights, generateInsights, daysOfData, medicationMoodInsight, type Insight } from "../services/patternInsights";
 import { computeStreak, computeCompassionateStreak } from "../services/streaks";
 import { nilaStats } from "../services/nilaSessions";
-import { adherenceSummary } from "../services/medicationAdherence";
+import { adherenceSummary, loadMedicationLogs } from "../services/medicationAdherence";
 import { getRecentMetrics, detectMoodSignal } from "../services/typingPatterns";
 import { voiceMoodSignal } from "../services/voicePatterns";
 import { computeCircadianInsight } from "../services/circadian";
-import { computeCircadianFeedback, computeSleepRegularityIndex } from "../services/circadianFeedback";
-import { computeRhythmRegularity, buildSleepWindows, loadRhythm } from "../services/socialRhythm";
+import { computeCircadianFeedback } from "../services/circadianFeedback";
+import { computeRhythmRegularity } from "../services/socialRhythm";
 import { computeNof1Ranking } from "../services/nOf1";
 import { PROTOCOLS } from "../services/protocols";
 import { secureLocal } from "../services/secureLocal";
@@ -30,13 +30,17 @@ import { runDeepAssessment as runDeepAssessmentRequest } from "../services/coach
 import { generateCsvReport, buildTextReport, generatePdfBlob, saveReport } from "../services/exportReport";
 import { computeRetention } from "../services/retentionMetrics";
 import { computeUsageSummary } from "../services/usageAnalytics";
+import { getAdherenceSummary } from "../services/protocolAdherence";
+import { assessDisengagementRisk } from "../services/disengagementPredictor";
 import { buildWeeklyReport } from "../services/weeklyReport";
 import { isPilotEnrolled, computePilotSummary } from "../services/pilotStudy";
 import CrisisCard from "./CrisisCard";
+import WellbeingTrendCard from "./WellbeingTrendCard";
+import EpisodeMarkerCard from "./EpisodeMarkerCard";
 import { stripProvenance } from "../services/emotionParse";
 import {
   emotionDistribution, derivedObservations, episodePatterns, quickNoteTags,
-  moodTrend, contextTrend,
+  moodTrend, contextTrend, sleepMoodTrend, weeklyRhythmBars,
 } from "../services/dashboardInsights";
 import { getRecentSnapshots } from "../db/behaviourDb";
 import type { CheckInEntry, DiaryCardEntry, EpisodeRecord } from "../types";
@@ -57,14 +61,15 @@ function readArr<T>(key: string): T[] {
 }
 
 // The USER's own private analytics. Local sections never leave the device.
-export default function DashboardScreen({ onManageData }: { onManageData?: () => void }) {
+export default function DashboardScreen({ onManageData, onOpenView }: { onManageData?: () => void; onOpenView?: (target: string) => void }) {
   const [timeRange, setTimeRange] = useState<"7d" | "30d">("30d");
-  const [chartTab, setChartTab] = useState<"emotion" | "context">("emotion");
+  const [chartTab, setChartTab] = useState<"emotion" | "context" | "energy" | "sleep-mood">("emotion");
   const [isAssessing, setIsAssessing] = useState(false);
   const [assessmentResult, setAssessmentResult] = useState<string | null>(null);
   const [assessmentCrisis, setAssessmentCrisis] = useState(false);
   const [behaviourInsights, setBehaviourInsights] = useState<Insight[]>([]);
   const [behaviourDays, setBehaviourDays] = useState(0);
+  useLanguage();
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [exportBusy, setExportBusy] = useState(false);
 
@@ -103,22 +108,37 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
     const circadian = computeCircadianInsight(mood);
     const nOf1 = computeNof1Ranking();
     const usageSummary = computeUsageSummary();
+    const protocolAdherence = getAdherenceSummary();
+    let disengagementRisk = null;
+    try {
+      const checkinDates = readArr<{ date: string }>("nilamind_checkins").map((c) => c.date).filter(Boolean);
+      const appOpenRaw = secureLocal.getItem("nilamind_app_opens");
+      const appOpenDays: string[] = appOpenRaw ? (JSON.parse(appOpenRaw).days ?? []) : [];
+      const lastCheckin = mood[mood.length - 1];
+      const daysSinceLastCheckin = lastCheckin ? Math.max(0, Math.floor((Date.now() - new Date(lastCheckin.date).getTime()) / 86400000)) : 999;
+      const lastOpenDay = appOpenDays.length > 0 ? appOpenDays[appOpenDays.length - 1] : null;
+      const daysSinceLastAppOpen = lastOpenDay ? Math.max(0, Math.floor((Date.now() - new Date(lastOpenDay + "T00:00:00").getTime()) / 86400000)) : 999;
+      disengagementRisk = assessDisengagementRisk({
+        checkinDates,
+        appOpenDays,
+        protocolAdherenceRate: protocolAdherence.adherenceRate,
+        allianceTrend: "insufficient_data",
+        daysSinceLastCheckin,
+        daysSinceLastAppOpen,
+        protocolCount: protocolAdherence.totalStarted,
+        featureCount: usageSummary.features.length,
+      });
+    } catch { /* best-effort */ }
     const rhythmReg = computeRhythmRegularity();
     const circadianFeedback = circadian ? computeCircadianFeedback({
       sleeps: mood.filter((m) => typeof m.sleepHours === "number" && m.sleepHours > 0).map((m) => m.sleepHours as number),
       rhythmVariabilityMin: rhythmReg.overallVariabilityMin,
     }) : null;
-    // Real Sleep Regularity Index (Phillips et al. 2017) — a SEPARATE, timing-based metric from
-    // circadianFeedback above (which is duration-CV + rhythm-SD, kept as "sleep duration consistency").
-    // Health Connect timestamps aren't fetched here (async, off-by-default, near-zero current usage);
-    // buildSleepWindows() gracefully falls back to the Social Rhythm Metric's own bed/wake anchors, which
-    // is the same diary-clock-time input the founding Phillips 2017 study itself used.
-    const sleepRegularityIndex = computeSleepRegularityIndex(buildSleepWindows([], loadRhythm()));
 
-    return { mood, streak, compassionateStreak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian, nOf1, usageSummary, circadianFeedback, rhythmReg, sleepRegularityIndex };
+    return { mood, streak, compassionateStreak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian, nOf1, usageSummary, circadianFeedback, rhythmReg, protocolAdherence, disengagementRisk };
   }, []);
 
-  const { mood, streak, compassionateStreak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian, nOf1, usageSummary, circadianFeedback, rhythmReg, sleepRegularityIndex } = data;
+  const { mood, streak, compassionateStreak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian, nOf1, usageSummary, circadianFeedback, rhythmReg, protocolAdherence, disengagementRisk } = data;
 
   // Load behaviour snapshots async and compute daily-behaviour insights
   useEffect(() => {
@@ -127,14 +147,31 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
       try {
         const snaps = await getRecentSnapshots(30);
         if (cancelled) return;
-        setBehaviourInsights(generateInsights(snaps, mood));
+        const insights = generateInsights(snaps, mood);
+        const medLogs = loadMedicationLogs();
+        const medInsight = medicationMoodInsight(medLogs, mood);
+        if (medInsight) insights.push(medInsight);
+        setBehaviourInsights(insights);
         setBehaviourDays(daysOfData(snaps, mood));
       } catch { /* fresh db or no permission */ }
     })();
     return () => { cancelled = true; };
   }, [mood]);
 
+  const energyScatter = useMemo(() => {
+    const range = timeRange === "7d" ? 7 : 30;
+    const cutoff = new Date(Date.now() - range * DAY_MS).toISOString().split("T")[0];
+    return checkins
+      .filter((c) => c.date >= cutoff && typeof c.intensity === "number" && typeof c.energy === "number")
+      .map((c) => ({
+        intensity: c.intensity,
+        energy: c.energy as number,
+        emotion: (c.emotion || "").replace(/\s*\(.*\)$/, ""),
+        date: c.date,
+      }));
+  }, [checkins, timeRange]);
   const emoBars = useMemo(() => emotionDistribution(checkins, stripProvenance), [checkins]);
+  const weeklyBars = useMemo(() => weeklyRhythmBars(checkins), [checkins]);
   const observations = useMemo(() => derivedObservations(checkins, diaryEntries), [checkins, diaryEntries]);
   const typingSignal = useMemo(() => {
     const metrics = getRecentMetrics("chat", 7);
@@ -153,6 +190,7 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
   const topTags = useMemo(() => quickNoteTags(diaryEntries), [diaryEntries]);
   const emotionTrend = useMemo(() => moodTrend(mood, timeRange), [mood, timeRange]);
   const ctxTrend = useMemo(() => contextTrend(mood, timeRange), [mood, timeRange]);
+  const sleepMoodTrendData = useMemo(() => sleepMoodTrend(mood, timeRange), [mood, timeRange]);
   const emaPoints = useMemo(() => {
     const entries = loadEmaEntries();
     const dateSet = new Set(emotionTrend.map(p => p.date));
@@ -163,7 +201,7 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
         intensity: Math.round(((e.valence + 3) / 6) * 9) + 1, // map -3..+3 to 1..10 roughly
       }));
   }, [emotionTrend]);
-  const trendLength = chartTab === "emotion" ? emotionTrend.length : ctxTrend.length;
+  const trendLength = chartTab === "emotion" ? emotionTrend.length : chartTab === "energy" ? energyScatter.length : chartTab === "sleep-mood" ? sleepMoodTrendData.length : ctxTrend.length;
 
   const moodSummary = (() => {
     if (thisAvg == null) return "No check-ins yet this week — even a one-tap mood helps your trends grow.";
@@ -352,25 +390,25 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
                 </button>
                 <button onClick={handleWeeklyReport} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-200 hover:bg-slate-700 text-left">
                   <FileText className="w-4 h-4 text-blue-400" />
-                  <span>Weekly report</span>
+                  <span>{t("weekly_report")}</span>
                 </button>
               </div>
             )}
           </div>
         </h1>
-        <p className="text-xs text-slate-400 leading-relaxed">Your local sections stay only on your device. A picture of how you're doing over time.</p>
+        <p className="text-xs text-slate-400 leading-relaxed">{t("dash_privacy")}</p>
       </header>
 
 {/* This-week summary */}
        <div className="bg-blue-500/5 border border-blue-500/20 rounded-2xl p-4">
-         <div className="text-[10px] uppercase font-mono tracking-widest text-blue-400 mb-1">This week</div>
+          <div className="text-[10px] uppercase font-mono tracking-widest text-blue-400 mb-1">{t("this_week")}</div>
          <p className="text-sm text-slate-200 leading-relaxed">{moodSummary}</p>
        </div>
 
        {/* Monthly narrative */}
        {monthlyNarrative && (
          <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4">
-           <div className="text-[10px] uppercase font-mono tracking-widest text-emerald-400 mb-1">Your month</div>
+            <div className="text-[10px] uppercase font-mono tracking-widest text-emerald-400 mb-1">{t("your_month")}</div>
            <p className="text-sm text-slate-200 leading-relaxed">
              This month has been <span className="font-semibold text-slate-100">{monthlyNarrative.word}</span>{" "}
              with mood averaging <span className="font-semibold text-slate-100">{monthlyNarrative.avgIntensity}/10</span> (
@@ -406,12 +444,18 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
       <div className="glass rounded-2xl py-3 px-4 text-center flex items-center justify-center gap-2">
         <span aria-hidden="true">{compassionateStreak.emoji}</span>
         <p className="text-sm text-slate-200">{compassionateStreak.message}</p>
-      </div>
+       </div>
+
+       {/* Longitudinal wellbeing — fortnightly WHO-5 trend + cadence */}
+       <WellbeingTrendCard onOpen={() => onOpenView?.("wellbeing")} />
+
+       {/* Episode-phase marker — current phase if active */}
+       <EpisodeMarkerCard onOpen={() => onOpenView?.("episode_marker")} />
 
        {/* Top stats */}
       <div className="grid grid-cols-2 gap-2">
-        <Stat icon={<CalendarCheck className="w-4 h-4 text-emerald-400" />} value={`${freq14}/14`} label="days logged" />
-        <Stat icon={<MessageSquare className="w-4 h-4 text-purple-400" />} value={String(nila.last7)} label="Nila chats (7d)" />
+        <Stat icon={<CalendarCheck className="w-4 h-4 text-emerald-400" />} value={`${freq14}/14`} label={t("days_logged")} />
+        <Stat icon={<MessageSquare className="w-4 h-4 text-purple-400" />} value={String(nila.last7)} label={t("nila_chats_7d")} />
       </div>
       {streak.longest > 0 && (
         <p className="text-[11px] text-slate-500 -mt-2 text-center flex items-center justify-center gap-1">
@@ -423,25 +467,25 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
       {/* Usage Analytics — on-device summary of all engagement */}
       {usageSummary.totalCheckins > 0 && (
         <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 space-y-3">
-          <p className="text-[10px] uppercase font-mono tracking-widest text-slate-400 flex items-center gap-1.5">
-            <Activity className="w-3.5 h-3.5" /> Your usage
-          </p>
+            <p className="text-[10px] uppercase font-mono tracking-widest text-slate-400 flex items-center gap-1.5">
+              <Activity className="w-3.5 h-3.5" /> {t("your_usage")}
+            </p>
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-page p-2.5 rounded-xl text-center border border-slate-850">
               <p className="text-lg font-bold text-slate-100 font-mono">{usageSummary.totalCheckins}</p>
-              <p className="text-[9px] text-slate-500 uppercase tracking-wide">check-ins</p>
+              <p className="text-[9px] text-slate-500 uppercase tracking-wide">{t("usage_checkins")}</p>
             </div>
             <div className="bg-page p-2.5 rounded-xl text-center border border-slate-850">
               <p className="text-lg font-bold text-slate-100 font-mono">{usageSummary.protocols.completed}</p>
-              <p className="text-[9px] text-slate-500 uppercase tracking-wide">programs done</p>
+              <p className="text-[9px] text-slate-500 uppercase tracking-wide">{t("usage_programs")}</p>
             </div>
             <div className="bg-page p-2.5 rounded-xl text-center border border-slate-850">
               <p className="text-lg font-bold text-slate-100 font-mono">{Object.keys(usageSummary.assessments).length}</p>
-              <p className="text-[9px] text-slate-500 uppercase tracking-wide">assessments</p>
+              <p className="text-[9px] text-slate-500 uppercase tracking-wide">{t("usage_assessments")}</p>
             </div>
             <div className="bg-page p-2.5 rounded-xl text-center border border-slate-850">
               <p className="text-lg font-bold text-slate-100 font-mono">{usageSummary.features.length}</p>
-              <p className="text-[9px] text-slate-500 uppercase tracking-wide">features used</p>
+              <p className="text-[9px] text-slate-500 uppercase tracking-wide">{t("usage_features")}</p>
             </div>
           </div>
           {usageSummary.avgMood != null && (
@@ -459,6 +503,71 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
               )}
             </p>
           )}
+        </div>
+      )}
+
+      {/* Protocol adherence — programs completed vs abandoned */}
+      {protocolAdherence.totalStarted > 0 && (
+        <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 space-y-2">
+          <p className="text-[10px] uppercase font-mono tracking-widest text-slate-400 flex items-center gap-1.5">
+            <ClipboardCheck className="w-3.5 h-3.5" /> Your programs
+          </p>
+          <div className="flex items-center justify-between">
+            <div className="flex gap-4">
+              <div>
+                <p className="text-lg font-bold text-slate-100 font-mono">{protocolAdherence.totalCompleted}</p>
+                <p className="text-[9px] text-slate-500 uppercase tracking-wide">completed</p>
+              </div>
+              <div>
+                <p className="text-lg font-bold text-slate-100 font-mono">{protocolAdherence.totalAbandoned}</p>
+                <p className="text-[9px] text-slate-500 uppercase tracking-wide">incomplete</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-xl font-bold text-slate-100">{Math.round(protocolAdherence.adherenceRate * 100)}%</p>
+              <p className="text-[9px] text-slate-500 uppercase tracking-wide">completion rate</p>
+            </div>
+          </div>
+          {protocolAdherence.perProtocol.filter((p) => p.started > 0).length > 0 && (
+            <div className="border-t border-slate-700/50 pt-2 mt-1 space-y-1">
+              {protocolAdherence.perProtocol.filter((p) => p.started > 0).slice(0, 4).map((p) => (
+                <div key={p.protocolId} className="flex items-center justify-between text-[11px]">
+                  <span className="text-slate-300 truncate max-w-[60%]">{p.title}</span>
+                  <span className="text-slate-400 tabular-nums">
+                    {p.completed}/{p.started}
+                    {p.avgStepsCompleted > 0 && <span className="text-slate-500"> · ~{p.avgStepsCompleted} steps</span>}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+          <p className="text-[10px] text-slate-500">Programs you've started and completed. Not a measure of you.</p>
+        </div>
+      )}
+
+      {/* Engagement disengagement risk — early warning when usage declines */}
+      {disengagementRisk && disengagementRisk.riskLevel !== "low" && disengagementRisk.frequencyTrend !== "insufficient_data" && (
+        <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 flex items-start gap-3">
+          <div className={`p-2 rounded-xl ${disengagementRisk.riskLevel === "high" ? "bg-rose-500/10 text-rose-400" : disengagementRisk.riskLevel === "elevated" ? "bg-amber-500/10 text-amber-400" : "bg-blue-500/10 text-blue-400"}`}>
+            <Activity className="w-5 h-5" />
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-slate-100">Engagement trend</p>
+              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${disengagementRisk.riskLevel === "high" ? "bg-rose-500/20 text-rose-300" : disengagementRisk.riskLevel === "elevated" ? "bg-amber-500/20 text-amber-300" : "bg-blue-500/20 text-blue-300"}`}>
+                {disengagementRisk.score}/100
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-400 leading-relaxed mt-1">
+              {disengagementRisk.daysSinceLastCheckin >= 3
+                ? `It's been ${disengagementRisk.daysSinceLastCheckin} days since your last check-in. `
+                : ""}
+              {disengagementRisk.frequencyTrend === "declining"
+                ? "Your check-in frequency has been tapering off — no pressure, just noticing."
+                : "Your recent engagement has been lower — whenever you're ready."}
+            </p>
+            <p className="text-[10px] text-slate-500 mt-1">A gentle observation, not a measure of you.</p>
+          </div>
         </div>
       )}
 
@@ -536,8 +645,7 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
         </div>
       )}
 
-      {/* Fused circadian + social rhythm feedback loop — duration consistency + rhythm-SD proxy. Separate
-          from the real timing-based Sleep Regularity Index card below (Group C correction, 2026-07-12). */}
+      {/* Fused circadian + social rhythm feedback loop */}
       {circadianFeedback && (
         <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 flex items-start gap-3">
           <div className={`p-2 rounded-xl ${circadianFeedback.needsAttention ? "bg-amber-500/10 text-amber-400" : "bg-emerald-500/10 text-emerald-400"}`}>
@@ -551,29 +659,6 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
               </span>
             </div>
             <p className="text-[11px] text-slate-400 leading-relaxed mt-1">{circadianFeedback.guidance}</p>
-            <p className="text-[10px] text-slate-500 mt-1">Sleep-duration &amp; routine-timing consistency (a proxy, not the Sleep Regularity Index below).</p>
-          </div>
-        </div>
-      )}
-
-      {/* Real Sleep Regularity Index (Phillips et al. 2017) — genuine bed/wake TIMING regularity, distinct
-          from the duration/rhythm-SD proxy above. Only renders once >=7 nights of bed+wake anchors exist. */}
-      {sleepRegularityIndex && (
-        <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 flex items-start gap-3">
-          <div className={`p-2 rounded-xl ${sleepRegularityIndex.band === "regular" ? "bg-emerald-500/10 text-emerald-400" : "bg-amber-500/10 text-amber-400"}`}>
-            <Moon className="w-5 h-5" />
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-slate-100">Sleep Regularity Index</p>
-              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${sleepRegularityIndex.band === "regular" ? "bg-emerald-500/20 text-emerald-300" : "bg-amber-500/20 text-amber-300"}`}>
-                {sleepRegularityIndex.sri}/100
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-400 leading-relaxed mt-1">{sleepRegularityIndex.guidance}</p>
-            <p className="text-[10px] text-slate-500 mt-1">
-              Real bed/wake-timing regularity (Phillips et al., 2017) — from {sleepRegularityIndex.nightsUsed} nights of bed/wake times, computed entirely on your device.
-            </p>
           </div>
         </div>
       )}
@@ -644,9 +729,13 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
                 className={`text-[10px] px-2 py-1 rounded-md font-medium transition-colors ${chartTab === "emotion" ? "bg-purple-500/20 text-purple-400" : "text-slate-500 hover:text-slate-300"}`}>Emotion</button>
               <button onClick={() => setChartTab("context")} aria-label="Show sleep and social context" aria-pressed={chartTab === "context"}
                 className={`text-[10px] px-2 py-1 rounded-md font-medium transition-colors ${chartTab === "context" ? "bg-blue-500/20 text-blue-400" : "text-slate-500 hover:text-slate-300"}`}>Context</button>
+              <button onClick={() => setChartTab("energy")} aria-label="Show mood vs energy scatter" aria-pressed={chartTab === "energy"}
+                className={`text-[10px] px-2 py-1 rounded-md font-medium transition-colors ${chartTab === "energy" ? "bg-amber-500/20 text-amber-400" : "text-slate-500 hover:text-slate-300"}`}>Energy</button>
+              <button onClick={() => setChartTab("sleep-mood")} aria-label="Show sleep vs mood correlation" aria-pressed={chartTab === "sleep-mood"}
+                className={`text-[10px] px-2 py-1 rounded-md font-medium transition-colors ${chartTab === "sleep-mood" ? "bg-emerald-500/20 text-emerald-400" : "text-slate-500 hover:text-slate-300"}`}>Sleep-Mood</button>
             </div>
           </div>
-          <div className="w-full h-48" role="img" aria-label={chartTab === "emotion" ? "Line chart showing emotional intensity trend over time. Lower values indicate calmer states." : "Line chart showing sleep hours and social connection over time."}>
+          <div className="w-full h-48" role="img" aria-label={chartTab === "emotion" ? "Line chart showing emotional intensity trend over time. Lower values indicate calmer states." : chartTab === "energy" ? "Scatter plot of mood intensity vs energy level. Each dot is one check-in." : chartTab === "sleep-mood" ? "Dual-axis line chart showing sleep hours and mood intensity over time." : "Line chart showing sleep hours and social connection over time."}>
             <ResponsiveContainer width="100%" height="100%">
               {chartTab === "emotion" ? (
                 <ComposedChart data={emotionTrend}>
@@ -659,6 +748,25 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
                       LineChart recharts silently drops it. dataKey ties each dot to the shared date axis. */}
                   <Scatter data={emaPoints} dataKey="intensity" name="Quick check-in" fill="#D8A657" />
                 </ComposedChart>
+              ) : chartTab === "energy" ? (
+                <ScatterChart>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#2E2922" vertical={false} />
+                  <XAxis dataKey="energy" stroke="#948A7E" fontSize={10} tickLine={false} axisLine={false} domain={[0.5, 4.5]} ticks={[1, 2, 3, 4]} tickFormatter={(v: number) => ["", "Very low", "Low", "Moderate", "High"][v] || ""} />
+                  <YAxis stroke="#948A7E" fontSize={10} domain={[1, 10]} allowDecimals={false} tickLine={false} axisLine={false} label={{ value: "Distress", angle: -90, position: "insideLeft", style: { fill: "#948A7E", fontSize: 10 } }} />
+                  <Tooltip contentStyle={{ backgroundColor: "#171311", borderColor: "#2E2922", borderRadius: "8px" }} labelFormatter={() => ""} wrapperStyle={{ fontSize: "12px" }} />
+                  <Scatter data={energyScatter} dataKey="intensity" name="Distress" fill="#D8A657" stroke="#2E2922" strokeWidth={0.5} />
+                </ScatterChart>
+              ) : chartTab === "sleep-mood" ? (
+                <LineChart data={sleepMoodTrendData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#2E2922" vertical={false} />
+                  <XAxis dataKey="date" stroke="#948A7E" fontSize={10} tickLine={false} axisLine={false} />
+                  <YAxis yAxisId="left" stroke="#948A7E" fontSize={10} domain={[0, 14]} allowDecimals={false} tickLine={false} axisLine={false} orientation="left" />
+                  <YAxis yAxisId="right" stroke="#948A7E" fontSize={10} domain={[1, 10]} allowDecimals={false} tickLine={false} axisLine={false} orientation="right" />
+                  <Tooltip contentStyle={{ backgroundColor: "#171311", borderColor: "#2E2922", borderRadius: "8px", fontSize: "12px" }} labelStyle={{ color: "#ECE5DA" }} />
+                  <Legend wrapperStyle={{ fontSize: "10px", color: "#948A7E" }} verticalAlign="top" height={36} />
+                  <Line yAxisId="left" type="monotone" dataKey="sleepHours" name="Sleep (hrs)" stroke="#46735C" strokeWidth={3} dot={{ r: 3, fill: "#211C17" }} />
+                  <Line yAxisId="right" type="monotone" dataKey="intensity" name="Distress" stroke="#9479B0" strokeWidth={3} dot={{ r: 3, fill: "#211C17" }} />
+                </LineChart>
               ) : (
                 <LineChart data={ctxTrend}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#2E2922" vertical={false} />
@@ -673,7 +781,7 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
               )}
             </ResponsiveContainer>
           </div>
-          <p className="text-[10px] text-slate-600">{chartTab === "emotion" ? "Lower is calmer. Per-day average of your check-ins." : "Sleep hours and felt-connection, per day."}</p>
+          <p className="text-[10px] text-slate-600">{chartTab === "emotion" ? "Lower is calmer. Per-day average of your check-ins." : chartTab === "energy" ? "Each dot is one check-in. Lower distress + higher energy = Vibrant; higher distress + lower energy = Sluggish." : chartTab === "sleep-mood" ? "Sleep hours vs distress. Lower sleep often correlates with higher distress." : "Sleep hours and felt-connection, per day."}</p>
         </div>
       ) : (
         <EmptyCard text="Your trend will appear here after a couple of check-ins." />
@@ -694,6 +802,25 @@ export default function DashboardScreen({ onManageData }: { onManageData?: () =>
               </BarChart>
             </ResponsiveContainer>
           </div>
+        </div>
+      )}
+
+      {/* Weekly rhythm: per-day-of-week mood averages */}
+      {weeklyBars.length > 0 && (
+        <div className="glass rounded-2xl p-4 space-y-3">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500 font-mono">Weekly rhythm</h2>
+          <div className="w-full h-44" role="img" aria-label="Bar chart showing average mood intensity by day of week.">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={weeklyBars}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#2E2922" vertical={false} />
+                <XAxis dataKey="day" stroke="#948A7E" fontSize={9} tickLine={false} axisLine={false} />
+                <YAxis stroke="#948A7E" fontSize={9} domain={[1, 10]} allowDecimals={false} tickLine={false} axisLine={false} />
+                <Tooltip contentStyle={{ backgroundColor: "#171311", borderColor: "#2E2922", borderRadius: "8px" }} labelStyle={{ color: "#ECE5DA" }} />
+                <Bar dataKey="avg" name="Avg distress" fill="#D8A657" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <p className="text-[10px] text-slate-600">Average distress by day of week. Based on {weeklyBars.reduce((s, b) => s + b.count, 0)} check-ins.</p>
         </div>
       )}
 

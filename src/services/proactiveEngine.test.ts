@@ -1,13 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const store = new Map<string, string>();
-vi.mock("./secureLocal", () => ({
-  secureLocal: {
-    getItem: (k: string) => store.get(k) ?? null,
-    setItem: (k: string, v: string) => { store.set(k, v); },
-    removeItem: (k: string) => { store.delete(k); },
-  },
-}));
+vi.mock("./secureLocal", async () => {
+  const actual = await vi.importActual<typeof import("./secureLocal")>("./secureLocal");
+  return {
+    ...actual,
+    secureLocal: {
+      getItem: (k: string) => store.get(k) ?? null,
+      setItem: (k: string, v: string) => { store.set(k, v); },
+      removeItem: (k: string) => { store.delete(k); },
+    },
+  };
+});
 
 // "Mostly calm" mood signal — reuse modeEngine's existing getUserState() rather than inventing a second
 // mood-detection path (2026-07-12 Wave 3, Task 1.5).

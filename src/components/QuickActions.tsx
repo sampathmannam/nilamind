@@ -3,7 +3,7 @@
 
 import React from "react";
 import {
-  Wind, Cloud, BookOpen, Phone, Pill, Moon,
+  Wind, Cloud, BookOpen, Phone, Pill, Moon, Coffee,
   AlertTriangle, Brain, Heart, Smile, Activity, Compass
 } from "lucide-react";
 import type { UserState, TimeMode } from "../types/modes";
@@ -34,6 +34,7 @@ export const ACTIONS: ActionDef[] = [
   { id: "thought_record", label: "Thought record", icon: <Brain className="w-5 h-5" />, color: "text-rose-400", modes: ["day", "evening"] },
   { id: "values_to_action", label: "Do one thing", icon: <Compass className="w-5 h-5" />, color: "text-violet-400", modes: ["morning", "day", "evening", "night"] },
   { id: "self_compassion", label: "Self-compassion", icon: <Heart className="w-5 h-5" />, color: "text-pink-400", modes: ["day", "evening", "night"] },
+  { id: "nap", label: "Log nap", icon: <Coffee className="w-5 h-5" />, color: "text-amber-400", modes: ["morning", "day", "evening"] },
   { id: "crisis", label: "Need help now", icon: <AlertTriangle className="w-5 h-5" />, color: "text-rose-400", modes: ["morning", "day", "evening", "night"] },
 ];
 

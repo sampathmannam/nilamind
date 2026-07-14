@@ -20,13 +20,17 @@ window.matchMedia = window.matchMedia || ((query: string) => ({
 Element.prototype.scrollIntoView = Element.prototype.scrollIntoView || (() => {});
 
 const store = new Map<string, string>();
-vi.mock("../services/secureLocal", () => ({
-  secureLocal: {
-    getItem: (k: string) => store.get(k) ?? null,
-    setItem: (k: string, v: string) => { store.set(k, v); },
-    removeItem: (k: string) => { store.delete(k); },
-  },
-}));
+vi.mock("../services/secureLocal", async () => {
+  const actual = await vi.importActual<typeof import("../services/secureLocal")>("../services/secureLocal");
+  return {
+    ...actual,
+    secureLocal: {
+      getItem: (k: string) => store.get(k) ?? null,
+      setItem: (k: string, v: string) => { store.set(k, v); },
+      removeItem: (k: string) => { store.delete(k); },
+    },
+  };
+});
 
 vi.mock("../services/modeEngine", () => ({
   getCurrentMode: () => ({ timeMode: "day", userState: "calm", hasCheckedIn: true, inCrisis: false }),
