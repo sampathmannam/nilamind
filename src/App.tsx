@@ -150,7 +150,7 @@ function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () 
     case "diary": return <DiaryCardScreen />;
     case "episode": return <EpisodeSupportScreen onSessionEnded={onClose} onNavigateToGrounding={() => { onClose(); onOpenGrounding(); }} onNavigateToBreathing={() => { onClose(); onOpenGrounding(); }} />;
     case "armed_checkin": return <ArmedCheckInScreen onClose={onClose} />;
-    case "ema_checkin": return <EmaCheckInScreen onCrisis={() => { onClose(); onActivateCrisis(); }} />;
+    case "ema_checkin": return <EmaCheckInScreen onLogged={onClose} onCrisis={() => { onClose(); onActivateCrisis(); }} />;
     case "wellbeing": return <WellbeingScreen onClose={onClose} onActivateCrisis={onActivateCrisis} onTake={() => onOpenView("assessment")} />;
     case "episode_marker": return <EpisodeMarkerScreen onClose={onClose} />;
     case "caregiver_settings": return <CaregiverSettingsScreen onClose={onClose} onOpenCaregiverShare={onOpenCaregiverShare} />;
