@@ -3,8 +3,8 @@
 
 import React from "react";
 import {
-  Wind, Cloud, BookOpen, Phone, Pill, Moon, Coffee,
-  AlertTriangle, Brain, Heart, Smile, Activity, Compass
+  Wind, Cloud, Phone, Pill, Moon,
+  AlertTriangle, Smile
 } from "lucide-react";
 import type { UserState, TimeMode } from "../types/modes";
 
@@ -28,13 +28,7 @@ export const ACTIONS: ActionDef[] = [
   { id: "diary", label: "Log feeling", icon: <Smile className="w-5 h-5" />, color: "text-violet-400", modes: ["day", "evening"] },
   { id: "reach_out", label: "Reach out", icon: <Phone className="w-5 h-5" />, color: "text-sky-400", modes: ["day", "evening"] },
   { id: "medication", label: "Medication", icon: <Pill className="w-5 h-5" />, color: "text-purple-400", modes: ["morning", "day"] },
-  { id: "dashboard", label: "Dashboard", icon: <Activity className="w-5 h-5" />, color: "text-sky-400", modes: ["day", "evening"] },
   { id: "wind_down", label: "Wind down", icon: <Moon className="w-5 h-5" />, color: "text-indigo-400", modes: ["evening", "night"] },
-  { id: "learn", label: "Learn", icon: <BookOpen className="w-5 h-5" />, color: "text-amber-400", modes: ["morning", "day", "evening", "night"] },
-  { id: "thought_record", label: "Thought record", icon: <Brain className="w-5 h-5" />, color: "text-rose-400", modes: ["day", "evening"] },
-  { id: "values_to_action", label: "Do one thing", icon: <Compass className="w-5 h-5" />, color: "text-violet-400", modes: ["morning", "day", "evening", "night"] },
-  { id: "self_compassion", label: "Self-compassion", icon: <Heart className="w-5 h-5" />, color: "text-pink-400", modes: ["day", "evening", "night"] },
-  { id: "nap", label: "Log nap", icon: <Coffee className="w-5 h-5" />, color: "text-amber-400", modes: ["morning", "day", "evening"] },
   { id: "crisis", label: "Need help now", icon: <AlertTriangle className="w-5 h-5" />, color: "text-rose-400", modes: ["morning", "day", "evening", "night"] },
 ];
 

@@ -97,7 +97,6 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   const [softCrisisCard, setSoftCrisisCard] = useState(false); // 2026-07-12 Wave 3: soft tier, classifier-only hits
   const [pactNotice, setPactNotice] = useState<PactNotice | null>(null); // #30: surfaced pact (the human bridge)
   // Phase: UX clutter fix — cap non-crisis nudges at 2 (crisis cards always shown)
-  const [nudgeCount, setNudgeCount] = useState(0);
   const MAX_NUDGES = 2;
   const [confirmNewChat, setConfirmNewChat] = useState(false); // "new conversation" confirm dialog
   const [welcomeBack, setWelcomeBack] = useState<string | null>(null);

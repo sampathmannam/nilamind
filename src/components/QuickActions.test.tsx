@@ -11,7 +11,7 @@ describe("selectQuickActions — home actions quiet down when elevated", () => {
     expect(day.length).toBeGreaterThan(0);
     expect(day.length).toBeLessThanOrEqual(9);
     expect(day.every((a) => a.modes.includes("day"))).toBe(true);
-    expect(day.map((a) => a.id)).toContain("learn"); // stimulating tool present when not elevated
+    expect(day.map((a) => a.id)).toContain("diary"); // accessible when not elevated
   });
 
   it("elevated → only the down-regulating / co-regulating tools", () => {
@@ -37,7 +37,7 @@ describe("selectQuickActions — home actions quiet down when elevated", () => {
   });
 
   it("null/unknown state behaves like the normal time-filtered set", () => {
-    expect(selectQuickActions("day", null).map((a) => a.id)).toContain("learn");
+    expect(selectQuickActions("day", null).map((a) => a.id)).toContain("diary");
   });
 
   // 2026-07-12 de-emphasis (user directive): the crisis shortcut is NOT a permanent fixture of the

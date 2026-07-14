@@ -31,8 +31,8 @@ describe("You hub rows (redesign §2)", () => {
   it("renders exactly the expected hub rows in order (catches accidental add/remove/reorder)", () => {
     const rendered = buildYouGroups().flatMap((g) => g.rows.map((r) => r.id));
     expect(rendered).toEqual([
-      "about_nila", "dashboard", "your_data", "nila_memory", "settings", "caregiver_settings",
-      "thought_record", "learn", "insights", "wellbeing", "episode_marker",
+      "dashboard", "your_data", "settings", "caregiver_settings",
+      "about_nila", "nila_memory", "thought_record", "learn", "insights", "wellbeing", "episode_marker",
     ]);
     expect(YOU_ROW_IDS).toEqual(rendered);
   });
@@ -48,7 +48,7 @@ describe("You hub localization", () => {
     setLanguage("ta");
     const groups = buildYouGroups();
     expect(groups.map((g) => g.title)).toEqual([DICT.ta.you_group_manage, DICT.ta.you_group_resources]);
-    const about = groups[0].rows.find((r) => r.id === "about_nila")!;
+    const about = groups[1].rows.find((r) => r.id === "about_nila")!;
     expect(about.label).toBe(DICT.ta.you_about_nila_label);
     expect(about.sub).toBe(DICT.ta.you_about_nila_sub);
   });

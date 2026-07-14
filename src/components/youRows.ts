@@ -30,10 +30,8 @@ export function buildYouGroups(): YouGroup[] {
     {
       title: t("you_group_manage"),
       rows: [
-        { id: "about_nila", label: t("you_about_nila_label"), sub: t("you_about_nila_sub"), Icon: Info, iconClass: "w-5 h-5 text-blue-400" },
         { id: "dashboard", label: t("you_dashboard_label"), sub: t("you_dashboard_sub"), Icon: LayoutDashboard, iconClass: "w-5 h-5 text-blue-400" },
         { id: "your_data", label: t("you_your_data_label"), sub: t("you_your_data_sub"), Icon: ShieldCheck, iconClass: "w-5 h-5 text-emerald-400" },
-        { id: "nila_memory", label: t("you_nila_memory_label"), sub: t("you_nila_memory_sub"), Icon: Sparkles, iconClass: "w-5 h-5 text-fuchsia-400" },
         { id: "settings", label: t("you_settings_label"), sub: t("you_settings_sub"), Icon: SettingsIcon, iconClass: "w-5 h-5 text-slate-300" },
         { id: "caregiver_settings", label: t("you_caregiver_settings_label"), sub: t("you_caregiver_settings_sub"), Icon: Users, iconClass: "w-5 h-5 text-emerald-400" },
       ],
@@ -41,6 +39,8 @@ export function buildYouGroups(): YouGroup[] {
     {
       title: t("you_group_resources"),
       rows: [
+        { id: "about_nila", label: t("you_about_nila_label"), sub: t("you_about_nila_sub"), Icon: Info, iconClass: "w-5 h-5 text-blue-400" },
+        { id: "nila_memory", label: t("you_nila_memory_label"), sub: t("you_nila_memory_sub"), Icon: Sparkles, iconClass: "w-5 h-5 text-fuchsia-400" },
         { id: "thought_record", label: t("you_thought_record_label"), sub: t("you_thought_record_sub"), Icon: Brain, iconClass: "w-5 h-5 text-blue-400" },
         { id: "learn", label: t("you_learn_label"), sub: t("you_learn_sub"), Icon: BookOpen, iconClass: "w-5 h-5 text-blue-400" },
         { id: "insights", label: t("you_insights_label"), sub: t("you_insights_sub"), Icon: TrendingUp, iconClass: "w-5 h-5 text-emerald-400" },
