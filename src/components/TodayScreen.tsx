@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Wind, MessageCircle, Moon, LayoutGrid, Sparkles, ChevronRight, HeartHandshake, Sparkle, Clock3, Target, LineChart } from "lucide-react";
 import { getTimeMode, getUserState, getGreeting } from "../services/modeEngine";
 import { hasCheckinToday } from "../services/checkin";
@@ -12,7 +12,7 @@ import { getCapacityLevel } from "../services/capacitySignal";
 import { hasRhythmToday, loadTodayAnchors, RHYTHM_ANCHORS } from "../services/socialRhythm";
 import { getUserGoals } from "../services/chatSuggestions";
 import { getDailyIntention } from "../services/weeklyIntention";
-import DailyIntentionCard from "./DailyIntentionCard";
+import DailyIntentionCard, { type DailyIntentionCardHandle } from "./DailyIntentionCard";
 import type { TimeMode, UserState } from "../types/modes";
 
 // Goal -> the tool row ids it should promote to the front of their group, when present in that group.
@@ -164,6 +164,7 @@ export default function TodayScreen({
   const todayMood = getTodayMood();
   const dailyIntentionSet = !!getDailyIntention();
   const hero = getHeroAction(timeMode, userState, dailyIntentionSet);
+  const intentionCardRef = useRef<DailyIntentionCardHandle>(null);
   const groups = personalizeToolOrder(buildToolGroups({ go, onEpisode, phoneEnabled }), getUserGoals());
   const weekInsight = getWeekInsight();
   const nilaReflection = getNilaReflection();
@@ -305,11 +306,14 @@ export default function TodayScreen({
 
       {/* Hero action — time-aware: wind-down at night, grounding when elevated, else the structured
           daily-intention prompt (until set) or the check-in prompt. Wave 3 Group I: the daily-
-          intention branch isn't a nav route — it scrolls/focuses the DailyIntentionCard rendered
-          just below instead of navigating away from the Today hub. */}
+          intention branch isn't a nav route — it OPENS the collapsed DailyIntentionCard's if-then
+          form inline (and scrolls to it) instead of navigating away from the Today hub. The card
+          stays silent while this hero promotes it (promptWhenClosed=false), so there's exactly one
+          "Set today's intention" affordance, and pressing it reveals the form. */}
       <button
         onClick={() => {
           if (hero.id === "daily_intention") {
+            intentionCardRef.current?.open();
             document.getElementById("today-daily-intention")?.scrollIntoView({ behavior: "smooth", block: "center" });
             return;
           }
@@ -327,8 +331,10 @@ export default function TodayScreen({
 
       {/* Daily intention — the structured if-then picker (Wave 3 Group I). Rendered unconditionally
           (not just while unset) so it's also where you review/edit today's plan once it's saved —
-          the SAME canonical store DiaryCardScreen's Part 3 reads/writes, so the two stay in sync. */}
-      <DailyIntentionCard />
+          the SAME canonical store DiaryCardScreen's Part 3 reads/writes, so the two stay in sync.
+          The form is collapsed by default; while the hero above is promoting it we suppress the
+          card's own prompt (promptWhenClosed=false) and let the hero's open() reveal the form. */}
+      <DailyIntentionCard ref={intentionCardRef} promptWhenClosed={hero.id !== "daily_intention"} />
 
       {/* Talk to Nila card — always present, exactly one tap away, never the default lead */}
       <button

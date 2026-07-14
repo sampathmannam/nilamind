@@ -248,7 +248,7 @@ export default function DiaryCardScreen() {
           <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-2 flex items-center gap-2">
             3. Today's Intention
           </h3>
-          <DailyIntentionCard />
+          <DailyIntentionCard defaultOpen />
         </div>
 
         {/* PART 4: Quick Notes */}

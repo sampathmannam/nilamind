@@ -30,11 +30,12 @@ interface OrbPalette {
 // These match the custom theme and respond correctly on both dark and light backgrounds.
 const PALETTES: Record<string, OrbPalette> = {
   calm: {
-    primary: "#BEA4D0",   // --color-blue-400 (warm lavender)
-    secondary: "#D1BFDF", // --color-purple-300 
-    glow: "rgba(190,164,208,0.25)",
-    ring: "rgba(190,164,208,0.15)",
-    core: "#E2D6EC",      // --color-blue-200
+    // Nila's identity color — the pink-magenta of the app icon (matches NilaOrb.tsx: white core → pink → magenta).
+    primary: "#EC5B9E",   // icon pink-magenta (primary accent for the home orb)
+    secondary: "#F58CC0", // lighter pink (specular / upper glow)
+    glow: "rgba(236,91,158,0.28)",
+    ring: "rgba(236,91,158,0.18)",
+    core: "#FBD9EC",      // near-white pink highlight (icon's bright core)
   },
   anxious: {
     primary: "#CE8470",   // --color-rose-400 (terracotta)

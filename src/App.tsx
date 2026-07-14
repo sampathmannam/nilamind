@@ -63,9 +63,10 @@ function ScreenFallback() {
   );
 }
 
-import { syncDailyReminders, scheduleReminderAt, syncEmaCheckins, syncWeeklyDigest, suppressNudgesForCrisis } from "./services/notifications";
-import { recordEngagement } from "./services/notificationBudget";
+import { syncDailyReminders, scheduleReminderAt, syncEmaCheckins, syncWeeklyDigest, suppressNudgesForCrisis, registerNotificationActionTypes, syncWindDownReminder } from "./services/notifications";
+import { recordEngagement, recordDismissal } from "./services/notificationBudget";
 import { recordNotificationOpen } from "./services/notificationEngagement";
+import { enableDndFor } from "./services/dnd";
 import { isCategoryEnabled } from "./services/notificationCategories";
 import { LocalNotifications } from "@capacitor/local-notifications";
 import { t, LANGUAGE_CHANGED_EVENT } from "./services/i18n";
@@ -197,6 +198,11 @@ export default function App() {
     return () => window.removeEventListener(LANGUAGE_CHANGED_EVENT, h);
   }, []);
 
+  // Phase 20 — register notification action types (Snooze / Check in / Taken / Dismiss)
+  useEffect(() => {
+    void registerNotificationActionTypes();
+  }, []);
+
   // Sync daily reminders
   useEffect(() => {
     void syncDailyReminders();
@@ -205,6 +211,11 @@ export default function App() {
   // P6.6 — re-arm the Sunday weekly-review digest on every app open (idempotent: cancels + reschedules).
   useEffect(() => {
     void syncWeeklyDigest({ request: false });
+  }, []);
+
+  // Phase 20 — re-arm the nightly wind-down reminder on every app open (idempotent).
+  useEffect(() => {
+    void syncWindDownReminder();
   }, []);
 
   // Record that the app was opened today (on-device retention instrumentation). Runs after SecureGate has
@@ -328,10 +339,37 @@ export default function App() {
     let removed = false;
     LocalNotifications.addListener("localNotificationActionPerformed", (action) => {
       try {
+        const actionId = action?.actionId as string | undefined;
+        // Phase 20: handle action button taps (Snooze, Check in, Taken, Dismiss)
+        if (actionId === "snooze_1h") {
+          enableDndFor(1); // 1-hour gentle snooze
+          return;
+        }
+        if (actionId === "snooze_3h") {
+          enableDndFor(3); // 3-hour pause
+          return;
+        }
+        if (actionId === "taken") {
+          // Medication "Taken ✓" — dismiss and log adherence
+          recordEngagement();
+          return;
+        }
+        if (actionId === "remind_30m") {
+          // Reschedule medication reminder in 30 min
+          const medName = action?.notification?.body?.replace("Time for ", "")?.split(" ")[0] || "";
+          scheduleReminderAt(new Date(Date.now() + 30 * 60_000), `Time for ${medName} — gentle reminder`, "NilaMind", { channelId: "nila_medication" }).catch(() => {});
+          return;
+        }
+        if (actionId === "dismiss" || actionId === "not_now") {
+          recordDismissal(); // Phase 20: wire progressive cooldown
+          return;
+        }
+
+        // Standard tap-to-open routing
         const view = action?.notification?.extra?.view;
         if (typeof view === "string" && view) {
-          recordEngagement(); // P6.3: a tapped non-crisis nudge resets the progressive-cooldown streak
-          recordNotificationOpen(); // P6.2: the tapped nudge is an engagement signal for the timing learner
+          recordEngagement();
+          recordNotificationOpen();
           go(view);
         }
       } catch (e) {

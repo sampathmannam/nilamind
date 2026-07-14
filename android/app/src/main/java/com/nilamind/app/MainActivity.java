@@ -1,5 +1,7 @@
 package com.nilamind.app;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
@@ -21,8 +23,56 @@ public class MainActivity extends BridgeActivity {
   @Override
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    createNotificationChannels();
     precacheModelWeights();
     startResidentServiceIfModelPresent();
+  }
+
+  // ── World-class notification channels (Phase 20) ───────────────────────────
+  // Android 8+ requires every notification to be posted to a channel. These give the
+  // user OS-level granularity: they can silence medication reminders but keep check-ins
+  // audible, or vice versa. Each channel maps to a user-facing notification category.
+  private void createNotificationChannels() {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
+    NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+    if (nm == null) return;
+
+    // Gentle daily nudges — silent, low-priority, never interrupt
+    NotificationChannel gentle = new NotificationChannel(
+      "nila_gentle", "Gentle nudges", NotificationManager.IMPORTANCE_LOW);
+    gentle.setDescription("Daily check-in prompts, wind-down reminders, and weekly digests. Silent and non-interruptive.");
+    gentle.setShowBadge(false);
+    gentle.enableVibration(false);
+    gentle.setSound(null, null);
+    nm.createNotificationChannel(gentle);
+
+    // Medication reminders — high-importance, must be noticed
+    NotificationChannel medication = new NotificationChannel(
+      "nila_medication", "Medication reminders", NotificationManager.IMPORTANCE_HIGH);
+    medication.setDescription("Medication schedule alerts. These are health-critical and appear with sound.");
+    medication.setShowBadge(true);
+    nm.createNotificationChannel(medication);
+
+    // Nila replied — default importance, gentle ping when backgrounded
+    NotificationChannel reply = new NotificationChannel(
+      "nila_reply", "Nila's replies", NotificationManager.IMPORTANCE_DEFAULT);
+    reply.setDescription("A gentle ping when Nila has replied. Medium priority with short vibration.");
+    reply.setShowBadge(false);
+    nm.createNotificationChannel(reply);
+
+    // Quick EMA check-ins — default importance
+    NotificationChannel ema = new NotificationChannel(
+      "nila_ema", "Quick check-ins", NotificationManager.IMPORTANCE_DEFAULT);
+    ema.setDescription("2-minute micro-check-ins scattered through your day. Medium priority.");
+    ema.setShowBadge(false);
+    nm.createNotificationChannel(ema);
+
+    // Crisis follow-up — high importance
+    NotificationChannel crisis = new NotificationChannel(
+      "nila_crisis", "Safety follow-ups", NotificationManager.IMPORTANCE_HIGH);
+    crisis.setDescription("Post-crisis aftercare check-ins. These are time-sensitive safety prompts and appear with sound.");
+    crisis.setShowBadge(true);
+    nm.createNotificationChannel(crisis);
   }
 
   @Override

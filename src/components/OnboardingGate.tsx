@@ -198,7 +198,7 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
           ) : (
             <button
               onClick={() => setStep((s) => s + 1)}
-              className="flex-[2] py-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm font-bold transition-colors cursor-pointer flex items-center justify-center gap-1"
+              className="flex-[2] py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold transition-colors cursor-pointer flex items-center justify-center gap-1"
             >
               {t("next")} <ChevronRight className="w-4 h-4" />
             </button>

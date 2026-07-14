@@ -22,15 +22,21 @@ export default function ChatLoading() {
           30% { transform: translateY(-6px); }
         }
         .shimmer-bar {
-          background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+          /* Soft pink-magenta shimmer that matches Nila's orb and reads calm on both the cream
+             (light) and warm-dark themes — semi-transparent so it blends with whatever surface
+             it sits on. Replaces the old dark-navy bars that looked like broken black lines. */
+          background: linear-gradient(90deg,
+            rgba(236,91,158,0.13) 25%,
+            rgba(236,91,158,0.28) 50%,
+            rgba(236,91,158,0.13) 75%);
           background-size: 400px 100%;
           animation: chat-shimmer 1.5s ease-in-out infinite;
-          border-radius: 8px;
+          border-radius: 999px;
         }
         .typing-dot {
           width: 7px; height: 7px;
           border-radius: 50%;
-          background: #64748b;
+          background: #EC5B9E;
           display: inline-block;
         }
         .typing-dot:nth-child(1) { animation: chat-dot-bounce 1.4s ease-in-out infinite; }

@@ -7,6 +7,7 @@
 import { LocalNotifications } from "@capacitor/local-notifications";
 import { withinQuietHours, getReminderPrefs } from "./reminders";
 import { selfReportSleepSignal } from "./sleepInsight";
+import { getWindDownReminder } from "./windDown";
 import { topFireableSignal } from "./nilaInflection";
 import { getInflectionEnabled } from "./inflectionPrefs";
 import { DAY_MS } from "./storageUtils";
@@ -18,6 +19,68 @@ import { isSafetySuppressed, markSafetySuppression } from "./notificationSuppres
 import { isDndActive } from "./dnd";
 import { peekRemaining, commitClaim, skipActive, recordNonCrisisSent } from "./notificationBudget";
 import { isCategoryEnabled } from "./notificationCategories";
+
+// ── Android notification channels (Phase 20) ──────────────────────────────────
+// Mirrors the channels created in MainActivity.java. Passed via channelId to every
+// LocalNotifications.schedule() call so the OS can apply per-channel importance,
+// sound, and badge policies defined natively.
+export const CHANNEL = {
+  gentle: "nila_gentle",
+  medication: "nila_medication",
+  reply: "nila_reply",
+  ema: "nila_ema",
+  crisis: "nila_crisis",
+} as const;
+
+// ── Notification action types (Phase 20) ──────────────────────────────────────
+// Capacitor action types render as inline buttons in the expanded notification
+// on Android. The "Snooze" type gives a gentle pause; "CheckIn" drives the EMA flow.
+// Each schedule call sets actionTypeId to one of these.
+export const ACTION_TYPE = {
+  snooze: "NILA_SNOOZE",
+  checkIn: "NILA_CHECKIN",
+  medication: "NILA_MEDICATION",
+  dismissOnly: "NILA_DISMISS",
+} as const;
+
+/** Call once at app start to register the action type templates. Idempotent. */
+export async function registerNotificationActionTypes(): Promise<void> {
+  try {
+    await LocalNotifications.registerActionTypes({
+      types: [
+        {
+          id: ACTION_TYPE.snooze,
+          actions: [
+            { id: "snooze_1h", title: "Be back in 1h" },
+            { id: "snooze_3h", title: "Pause for 3h" },
+          ],
+        },
+        {
+          id: ACTION_TYPE.checkIn,
+          actions: [
+            { id: "check_in", title: "Check in" },
+            { id: "dismiss", title: "Not now" },
+          ],
+        },
+        {
+          id: ACTION_TYPE.medication,
+          actions: [
+            { id: "taken", title: "Taken ✓" },
+            { id: "remind_30m", title: "Remind in 30m" },
+          ],
+        },
+        {
+          id: ACTION_TYPE.dismissOnly,
+          actions: [
+            { id: "dismiss", title: "Dismiss" },
+          ],
+        },
+      ],
+    });
+  } catch (e) {
+    console.error("[notifications] registerActionTypes failed:", e);
+  }
+}
 import { optimalFireHourNow } from "./notificationEngagement";
 
 // Warm, low-pressure nudges (Phase 7). Never demanding, never guilt-laden — each is an invitation.
@@ -148,6 +211,8 @@ export async function scheduleReminderAt(when: Date, body: string, title = "Nila
         body,
         schedule: { at: when, allowWhileIdle: true },
         smallIcon: "ic_stat_icon_config_sample",
+        channelId: (extra as any)?.channelId || CHANNEL.gentle,
+        actionTypeId: ACTION_TYPE.snooze,
         // Content-free routing payload only (e.g. {view:'armed_checkin'}) — NEVER user text.
         ...(extra ? { extra } : {}),
       }],
@@ -160,7 +225,7 @@ export async function scheduleReminderAt(when: Date, body: string, title = "Nila
 }
 
 // Stable id for the "Nila replied" ping so a new one replaces (not stacks) the last.
-const REPLY_READY_ID = 1002;
+const REPLY_READY_ID = 1003;
 
 /**
  * Fire an immediate, gentle ping that Nila's reply is ready — the passive→active "reaches out" piece.
@@ -180,8 +245,10 @@ export async function notifyReplyReady(): Promise<void> {
         id: REPLY_READY_ID,
         title: "NilaMind",
         body: "Nila replied — she's here whenever you're ready. 💙",
-        schedule: { at: new Date(Date.now() + 200), allowWhileIdle: true }, // ~immediate, fires even in doze
+        schedule: { at: new Date(Date.now() + 200), allowWhileIdle: true },
         smallIcon: "ic_stat_icon_config_sample",
+        channelId: CHANNEL.reply,
+        actionTypeId: ACTION_TYPE.dismissOnly,
       }],
     });
   } catch (e) {
@@ -261,6 +328,8 @@ export async function syncDailyReminders(opts: { request?: boolean } = { request
         body: nudgeForToday(),
         schedule: { on: { hour: h, minute: m }, allowWhileIdle: true }, // repeats daily
         smallIcon: "ic_stat_icon_config_sample",
+        channelId: CHANNEL.gentle,
+        actionTypeId: ACTION_TYPE.snooze,
       }],
     });
     commitClaim(1); // P6.3: count the daily nudge against the per-day budget
@@ -309,8 +378,10 @@ export async function syncWeeklyDigest(opts: { request?: boolean } = { request: 
         id: WEEKLY_DIGEST_ID,
         title: "NilaMind",
         body: "Your week in review is ready — tap to see how your mood and rhythm went.",
-        schedule: { on: { weekday: 1, hour: h, minute: m }, allowWhileIdle: true }, // Sundays
+        schedule: { on: { weekday: 1, hour: h, minute: m }, allowWhileIdle: true },
         smallIcon: "ic_stat_icon_config_sample",
+        channelId: CHANNEL.gentle,
+        actionTypeId: ACTION_TYPE.snooze,
       }],
     });
     commitClaim(1); // counts against the per-day non-crisis budget
@@ -366,16 +437,15 @@ export async function syncMedicationReminders(meds: Medication[]): Promise<void>
   try { granted = (await LocalNotifications.checkPermissions()).display === "granted"; } catch (e) { console.error("[notifications] syncMedicationReminders checkPermissions failed:", e); return; }
   if (!granted) return;
 
-  const notifications: { id: number; title: string; body: string; schedule: { on: { hour: number; minute: number }; allowWhileIdle: true }; smallIcon: string }[] = [];
+  const notifications: { id: number; title: string; body: string; schedule: { on: { hour: number; minute: number }; allowWhileIdle: true }; smallIcon: string; channelId: string; actionTypeId: string }[] = [];
   for (const med of meds) {
     if (!med.active) continue;
     const [h, m] = parseTime(med.time);
     const body = `Time for ${med.name} ${med.dose}`.trim();
-    notifications.push({ id: medNotificationId(med.id), title: "NilaMind", body, schedule: { on: { hour: h, minute: m }, allowWhileIdle: true }, smallIcon: "ic_stat_icon_config_sample" });
+    notifications.push({ id: medNotificationId(med.id), title: "NilaMind", body, schedule: { on: { hour: h, minute: m }, allowWhileIdle: true }, smallIcon: "ic_stat_icon_config_sample", channelId: CHANNEL.medication, actionTypeId: ACTION_TYPE.medication });
     if (med.schedule === "twice_daily") {
-      // Space second dose 12 hours later, wrapping around midnight.
       const h2 = (h + 12) % 24;
-      notifications.push({ id: medNotificationId(med.id, 1), title: "NilaMind", body, schedule: { on: { hour: h2, minute: m }, allowWhileIdle: true }, smallIcon: "ic_stat_icon_config_sample" });
+      notifications.push({ id: medNotificationId(med.id, 1), title: "NilaMind", body, schedule: { on: { hour: h2, minute: m }, allowWhileIdle: true }, smallIcon: "ic_stat_icon_config_sample", channelId: CHANNEL.medication, actionTypeId: ACTION_TYPE.medication });
     }
   }
   if (notifications.length === 0) return;
@@ -449,7 +519,11 @@ export async function syncEmaCheckins(opts: { request?: boolean } = { request: t
         body: EMA_BODY,
         schedule: { at, allowWhileIdle: true },
         smallIcon: "ic_stat_icon_config_sample",
-        extra: { view: "ema_checkin" }, // content-free routing tag for the tap listener
+        channelId: CHANNEL.ema,
+        actionTypeId: ACTION_TYPE.checkIn,
+        group: "nila_ema",
+        groupSummary: i === 0, // first one acts as the group summary
+        extra: { view: "ema_checkin" },
       })),
     });
     commitClaim(todayCount); // P6.3: count today's EMA nudges against the per-day budget
@@ -469,4 +543,36 @@ export async function syncEmaCheckins(opts: { request?: boolean } = { request: t
 export async function suppressNudgesForCrisis(): Promise<void> {
   markSafetySuppression();
   await Promise.allSettled([clearEmaCheckins(), clearDailyReminders()]);
+}
+
+// ── Wind-down reminder sync (Phase 20) ────────────────────────────────────────
+// Reconciles the nightly wind-down nudge on every app open (idempotent).
+// Was previously only scheduled on explicit toggle; now catches boot/upgrade too.
+const WIND_DOWN_ID = 5001;
+export async function syncWindDownReminder(): Promise<void> {
+  const wd = getWindDownReminder();
+  try {
+    await LocalNotifications.cancel({ notifications: [{ id: WIND_DOWN_ID }] });
+  } catch { /* ok if not yet scheduled */ }
+
+  if (!wd.enabled) return;
+  const [h, m] = wd.time.split(":").map(Number);
+  if (isNaN(h) || isNaN(m)) return;
+
+  try {
+    await LocalNotifications.schedule({
+      notifications: [{
+        id: WIND_DOWN_ID,
+        title: "NilaMind",
+        body: "Time to wind down — a few minutes to settle your body and let the day rest.",
+        schedule: { on: { hour: h, minute: m }, allowWhileIdle: true },
+        smallIcon: "ic_stat_icon_config_sample",
+        channelId: CHANNEL.gentle,
+        actionTypeId: ACTION_TYPE.snooze,
+        extra: { view: "winddown" },
+      }],
+    });
+  } catch (e) {
+    console.error("[notifications] syncWindDownReminder failed:", e);
+  }
 }
