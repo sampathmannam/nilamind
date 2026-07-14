@@ -291,6 +291,20 @@ export default function TodayScreen({
         </div>
       )}
 
+      {/* Quick breathe — one-tap immersive breathing exercise */}
+      <button
+        onClick={() => go("breathing")}
+        className="w-full glass hover:brightness-110 p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left flex items-center gap-3"
+      >
+        <div className="p-2 rounded-xl bg-blue-500/10">
+          <Wind className="w-5 h-5 text-blue-400" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-slate-200">Quick breathe</p>
+          <p className="text-[11px] text-slate-500">A 5-minute breathing session to settle your body</p>
+        </div>
+      </button>
+
       {/* Mood card — prompt to log if not checked in, show reflection if done */}
       <button
         onClick={() => checkedIn ? go("diary") : go("ema_checkin")}

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Users, Plus, X } from "lucide-react";
 import { createProfile, loadProfile, saveProfile, loadSessions, saveSession, prewrittenTemplates, type PeerProfile, type PeerSession } from "../services/peerSupport";
+import EmptyState from "./EmptyState";
 
 export default function PeerSupportScreen() {
   const [profile, setProfile] = useState<PeerProfile | null>(loadProfile);
@@ -45,10 +46,12 @@ export default function PeerSupportScreen() {
     return (
       <div className="space-y-4 max-w-md mx-auto" id="peer-support-screen">
         <h2 className="text-xl font-semibold text-slate-100 flex items-center gap-2"><Users className="w-5 h-5 text-emerald-400" /> Peer Support</h2>
-        <div className="glass rounded-2xl p-5 text-center text-xs text-slate-400 space-y-3">
-          <p>No profile yet. Create one to start tracking your connections.</p>
-          <button onClick={() => setShowCreate(true)} className="glass rounded-xl px-4 py-2 text-xs text-emerald-300 cursor-pointer">Create profile</button>
-        </div>
+        <EmptyState
+          illustration="👥"
+          title="No profile yet"
+          body="Create one to start tracking your connections with trusted people."
+          cta={{ label: "Create profile", onClick: () => setShowCreate(true) }}
+        />
       </div>
     );
   }

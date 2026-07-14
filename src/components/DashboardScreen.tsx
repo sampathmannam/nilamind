@@ -860,7 +860,7 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
           <p className="text-[10px] text-slate-600">{chartTab === "emotion" ? "Lower is calmer. Per-day average of your check-ins." : chartTab === "energy" ? "Each dot is one check-in. Lower distress + higher energy = Vibrant; higher distress + lower energy = Sluggish." : chartTab === "sleep-mood" ? "Sleep hours vs distress. Lower sleep often correlates with higher distress." : "Sleep hours and felt-connection, per day."}</p>
         </div>
       ) : (
-        <EmptyCard text="Your trend will appear here after a couple of check-ins." />
+        <EmptyCard illustration="📊" text="Your trend will appear here after a couple of check-ins." />
       )}
 
       {/* Emotion distribution (suffix-stripped counts) */}
@@ -921,7 +921,7 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
             );
           })
         ) : (
-          <EmptyCard text="Take a PHQ-9 or GAD-7 (Validated Check-In) to track depression/anxiety over time." />
+          <EmptyCard illustration="📝" text="Take a PHQ-9 or GAD-7 (Validated Check-In) to track depression/anxiety over time." />
         )}
       </div>
 
@@ -1062,6 +1062,11 @@ function Stat({ icon, value, label }: { icon: React.ReactNode; value: string; la
   );
 }
 
-function EmptyCard({ text }: { text: string }) {
-  return <div className="glass rounded-2xl p-4 text-center text-[11px] text-slate-500 leading-relaxed">{text}</div>;
+function EmptyCard({ text, illustration }: { text: string; illustration?: string }) {
+  return (
+    <div className="glass rounded-2xl p-4 text-center space-y-2">
+      {illustration && <span className="text-2xl">{illustration}</span>}
+      <p className="text-[11px] text-slate-500 leading-relaxed">{text}</p>
+    </div>
+  );
 }

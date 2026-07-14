@@ -47,6 +47,7 @@ const ArmedCheckInScreen = lazy(() => import("./components/ArmedCheckInScreen"))
 const WellbeingScreen = lazy(() => import("./components/WellbeingScreen"));
 const EpisodeMarkerScreen = lazy(() => import("./components/EpisodeMarkerScreen"));
 const CaregiverSettingsScreen = lazy(() => import("./components/CaregiverSettingsScreen"));
+const BreathingScreen = lazy(() => import("./components/BreathingScreen"));
 const AboutNilaScreen = lazy(() => import("./components/AboutNilaScreen"));
 const InsightsScreen = lazy(() => import("./components/InsightsScreen"));
 
@@ -169,6 +170,7 @@ export default function App() {
   const [isMedicationOpen, setIsMedicationOpen] = useState(false);
   const [isCaregiverOpen, setIsCaregiverOpen] = useState(false);
   const [selectedCaregiverContactId, setSelectedCaregiverContactId] = useState<string | undefined>();
+  const [isBreathingOpen, setIsBreathingOpen] = useState(false);
   const [activeAuxView, setActiveAuxView] = useState<AuxView | null>(null);
   const [closingAuxView, setClosingAuxView] = useState<AuxView | null>(null);
   const [activeTab, setActiveTab] = useState<AppTab>("today");
@@ -306,7 +308,8 @@ export default function App() {
     // "caregiver" and other special targets — route to the right sheet
     if (res.kind === "unknown") {
       if (res.target === "caregiver") { setIsCaregiverOpen(true); return; }
-      if (res.target === "grounding" || res.target === "breathing") { setIsGroundingOpen(true); return; }
+      if (res.target === "grounding") { setIsGroundingOpen(true); return; }
+      if (res.target === "breathing") { setIsBreathingOpen(true); return; }
     }
   }, [activateCrisis]);
 
@@ -323,6 +326,7 @@ export default function App() {
       if (isGroundingOpen) { setIsGroundingOpen(false); return; }
       if (isMedicationOpen) { setIsMedicationOpen(false); return; }
       if (isCaregiverOpen) { setIsCaregiverOpen(false); return; }
+      if (isBreathingOpen) { setIsBreathingOpen(false); return; }
       if (activeAuxView) { setActiveAuxView(null); return; }
       if (modeScreenHasSheet) { setModeScreenHasSheet(false); return; }
       if (activeTab !== "nila") { setActiveTab("nila"); return; }
@@ -579,12 +583,19 @@ export default function App() {
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
             <span className="text-sm font-semibold text-slate-100">{auxViewLabel(activeAuxView || closingAuxView!)}</span>
             <button onClick={() => closeSheet(activeAuxView)} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Close"><X className="w-4 h-4" aria-hidden="true" /></button>
-          </div>
-          <div className="flex-1 min-h-0 overflow-y-auto">
-            <Suspense fallback={<ScreenFallback />}>{renderAuxView((activeAuxView || closingAuxView)!, activateCrisis, closeActiveAux, () => setIsGroundingOpen(true), go, (cid) => { setSelectedCaregiverContactId(cid); setIsCaregiverOpen(true); })}</Suspense>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+           </div>
+           <div className="flex-1 min-h-0 overflow-y-auto">
+             <Suspense fallback={<ScreenFallback />}>{renderAuxView((activeAuxView || closingAuxView)!, activateCrisis, closeActiveAux, () => setIsGroundingOpen(true), go, (cid) => { setSelectedCaregiverContactId(cid); setIsCaregiverOpen(true); })}</Suspense>
+           </div>
+         </div>
+       )}
+
+       {/* Full-screen breathing experience */}
+       {isBreathingOpen && (
+         <Suspense fallback={null}>
+           <BreathingScreen onClose={() => setIsBreathingOpen(false)} />
+         </Suspense>
+       )}
+     </div>
+   );
 }
