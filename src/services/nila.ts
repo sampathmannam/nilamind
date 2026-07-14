@@ -20,6 +20,8 @@ import { distortionSteer, safeSpotDistortions } from "./distortionSpotter"; // �
 import { checkAndStartProtocol } from "./protocolIntegration";
 import { retrieveConversationMemories, formatMemoryBlock } from "./conversationMemory";
 import { emotionalSteer } from "./emotionalIntelligence";
+import { personalRagBlock } from "./personalRag";
+import { ragGuidanceBlock } from "./ragWarmth";
 import { searchPsychoed } from "./psychoed";
 
 export interface NilaMessage {
@@ -263,6 +265,10 @@ export function buildNilaSystem(query?: string): string {
   // Emotional intelligence: prime the model for the user's emotional state.
   // Per-turn guidance that overrides the default persona for this specific reply.
   const steer = query ? emotionalSteer(query) : "";
+
+  // Personal RAG: retrieve what helped before, recent mood, check-in patterns.
+  // Gives the model specific, personal knowledge for warm, natural responses.
+  const personalRag = query ? personalRagBlock(query) : "";
   const context = buildPersonalContext();
   // A structured program the person is partway through — grounds a free-text mid-program turn so Nila answers
   // with the program in mind, not generically (deterministic; "" when nothing is active). See nilaContext.ts.
@@ -283,7 +289,9 @@ const distortions = (() => {
   // Conversation memory: retrieve similar past conversations as few-shot context.
   const memories = query ? retrieveConversationMemories(query, 2) : [];
   const memoryBlock = formatMemoryBlock(memories);
-  return [steer, persona, distortions, context, activeProtocol, memoryBlock, skills].filter(Boolean).join("\n\n");
+  // RAG warmth guidance: teaches model HOW to use retrieved data naturally
+  const ragGuidance = ragGuidanceBlock(personalRag, skills, memoryBlock);
+  return [steer, persona, personalRag, context, activeProtocol, distortions, memoryBlock, skills, ragGuidance].filter(Boolean).join("\n\n");
 }
 
 /** A first message that sounds like a friend opening the door — not a clinical intake. */
