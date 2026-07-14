@@ -47,7 +47,7 @@ const FORMAT_CONFIGS: Record<PromptFormat, FormatConfig> = {
     turnPattern: /<(?:end|start)_of_turn>/,
   },
   qwen: {
-    n_ctx: 2048,
+    n_ctx: 4096, // expanded from 2048 — q8_0 KV cache ~350MB, safe in 8GB RAM. Qwen2.5 supports native 32K via YaRN rope scaling.
     buildPrompt: toQwenPrompt,
     windowMessages: windowQwenMessages,
     stop: ["<|im_end|>", "<|im_start|>"],

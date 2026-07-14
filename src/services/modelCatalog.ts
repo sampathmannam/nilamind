@@ -28,6 +28,16 @@ export interface CatalogModel {
 
 export const MODELS: CatalogModel[] = [
   {
+    id: "quality",
+    label: "Nila's brain (thoughtful)",
+    detail: "Qwen2.5-3B · ~1.9 GB · more empathetic & nuanced · runs entirely on your phone",
+    filename: "qwen2.5-3b-instruct-q4_k_m.gguf",
+    url: "https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF/resolve/main/qwen2.5-3b-instruct-q4_k_m.gguf",
+    sizeBytes: 1985000000,
+    runtime: "gguf",
+    promptFormat: "qwen",
+  },
+  {
     id: "fast",
     label: "Nila's brain (fast)",
     detail: "Qwen2.5-1.5B · ~1.1 GB · fast & capable · runs entirely on your phone",

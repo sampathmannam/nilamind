@@ -16,9 +16,20 @@ import java.io.FileInputStream;
 
 public class MainActivity extends BridgeActivity {
 
-  // The on-device model file warmed at launch — must match the llama.cpp adapter's path
-  // (llamaCppLlmAdapter.ts DEFAULT_MODEL_PATH).
-  private static final String MODEL_FILE = "gemma-3-1b-it-Q4_K_M.gguf";
+  // The on-device model file warmed at launch — matches modelCatalog.ts default (Qwen2.5-3B Q4_K_M).
+  // Falls back to 1.5B if 3B not found. Order must match modelCatalog priority.
+  private static final String[] MODEL_FILES = {
+    "qwen2.5-3b-instruct-q4_k_m.gguf",
+    "qwen2.5-1.5b-instruct-q4_k_m.gguf",
+  };
+
+  private File findModelFile() {
+    for (String name : MODEL_FILES) {
+      File f = new File(getExternalFilesDir(null), name);
+      if (f.exists() && f.length() > 0) return f;
+    }
+    return null;
+  }
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
@@ -85,7 +96,8 @@ public class MainActivity extends BridgeActivity {
   // per reboot. Gated on the model existing, so first-run (no model yet) never shows the notification.
   private void startResidentServiceIfModelPresent() {
     try {
-      final File model = new File(getExternalFilesDir(null), MODEL_FILE);
+      final File model = findModelFile();
+      if (model == null) return;
       if (!model.exists() || model.length() == 0) return;
       Intent svc = new Intent(this, ModelResidentService.class);
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(svc);
@@ -108,7 +120,8 @@ public class MainActivity extends BridgeActivity {
   // heap never holds the model; the warmth lives in the kernel page cache (reclaimable under
   // memory pressure → on a low-RAM device the benefit may be partial, never harmful).
   private void precacheModelWeights() {
-    final File model = new File(getExternalFilesDir(null), MODEL_FILE);
+    final File model = findModelFile();
+    if (model == null) return;
     new Thread(() -> {
       try {
         Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
