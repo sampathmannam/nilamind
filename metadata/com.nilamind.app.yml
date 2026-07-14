@@ -25,9 +25,9 @@ RepoType: git
 Repo: https://github.com/sampathmannam/nilamind.git
 
 Builds:
-  - versionName: 1.10.0
-    versionCode: 20
-    commit: v1.10.0
+  - versionName: 1.10.1
+    versionCode: 21
+    commit: v1.10.1
     sudo:
       - apt-get update
       - apt-get install -y nodejs npm
@@ -45,5 +45,5 @@ Builds:
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags ^v[0-9.]+$
-CurrentVersion: 1.10.0
-CurrentVersionCode: 20
+CurrentVersion: 1.10.1
+CurrentVersionCode: 21
