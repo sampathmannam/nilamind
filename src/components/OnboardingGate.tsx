@@ -101,7 +101,7 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
   return (
     <div className="fixed inset-0 z-[60] bg-page flex flex-col" id="onboarding-gate">
       {/* Always-reachable crisis help */}
-      <div className="flex items-center justify-end px-4 py-3">
+      <div className="flex items-center justify-end px-4 pb-3" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
         <button
           onClick={onOpenCrisis}
           className="flex items-center gap-1.5 text-xs font-semibold text-rose-300 hover:text-rose-200 px-3 py-1.5 rounded-full border border-rose-500/30 hover:bg-rose-500/10 transition-colors cursor-pointer"
