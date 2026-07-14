@@ -110,13 +110,17 @@ Play App Signing will re-sign on upload; your `upload-keystore.jks` is the *uplo
 
 ---
 
-## C. F-Droid ecosystem — via Obtainium (recommended FOSS route)
+## C. F-Droid ecosystem — Obtainium (recommended) + IzzyOnDroid (ready to submit)
 
-> **Obtainium, not IzzyOnDroid.** IzzyOnDroid enforces a **~30 MB APK limit**; even after the size
-> trim (§D) NilaMind is **77 MB**, so it will not be accepted there. **[Obtainium](https://obtainium.imranr.dev)**
-> is the right home for a large FOSS app: **no size limit**, and it auto-updates users straight from
-> your GitHub Releases (which already exist — nothing new to host or maintain). The IzzyOnDroid notes
-> further below are kept only as a reference in case the app is ever split under the size cap.
+> **Two FOSS channels, both fed by your existing GitHub Releases and the same signing key**, so a user
+> can move between them without reinstalling. **[Obtainium](https://obtainium.imranr.dev)** is the
+> recommended route — it's live **today**, needs nothing to host or maintain, and auto-updates users
+> straight from your Releases. **IzzyOnDroid** is a second, F-Droid-ecosystem channel that is
+> **ready to submit** (see [`docs/IZZYONDROID_SUBMISSION.md`](docs/IZZYONDROID_SUBMISSION.md) for the
+> audited checklist and the copy-paste request). An earlier note here claimed a **~30 MB IzzyOnDroid
+> size cap** blocked NilaMind (~75 MB) — that was unfounded: IzzyOnDroid routinely hosts apps far larger
+> than that and does not enforce a 30 MB limit. The one repo that genuinely can't take NilaMind is
+> **mainline f-droid.org**, which builds from source and rejects the prebuilt `llama.cpp` `.so` (§D).
 
 ### Obtainium (do this)
 NilaMind is Obtainium-ready **today** — you already publish signed APKs to GitHub Releases.
@@ -135,13 +139,14 @@ anti-feature applies (the earlier Gemma-based default did require that disclosur
 
 ---
 
-### IzzyOnDroid (reference only — currently blocked by the 30 MB size cap)
+### IzzyOnDroid (F-Droid ecosystem — ready to submit)
 
 An F-Droid-format repository, installable from inside the F-Droid client, that accepts your **own
 signed APK** (no rebuild-from-source) and merely *flags* prebuilt/native bits as disclosed
-anti-features. It would be a fine home **except for its size limit**. Mainline f-droid.org is a
-separate, stricter matter — it builds from source and rejects the prebuilt `libllama-cpp-arm64.so`
-(the native llama.cpp inference engine).
+anti-features. It's a fine home for NilaMind — the readiness audit is green (see
+[`docs/IZZYONDROID_SUBMISSION.md`](docs/IZZYONDROID_SUBMISSION.md)); you just open the inclusion
+request. Mainline f-droid.org is a separate, stricter matter — it builds from source and rejects the
+prebuilt `libllama-cpp-arm64.so` (the native llama.cpp inference engine).
 
 ### Prereqs (already done in this repo)
 - ✅ FOSS license (`LICENSE`, Apache-2.0) and public source on GitHub.
