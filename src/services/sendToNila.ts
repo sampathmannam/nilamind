@@ -22,6 +22,7 @@ import { applyOutputSafety } from "./nilaSafetyGate";
 import { isLocalLlmReady, generateOnDevice } from "./localLlm";
 import { askNilaLocalStream } from "./localNila";
 import { storeConversationMemory } from "./conversationMemory";
+import { cleanResponse } from "./responseCleaner";
 import {
   NilaMode,
   NilaUiMessage,
@@ -118,7 +119,8 @@ export async function sendToNila(
         // effects (navigate / open skill) for an unsafe turn. Return only the safe fallback.
         return { reply: getUnsafeFallbackReply(), reachedAI: true };
       }
-      const safe = applyOutputSafety(r.reply, userText, true); // INVARIANT 3
+      const cleaned = cleanResponse(r.reply);
+      const safe = applyOutputSafety(cleaned, userText, true); // INVARIANT 3
       storeConversationMemory(userText, safe); // Lever 6: store for future retrieval
       return { reply: safe, reachedAI: true, navigate: r.navigate, openSkillId: r.openSkillId };
     }
