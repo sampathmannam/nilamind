@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Wind, MessageCircle, Moon, LayoutGrid, Sparkles, ChevronRight, HeartHandshake, Sparkle, Clock3, Target, LineChart } from "lucide-react";
+import { Wind, MessageCircle, Moon, LayoutGrid, Sparkles, ChevronRight, HeartHandshake, Sparkle, Clock3, Target, LineChart, Activity } from "lucide-react";
 import { getTimeMode, getUserState, getGreeting } from "../services/modeEngine";
 import { hasCheckinToday } from "../services/checkin";
 import { secureLocal } from "../services/secureLocal";
@@ -15,6 +15,7 @@ import { getDailyIntention } from "../services/weeklyIntention";
 import DailyIntentionCard, { type DailyIntentionCardHandle } from "./DailyIntentionCard";
 import { useTimeOfDay, heroGradient, contextualSummary } from "../hooks/useTimeOfDay";
 import { buildNilaMessage } from "../services/nilaVoice";
+import { getTopAssessmentPrompt } from "../services/assessmentPrompts";
 import type { TimeMode, UserState } from "../types/modes";
 
 // Goal -> the tool row ids it should promote to the front of their group, when present in that group.
@@ -207,6 +208,9 @@ export default function TodayScreen({
     isReturning: hasAnyCheckins && !checkedIn,
   });
 
+  // Proactive assessment suggestion based on signals
+  const assessmentPrompt = getTopAssessmentPrompt();
+
   return (
     <div className="space-y-5 max-w-md mx-auto" id="today-hub">
       {/* Greeting — time-aware, serif voice, with subtle gradient backdrop */}
@@ -289,6 +293,26 @@ export default function TodayScreen({
             {t("wellbeing_take")}
           </button>
         </div>
+      )}
+
+      {/* Proactive assessment suggestion — contextual or routine */}
+      {assessmentPrompt && (
+        <button
+          onClick={() => go("assessment")}
+          className={`w-full p-4 rounded-2xl text-left transition-all cursor-pointer ${
+            assessmentPrompt.priority === "high"
+              ? "bg-amber-500/5 border border-amber-500/20 hover:bg-amber-500/10"
+              : "glass hover:brightness-110"
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <Activity className={`w-4 h-4 ${assessmentPrompt.priority === "high" ? "text-amber-400" : "text-blue-400"}`} />
+            <p className="text-sm font-semibold text-slate-200">
+              {assessmentPrompt.instrument} {assessmentPrompt.kind === "contextual" ? "suggested" : "due"}
+            </p>
+          </div>
+          <p className="text-[11px] text-slate-400 leading-relaxed mt-1">{assessmentPrompt.reason}</p>
+        </button>
       )}
 
       {/* Quick breathe — one-tap immersive breathing exercise */}

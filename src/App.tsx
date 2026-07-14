@@ -66,6 +66,7 @@ function ScreenFallback() {
 }
 
 import { syncDailyReminders, scheduleReminderAt, syncEmaCheckins, syncWeeklyDigest, suppressNudgesForCrisis, registerNotificationActionTypes, syncWindDownReminder } from "./services/notifications";
+import { recordFirstOpenToday, recordLastCloseToday } from "./services/autoAnchors";
 import { recordEngagement, recordDismissal } from "./services/notificationBudget";
 import { recordNotificationOpen } from "./services/notificationEngagement";
 import { enableDndFor } from "./services/dnd";
@@ -221,6 +222,22 @@ export default function App() {
   // Phase 20 — re-arm the nightly wind-down reminder on every app open (idempotent).
   useEffect(() => {
     void syncWindDownReminder();
+  }, []);
+
+  // Auto-detect wake/bed times from phone usage (social rhythm data without Health Connect).
+  // recordFirstOpenToday() captures the first app open as a wake-time proxy.
+  // recordLastCloseToday() captures the last background event as a bed-time proxy.
+  useEffect(() => {
+    recordFirstOpenToday();
+    const handleVisibility = () => {
+      if (document.visibilityState === "hidden") recordLastCloseToday();
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("beforeunload", recordLastCloseToday);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("beforeunload", recordLastCloseToday);
+    };
   }, []);
 
   // Record that the app was opened today (on-device retention instrumentation). Runs after SecureGate has
