@@ -25,6 +25,7 @@ import { INSTRUMENTS, type AssessmentEntry } from "./assessments";
 import { wellbeingLongitudinal } from "./wellbeingTrack";
 import { episodeMarkerSummary } from "./episodeMarker";
 import { listCaregiverContacts } from "./caregiverContacts";
+import { topicContextBlock } from "./topicTracker";
 import { DAY_MS } from "./storageUtils";
 import { parseSafetyPlan } from "./safetyPlan";
 import { safetyPlanFollowUpContextBlock } from "./safetyPlanFollowUp";
@@ -291,6 +292,13 @@ export function buildPersonalContext(): string {
   {
     const cgBlock = caregiverContextBlock();
     if (cgBlock) lines.push(cgBlock);
+  }
+
+  // ── Conversation topics (Lever 11) ─────────────────────────────────────────
+  // Tracks recurring themes in conversations — what the person talks about most.
+  {
+    const tpBlock = topicContextBlock();
+    if (tpBlock) lines.push(tpBlock);
   }
 
   // ── What has helped (episodes + diary) ────────────────────────────────────
