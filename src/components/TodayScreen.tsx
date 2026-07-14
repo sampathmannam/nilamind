@@ -13,6 +13,7 @@ import { hasRhythmToday, loadTodayAnchors, RHYTHM_ANCHORS } from "../services/so
 import { getUserGoals } from "../services/chatSuggestions";
 import { getDailyIntention } from "../services/weeklyIntention";
 import DailyIntentionCard, { type DailyIntentionCardHandle } from "./DailyIntentionCard";
+import { useTimeOfDay, heroGradient, contextualSummary } from "../hooks/useTimeOfDay";
 import type { TimeMode, UserState } from "../types/modes";
 
 // Goal -> the tool row ids it should promote to the front of their group, when present in that group.
@@ -156,6 +157,7 @@ export default function TodayScreen({
 }) {
   const [showAllTools, setShowAllTools] = useState(false);
   useLanguage();
+  const { timeOfDay } = useTimeOfDay();
   const timeMode = getTimeMode();
   const userState = getUserState();
   const capacity = getCapacityLevel(userState);
@@ -178,12 +180,31 @@ export default function TodayScreen({
   })();
   const wellbeingDue = isWellbeingDue(loadAssessments());
 
+  // Contextual summary — a warm one-liner based on recent check-ins and time of day
+  const recentAvg = (() => {
+    try {
+      const raw = secureLocal.getItem("nilamind_checkins");
+      if (!raw) return null;
+      const list = JSON.parse(raw);
+      if (!Array.isArray(list)) return null;
+      const recent = list.slice(-3).filter((e: any) => e?.intensity != null);
+      if (recent.length === 0) return null;
+      return recent.reduce((s: number, e: any) => s + e.intensity, 0) / recent.length;
+    } catch { return null; }
+  })();
+  const contextLine = contextualSummary(timeOfDay, checkedIn, recentAvg, 0);
+
   return (
     <div className="space-y-5 max-w-md mx-auto" id="today-hub">
-      {/* Greeting — time-aware, serif voice, no emoji (screen-reader-safe) */}
-      <header className="space-y-0.5">
-        <h1 className="editorial text-3xl text-slate-100">{greeting}</h1>
-        <p className="text-sm text-slate-400">{formatDate()}</p>
+      {/* Greeting — time-aware, serif voice, with subtle gradient backdrop */}
+      <header className={`relative rounded-2xl p-4 -mx-1 bg-gradient-to-br ${heroGradient(timeOfDay)}`}>
+        <div className="space-y-0.5">
+          <h1 className="editorial text-3xl text-slate-100">{greeting}</h1>
+          <p className="text-sm text-slate-400">{formatDate()}</p>
+          {contextLine && (
+            <p className="text-[11px] text-slate-500 leading-relaxed mt-1">{contextLine}</p>
+          )}
+        </div>
       </header>
 
       {/* Empty-state welcome — shown only on first launch when no check-ins exist yet */}
@@ -196,6 +217,42 @@ export default function TodayScreen({
           <p className="text-xs text-slate-400 leading-relaxed">
             Everything here stays on your device. Start with a check-in — it takes two taps.
             Nila will suggest tools based on how you're feeling.
+          </p>
+        </div>
+      )}
+
+      {/* Welcome back — returning after absence */}
+      {hasAnyCheckins && !checkedIn && (() => {
+        try {
+          const raw = secureLocal.getItem("nilamind_checkins");
+          if (!raw) return false;
+          const list = JSON.parse(raw);
+          if (!Array.isArray(list) || list.length === 0) return false;
+          const last = list[list.length - 1];
+          if (!last?.date) return false;
+          const lastDate = new Date(last.date + "T00:00:00");
+          const daysSince = Math.floor((Date.now() - lastDate.getTime()) / 86_400_000);
+          return daysSince >= 2;
+        } catch { return false; }
+      })() && (
+        <div className="glass p-4 rounded-2xl space-y-1.5 border border-blue-400/10">
+          <div className="flex items-center gap-2">
+            <Sparkle className="w-4 h-4 text-blue-400" />
+            <p className="text-sm font-semibold text-slate-200">Welcome back</p>
+          </div>
+          <p className="text-[11px] text-slate-400 leading-relaxed">
+            It's been a little while — no pressure. A quick check-in can help you reconnect with how you're doing.
+          </p>
+        </div>
+      )}
+
+      {/* Morning focus — if morning and not checked in yet */}
+      {timeOfDay === "morning" && checkedIn && weekInsight && (
+        <div className="glass p-3 rounded-2xl space-y-1">
+          <p className="text-[10px] uppercase font-mono tracking-widest text-slate-500">This week</p>
+          <p className="text-[11px] text-slate-300">
+            {weekInsight.checkinCount} check-in{weekInsight.checkinCount !== 1 ? "s" : ""}
+            {weekInsight.topEmotion ? ` · mostly feeling ${weekInsight.topEmotion}` : ""}
           </p>
         </div>
       )}
