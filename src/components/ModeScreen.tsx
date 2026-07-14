@@ -96,8 +96,23 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   const [skillOffer, setSkillOffer] = useState<Skill | null>(null);
   const [softCrisisCard, setSoftCrisisCard] = useState(false); // 2026-07-12 Wave 3: soft tier, classifier-only hits
   const [pactNotice, setPactNotice] = useState<PactNotice | null>(null); // #30: surfaced pact (the human bridge)
+  // Phase: UX clutter fix — cap non-crisis nudges at 2 (crisis cards always shown)
+  const [nudgeCount, setNudgeCount] = useState(0);
+  const MAX_NUDGES = 2;
   const [confirmNewChat, setConfirmNewChat] = useState(false); // "new conversation" confirm dialog
   const [welcomeBack, setWelcomeBack] = useState<string | null>(null);
+
+  // Compute which non-crisis nudges are visible (cap at MAX_NUDGES)
+  const nonCrisisNudges = [
+    { id: "sleep", show: !!sleepProdromeNudge },
+    { id: "jitai", show: !!jitaiNudge?.shouldNudge },
+    { id: "calmSafety", show: !!calmSafetyNudge?.show },
+    { id: "pact", show: !!pactNotice },
+    { id: "welcome", show: !!welcomeBack },
+  ].filter((n) => n.show);
+
+  const visibleNudgeIds = new Set(nonCrisisNudges.slice(0, MAX_NUDGES).map((n) => n.id));
+
   const [ratedMessages, setRatedMessages] = useState<Set<number>>(new Set());
   // 2026-07-12 Wave 3, Group F: completes the already-built-but-unwired attachSuggestion() flow — a one-tap,
   // optional, dismissable "what would've helped?" follow-up after a thumbs-down. Never forced.
@@ -886,7 +901,8 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
 
           {/* Calm-moment safety-plan nudge (Task 1.5, 2026-07-12 Wave 3) — only when mood is calm, no recent
               crisis, and a section is still blank. Never shown crisis-adjacent (cleared in openCrisis). */}
-          {calmSafetyNudge?.show && (
+          {/* Calm safety nudge — capped by priority system */}
+          {visibleNudgeIds.has("calmSafety") && calmSafetyNudge?.show && (
             <div
               key="calm-safety-plan-nudge"
               className="w-full px-3 py-2 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-200 text-xs"
@@ -916,7 +932,8 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           )}
 
           {/* Sleep prodrome nudge (C1 — soft signal, never alarm) */}
-          {sleepProdromeNudge && (
+          {/* Sleep prodrome nudge — capped by priority system */}
+          {visibleNudgeIds.has("sleep") && sleepProdromeNudge && (
             <div
               key="sleep-prodrome"
               className="w-full px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs"
@@ -947,7 +964,8 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           )}
 
           {/* JITAI nudge */}
-          {jitaiNudge?.shouldNudge && (
+          {/* JITAI nudge — capped by priority system */}
+          {visibleNudgeIds.has("jitai") && jitaiNudge?.shouldNudge && (
             <div
               key="jitai-nudge"
               className="w-full px-3 py-2 rounded-xl bg-slate-800/50 border border-slate-700 text-slate-200 text-xs"
@@ -991,7 +1009,8 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
            )}
 
           {/* Welcome-back card — gentle nudge after inactivity (>= 2 days). §9 clears it. */}
-          {welcomeBack && (
+          {/* Welcome back — capped by priority system */}
+          {visibleNudgeIds.has("welcome") && welcomeBack && (
             <div className="w-full px-3 py-2.5 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-200 text-xs">
               <div className="flex items-start gap-2">
                 <MessageCircle className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" />
@@ -1021,7 +1040,8 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
 
           {/* #30 (audit): pact surface — the user's own letter + a tap-to-text handoff, when a real shift
               is noticed. §9 takes precedence (cleared in openCrisis). */}
-          {pactNotice && (
+          {/* Pact notice — capped by priority system */}
+          {visibleNudgeIds.has("pact") && pactNotice && (
             <PactNoticeCard
               notice={pactNotice}
               onDismiss={() => { dismissPactNoticeToday(); setPactNotice(null); }}

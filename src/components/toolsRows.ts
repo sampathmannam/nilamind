@@ -49,8 +49,6 @@ export function buildToolGroups({ go, onEpisode, phoneEnabled }: ToolRowDeps): T
         { id: "winddown", label: t("tool_winddown_label"), sub: t("tool_winddown_sub"), Icon: Moon, iconClass: "w-5 h-5 text-indigo-400", onTap: () => go("winddown") },
         { id: "sounds", label: "Ambient sounds", sub: "White/brown/pink noise for focus, sleep, or calm", Icon: Volume2, iconClass: "w-5 h-5 text-emerald-400", onTap: () => go("sounds") },
         { id: "reach_out", label: t("tool_reach_out_label"), sub: t("tool_reach_out_sub"), Icon: MessageCircle, iconClass: "w-5 h-5 text-emerald-400", onTap: () => go("reach_out") },
-        { id: "crisis_rehearsal", label: t("tool_crisis_rehearsal_label"), sub: t("tool_crisis_rehearsal_sub"), Icon: Shield, iconClass: "w-5 h-5 text-rose-400", onTap: () => go("crisis_rehearsal") },
-        { id: "relapse_plan", label: t("tool_relapse_label"), sub: t("tool_relapse_sub"), Icon: AlertTriangle, iconClass: "w-5 h-5 text-amber-400", onTap: () => go("relapse_plan") },
         { id: "episode", label: t("tool_episode_label"), sub: t("tool_episode_sub"), Icon: LifeBuoy, iconClass: "w-5 h-5 text-rose-400", onTap: onEpisode },
       ],
     },
@@ -71,6 +69,8 @@ export function buildToolGroups({ go, onEpisode, phoneEnabled }: ToolRowDeps): T
         { id: "values_to_action", label: t("tool_values_work_label"), sub: t("tool_values_work_sub"), Icon: Compass, iconClass: "w-5 h-5 text-violet-400", onTap: () => go("values_to_action") },
         { id: "exposure", label: t("tool_exposure_label"), sub: t("tool_exposure_sub"), Icon: Mountain, iconClass: "w-5 h-5 text-orange-400", onTap: () => go("exposure") },
         { id: "peer_support", label: t("tool_peer_support_label"), sub: t("tool_peer_support_sub"), Icon: Users, iconClass: "w-5 h-5 text-emerald-400", onTap: () => go("peer_support") },
+        { id: "crisis_rehearsal", label: t("tool_crisis_rehearsal_label"), sub: t("tool_crisis_rehearsal_sub"), Icon: Shield, iconClass: "w-5 h-5 text-rose-400", onTap: () => go("crisis_rehearsal") },
+        { id: "relapse_plan", label: t("tool_relapse_label"), sub: t("tool_relapse_sub"), Icon: AlertTriangle, iconClass: "w-5 h-5 text-amber-400", onTap: () => go("relapse_plan") },
       ],
     },
     ...(phoneEnabled

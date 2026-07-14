@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Settings as SettingsIcon, Users, Shield, ExternalLink, Gauge } from "lucide-react";
+import { Settings as SettingsIcon, Users, Shield, ExternalLink, Gauge, ChevronDown, ChevronUp } from "lucide-react";
 import { t, useLanguage } from "../services/i18n";
 import AppearanceSection from "./settings/AppearanceSection";
 import VoiceSection from "./settings/VoiceSection";
@@ -23,6 +23,7 @@ interface SettingsScreenProps {
 
 export default function SettingsScreen({ onOpenCaregiver }: SettingsScreenProps) {
   const [showPerf, setShowPerf] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   useLanguage();
   return (
     <div className="space-y-6 max-w-md mx-auto text-slate-100" id="settings-view">
@@ -41,9 +42,23 @@ export default function SettingsScreen({ onOpenCaregiver }: SettingsScreenProps)
 <RemindersSection />
 <EmaSection />
 <NotificationCategoriesSection />
+
+      {/* Advanced / Developer settings toggle */}
+      <button
+        onClick={() => setShowAdvanced(!showAdvanced)}
+        className="w-full flex items-center justify-between py-2 px-1 text-slate-500 hover:text-slate-300 cursor-pointer transition-colors"
+      >
+        <span className="text-[10px] uppercase tracking-widest font-mono">Advanced</span>
+        {showAdvanced ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+      </button>
+
+      {showAdvanced && (
+        <div className="space-y-6 animate-fade-in">
 <InflectionSection />
 <HealthConnectSection />
-      <OnDeviceSection />
+          <OnDeviceSection />
+        </div>
+      )}
       <IdentitySection />
       <PrivacyLockSection />
       {onOpenCaregiver && (

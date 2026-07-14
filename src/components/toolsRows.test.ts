@@ -19,9 +19,9 @@ const rowIds = (phoneEnabled: boolean) =>
 describe("Tools hub rows (redesign §2)", () => {
   it("renders all tool rows in order, when phone is off", () => {
     expect(rowIds(false)).toEqual([
-      "plan", "winddown", "sounds", "reach_out", "crisis_rehearsal", "relapse_plan", "episode",
+      "plan", "winddown", "sounds", "reach_out", "episode",
       "ema_checkin", "diary", "assessment", "medication", "social_rhythm",
-      "problem_solving", "values_to_action", "exposure", "peer_support",
+      "problem_solving", "values_to_action", "exposure", "peer_support", "crisis_rehearsal", "relapse_plan",
     ]);
   });
 
