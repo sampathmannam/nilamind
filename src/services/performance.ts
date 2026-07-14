@@ -37,36 +37,6 @@ export function clearMetrics(): void {
   metrics.length = 0;
 }
 
-/** Measure async function duration and record as metric. */
-export async function measureAsync<T>(
-  name: string,
-  fn: () => Promise<T>,
-  metadata?: Record<string, unknown>
-): Promise<T> {
-  const start = performance.now();
-  try {
-    return await fn();
-  } finally {
-    const duration = performance.now() - start;
-    recordMetric(name, duration, metadata);
-  }
-}
-
-/** Measure sync function duration and record as metric. */
-export function measureSync<T>(
-  name: string,
-  fn: () => T,
-  metadata?: Record<string, unknown>
-): T {
-  const start = performance.now();
-  try {
-    return fn();
-  } finally {
-    const duration = performance.now() - start;
-    recordMetric(name, duration, metadata);
-  }
-}
-
 /** Web Vitals helpers (LCP, FID, CLS, FCP, TTFB) — only on web. */
 if (typeof window !== "undefined" && "PerformanceObserver" in window) {
   try {

@@ -14,6 +14,7 @@ import {
 } from "../services/socialRhythm";
 import { dayKey } from "../services/retentionMetrics";
 import { hapticLight } from "../hooks/useHaptics";
+import { getAutoAnchors } from "../services/autoAnchors";
 import { computeCircadianFeedback } from "../services/circadianFeedback";
 import { loadMoodHistory } from "../services/moodHistory";
 
@@ -45,7 +46,13 @@ const BAND_COPY: Record<RhythmBand, { label: string; cls: string }> = {
 export default function SocialRhythmScreen() {
   const today = dayKey(new Date());
   const [anchors, setAnchors] = useState<RhythmAnchors>(
-    () => loadRhythm().find((e) => e.date === today)?.anchors ?? {},
+    () => {
+      const stored = loadRhythm().find((e) => e.date === today)?.anchors;
+      if (stored?.wake || stored?.bed) return stored;
+      // Auto-fill wake/bed from phone usage (no Health Connect needed)
+      const auto = getAutoAnchors();
+      return { ...stored, ...(auto.wake ? { wake: auto.wake } : {}), ...(auto.bed ? { bed: auto.bed } : {}) };
+    },
   );
   const [saved, setSaved] = useState(false);
   const [version, setVersion] = useState(0); // bump to recompute after a save

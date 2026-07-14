@@ -95,11 +95,6 @@ export function commonSideEffects(medId: string, days = 14): { symptom: string; 
     .sort((a, b) => b.count - a.count);
 }
 
-export function missedDays(medId: string, days = 7): number {
-  const rate = adherenceRate(medId, days);
-  return Math.round((1 - rate / 100) * days);
-}
-
 export interface AdherenceSummary {
   activeMeds: number;
   avgAdherence: number; // 0–100 across active meds

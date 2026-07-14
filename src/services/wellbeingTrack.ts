@@ -17,7 +17,6 @@ import {
 } from "./assessments";
 import { outcomeStatus, type TrendDirection } from "./reliableChange";
 
-export const WELLBEING_INSTRUMENT: InstrumentId = "WHO-5";
 /** Fortnightly cadence — matches the WHO-5 "over the last two weeks" recall window. */
 export const WELLBEING_RECALL_DAYS = 14;
 

@@ -506,48 +506,6 @@ export interface MultilingualCrisisConfig {
   threshold?: number;
 }
 
-export const MULTILINGUAL_CRISIS_CONFIGS: MultilingualCrisisConfig[] = [
-  {
-    language: "en",
-    keywords: [
-      "kill myself", "end my life", "want to die", "suicide", "suicidal",
-      "want to kms", "unalive", "sewerslide", "log out of life", "exit the game",
-      "overdosed", "took all my pills", "slit my wrists", "hang myself",
-      "jump off", "jump in front of", "tie a noose",
-      "affairs in order", "goodbye letter", "at peace with dying", "ready to go",
-      "better off dead", "no reason to live", "can't go on",
-      "hurt myself", "cut myself", "self harm", "self-harm",
-      "given away my", "said my goodbyes", "won't be around",
-      "this is my last message", "won't have to worry about me",
-    ],
-  },
-  {
-    language: "hi",
-    keywords: [
-      "marna hai", "marna chahta", "marna chahti", "jeena nahi chahta", "jeena nahi chahti",
-      "khudkushi", "aatmahatya", "marne ka mann", "zindagi khatam", "khatam kar lunga",
-      "mar jaunga", "mar jaungi", "ab jeena nahi", "mar raha hoon", "mar rahi hoon",
-    ],
-  },
-  {
-    language: "ta",
-    keywords: [
-      "saaganum", "saga poren", "saaga poren", "uyir vaazha maaten",
-      "vaazha vendaam", "saavukku poyida poren", "saaganum da",
-      "தற்கொலை", "சாக விரும்பு", "வாழ விரும்பவில்லை", "இறந்துவிட வேண்டும்",
-    ],
-  },
-  {
-    language: "te",
-    keywords: [
-      "chanipovaalani", "chanipovali", "chavaalani undi", "bathakalani ledu",
-      "aatmahatya", "aatmahatya cheskovali",
-      "చనిపోవాలని", "చనిపోవాలి", "చావాలని ఉంది", "బతకాలని లేదు", "ఆత్మహత్య",
-    ],
-  },
-  // Native script configs use the same keywords as romanized (already in safety.ts NATIVE_SCRIPT_IDEATION)
-];
-
 /**
  * Confidence threshold recommendations based on clinical use case
  * From: Chu et al. 2017 (meta-analysis of suicide risk prediction)

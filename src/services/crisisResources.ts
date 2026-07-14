@@ -104,11 +104,6 @@ function guessRegion(): RegionCode {
   return "international";
 }
 
-/** Whether the user has explicitly chosen a region (vs. running on the locale guess). */
-export function regionIsExplicit(): boolean {
-  return !!ls()?.getItem(STORAGE_KEY);
-}
-
 export function getRegionCode(): RegionCode {
   const stored = ls()?.getItem(STORAGE_KEY) as RegionCode | null;
   if (stored && stored in REGIONS) return stored;
