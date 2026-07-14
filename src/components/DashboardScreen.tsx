@@ -40,6 +40,8 @@ import WellbeingTrendCard from "./WellbeingTrendCard";
 import EpisodeMarkerCard from "./EpisodeMarkerCard";
 import MoodHeatmap from "./MoodHeatmap";
 import PhaseTimeline from "./PhaseTimeline";
+import TrendChart, { PHQ9_BANDS, GAD7_BANDS } from "./TrendChart";
+import InsightCard from "./InsightCard";
 import StreakCounter from "./StreakCounter";
 import AchievementBadge from "./AchievementBadge";
 import { getAllAchievements, getAchievementCount } from "../services/achievements";
@@ -492,6 +494,38 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
        {/* Phase Timeline — episode phases over time */}
        {episodeMarkers.length > 0 && (
          <PhaseTimeline markers={episodeMarkers} days={365} />
+       )}
+
+       {/* Assessment Trend — PHQ-9 score trajectory with severity bands */}
+       {assessments.filter((a) => a.instrument === "PHQ-9").length >= 2 && (
+         <TrendChart
+           data={assessments
+             .filter((a) => a.instrument === "PHQ-9")
+             .sort((a, b) => a.date.localeCompare(b.date))
+             .map((a) => ({ date: a.date, score: a.total, severity: a.severity }))}
+           title="PHQ-9 Depression"
+           bands={PHQ9_BANDS}
+           maxScore={27}
+           threshold={10}
+         />
+       )}
+
+       {/* Behaviour Insights — patterns Nila noticed */}
+       {behaviourInsights.length > 0 && (
+         <div className="space-y-2">
+           <p className="text-[10px] uppercase font-mono tracking-widest text-slate-500">Nila noticed</p>
+           {behaviourInsights.slice(0, 3).map((insight, i) => (
+             <InsightCard
+               key={i}
+               insight={{
+                 title: insight.title,
+                 body: insight.finding,
+                 trend: insight.direction === "protective" ? "improving" : insight.direction === "risk" ? "declining" : "stable",
+                 citation: insight.basis,
+               }}
+             />
+           ))}
+         </div>
        )}
 
        {/* Top stats */}
