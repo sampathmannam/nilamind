@@ -139,7 +139,12 @@ export default function ModelSetupScreen({ onReady }: { onReady: () => void }) {
 
       {busy ? (
         <div className="w-full max-w-[18rem] mt-8" aria-live="polite">
-          <div className="text-sm text-slate-200 mb-2">Getting Nila ready…</div>
+          {/* Two visible passes: the byte transfer, then a SHA-256 integrity check that streams the whole
+              file back through JS and takes MINUTES on-device. Both must show live movement — a silent
+              verify pass at a pinned 100% bar reads as a hung app (the "downloaded but never opens" bug). */}
+          <div className="text-sm text-slate-200 mb-2">
+            {progress?.phase === "verifying" ? "Checking Nila's brain…" : "Getting Nila ready…"}
+          </div>
           <div className="h-2.5 rounded-full bg-slate-800 overflow-hidden">
             <div
               className="h-full bg-purple-500 transition-all duration-300"
@@ -147,7 +152,9 @@ export default function ModelSetupScreen({ onReady }: { onReady: () => void }) {
             />
           </div>
           <div className="text-[11px] text-slate-500 mt-1.5">
-            {Math.round(progress?.receivedMB ?? 0)} / {Math.round(progress?.totalMB ?? totalMB)} MB · keep the app open on Wi-Fi
+            {progress?.phase === "verifying"
+              ? `Verifying the download is complete and safe · ${Math.round(progress?.pct ?? 0)}%`
+              : `${Math.round(progress?.receivedMB ?? 0)} / ${Math.round(progress?.totalMB ?? totalMB)} MB · keep the app open on Wi-Fi`}
           </div>
           <div className="mt-5 rounded-2xl border border-slate-800 bg-slate-900/40 p-4 min-h-[5.5rem] flex items-center">
             <p key={tip} className="text-[12px] text-slate-300 leading-relaxed">

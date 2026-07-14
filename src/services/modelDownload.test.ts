@@ -56,7 +56,7 @@ vi.mock("@capacitor/filesystem", () => ({
 vi.mock("./localLlm", () => ({ registerLocalLlmBackend: vi.fn() }));
 
 import { Filesystem } from "@capacitor/filesystem";
-import { findInstalledModel, downloadModel } from "./modelDownload";
+import { findInstalledModel, downloadModel, type DownloadProgress } from "./modelDownload";
 import { MODELS } from "./modelCatalog";
 
 const model = MODELS[0];
@@ -206,6 +206,37 @@ describe("downloadModel — SHA-256 content verification", () => {
     await expect(downloadModel(m)).rejects.toThrow(/SHA-256|hash/i);
     expect(h.files.has(PART)).toBe(false); // partial reclaimed
     expect(h.files.has(model.filename)).toBe(false); // never installed
+  });
+
+  // The SHA-256 pass streams the whole file back in JS and takes MINUTES on a real device. If it emits no
+  // progress the setup screen sits frozen at "100% · Getting Nila ready…" and reads as a hung app (the
+  // reported "download finished but never opens" bug). It MUST report a distinct "verifying" phase so the UI
+  // can show live movement.
+  it("emits `phase: verifying` progress that climbs to 100% during the SHA-256 pass", async () => {
+    writeContentOnDownload(content);
+    const m = { ...model, sizeBytes: content.length, sha256: goodHash };
+    const onProgress = vi.fn();
+    await downloadModel(m, onProgress);
+    const verify = onProgress.mock.calls
+      .map((c) => c[0] as DownloadProgress)
+      .filter((p) => p.phase === "verifying");
+    expect(verify.length).toBeGreaterThan(0); // verify phase is actually reported
+    expect(verify[verify.length - 1].pct).toBe(100); // and it reaches 100% (not a frozen bar)
+  });
+
+  it("tags the byte-transfer samples as `phase: downloading` so the UI can distinguish the two passes", async () => {
+    const onProgress = vi.fn();
+    vi.mocked(Filesystem.downloadFile).mockImplementation(async ({ path }: { path: string }) => {
+      h.lastListener?.({ url: model.url, bytes: Math.floor(content.length / 2), contentLength: content.length });
+      h.files.set(path, { size: content.length, magic: "GGUF", content });
+      return {} as never;
+    });
+    const m = { ...model, sizeBytes: content.length, sha256: goodHash };
+    await downloadModel(m, onProgress);
+    const download = onProgress.mock.calls
+      .map((c) => c[0] as DownloadProgress)
+      .filter((p) => p.phase === "downloading");
+    expect(download.length).toBeGreaterThan(0);
   });
 });
 

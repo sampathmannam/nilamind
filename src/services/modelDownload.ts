@@ -19,6 +19,11 @@ export interface DownloadProgress {
   receivedMB: number;
   totalMB: number;
   pct: number;
+  // Which pass this sample belongs to. The byte transfer ("downloading") and the post-transfer SHA-256
+  // integrity check ("verifying") are BOTH multi-minute on a real device, so the UI must be able to tell
+  // them apart — otherwise the verify pass looks like a frozen 100% bar and reads as a hung app. Optional
+  // so older callers that don't set it default to the download pass.
+  phase?: "downloading" | "verifying";
 }
 
 const PREF_KEY = "nilamind_model_pref";
@@ -207,7 +212,11 @@ const HASH_CHUNK_BYTES = 8 * 1024 * 1024;
 /** SHA-256 the file by reading it in bounded chunks (never the whole 2.5 GB at once) and return the
  *  lowercase hex digest. Throws if a chunk read fails (so the caller rejects the download rather than
  *  installing an unverified file). */
-async function fileSha256(m: CatalogModel, filename: string): Promise<string> {
+async function fileSha256(
+  m: CatalogModel,
+  filename: string,
+  onProgress?: (p: DownloadProgress) => void,
+): Promise<string> {
   const size = m.sizeBytes;
   const hasher = new Sha256();
   for (let offset = 0; offset < size; offset += HASH_CHUNK_BYTES) {
@@ -215,6 +224,15 @@ async function fileSha256(m: CatalogModel, filename: string): Promise<string> {
     const res = await Filesystem.readFile({ path: filename, directory: Directory.External, offset, length });
     if (typeof res.data !== "string") throw new Error("readFile returned non-string data during hashing");
     hasher.update(b64ToBytes(res.data));
+    // Report the verify pass so the UI shows live movement instead of a frozen 100% bar. Emitted AFTER the
+    // chunk is hashed so the count reflects work actually done.
+    const done = Math.min(offset + length, size);
+    onProgress?.({
+      receivedMB: done / 1e6,
+      totalMB: size / 1e6,
+      pct: size ? Math.min(100, (done / size) * 100) : 100,
+      phase: "verifying",
+    });
   }
   return hasher.digestHex();
 }
@@ -223,9 +241,13 @@ async function fileSha256(m: CatalogModel, filename: string): Promise<string> {
  *  hex value. The "TODO_SHA256" placeholder (or any non-64-hex value) is a NO-OP so an un-hashed catalog
  *  entry never blocks a legitimate download. When a real digest IS present, a mismatch is a hard failure
  *  (a same-size poisoned GGUF that slipped past the byte-length + magic checks). */
-async function verifySha256(m: CatalogModel, filename: string): Promise<void> {
+async function verifySha256(
+  m: CatalogModel,
+  filename: string,
+  onProgress?: (p: DownloadProgress) => void,
+): Promise<void> {
   if (!isRealSha256(m.sha256)) return; // placeholder / unset → skip (no-op)
-  const actual = await fileSha256(m, filename);
+  const actual = await fileSha256(m, filename, onProgress);
   if (actual.toLowerCase() !== m.sha256.toLowerCase()) {
     throw new Error("Downloaded model failed SHA-256 verification (hash mismatch).");
   }
@@ -281,7 +303,11 @@ export async function findInstalledModel(): Promise<CatalogModel | null> {
  *  This step is the slow one: verifySha256 streams the whole 2.5 GB back over the bridge in bounded chunks
  *  and hashes it in JS, taking minutes. If the app is killed/backgrounded mid-verify the rename never runs
  *  and the complete `.part` is left on disk — which downloadModel now RECOVERS instead of re-downloading. */
-async function verifyPart(model: CatalogModel, part: string): Promise<void> {
+async function verifyPart(
+  model: CatalogModel,
+  part: string,
+  onProgress?: (p: DownloadProgress) => void,
+): Promise<void> {
   if (!(await isComplete(model, part))) {
     throw new Error("Downloaded file is incomplete (size mismatch).");
   }
@@ -290,8 +316,9 @@ async function verifyPart(model: CatalogModel, part: string): Promise<void> {
   }
   // Cryptographic integrity: if the catalog carries a real SHA-256, verify the .part against it before it
   // can become the brain (defends a same-size poisoned GGUF). No-op while the digest is the placeholder.
-  // Reads the 2.5 GB file in bounded chunks — never all at once (WebView OOM).
-  await verifySha256(model, part);
+  // Reads the 2.5 GB file in bounded chunks — never all at once (WebView OOM). Streams `verifying`
+  // progress so the multi-minute pass never presents as a frozen bar.
+  await verifySha256(model, part, onProgress);
 }
 
 /** Stream-download a model to a temp path, verify it, then atomically move it into place.
@@ -319,7 +346,7 @@ export async function downloadModel(
     if (pre === "complete") {
       // The bytes are already on disk from a prior (interrupted) attempt — skip the multi-GB transfer and
       // go straight to verify + install. Report 100% so the UI doesn't sit at a stale percentage.
-      onProgress?.({ receivedMB: model.sizeBytes / 1e6, totalMB: model.sizeBytes / 1e6, pct: 100 });
+      onProgress?.({ receivedMB: model.sizeBytes / 1e6, totalMB: model.sizeBytes / 1e6, pct: 100, phase: "downloading" });
     } else {
       if (onProgress) {
         const total = model.sizeBytes; // catalog size: the native `contentLength` overflows Int for >2.1GB
@@ -336,6 +363,7 @@ export async function downloadModel(
             receivedMB: received / 1e6,
             totalMB: total / 1e6,
             pct: total ? Math.min(100, Math.max(0, (received / total) * 100)) : 0,
+            phase: "downloading",
           });
         });
       }
@@ -346,7 +374,7 @@ export async function downloadModel(
         progress: true,
       });
     }
-    await verifyPart(model, part); // size + magic + SHA — throws (→ catch deletes) if the .part is bad
+    await verifyPart(model, part, onProgress); // size + magic + SHA — throws (→ catch deletes) if the .part is bad
     // From here the .part is VERIFIED-GOOD. A failure in the rename below must NOT delete it (2026-07-06
     // audit #9): a transient rename hiccup would otherwise destroy a byte-perfect, SHA-matched 2.5 GB model
     // and force a full re-download. A verified .part is recoverable by findInstalledModel's startup self-heal,
