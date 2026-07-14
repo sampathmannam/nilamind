@@ -3,6 +3,7 @@ import {
   Shield, Users, Pill, Lightbulb, Compass, Mountain, AlertTriangle, Smile, Clock3, Volume2,
   type LucideIcon,
 } from "lucide-react";
+import { t } from "../services/i18n";
 
 // Redesign §2 — the single source of truth for the "Tools" hub rows. ToolsScreen renders exactly what
 // buildToolGroups() returns, so this file (and its test) guard the real, on-screen row set: focused
@@ -42,41 +43,41 @@ export interface ToolRowDeps {
 export function buildToolGroups({ go, onEpisode, phoneEnabled }: ToolRowDeps): ToolGroup[] {
   return [
     {
-      title: "In the moment",
+      title: t("tool_group_moment"),
       rows: [
-        { id: "plan", label: "Grounding & breathing", sub: "Calm your body in a hard minute", Icon: Wind, iconClass: "w-5 h-5 text-blue-400", onTap: () => go("plan") },
-        { id: "winddown", label: "Wind down for sleep", sub: "A calm bedtime routine — park the day & settle", Icon: Moon, iconClass: "w-5 h-5 text-indigo-400", onTap: () => go("winddown") },
+        { id: "plan", label: t("tool_plan_label"), sub: t("tool_plan_sub"), Icon: Wind, iconClass: "w-5 h-5 text-blue-400", onTap: () => go("plan") },
+        { id: "winddown", label: t("tool_winddown_label"), sub: t("tool_winddown_sub"), Icon: Moon, iconClass: "w-5 h-5 text-indigo-400", onTap: () => go("winddown") },
         { id: "sounds", label: "Ambient sounds", sub: "White/brown/pink noise for focus, sleep, or calm", Icon: Volume2, iconClass: "w-5 h-5 text-emerald-400", onTap: () => go("sounds") },
-        { id: "reach_out", label: "Reach out to someone", sub: "A gentle, ready-to-send message to a person you trust", Icon: MessageCircle, iconClass: "w-5 h-5 text-emerald-400", onTap: () => go("reach_out") },
-        { id: "crisis_rehearsal", label: "Crisis rehearsal", sub: "Practice your plan before you need it", Icon: Shield, iconClass: "w-5 h-5 text-rose-400", onTap: () => go("crisis_rehearsal") },
-        { id: "relapse_plan", label: "Relapse prevention plan", sub: "Plan ahead for each phase — green, orange, red", Icon: AlertTriangle, iconClass: "w-5 h-5 text-amber-400", onTap: () => go("relapse_plan") },
-        { id: "episode", label: "I'm in an episode", sub: "Guided, step-by-step support right now", Icon: LifeBuoy, iconClass: "w-5 h-5 text-rose-400", onTap: onEpisode },
+        { id: "reach_out", label: t("tool_reach_out_label"), sub: t("tool_reach_out_sub"), Icon: MessageCircle, iconClass: "w-5 h-5 text-emerald-400", onTap: () => go("reach_out") },
+        { id: "crisis_rehearsal", label: t("tool_crisis_rehearsal_label"), sub: t("tool_crisis_rehearsal_sub"), Icon: Shield, iconClass: "w-5 h-5 text-rose-400", onTap: () => go("crisis_rehearsal") },
+        { id: "relapse_plan", label: t("tool_relapse_label"), sub: t("tool_relapse_sub"), Icon: AlertTriangle, iconClass: "w-5 h-5 text-amber-400", onTap: () => go("relapse_plan") },
+        { id: "episode", label: t("tool_episode_label"), sub: t("tool_episode_sub"), Icon: LifeBuoy, iconClass: "w-5 h-5 text-rose-400", onTap: onEpisode },
       ],
     },
     {
-      title: "Log & track",
+      title: t("tool_group_log"),
       rows: [
-        { id: "ema_checkin", label: "Quick check-in", sub: "A 10-second mood check, right now", Icon: Smile, iconClass: "w-5 h-5 text-purple-400", onTap: () => go("ema_checkin") },
-        { id: "diary", label: "Diary", sub: "A DBT diary card for today", Icon: NotebookPen, iconClass: "w-5 h-5 text-blue-400", onTap: () => go("diary") },
-        { id: "assessment", label: "Screenings", sub: "PHQ-9, GAD-7 & more over time", Icon: Activity, iconClass: "w-5 h-5 text-blue-400", onTap: () => go("assessment") },
-        { id: "medication", label: "Medications", sub: "Track doses and adherence", Icon: Pill, iconClass: "w-5 h-5 text-blue-400", onTap: () => go("medication") },
-        { id: "social_rhythm", label: "Social rhythm", sub: "Keep daily routines steady — timing vs. mood", Icon: Clock3, iconClass: "w-5 h-5 text-indigo-400", onTap: () => go("social_rhythm") },
+        { id: "ema_checkin", label: t("tool_ema_label"), sub: t("tool_ema_sub"), Icon: Smile, iconClass: "w-5 h-5 text-purple-400", onTap: () => go("ema_checkin") },
+        { id: "diary", label: t("tool_diary_label"), sub: t("tool_diary_sub"), Icon: NotebookPen, iconClass: "w-5 h-5 text-blue-400", onTap: () => go("diary") },
+        { id: "assessment", label: t("tool_assessment_label"), sub: t("tool_assessment_sub"), Icon: Activity, iconClass: "w-5 h-5 text-blue-400", onTap: () => go("assessment") },
+        { id: "medication", label: t("tool_medication_label"), sub: t("tool_medication_sub"), Icon: Pill, iconClass: "w-5 h-5 text-blue-400", onTap: () => go("medication") },
+        { id: "social_rhythm", label: t("tool_social_rhythm_label"), sub: t("tool_social_rhythm_sub"), Icon: Clock3, iconClass: "w-5 h-5 text-indigo-400", onTap: () => go("social_rhythm") },
       ],
     },
     {
-      title: "Skills & practice",
+      title: t("tool_group_skills"),
       rows: [
-        { id: "problem_solving", label: "Problem-solving", sub: "Break a problem into steps and try a solution", Icon: Lightbulb, iconClass: "w-5 h-5 text-amber-400", onTap: () => go("problem_solving") },
-        { id: "values_to_action", label: "Values to action", sub: "What matters, where you've drifted, and one small step", Icon: Compass, iconClass: "w-5 h-5 text-violet-400", onTap: () => go("values_to_action") },
-        { id: "exposure", label: "Exposure hierarchy", sub: "Build a fear ladder — work from the bottom up", Icon: Mountain, iconClass: "w-5 h-5 text-orange-400", onTap: () => go("exposure") },
-        { id: "peer_support", label: "Peer support", sub: "Practice reaching out to people who get it", Icon: Users, iconClass: "w-5 h-5 text-emerald-400", onTap: () => go("peer_support") },
+        { id: "problem_solving", label: t("tool_problem_solving_label"), sub: t("tool_problem_solving_sub"), Icon: Lightbulb, iconClass: "w-5 h-5 text-amber-400", onTap: () => go("problem_solving") },
+        { id: "values_to_action", label: t("tool_values_work_label"), sub: t("tool_values_work_sub"), Icon: Compass, iconClass: "w-5 h-5 text-violet-400", onTap: () => go("values_to_action") },
+        { id: "exposure", label: t("tool_exposure_label"), sub: t("tool_exposure_sub"), Icon: Mountain, iconClass: "w-5 h-5 text-orange-400", onTap: () => go("exposure") },
+        { id: "peer_support", label: t("tool_peer_support_label"), sub: t("tool_peer_support_sub"), Icon: Users, iconClass: "w-5 h-5 text-emerald-400", onTap: () => go("peer_support") },
       ],
     },
     ...(phoneEnabled
       ? [{
-          title: "Patterns",
+          title: t("tool_group_patterns"),
           rows: [
-            { id: "behaviour", label: "Phone patterns", sub: "Screen time & sleep vs. mood — on-device", Icon: TrendingUp, iconClass: "w-5 h-5 text-blue-400", onTap: () => go("behaviour") },
+            { id: "behaviour", label: t("tool_behaviour_label"), sub: t("tool_behaviour_sub"), Icon: TrendingUp, iconClass: "w-5 h-5 text-blue-400", onTap: () => go("behaviour") },
           ],
         }]
       : []),

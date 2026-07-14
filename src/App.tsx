@@ -38,7 +38,7 @@ const LearnScreen = lazy(() => import("./components/LearnScreen"));
 const CrisisRehearsalScreen = lazy(() => import("./components/CrisisRehearsalScreen"));
 const PeerSupportScreen = lazy(() => import("./components/PeerSupportScreen"));
 const ProblemSolvingScreen = lazy(() => import("./components/ProblemSolvingScreen"));
-const ValuesWorkScreen = lazy(() => import("./components/ValuesWorkScreen"));
+const ValuesToActionScreen = lazy(() => import("./components/ValuesToActionScreen"));
 const ExposureHierarchyScreen = lazy(() => import("./components/ExposureHierarchyScreen"));
 const RelapsePlanScreen = lazy(() => import("./components/RelapsePlanScreen"));
 const EpisodeSupportScreen = lazy(() => import("./components/EpisodeSupportScreen"));
@@ -149,7 +149,8 @@ function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () 
     case "crisis_rehearsal": return <CrisisRehearsalScreen />;
     case "peer_support": return <PeerSupportScreen />;
     case "problem_solving": return <ProblemSolvingScreen />;
-    case "values_work": return <ValuesWorkScreen />;
+    case "values_work": // retired — renders the active values_to_action screen
+      return <ValuesToActionScreen />;
     case "exposure": return <ExposureHierarchyScreen />;
     case "relapse_plan": return <RelapsePlanScreen />;
     case "behaviour": return <DashboardScreen onOpenView={onOpenView} />;

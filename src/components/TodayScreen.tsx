@@ -23,7 +23,7 @@ import type { TimeMode, UserState } from "../types/modes";
 // content is a named engagement facilitator, closing the onboarding goal picker's previously write-only
 // loop (nilamind_user_goal), per Borghouts, Eikey, Mark et al. (2021), J Med Internet Res.
 const GOAL_TOOL_PRIORITY: Record<string, string[]> = {
-  "Feeling low": ["problem_solving", "values_work", "diary"],
+  "Feeling low": ["problem_solving", "values_to_action", "diary"],
   "Managing stress": ["plan", "winddown", "diary"],
   "Managing anxiety": ["plan", "exposure", "diary"],
   "Tracking moods": ["ema_checkin", "diary", "assessment", "social_rhythm"],
