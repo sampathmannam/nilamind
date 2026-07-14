@@ -16,6 +16,7 @@
 
 import type { LocalLlmBackend, LocalGenParams } from "./localLlm";
 import { mapEmotion } from "./emotionParse";
+import { enhancedOfflineReply } from "./enhancedOffline";
 
 // Reflective-listening openers per emotion family. Each VALIDATES a state; none claims to have lived it.
 // The `{f}` slot is filled with the mapped feeling word, lower-cased, so the reflection names it back.
@@ -120,6 +121,8 @@ export function makeReflector(): (text: string) => string {
  *  single static "model isn't ready" sentence, then gently note the tools are here. A large fraction of FIRST
  *  messages hit this, so it must feel like Nila listening, not an error wall. §9's output gate still runs. */
 export function offlineFallbackReply(userText: string): string {
+  // Enhanced offline: use emotionally-aware scripted responses
+  try { return enhancedOfflineReply(userText); } catch { /* fallback */ }
   const reflection = makeReflector()(userText);
   return `${reflection}\n\nMy on-device voice is still waking up — but I'm here, and your grounding and safety tools are ready any time, just below.`;
 }

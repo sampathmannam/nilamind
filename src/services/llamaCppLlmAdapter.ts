@@ -133,9 +133,9 @@ export function createLlamaCppBackend(
             top_p: 0.95,
             penalty_repeat: 1.05, // milder than 1.1 — less penalizing of common words like "that" / "feel"
             penalty_last_n: 128, // shorter penalty window matches shorter replies
-            dry_multiplier: 0.8,
-            dry_base: 1.75,
-            dry_allowed_length: 2,
+            dry_multiplier: 1.0, // stronger: 0.8 was too mild, model would still loop phrases
+            dry_base: 2.0, // higher baseline makes penalty more effective for short replies
+            dry_allowed_length: 2, // catch both 2-token and 3-token repeats (DRY original recommendation)
             stop: fmt.stop,
           },
           (data) => {
