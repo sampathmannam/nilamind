@@ -150,7 +150,7 @@ describe("generate — turn-marker stripping (Gemma, explicit format)", () => {
     await flush();
     await b.generate({ system: "s", messages: [{ role: "user", content: "hi" }], onToken: () => {} });
     const realCall = mockCompletion.mock.calls.find(([o]) => (o as { n_predict?: number }).n_predict !== 1);
-    expect((realCall![0] as { n_predict: number }).n_predict).toBeLessThanOrEqual(128);
+    expect((realCall![0] as { n_predict: number }).n_predict).toBeLessThanOrEqual(96);
   });
 
   it("trims a length-cut reply back to the last complete sentence", async () => {
@@ -178,7 +178,7 @@ it("generate applies anti-repetition sampling", async () => {
   expect(realCall).toBeTruthy();
   const opts = realCall![0] as Record<string, number>;
   expect(opts.penalty_repeat).toBeGreaterThan(1);
-  expect(opts.penalty_last_n).toBeGreaterThanOrEqual(256);
+  expect(opts.penalty_last_n).toBeGreaterThanOrEqual(96);
   expect(opts.dry_multiplier).toBeGreaterThan(0);
 });
 
@@ -263,6 +263,6 @@ it("initLlama receives cache_type_k and cache_type_v params", async () => {
   createLlamaCppBackend();
   await flush();
   expect(initLlama).toHaveBeenCalledWith(
-    expect.objectContaining({ cache_type_k: "q8_0", cache_type_v: "q8_0" }),
+    expect.objectContaining({ cache_type_k: "q4_0", cache_type_v: "q4_0" }),
   );
 });

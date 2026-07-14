@@ -80,7 +80,7 @@ export async function generateQualityResponse(
     const responses: string[] = [];
     for (let i = 0; i < candidates; i++) {
       try {
-        const r = await backend.generate(system, messages);
+        const r = await backend.generate({ system, messages, onToken: () => {} });
         if (r) responses.push(r);
       } catch { continue; }
     }
@@ -90,13 +90,13 @@ export async function generateQualityResponse(
   }
 
   // Single generation
-  const first = await backend.generate(system, messages);
+  const first = await backend.generate({ system, messages, onToken: () => {} });
   if (!first || !chain) return first ?? "";
 
   // Response chaining: extend with follow-up
   try {
     const followUpSystem = system + "\n\nYou just said: '" + first + "'. Now gently follow up with one short, warm sentence. No new questions — just reflect or validate.";
-    const followUp = await backend.generate(followUpSystem, messages);
+    const followUp = await backend.generate({ system: followUpSystem, messages, onToken: () => {} });
     if (followUp && followUp.length > 3) {
       return first.trim() + " " + followUp.trim();
     }

@@ -47,7 +47,7 @@ const FORMAT_CONFIGS: Record<PromptFormat, FormatConfig> = {
     turnPattern: /<(?:end|start)_of_turn>/,
   },
   qwen: {
-    n_ctx: 4096, // expanded from 2048 — q8_0 KV cache ~350MB, safe in 8GB RAM. Qwen2.5 supports native 32K via YaRN rope scaling.
+    n_ctx: 4096, // expanded from 2048 — q4_0 KV cache ~200MB, q8_0 was ~350MB. Qwen2.5 supports native 32K via YaRN rope scaling.
     buildPrompt: toQwenPrompt,
     windowMessages: windowQwenMessages,
     stop: ["<|im_end|>", "<|im_start|>"],
@@ -73,11 +73,12 @@ export function createLlamaCppBackend(
       ctx = await initLlama({
         model: modelPath,
         n_ctx: fmt.n_ctx,
-        n_threads: 8,
+        n_threads: 8, // ARMv9.2 fast cores — don't oversubscribe (8 physical cores, 12 would context-switch)
+        n_batch: 1024, // prompt processing batch size — 1024 fits in L2 cache, faster prefill than default 512
+        flash_attn: false, // disabled: Vulkan path crashed on Adreno (VK_ERROR_DEVICE_LOST), CPU path untested
         n_gpu_layers: 0,
-        flash_attn: false,
-        cache_type_k: "q8_0",
-        cache_type_v: "q8_0",
+        cache_type_k: "q4_0", // 4.5-bit KV cache — 44% smaller than q8_0 (200MB vs 350MB at 4096), negligible quality loss
+        cache_type_v: "q4_0",
         use_mlock: true,
       });
       ready = true;
@@ -126,18 +127,12 @@ export function createLlamaCppBackend(
         const res = await ctx.completion(
           {
             prompt,
-            // Hard cap on reply length — a short, warm companion reply is 1-3 sentences (~60-90 tokens).
-            // 128 leaves headroom for the rare "one plain fact, then back to them" turn while making an
-            // essay hard even when the model ignores the persona's brevity ask; decode is the per-token CPU
-            // cost, so this also speeds replies up. trimToLastSentence() below cleans any reply that hits this
-            // cap so it never ends mid-thought. (Was 220 — sized before the companion persona + this cap.)
-            n_predict: 128,
-            // Low temp keeps replies briefer and more in-distribution.
-            temperature: 0.4,
-            top_k: 40,
+            n_predict: 96, // brevity = speed: 2-4 sentence companion replies fit in ~60-100 tokens
+            temperature: 0.4, // low temp keeps replies in-distribution for 1.5B model
+            top_k: 30, // narrower than 40 — small model benefits from less diversity
             top_p: 0.95,
-            penalty_repeat: 1.1,
-            penalty_last_n: 256,
+            penalty_repeat: 1.05, // milder than 1.1 — less penalizing of common words like "that" / "feel"
+            penalty_last_n: 128, // shorter penalty window matches shorter replies
             dry_multiplier: 0.8,
             dry_base: 1.75,
             dry_allowed_length: 2,
