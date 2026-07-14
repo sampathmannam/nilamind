@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { LifeBuoy, ChevronRight, ChevronLeft, Shield, Globe, HeartHandshake, MessageCircle, Check } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { LifeBuoy, ChevronRight, ChevronLeft, Shield, Globe, HeartHandshake, MessageCircle, Check, Wind, Moon, Activity, Pill, Users, Target } from "lucide-react";
 import { LocalNotifications } from "@capacitor/local-notifications";
 import {
   completeOnboarding,
@@ -9,10 +9,24 @@ import {
 import { allRegions, type RegionCode, getCrisisLines } from "../services/crisisResources";
 import { t } from "../services/i18n";
 import { secureLocal } from "../services/secureLocal";
+import { hapticLight, hapticSuccess, hapticCelebration } from "../hooks/useHaptics";
+import ConfettiBurst from "./ConfettiBurst";
+import { tryUnlockAchievement } from "../services/achievements";
 
 const USER_GOALS = [
-  "Feeling low", "Managing stress", "Managing anxiety",
-  "Tracking moods", "Building skills", "Just curious",
+  { id: "sleep", label: "Sleep", icon: <Moon className="w-4 h-4" /> },
+  { id: "mood", label: "Mood patterns", icon: <Activity className="w-4 h-4" /> },
+  { id: "grounding", label: "Staying grounded", icon: <Wind className="w-4 h-4" /> },
+  { id: "medication", label: "My medications", icon: <Pill className="w-4 h-4" /> },
+  { id: "talking", label: "Talking to someone", icon: <Users className="w-4 h-4" /> },
+] as const;
+
+const MOOD_OPTIONS = [
+  { value: 1, emoji: "😔", label: "Very low", color: "text-blue-400" },
+  { value: 3, emoji: "😐", label: "A bit low", color: "text-slate-400" },
+  { value: 5, emoji: "🙂", label: "Okay", color: "text-amber-400" },
+  { value: 7, emoji: "😊", label: "Good", color: "text-emerald-400" },
+  { value: 9, emoji: "😄", label: "Great", color: "text-emerald-300" },
 ] as const;
 
 interface OnboardingGateProps {
@@ -20,46 +34,12 @@ interface OnboardingGateProps {
   onOpenCrisis: () => void;
 }
 
-const SLIDES = [
-  {
-    id: "welcome",
-    title: "Hi, I'm Nila",
-    body: "I'm a private, on-device AI companion for the harder moments. Nothing you share leaves your phone, and I work fully offline. I'm not a therapist or a doctor — I'm here alongside you, never a replacement for real support.",
-    icon: <HeartHandshake className="w-10 h-10 text-blue-400" />,
-  },
-  {
-    id: "privacy",
-    title: "Your data stays with you",
-    body: "All your history, chats, and insights are stored locally and encrypted on this device. No accounts, no cloud, no ads.",
-    icon: <Shield className="w-10 h-10 text-emerald-400" />,
-  },
-  {
-    id: "region",
-    title: "Choose your region",
-    body: "This sets the crisis helplines shown if you ever need them. You can change it later in Settings.",
-    icon: <Globe className="w-10 h-10 text-indigo-400" />,
-  },
-  {
-    id: "how_nila_helps",
-    title: "How Nila helps",
-    // Expectancy/rationale sentence: knowing what to expect from a tool and why it's offered is linked to
-    // how people do afterward, not just whether they keep opening the app — credibility/expectancy are
-    // validated constructs that predict subsequent SYMPTOM outcome (Devilly & Borkovec 2000, J Behavior
-    // Therapy and Experimental Psychiatry), with effect-size grounding from Abd-Alrazaq et al. (2020, JMIR)
-    // and Sohn, Ha, Park et al. (2026, npj Digital Medicine). Deliberately NOT an adherence-correlation
-    // claim — an earlier "~0.35 adherence correlation" figure was found unsupported by the synthesis and
-    // removed; keep this hedged ("may help", "linked to") and free of any specific number.
-    body: "I can listen, suggest tools, and help you notice patterns — all based on what you share. Every feature is grounded in research you can explore anytime. Knowing what to expect from a tool and why it might help is itself linked to feeling better from it — so I'll always tell you the why, not just hand you an exercise. I'm not a therapist and I don't diagnose — I'm a companion, not a replacement for care.",
-    icon: <MessageCircle className="w-10 h-10 text-blue-400" />,
-  },
-  {
-    id: "goals",
-    title: "What brings you here?",
-    body: "This helps me suggest the most useful things. Pick what fits — you can change it anytime.",
-    icon: <HeartHandshake className="w-10 h-10 text-amber-400" />,
-  },
-];
-
+/**
+ * Emotional onboarding — 7-step guided journey.
+ * Research: Finch's "adopt a pet" creates immediate emotional investment.
+ * We can't do a pet, but we CAN make Nila introduce herself warmly,
+ * ask how the user feels, and personalize from the first moment.
+ */
 export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingGateProps) {
   const [step, setStep] = useState(0);
   const [region, setRegion] = useState<RegionCode>(getOnboardingRegion());
@@ -69,30 +49,43 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
       return raw ? JSON.parse(raw) : [];
     } catch { return []; }
   });
+  const [baselineMood, setBaselineMood] = useState<number | null>(null);
+  const [showConfetti, setShowConfetti] = useState(false);
 
-  const slide = SLIDES[step];
-  const isLast = step === SLIDES.length - 1;
+  const slides = getSlides(baselineMood);
+  const slide = slides[step];
+  const isLast = step === slides.length - 1;
 
   const handleRegionChange = (code: RegionCode) => {
     setRegion(code);
     setOnboardingRegion(code);
   };
 
-  const toggleGoal = (goal: string) => {
+  const toggleGoal = (goalId: string) => {
     setSelectedGoals((prev) => {
-      const next = prev.includes(goal)
-        ? prev.filter((g) => g !== goal)
-        : [...prev, goal];
-      try { secureLocal.setItem("nilamind_user_goal", JSON.stringify(next)); } catch { /* best-effort */ }
+      const next = prev.includes(goalId) ? prev.filter((g) => g !== goalId) : [...prev, goalId];
+      try { secureLocal.setItem("nilamind_user_goal", JSON.stringify(next)); } catch { /* */ }
       return next;
     });
+    hapticLight();
+  };
+
+  const selectMood = (value: number) => {
+    setBaselineMood(value);
+    hapticLight();
   };
 
   const finish = () => {
-    try { secureLocal.setItem("nilamind_user_goal", JSON.stringify(selectedGoals)); } catch { /* best-effort */ }
-    try { LocalNotifications.requestPermissions(); } catch { /* best-effort — user can deny */ }
+    try { secureLocal.setItem("nilamind_user_goal", JSON.stringify(selectedGoals)); } catch { /* */ }
+    if (baselineMood != null) {
+      try { secureLocal.setItem("nilamind_onboarding_mood", String(baselineMood)); } catch { /* */ }
+    }
+    try { LocalNotifications.requestPermissions(); } catch { /* */ }
     completeOnboarding();
-    onComplete();
+    hapticCelebration();
+    setShowConfetti(true);
+    tryUnlockAchievement("first_checkin");
+    setTimeout(() => onComplete(), 1500);
   };
 
   const lines = getCrisisLines();
@@ -100,6 +93,8 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
 
   return (
     <div className="fixed inset-0 z-[60] bg-page flex flex-col" id="onboarding-gate">
+      <ConfettiBurst active={showConfetti} count={25} duration={1500} />
+
       {/* Always-reachable crisis help */}
       <div className="flex items-center justify-end px-4 pb-3" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
         <button
@@ -112,14 +107,21 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
 
       {/* Slide content */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 max-w-md mx-auto text-center space-y-6">
-        <div className="p-4 rounded-2xl bg-slate-800/50 border border-slate-700/50">
-          {slide.icon}
-        </div>
+        {/* Icon / Nila orb */}
+        {slide.id === "nila_intro" ? (
+          <NilaOrbIntro />
+        ) : (
+          <div className="p-4 rounded-2xl bg-slate-800/50 border border-slate-700/50">
+            {slide.icon}
+          </div>
+        )}
+
         <div className="space-y-2">
           <h1 className="text-xl font-semibold text-slate-100">{slide.title}</h1>
           <p className="text-sm text-slate-400 leading-relaxed">{slide.body}</p>
         </div>
 
+        {/* Region selector */}
         {slide.id === "region" && (
           <div className="w-full space-y-2 text-left">
             <label htmlFor="region-select" className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Crisis lines</label>
@@ -137,9 +139,61 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
           </div>
         )}
 
-        {slide.id === "goals" && (
+        {/* Mood baseline assessment */}
+        {slide.id === "mood_check" && (
+          <div className="w-full space-y-3">
+            <div className="flex justify-center gap-3">
+              {MOOD_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => selectMood(opt.value)}
+                  className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all cursor-pointer ${
+                    baselineMood === opt.value
+                      ? "bg-blue-500/15 border-blue-500/50 scale-110"
+                      : "bg-slate-800/50 border-slate-700/50 hover:border-slate-600"
+                  }`}
+                >
+                  <span className="text-2xl">{opt.emoji}</span>
+                  <span className={`text-[10px] ${baselineMood === opt.value ? "text-blue-300" : "text-slate-500"}`}>{opt.label}</span>
+                </button>
+              ))}
+            </div>
+            {baselineMood != null && (
+              <p className="text-[11px] text-slate-500 animate-fade-in">
+                Thank you for sharing. This helps me understand where you're starting from.
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Personalization — what matters to you */}
+        {slide.id === "personalize" && (
           <div className="w-full flex flex-wrap justify-center gap-2">
             {USER_GOALS.map((goal) => {
+              const selected = selectedGoals.includes(goal.id);
+              return (
+                <button
+                  key={goal.id}
+                  onClick={() => toggleGoal(goal.id)}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm transition-all cursor-pointer ${
+                    selected
+                      ? "bg-blue-500/20 border-blue-500/50 text-blue-300 font-semibold"
+                      : "bg-slate-800/50 border-slate-700/50 text-slate-400 hover:text-slate-300 hover:border-slate-600"
+                  }`}
+                >
+                  {goal.icon}
+                  {goal.label}
+                  {selected && <Check className="w-3.5 h-3.5 ml-1 stroke-[2.5]" />}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Goals (original) */}
+        {slide.id === "goals" && (
+          <div className="w-full flex flex-wrap justify-center gap-2">
+            {(["Feeling low", "Managing stress", "Managing anxiety", "Tracking moods", "Building skills", "Just curious"] as const).map((goal) => {
               const selected = selectedGoals.includes(goal);
               return (
                 <button
@@ -158,12 +212,22 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
             })}
           </div>
         )}
+
+        {/* Completion animation */}
+        {slide.id === "ready" && (
+          <div className="space-y-3 animate-fade-in">
+            <div className="text-4xl">🌱</div>
+            <p className="text-[11px] text-slate-400 leading-relaxed">
+              Your story starts now. Every check-in, every tool, every insight — it all builds from here.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Bottom controls */}
       <div className="px-6 pb-8 pt-4 max-w-md mx-auto w-full space-y-3">
         <div className="flex justify-center gap-1.5">
-          {SLIDES.map((_, i) => (
+          {slides.map((_, i) => (
             <div
               key={i}
               className={`h-1.5 rounded-full transition-all ${i === step ? "w-6 bg-blue-500" : "w-1.5 bg-slate-700"}`}
@@ -197,7 +261,7 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
             </button>
           ) : (
             <button
-              onClick={() => setStep((s) => s + 1)}
+              onClick={() => { setStep((s) => s + 1); hapticLight(); }}
               className="flex-[2] py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold transition-colors cursor-pointer flex items-center justify-center gap-1"
             >
               {t("next")} <ChevronRight className="w-4 h-4" />
@@ -207,4 +271,74 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
       </div>
     </div>
   );
+}
+
+/** Animated Nila orb introduction — the emotional hook. */
+function NilaOrbIntro() {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setVisible(true), 200);
+    return () => clearTimeout(t);
+  }, []);
+
+  return (
+    <div className={`transition-all duration-1000 ${visible ? "opacity-100 scale-100" : "opacity-0 scale-75"}`}>
+      <div className="relative">
+        {/* Outer glow */}
+        <div className="absolute inset-0 rounded-full bg-blue-400/10 blur-xl animate-pulse" style={{ width: 120, height: 120, margin: "auto" }} />
+        {/* Orb */}
+        <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-blue-400/30 to-purple-400/20 border border-blue-400/30 flex items-center justify-center nila-orb">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-400 opacity-60" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Build slides dynamically based on state. */
+function getSlides(baselineMood: number | null) {
+  return [
+    {
+      id: "nila_intro",
+      title: "Hi, I'm Nila",
+      body: "I'm here with you. Not a therapist, not a doctor — a companion. I work entirely on your phone, and nothing you share ever leaves this device.",
+      icon: <HeartHandshake className="w-10 h-10 text-blue-400" />,
+    },
+    {
+      id: "privacy",
+      title: "Your data stays with you",
+      body: "All your history, chats, and insights are stored locally and encrypted on this device. No accounts, no cloud, no ads. Just you and me.",
+      icon: <Shield className="w-10 h-10 text-emerald-400" />,
+    },
+    {
+      id: "mood_check",
+      title: "How are you feeling right now?",
+      body: "There's no wrong answer. This helps me understand where you're starting from.",
+      icon: <HeartHandshake className="w-10 h-10 text-amber-400" />,
+    },
+    {
+      id: "personalize",
+      title: "What matters to you most?",
+      body: "Pick what fits — I'll suggest the most useful tools. You can change this anytime.",
+      icon: <Target className="w-10 h-10 text-blue-400" />,
+    },
+    {
+      id: "region",
+      title: "Choose your region",
+      body: "This sets the crisis helplines shown if you ever need them. You can change it later in Settings.",
+      icon: <Globe className="w-10 h-10 text-indigo-400" />,
+    },
+    {
+      id: "how_nila_helps",
+      title: "How Nila helps",
+      body: "I can listen, suggest tools, and help you notice patterns — all based on what you share. Knowing what to expect from a tool and why it might help is itself linked to feeling better from it — so I'll always tell you the why, not just hand you an exercise. Every feature is grounded in research you can explore anytime. I'm not a therapist and I don't diagnose — I'm a companion, not a replacement for care.",
+      icon: <MessageCircle className="w-10 h-10 text-blue-400" />,
+    },
+    {
+      id: "ready",
+      title: "You're all set",
+      body: "Let's begin. Your first check-in takes 30 seconds.",
+      icon: <HeartHandshake className="w-10 h-10 text-emerald-400" />,
+    },
+  ];
 }
