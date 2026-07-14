@@ -99,7 +99,7 @@ export function getHeroAction(timeMode: TimeMode, userState: UserState | null, d
   if (!dailyIntentionSet) {
     return { id: "daily_intention", label: "Set today's intention", sub: "A 30-second if-then plan — research-backed", icon: <Target className="w-5 h-5" aria-hidden="true" />, color: "text-amber-400", route: "" };
   }
-  return { id: "checkin", label: "How are you feeling?", sub: "A quick check-in takes just a moment", icon: <Sparkles className="w-5 h-5" aria-hidden="true" />, color: "text-blue-400", route: "ema_checkin" };
+  return { id: "checkin", label: "✨ How are you feeling?", sub: "A quick check-in takes just a moment", icon: <Sparkles className="w-5 h-5" aria-hidden="true" />, color: "text-blue-400", route: "ema_checkin" };
 }
 
 function formatDate(): string {
@@ -325,7 +325,7 @@ export default function TodayScreen({
           <Wind className="w-5 h-5 text-blue-400" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-slate-200">Quick breathe</p>
+          <p className="text-sm font-semibold text-slate-200">🌬️ Quick breathe</p>
           <p className="text-[11px] text-slate-500">A 5-minute breathing session to settle your body</p>
         </div>
       </button>
@@ -349,7 +349,7 @@ export default function TodayScreen({
               <Sparkles className="w-5 h-5 text-white" aria-hidden="true" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-slate-100">How are you feeling right now?</p>
+              <p className="text-sm font-bold text-slate-100">💭 How are you feeling right now?</p>
               <p className="text-[11px] text-slate-400 mt-0.5">Two taps — no typing needed</p>
             </div>
           </div>
@@ -363,7 +363,7 @@ export default function TodayScreen({
         className="w-full flex items-center justify-center gap-2 py-2 rounded-xl border border-slate-800 hover:border-slate-700 text-slate-500 hover:text-slate-400 text-[11px] font-medium transition-all cursor-pointer"
       >
         <Sparkles className="w-3 h-3" />
-        {showExtraCards ? "Less" : "Your patterns"}
+        {showExtraCards ? "Less" : "📊 Your patterns"}
       </button>
 
       {showExtraCards && (
@@ -470,7 +470,7 @@ export default function TodayScreen({
           <MessageCircle className="w-5 h-5 text-white" aria-hidden="true" />
         </span>
         <span className="flex-1 min-w-0">
-          <span className="block text-sm font-bold text-slate-100">Talk to Nila</span>
+          <span className="block text-sm font-bold text-slate-100">💬 Talk to Nila</span>
           <span className="block text-[11px] text-slate-400">Your companion — always here, always private</span>
         </span>
         <ChevronRight className="w-5 h-5 text-slate-500 shrink-0" aria-hidden="true" />

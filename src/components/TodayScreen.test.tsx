@@ -45,14 +45,14 @@ describe("personalizeToolOrder", () => {
   it("promotes anxiety-relevant tools to the front of their group for Managing anxiety", () => {
     const groups = buildToolGroups(STUB);
     const result = personalizeToolOrder(groups, ["Managing anxiety"]);
-    const inTheMoment = result.find((g) => g.title === "In the moment")!;
+    const inTheMoment = result.find((g) => g.title === "⚡ In the moment")!;
     expect(inTheMoment.rows[0].id).toBe("plan");
   });
 
   it("promotes mood-tracking tools to the front for Tracking moods", () => {
     const groups = buildToolGroups(STUB);
     const result = personalizeToolOrder(groups, ["Tracking moods"]);
-    const logTrack = result.find((g) => g.title === "Log & track")!;
+    const logTrack = result.find((g) => g.title === "📝 Log & track")!;
     expect(logTrack.rows[0].id).toBe("ema_checkin");
   });
 
@@ -104,7 +104,7 @@ describe("TodayScreen — structured-tool lead, chat still one tap away", () => 
   it("renders the daily-intention card ahead of the 'Talk to Nila' card", () => {
     render(<TodayScreen go={noop} phoneEnabled={false} onEpisode={noop} />);
     const intentionCard = document.getElementById("today-daily-intention");
-    const chatCard = screen.getByText("Talk to Nila").closest("button")!;
+    const chatCard = screen.getByText(/Talk to Nila/).closest("button")!;
     expect(intentionCard).toBeTruthy();
     // DOCUMENT_POSITION_FOLLOWING (4) means intentionCard comes BEFORE chatCard in the DOM.
     expect(intentionCard!.compareDocumentPosition(chatCard) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
@@ -113,7 +113,7 @@ describe("TodayScreen — structured-tool lead, chat still one tap away", () => 
   it("keeps chat reachable in exactly one tap from the default hero — 'Talk to Nila' always renders and navigates to nila", () => {
     const go = vi.fn();
     render(<TodayScreen go={go} phoneEnabled={false} onEpisode={noop} />);
-    fireEvent.click(screen.getByText("Talk to Nila"));
+    fireEvent.click(screen.getByText(/Talk to Nila/));
     expect(go).toHaveBeenCalledWith("nila");
   });
 });
