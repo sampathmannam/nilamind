@@ -50,6 +50,7 @@ import { selfReportSleepSignal } from "../services/sleepInsight";
 import { assessJitai, type JitaiDecision } from "../services/jitaiEngine";
 import { logAndGateJitaiDecision } from "../services/jitaiDecisionLog";
 import { calmSafetyPlanNudge, dismissCalmSafetyPlanNudge } from "../services/proactiveEngine";
+import { checkProactiveCheckIn, recordProactiveCheckIn } from "../services/proactiveCheckIn";
 import { computeUsageSummary } from "../services/usageAnalytics";
 import { loadMoodHistory } from "../services/moodHistory";
 import { computeCompassionateStreak } from "../services/streaks";

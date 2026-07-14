@@ -21,6 +21,7 @@ import { buildEpisodeSystem } from "./episodePrompt";
 import { applyOutputSafety } from "./nilaSafetyGate";
 import { isLocalLlmReady, generateOnDevice } from "./localLlm";
 import { askNilaLocalStream } from "./localNila";
+import { storeConversationMemory } from "./conversationMemory";
 import {
   NilaMode,
   NilaUiMessage,
@@ -118,6 +119,7 @@ export async function sendToNila(
         return { reply: getUnsafeFallbackReply(), reachedAI: true };
       }
       const safe = applyOutputSafety(r.reply, userText, true); // INVARIANT 3
+      storeConversationMemory(userText, safe); // Lever 6: store for future retrieval
       return { reply: safe, reachedAI: true, navigate: r.navigate, openSkillId: r.openSkillId };
     }
     return { reply: r.reply, reachedAI: false, navigate: r.navigate, openSkillId: r.openSkillId };

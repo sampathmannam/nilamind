@@ -18,6 +18,7 @@ import { buildPersonalContext, activeProtocolContextBlock } from "./nilaContext"
 import { getLatestReflection } from "./asyncReflection";
 import { distortionSteer, safeSpotDistortions } from "./distortionSpotter"; // 🟡 Safety: distortion spotting now §9‑gated, needs review
 import { checkAndStartProtocol } from "./protocolIntegration";
+import { retrieveConversationMemories, formatMemoryBlock } from "./conversationMemory";
 import { searchPsychoed } from "./psychoed";
 
 export interface NilaMessage {
@@ -257,7 +258,10 @@ const distortions = (() => {
   const safe = safeSpotDistortions(query);
   return safe.ok ? distortionSteer(safe.matches) : "";
 })();
-  return [persona, distortions, context, activeProtocol, skills].filter(Boolean).join("\n\n");
+  // Conversation memory: retrieve similar past conversations as few-shot context.
+  const memories = query ? retrieveConversationMemories(query, 2) : [];
+  const memoryBlock = formatMemoryBlock(memories);
+  return [persona, distortions, context, activeProtocol, memoryBlock, skills].filter(Boolean).join("\n\n");
 }
 
 /** A first message that sounds like a friend opening the door — not a clinical intake. */
