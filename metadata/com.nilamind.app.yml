@@ -1,0 +1,60 @@
+# Draft F-Droid recipe for fdroiddata — NOT yet buildable.
+# Copy into gitlab.com/fdroid/fdroiddata as metadata/com.nilamind.app.yml and open an MR.
+# BLOCKER (see docs/FDROID_SUBMISSION.md #1): the `build:` step must compile llama.cpp from
+# source via NDK/CMake and NO prebuilt jniLibs/*.so may remain — the section below is a
+# TODO scaffold, not a validated recipe.
+
+Categories:
+  - Health & Fitness
+License: Apache-2.0
+AuthorName: Sujith Sampath
+SourceCode: https://github.com/sampathmannam/nilamind
+IssueTracker: https://github.com/sampathmannam/nilamind/issues
+Changelog: https://github.com/sampathmannam/nilamind/releases
+
+AutoName: NilaMind
+Description: |-
+    NilaMind is a privacy-first, on-device mental-wellbeing companion. All inference runs
+    locally on the phone via llama.cpp (Qwen2.5-1.5B, Apache-2.0) — there is no cloud and
+    no account. It includes a research-grounded crisis-support surface, structured coping
+    tools (grounding, wind-down, values work, relapse planning), mood/rhythm tracking, and
+    Hindi/Tamil/Telugu localization.
+
+    The language model (~1.1 GB, Apache-2.0) is downloaded from Hugging Face on first run;
+    speech-to-text uses the Apache-2.0 Vosk small English model. Not a medical device and
+    not clinically validated.
+
+AntiFeatures:
+  - NonFreeNet   # first-run model download from Hugging Face (libre Apache-2.0 data)
+
+RepoType: git
+Repo: https://github.com/sampathmannam/nilamind.git
+
+Builds:
+  - versionName: 1.9.10
+    versionCode: 17
+    commit: v1.9.10
+    sudo:
+      - apt-get update
+      - apt-get install -y nodejs npm
+      - npm install -g @capacitor/cli
+    init:
+      - rm -f android/app/src/main/jniLibs/arm64-v8a/*.so   # scrub any prebuilt native lib
+    prebuild:
+      - npm ci
+      - npm run build
+      - npx cap sync android
+    # TODO(blocker): the llama-cpp-capacitor plugin ships a PREBUILT libllama-cpp-arm64.so.
+    # F-Droid must build it from the bundled cpp/ sources instead. Options:
+    #   a) patch node_modules/llama-cpp-capacitor/android/build.gradle to add an
+    #      externalNativeBuild { cmake { path "../cpp/CMakeLists.txt" } } and delete jniLibs, or
+    #   b) reference a patched fork via `srclibs` and swap it in during prebuild.
+    ndk: r27
+    gradle:
+      - yes
+    output: android/app/build/outputs/apk/release/app-release-unsigned.apk
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags ^v[0-9.]+$
+CurrentVersion: 1.9.10
+CurrentVersionCode: 17
