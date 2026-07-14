@@ -8,6 +8,8 @@ import {
   type EpisodePhase,
 } from "../services/episodeMarker";
 
+import EmptyState from "./EmptyState";
+
 interface Props {
   onClose: () => void;
 }
@@ -140,7 +142,11 @@ export default function EpisodeMarkerScreen({ onClose }: Props) {
       <div className="space-y-2">
         <p className="text-[10px] uppercase font-mono tracking-widest text-slate-400">{t("em_past")}</p>
         {sorted.length === 0 ? (
-          <p className="text-[11px] text-slate-500">{t("em_none")}</p>
+          <EmptyState
+            illustration="🌿"
+            title={t("em_none")}
+            body="Track your bipolar phases over time. This helps you and your clinician see patterns."
+          />
         ) : (
           sorted.map((m) => (
             <div key={m.id} className="bg-slate-800/50 border border-slate-700 rounded-xl p-3 space-y-1">

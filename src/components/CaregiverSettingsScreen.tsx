@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback } from "react";
 import { ChevronLeft, Plus, Trash2, Eye, Bell, Users, type LucideIcon } from "lucide-react";
 import { t, useLanguage } from "../services/i18n";
+import EmptyState from "./EmptyState";
 import {
   addCaregiverContact,
   removeCaregiverContact,
@@ -119,7 +120,11 @@ export default function CaregiverSettingsScreen({ onClose, onOpenCaregiverShare 
       {/* Contact list */}
       <div className="space-y-2">
         {contacts.length === 0 ? (
-          <p className="text-[11px] text-slate-500">{t("cg_no_contacts")}</p>
+          <EmptyState
+            illustration="🤝"
+            title={t("cg_no_contacts") || "No trusted contacts yet"}
+            body="Adding a trusted person means you can share a wellness snapshot when you need support."
+          />
         ) : (
           contacts.map((c) => (
             <button
