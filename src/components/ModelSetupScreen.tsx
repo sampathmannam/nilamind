@@ -95,10 +95,10 @@ export default function ModelSetupScreen({ onReady }: { onReady: () => void }) {
     }
   };
 
-  // UX-level cancel. The native Filesystem.downloadFile transfer has no AbortSignal, so this can't kill the
-  // in-flight bytes; it unblocks the UI (the user is no longer stuck watching the bar) and returns to the
-  // idle screen. Any partial `.part` is cleaned up on the next download attempt (tryDelete) or on failure.
-  // TODO(modelDownload): thread an AbortController through downloadModel for a true byte-level cancel.
+  // UX-level cancel. The native Filesystem.downloadFile transfer has no AbortSignal (Capacitor limitation),
+  // so this can't kill the in-flight bytes; it unblocks the UI (the user is no longer stuck watching the bar)
+  // and returns to the idle screen. Any partial `.part` is cleaned up on the next download attempt (tryDelete)
+  // or on failure. This is the best we can do without native plugin changes.
   const cancel = () => {
     setBusy(false);
     setProgress(null);

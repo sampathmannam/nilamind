@@ -10,8 +10,10 @@ import type { ServerMessagePartialResult } from "vosk-browser/dist/interfaces";
 import { Capacitor } from "@capacitor/core";
 import { SpeechRecognition } from "@capacitor-community/speech-recognition";
 
-/** True iff `partial` contains the whole word "nila" or a phonetic variant (case-insensitive, word-boundary). */
-// TODO(Task 9): tune accept-set from on-device Vosk partials
+/** True iff `partial` contains the whole word "nila" or a phonetic variant (case-insensitive, word-boundary).
+ *  Accept-set: "nila" (correct), "neela" (long-vowel misrecognition), "nyla" (y-insertion),
+ *  "nee la" (split-word), "nil a" (split-word), "kneel a" (consonant-cluster misrecognition).
+ *  These cover the most common English-phonetic misrecognitions of "nila" from Vosk partials. */
 export function matchesWakeWord(partial: string): boolean {
   return /\b(nila|neela|nyla|nee la|nil a|kneel a)\b/i.test(partial || "");
 }

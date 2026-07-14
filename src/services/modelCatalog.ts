@@ -19,8 +19,8 @@ export interface CatalogModel {
   sizeBytes: number;
   // OPTIONAL expected lowercase 64-hex SHA-256 of the file at `url`. When set to a real hex digest,
   // modelDownload verifies it before installing (defends a same-SIZE poisoned GGUF that would pass the
-  // byte-length + magic checks). The literal placeholder "TODO_SHA256" is a NO-OP — the check is skipped
-  // until a real hash is filled in, so shipping without the hash never blocks a legitimate download.
+  // byte-length + magic checks). When not provided, the integrity check relies on byte-length + magic
+  // checks only — intentional for models where the hash hasn't been verified yet.
   sha256?: string;
   runtime: ModelRuntime;
   promptFormat: PromptFormat; // which prompt template builder to use

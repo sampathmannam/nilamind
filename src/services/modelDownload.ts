@@ -192,7 +192,8 @@ function rotr(x: number, n: number): number {
   return (x >>> n) | (x << (32 - n));
 }
 
-/** A 64-char lowercase hex string (a REAL digest, i.e. not the "TODO_SHA256" placeholder). */
+/** A 64-char lowercase hex string (a REAL digest). When not provided or invalid, the SHA-256 check
+ *  is skipped — this is intentional for models where the hash hasn't been verified yet. */
 function isRealSha256(v: string | undefined): v is string {
   return typeof v === "string" && /^[0-9a-f]{64}$/i.test(v);
 }
@@ -238,9 +239,9 @@ async function fileSha256(
 }
 
 /** Verify the downloaded file's SHA-256 against the catalog's expected digest, IF one is set to a real
- *  hex value. The "TODO_SHA256" placeholder (or any non-64-hex value) is a NO-OP so an un-hashed catalog
- *  entry never blocks a legitimate download. When a real digest IS present, a mismatch is a hard failure
- *  (a same-size poisoned GGUF that slipped past the byte-length + magic checks). */
+ *  hex value. When no digest is provided (or it's invalid), the check is skipped — this is intentional
+ *  for models where the hash hasn't been verified yet. When a real digest IS present, a mismatch is a
+ *  hard failure (a same-size poisoned GGUF that slipped past the byte-length + magic checks). */
 async function verifySha256(
   m: CatalogModel,
   filename: string,
