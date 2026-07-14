@@ -10,6 +10,10 @@
   <a href="SAFETY.md"><img alt="Crisis safety §9" src="https://img.shields.io/badge/crisis_safety-%C2%A79-fbbf24"></a>
 </p>
 
+<p align="center">
+  <a href="https://www.producthunt.com/products/nilamind?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-nilamind" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1196466&theme=light" alt="NilaMind - A private, fully on-device mental health companion | Product Hunt" style="width: 250px; height: 54px;" width="250" height="54" /></a>
+</p>
+
 <h1 align="center">NilaMind</h1>
 
 <p align="center"><b>A privacy-first, fully on-device mental-health companion for Android.</b> · <a href="#install">get the app →</a></p>
