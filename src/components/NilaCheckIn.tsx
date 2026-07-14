@@ -39,6 +39,7 @@ import {
   resolveCheckin,
 } from "../services/nilaCheckinReducer";
 import { buildCheckinEntry, appendCheckin } from "../services/checkin";
+import { hapticSuccess } from "../hooks/useHaptics";
 import { suggestGranularEmotions } from "../services/emotionGranularity";
 import { Mic, MicOff } from "lucide-react";
 import { listenOnce, stopListening } from "../services/voice";
@@ -82,6 +83,7 @@ export default function NilaCheckIn({ onLogged, onSkip }: NilaCheckInProps) {
     doneRef.current = true;
     const entry = buildCheckinEntry(resolved.label, resolved.intensity, resolved.contextTag, resolved.granularEmotion, resolved.energy);
     appendCheckin(entry);
+    hapticSuccess(); // UX-5: tactile confirmation on check-in complete
     onLogged(entry);
   };
 

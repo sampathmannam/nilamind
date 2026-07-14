@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { ChevronLeft, CalendarRange, Check } from "lucide-react";
 import { t, useLanguage, type I18nKey } from "../services/i18n";
+import { hapticSuccess } from "../hooks/useHaptics";
 import {
   addEpisodeMarker,
   readEpisodeMarkers,
@@ -48,6 +49,7 @@ export default function EpisodeMarkerScreen({ onClose }: Props) {
         note: note.trim(),
         createdAt: new Date().toISOString(),
       });
+      hapticSuccess(); // UX-5: tactile confirmation on episode marker save
       setPhase(null);
       setNote("");
       setFrom(today());

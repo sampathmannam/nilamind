@@ -2,6 +2,7 @@ import React, { useState, useMemo, useCallback } from "react";
 import { ChevronLeft, Plus, Trash2, Eye, Bell, Users, type LucideIcon } from "lucide-react";
 import { t, useLanguage } from "../services/i18n";
 import EmptyState from "./EmptyState";
+import { hapticSuccess } from "../hooks/useHaptics";
 import {
   addCaregiverContact,
   removeCaregiverContact,
@@ -53,6 +54,7 @@ export default function CaregiverSettingsScreen({ onClose, onOpenCaregiverShare 
     if (!form.name.trim()) { setFormError(t("cg_name") + " required"); return; }
     if (!form.phoneOrEmail.trim()) { setFormError(t("cg_phone_or_email") + " required"); return; }
     addCaregiverContact({ name: form.name, phoneOrEmail: form.phoneOrEmail, relationship: form.relationship, addedAt: new Date().toISOString() } as any);
+    hapticSuccess(); // UX-5: tactile confirmation on contact add
     setAdding(false);
     setFormError(null);
     refresh();

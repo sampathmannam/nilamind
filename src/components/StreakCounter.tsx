@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Flame } from "lucide-react";
 import { useLanguage } from "../services/i18n";
+import ConfettiBurst from "./ConfettiBurst";
+import { hapticCelebration } from "../hooks/useHaptics";
 
 interface Props {
   current: number;
@@ -24,6 +26,7 @@ export default function StreakCounter({ current, longest, totalActiveDays, celeb
   useEffect(() => {
     if (celebrate && MILESTONES.includes(current)) {
       setShowCelebration(true);
+      hapticCelebration(); // UX-5: tactile celebration on milestone
       const timer = setTimeout(() => setShowCelebration(false), 2000);
       return () => clearTimeout(timer);
     }
@@ -36,6 +39,7 @@ export default function StreakCounter({ current, longest, totalActiveDays, celeb
 
   return (
     <div className="relative">
+      <ConfettiBurst active={showCelebration} count={15} duration={1500} onComplete={() => setShowCelebration(false)} />
       <div className={`glass rounded-2xl p-4 space-y-2 transition-all ${showCelebration ? "ring-2 ring-amber-400/50" : ""}`}>
         <div className="flex items-center gap-2">
           <div className="relative">

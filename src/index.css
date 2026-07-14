@@ -237,9 +237,54 @@ html.sensory-comfort body::after {
 @keyframes sheet-slide-out { from { transform: translateY(0); opacity: 1; } to { transform: translateY(100%); opacity: 0; } }
 .animate-slide-out { animation: sheet-slide-out 200ms ease-in forwards; }
 
-/* ── Tab crossfade ── */
-@keyframes tab-fade-in { from { opacity: 0; } to { opacity: 1; } }
-.animate-tab-fade { animation: tab-fade-in 150ms ease-out; }
+/* ── Confetti particle animation (Phase UX-5) ── */
+@keyframes confetti-fall {
+  0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+  50% { opacity: 1; }
+  100% { transform: translateY(80vh) rotate(720deg) scale(0.3); opacity: 0; }
+}
+.confetti-particle {
+  animation: confetti-fall 1.5s ease-out forwards;
+  will-change: transform, opacity;
+}
+
+/* ── Spring button animation (Phase UX-5) ── */
+@keyframes spring-press {
+  0% { transform: scale(1); }
+  40% { transform: scale(0.95); }
+  70% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+.spring-press {
+  animation: spring-press 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ── Pulse glow for achievements (Phase UX-5) ── */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(172, 143, 194, 0.4); }
+  50% { box-shadow: 0 0 12px 4px rgba(172, 143, 194, 0.3); }
+}
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* ── Slide-up entrance (Phase UX-5) ── */
+@keyframes slide-up-enter {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.slide-up-enter {
+  animation: slide-up-enter 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* ── Fade-in (Phase UX-5) ── */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.fade-in {
+  animation: fade-in 0.3s ease-out both;
+}
 
 /* ── Touch-friendly tap targets + focus rings ── */
 .tap-target { min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center; }
