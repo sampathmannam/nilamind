@@ -48,6 +48,7 @@ const WellbeingScreen = lazy(() => import("./components/WellbeingScreen"));
 const EpisodeMarkerScreen = lazy(() => import("./components/EpisodeMarkerScreen"));
 const CaregiverSettingsScreen = lazy(() => import("./components/CaregiverSettingsScreen"));
 const BreathingScreen = lazy(() => import("./components/BreathingScreen"));
+const SoundPlayer = lazy(() => import("./components/SoundPlayer"));
 const AboutNilaScreen = lazy(() => import("./components/AboutNilaScreen"));
 const InsightsScreen = lazy(() => import("./components/InsightsScreen"));
 
@@ -120,6 +121,7 @@ const AUX_LABELS: Partial<Record<AuxView, string>> = {
   wellbeing: "Wellbeing over time",
   episode_marker: "Episode markers",
   caregiver_settings: "Caregiver settings",
+  sounds: "Ambient sounds",
 };
 
 function auxViewLabel(view: AuxView): string {
@@ -156,6 +158,7 @@ function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () 
     case "wellbeing": return <WellbeingScreen onClose={onClose} onActivateCrisis={onActivateCrisis} onTake={() => onOpenView("assessment")} />;
     case "episode_marker": return <EpisodeMarkerScreen onClose={onClose} />;
     case "caregiver_settings": return <CaregiverSettingsScreen onClose={onClose} onOpenCaregiverShare={onOpenCaregiverShare} />;
+    case "sounds": return <SoundPlayer onClose={onClose} />;
     default: return <div className="p-6 text-slate-400 text-sm text-center">Not available</div>;
   }
 }
