@@ -12,7 +12,7 @@
 
 <h1 align="center">NilaMind</h1>
 
-<p align="center"><b>A privacy-first, fully on-device mental-health companion.</b> · <a href="https://nilamind.netlify.app">try it in your browser →</a></p>
+<p align="center"><b>A privacy-first, fully on-device mental-health companion for Android.</b> · <a href="#install">get the app →</a></p>
 
 NilaMind is a mobile app built around *Nila* — someone you can talk to (by voice
 or text) for everyday emotional support. The **language model, the crisis-safety
@@ -33,21 +33,6 @@ leave the device.
 ---
 
 📖 **Full documentation** — architecture, the on-device brain, the §9 safety design, privacy, features, building, and distribution — is in **[`docs/wiki/`](docs/wiki/)**.
-
-## Try it now — in your browser
-
-### 👉 [**nilamind.netlify.app**](https://nilamind.netlify.app)
-
-No install, no account, nothing to download — open it and start talking. The
-reflective check-ins, the evidence-based coping tools, and the **crisis-safety
-layer (§9)** all run **client-side in your browser**: your words, check-ins, and
-notes stay on your device (no backend, no analytics). It works on your phone or
-laptop, and installs as a PWA if you want it on your home screen.
-
-The web version is the *instant* front door, meeting you where you are right now.
-The **Android app** below is the deeper home — it adds the full **on-device
-language model** for richer, in-her-own-words conversation, **on-device voice**,
-and compounding memory. Same NilaMind, same one rule: *help is the only metric.*
 
 ## Install
 
