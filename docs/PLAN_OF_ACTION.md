@@ -232,10 +232,19 @@ Tested (TDD) · `npm run guard` green · **WIRED to a user surface** · safety d
 
 ## Next steps (strategic — not in build queue)
 When new priorities emerge, they should be added here with autonomy tags and research basis:
-- [ ] India market polish (Phase 13) — if market signal warrants
-- [ ] Family/caregiver mode — if user research shows demand
+- ~~India market polish (Phase 13)~~ — dropped by user
+- ~~Family/caregiver mode~~ — done (Phase 19)
 - [ ] Employer/insurer dashboard — if B2B pivot chosen
-- [ ] Longitudinal outcome tracking — if IRB/clinical partnership secured
+- ~~Longitudinal outcome tracking~~ — done (Phase 17)
+
+## All Phases Complete (2026-07-14)
+- Phases 1–20: All shipped
+- P4 Localization: Paused by user (~45 screens remain)
+- UX Masterplan (10 phases): All complete
+- Data Collection Fixes (5): All complete
+- Retention Mechanics (5): All complete
+- 9/10 Feature Plan (5): All complete
+- Test count: 2551
 
 ---
 
