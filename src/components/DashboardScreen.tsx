@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import Markdown from "react-markdown";
 import { loadMoodHistory } from "../services/moodHistory";
+import { readEpisodeMarkers } from "../services/episodeMarker";
 import { t, useLanguage } from "../services/i18n";
 import { loadAssessments, latestFor, INSTRUMENTS, type InstrumentId } from "../services/assessments";
 import { assessmentInsights, generateInsights, daysOfData, medicationMoodInsight, type Insight } from "../services/patternInsights";
@@ -37,6 +38,8 @@ import { isPilotEnrolled, computePilotSummary } from "../services/pilotStudy";
 import CrisisCard from "./CrisisCard";
 import WellbeingTrendCard from "./WellbeingTrendCard";
 import EpisodeMarkerCard from "./EpisodeMarkerCard";
+import MoodHeatmap from "./MoodHeatmap";
+import PhaseTimeline from "./PhaseTimeline";
 import { stripProvenance } from "../services/emotionParse";
 import {
   emotionDistribution, derivedObservations, episodePatterns, quickNoteTags,
@@ -76,6 +79,7 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
   const data = useMemo(() => {
     const mood = loadMoodHistory().sort((a, b) => a.date.localeCompare(b.date));
     const assessments = loadAssessments();
+    const episodeMarkers = readEpisodeMarkers();
     const streak = computeStreak();
     const compassionateStreak = computeCompassionateStreak();
     const nila = nilaStats();
@@ -135,10 +139,10 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
       rhythmVariabilityMin: rhythmReg.overallVariabilityMin,
     }) : null;
 
-    return { mood, streak, compassionateStreak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian, nOf1, usageSummary, circadianFeedback, rhythmReg, protocolAdherence, disengagementRisk };
+    return { mood, streak, compassionateStreak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian, nOf1, usageSummary, circadianFeedback, rhythmReg, protocolAdherence, disengagementRisk, episodeMarkers };
   }, []);
 
-  const { mood, streak, compassionateStreak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian, nOf1, usageSummary, circadianFeedback, rhythmReg, protocolAdherence, disengagementRisk } = data;
+  const { mood, streak, compassionateStreak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian, nOf1, usageSummary, circadianFeedback, rhythmReg, protocolAdherence, disengagementRisk, episodeMarkers } = data;
 
   // Load behaviour snapshots async and compute daily-behaviour insights
   useEffect(() => {
@@ -451,6 +455,16 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
 
        {/* Episode-phase marker — current phase if active */}
        <EpisodeMarkerCard onOpen={() => onOpenView?.("episode_marker")} />
+
+       {/* Mood Heatmap — Year in Pixels */}
+       {mood.length >= 7 && (
+         <MoodHeatmap moods={mood} days={182} />
+       )}
+
+       {/* Phase Timeline — episode phases over time */}
+       {episodeMarkers.length > 0 && (
+         <PhaseTimeline markers={episodeMarkers} days={365} />
+       )}
 
        {/* Top stats */}
       <div className="grid grid-cols-2 gap-2">
