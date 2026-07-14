@@ -40,6 +40,9 @@ import WellbeingTrendCard from "./WellbeingTrendCard";
 import EpisodeMarkerCard from "./EpisodeMarkerCard";
 import MoodHeatmap from "./MoodHeatmap";
 import PhaseTimeline from "./PhaseTimeline";
+import StreakCounter from "./StreakCounter";
+import AchievementBadge from "./AchievementBadge";
+import { getAllAchievements, getAchievementCount } from "../services/achievements";
 import { stripProvenance } from "../services/emotionParse";
 import {
   emotionDistribution, derivedObservations, episodePatterns, quickNoteTags,
@@ -446,9 +449,34 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
            Econometrica. The raw count is still shown, just demoted to small muted caption text
            below rather than a big Flame+number stat tile. */}
       <div className="glass rounded-2xl py-3 px-4 text-center flex items-center justify-center gap-2">
-        <span aria-hidden="true">{compassionateStreak.emoji}</span>
-        <p className="text-sm text-slate-200">{compassionateStreak.message}</p>
-       </div>
+         <span aria-hidden="true">{compassionateStreak.emoji}</span>
+         <p className="text-sm text-slate-200">{compassionateStreak.message}</p>
+        </div>
+
+        {/* Streak counter with milestone progress */}
+        <StreakCounter
+          current={streak.current}
+          longest={streak.longest}
+          totalActiveDays={streak.totalActiveDays}
+        />
+
+        {/* Achievements — recent unlocks */}
+        {getAchievementCount() > 0 && (
+          <div className="glass rounded-2xl p-4 space-y-2">
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] uppercase font-mono tracking-widest text-slate-500">Achievements</p>
+              <span className="text-[10px] text-slate-500">{getAchievementCount()}/{getAllAchievements().length}</span>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {getAllAchievements()
+                .filter((a) => a.unlockedAt != null)
+                .slice(0, 6)
+                .map((a) => (
+                  <AchievementBadge key={a.id} achievement={a} compact />
+                ))}
+            </div>
+          </div>
+        )}
 
        {/* Longitudinal wellbeing — fortnightly WHO-5 trend + cadence */}
        <WellbeingTrendCard onOpen={() => onOpenView?.("wellbeing")} />
