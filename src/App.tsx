@@ -65,11 +65,12 @@ function ScreenFallback() {
   );
 }
 
-import { syncDailyReminders, scheduleReminderAt, syncEmaCheckins, syncWeeklyDigest, suppressNudgesForCrisis, registerNotificationActionTypes, syncWindDownReminder } from "./services/notifications";
+import { syncDailyReminders, scheduleReminderAt, syncEmaCheckins, syncWeeklyDigest, suppressNudgesForCrisis, registerNotificationActionTypes, syncWindDownReminder, syncMedicationReminders } from "./services/notifications";
 import { recordFirstOpenToday, recordLastCloseToday } from "./services/autoAnchors";
 import { recordEngagement, recordDismissal } from "./services/notificationBudget";
 import { recordNotificationOpen } from "./services/notificationEngagement";
 import { enableDndFor } from "./services/dnd";
+import { logMedication, loadMedications } from "./services/medicationAdherence";
 import { isCategoryEnabled } from "./services/notificationCategories";
 import { LocalNotifications } from "@capacitor/local-notifications";
 import { t, LANGUAGE_CHANGED_EVENT } from "./services/i18n";
@@ -224,6 +225,14 @@ export default function App() {
     void syncWindDownReminder();
   }, []);
 
+  // Sync medication reminders on app open (health-critical: exempt from safety suppression).
+  useEffect(() => {
+    try {
+      const meds = loadMedications();
+      if (meds.length > 0) void syncMedicationReminders(meds);
+    } catch { /* best-effort */ }
+  }, []);
+
   // Auto-detect wake/bed times from phone usage (social rhythm data without Health Connect).
   // recordFirstOpenToday() captures the first app open as a wake-time proxy.
   // recordLastCloseToday() captures the last background event as a bed-time proxy.
@@ -375,6 +384,10 @@ export default function App() {
         }
         if (actionId === "taken") {
           // Medication "Taken ✓" — dismiss and log adherence
+          const medId = action?.notification?.extra?.medId;
+          if (medId) {
+            try { logMedication(medId, true, []); } catch { /* best-effort */ }
+          }
           recordEngagement();
           return;
         }

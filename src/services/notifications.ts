@@ -437,15 +437,15 @@ export async function syncMedicationReminders(meds: Medication[]): Promise<void>
   try { granted = (await LocalNotifications.checkPermissions()).display === "granted"; } catch (e) { console.error("[notifications] syncMedicationReminders checkPermissions failed:", e); return; }
   if (!granted) return;
 
-  const notifications: { id: number; title: string; body: string; schedule: { on: { hour: number; minute: number }; allowWhileIdle: true }; smallIcon: string; channelId: string; actionTypeId: string }[] = [];
+  const notifications: { id: number; title: string; body: string; schedule: { on: { hour: number; minute: number }; allowWhileIdle: true }; smallIcon: string; channelId: string; actionTypeId: string; extra: { medId: string } }[] = [];
   for (const med of meds) {
     if (!med.active) continue;
     const [h, m] = parseTime(med.time);
     const body = `Time for ${med.name} ${med.dose}`.trim();
-    notifications.push({ id: medNotificationId(med.id), title: "NilaMind", body, schedule: { on: { hour: h, minute: m }, allowWhileIdle: true }, smallIcon: "ic_stat_icon_config_sample", channelId: CHANNEL.medication, actionTypeId: ACTION_TYPE.medication });
+    notifications.push({ id: medNotificationId(med.id), title: "NilaMind", body, schedule: { on: { hour: h, minute: m }, allowWhileIdle: true }, smallIcon: "ic_stat_icon_config_sample", channelId: CHANNEL.medication, actionTypeId: ACTION_TYPE.medication, extra: { medId: med.id } });
     if (med.schedule === "twice_daily") {
       const h2 = (h + 12) % 24;
-      notifications.push({ id: medNotificationId(med.id, 1), title: "NilaMind", body, schedule: { on: { hour: h2, minute: m }, allowWhileIdle: true }, smallIcon: "ic_stat_icon_config_sample", channelId: CHANNEL.medication, actionTypeId: ACTION_TYPE.medication });
+      notifications.push({ id: medNotificationId(med.id, 1), title: "NilaMind", body, schedule: { on: { hour: h2, minute: m }, allowWhileIdle: true }, smallIcon: "ic_stat_icon_config_sample", channelId: CHANNEL.medication, actionTypeId: ACTION_TYPE.medication, extra: { medId: med.id } });
     }
   }
   if (notifications.length === 0) return;

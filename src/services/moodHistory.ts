@@ -4,12 +4,14 @@ import { secureLocal } from "./secureLocal";
 // Read-only; touches nothing the rest of the app writes.
 
 import { loadEmaEntries } from "./ema";
+import { inferShame } from "./shameInference";
 import type { MoodPoint } from './patternInsights';
 
 interface DayAgg {
   intensitySum: number;
   intensityN: number;
   shame: number | null;
+  inferredShame: number; // max shame inferred from check-in emotion labels
   sleepSum: number;
   sleepN: number;
   socialSum: number;
@@ -17,7 +19,7 @@ interface DayAgg {
 }
 
 function blank(): DayAgg {
-  return { intensitySum: 0, intensityN: 0, shame: null, sleepSum: 0, sleepN: 0, socialSum: 0, socialN: 0 };
+  return { intensitySum: 0, intensityN: 0, shame: null, inferredShame: 0, sleepSum: 0, sleepN: 0, socialSum: 0, socialN: 0 };
 }
 
 /** Map EMA valence (-3 to +3) to distress intensity (1-10). Inverse: higher valence = lower distress. */
@@ -33,17 +35,22 @@ export function loadMoodHistory(): MoodPoint[] {
   const byDate: Record<string, DayAgg> = {};
   const get = (date: string): DayAgg => (byDate[date] ||= blank());
 
-  // Check-ins: nilamind_checkins = CheckInEntry[]  ({ date, intensity, sleepHours?, socialInteraction? })
+  // Check-ins: nilamind_checkins = CheckInEntry[]  ({ date, intensity, sleepHours?, socialInteraction?, emotion? })
   try {
     const raw = secureLocal.getItem('nilamind_checkins');
     if (raw) {
-      const list = JSON.parse(raw) as Array<{ date?: string; intensity?: number; sleepHours?: number; socialInteraction?: number }>;
+      const list = JSON.parse(raw) as Array<{ date?: string; intensity?: number; sleepHours?: number; socialInteraction?: number; emotion?: string }>;
       for (const c of list) {
         if (!c?.date) continue;
         const d = get(c.date);
         if (typeof c.intensity === 'number') { d.intensitySum += c.intensity; d.intensityN += 1; }
         if (typeof c.sleepHours === 'number') { d.sleepSum += c.sleepHours; d.sleepN += 1; }
         if (typeof c.socialInteraction === 'number') { d.socialSum += c.socialInteraction; d.socialN += 1; }
+        // Infer shame from emotion label (Phase: data collection fix — shame from check-ins, not just diary)
+        if (c.emotion) {
+          const inferred = inferShame(c.emotion);
+          if (inferred > d.inferredShame) d.inferredShame = inferred;
+        }
       }
     }
   } catch {
@@ -84,7 +91,7 @@ export function loadMoodHistory(): MoodPoint[] {
   return Object.entries(byDate).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)).map(([date, d]) => ({
     date,
     intensity: d.intensityN ? Math.round((d.intensitySum / d.intensityN) * 10) / 10 : null,
-    shame: d.shame,
+    shame: d.shame ?? (d.inferredShame > 0 ? d.inferredShame : null), // diary shame takes priority; inferred as fallback
     sleepHours: d.sleepN ? Math.round((d.sleepSum / d.sleepN) * 10) / 10 : null,
     social: d.socialN ? Math.round((d.socialSum / d.socialN) * 10) / 10 : null,
   }));
