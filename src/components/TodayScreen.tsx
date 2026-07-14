@@ -14,6 +14,7 @@ import { getUserGoals } from "../services/chatSuggestions";
 import { getDailyIntention } from "../services/weeklyIntention";
 import DailyIntentionCard, { type DailyIntentionCardHandle } from "./DailyIntentionCard";
 import { useTimeOfDay, heroGradient, contextualSummary } from "../hooks/useTimeOfDay";
+import { buildNilaMessage } from "../services/nilaVoice";
 import type { TimeMode, UserState } from "../types/modes";
 
 // Goal -> the tool row ids it should promote to the front of their group, when present in that group.
@@ -194,6 +195,18 @@ export default function TodayScreen({
   })();
   const contextLine = contextualSummary(timeOfDay, checkedIn, recentAvg, 0);
 
+  // Nila's warm companion message based on current state
+  const nilaMsg = buildNilaMessage({
+    timeOfDay,
+    recentMoodAvg: recentAvg,
+    checkedInToday: checkedIn,
+    streakDays: 0, // simplified — streak is in DashboardScreen
+    sleepHours: null,
+    isCrisis: false,
+    hasRecentEpisode: false,
+    isReturning: hasAnyCheckins && !checkedIn,
+  });
+
   return (
     <div className="space-y-5 max-w-md mx-auto" id="today-hub">
       {/* Greeting — time-aware, serif voice, with subtle gradient backdrop */}
@@ -203,6 +216,9 @@ export default function TodayScreen({
           <p className="text-sm text-slate-400">{formatDate()}</p>
           {contextLine && (
             <p className="text-[11px] text-slate-500 leading-relaxed mt-1">{contextLine}</p>
+          )}
+          {!contextLine && nilaMsg.message && (
+            <p className="text-[11px] text-slate-500 leading-relaxed mt-1 italic">"{nilaMsg.message}"</p>
           )}
         </div>
       </header>
