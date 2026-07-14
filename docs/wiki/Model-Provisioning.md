@@ -6,13 +6,13 @@ NilaMind ships **without** a language model — both because GGUF files are larg
 
 On first launch, if no valid model is on disk, the app shows a setup screen (`ModelSetupScreen`) offering to download Nila's brain. The flow (`src/services/modelCatalog.ts`, `modelDownload.ts`):
 
-1. **Informed consent.** The card states the size (~806 MB) and warns to use Wi-Fi before anything downloads — no silent mobile-data burn.
+1. **Informed consent.** The card states the size (~1.1 GB) and warns to use Wi-Fi before anything downloads — no silent mobile-data burn.
 2. **Streamed to a temp file.** The model is downloaded to a `*.part` file (streamed to disk, so the JS heap never holds it).
 3. **Integrity-verified.** It is accepted **only if** the on-disk byte length **exactly** matches the catalog size *and* the file starts with the `GGUF` magic. This catches both a truncated transfer and the classic failure where an HTTP error page gets written to disk as the "model."
 4. **Atomic install.** Only after verification is it atomically renamed into place. Any failure deletes the partial, so a half-finished file can never silently become the brain.
 5. **Self-healing.** On later launches, a file that's present but the wrong size is deleted and the setup screen re-offers a clean download — there's no one-way "bricked" state.
 
-The catalog currently lists a single active model — the **stock Gemma-3-1B-it** (~806 MB) — fetched from unsloth's public Hugging Face repo (the project's own fine-tuned 4B survives only as a commented-out one-line-revert entry in `modelCatalog.ts`). The model is under the **Gemma license** (not a free/open-source license); that's the one "non-free" aspect of an otherwise fully-FOSS app (see [Distribution](Distribution.md)).
+The catalog currently lists a single active model — the **stock Qwen2.5-1.5B-Instruct** (~1.1 GB) — fetched from Qwen's public Hugging Face repo (`Qwen/Qwen2.5-1.5B-Instruct-GGUF`). The older stock Gemma-3-1B and the project's own fine-tuned 4B each survive only as commented-out one-line-revert entries in `modelCatalog.ts`. The model is **Apache-2.0** licensed — the same license as the app — so NilaMind is now FOSS end-to-end, with no "non-free" model caveat (see [Distribution](Distribution.md)).
 
 ## Side-loading (for developers)
 
@@ -20,7 +20,7 @@ You can skip the in-app download and push a GGUF directly:
 
 ```bash
 adb push your-model.gguf \
-  /sdcard/Android/data/com.nilamind.app/files/gemma-3-1b-it-Q4_K_M.gguf
+  /sdcard/Android/data/com.nilamind.app/files/qwen2.5-1.5b-instruct-q4_k_m.gguf
 ```
 
 `llamaCppLlmAdapter.ts` looks for that filename in the app's external files dir. (If you use a different filename, point the adapter/catalog at it.)

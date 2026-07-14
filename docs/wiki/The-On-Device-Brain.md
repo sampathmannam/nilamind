@@ -4,7 +4,7 @@
 
 ## The model
 
-By default the app downloads the **stock Gemma-3-1B-it** — Google's un-fine-tuned instruct model, `Q4_K_M` GGUF, ~806 MB, from [`unsloth/gemma-3-1b-it-GGUF`](https://huggingface.co/unsloth/gemma-3-1b-it-GGUF) — a 2026-07-07 speed A/B. The project's own therapy-tuned **Gemma-3-4B** (~2.5 GB) is a separate ⚠️ **research preview** at [`sampathmannam/nilamind-gemma-3-4b-GGUF`](https://huggingface.co/sampathmannam/nilamind-gemma-3-4b-GGUF), **not** the default brain; it was distilled to be brief, warm, and grounded in CBT/DBT/ACT/MI/self-compassion, with severity-aware stances (hold space vs. reflect vs. gently probe).
+By default the app downloads the **stock Qwen2.5-1.5B-Instruct** — Qwen's un-fine-tuned instruct model, `Q4_K_M` GGUF, ~1.1 GB, Apache-2.0 licensed, from [`Qwen/Qwen2.5-1.5B-Instruct-GGUF`](https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF) — adopted in a 2026-07-11 speed swap (it replaced an earlier stock Gemma-3-1B default). The project's own therapy-tuned **Gemma-3-4B** (~2.5 GB) is a separate ⚠️ **research preview** at [`sampathmannam/nilamind-gemma-3-4b-GGUF`](https://huggingface.co/sampathmannam/nilamind-gemma-3-4b-GGUF), **not** the default brain; it was distilled to be brief, warm, and grounded in CBT/DBT/ACT/MI/self-compassion, with severity-aware stances (hold space vs. reflect vs. gently probe).
 
 NilaMind is **not** married to this model — see [Model Provisioning](Model-Provisioning.md) → *Bring your own model*. Reply quality, latency, and failure modes depend entirely on the model you load.
 

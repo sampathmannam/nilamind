@@ -19,7 +19,7 @@ Yes — drop in any GGUF, or wire a different on-device backend via the `localLl
 Because it relies on a *prebuilt* llama.cpp inference binary, and f-droid.org builds everything from source. The FOSS-ecosystem route is **IzzyOnDroid**. See [Distribution](Distribution.md).
 
 **Which devices are supported?**
-Android 7.0+ (API 24), arm64-v8a, with enough free storage (~3 GB) and RAM for the model. Older or low-RAM phones may struggle with the 4B model.
+Android 7.0+ (API 24), arm64-v8a, with enough free storage (~1.5 GB) and RAM for the model. The default brain (Qwen2.5-1.5B, ~1.1 GB) runs on most recent phones; only the optional side-loaded 4B model strains low-RAM devices.
 
 **Is there an iOS version?**
 Not currently. The codebase is React/Capacitor, so iOS is conceivable, but the on-device LLM runtime and the build are Android-only today.

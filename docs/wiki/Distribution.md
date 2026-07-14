@@ -10,7 +10,7 @@ Signed APKs are published on the [Releases page](https://github.com/sampathmanna
 
 **IzzyOnDroid** is an F-Droid-format repository, installable inside the F-Droid client, that accepts a developer's **own signed APK** (it doesn't rebuild from source), tolerates prebuilt native libraries, and discloses anything non-free as an "anti-feature." It's the standard home for FOSS apps that can't meet mainline F-Droid's build-from-source rule, and it's fed from GitHub Releases.
 
-Expected anti-feature flag: **`NonFreeNet`** — on first run the app downloads the ~2.5 GB language model (Gemma license) from Hugging Face, then runs fully offline.
+Anti-feature flags: **none needed for the model.** On first run the app downloads its ~1.1 GB language model (Qwen2.5-1.5B, **Apache-2.0** — the same license as the app) from Hugging Face, then runs fully offline. Because the model is freely licensed, no `NonFreeNet` or `NonFreeDep` disclosure applies (the earlier Gemma-licensed default did require `NonFreeNet`; it no longer ships).
 
 To install once listed: add `https://apt.izzysoft.de/fdroid/repo` in the F-Droid client and search for NilaMind.
 

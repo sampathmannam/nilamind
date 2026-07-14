@@ -16,16 +16,17 @@ By default, on first run, NilaMind downloads and runs a **stock, un-fine-tuned l
 
 | Property | Value |
 |---|---|
-| Base model | Google **Gemma-3-1B-Instruct** (stock instruct weights) |
-| Parameters | ~1 billion |
+| Base model | **Qwen2.5-1.5B-Instruct** (stock instruct weights, Alibaba/Qwen) |
+| Parameters | ~1.5 billion |
 | Quantization | Q4_K_M (GGUF) |
-| File | `gemma-3-1b-it-Q4_K_M.gguf` |
-| Size | ~806 MB (806,058,272 bytes) |
-| Source | `unsloth/gemma-3-1b-it-GGUF` (public, non-gated HuggingFace repo) |
-| Integrity | SHA-256 pinned; verified before install |
+| File | `qwen2.5-1.5b-instruct-q4_k_m.gguf` |
+| Size | ~1.1 GB (1,117,320,736 bytes) |
+| License | **Apache-2.0** (same as the app) |
+| Source | `Qwen/Qwen2.5-1.5B-Instruct-GGUF` (public, non-gated HuggingFace repo) |
+| Integrity | SHA-256 pinned (`6a1a2eb6…e9407e`); verified before install |
 | Runtime | llama.cpp, on-device (Android native) |
 
-This is a **stock** re-quantized copy of Google's official `gemma-3-1b-it`. It is **not** fine-tuned on any mental-health corpus. The app ships **without a bundled model**; the model is downloaded on first run (see Privacy §3.2, egress item 1) or side-loaded by developers.
+This is a **stock** re-quantized copy of Qwen's official `Qwen2.5-1.5B-Instruct`, adopted in a dated speed swap on **2026-07-11** (it replaced an earlier stock **Gemma-3-1B-it** default; Qwen offers better instruction-following and a permissive Apache-2.0 license). It is **not** fine-tuned on any mental-health corpus. The app ships **without a bundled model**; the model is downloaded on first run (see Privacy §3.2, egress item 1) or side-loaded by developers.
 
 ### Where it runs
 
@@ -44,13 +45,13 @@ Private, non-clinical self-reflection: journaling-style conversation, mood check
 
 ### Known limitations
 
-- **Reply quality is limited by a 1B stock model.** A 1-billion-parameter model produces shorter, less nuanced, and occasionally incoherent replies compared with larger models, and is not tuned for a specific therapeutic voice.
+- **Reply quality is limited by a small (~1.5B) stock model.** A 1.5-billion-parameter model produces shorter, less nuanced, and occasionally incoherent replies compared with larger models, and is not tuned for a specific therapeutic voice.
 - **Model quality is partly user-supplied.** Because the model is downloaded/side-loadable rather than baked in, whatever GGUF a user supplies determines reply quality and failure modes. The safety layer (§2) reduces, but does not eliminate, model-driven risk.
 - **Hallucination.** Like any LLM, it can produce confident, incorrect statements. Do not rely on factual claims it makes.
 
 ### The optional larger model (accurate description)
 
-The project also published a therapy-tuned **Gemma-3-4B** GGUF (`v2-4b-Q4_K_M.gguf`, ~2.5 GB, repo `sampathmannam/nilamind-gemma-3-4b-GGUF`). In the current build this model is **not the default, not user-selectable, and not an automatic fallback.** It exists only as: (a) the previously-shipped brain, swapped out for the stock 1B in a dated speed A/B on 2026-07-07; (b) a one-line catalog revert for developers; (c) a GGUF a developer can side-load manually; and (d) a published research-preview artifact. Any older README, wiki, or in-code comment that describes the app as "running a fine-tuned Gemma-3-4B" or calls the 4B "the exact GGUF this app loads" is **stale**; the shipped default is the stock 1B, and those references are being corrected. This document is the authoritative statement of what ships.
+The project also published a therapy-tuned **Gemma-3-4B** GGUF (`v2-4b-Q4_K_M.gguf`, ~2.5 GB, repo `sampathmannam/nilamind-gemma-3-4b-GGUF`). In the current build this model is **not the default, not user-selectable, and not an automatic fallback.** It exists only as: (a) an earlier-shipped brain, since superseded — first by the stock Gemma-3-1B (2026-07-07 speed A/B) and then by the current stock Qwen2.5-1.5B (2026-07-11 speed swap); (b) a one-line catalog revert for developers; (c) a GGUF a developer can side-load manually; and (d) a published research-preview artifact. Any older README, wiki, or in-code comment that describes the app as "running a fine-tuned Gemma-3-4B," calls the 4B "the exact GGUF this app loads," or names Gemma-3-1B as the current default is **stale**; the shipped default is the stock **Qwen2.5-1.5B-Instruct**, and those references are being corrected. This document is the authoritative statement of what ships.
 
 ---
 
@@ -144,7 +145,7 @@ NilaMind implements the six-section **Stanley-Brown Safety Planning Intervention
 
 | # | What leaves | When | Where |
 |---|---|---|---|
-| 1 | One-time model download (~806 MB GGUF) over HTTPS | Native only, and only when the user taps "download" | Public HuggingFace CDN |
+| 1 | One-time model download (~1.1 GB GGUF) over HTTPS | Native only, and only when the user taps "download" | Public HuggingFace CDN |
 | 2 | System (cloud) STT audio — **opt-out only** | Only if the user explicitly turns off on-device Vosk | OS/Google recognizer |
 | 3 | Cloud TTS voice text — **opt-in only** | Only if the user picks a voice labelled "network" (on-device voices listed first) | OS TTS provider |
 | 4 | User-drafted "reach out" / caregiver share text | Only when the user taps share/send (OS share sheet or SMS composer; no app server) | Whoever the user chooses |
@@ -192,7 +193,7 @@ The clinical instruments and interventions NilaMind draws on have their own evid
 
 ## 5. How We Test
 
-- **Suite:** 1,234 automated tests across 123 test files, all passing (Vitest). Any older figure (e.g. "~1,100 tests") is stale.
+- **Suite:** 2,500+ automated tests across 220+ test files, all passing (Vitest). Any older figure (e.g. "1,234 tests") is stale.
 - **Crisis coverage:** roughly 115 dedicated §9 / crisis cases across 12 core test files, spanning input-gate recall, precision / negative guards (each paired with benign controls so ordinary wellness language does not trip the gate), classifier invariants (additive, fail-closed, never-suppress-a-keyword-hit), a real-model regression that asserts the shipped classifier still scores known cases above threshold, output-gate anti-sycophancy rules with positive controls (warm reframes must pass unchanged), and end-to-end invariants (crisis scan short-circuits before the model in both companion and episode modes; unsafe replies are replaced; no crisis-line placeholder ever leaks into an outgoing prompt).
 - **Adversarial posture:** explicit red-team suites (including a multi-agent audit hardening pass) and a reusable adversarial tester agent generate regressions from attempted bypasses. Specific bypass phrasings are kept private and are not published.
 - **The single-turn vs. multi-turn lesson (honest):** most adversarial tests today are single-turn. We have learned that evaluating in the wrong shape — a single-turn probe, or only a subset of the suite — can yield a misleadingly "green" result that misses failures a full, in-deployment-shape run would catch. We therefore run the full suite, and multi-turn adversarial coverage (probing longer, evolving conversations) is an active, unfinished area. Passing tests demonstrate the behaviors we thought to test; they do not prove the absence of undiscovered failure modes.
