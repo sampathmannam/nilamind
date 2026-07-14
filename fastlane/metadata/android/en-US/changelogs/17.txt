@@ -1,0 +1,6 @@
+v1.9.10 — languages, longitudinal wellbeing & family mode:
+- Hindi, Tamil & Telugu across the crisis surface, Tools, You, Settings and Dashboard — all on-device.
+- WHO-5 wellbeing tracked over time; a you-owned episode-phase (bipolar course) tracker; consent-gated on-device family/caregiver mode.
+- 7-day anchor rhythm timeline with mood overlay; real Sleep Regularity Index (Phillips 2017); proactive wind-down when rhythm dips; seasonal mood-pattern insight; smarter notification timing; weekly review digest.
+- Warmer, steadier companion voice (expanded on-device exemplar corpus + register steering).
+- Auto-update / privacy controls in Settings. Crisis support fully preserved. Still 100% on-device — nothing leaves your phone.
