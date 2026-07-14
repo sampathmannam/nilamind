@@ -1,9 +1,13 @@
 import React from "react";
 import { useLanguage } from "../services/i18n";
+import NilaCharacter from "../illustrations/NilaCharacter";
+import type { NilaState } from "../illustrations/NilaCharacter";
 
 interface Props {
-  /** Illustration to show (emoji or SVG). */
-  illustration: React.ReactNode;
+  /** Illustration to show — either a NilaCharacter state or custom ReactNode. */
+  illustration?: React.ReactNode;
+  /** NilaCharacter state (used when illustration is not provided). */
+  nilaState?: NilaState;
   /** Primary message. */
   title: string;
   /** Supporting text. */
@@ -22,15 +26,15 @@ interface Props {
 
 /**
  * EmptyState — a warm, illustrated empty state for screens with no data.
- * Shows an illustration, title, body, and optional CTA.
+ * Shows a NilaCharacter illustration, title, body, and optional CTA.
  * Designed to feel like a gentle invitation, not a blank wall.
  */
-export default function EmptyState({ illustration, title, body, cta, secondary }: Props) {
+export default function EmptyState({ illustration, nilaState = "calm", title, body, cta, secondary }: Props) {
   useLanguage();
 
   return (
     <div className="flex flex-col items-center justify-center text-center px-6 py-10 space-y-4">
-      <div className="text-4xl">{illustration}</div>
+      {illustration ?? <NilaCharacter state={nilaState} size={64} />}
       <div className="space-y-1.5 max-w-xs">
         <p className="text-sm font-semibold text-slate-200">{title}</p>
         <p className="text-[11px] text-slate-400 leading-relaxed">{body}</p>
@@ -57,66 +61,66 @@ export default function EmptyState({ illustration, title, body, cta, secondary }
 
 /**
  * Pre-built empty states for common screens.
- * Each uses the warm companion voice and a relevant illustration.
+ * Each uses a NilaCharacter state + warm companion voice copy.
  */
 export const EMPTY_STATES = {
   noCheckins: {
-    illustration: "🌱",
+    nilaState: "greeting" as NilaState,
     title: "Your story starts here",
     body: "A quick check-in takes 30 seconds. Even one tap helps your patterns grow.",
   },
   noEpisodes: {
-    illustration: "🌿",
+    nilaState: "calm" as NilaState,
     title: "No episodes yet",
     body: "That's a good sign. If you do log one, here's what we track: the phase, how long it lasted, and what helped.",
   },
   noMoodData: {
-    illustration: "📊",
+    nilaState: "supporting" as NilaState,
     title: "Your mood story starts with one check-in",
     body: "After a few days, you'll see patterns emerge — what helps, what triggers, and how you're trending.",
   },
   noCaregiverContacts: {
-    illustration: "🤝",
+    nilaState: "supporting" as NilaState,
     title: "Share with someone you trust",
     body: "Adding a trusted person means you can share a wellness snapshot when you need support.",
   },
   noWellbeingChecks: {
-    illustration: "💚",
+    nilaState: "calm" as NilaState,
     title: "Track your wellbeing over time",
     body: "A fortnightly WHO-5 check takes 2 minutes and shows how your wellbeing trends over months.",
   },
   noAssessments: {
-    illustration: "📝",
+    nilaState: "supporting" as NilaState,
     title: "No screenings yet",
     body: "Complete a PHQ-9 or GAD-7 to see your scores trend over time. Research-backed, takes 2 minutes.",
   },
   noInsights: {
-    illustration: "💡",
+    nilaState: "greeting" as NilaState,
     title: "Insights emerge with data",
     body: "Keep checking in — after a few days, Nila will notice patterns and share what she finds.",
   },
   noMedications: {
-    illustration: "💊",
+    nilaState: "calm" as NilaState,
     title: "No medications tracked",
     body: "Add your medications to get gentle reminders and track adherence over time.",
   },
   noProtocols: {
-    illustration: "🧰",
+    nilaState: "supporting" as NilaState,
     title: "No protocols started yet",
     body: "Protocols are research-backed skill programs. Start one to build a new habit.",
   },
   noDiaryEntries: {
-    illustration: "📖",
+    nilaState: "calm" as NilaState,
     title: "Your diary is empty",
     body: "Write a few lines about your day. It helps you process and reflect.",
   },
   noSleepData: {
-    illustration: "🌙",
+    nilaState: "resting" as NilaState,
     title: "No sleep data yet",
     body: "Log your sleep for a few days to see patterns and get personalized suggestions.",
   },
   noSocialRhythm: {
-    illustration: "⏰",
+    nilaState: "calm" as NilaState,
     title: "Build your rhythm",
     body: "Track your daily anchors (wake, meals, sleep) to see how regular your rhythm is.",
   },
