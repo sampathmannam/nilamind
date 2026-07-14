@@ -2,6 +2,7 @@ import React, { useState, useMemo } from "react";
 import { ChevronLeft, CalendarRange, Check } from "lucide-react";
 import { t, useLanguage, type I18nKey } from "../services/i18n";
 import { hapticSuccess } from "../hooks/useHaptics";
+import { tryUnlockAchievement } from "../services/achievements";
 import {
   addEpisodeMarker,
   readEpisodeMarkers,
@@ -50,6 +51,7 @@ export default function EpisodeMarkerScreen({ onClose }: Props) {
         createdAt: new Date().toISOString(),
       });
       hapticSuccess(); // UX-5: tactile confirmation on episode marker save
+      tryUnlockAchievement("first_episode"); // Retention: unlock achievement
       setPhase(null);
       setNote("");
       setFrom(today());

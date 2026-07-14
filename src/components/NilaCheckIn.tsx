@@ -41,6 +41,8 @@ import {
 } from "../services/nilaCheckinReducer";
 import { buildCheckinEntry, appendCheckin } from "../services/checkin";
 import { hapticSuccess } from "../hooks/useHaptics";
+import { checkAchievementConditions } from "../services/achievements";
+import { secureLocal } from "../services/secureLocal";
 import { suggestGranularEmotions } from "../services/emotionGranularity";
 import { Mic, MicOff } from "lucide-react";
 import { listenOnce, stopListening } from "../services/voice";
@@ -86,6 +88,37 @@ export default function NilaCheckIn({ onLogged, onSkip }: NilaCheckInProps) {
     const entry = buildCheckinEntry(resolved.label, resolved.intensity, resolved.contextTag, resolved.granularEmotion, resolved.energy, resolved.sleepHours);
     appendCheckin(entry);
     hapticSuccess(); // UX-5: tactile confirmation on check-in complete
+
+    // Retention: check and unlock achievements on every check-in
+    try {
+      const checkinCount = (() => {
+        try {
+          const raw = secureLocal.getItem("nilamind_checkins");
+          return raw ? JSON.parse(raw).length : 0;
+        } catch { return 0; }
+      })();
+      const hasEpisodeMarkers = (() => {
+        try { return !!secureLocal.getItem("nilamind_episode_markers"); } catch { return false; }
+      })();
+      const hasSafetyPlan = (() => {
+        try { return !!secureLocal.getItem("nilamind_safetyplan"); } catch { return false; }
+      })();
+      const hasCaregiverContact = (() => {
+        try { return !!secureLocal.getItem("nilamind_caregiver_contacts"); } catch { return false; }
+      })();
+      const hasWellbeingCheck = (() => {
+        try { return !!secureLocal.getItem("nilamind_assessments"); } catch { return false; }
+      })();
+      checkAchievementConditions({
+        checkinCount,
+        streakDays: 0, // streak computed separately
+        hasEpisodeMarkers,
+        hasSafetyPlan,
+        hasCaregiverContact,
+        hasWellbeingCheck,
+        hasUsedTool: true, // completing a check-in IS using a tool
+      });
+    } catch { /* best-effort */ }
     onLogged(entry);
   };
 

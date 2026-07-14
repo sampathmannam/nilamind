@@ -3,6 +3,7 @@ import { ChevronLeft, Plus, Trash2, Eye, Bell, Users, type LucideIcon } from "lu
 import { t, useLanguage } from "../services/i18n";
 import EmptyState from "./EmptyState";
 import { hapticSuccess } from "../hooks/useHaptics";
+import { tryUnlockAchievement } from "../services/achievements";
 import {
   addCaregiverContact,
   removeCaregiverContact,
@@ -55,6 +56,7 @@ export default function CaregiverSettingsScreen({ onClose, onOpenCaregiverShare 
     if (!form.phoneOrEmail.trim()) { setFormError(t("cg_phone_or_email") + " required"); return; }
     addCaregiverContact({ name: form.name, phoneOrEmail: form.phoneOrEmail, relationship: form.relationship, addedAt: new Date().toISOString() } as any);
     hapticSuccess(); // UX-5: tactile confirmation on contact add
+    tryUnlockAchievement("caregiver_added"); // Retention: unlock achievement
     setAdding(false);
     setFormError(null);
     refresh();

@@ -65,7 +65,7 @@ function ScreenFallback() {
   );
 }
 
-import { syncDailyReminders, scheduleReminderAt, syncEmaCheckins, syncWeeklyDigest, suppressNudgesForCrisis, registerNotificationActionTypes, syncWindDownReminder, syncMedicationReminders } from "./services/notifications";
+import { syncDailyReminders, scheduleReminderAt, syncEmaCheckins, syncWeeklyDigest, suppressNudgesForCrisis, registerNotificationActionTypes, syncWindDownReminder, syncMedicationReminders, syncInsightNotification } from "./services/notifications";
 import { recordFirstOpenToday, recordLastCloseToday } from "./services/autoAnchors";
 import { recordEngagement, recordDismissal } from "./services/notificationBudget";
 import { recordNotificationOpen } from "./services/notificationEngagement";
@@ -231,6 +231,11 @@ export default function App() {
       const meds = loadMedications();
       if (meds.length > 0) void syncMedicationReminders(meds);
     } catch { /* best-effort */ }
+  }, []);
+
+  // Retention: sync weekly insight notification (fires Wednesdays with one pattern insight).
+  useEffect(() => {
+    void syncInsightNotification();
   }, []);
 
   // Auto-detect wake/bed times from phone usage (social rhythm data without Health Connect).

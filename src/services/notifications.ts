@@ -19,6 +19,101 @@ import { isSafetySuppressed, markSafetySuppression } from "./notificationSuppres
 import { isDndActive } from "./dnd";
 import { peekRemaining, commitClaim, skipActive, recordNonCrisisSent } from "./notificationBudget";
 import { isCategoryEnabled } from "./notificationCategories";
+import { extractWeeklyFacts } from "./weeklySynthesis";
+import { loadMoodHistory } from "./moodHistory";
+import { secureLocal } from "./secureLocal";
+
+// ── Proactive insight notification (Retention mechanic) ───────────────────────
+// Surfaces one pattern insight per week as a notification.
+// "Nila noticed: on days you got 7k+ steps, your mood was 2 points better."
+// Research: Woebot proactively offers CBT-informed insights during conversations.
+// We push one insight per week so the user feels the app is learning about them.
+const INSIGHT_NOTIF_ID = 1004;
+
+function contextualInsightBody(): string | null {
+  try {
+    const mood = loadMoodHistory();
+    if (mood.length < 7) return null;
+
+    // Compute a simple insight from mood data
+    const recent7 = mood.slice(-7);
+    const older7 = mood.slice(-14, -7);
+    if (recent7.length < 3 || older7.length < 3) return null;
+
+    const recentAvg = recent7.reduce((s, m) => s + (m.intensity ?? 5), 0) / recent7.length;
+    const olderAvg = older7.reduce((s, m) => s + (m.intensity ?? 5), 0) / older7.length;
+    const delta = recentAvg - olderAvg;
+
+    // Check sleep correlation
+    const withSleep = mood.filter((m) => m.sleepHours != null);
+    if (withSleep.length >= 5) {
+      const shortSleep = withSleep.filter((m) => m.sleepHours! < 6);
+      const goodSleep = withSleep.filter((m) => m.sleepHours! >= 7 && m.sleepHours! <= 9);
+      if (shortSleep.length >= 2 && goodSleep.length >= 2) {
+        const shortAvg = shortSleep.reduce((s, m) => s + (m.intensity ?? 5), 0) / shortSleep.length;
+        const goodAvg = goodSleep.reduce((s, m) => s + (m.intensity ?? 5), 0) / goodSleep.length;
+        if (shortAvg - goodAvg > 1.5) {
+          return "Nila noticed: on days you slept less, your distress tended to be higher. Sleep might be worth protecting.";
+        }
+      }
+    }
+
+    if (delta < -1.5) {
+      return "Nila noticed: your mood has been trending better this week compared to last. Whatever you're doing, it's working.";
+    }
+    if (delta > 1.5) {
+      return "Nila noticed: things have been harder this week. You don't have to figure it out alone — a quick check-in might help.";
+    }
+
+    // Check streak
+    const streakDays = mood.length >= 7 ? 7 : mood.length;
+    if (streakDays >= 5) {
+      return `Nila noticed: you've been checking in consistently. That kind of self-awareness builds over time.`;
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+// ── Contextual weekly digest (Retention mechanic) ────────────────────────────
+// Generates a warm, personalized notification body from weekly facts.
+// "Finch sends a weekly report that feels like a letter from a friend" — we do the same.
+function contextualWeeklyBody(): string {
+  try {
+    const f = extractWeeklyFacts();
+    const parts: string[] = [];
+
+    if (f.checkinCount >= 5) {
+      parts.push(`${f.checkinCount} check-ins this week — you showed up.`);
+    } else if (f.checkinCount >= 2) {
+      parts.push(`${f.checkinCount} check-ins this week.`);
+    }
+
+    if (f.streak >= 7) {
+      parts.push(`${f.streak}-day streak and counting.`);
+    } else if (f.streak >= 3) {
+      parts.push(`${f.streak} days in a row.`);
+    }
+
+    if (f.episodes > 0) {
+      parts.push(`${f.episodes} episode${f.episodes > 1 ? "s" : ""} logged — that takes courage.`);
+    }
+
+    if (f.skillsUsed.length > 0) {
+      parts.push(`Skills used: ${f.skillsUsed.slice(0, 2).join(", ")}.`);
+    }
+
+    if (parts.length === 0) {
+      return "Your week in review is ready — tap to see how things went.";
+    }
+
+    return parts.join(" ") + " Tap for your full week in review.";
+  } catch {
+    return "Your week in review is ready — tap to see how your mood and rhythm went.";
+  }
+}
 
 // ── Android notification channels (Phase 20) ──────────────────────────────────
 // Mirrors the channels created in MainActivity.java. Passed via channelId to every
@@ -122,6 +217,25 @@ export const STREAK_NUDGES = [
   "🌱 You're on a roll. No pressure; just wanted you to know it counts.",
 ];
 
+// Retention: medication adherence nudges (for users with active meds who are missing doses)
+export const MEDICATION_NUDGES = [
+  "💊 A gentle reminder — your medications are part of your routine. No pressure.",
+  "💙 Taking care of yourself includes the small things. Your meds are waiting.",
+];
+
+// Retention: elevation signal nudges (for users with rising energy — bipolar prodrome)
+export const ELEVATION_NUDGES = [
+  "⚡ Your energy has been rising lately — worth checking in with how you're feeling.",
+  "🌤️ Things seem to be picking up. A quick check-in can help you stay grounded.",
+];
+
+// Retention: disengagement nudges (for users drifting away — 7+ days inactive)
+export const DISENGAGEMENT_NUDGES = [
+  "💙 It's been a while — no judgment. I'm here whenever you're ready.",
+  "🌱 Taking a break is okay. When you're ready, I'll be here.",
+  "💙 Missing you. No pressure — just know the door is open.",
+];
+
 /** Choose the daily nudge from the person's current SOFT signals — sleep prodrome first (manic-first), then a
  *  flagged downward trend, then compassionate streak state — else the warm rotation. Pure + deterministic
  *  (varies by dayIndex); dataless by design. The call site gates the inputs (inflection only when the user
@@ -134,12 +248,19 @@ export function chooseNudge(ctx: {
   streak?: number;
   milestone?: number | null;
   activeToday?: boolean;
+  medicationMissed?: boolean;
+  elevationSignal?: boolean;
+  disengaged?: boolean;
 }): string {
+  // Priority cascade: sleep > deterioration > disengagement > elevation > lapse > milestone > streak > medication > warm
   if (ctx.sleepFiring) return SLEEP_NUDGES[ctx.dayIndex % SLEEP_NUDGES.length];
   if (ctx.inflection === "deterioration") return CARE_NUDGES[ctx.dayIndex % CARE_NUDGES.length];
+  if (ctx.disengaged) return DISENGAGEMENT_NUDGES[ctx.dayIndex % DISENGAGEMENT_NUDGES.length];
+  if (ctx.elevationSignal) return ELEVATION_NUDGES[ctx.dayIndex % ELEVATION_NUDGES.length];
   if (ctx.lapsed) return LAPSE_NUDGES[ctx.dayIndex % LAPSE_NUDGES.length];
   if (ctx.milestone) return MILESTONE_NUDGES[ctx.milestone] ?? STREAK_NUDGES[ctx.dayIndex % STREAK_NUDGES.length];
   if ((ctx.streak ?? 0) >= 3 && ctx.activeToday) return STREAK_NUDGES[ctx.dayIndex % STREAK_NUDGES.length];
+  if (ctx.medicationMissed) return MEDICATION_NUDGES[ctx.dayIndex % MEDICATION_NUDGES.length];
   return WARM_NUDGES[ctx.dayIndex % WARM_NUDGES.length];
 }
 
@@ -161,6 +282,28 @@ function nudgeForToday(): string {
   const sleepFiring = !!selfReportSleepSignal()?.firing;
   const inflection = getInflectionEnabled() ? (topFireableSignal()?.direction ?? null) : null;
   const streak = computeCompassionateStreak();
+
+  // Retention: check medication adherence
+  const medicationMissed = (() => {
+    try {
+      const raw = secureLocal.getItem("nilamind_medication_logs");
+      if (!raw) return false;
+      const logs = JSON.parse(raw);
+      const today = new Date().toISOString().split("T")[0];
+      const todayLogs = Array.isArray(logs) ? logs.filter((l: any) => l?.date === today) : [];
+      const todayMeds = (() => {
+        try {
+          const mRaw = secureLocal.getItem("nilamind_medications");
+          return mRaw ? JSON.parse(mRaw).filter((m: any) => m?.active) : [];
+        } catch { return []; }
+      })();
+      return todayMeds.length > 0 && todayLogs.length < todayMeds.length;
+    } catch { return false; }
+  })();
+
+  // Retention: check disengagement (7+ days since last activity)
+  const disengaged = streak.lapsed && (streak.current === 0);
+
   return chooseNudge({
     dayIndex,
     sleepFiring,
@@ -169,6 +312,8 @@ function nudgeForToday(): string {
     streak: streak.current,
     milestone: streak.milestone,
     activeToday: streak.activeToday,
+    medicationMissed,
+    disengaged,
   });
 }
 
@@ -377,7 +522,7 @@ export async function syncWeeklyDigest(opts: { request?: boolean } = { request: 
       notifications: [{
         id: WEEKLY_DIGEST_ID,
         title: "NilaMind",
-        body: "Your week in review is ready — tap to see how your mood and rhythm went.",
+        body: contextualWeeklyBody(),
         schedule: { on: { weekday: 1, hour: h, minute: m }, allowWhileIdle: true },
         smallIcon: "ic_stat_icon_config_sample",
         channelId: CHANNEL.gentle,
@@ -543,6 +688,42 @@ export async function syncEmaCheckins(opts: { request?: boolean } = { request: t
 export async function suppressNudgesForCrisis(): Promise<void> {
   markSafetySuppression();
   await Promise.allSettled([clearEmaCheckins(), clearDailyReminders()]);
+}
+
+// ── Weekly insight notification (Retention mechanic) ──────────────────────────
+// Surfaces one pattern insight per week. Fires on Wednesdays (mid-week, not competing
+// with the Sunday digest). Respects all safety gates.
+export async function syncInsightNotification(): Promise<void> {
+  try {
+    await LocalNotifications.cancel({ notifications: [{ id: INSIGHT_NOTIF_ID }] });
+  } catch { /* ok */ }
+
+  const body = contextualInsightBody();
+  if (!body) return;
+
+  try {
+    const perms = await LocalNotifications.checkPermissions();
+    if (perms.display !== "granted") return;
+  } catch { return; }
+
+  if (isSafetySuppressed() || isDndActive()) return;
+  if (!isCategoryEnabled("insight")) return;
+
+  try {
+    await LocalNotifications.schedule({
+      notifications: [{
+        id: INSIGHT_NOTIF_ID,
+        title: "NilaMind",
+        body,
+        schedule: { on: { weekday: 4, hour: 10, minute: 0 }, allowWhileIdle: true }, // Wednesday 10am
+        smallIcon: "ic_stat_icon_config_sample",
+        channelId: CHANNEL.gentle,
+        actionTypeId: ACTION_TYPE.snooze,
+      }],
+    });
+  } catch (e) {
+    console.error("[notifications] syncInsightNotification failed:", e);
+  }
 }
 
 // ── Wind-down reminder sync (Phase 20) ────────────────────────────────────────
