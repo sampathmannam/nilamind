@@ -10,8 +10,8 @@ const SKIP_KEY = "nilamind_checkin_skipped";    // non-sensitive UI flag — pla
 
 /** Build the single CheckInEntry a Nila check-in produces. Provenance suffix " (Nila)" lets readers
  *  strip it back to the base emotion (see stripProvenance / nilaContext.cleanEmotion). */
-export function buildCheckinEntry(label: string, intensity: number, contextTag: string | null, granularEmotion?: string | null, energy?: number | null): CheckInEntry {
-  return {
+export function buildCheckinEntry(label: string, intensity: number, contextTag: string | null, granularEmotion?: string | null, energy?: number | null, sleepHours?: number | null): CheckInEntry {
+  const entry: CheckInEntry = {
     id: "ch_" + Date.now(),
     date: new Date().toISOString().split("T")[0],
     timestamp: new Date().toLocaleTimeString(),
@@ -21,6 +21,8 @@ export function buildCheckinEntry(label: string, intensity: number, contextTag: 
     context: contextTag || "Nila check-in",
     granularEmotion: granularEmotion || undefined,
   };
+  if (sleepHours != null) entry.sleepHours = sleepHours;
+  return entry;
 }
 
 /** Append the entry via the atomic shared primitive (2026-07-06 audit — closes the last-writer-wins race

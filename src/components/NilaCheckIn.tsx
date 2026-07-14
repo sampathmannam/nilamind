@@ -33,6 +33,7 @@ import {
   INITIAL_DRAFT,
   MOOD_CHIPS,
   INTENSITY_CHIPS,
+  SLEEP_CHIPS,
   ENERGY_CHIPS,
   CONTEXT_TAGS,
   checkinReducer,
@@ -56,7 +57,7 @@ export interface NilaCheckInProps {
 
 // ─── Step labels for display ─────────────────────────────────────────────────
 
-const STEP_LABELS = { mood: "How are you feeling?", intensity: "How strong is that?", energy: "How's your energy level?", context: "What's on your mind?", granularity: "Name it more precisely", done: "" } as const;
+const STEP_LABELS = { mood: "How are you feeling?", intensity: "How strong is that?", sleep: "How did you sleep?", energy: "How's your energy level?", context: "What's on your mind?", granularity: "Name it more precisely", done: "" } as const;
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -73,6 +74,7 @@ export default function NilaCheckIn({ onLogged, onSkip }: NilaCheckInProps) {
   const handleMood = (label: string) => { dispatch({ type: "pickMood", label }); };
   const handleIntensity = (value: number) => { dispatch({ type: "pickIntensity", intensity: value }); };
   const handleEnergy = (value: number) => { dispatch({ type: "pickEnergy", energy: value }); };
+  const handleSleep = (value: number | null) => { dispatch({ type: "pickSleep", sleepHours: value }); };
 
   const handleContext = (tag: string | null) => {
     dispatch({ type: "pickContext", tag });
@@ -81,7 +83,7 @@ export default function NilaCheckIn({ onLogged, onSkip }: NilaCheckInProps) {
   const resolveAndPersist = (resolved: ReturnType<typeof resolveCheckin>) => {
     if (!resolved || doneRef.current) return;
     doneRef.current = true;
-    const entry = buildCheckinEntry(resolved.label, resolved.intensity, resolved.contextTag, resolved.granularEmotion, resolved.energy);
+    const entry = buildCheckinEntry(resolved.label, resolved.intensity, resolved.contextTag, resolved.granularEmotion, resolved.energy, resolved.sleepHours);
     appendCheckin(entry);
     hapticSuccess(); // UX-5: tactile confirmation on check-in complete
     onLogged(entry);
@@ -131,7 +133,7 @@ export default function NilaCheckIn({ onLogged, onSkip }: NilaCheckInProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [draft.step, suggestions.length]);
 
-  const steps = ["mood", "intensity", "energy", "context", "granularity"] as const;
+  const steps = ["mood", "intensity", "sleep", "energy", "context", "granularity"] as const;
   const stepIdx = steps.indexOf(draft.step as (typeof steps)[number]);
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -218,7 +220,26 @@ export default function NilaCheckIn({ onLogged, onSkip }: NilaCheckInProps) {
           </div>
         )}
 
-        {/* ── Step 3: Energy chips ── */}
+         {/* ── Step 2b: Sleep chips (research: sleep is the #1 bipolar prodrome signal) ── */}
+         {draft.step === "sleep" && (
+           <div className="grid grid-cols-2 gap-2" id="nila-sleep-grid">
+             {SLEEP_CHIPS.map((chip) => (
+               <button
+                 key={chip.label}
+                 onClick={() => handleSleep(chip.value)}
+                 className={`py-3 rounded-xl text-sm font-medium border cursor-pointer transition-all active:scale-95 ${
+                   draft.sleepHours === chip.value
+                     ? "bg-indigo-600/20 border-indigo-500/50 text-indigo-200"
+                     : "bg-page border-slate-800 text-slate-300 hover:border-slate-700 hover:text-slate-100"
+                 }`}
+               >
+                 {chip.label}
+               </button>
+             ))}
+           </div>
+         )}
+
+         {/* ── Step 3: Energy chips ── */}
         {draft.step === "energy" && (
           <div className="grid grid-cols-2 gap-2" id="nila-energy-grid">
             {ENERGY_CHIPS.map((chip) => (
@@ -305,11 +326,14 @@ export default function NilaCheckIn({ onLogged, onSkip }: NilaCheckInProps) {
       </div>
 
       {/* Mood label in sub-steps for context */}
-      {(draft.step === "intensity" || draft.step === "energy" || draft.step === "context") && draft.label && (
+      {(draft.step === "intensity" || draft.step === "sleep" || draft.step === "energy" || draft.step === "context") && draft.label && (
         <p className="text-xs text-center text-slate-500">
           Feeling: <span className="text-slate-300 font-medium">{draft.label}</span>
           {draft.intensity !== null && (
             <> · Intensity: <span className="text-slate-300 font-medium">{draft.intensity}/10</span></>
+          )}
+          {draft.sleepHours !== null && (
+            <> · Sleep: <span className="text-slate-300 font-medium">{draft.sleepHours}h</span></>
           )}
           {draft.energy !== null && (
             <> · Energy: <span className="text-slate-300 font-medium">{draft.energy}/4</span></>
