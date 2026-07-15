@@ -1,43 +1,48 @@
 // Chat suggestion engine — time-aware quick-reply chips to reduce cold-start friction.
 // India-first: suggestions include culturally-relevant entries. Pure logic, no side effects.
 
+import {
+  Sun, Moon, Target, Heart, Star, CloudSun, CloudRain, CloudFog, Wind,
+  HeartHandshake, Sunset, RefreshCw, PenLine, Sparkles, Feather, Zap,
+  type LucideIcon,
+} from "lucide-react";
 import type { CheckInEntry } from "../types";
 import { secureLocal } from "./secureLocal";
 
 export interface SuggestionChip {
   id: string;
   text: string;
-  emoji: string;
+  Icon: LucideIcon;
 }
 
 const CHIPS: Record<"morning" | "day" | "evening" | "night", SuggestionChip[]> = {
   morning: [
-    { id: "am_checkin", text: "Checking in this morning", emoji: "☀️" },
-    { id: "am_sleep", text: "I didn't sleep well", emoji: "😴" },
-    { id: "am_intention", text: "Help me set an intention", emoji: "🎯" },
-    { id: "am_mood", text: "I'm feeling a bit low", emoji: "💙" },
-    { id: "am_gratitude", text: "Something good just happened", emoji: "🌟" },
+    { id: "am_checkin", text: "Checking in this morning", Icon: Sun },
+    { id: "am_sleep", text: "I didn't sleep well", Icon: Moon },
+    { id: "am_intention", text: "Help me set an intention", Icon: Target },
+    { id: "am_mood", text: "I'm feeling a bit low", Icon: Heart },
+    { id: "am_gratitude", text: "Something good just happened", Icon: Star },
   ],
   day: [
-    { id: "day_checkin", text: "A quick check-in", emoji: "🌤️" },
-    { id: "day_anxiety", text: "Feeling anxious right now", emoji: "😰" },
-    { id: "day_flat", text: "Everything feels flat", emoji: "😶" },
-    { id: "day_breathing", text: "Help me breathe for a minute", emoji: "🫁" },
-    { id: "day_support", text: "I just need to talk to someone", emoji: "🤗" },
+    { id: "day_checkin", text: "A quick check-in", Icon: CloudSun },
+    { id: "day_anxiety", text: "Feeling anxious right now", Icon: CloudRain },
+    { id: "day_flat", text: "Everything feels flat", Icon: CloudFog },
+    { id: "day_breathing", text: "Help me breathe for a minute", Icon: Wind },
+    { id: "day_support", text: "I just need to talk to someone", Icon: HeartHandshake },
   ],
   evening: [
-    { id: "eve_checkin", text: "How was my day?", emoji: "🌇" },
-    { id: "eve_wind", text: "Help me wind down", emoji: "🌙" },
-    { id: "eve_racing", text: "My mind won't stop racing", emoji: "🌀" },
-    { id: "eve_reflect", text: "Let's reflect on today", emoji: "📝" },
-    { id: "eve_gratitude", text: "Three good things today", emoji: "✨" },
+    { id: "eve_checkin", text: "How was my day?", Icon: Sunset },
+    { id: "eve_wind", text: "Help me wind down", Icon: Moon },
+    { id: "eve_racing", text: "My mind won't stop racing", Icon: RefreshCw },
+    { id: "eve_reflect", text: "Let's reflect on today", Icon: PenLine },
+    { id: "eve_gratitude", text: "Three good things today", Icon: Sparkles },
   ],
   night: [
-    { id: "nt_wind", text: "Help me fall asleep", emoji: "🌙" },
-    { id: "nt_lonely", text: "I feel alone tonight", emoji: "💙" },
-    { id: "nt_racing", text: "Too many thoughts to sleep", emoji: "🌀" },
-    { id: "nt_calm", text: "Just need a calm voice", emoji: "🕊️" },
-    { id: "nt_gratitude", text: "What went well today", emoji: "✨" },
+    { id: "nt_wind", text: "Help me fall asleep", Icon: Moon },
+    { id: "nt_lonely", text: "I feel alone tonight", Icon: Heart },
+    { id: "nt_racing", text: "Too many thoughts to sleep", Icon: RefreshCw },
+    { id: "nt_calm", text: "Just need a calm voice", Icon: Feather },
+    { id: "nt_gratitude", text: "What went well today", Icon: Sparkles },
   ],
 };
 
@@ -109,13 +114,13 @@ export function getSuggestions(
   // Swap one chip when recent mood is notably high (anxious/racing) or low
   if (recentMood.intensity >= 8) {
     const replacement = slot === "night" || slot === "evening"
-      ? { id: "elevated", text: "I'm feeling really intense", emoji: "⚡" }
-      : { id: "elevated", text: "Everything feels too fast", emoji: "⚡" };
+      ? { id: "elevated", text: "I'm feeling really intense", Icon: Zap }
+      : { id: "elevated", text: "Everything feels too fast", Icon: Zap };
     return [replacement, ...base.filter((c) => c.id !== replacement.id).slice(0, 2)];
   }
 
   if (recentMood.intensity <= 3) {
-    const replacement = { id: "low", text: "Finding it hard to do anything", emoji: "💙" };
+    const replacement = { id: "low", text: "Finding it hard to do anything", Icon: Heart };
     return [replacement, ...base.filter((c) => c.id !== replacement.id).slice(0, 2)];
   }
 

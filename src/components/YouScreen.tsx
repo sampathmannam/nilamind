@@ -140,7 +140,7 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
       <div className="glass rounded-2xl p-5">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full sun-cta flex items-center justify-center shrink-0">
-            <Sparkles className="w-5 h-5 text-white" aria-hidden="true" />
+            <Sparkles className="w-5 h-5" aria-hidden="true" />
           </div>
           <div className="flex-1 min-w-0">
             <h1 className="editorial text-xl text-slate-100">You</h1>
@@ -227,7 +227,7 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
           className="w-full glass hover:brightness-125 p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left flex items-center gap-3"
         >
           <span className="w-10 h-10 rounded-full sun-cta flex items-center justify-center shrink-0">
-            <Target className="w-5 h-5 text-white" />
+            <Target className="w-5 h-5" aria-hidden="true" />
           </span>
           <span className="flex-1 min-w-0">
             <span className="block text-sm font-bold text-slate-100">Set a gentle intention</span>

@@ -37,7 +37,7 @@ describe("chatSuggestions", () => {
     const chips = getSuggestions("morning");
     expect(chips).toHaveLength(3);
     expect(chips[0].id).toMatch(/^am_/);
-    expect(chips.every((c) => c.text && c.emoji)).toBe(true);
+    expect(chips.every((c) => c.text && c.Icon)).toBe(true);
   });
 
   it("adapts first chip when recent mood is intense", () => {

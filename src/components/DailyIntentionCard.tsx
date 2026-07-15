@@ -141,7 +141,7 @@ const DailyIntentionCard = forwardRef<DailyIntentionCardHandle, DailyIntentionCa
         <button
           onClick={handleSave}
           disabled={!canSave}
-          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl sun-cta text-white text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl sun-cta text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
         >
           {justSaved && <Check className="w-4 h-4" aria-hidden="true" />}
           {justSaved ? "Saved" : "Save intention"}

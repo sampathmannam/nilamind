@@ -12,6 +12,7 @@ import {
 import { clearChatElevation, noteChatElevation } from "../services/chatElevation";
 import { detectElevationRisk } from "../services/elevationGuard";
 import { hasCheckinToday, getSkipFlag } from "../services/checkin";
+import { stripProvenance } from "../services/emotionParse";
 import { t } from "../services/i18n";
 import { WELCOME_SEED, STATE_MESSAGES, WELCOME_BACK_LONG, WELCOME_BACK_MEDIUM, WELCOME_BACK_SHORT } from "../services/personaConfig";
 import { useTypingSession } from "../hooks/useTypingSession";
@@ -306,8 +307,14 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
     clearChatElevation(); // a fresh check-in supersedes any chat-detected elevation → relax the UI
     setMode(getCurrentMode());
     hapticMedium();
+    // The check-in is tapped, not typed — but it must still appear as the user's turn (a right-aligned
+    // bubble) so the transcript reads as a real two-sided exchange. Previously only the assistant's ack
+    // was appended, so the reply looked orphaned with no visible context for what it was replying to.
+    const hasContext = entry.context && entry.context !== "Nila check-in";
+    const checkinSummary = `Checked in: feeling ${stripProvenance(entry.emotion).toLowerCase()}, ${entry.intensity}/10${hasContext ? ` — ${entry.context}` : ""}`;
     setMessages((prev) => [
       ...prev,
+      { role: "user", content: checkinSummary },
       { role: "assistant", content: `Thank you. I'll keep that in mind.` },
     ]);
   };
@@ -1092,9 +1099,10 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                 <button
                   key={chip.id}
                   onClick={() => handleSendMessage(chip.text)}
-                  className="px-4 py-2 rounded-full bg-slate-800 border border-slate-700 text-xs text-slate-300 hover:bg-slate-700 hover:text-slate-100 transition-colors cursor-pointer min-h-[44px] focus-ring"
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-slate-800 border border-slate-700 text-xs text-slate-300 hover:bg-slate-700 hover:text-slate-100 transition-colors cursor-pointer min-h-[44px] focus-ring"
                 >
-                  {chip.emoji} {chip.text}
+                  <chip.Icon className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                  {chip.text}
                 </button>
               ))}
             </div>

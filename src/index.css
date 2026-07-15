@@ -291,8 +291,10 @@ html.sensory-comfort body::after {
 :root.theme-light .glass { background: color-mix(in srgb, var(--color-card) 74%, transparent); border-color: rgba(122,93,72,0.12); box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), 0 10px 30px -20px rgba(122,93,72,0.25); }
 
 /* Warm peach gradient CTA — used on hero action buttons and circular action tiles.
-   Contract: dark text only (never white) — peach + dark text clears WCAG AA (5.9–7.7:1). */
-.sun-cta { background: linear-gradient(135deg, var(--color-peach-400), var(--color-peach-500)); }
+   Contract: dark text only (never white) — peach + dark text clears WCAG AA (5.9–7.7:1); white on
+   peach is only ~2.1–2.3:1 in both themes and fails. `color` here is inherited by any `currentColor`
+   icon/text inside — callers must NOT hardcode `text-white` on top of it. */
+.sun-cta { background: linear-gradient(135deg, var(--color-peach-400), var(--color-peach-500)); color: var(--color-slate-900); }
 :root.theme-light .sun-cta { background: linear-gradient(135deg, var(--color-peach-300), var(--color-peach-400)); color: var(--color-slate-100); }
 
 /* Editorial display heading — the bold serif voice (Lora), tightened + optical size bump for hero copy. */
