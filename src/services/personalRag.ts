@@ -6,6 +6,7 @@
 import { secureLocal } from "./secureLocal";
 import { loadMoodHistory } from "./moodHistory";
 import { loadAssessments } from "./assessments";
+import { detectEmotionUnified } from "./personaConfig";
 
 export interface PersonalContext {
   /** What skills/techniques helped before for similar situations. */
@@ -169,18 +170,10 @@ function getRelevantEpisodes(): string | null {
 
 /**
  * Detect the primary emotional context from the user message.
+ * Delegates to the unified keyword matcher in personaConfig.
  */
 function detectEmotionalContext(message: string): string {
-  const lower = message.toLowerCase();
-  if (/anxious|anxiety|panic|worried|scared|fear/i.test(lower)) return "anxious";
-  if (/sad|depress|crying|down|low|heavy/i.test(lower)) return "sad";
-  if (/angry|furious|rage|pissed|irritated/i.test(lower)) return "angry";
-  if (/numb|empty|nothing|void|hollow|flat/i.test(lower)) return "numb";
-  if (/hopeless|pointless|no point|give up/i.test(lower)) return "hopeless";
-  if (/lonely|alone|isolated|disconnected/i.test(lower)) return "lonely";
-  if (/overwhelm|too much|can't handle/i.test(lower)) return "overwhelmed";
-  if (/stress|pressure|deadline/i.test(lower)) return "stressed";
-  return "neutral";
+  return detectEmotionUnified(message);
 }
 
 /**

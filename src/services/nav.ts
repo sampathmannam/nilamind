@@ -12,7 +12,6 @@ export type AuxView =
   | "settings"
   | "behaviour"
   | "assessment"
-  | "skills"
   | "dashboard"
   | "your_data"
   | "nila_memory"
@@ -30,7 +29,6 @@ export type AuxView =
   | "diary"
   | "social_rhythm"
   | "ema_checkin"
-  | "wellbeing"
   | "episode_marker"
   | "caregiver_settings"
   | "legal"
@@ -43,12 +41,11 @@ export const TAB_TARGETS: readonly TabView[] = [
 
 export const KNOWN_AUX_VIEWS: readonly AuxView[] = [
    "about_nila", "insights", "thought_record", "settings", "behaviour", "reach_out", "assessment",
-   "skills", "dashboard", "your_data", "nila_memory", "winddown", "understand",
+   "dashboard", "your_data", "nila_memory", "winddown", "understand",
    "learn", "medication", "problem_solving", "values_work", "exposure", "relapse_plan", "caregiver", "episode",
    "diary",
      "social_rhythm",
       "ema_checkin",
-      "wellbeing",
       "episode_marker",
   "caregiver_settings",
   "legal",

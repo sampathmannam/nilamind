@@ -13,6 +13,7 @@
 // the working alliance are the most consistent predictors of benefit (Flückiger et al., 2018).
 
 import { crisisLinesInline } from "./crisisResources";
+import { WELCOME_GREETING as WELCOME_GREETING_PERSONA, WELCOME_FIRST, WELCOME_RETURNING, CRISIS_RESPONSE } from "./personaConfig";
 import { relevantSkillsBlock } from "./skillRetrieval";
 import { buildPersonalContext, activeProtocolContextBlock } from "./nilaContext";
 import { getLatestReflection } from "./asyncReflection";
@@ -23,6 +24,28 @@ import { emotionalSteer } from "./emotionalIntelligence";
 import { personalRagBlock } from "./personalRag";
 import { ragGuidanceBlock } from "./ragWarmth";
 import { searchPsychoed } from "./psychoed";
+import { secureLocal } from "./secureLocal";
+
+// ── Greeting memory (dedup last 3) ────────────────────────────────────────
+const GREETING_MEMORY_KEY = "nilamind_recent_greetings";
+const MAX_RECENT_GREETINGS = 3;
+
+function getRecentGreetings(): string[] {
+  try {
+    const raw = secureLocal.getItem(GREETING_MEMORY_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveRecentGreeting(greeting: string): void {
+  try {
+    const recent = getRecentGreetings();
+    const updated = [greeting, ...recent.filter((g) => g !== greeting)].slice(0, MAX_RECENT_GREETINGS);
+    secureLocal.setItem(GREETING_MEMORY_KEY, JSON.stringify(updated));
+  } catch { /* non-critical */ }
+}
 
 export interface NilaMessage {
   role: "user" | "assistant";
@@ -306,10 +329,6 @@ export function partOfDay(hour: number): PartOfDay {
   return "night";
 }
 
-const WELCOME_GREETING: Record<PartOfDay, string> = {
-  morning: "Good morning", afternoon: "Hey", evening: "Good evening", night: "Hey",
-};
-
 /** PURE welcome composer (audit P2 #10). Returning users get a warm, shorter "good to see you again";
  *  first-timers get the full intro that names Nila. BOTH always disclose Nila is an AI, not a therapist —
  *  that honesty rail is non-negotiable (§9 / bot-disclosure law) and is never dropped for warmth.
@@ -319,13 +338,30 @@ const WELCOME_GREETING: Record<PartOfDay, string> = {
  *  honest thing. Known-machine status increases willingness to disclose, per Lucas, Gratch, King &
  *  Morency (2014), Computers in Human Behavior; a working bond can form despite that disclosure within
  *  ~5 days, per Darcy et al. (2021), JMIR Formative Research. We do NOT claim a bond is "sustained over
- *  8 weeks" — that specific figure was checked against the synthesis and found unsupported; removed. */
+ *  8 weeks" — that specific figure was checked against the synthesis and found unsupported; removed.
+ *
+ *  greeting-dedup (2026-07-15): remembers the last 3 greetings and cycles through them so repeat
+ *  visitors don't get the exact same opening line multiple sessions in a row. */
 export function composeWelcome(ctx: { returning: boolean; part: PartOfDay }): string {
-  const g = WELCOME_GREETING[ctx.part];
-  if (ctx.returning) {
-    return `${g} — really good to see you again. I'm still right here (an AI, not a therapist, but in your corner). How are you doing right now?`;
+  const g = WELCOME_GREETING_PERSONA[ctx.part];
+  const base = ctx.returning ? `${g} — ${WELCOME_RETURNING}` : `${g} — ${WELCOME_FIRST}`;
+
+  // Dedup: if this exact greeting was used in the last 3, try a different time-of-day greeting
+  const recent = getRecentGreetings();
+  if (recent.includes(base)) {
+    const parts: PartOfDay[] = ["morning", "afternoon", "evening", "night"];
+    const alt = parts.find((p) => p !== ctx.part && !recent.includes(
+      `${WELCOME_GREETING_PERSONA[p]} — ${ctx.returning ? WELCOME_RETURNING : WELCOME_FIRST}`
+    ));
+    if (alt) {
+      const varied = `${WELCOME_GREETING_PERSONA[alt]} — ${ctx.returning ? WELCOME_RETURNING : WELCOME_FIRST}`;
+      saveRecentGreeting(varied);
+      return varied;
+    }
   }
-  return `${g} — I'm really glad you're here. I'm Nila. Think of me as a friend in your corner who gets this stuff (I'm an AI, not a therapist, but I'm here alongside you) — and for a lot of people, knowing that upfront makes it easier to say the honest thing. No agenda — how are you doing right now?`;
+
+  saveRecentGreeting(base);
+  return base;
 }
 
 /** Live welcome: warm and varying — knows whether Nila has met this person before (any on-device history)

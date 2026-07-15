@@ -1,4 +1,5 @@
 import { Sparkles, Shield, BookOpen, HeartHandshake, Cpu } from "lucide-react";
+import { NILA_ORIGIN } from "../services/personaConfig";
 
 export default function AboutNilaScreen() {
   return (
@@ -21,6 +22,16 @@ export default function AboutNilaScreen() {
           Nila is a private, on-device AI companion designed for the harder moments. She listens, suggests
           evidence-based tools, and helps you notice patterns in how you're doing — all without any data
           leaving your phone.
+        </p>
+      </div>
+
+      {/* Origin story */}
+      <div className="glass rounded-2xl p-4 space-y-2">
+        <h2 className="text-sm font-semibold text-slate-100 flex items-center gap-2">
+          <Sparkles className="w-4 h-4 text-purple-400" /> Nila's story
+        </h2>
+        <p className="text-xs text-slate-400 leading-relaxed italic">
+          "{NILA_ORIGIN}"
         </p>
       </div>
 

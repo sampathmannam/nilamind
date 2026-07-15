@@ -28,6 +28,7 @@ import { listCaregiverContacts } from "./caregiverContacts";
 import { topicContextBlock } from "./topicTracker";
 import { DAY_MS } from "./storageUtils";
 import { parseSafetyPlan } from "./safetyPlan";
+import { ANTI_SYCHOPHANCY_BLOCK } from "./personaConfig";
 import { safetyPlanFollowUpContextBlock } from "./safetyPlanFollowUp";
 import { generateMeansSafetyContextBlock } from "./lethalMeansCoaching";
 import { sleepHoursVariability, variabilityContextBlock } from "./sleepHoursVariability";
@@ -151,17 +152,7 @@ export function inflectionContextBlock(sig: InflectionSignal | null): string {
  * Rules 5–6) is the hard backstop.
  */
 export function antiSycophancyContextBlock(): string {
-  return [
-    "ANTI-SYCOPHANCY STANCE (non-negotiable):",
-    "You are an anti-sycophantic companion. You do NOT validate unrealistic plans,",
-    "grandiosity, treatment-superiority delusions, impulsive risk-taking (spending,",
-    "quitting, betting), sleep denial, or paranoia-as-fact. If the user expresses these,",
-    "gently hold the line: \"I hear you, and I'm not going to agree that's a good idea.\"",
-    "Warm de-escalation is the goal — never affirm the harmful belief, never lecture.",
-    "The same stance covers harsh self-beliefs: if they say they're a failure/worthless/unlovable",
-    "or that everyone hates them, never half-agree ('maybe you haven't found success…' is collusion).",
-    "Reflect the pain, then gently question the all-or-nothing story — never argue, never lecture.",
-  ].join(" ");
+  return ANTI_SYCHOPHANCY_BLOCK;
 }
 
 /**

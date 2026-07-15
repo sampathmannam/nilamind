@@ -16,7 +16,7 @@ import { CheckInEntry } from "../types";
 import { armCheckin } from "./armedCheckin";
 
 export type AgentView =
-  | "dashboard" | "your_data" | "settings" | "skills" | "assessment"
+  | "dashboard" | "your_data" | "settings" | "learn" | "assessment"
   | "values_to_action" | "nila"
   | "grounding" | "breathing" | "diary" | "winddown";
 
@@ -105,7 +105,7 @@ const NAV: { re: RegExp; view: AgentView; label: string }[] = [
   { re: /\b(your data|my data|export|delete my data|privacy data)\b/, view: "your_data", label: "your data" },
   { re: /\b(dashboard|my progress|my stats|overview|how i'?m doing)\b/, view: "dashboard", label: "your dashboard" },
   { re: /\b(settings|preferences|voice settings|reminders settings)\b/, view: "settings", label: "settings" },
-  { re: /\b(skills?( library)?|coping skills|dbt|cbt skills)\b/, view: "skills", label: "the skills library" },
+  { re: /\b(skills?( library)?|coping skills|dbt|cbt skills)\b/, view: "learn", label: "the skills library" },
   { re: /\b(screening|assessment|phq|gad|who-?5|pss|questionnaire)\b/, view: "assessment", label: "a screening" },
   { re: /\b(behaviou?ral activation|plan (an? )?activit|schedule activit|values( compass)?|toward steps?|values to action)\b/, view: "values_to_action", label: "values to action" },
   { re: /\b(voice check-?in|check in with nila|nila check-?in|talk to nila)\b/, view: "nila", label: "Nila" },

@@ -27,7 +27,7 @@ describe("resolveNavTarget", () => {
   it("maps known aux views including insights (values_to_action retired per PLAN_OF_ACTION A6)", () => {
     expect(resolveNavTarget("dashboard")).toEqual({ kind: "aux", view: "dashboard" });
     expect(resolveNavTarget("values_to_action")).toEqual({ kind: "unknown", target: "values_to_action" });
-    expect(resolveNavTarget("skills")).toEqual({ kind: "aux", view: "skills" });
+    expect(resolveNavTarget("skills")).toEqual({ kind: "unknown", target: "skills" });
     expect(resolveNavTarget("assessment")).toEqual({ kind: "aux", view: "assessment" });
     expect(resolveNavTarget("insights")).toEqual({ kind: "aux", view: "insights" });
   });
@@ -45,6 +45,7 @@ describe("resolveNavTarget", () => {
   });
   it("exposes stable allowlists", () => {
     expect(KNOWN_AUX_VIEWS).not.toContain("values_to_action");
+    expect(KNOWN_AUX_VIEWS).not.toContain("skills");
     expect(KNOWN_AUX_VIEWS).toContain("insights");
     expect(KNOWN_AUX_VIEWS).not.toContain("nila_voice");
     expect(KNOWN_AUX_VIEWS).not.toContain("pact");

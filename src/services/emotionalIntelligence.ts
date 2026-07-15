@@ -4,6 +4,8 @@
 // when told explicitly "this person is feeling [X], validate with [Y], avoid [Z]".
 // This pre-processor analyzes the user message and injects emotion-aware guidance into the system prompt.
 
+import { detectEmotionUnified } from "./personaConfig";
+
 export interface EmotionGuidance {
   /** Primary emotion detected. */
   primary: string;
@@ -85,23 +87,26 @@ const EMOTION_PATTERNS: Record<string, EmotionGuidance> = {
 
 /**
  * Detect the user's primary emotion from their message.
- * Uses keyword matching — fast, deterministic, privacy-preserving.
- * For production, this could be enhanced with the MiniLM classifier.
+ * Uses the unified keyword matcher from personaConfig, then maps to EMOTION_PATTERNS keys.
  */
 export function detectEmotion(message: string): string {
-  const lower = message.toLowerCase();
-
-  // Priority order: most specific/distressed first
-  if (/suicide|kill.*self|want.*die|can't go on|end.*life/i.test(lower)) return "distress";
-  if (/hopeless|pointless|nothing.*matters|no.*point|give up/i.test(lower)) return "hopelessness";
-  if (/numb|empty|nothing|void|hollow|flat/i.test(lower)) return "numbness";
-  if (/anxious|panic|worried|scared|fear|terrified|freaking/i.test(lower)) return "anxiety";
-  if (/lonely|alone|isolated|disconnected|no one|nobody/i.test(lower)) return "loneliness";
-  if (/angry|furious|rage|pissed|irritated|annoyed/i.test(lower)) return "anger";
-  if (/sad|depressed|crying|tears|down|low|heavy/i.test(lower)) return "sadness";
-  if (/great|amazing|wonderful|happy|grateful|celebrat|good day/i.test(lower)) return "celebration";
-
-  return "neutral";
+  const unified = detectEmotionUnified(message);
+  // Map unified labels to EMOTION_PATTERNS keys
+  const MAP: Record<string, string> = {
+    crisis: "distress",
+    distress: "distress",
+    hopeless: "hopelessness",
+    numb: "numbness",
+    anxious: "anxiety",
+    lonely: "loneliness",
+    angry: "anger",
+    sad: "sadness",
+    happy: "celebration",
+    overwhelmed: "anxiety",
+    stressed: "anxiety",
+    neutral: "neutral",
+  };
+  return MAP[unified] ?? "neutral";
 }
 
 /**
