@@ -14,6 +14,8 @@ import ConfettiBurst from "./ConfettiBurst";
 import { tryUnlockAchievement } from "../services/achievements";
 import { setReminderPrefs } from "../services/reminders";
 import { setEmaEnabled, setEmaFrequency } from "../services/emaPrefs";
+import type { SafetyPlan } from "../types";
+import { parseSafetyPlan } from "../services/safetyPlan";
 
 type NudgeCadence = "regular" | "daily" | "minimal";
 
@@ -62,6 +64,7 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
   const [baselineMood, setBaselineMood] = useState<number | null>(null);
   const [nudgeCadence, setNudgeCadence] = useState<NudgeCadence | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [safetyNet, setSafetyNet] = useState({ warningSign: "", copingIdea: "", trustedPerson: "" });
 
   const slides = getSlides(baselineMood);
   const slide = slides[step];
@@ -90,6 +93,22 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
     try { secureLocal.setItem("nilamind_user_goal", JSON.stringify(selectedGoals)); } catch { /* */ }
     if (baselineMood != null) {
       try { secureLocal.setItem("nilamind_onboarding_mood", String(baselineMood)); } catch { /* */ }
+    }
+    const { warningSign, copingIdea, trustedPerson } = safetyNet;
+    if (warningSign.trim() || copingIdea.trim() || trustedPerson.trim()) {
+      try {
+        const existing = parseSafetyPlan(secureLocal.getItem("nilamind_safetyplan"));
+        const updated: SafetyPlan = {
+          ...existing,
+          warningSigns: warningSign.trim() || existing.warningSigns,
+          internalCoping: copingIdea.trim() || existing.internalCoping,
+          trustedPeople: trustedPerson.trim() || existing.trustedPeople,
+          lastUpdatedAt: Date.now(),
+        };
+        secureLocal.setItem("nilamind_safetyplan", JSON.stringify(updated));
+      } catch {
+        /* best effort — never block onboarding completion on this */
+      }
     }
     // Apply the user's notification cadence preference (Fix 2: don't default to 3/day without asking)
     if (nudgeCadence === "daily") {
@@ -243,6 +262,54 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
           </div>
         )}
 
+        {/* Safety net — first-run coping plan, optional, autosaved into the real safety plan */}
+        {slide.id === "safety_net" && (
+          <div className="w-full space-y-3 text-left">
+            <div>
+              <label htmlFor="sp-onboarding-warningsign-input" className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">
+                A warning sign for you (optional)
+              </label>
+              <input
+                id="sp-onboarding-warningsign-input"
+                type="text"
+                value={safetyNet.warningSign}
+                onChange={(e) => setSafetyNet((p) => ({ ...p, warningSign: e.target.value }))}
+                placeholder="e.g. not sleeping, going quiet"
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 mt-1"
+              />
+            </div>
+            <div>
+              <label htmlFor="sp-onboarding-copingidea-input" className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">
+                One thing you can do alone to cope (optional)
+              </label>
+              <input
+                id="sp-onboarding-copingidea-input"
+                type="text"
+                value={safetyNet.copingIdea}
+                onChange={(e) => setSafetyNet((p) => ({ ...p, copingIdea: e.target.value }))}
+                placeholder="e.g. cold water on my face, a walk"
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 mt-1"
+              />
+            </div>
+            <div>
+              <label htmlFor="sp-onboarding-trustedperson-input" className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">
+                Someone you could reach out to (optional, name only)
+              </label>
+              <input
+                id="sp-onboarding-trustedperson-input"
+                type="text"
+                value={safetyNet.trustedPerson}
+                onChange={(e) => setSafetyNet((p) => ({ ...p, trustedPerson: e.target.value }))}
+                placeholder="e.g. Maya"
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 mt-1"
+              />
+            </div>
+            <p className="text-[11px] text-slate-500">
+              You can skip this and fill it in anytime — even one line helps future-you.
+            </p>
+          </div>
+        )}
+
         {/* Goals (original) */}
         {slide.id === "goals" && (
           <div className="w-full flex flex-wrap justify-center gap-2">
@@ -374,6 +441,12 @@ function getSlides(baselineMood: number | null) {
       title: "What matters to you most?",
       body: "Pick what fits — I'll suggest the most useful tools. You can change this anytime.",
       icon: <Target className="w-10 h-10 text-blue-400" />,
+    },
+    {
+      id: "safety_net",
+      title: "Let's set up your safety net",
+      body: "A few optional notes now can help a lot on a harder day. Nothing here is required — you can always add to it later.",
+      icon: <LifeBuoy className="w-10 h-10 text-rose-400" />,
     },
     {
       id: "region",

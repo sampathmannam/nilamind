@@ -7,18 +7,29 @@ import { render, screen, cleanup, fireEvent } from "@testing-library/react";
 // expectancy predicts subsequent SYMPTOM outcome, not adherence. The synthesis explicitly found an earlier
 // "~0.35 adherence correlation" claim unsupported and removed it, so this must never resurface a number or
 // an adherence/retention claim, and must stay hedged ("may help" / "linked to", not "proven"/"treats").
+const store = new Map<string, string>();
 vi.mock("../services/secureLocal", () => ({
-  secureLocal: { getItem: () => null, setItem: () => {}, removeItem: () => {} },
+  secureLocal: {
+    getItem: (k: string) => store.get(k) ?? null,
+    setItem: (k: string, v: string) => { store.set(k, v); },
+    removeItem: (k: string) => { store.delete(k); },
+  },
+}));
+// jsdom has no real notifications backend — the finish() path now gets exercised by the safety-net
+// tests below, so stub this out to avoid an unhandled promise rejection unrelated to what's under test.
+vi.mock("@capacitor/local-notifications", () => ({
+  LocalNotifications: { requestPermissions: () => Promise.resolve({ display: "granted" }) },
 }));
 
 import OnboardingGate from "./OnboardingGate";
 
-afterEach(cleanup);
+afterEach(() => { cleanup(); store.clear(); });
 const noop = () => {};
 
 function goToHowNilaHelpsSlide() {
   render(<OnboardingGate onComplete={noop} onOpenCrisis={noop} />);
-  // nila_intro -> privacy -> mood_check -> personalize -> region -> nudge_cadence -> how_nila_helps (6 "Next" taps)
+  // nila_intro -> privacy -> mood_check -> personalize -> safety_net -> region -> nudge_cadence -> how_nila_helps (7 "Next" taps)
+  fireEvent.click(screen.getByText(/next/i));
   fireEvent.click(screen.getByText(/next/i));
   fireEvent.click(screen.getByText(/next/i));
   fireEvent.click(screen.getByText(/next/i));
@@ -46,5 +57,55 @@ describe("OnboardingGate — how Nila helps slide (expectancy-setting copy)", ()
     goToHowNilaHelpsSlide();
     const bodyText = document.getElementById("onboarding-gate")?.textContent ?? "";
     expect(bodyText).not.toMatch(/\bproven\b|\btreats\b|\bcures\b/i);
+  });
+});
+
+describe("OnboardingGate — safety net slide (first-run coping plan, never blocking)", () => {
+  it("shows three optional prompts after personalize, before region", () => {
+    render(<OnboardingGate onComplete={noop} onOpenCrisis={noop} />);
+    // nila_intro -> privacy -> mood_check -> personalize -> safety_net (4 "Next" taps)
+    fireEvent.click(screen.getByText(/next/i));
+    fireEvent.click(screen.getByText(/next/i));
+    fireEvent.click(screen.getByText(/next/i));
+    fireEvent.click(screen.getByText(/next/i));
+    expect(screen.getByText(/safety net/i)).toBeTruthy();
+    expect(document.getElementById("sp-onboarding-warningsign-input")).toBeTruthy();
+    expect(document.getElementById("sp-onboarding-copingidea-input")).toBeTruthy();
+    expect(document.getElementById("sp-onboarding-trustedperson-input")).toBeTruthy();
+  });
+
+  it("completing onboarding with all three fields blank never writes a safety plan record", () => {
+    render(<OnboardingGate onComplete={noop} onOpenCrisis={noop} />);
+    fireEvent.click(screen.getByText(/next/i)); // -> privacy
+    fireEvent.click(screen.getByText(/next/i)); // -> mood_check
+    fireEvent.click(screen.getByText(/next/i)); // -> personalize
+    fireEvent.click(screen.getByText(/next/i)); // -> safety_net
+    fireEvent.click(screen.getByText(/next/i)); // -> region
+    fireEvent.click(screen.getByText(/next/i)); // -> nudge_cadence
+    fireEvent.click(screen.getByText(/next/i)); // -> how_nila_helps
+    fireEvent.click(screen.getByText(/next/i)); // -> ready
+    fireEvent.click(screen.getByRole("button", { name: /start/i })); // finish()
+    expect(store.get("nilamind_safetyplan")).toBeUndefined();
+  });
+
+  it("filling the warning-sign field persists it into the real safety plan on completion", () => {
+    render(<OnboardingGate onComplete={noop} onOpenCrisis={noop} />);
+    fireEvent.click(screen.getByText(/next/i)); // -> privacy
+    fireEvent.click(screen.getByText(/next/i)); // -> mood_check
+    fireEvent.click(screen.getByText(/next/i)); // -> personalize
+    fireEvent.click(screen.getByText(/next/i)); // -> safety_net
+    fireEvent.change(document.getElementById("sp-onboarding-warningsign-input")!, {
+      target: { value: "not sleeping" },
+    });
+    fireEvent.click(screen.getByText(/next/i)); // -> region
+    fireEvent.click(screen.getByText(/next/i)); // -> nudge_cadence
+    fireEvent.click(screen.getByText(/next/i)); // -> how_nila_helps
+    fireEvent.click(screen.getByText(/next/i)); // -> ready
+    fireEvent.click(screen.getByRole("button", { name: /start/i })); // finish()
+    const raw = store.get("nilamind_safetyplan");
+    expect(raw).toBeTruthy();
+    const saved = JSON.parse(raw!);
+    expect(saved.warningSigns).toBe("not sleeping");
+    expect(typeof saved.lastUpdatedAt).toBe("number");
   });
 });
