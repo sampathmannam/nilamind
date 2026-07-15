@@ -407,8 +407,16 @@ function AppShell() {
         )}
         {state.tab === "today" && (
           <ErrorBoundary name="today" onError={(err: Error, info: React.ErrorInfo) => console.error("[ErrorBoundary:today] caught:", err, info)}>
-            <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-12" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
-              <TodayScreen go={go} phoneEnabled={phoneEnabled} onEpisode={onEpisode} onOpenCrisis={activateCrisis} />
+            <div className="flex-1 min-h-0 flex flex-col">
+              {/* Opaque status-bar mask. The app is edge-to-edge (viewport-fit=cover), so the WebView
+                  draws under the status bar. Previously this tab put the safe-area padding INSIDE the
+                  transparent scroll container, so scrolled content bled up into the status bar
+                  (device screenshot 2026-07-15). The Nila tab avoids this via ModeScreen's own opaque
+                  header; Today/You had none. A non-scrolling bg-page bar now masks the inset zone. */}
+              <div className="shrink-0 bg-page" style={{ height: 'max(12px, env(safe-area-inset-top))' }} />
+              <div className="flex-1 min-h-0 overflow-y-auto px-4 pt-2 pb-12">
+                <TodayScreen go={go} phoneEnabled={phoneEnabled} onEpisode={onEpisode} onOpenCrisis={activateCrisis} />
+              </div>
             </div>
           </ErrorBoundary>
         )}

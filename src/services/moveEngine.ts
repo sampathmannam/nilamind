@@ -167,14 +167,15 @@ export function classifyMove(
 ): Move {
   const msg = userMessage.trim();
 
-  // 1. F5 fix — loaded word "episode" → CLARIFY (highest content priority).
-  // Ash's #1 rule: "episode" is the most important word. Always ask what it was.
-  // Placed FIRST so it outranks OVERWHELM_CUES (which would otherwise match "today morning" in
-  // "I had an episode today morning" and steal priority).
-  if (EPISODE_CUES.test(msg)) return "CLARIFY";
-
-  // 2. Self-attack → REPAIR (safety-critical)
+  // 1. Self-attack → REPAIR (highest priority — safety-critical)
   if (SELF_ATTACK_CUES.test(msg)) return "REPAIR";
+
+  // 2. F5 fix — loaded word "episode" → CLARIFY (highest content priority).
+  // Ash's #1 rule: "episode" is the most important word. Always ask what it was.
+  // Must beat OVERWHELM below because "I had an episode today morning" contains
+  // "today morning" which matches OVERWHELM, but the more specific content signal
+  // is "episode" — ask about THAT, not generic overwhelm.
+  if (EPISODE_CUES.test(msg)) return "CLARIFY";
 
   // 3. Overwhelm / soft disclosure → REPAIR
   if (OVERWHELM_CUES.test(msg) && sentenceCount(msg) <= 2) return "REPAIR";
