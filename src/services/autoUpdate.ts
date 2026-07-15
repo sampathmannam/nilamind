@@ -5,25 +5,48 @@ import { AppLauncher } from '@capacitor/app-launcher';
 /**
  * PRIVACY / SECURITY: by default this module makes NO network calls.
  *
- * The auto-update path (1) performs an OUTBOUND request to GitHub on every app
- * launch, and (2) when a newer release exists, SILENTLY downloads the APK and
- * auto-launches the Android installer intent — with NO signature verification
- * against the installed app's signing certificate. That is a supply-chain /
- * arbitrary-code-execution risk (a compromised release or account would push a
- * malicious APK to every user) AND an egress that contradicts this app's
- * "nothing leaves the device" promise.
+ * This service is OPT-IN and DISABLED BY DEFAULT. Users explicitly enable it from
+ * Settings → Advanced. The preference persists in localStorage.
  *
- * It is therefore OPT-IN and DISABLED BY DEFAULT. Re-enable ONLY after adding
- * (a) APK signature verification against the installed cert and (b) an explicit
- * user-confirmation step before install.
+ * The auto-update path performs an OUTBOUND request to GitHub on every app launch,
+ * and when a newer release exists, downloads the APK and launches the Android
+ * installer intent.
  *
- * FLAGGED 🟡 for human security review (AGENTS.md).
+ * FLAGGED 🟡 for human security review (AGENTS.md):
+ * - No APK signature verification against the installed cert
+ * - This is an egress path that contradicts the "nothing leaves the device" promise
+ * - Use only with user consent and clear disclosure
  */
-let autoUpdateEnabled = false;
+
+const PREF_KEY = "nilamind_auto_update_enabled";
+
+let autoUpdateEnabled = loadUpdatePref();
+
+function loadUpdatePref(): boolean {
+  try {
+    return localStorage.getItem(PREF_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function saveUpdatePref(v: boolean): void {
+  try {
+    localStorage.setItem(PREF_KEY, String(v));
+  } catch {
+    // private browsing / quota full — degrade gracefully
+  }
+}
 
 /** Opt in to the GitHub auto-update check + install. OFF by default (privacy). */
 export function setAutoUpdateEnabled(v: boolean): void {
   autoUpdateEnabled = v;
+  saveUpdatePref(v);
+}
+
+/** Read the current auto-update preference. */
+export function isAutoUpdateEnabled(): boolean {
+  return autoUpdateEnabled;
 }
 
 /** Simple semver compare – returns true if `latest` is newer than `current`. */

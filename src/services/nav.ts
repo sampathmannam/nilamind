@@ -33,6 +33,7 @@ export type AuxView =
   | "wellbeing"
   | "episode_marker"
   | "caregiver_settings"
+  | "legal"
   | "sounds";
 
 export const TAB_TARGETS: readonly TabView[] = [
@@ -49,6 +50,7 @@ export const KNOWN_AUX_VIEWS: readonly AuxView[] = [
       "wellbeing",
       "episode_marker",
   "caregiver_settings",
+  "legal",
   "sounds",
     ];
 

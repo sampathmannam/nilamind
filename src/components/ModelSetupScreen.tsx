@@ -9,7 +9,7 @@ import {
   setPreferredModelId,
   type DownloadProgress,
 } from "../services/modelDownload";
-import { setBrainStatus } from "../services/brainSetup";
+import { setBrainStatus, recordModelDownloadSkipped } from "../services/brainSetup";
 
 // Best-effort connectivity read. navigator.onLine is a coarse signal (it only knows the radio/link is up,
 // not that traffic actually reaches the internet) but it reliably catches the common "no Wi-Fi / airplane
@@ -107,10 +107,11 @@ export default function ModelSetupScreen({ onReady }: { onReady: () => void }) {
   };
 
   // Skip into the app without the model. The app is explicitly designed to run model-less — the chat falls
-  // back to the calm offline companion and every tool + crisis line stays available. Dismiss the gate by
-  // marking the brain "ready" for this session; on next launch main.tsx re-checks disk and, finding no
-  // model, will offer setup again. (Full deferral of the gate is intentionally NOT more invasive than this.)
+  // back to the calm offline companion and every tool + crisis line stays available. The skip is persisted:
+  // the user won't see the gate again for 7 days (RE_PROMPT_DAYS in brainSetup.ts). After the window
+  // expires, they get one fresh prompt on the next cold launch.
   const skipForNow = () => {
+    recordModelDownloadSkipped();
     setBrainStatus("ready");
     onReady();
   };

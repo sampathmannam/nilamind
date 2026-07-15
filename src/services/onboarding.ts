@@ -5,6 +5,7 @@ import { ls } from "./storageUtils";
 import { getRegionCode, setRegionCode, type RegionCode } from "./crisisResources";
 
 const DONE_KEY = "nilamind_onboarding_done";
+export const ONBOARDING_DONE_EVENT = "nilamindOnboardingDone";
 
 export function hasCompletedOnboarding(): boolean {
   try {
@@ -17,6 +18,7 @@ export function hasCompletedOnboarding(): boolean {
 export function completeOnboarding(): void {
   try {
     ls()?.setItem(DONE_KEY, "1");
+    window.dispatchEvent(new Event(ONBOARDING_DONE_EVENT));
   } catch {
     /* best-effort */
   }

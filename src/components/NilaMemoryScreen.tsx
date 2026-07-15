@@ -8,6 +8,7 @@ import { latestInflectionsForLog, dismissLoggedSignal, type InflectionSignal } f
 import { loadFacts, removeFact, loadFoci, removeFocus, type ProfileFact, type ActiveFocus } from "../services/nilaProfile";
 import { feedbackSummary, clearFeedback, pendingContributions, type FeedbackSummary, type ReplyFeedback } from "../services/nilaFeedback";
 import { donationCount, clearDonations, buildDonationPreview, confirmDonation, revokeDonation, isDonated, type DonationPreview } from "../services/nilaContributions";
+import EmptyStateShared, { EMPTY_STATES } from "./EmptyState";
 
 export const KIND_LABELS: Record<InsightKind, string> = {
   working_through: "What you're working through",
@@ -121,12 +122,11 @@ export default function NilaMemoryScreen() {
       )}
 
       {groups.length === 0 && facts.length === 0 && foci.length === 0 ? (
-        <div className="glass rounded-2xl p-5 text-center">
-          <p className="text-sm text-slate-300">Nothing yet.</p>
-          <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
-            As you check in and talk with Nila, she'll gently start to remember what matters to you.
-          </p>
-        </div>
+        <EmptyStateShared
+          nilaState={EMPTY_STATES.noInsights.nilaState}
+          title="Nothing yet"
+          body="As you check in and talk with Nila, she'll gently start to remember what matters to you."
+        />
       ) : (
         groups.map((g) => (
           <section key={g.kind} className="space-y-2">

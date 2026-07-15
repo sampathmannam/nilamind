@@ -92,9 +92,9 @@ describe("getHeroAction — structured-tool-first rebalance", () => {
     expect(hero.label.toLowerCase()).toContain("intention");
   });
 
-  it("falls back to the check-in prompt once today's intention has been set", () => {
+  it("falls back to Talk to Nila once today's intention has been set (avoids duplicating the mood check-in card)", () => {
     const hero = getHeroAction("morning", "calm", true);
-    expect(hero.id).toBe("checkin");
+    expect(hero.id).toBe("nila");
   });
 });
 
@@ -102,7 +102,7 @@ describe("TodayScreen — structured-tool lead, chat still one tap away", () => 
   const noop = () => {};
 
   it("renders the daily-intention card ahead of the 'Talk to Nila' card", () => {
-    render(<TodayScreen go={noop} phoneEnabled={false} onEpisode={noop} />);
+    render(<TodayScreen go={noop} phoneEnabled={false} onEpisode={noop} onOpenCrisis={noop} />);
     const intentionCard = document.getElementById("today-daily-intention");
     const chatCard = screen.getByText(/Talk to Nila/).closest("button")!;
     expect(intentionCard).toBeTruthy();
@@ -112,7 +112,7 @@ describe("TodayScreen — structured-tool lead, chat still one tap away", () => 
 
   it("keeps chat reachable in exactly one tap from the default hero — 'Talk to Nila' always renders and navigates to nila", () => {
     const go = vi.fn();
-    render(<TodayScreen go={go} phoneEnabled={false} onEpisode={noop} />);
+    render(<TodayScreen go={go} phoneEnabled={false} onEpisode={noop} onOpenCrisis={noop} />);
     fireEvent.click(screen.getByText(/Talk to Nila/));
     expect(go).toHaveBeenCalledWith("nila");
   });

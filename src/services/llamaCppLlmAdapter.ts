@@ -127,11 +127,11 @@ export function createLlamaCppBackend(
         const res = await ctx.completion(
           {
             prompt,
-            n_predict: 96, // brevity = speed: 2-4 sentence companion replies fit in ~60-100 tokens
-            temperature: 0.4, // low temp keeps replies in-distribution for 1.5B model
-            top_k: 30, // narrower than 40 — small model benefits from less diversity
+            n_predict: 128, // enough for 3-5 sentence companion replies (~100-150 tokens)
+            temperature: 0.6, // moderate diversity — warm companion voice, not robotic repetition
+            top_k: 40, // standard diversity — lets the model find the right empathetic register
             top_p: 0.95,
-            penalty_repeat: 1.05, // milder than 1.1 — less penalizing of common words like "that" / "feel"
+            penalty_repeat: 1.10, // standard repetition penalty — avoids loops while keeping natural phrasing
             penalty_last_n: 128, // shorter penalty window matches shorter replies
             dry_multiplier: 1.0, // stronger: 0.8 was too mild, model would still loop phrases
             dry_base: 2.0, // higher baseline makes penalty more effective for short replies

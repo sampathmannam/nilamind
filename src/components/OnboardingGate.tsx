@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { LifeBuoy, ChevronRight, ChevronLeft, Shield, Globe, HeartHandshake, MessageCircle, Check, Wind, Moon, Activity, Pill, Users, Target } from "lucide-react";
+import { LifeBuoy, ChevronRight, ChevronLeft, Shield, Globe, HeartHandshake, MessageCircle, Check, Wind, Moon, Activity, Pill, Users, Target, Bell } from "lucide-react";
 import { LocalNotifications } from "@capacitor/local-notifications";
 import {
   completeOnboarding,
@@ -12,6 +12,16 @@ import { secureLocal } from "../services/secureLocal";
 import { hapticLight, hapticSuccess, hapticCelebration } from "../hooks/useHaptics";
 import ConfettiBurst from "./ConfettiBurst";
 import { tryUnlockAchievement } from "../services/achievements";
+import { setReminderPrefs } from "../services/reminders";
+import { setEmaEnabled, setEmaFrequency } from "../services/emaPrefs";
+
+type NudgeCadence = "regular" | "daily" | "minimal";
+
+const NUDGE_OPTIONS: { id: NudgeCadence; label: string; desc: string; icon: React.ReactNode }[] = [
+  { id: "regular", label: "A few times a day", desc: "Daily nudge + 2 quick check-ins", icon: <Bell className="w-4 h-4" /> },
+  { id: "daily", label: "Once a day", desc: "Just a gentle morning nudge", icon: <Bell className="w-4 h-4" /> },
+  { id: "minimal", label: "Leave me be", desc: "No nudges — I'll come when I'm ready", icon: <Bell className="w-4 h-4" /> },
+];
 
 const USER_GOALS = [
   { id: "sleep", label: "Sleep", icon: <Moon className="w-4 h-4" /> },
@@ -50,6 +60,7 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
     } catch { return []; }
   });
   const [baselineMood, setBaselineMood] = useState<number | null>(null);
+  const [nudgeCadence, setNudgeCadence] = useState<NudgeCadence | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
 
   const slides = getSlides(baselineMood);
@@ -79,6 +90,19 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
     try { secureLocal.setItem("nilamind_user_goal", JSON.stringify(selectedGoals)); } catch { /* */ }
     if (baselineMood != null) {
       try { secureLocal.setItem("nilamind_onboarding_mood", String(baselineMood)); } catch { /* */ }
+    }
+    // Apply the user's notification cadence preference (Fix 2: don't default to 3/day without asking)
+    if (nudgeCadence === "daily") {
+      setReminderPrefs({ enabled: true });
+      setEmaEnabled(false);
+    } else if (nudgeCadence === "minimal") {
+      setReminderPrefs({ enabled: false });
+      setEmaEnabled(false);
+    } else {
+      // "regular" or unset (skip case) — keep defaults
+      setReminderPrefs({ enabled: true });
+      setEmaEnabled(true);
+      setEmaFrequency(2);
     }
     try { LocalNotifications.requestPermissions(); } catch { /* */ }
     completeOnboarding();
@@ -136,6 +160,35 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
               ))}
             </select>
             <p className="text-[11px] text-slate-500">Preview: {preview}</p>
+          </div>
+        )}
+
+        {/* Mood baseline assessment */}
+        {slide.id === "nudge_cadence" && (
+          <div className="w-full space-y-2.5">
+            {NUDGE_OPTIONS.map((opt) => {
+              const selected = nudgeCadence === opt.id;
+              return (
+                <button
+                  key={opt.id}
+                  onClick={() => { setNudgeCadence(opt.id); hapticLight(); }}
+                  className={`w-full flex items-center gap-3 p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
+                    selected
+                      ? "bg-amber-500/15 border-amber-500/50"
+                      : "bg-slate-800/50 border-slate-700/50 hover:border-slate-600"
+                  }`}
+                >
+                  <div className={`p-2 rounded-lg ${selected ? "bg-amber-500/20 text-amber-300" : "bg-slate-700/50 text-slate-400"}`}>
+                    {opt.icon}
+                  </div>
+                  <div className="flex-1">
+                    <div className={`text-sm font-semibold ${selected ? "text-amber-200" : "text-slate-300"}`}>{opt.label}</div>
+                    <div className="text-[11px] text-slate-500">{opt.desc}</div>
+                  </div>
+                  {selected && <Check className="w-4 h-4 text-amber-400 shrink-0" />}
+                </button>
+              );
+            })}
           </div>
         )}
 
@@ -327,6 +380,12 @@ function getSlides(baselineMood: number | null) {
       title: "Choose your region",
       body: "This sets the crisis helplines shown if you ever need them. You can change it later in Settings.",
       icon: <Globe className="w-10 h-10 text-indigo-400" />,
+    },
+    {
+      id: "nudge_cadence",
+      title: "How often should I check in?",
+      body: "Gentle reminders help you build a rhythm — but it's your call. You can change this anytime in Settings.",
+      icon: <Bell className="w-10 h-10 text-amber-400" />,
     },
     {
       id: "how_nila_helps",

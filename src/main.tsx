@@ -126,6 +126,12 @@ if ((import.meta as any).env?.VITE_USE_FREE_API_LLM) {
   });
 }
 
+// The opt-in cloud API tier needs NO boot-time registration: localLlm.ts consults the user's
+// Settings preference (cloudApi.ts) LIVE on every conversational call, so the toggle takes effect
+// on the next message. (A previous boot-time registration here RACED the native model load for the
+// single backend slot — whichever async chain resolved last won — so cloud silently never activated
+// on device. Routing at the seam removes the race entirely.)
+
 // Native: on-device IS Nila's brain (no cloud). A size-verified on-disk model — by default the stock
 // Gemma-3-1B-it GGUF (a fine-tuned V2 4B GGUF is an optional revert/side-load), run via llama.cpp — is
 // the brain. findInstalledModel only returns a file whose byte length matches the catalog exactly, so a
@@ -145,8 +151,10 @@ if (Capacitor.isNativePlatform()) {
     } catch {
       /* nothing valid on disk → first-run setup */
     }
-    const { setBrainStatus } = await import("./services/brainSetup");
-    setBrainStatus("needs-setup");
+    const { setBrainStatus, shouldRespectModelDownloadSkip } = await import("./services/brainSetup");
+    if (!shouldRespectModelDownloadSkip()) {
+      setBrainStatus("needs-setup");
+    }
   }).catch(() => {});
 
   // Async between-sessions brain: run the overnight reflection when the app is idle

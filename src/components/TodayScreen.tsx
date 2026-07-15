@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Wind, MessageCircle, Moon, LayoutGrid, Sparkles, ChevronRight, HeartHandshake, Sparkle, Clock3, Target, LineChart, Activity, Lightbulb } from "lucide-react";
+import { Wind, MessageCircle, Moon, LayoutGrid, Sparkles, ChevronRight, HeartHandshake, Sparkle, Clock3, Target, LineChart, Activity, Lightbulb, LifeBuoy } from "lucide-react";
 import { getTimeMode, getUserState, getGreeting } from "../services/modeEngine";
 import { hasCheckinToday } from "../services/checkin";
 import { secureLocal } from "../services/secureLocal";
@@ -13,6 +13,8 @@ import { hasRhythmToday, loadTodayAnchors, RHYTHM_ANCHORS } from "../services/so
 import { getUserGoals } from "../services/chatSuggestions";
 import { getDailyIntention } from "../services/weeklyIntention";
 import DailyIntentionCard, { type DailyIntentionCardHandle } from "./DailyIntentionCard";
+import DailyContentCard from "./DailyContentCard";
+import RatingPromptCard from "./RatingPromptCard";
 import { useTimeOfDay, heroGradient, contextualSummary } from "../hooks/useTimeOfDay";
 import { buildNilaMessage } from "../services/nilaVoice";
 import { getTopAssessmentPrompt } from "../services/assessmentPrompts";
@@ -96,10 +98,12 @@ export function getHeroAction(timeMode: TimeMode, userState: UserState | null, d
   if (userState === "anxious" || userState === "elevated") {
     return { id: "plan", label: "Grounding & breathing", sub: "Calm your body in a hard minute", icon: <Wind className="w-5 h-5" aria-hidden="true" />, color: "text-emerald-400", route: "plan" };
   }
-  if (!dailyIntentionSet) {
+if (!dailyIntentionSet) {
     return { id: "daily_intention", label: "Set today's intention", sub: "A 30-second if-then plan — research-backed", icon: <Target className="w-5 h-5" aria-hidden="true" />, color: "text-amber-400", route: "" };
   }
-  return { id: "checkin", label: "✨ How are you feeling?", sub: "A quick check-in takes just a moment", icon: <Sparkles className="w-5 h-5" aria-hidden="true" />, color: "text-blue-400", route: "ema_checkin" };
+  // Intention already set → promote Talk to Nila (not a duplicate check-in prompt — the mood
+  // card directly below already handles that, and stacking two check-in CTAs is confusing).
+  return { id: "nila", label: "Talk to Nila", sub: "A conversation, a reflection, or just a listen", icon: <MessageCircle className="w-5 h-5" aria-hidden="true" />, color: "text-blue-400", route: "nila" };
 }
 
 function formatDate(): string {
@@ -152,10 +156,12 @@ export default function TodayScreen({
   go,
   phoneEnabled,
   onEpisode,
+  onOpenCrisis,
 }: {
   go: (target: string) => void;
   phoneEnabled: boolean;
   onEpisode: () => void;
+  onOpenCrisis: () => void;
 }) {
   const [showAllTools, setShowAllTools] = useState(false);
   const [showMoreSkills, setShowMoreSkills] = useState(false);
@@ -217,6 +223,14 @@ export default function TodayScreen({
     <div className="space-y-5 max-w-md mx-auto" id="today-hub">
       {/* Greeting — time-aware, serif voice, with subtle gradient backdrop */}
       <header className={`relative rounded-2xl p-4 -mx-1 bg-gradient-to-br ${heroGradient(timeOfDay)}`}>
+        <button
+          onClick={onOpenCrisis}
+          className="absolute top-3 right-3 p-2 rounded-lg text-slate-500 hover:text-rose-300 hover:bg-rose-500/10 transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center"
+          aria-label="Get help now"
+          title="Get help now"
+        >
+          <LifeBuoy className="w-4 h-4" />
+        </button>
         <div className="space-y-0.5">
           <h1 className="editorial text-3xl text-slate-100">{greeting}</h1>
           <p className="text-sm text-slate-400">{formatDate()}</p>
@@ -242,6 +256,12 @@ export default function TodayScreen({
           </p>
         </div>
       )}
+
+      {/* Daily inspiration — quote + tip, dismissable, changes every day */}
+      <DailyContentCard />
+
+      {/* Gentle Play Store rating prompt — only after 5+ positive sessions */}
+      <RatingPromptCard />
 
       {/* Welcome back — returning after absence */}
       {hasAnyCheckins && !checkedIn && (() => {

@@ -11,6 +11,7 @@ import {
 } from "../services/medicationAdherence";
 import { hapticLight } from "../hooks/useHaptics";
 import { syncMedicationReminders } from "../services/notifications";
+import EmptyState, { EMPTY_STATES } from "./EmptyState";
 
 export default function MedicationAdherenceScreen() {
   const [medications, setMedications] = useState<Medication[]>([]);
@@ -144,7 +145,12 @@ export default function MedicationAdherenceScreen() {
 
       <div className="space-y-3">
         {medications.length === 0 && (
-          <p className="text-sm text-slate-500 text-center py-6">No medications yet. Add one to get gentle reminders.</p>
+          <EmptyState
+            nilaState={EMPTY_STATES.noMedications.nilaState}
+            title={EMPTY_STATES.noMedications.title}
+            body={EMPTY_STATES.noMedications.body}
+            cta={{ label: "Add medication", onClick: () => setShowForm(true) }}
+          />
         )}
         {medications.map((med) => {
           const takenToday = logsToday.has(med.id);

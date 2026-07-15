@@ -20,8 +20,8 @@ describe("Tools hub rows (redesign §2)", () => {
   it("renders all tool rows in order, when phone is off", () => {
     expect(rowIds(false)).toEqual([
       "plan", "winddown", "sounds", "reach_out", "episode",
-      "ema_checkin", "diary", "assessment", "medication", "social_rhythm",
-      "problem_solving", "values_to_action", "exposure", "relapse_plan",
+      "ema_checkin", "diary", "medication",
+      "problem_solving", "values_to_action", "assessment", "social_rhythm", "exposure", "relapse_plan",
     ]);
   });
 

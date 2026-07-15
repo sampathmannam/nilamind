@@ -280,20 +280,24 @@ describe("ModeScreen — feedback-suggestion UI (2026-07-12 Wave 3, Group F)", (
   it("tapping thumbs-down on a reply shows a one-tap 'what would've helped' prompt", async () => {
     await sendAndGetReply("a reply");
     expect(document.getElementById("feedback-suggestion-prompt")).toBeNull();
-    fireEvent.click(screen.getByLabelText("Mark as not helpful"));
+    // Use getAllByLabelText and pick the last one — the greeting message also has feedback buttons
+    const downButtons = screen.getAllByLabelText("Mark as not helpful");
+    fireEvent.click(downButtons[downButtons.length - 1]);
     expect(recordFeedbackMock).toHaveBeenCalledWith("a reply", "down");
     expect(document.getElementById("feedback-suggestion-prompt")).toBeTruthy();
   });
 
   it("tapping thumbs-up does NOT show the suggestion prompt (only a down-rating asks what would help)", async () => {
     await sendAndGetReply("a good reply");
-    fireEvent.click(screen.getByLabelText("Mark as helpful"));
+    const upButtons = screen.getAllByLabelText("Mark as helpful");
+    fireEvent.click(upButtons[upButtons.length - 1]);
     expect(document.getElementById("feedback-suggestion-prompt")).toBeNull();
   });
 
   it("submitting a typed suggestion calls attachSuggestion with the exact feedback id, then closes the prompt", async () => {
     await sendAndGetReply("a reply");
-    fireEvent.click(screen.getByLabelText("Mark as not helpful"));
+    const downButtons = screen.getAllByLabelText("Mark as not helpful");
+    fireEvent.click(downButtons[downButtons.length - 1]);
     const input = screen.getByPlaceholderText(/what would.*helped/i);
     fireEvent.change(input, { target: { value: "be gentler" } });
     fireEvent.click(screen.getByLabelText("Share what would help"));
@@ -303,7 +307,8 @@ describe("ModeScreen — feedback-suggestion UI (2026-07-12 Wave 3, Group F)", (
 
   it("dismissing without submitting never calls attachSuggestion and closes the prompt (optional, not forced)", async () => {
     await sendAndGetReply("a reply");
-    fireEvent.click(screen.getByLabelText("Mark as not helpful"));
+    const downButtons = screen.getAllByLabelText("Mark as not helpful");
+    fireEvent.click(downButtons[downButtons.length - 1]);
     expect(document.getElementById("feedback-suggestion-prompt")).toBeTruthy();
     fireEvent.click(screen.getByLabelText("Not now"));
     expect(attachSuggestionMock).not.toHaveBeenCalled();

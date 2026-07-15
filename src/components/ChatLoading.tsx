@@ -1,15 +1,29 @@
-// ChatLoading — skeleton shimmer + typing indicator for when Nila is generating.
+// ChatLoading — skeleton shimmer + typing indicator + breathing bubble for when Nila is generating.
 // Research: skeleton screens reduce perceived wait time (Google, 2019); typing indicators
-// are a conversational UI convention (WhatsApp/Facebook/iMessage).
+// are a conversational UI convention (WhatsApp/Facebook/iMessage). The breathing bubble gives
+// the user something to DO while waiting — sync their breath to the expanding/contracting orb.
+// The copy escalates with wait time (useSettlingNote) so a long cold-load never reads as broken.
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useSettlingNote } from "./useSettlingNote";
 
+const WAITING_TIPS = [
+  "Tip: Name 5 things you can see right now — it gently anchors you while you wait.",
+  "Tip: Try a slow breath in for 4, hold for 4, out for 4. The bubble matches a calm pace.",
+  "Tip: If waiting feels hard, that's okay. Nila will be here when you're ready.",
+  "Tip: You could notice the weight of your phone in your hand while you wait.",
+  "Tip: One slow exhale. Let your shoulders drop. Nila's almost here.",
+];
+
 export default function ChatLoading() {
-  // #24 (audit): ChatLoading only mounts while a reply is generating, so drive the escalating reassurance
-  // (base → "taking a moment" → "taking longer" → "the first reply can take a few minutes, nothing's stuck").
-  // This hook existed for exactly the documented multi-minute cold-load wait but was never wired to any screen.
   const note = useSettlingNote(true, "Nila is thinking");
+  const [tipIndex, setTipIndex] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => setTipIndex((i) => (i + 1) % WAITING_TIPS.length), 6000);
+    return () => clearInterval(id);
+  }, []);
+
   return (
     <>
       <style>{`
@@ -21,10 +35,11 @@ export default function ChatLoading() {
           0%, 60%, 100% { transform: translateY(0); }
           30% { transform: translateY(-6px); }
         }
+        @keyframes breathing-orb {
+          0%, 100% { transform: scale(0.85); opacity: 0.5; }
+          50% { transform: scale(1.15); opacity: 0.8; }
+        }
         .shimmer-bar {
-          /* Soft pink-magenta shimmer that matches Nila's orb and reads calm on both the cream
-             (light) and warm-dark themes — semi-transparent so it blends with whatever surface
-             it sits on. Replaces the old dark-navy bars that looked like broken black lines. */
           background: linear-gradient(90deg,
             rgba(236,91,158,0.13) 25%,
             rgba(236,91,158,0.28) 50%,
@@ -42,6 +57,9 @@ export default function ChatLoading() {
         .typing-dot:nth-child(1) { animation: chat-dot-bounce 1.4s ease-in-out infinite; }
         .typing-dot:nth-child(2) { animation: chat-dot-bounce 1.4s ease-in-out 0.2s infinite; }
         .typing-dot:nth-child(3) { animation: chat-dot-bounce 1.4s ease-in-out 0.4s infinite; }
+        .breathing-orb {
+          animation: breathing-orb 4s ease-in-out infinite;
+        }
       `}</style>
       <div className="flex flex-col gap-3 w-full max-w-sm" id="chat-loading">
         {/* Typing indicator */}
@@ -59,6 +77,17 @@ export default function ChatLoading() {
           <div className="shimmer-bar h-3 w-full" />
           <div className="shimmer-bar h-3 w-5/6" />
           <div className="shimmer-bar h-3 w-2/3" />
+        </div>
+        {/* Breathing bubble — gives the user something to DO while waiting.
+            Syncs to a 4-second cycle (in 4s, out 4s) that matches box-breathing. */}
+        <div className="flex flex-col items-center gap-2 py-2">
+          <div
+            className="breathing-orb w-12 h-12 rounded-full bg-gradient-to-br from-purple-400/40 to-purple-600/30 border border-purple-400/20 flex items-center justify-center"
+            aria-hidden="true"
+          />
+          <p className="text-[10px] text-slate-500 leading-relaxed text-center max-w-[16rem] transition-all duration-500" key={tipIndex}>
+            {WAITING_TIPS[tipIndex]}
+          </p>
         </div>
       </div>
     </>

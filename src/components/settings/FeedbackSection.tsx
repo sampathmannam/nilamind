@@ -1,9 +1,27 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { t } from "../../services/i18n";
-import { MessageSquare, ExternalLink } from "lucide-react";
+import { MessageSquare, ExternalLink, Copy, Check } from "lucide-react";
+import { pendingContributions, type ReplyFeedback } from "../../services/nilaFeedback";
 
 export default function FeedbackSection() {
   const REPO = "https://github.com/sampathmannam/nilamind";
+  const [pending, setPending] = useState<ReplyFeedback[]>([]);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    setPending(pendingContributions());
+  }, []);
+
+  const handleCopySuggestions = () => {
+    const text = pending.map((p, i) =>
+      `Suggestion ${i + 1}: ${p.suggestion}\n(in reply to: ${p.reply.slice(0, 200)})`
+    ).join("\n\n");
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }).catch(() => {});
+  };
+
   return (
     <div className="glass p-5 rounded-2xl space-y-3 shadow-lg" id="settings-feedback">
       <div>
@@ -15,6 +33,26 @@ export default function FeedbackSection() {
           automatically — these open in your browser, and you choose what to share.
         </p>
       </div>
+
+      {pending.length > 0 && (
+        <div className="border border-purple-500/30 bg-purple-500/10 rounded-xl p-3 space-y-2">
+          <div className="text-[12px] text-purple-200/90 font-medium">
+            {pending.length} improvement suggestion{pending.length !== 1 ? "s" : ""} ready
+          </div>
+          <p className="text-[10px] text-purple-300/70 leading-relaxed">
+            You typed {pending.length} suggestion{pending.length !== 1 ? "s" : ""} for how Nila could have replied better.
+            These stay on your device — tap Copy to save them, then paste into a GitHub issue.
+          </p>
+          <button
+            onClick={handleCopySuggestions}
+            className="flex items-center gap-1.5 text-[11px] font-medium rounded-lg py-1.5 px-3 bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 transition-colors cursor-pointer min-h-[44px] min-w-[44px]"
+          >
+            {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+            {copied ? "Copied" : "Copy your suggestions"}
+          </button>
+        </div>
+      )}
+
       <a
         href={`${REPO}/issues/new`}
         target="_blank"

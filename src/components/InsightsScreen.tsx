@@ -3,6 +3,7 @@ import { Sparkles, Shield, TrendingUp, TrendingDown, Minus, HelpCircle, Activity
 import { secureLocal } from "../services/secureLocal";
 import { generateInsights, assessmentInsights, daysOfData, type Insight } from "../services/patternInsights";
 import { getRecentSnapshots } from "../db/behaviourDb";
+import EmptyStateShared, { EMPTY_STATES } from "./EmptyState";
 import { loadMoodHistory } from "../services/moodHistory";
 import { loadAssessments, type AssessmentEntry } from "../services/assessments";
 import { getNo1Insights, type No1Insight } from "../services/nOf1";
@@ -80,16 +81,11 @@ function InsightCard({ insight, index }: { insight: Insight; index: number }) {
 
 function EmptyState() {
   return (
-    <div className="glass rounded-2xl p-6 text-center space-y-3">
-      <Sparkles className="w-12 h-12 text-slate-500 mx-auto" />
-      <h3 className="text-sm font-semibold text-slate-100">No insights yet</h3>
-      <p className="text-xs text-slate-400 leading-relaxed max-w-sm mx-auto">
-        Insights appear after you&apos;ve checked in for several days and granted permission for phone behaviour signals (screen time, sleep, movement). Everything stays on your device — nothing leaves your phone.
-      </p>
-      <p className="text-[10px] text-slate-500 mt-2">
-        Minimum 5 paired days of check-ins + phone data needed per pattern.
-      </p>
-    </div>
+    <EmptyStateShared
+      nilaState={EMPTY_STATES.noInsights.nilaState}
+      title="No insights yet"
+      body="Insights appear after you've checked in for several days and granted permission for phone behaviour signals (screen time, sleep, movement). Everything stays on your device — nothing leaves your phone. Minimum 5 paired days of check-ins + phone data needed per pattern."
+    />
   );
 }
 

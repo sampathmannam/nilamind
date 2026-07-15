@@ -45,6 +45,7 @@ const CaregiverSettingsScreen = lazy(() => import("./components/CaregiverSetting
 const BreathingScreen = lazy(() => import("./components/BreathingScreen"));
 const SoundPlayer = lazy(() => import("./components/SoundPlayer"));
 const AboutNilaScreen = lazy(() => import("./components/AboutNilaScreen"));
+const LegalScreen = lazy(() => import("./components/LegalScreen"));
 const InsightsScreen = lazy(() => import("./components/InsightsScreen"));
 
 // Calm fallback while lazy chunks load
@@ -79,6 +80,7 @@ import { hasCompletedOnboarding } from "./services/onboarding";
 import { resolveNavTarget, type AuxView, type TabView } from "./services/nav";
 import { getArmedCheckin, armedCheckinBody } from "./services/armedCheckin";
 import { recordAppOpen } from "./services/retentionMetrics";
+import { recordPositiveSession } from "./services/ratingPrompt";
 import { getPilotState, markEndpointReminderScheduled, PILOT_ENDPOINT_REMINDER_BODY } from "./services/pilotStudy";
 import { getUserState } from "./services/modeEngine";
 import { computeAdaptiveMode, getAdaptiveCssClass } from "./services/adaptiveTheme";
@@ -113,6 +115,7 @@ const AUX_LABELS: Partial<Record<AuxView, string>> = {
   wellbeing: "Wellbeing over time",
   episode_marker: "Episode markers",
   caregiver_settings: "Caregiver settings",
+  legal: "Legal",
   sounds: "Ambient sounds",
 };
 
@@ -147,6 +150,7 @@ function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () 
     case "episode_marker": return <EpisodeMarkerScreen onClose={onClose} />;
     case "caregiver_settings": return <CaregiverSettingsScreen onClose={onClose} onOpenCaregiverShare={onOpenCaregiverShare} />;
     case "sounds": return <SoundPlayer onClose={onClose} />;
+    case "legal": return <LegalScreen />;
     default: return <div className="p-6 text-slate-400 text-sm text-center">Not available</div>;
   }
 }
@@ -160,6 +164,7 @@ export default function App() {
   const [groundingExpandIndex, setGroundingExpandIndex] = useState<number | undefined>(undefined);
   const [isMedicationOpen, setIsMedicationOpen] = useState(false);
   const [isCaregiverOpen, setIsCaregiverOpen] = useState(false);
+  const [isLegalOpen, setIsLegalOpen] = useState(false);
   const [selectedCaregiverContactId, setSelectedCaregiverContactId] = useState<string | undefined>();
   const [isBreathingOpen, setIsBreathingOpen] = useState(false);
   const [activeAuxView, setActiveAuxView] = useState<AuxView | null>(null);
@@ -245,6 +250,7 @@ export default function App() {
   // Nothing is sent anywhere — the metric only leaves the device via the user-initiated export.
   useEffect(() => {
     recordAppOpen();
+    recordPositiveSession();
   }, []);
 
   // If enrolled in the opt-in research pilot, schedule the single endpoint check-in reminder once. The body
@@ -486,14 +492,14 @@ export default function App() {
         {activeTab === "today" && (
           <ErrorBoundary name="today" onError={(err: Error, info: React.ErrorInfo) => console.error("[ErrorBoundary:today] caught:", err, info)}>
             <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-6" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
-              <TodayScreen go={go} phoneEnabled={phoneEnabled} onEpisode={onEpisode} />
+              <TodayScreen go={go} phoneEnabled={phoneEnabled} onEpisode={onEpisode} onOpenCrisis={activateCrisis} />
             </div>
           </ErrorBoundary>
         )}
         {activeTab === "you" && (
           <ErrorBoundary name="you" onError={(err: Error, info: React.ErrorInfo) => console.error("[ErrorBoundary:you] caught:", err, info)}>
             <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-6" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
-              <YouScreen go={go} />
+              <YouScreen go={go} onOpenCrisis={activateCrisis} />
             </div>
           </ErrorBoundary>
         )}
@@ -556,7 +562,7 @@ export default function App() {
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto">
             <Suspense fallback={<ScreenFallback />}>
-              <SettingsScreen onOpenCaregiver={() => setIsCaregiverOpen(true)} />
+              <SettingsScreen onOpenCaregiver={() => setIsCaregiverOpen(true)} onOpenLegal={() => setIsLegalOpen(true)} />
             </Suspense>
           </div>
         </div>
@@ -597,6 +603,19 @@ export default function App() {
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto p-4">
             <Suspense fallback={<ScreenFallback />}><CaregiverShareScreen selectedContactId={selectedCaregiverContactId} /></Suspense>
+          </div>
+        </div>
+      )}
+
+      {/* Legal sheet — Privacy Policy, Terms, OSS licenses */}
+      {isLegalOpen && (
+        <div className="fixed inset-0 z-50 bg-page flex flex-col animate-slide-in" id="legal-sheet">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
+            <span className="text-sm font-semibold text-slate-100">Legal</span>
+            <button onClick={() => setIsLegalOpen(false)} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Close"><X className="w-4 h-4" aria-hidden="true" /></button>
+          </div>
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            <Suspense fallback={<ScreenFallback />}><LegalScreen /></Suspense>
           </div>
         </div>
       )}

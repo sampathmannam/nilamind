@@ -8,13 +8,24 @@
 // cannot run in the web build or in node/test — so it is deliberately NOT imported here. Instead the
 // native adapter REGISTERS a backend at runtime via registerLocalLlmBackend(). Until one is registered
 // (e.g. on web, or before the model finishes loading on device), the on-device model is simply
-// "unavailable" and Nila falls back to the calm offline companion — there is NO cloud transport. This
-// keeps the app fully working, and makes the routing logic unit-testable by registering a fake backend.
+// "unavailable" and Nila falls back to the calm offline companion — there is NO cloud transport in the
+// default path. This keeps the app fully working, and makes the routing logic unit-testable by
+// registering a fake backend.
+//
+// OPT-IN CLOUD TIER (2026-07-15): when the user explicitly enables the cloud API in Settings AND enters
+// their own key (cloudApi.ts), the PRIMARY conversational path (generateGuarded — chat/voice) routes to
+// the cloud backend instead. The preference is read LIVE on every call, so toggling takes effect on the
+// next message without re-registration and without racing the native model load. The BACKGROUND path
+// (generateOnDevice — reflection, coachAssist, memory, episode) NEVER uses cloud: those calls carry
+// derived personal-data digests the user consented to share only with Nila's conversation provider,
+// so they stay strictly on-device regardless of the toggle. All §9 gates sit ABOVE this seam and are
+// unchanged by the routing choice.
 //
 // Shipped bindings: llamaCppLlmAdapter.ts (native — llama.cpp over the GGUF) and
 // ollamaLlmAdapter.ts (desktop/dev). main.tsx registers the right one per platform once the model loads.
 
 import { runExclusive, tryRunExclusive } from "./modelLock";
+import { createCloudBackend } from "./cloudLlmAdapter";
 
 export interface LocalGenParams {
   /** Full system instruction (buildNilaSystem) — persona + on-device memory + skills. */
@@ -51,6 +62,16 @@ export interface LocalLlmBackend {
 
 let backend: LocalLlmBackend | null = null;
 
+// The opt-in cloud backend. Its isReady() reads the user's Settings preference live (enabled + key),
+// so it activates/deactivates instantly with the toggle. It is a pure fetch transport (no native deps),
+// so constructing it eagerly costs nothing.
+const cloudBackend: LocalLlmBackend = createCloudBackend();
+
+/** The backend the PRIMARY conversational path should use right now: cloud when the user opted in, else native. */
+function activeBackend(): LocalLlmBackend | null {
+  return cloudBackend.isReady() ? cloudBackend : backend;
+}
+
 // Concurrency: the llama.cpp binding runs completion() synchronously on Capacitor's ONE plugin thread, so two
 // overlapping completions freeze the app. ALL model access is serialized through modelLock (see that module):
 // generateGuarded (chat/voice) waits its turn; generateOnDevice (reflection/coach/episode) skips if busy.
@@ -65,9 +86,11 @@ export function getLocalLlmBackend(): LocalLlmBackend | null {
   return backend;
 }
 
-/** True only when an on-device model is registered AND ready — the gate sendToNila uses to route. */
+/** True when a conversational brain is ready — on-device model, or the opt-in cloud tier.
+ *  This is the gate sendToNila uses to route. */
 export function isLocalLlmReady(): boolean {
-  return !!backend && backend.isReady();
+  const b = activeBackend();
+  return !!b && b.isReady();
 }
 
 /**
@@ -80,13 +103,15 @@ export function isLocalLlmReady(): boolean {
  * companion forever with no explanation (2026-07-06 audit #10).
  */
 export function localLlmLoadState(): "none" | "loading" | "ready" | "error" {
+  if (cloudBackend.isReady()) return "ready"; // opt-in cloud tier is stateless — always "ready" when active
   if (!backend) return "none";
   return backend.loadState?.() ?? (backend.isReady() ? "ready" : "loading");
 }
 
-/** The active model id, or null when no on-device backend is ready. */
+/** The active model id, or null when no backend (on-device or opt-in cloud) is ready. */
 export function localLlmId(): string | null {
-  return backend && backend.isReady() ? backend.id : null;
+  const b = activeBackend();
+  return b && b.isReady() ? b.id : null;
 }
 
 /**
@@ -120,8 +145,8 @@ const GEN_HANG_TIMEOUT_MS = 600_000;
  * signal. EVERY on-device caller (companion + episode + coachAssist + reflection + memory) routes through
  * this so they share the same deadlock protection, rather than calling backend.generate directly.
  */
-async function rawGuardedGenerate(params: LocalGenParams): Promise<string> {
-  if (!backend) throw new Error("no on-device backend");
+async function rawGuardedGenerate(params: LocalGenParams, b: LocalLlmBackend | null): Promise<string> {
+  if (!b) throw new Error("no on-device backend");
   const ctrl = new AbortController();
   const onOuter = () => ctrl.abort();
   params.signal?.addEventListener("abort", onOuter, { once: true });
@@ -130,25 +155,28 @@ async function rawGuardedGenerate(params: LocalGenParams): Promise<string> {
     timer = setTimeout(() => { ctrl.abort(); reject(new Error("on-device generate hang-timeout")); }, GEN_HANG_TIMEOUT_MS);
   });
   try {
-    return await Promise.race([backend.generate({ ...params, signal: ctrl.signal }), hang]);
+    return await Promise.race([b.generate({ ...params, signal: ctrl.signal }), hang]);
   } finally {
     if (timer) clearTimeout(timer);
     params.signal?.removeEventListener("abort", onOuter);
   }
 }
 
-/** PRIMARY on-device path (companion chat + voice call). Serialized through the model lock — WAITS its turn
- *  so it can never overlap another completion on the one plugin thread. */
+/** PRIMARY conversational path (companion chat + voice call). Routes to the opt-in cloud tier when the
+ *  user enabled it, else the on-device model. Serialized through the model lock — WAITS its turn so the
+ *  native case can never overlap another completion on the one plugin thread (the cloud case doesn't
+ *  need the lock but holding it is harmless and keeps ordering simple). */
 export async function generateGuarded(params: LocalGenParams): Promise<string> {
-  return runExclusive(() => rawGuardedGenerate(params));
+  return runExclusive(() => rawGuardedGenerate(params, activeBackend()));
 }
 
 /**
  * One-shot on-device generation for the non-companion features (the episode prompt, the coachAssist
  * "Ask Nila" analyses, the reflection, the memory summariser). Streams via onToken if given, and resolves
  * with the full reply. Returns null when NO model is loaded (or on a hang-timeout) so every caller
- * degrades gracefully — it never reaches the network. The caller keeps its own §9 input scan + output
- * gate around this, exactly as around the old cloud call.
+ * degrades gracefully — it NEVER reaches the network, even when the opt-in cloud tier is enabled: these
+ * calls carry derived personal-data digests that stay strictly on-device (see the header note). The
+ * caller keeps its own §9 input scan + output gate around this, exactly as around the old cloud call.
  */
 
 
@@ -166,7 +194,7 @@ export async function generateOnDevice(
   // it WAITS its turn and always produces a reply, rather than dropping the user to the offline walkthrough.
   const run = opts?.wait ? runExclusive : tryRunExclusive;
   try {
-    const reply = await run(() => rawGuardedGenerate({ system, messages, onToken, signal }));
+    const reply = await run(() => rawGuardedGenerate({ system, messages, onToken, signal }, backend));
     return reply === null ? null : reply.trim() || null;
   } catch {
     return null;

@@ -53,6 +53,7 @@ import {
 import { getRecentSnapshots } from "../db/behaviourDb";
 import type { CheckInEntry, DiaryCardEntry, EpisodeRecord } from "../types";
 import { DAY_MS } from "../services/storageUtils";
+import EmptyStateShared, { EMPTY_STATES } from "./EmptyState";
 
 const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 const r1 = (n: number) => Math.round(n * 10) / 10;
@@ -1062,11 +1063,12 @@ function Stat({ icon, value, label }: { icon: React.ReactNode; value: string; la
   );
 }
 
-function EmptyCard({ text, illustration }: { text: string; illustration?: string }) {
+function EmptyCard({ text }: { text: string; illustration?: string }) {
   return (
-    <div className="glass rounded-2xl p-4 text-center space-y-2">
-      {illustration && <span className="text-2xl">{illustration}</span>}
-      <p className="text-[11px] text-slate-500 leading-relaxed">{text}</p>
-    </div>
+    <EmptyStateShared
+      nilaState={EMPTY_STATES.noMoodData.nilaState}
+      title=""
+      body={text}
+    />
   );
 }

@@ -57,6 +57,7 @@ import { computeCompassionateStreak } from "../services/streaks";
 import { Settings, Mic, Send, MicOff, Keyboard, X, ShieldCheck, ThumbsUp, ThumbsDown, MessageCircle, Brain, Moon, SquarePen } from "lucide-react";
 import { hapticLight, hapticMedium } from "../hooks/useHaptics";
 import { recordFeedback, attachSuggestion } from "../services/nilaFeedback";
+import { isCloudApiEnabled, getCloudApiKey } from "../services/cloudApi";
 
 interface ModeScreenProps {
   onOpenSettings?: () => void;
@@ -80,7 +81,14 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   const [showCheckin, setShowCheckin] = useState(() => {
     return !mode.hasCheckedIn;
   });
-  const [messages, setMessages] = useState<NilaUiMessage[]>([]);
+  const [messages, setMessages] = useState<NilaUiMessage[]>(() => {
+    // Restore saved session if one exists (survives app restart)
+    const saved = getSessionChat();
+    if (saved.length) return saved;
+    // Seed a warm greeting on first launch — so the chat is never blank.
+    // Previously messages started empty and the user had to type first.
+    return [{ role: "assistant", content: "Hi — I'm Nila. I'm here to listen and help you reflect. Nothing you say leaves your phone." }];
+  });
   const [inputText, setInputText] = useState(() => modeDraftCache); // #22: restore draft after a tab-switch remount
   const [loading, setLoading] = useState(false);
   const [listening, setListening] = useState(false);
@@ -243,6 +251,8 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   // audit 2.1 — CHAT PERSISTENCE (regressed in the rewrite: sessionChat was imported but never used).
   // Restore an in-progress conversation on mount so it survives leaving/killing the app; a crisis session
   // is intentionally never restored (it is cleared by the persist effect below).
+  // Note: the greeting is seeded in the initial state of `messages` — if getSessionChat() returns
+  // empty, the greeting stays and this effect does nothing.
   useEffect(() => {
     const saved = getSessionChat();
     if (saved.length) setMessages(saved);
@@ -394,6 +404,11 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           speakIfEnabled(result.reply);
           if (document.hidden) void notifyReplyReady();
         }
+      } else if (!result.reachedAI && isCloudApiEnabled() && getCloudApiKey()) {
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", content: "Cloud API returned an empty response — check your API key and endpoint in Settings → Advanced → Cloud API." },
+        ]);
       }
       // After Nila replies, refresh the protocol card (continue if active, else re-offer).
       setProtocolCard(protocolOfferCard(msg));
@@ -402,11 +417,15 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
       setMode(getCurrentMode());
       // Suggest a relevant coping skill if the user expressed distress
       setSkillOffer(insight?.skill?.skill ?? null);
-    } catch {
+    } catch (err) {
       crisisPendingRef.current = false; // model error is not a §9 crisis — let the turn persist
+      const isCloud = isCloudApiEnabled() && getCloudApiKey();
+      const msg = isCloud
+        ? "Cloud API isn't responding — check your API key and endpoint in Settings → Advanced → Cloud API. Your conversations are still private on-device in the meantime."
+        : "I'm having a quiet moment — my model isn't responding right now. Your phone might be low on memory or the model needs a moment. Try typing again? 💙";
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: "I'm having a quiet moment — my model isn't responding right now. Your phone might be low on memory or the model needs a moment. Try typing again? 💙" },
+        { role: "assistant", content: msg },
       ]);
     } finally {
       setLoading(false);
@@ -660,175 +679,182 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
 
       {/* Main content — scrollable for chat messages */}
       <div className="flex-1 min-h-0 overflow-y-auto flex flex-col items-center justify-start p-4 space-y-6 pt-8">
-        {/* Check-in gate */}
+        {/* Check-in card — dismissable, sits above the chat so Nila is always visible.
+            Previously this replaced the entire chat area, meaning "Talk to Nila" opened
+            a form, not a conversation. Now the check-in is an optional card above the
+            always-visible NilaFace + question + input. */}
         {showCheckin && (
-          <div className="w-full max-w-sm">
+          <div className="w-full max-w-sm relative">
+            <button
+              onClick={handleCheckinSkip}
+              className="absolute top-2 right-2 z-10 p-1.5 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-slate-800/50 transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center"
+              aria-label="Skip check-in"
+            >
+              <X className="w-4 h-4" />
+            </button>
             <NilaCheckIn onLogged={handleCheckinLogged} onSkip={handleCheckinSkip} />
           </div>
         )}
 
-        {/* Nila's face + question */}
-        {!showCheckin && (
+        {/* Nila's face + question — always visible, never gated behind check-in */}
+        <NilaFace
+          state={mode.userState}
+          onClick={handleVoice}
+          onLongPress={() => openCrisis()}
+          size={160}
+          isListening={listening}
+        />
+
+        <div className="text-center space-y-2">
+          <p className="text-lg text-slate-200 font-display">{question}</p>
+          {mode.userState && mode.userState !== "calm" && (
+            <p className="text-xs text-slate-400">
+              {mode.userState === "anxious" && "I'm here with you. Take your time."}
+              {mode.userState === "low" && "You're not alone in this."}
+              {mode.userState === "elevated" && "Let's slow things down together."}
+            </p>
+          )}
+        </div>
+
+        {/* Quick actions — hidden behind a toggle for a cleaner first impression */}
+        {!showQuickActions && (
+          <button
+            onClick={() => setShowQuickActions(true)}
+            className="text-xs text-slate-500 hover:text-slate-300 flex items-center gap-1 transition-colors cursor-pointer py-2 px-3 min-h-[44px] min-w-[44px] focus-ring"
+          >
+            <span>More tools</span>
+            <span className="text-slate-600">+</span>
+          </button>
+        )}
+        {showQuickActions && (
           <>
-            <NilaFace
-              state={mode.userState}
-              onClick={handleVoice}
-              onLongPress={() => openCrisis()}
-              size={160}
-              isListening={listening}
-            />
+            <QuickActions onAction={handleQuickAction} timeMode={mode.timeMode} userState={mode.userState} />
+            <button
+              onClick={() => setShowQuickActions(false)}
+              className="text-xs text-slate-500 hover:text-slate-300 transition-colors cursor-pointer py-2 px-3 min-h-[44px] min-w-[44px] focus-ring"
+            >
+              Hide tools
+            </button>
+          </>
+        )}
 
-            <div className="text-center space-y-2">
-              <p className="text-lg text-slate-200 font-display">{question}</p>
-              {mode.userState && mode.userState !== "calm" && (
-                <p className="text-xs text-slate-400">
-                  {mode.userState === "anxious" && "I'm here with you. Take your time."}
-                  {mode.userState === "low" && "You're not alone in this."}
-                  {mode.userState === "elevated" && "Let's slow things down together."}
-                </p>
-              )}
-            </div>
-
-            {/* Quick actions — hidden behind a toggle for a cleaner first impression */}
-            {!showQuickActions && (
-              <button
-                onClick={() => setShowQuickActions(true)}
-                className="text-xs text-slate-500 hover:text-slate-300 flex items-center gap-1 transition-colors cursor-pointer py-2 px-3 min-h-[44px] min-w-[44px] focus-ring"
+        {/* Messages — #23 (audit): render the FULL conversation (was slice(-5), so earlier turns became
+            unreachable) and auto-scroll to the newest reply via bottomRef below. */}
+        {messages.length > 0 && (
+          <div className="w-full max-w-sm space-y-3 mt-4" role="log" aria-live="polite">
+            {messages.map((m, i) => (
+              <div
+                key={i}
+                className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
               >
-                <span>More tools</span>
-                <span className="text-slate-600">+</span>
-              </button>
-            )}
-            {showQuickActions && (
-              <>
-                <QuickActions onAction={handleQuickAction} timeMode={mode.timeMode} userState={mode.userState} />
-                <button
-                  onClick={() => setShowQuickActions(false)}
-                  className="text-xs text-slate-500 hover:text-slate-300 transition-colors cursor-pointer py-2 px-3 min-h-[44px] min-w-[44px] focus-ring"
-                >
-                  Hide tools
-                </button>
-              </>
-            )}
-
-            {/* Messages — #23 (audit): render the FULL conversation (was slice(-5), so earlier turns became
-                unreachable) and auto-scroll to the newest reply via bottomRef below. */}
-            {messages.length > 0 && (
-              <div className="w-full max-w-sm space-y-3 mt-4" role="log" aria-live="polite">
-                {messages.map((m, i) => (
+                <div>
                   <div
-                    key={i}
-                    className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
+                   className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${
+                     m.role === "user"
+                       ? "bg-purple-600/70 text-white"
+                       : "bg-slate-800/80 text-slate-200"
+                   }`}
                   >
-                    <div>
-                      <div
-                       className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${
-                         m.role === "user"
-                           ? "bg-purple-600/70 text-white"
-                           : "bg-slate-800/80 text-slate-200"
-                       }`}
+                    {m.role === "user" ? m.content : stripChatMarkdown(m.content)}
+                  </div>
+                  {m.role === "assistant" && !ratedMessages.has(i) && (
+                    <div className="flex gap-1 mt-1">
+                      <button
+                        onClick={() => {
+                          recordFeedback(m.content, "up");
+                          setRatedMessages((prev) => new Set(prev).add(i));
+                          hapticLight();
+                        }}
+                        className="p-2.5 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-slate-800/50 transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center focus-ring"
+                        aria-label="Mark as helpful"
                       >
-                        {m.role === "user" ? m.content : stripChatMarkdown(m.content)}
-                      </div>
-                      {m.role === "assistant" && !ratedMessages.has(i) && (
-                        <div className="flex gap-1 mt-1">
+                        <ThumbsUp className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          const entry = recordFeedback(m.content, "down");
+                          setRatedMessages((prev) => new Set(prev).add(i));
+                          hapticLight();
+                          setSuggestionText("");
+                          setSuggestionPrompt({ index: i, feedbackId: entry.id });
+                        }}
+                        className="p-2.5 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-slate-800/50 transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center focus-ring"
+                        aria-label="Mark as not helpful"
+                      >
+                        <ThumbsDown className="w-4 h-4" />
+                      </button>
+                    </div>
+                    )}
+                    {m.role === "assistant" && m.insight && (
+                      <InMomentInsightCard
+                        explainerTitle={m.insight.explainer?.title ?? ""}
+                        explainerSummary={m.insight.explainer?.summary ?? ""}
+                        explainerBasis={m.insight.explainer?.basis ?? ""}
+                        skillEmoji={m.insight.skill?.emoji ?? ""}
+                        skillName={m.insight.skill?.skill.name ?? ""}
+                        skillReason={m.insight.skill?.reason ?? ""}
+                        onTrySkill={
+                          m.insight.skill
+                            ? () => handleTrySkill(m.insight!.skill!.skill)
+                            : undefined
+                        }
+                      />
+                    )}
+                    {/* 2026-07-12 Wave 3, Group F: one-tap, dismissable "what would've helped?" follow-up —
+                        completes the already-built attachSuggestion() flow. Optional, never forced; a bare
+                        thumbs-down alone is still a complete, valid piece of feedback. */}
+                    {suggestionPrompt?.index === i && (
+                      <div
+                        id="feedback-suggestion-prompt"
+                        className="mt-1.5 p-2.5 rounded-lg bg-slate-800/50 border border-slate-700 text-xs space-y-2 max-w-[85%]"
+                      >
+                        <p className="text-slate-300">What would've helped?</p>
+                        <input
+                          type="text"
+                          value={suggestionText}
+                          onChange={(e) => setSuggestionText(e.target.value)}
+                          placeholder="What would've helped? (optional)"
+                          className="w-full px-2.5 py-2 rounded-md bg-slate-900/70 border border-slate-700 text-slate-200 placeholder:text-slate-500 focus-ring"
+                        />
+                        <div className="flex gap-2 justify-end">
                           <button
-                            onClick={() => {
-                              recordFeedback(m.content, "up");
-                              setRatedMessages((prev) => new Set(prev).add(i));
-                              hapticLight();
-                            }}
-                            className="p-2.5 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-slate-800/50 transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center focus-ring"
-                            aria-label="Mark as helpful"
+                            onClick={() => { setSuggestionPrompt(null); setSuggestionText(""); }}
+                            className="px-3 py-2 rounded-md text-slate-400 hover:text-slate-200 hover:bg-slate-700/50 transition-colors cursor-pointer min-h-[36px] focus-ring"
+                            aria-label="Not now"
                           >
-                            <ThumbsUp className="w-4 h-4" />
+                            Not now
                           </button>
                           <button
                             onClick={() => {
-                              const entry = recordFeedback(m.content, "down");
-                              setRatedMessages((prev) => new Set(prev).add(i));
-                              hapticLight();
+                              if (suggestionText.trim()) attachSuggestion(suggestionPrompt.feedbackId, suggestionText);
+                              setSuggestionPrompt(null);
                               setSuggestionText("");
-                              setSuggestionPrompt({ index: i, feedbackId: entry.id });
                             }}
-                            className="p-2.5 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-slate-800/50 transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center focus-ring"
-                            aria-label="Mark as not helpful"
+                            className="px-3 py-2 rounded-md bg-violet-500/20 hover:bg-violet-500/30 text-violet-200 font-medium transition-colors cursor-pointer min-h-[36px] focus-ring"
+                            aria-label="Share what would help"
                           >
-                            <ThumbsDown className="w-4 h-4" />
+                            Share
                           </button>
                         </div>
-                        )}
-                        {m.role === "assistant" && m.insight && (
-                          <InMomentInsightCard
-                            explainerTitle={m.insight.explainer?.title ?? ""}
-                            explainerSummary={m.insight.explainer?.summary ?? ""}
-                            explainerBasis={m.insight.explainer?.basis ?? ""}
-                            skillEmoji={m.insight.skill?.emoji ?? ""}
-                            skillName={m.insight.skill?.skill.name ?? ""}
-                            skillReason={m.insight.skill?.reason ?? ""}
-                            onTrySkill={
-                              m.insight.skill
-                                ? () => handleTrySkill(m.insight!.skill!.skill)
-                                : undefined
-                            }
-                          />
-                        )}
-                        {/* 2026-07-12 Wave 3, Group F: one-tap, dismissable "what would've helped?" follow-up —
-                            completes the already-built attachSuggestion() flow. Optional, never forced; a bare
-                            thumbs-down alone is still a complete, valid piece of feedback. */}
-                        {suggestionPrompt?.index === i && (
-                          <div
-                            id="feedback-suggestion-prompt"
-                            className="mt-1.5 p-2.5 rounded-lg bg-slate-800/50 border border-slate-700 text-xs space-y-2 max-w-[85%]"
-                          >
-                            <p className="text-slate-300">What would've helped?</p>
-                            <input
-                              type="text"
-                              value={suggestionText}
-                              onChange={(e) => setSuggestionText(e.target.value)}
-                              placeholder="What would've helped? (optional)"
-                              className="w-full px-2.5 py-2 rounded-md bg-slate-900/70 border border-slate-700 text-slate-200 placeholder:text-slate-500 focus-ring"
-                            />
-                            <div className="flex gap-2 justify-end">
-                              <button
-                                onClick={() => { setSuggestionPrompt(null); setSuggestionText(""); }}
-                                className="px-3 py-2 rounded-md text-slate-400 hover:text-slate-200 hover:bg-slate-700/50 transition-colors cursor-pointer min-h-[36px] focus-ring"
-                                aria-label="Not now"
-                              >
-                                Not now
-                              </button>
-                              <button
-                                onClick={() => {
-                                  if (suggestionText.trim()) attachSuggestion(suggestionPrompt.feedbackId, suggestionText);
-                                  setSuggestionPrompt(null);
-                                  setSuggestionText("");
-                                }}
-                                className="px-3 py-2 rounded-md bg-violet-500/20 hover:bg-violet-500/30 text-violet-200 font-medium transition-colors cursor-pointer min-h-[36px] focus-ring"
-                                aria-label="Share what would help"
-                              >
-                                Share
-                              </button>
-                            </div>
-                          </div>
-                        )}
                       </div>
-                    </div>
-                ))}
-              </div>
-            )}
+                    )}
+                  </div>
+                </div>
+            ))}
+          </div>
+        )}
 
             {/* Chat loading — skeleton shimmer + typing dots */}
             {loading && <ChatLoading />}
 
             {/* #23 (audit): scroll anchor so a new reply is always brought into view. */}
             <div ref={bottomRef} />
-          </>
-        )}
       </div>
 
-      {/* Input bar */}
-      {!showCheckin && (
-        <div className="px-4 py-3 border-t border-slate-800/50 space-y-2">
+      {/* Input bar — always visible, even during check-in (check-in is a dismissable card above, not a gate).
+          Previously this was gated behind `!showCheckin`, which meant the user could see Nila but couldn't
+          type/speak until the check-in was completed or dismissed. Now the chat is fully usable at all times. */}
+      <div className="px-4 py-3 border-t border-slate-800/50 space-y-2">
 {/* Soft crisis card (2026-07-12 Wave 3) — inline surface for a classifier-only §9 hit. Escalating opens the
               REAL full-takeover CrisisOverlay directly; dismissing only clears this card — it does NOT un-latch
               hadCrisisRef or restore the wiped transcript (one-way door, same as a keyword hit today). */}
@@ -1149,7 +1175,6 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
             )}
           </div>
         </div>
-      )}
 
       {/* #9 (audit): the §9 crisis overlay is now rendered once at the App level (back-button aware) and
           opened via onOpenCrisis() / openCrisis() above — no duplicate local overlay that the hardware back

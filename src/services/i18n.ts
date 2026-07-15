@@ -184,6 +184,10 @@ export type I18nKey =
   | "sec_identity"
   | "sec_privacy_lock"
   | "sec_feedback"
+  | "sec_legal"
+  | "sec_legalSub"
+  | "sec_cloud_api"
+  | "sec_cloud_apiSub"
   | "sec_region"
   | "sec_pilot"
   // Phase 17 — Longitudinal wellbeing
@@ -399,6 +403,10 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     sec_identity: "🔑 Account & Recovery",
     sec_privacy_lock: "🔒 Privacy Lock",
     sec_feedback: "💬 Feedback & about",
+    sec_legal: "Legal — Terms & licenses",
+    sec_legalSub: "Privacy Policy, Terms of Service, and open-source licenses",
+    sec_cloud_api: "Optional Cloud API",
+    sec_cloud_apiSub: "Connect your own API key for a cloud model (messages leave your device)",
     sec_region: "Crisis lines & region",
     sec_pilot: "Research pilot",
     you_wellbeing_label: "💚 Wellbeing over time",
@@ -611,6 +619,10 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     sec_identity: "खाता और रिकवरी",
     sec_privacy_lock: "गोपनीयता लॉक",
     sec_feedback: "प्रतिक्रिया और बारे में",
+    sec_legal: "कानूनी — शर्तें और लाइसेंस",
+    sec_legalSub: "गोपनीयता नीति, सेवा की शर्तें, और ओपन-सोर्स लाइसेंस",
+    sec_cloud_api: "वैकल्पिक क्लाउड API",
+    sec_cloud_apiSub: "क्लाउड मॉडल के लिए अपनी API कुंजी कनेक्ट करें (संदेश आपके डिवाइस से बाहर जाते हैं)",
     sec_region: "संकट लाइनें और क्षेत्र",
     sec_pilot: "अनुसंधान पायलट",
     you_wellbeing_label: "समय के साथ कल्याण",
@@ -822,6 +834,10 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     sec_identity: "கணக்கு மற்றும் மீட்பு",
     sec_privacy_lock: "தனியுரிமை பூட்டு",
     sec_feedback: "கருத்து & பற்றி",
+    sec_legal: "சட்டப்பூர்வ — விதிமுறைகள் & உரிமங்கள்",
+    sec_legalSub: "தனியுரிமைக் கொள்கை, சேவை விதிமுறைகள், மற்றும் திறந்த மூல உரிமங்கள்",
+    sec_cloud_api: "விருப்பமான கிளவுட் API",
+    sec_cloud_apiSub: "கிளவுட் மாடலுக்கு உங்கள் API விசையை இணைக்கவும் (செய்திகள் உங்கள் சாதனத்தை விட்டு வெளியேறும்)",
     sec_region: "நெருக்கடி வரிகள் & பகுதி",
     sec_pilot: "ஆராய்ச்சி பைலட்",
     you_wellbeing_label: "காலப்போக்கில் நலன்",
@@ -1033,6 +1049,10 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     sec_identity: "ఖాతా & రికవరీ",
     sec_privacy_lock: "ప్రైవసీ లాక్",
     sec_feedback: "ఫీడ్‌బ్యాక్ & గురించి",
+    sec_legal: "చట్టపరమైన — నియమాలు & లైసెన్స్‌లు",
+    sec_legalSub: "గోప్యతా విధానం, సేవా షరతులు, మరియు ఓపెన్-సోర్స్ లైసెన్స్‌లు",
+    sec_cloud_api: "ఐచ్ఛిక క్లౌడ్ API",
+    sec_cloud_apiSub: "క్లౌడ్ మోడల్ కోసం మీ API కీని కనెక్ట్ చేయండి (సందేశాలు మీ పరికరం నుండి బయటకు వెళ్తాయి)",
     sec_region: "సంక్షోభ లైన్‌లు & ప్రాంతం",
     sec_pilot: "పరిశోధన పైలట్",
     you_wellbeing_label: "కాలక్రమంలో శ్రేయస్సు",

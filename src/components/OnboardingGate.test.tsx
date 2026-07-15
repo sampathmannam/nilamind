@@ -18,7 +18,8 @@ const noop = () => {};
 
 function goToHowNilaHelpsSlide() {
   render(<OnboardingGate onComplete={noop} onOpenCrisis={noop} />);
-  // nila_intro -> privacy -> mood_check -> personalize -> region -> how_nila_helps (5 "Next" taps)
+  // nila_intro -> privacy -> mood_check -> personalize -> region -> nudge_cadence -> how_nila_helps (6 "Next" taps)
+  fireEvent.click(screen.getByText(/next/i));
   fireEvent.click(screen.getByText(/next/i));
   fireEvent.click(screen.getByText(/next/i));
   fireEvent.click(screen.getByText(/next/i));

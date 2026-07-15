@@ -1,30 +1,21 @@
+// Cloud LLM backend adapter — a cleaner wrapper around the cloud API for Nila.
+// Unlike freeApiLlmAdapter (which is a static constructor), this adapter dynamically reads
+// the cloud API settings from cloudApi.ts — so toggling the cloud preference takes effect
+// immediately without re-registering the backend. Used by the runtime cloud registration in main.tsx.
+
 import type { LocalLlmBackend, LocalGenParams } from "./localLlm";
+import { isCloudApiActive, getCloudApiKey, getCloudApiUrl, getCloudApiModel } from "./cloudApi";
 
-/**
- * Simple free API LLM backend adapter.
- *
- * This backend streams responses from an OpenAI-compatible HTTP endpoint.
- * It is intended for development/testing purposes and respects the
- * {@link LocalLlmBackend} contract used throughout the app.
- *
- * Settings are provided via the constructor arguments – typically pulled
- * from Vite env variables in `main.tsx`.
- */
-export function createFreeApiBackend(apiUrl: string, apiKey: string): LocalLlmBackend {
-  // Basic readiness check – can be extended to probe the endpoint if desired.
-  let ready = !!apiKey;
-
-  // Optionally ping the endpoint to set ready flag (non‑blocking).
-  // fetch(`${apiUrl}/models`).then(r => { if (r.ok) ready = true; }).catch(() => {});
-
+export function createCloudBackend(): LocalLlmBackend {
   return {
-    id: "free-api-llm",
-    isReady: () => ready,
-    /**
-     * Generate a response via the remote API. Supports streaming tokens if the endpoint
-     * returns an OpenAI‑style server‑sent events stream. Falls back to a full JSON response.
-     */
+    id: "cloud-api",
+    isReady: () => isCloudApiActive(),
+
     generate: async ({ system, messages, onToken, signal }: LocalGenParams): Promise<string> => {
+      const apiKey = getCloudApiKey();
+      const apiUrl = getCloudApiUrl();
+      if (!apiKey) throw new Error("No cloud API key configured");
+
       const res = await fetch(apiUrl, {
         method: "POST",
         headers: {
@@ -32,7 +23,7 @@ export function createFreeApiBackend(apiUrl: string, apiKey: string): LocalLlmBa
           Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: "gpt-3.5-turbo",
+          model: getCloudApiModel(),
           messages: [
             { role: "system", content: system },
             ...messages.map((m) => ({ role: m.role, content: m.content })),
@@ -43,11 +34,12 @@ export function createFreeApiBackend(apiUrl: string, apiKey: string): LocalLlmBa
       });
 
       if (!res.ok) {
-        const detail = await res.text().catch(() => "");
-        throw new Error(`Free API LLM ${res.status}${detail ? `: ${detail.slice(0, 200)}` : ""}`);
+        let detail = "";
+        try { detail = await res.text(); } catch { /* response may not have text() */ }
+        throw new Error(`Cloud API ${res.status}${detail ? `: ${detail.slice(0, 200)}` : ""}`);
       }
 
-      // If the response has a body, attempt to stream token‑by‑token.
+      // SSE streaming path
       if (res.body) {
         const reader = res.body.getReader();
         const decoder = new TextDecoder();
@@ -61,9 +53,7 @@ export function createFreeApiBackend(apiUrl: string, apiKey: string): LocalLlmBa
           buffer = lines.pop() ?? "";
           for (const line of lines) {
             const trimmed = line.trim();
-            if (!trimmed) continue;
-            // OpenAI streams lines prefixed with "data: "
-            if (!trimmed.startsWith("data:")) continue;
+            if (!trimmed || !trimmed.startsWith("data:")) continue;
             const json = trimmed.slice(5).trim();
             if (json === "[DONE]") return full;
             try {
@@ -81,7 +71,7 @@ export function createFreeApiBackend(apiUrl: string, apiKey: string): LocalLlmBa
         return full;
       }
 
-      // Fallback: read full JSON response (non‑streaming)
+      // Fallback: non-streaming JSON
       const data = await res.json();
       const content = data?.choices?.[0]?.message?.content ?? "";
       if (content) onToken(content);

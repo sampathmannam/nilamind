@@ -32,7 +32,7 @@ describe("You hub rows (redesign §2)", () => {
     const rendered = buildYouGroups().flatMap((g) => g.rows.map((r) => r.id));
     expect(rendered).toEqual([
       "dashboard", "your_data", "settings", "caregiver_settings",
-      "about_nila", "nila_memory", "thought_record", "learn", "insights", "wellbeing", "episode_marker",
+      "about_nila", "insights", "wellbeing", "nila_memory", "thought_record", "learn", "episode_marker",
     ]);
     expect(YOU_ROW_IDS).toEqual(rendered);
   });
@@ -43,7 +43,7 @@ describe("You hub rows (redesign §2)", () => {
   it("marks informational/niche rows as 'more' (hidden behind a toggle, not shown by default)", () => {
     const all = buildYouGroups().flatMap((g) => g.rows);
     const moreIds = all.filter((r) => r.more).map((r) => r.id);
-    expect(moreIds).toEqual(["about_nila", "nila_memory", "thought_record", "learn", "episode_marker"]);
+    expect(moreIds).toEqual(["nila_memory", "thought_record", "learn", "episode_marker"]);
   });
 
   it("does not mark Manage rows or core Resources (insights, wellbeing) as 'more'", () => {

@@ -150,7 +150,7 @@ describe("generate — turn-marker stripping (Gemma, explicit format)", () => {
     await flush();
     await b.generate({ system: "s", messages: [{ role: "user", content: "hi" }], onToken: () => {} });
     const realCall = mockCompletion.mock.calls.find(([o]) => (o as { n_predict?: number }).n_predict !== 1);
-    expect((realCall![0] as { n_predict: number }).n_predict).toBeLessThanOrEqual(96);
+    expect((realCall![0] as { n_predict: number }).n_predict).toBeLessThanOrEqual(128);
   });
 
   it("trims a length-cut reply back to the last complete sentence", async () => {
