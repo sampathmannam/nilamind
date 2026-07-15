@@ -1,0 +1,1 @@
+Pinned the Gradle wrapper's distribution checksum (supply-chain integrity fix flagged during F-Droid review). No user-facing changes.
