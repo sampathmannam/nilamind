@@ -73,6 +73,25 @@ export const MODELS: CatalogModel[] = [
   //   runtime: "gguf",
   //   promptFormat: "gemma",
   // },
+  // --- Qwen3-1.7B upgrade (better reasoning, same size class as the 1.5B) -------------------------------
+  // TODO(maintainer, gated-model): Qwen3-1.7B-Instruct-GGUF is AUTH-GATED on HuggingFace — an authenticated
+  // session is required to read its exact byte size / SHA-256, so they could not be filled here. The catalog
+  // REQUIRES an EXACT sizeBytes match for download integrity (partial/corrupt transfers are rejected), so DO
+  // NOT uncomment this until you paste the verified sizeBytes + sha256 from an authenticated `curl -sIL` of the
+  // resolve URL. Prompt format is "qwen" (Qwen3 shares Qwen2.5's <|im_start|>/<|im_end|> template), so no prompt
+  // code change is needed once the size is filled. The registration path is already dynamic (modelDownload
+  // passes the real on-disk path), so once uncommented this becomes a selectable, downloadable brain.
+  // {
+  //   id: "fast3",
+  //   label: "Nila's brain (fast, smarter)",
+  //   detail: "Qwen3-1.7B · ~1.3 GB · better reasoning than 1.5B · runs entirely on your phone",
+  //   filename: "qwen3-1.7b-instruct-q4_k_m.gguf",
+  //   url: "https://huggingface.co/Qwen/Qwen3-1.7B-Instruct-GGUF/resolve/main/qwen3-1.7b-instruct-q4_k_m.gguf",
+  //   sizeBytes: 0, // TODO(maintainer): exact byte length from authenticated HF resolve HEAD
+  //   sha256: "",    // TODO(maintainer): SHA-256 from authenticated HF resolve HEAD
+  //   runtime: "gguf",
+  //   promptFormat: "qwen",
+  // },
 ];
 
 /** Human-readable size for the UI (e.g. "2.5 GB"). */

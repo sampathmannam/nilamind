@@ -79,6 +79,12 @@ export function createLlamaCppBackend(
         n_gpu_layers: 0,
         cache_type_k: "q4_0", // 4.5-bit KV cache — 44% smaller than q8_0 (200MB vs 350MB at 4096), negligible quality loss
         cache_type_v: "q4_0",
+        ctx_shift: true, // KV-cache context shifting: when a long conversation hits n_ctx, rotate the cache
+                         // instead of re-prefilling from scratch — avoids an O(n²) re-prefill on each turn past
+                         // the window. Safe with the per-turn variable prompt (unlike saveSession/loadSession,
+                         // which would restore a STALE KV cache that doesn't match the RAG/elevation-injected
+                         // prefix this turn — so we deliberately do NOT persist the session; see localLlm.ts).
+        kv_unified: true, // single unified KV buffer (llama.cpp >= 14070) — slightly lower peak RAM, no behavior change
         use_mlock: true,
       });
       ready = true;
@@ -136,6 +142,10 @@ export function createLlamaCppBackend(
             dry_multiplier: 1.0, // stronger: 0.8 was too mild, model would still loop phrases
             dry_base: 2.0, // higher baseline makes penalty more effective for short replies
             dry_allowed_length: 2, // catch both 2-token and 3-token repeats (DRY original recommendation)
+            // FUTURE (binding upgrade): n-gram speculative decoding. llama-cpp-capacitor v0.1.5 does NOT
+            // expose draft_model / n_draft / ngram-prefix speculative params, so it can't be wired without
+            // inventing an API (forbidden). When the binding ships speculative support, pass a small draft
+            // model (or n-gram prefix) here for a ~1.2-2x chat throughput gain at zero extra RAM.
             stop: fmt.stop,
           },
           (data) => {

@@ -266,3 +266,11 @@ it("initLlama receives cache_type_k and cache_type_v params", async () => {
     expect.objectContaining({ cache_type_k: "q4_0", cache_type_v: "q4_0" }),
   );
 });
+
+it("initLlama enables KV-cache context shifting + unified KV buffer", async () => {
+  createLlamaCppBackend();
+  await flush();
+  expect(initLlama).toHaveBeenCalledWith(
+    expect.objectContaining({ ctx_shift: true, kv_unified: true }),
+  );
+});
