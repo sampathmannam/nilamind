@@ -72,7 +72,7 @@ const USER_ANSWER_CUES =
  * It must ALWAYS be asked about, no matter what else is in the message.
  * Ash treated "episode" as the most important word in the sentence.
  * Match: standalone "episode" or "an/the episode" (not "tv episode"). */
-const EPISODE_CUES = /\b(had? an? episode|an? episode today|what episode|explain.*episode|episode$|the episode happened|called? an? episode)\b/i;
+const EPISODE_CUES = /\b(had? an? episode|an? episode today|what episode|explain.*episode|an? episode happened|called? an? episode|(?<!my |his |her |their )episode$)\b/i;
 
 /** Help-seeking language — user already sought professional care.
  * Must be acknowledged as positive action, not crisis.
@@ -167,15 +167,17 @@ export function classifyMove(
 ): Move {
   const msg = userMessage.trim();
 
-  // 1. Self-attack → REPAIR (highest priority — safety-critical)
+  // 1. F5 fix — loaded word "episode" → CLARIFY (highest content priority).
+  // Ash's #1 rule: "episode" is the most important word. Always ask what it was.
+  // Placed FIRST so it outranks OVERWHELM_CUES (which would otherwise match "today morning" in
+  // "I had an episode today morning" and steal priority).
+  if (EPISODE_CUES.test(msg)) return "CLARIFY";
+
+  // 2. Self-attack → REPAIR (safety-critical)
   if (SELF_ATTACK_CUES.test(msg)) return "REPAIR";
 
-  // 2. Overwhelm / soft disclosure → REPAIR
+  // 3. Overwhelm / soft disclosure → REPAIR
   if (OVERWHELM_CUES.test(msg) && sentenceCount(msg) <= 2) return "REPAIR";
-
-  // 3. F5 fix — loaded word "episode" → CLARIFY (highest content priority).
-  // Ash's #1 rule: "episode" is the most important word. Always ask what it was.
-  if (EPISODE_CUES.test(msg)) return "CLARIFY";
 
   // 4. Help-seeking language → REFLECT_ASK with positive acknowledgment.
   // "I saw a psychiatrist" = user took agency, not a crisis. Acknowledge it.

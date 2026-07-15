@@ -1,4 +1,4 @@
-// App.tsx — 3-tab IA (Nila / Tools / You) with aux-view routing.
+// App.tsx — 3-tab IA (Nila / Today / You) with nav-store-driven overlays.
 // BiometricGateHost and ModelSetupGate are standalone gates (no children).
 
 import { secureLocal, onPersistError } from "./services/secureLocal";
@@ -77,7 +77,7 @@ import ModelSetupGate from "./components/ModelSetupGate";
 import OnboardingGate from "./components/OnboardingGate";
 import SafetyPlanScreen from "./components/SafetyPlanScreen";
 import { hasCompletedOnboarding } from "./services/onboarding";
-import { resolveNavTarget, type AuxView, type TabView } from "./services/nav";
+import { type AuxView } from "./services/nav";
 
 import { recordAppOpen } from "./services/retentionMetrics";
 import { recordPositiveSession } from "./services/ratingPrompt";
@@ -88,6 +88,9 @@ import { warmVoskStt } from "./services/voskStt";
 import { MessageSquare, LayoutGrid, User } from "lucide-react";
 
 import { hapticLight } from "./hooks/useHaptics";
+
+// Navigation store
+import { NavProvider, useNav, hasOverlay, topOverlay, type NavApi, type SheetId } from "./services/navStore";
 
 type AppTab = "nila" | "today" | "you";
 
@@ -155,68 +158,66 @@ function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () 
   }
 }
 
-export default function App() {
+// ── Inner app shell (uses useNav) ───────────────────────────────────────────
+function AppShell() {
   const prefersReduced = useReducedMotion();
-  const [isCrisisOpen, setIsCrisisOpen] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [isDashboardOpen, setIsDashboardOpen] = useState(false);
-  const [isGroundingOpen, setIsGroundingOpen] = useState(false);
+  const nav = useNav();
+  const { state, go, openCrisis, openAux, openSheet, closeAuxStart, closeAuxDone, closeTop, setTab } = nav;
+
+  // Legacy booleans that are NOT yet in the nav store (or are internal to ModeScreen)
   const [groundingExpandIndex, setGroundingExpandIndex] = useState<number | undefined>(undefined);
-  const [isMedicationOpen, setIsMedicationOpen] = useState(false);
-  const [isCaregiverOpen, setIsCaregiverOpen] = useState(false);
-  const [isLegalOpen, setIsLegalOpen] = useState(false);
   const [selectedCaregiverContactId, setSelectedCaregiverContactId] = useState<string | undefined>();
-  const [isBreathingOpen, setIsBreathingOpen] = useState(false);
-  const [activeAuxView, setActiveAuxView] = useState<AuxView | null>(null);
-  const [closingAuxView, setClosingAuxView] = useState<AuxView | null>(null);
-  const [activeTab, setActiveTab] = useState<AppTab>("today");
   const [saveWarning, setSaveWarning] = useState(false);
   const [onboardingDone, setOnboardingDone] = useState(hasCompletedOnboarding());
   const [wakeListening, setWakeListening] = useState(false);
   const [phoneEnabled] = useState(true);
   const [modeScreenHasSheet, setModeScreenHasSheet] = useState(false);
   const [, setLangTick] = useState(0);
-  const closeSheet = useCallback((view: AuxView | null) => {
-    if (!view) return;
-    setClosingAuxView(view);
-    setActiveAuxView(null);
-    setTimeout(() => setClosingAuxView(null), 200);
-  }, []);
 
-  const closeActiveAux = useCallback(() => {
-    if (activeAuxView) closeSheet(activeAuxView);
-  }, [activeAuxView, closeSheet]);
+  // Helper: does the overlay stack contain a specific sheet?
+  const hasSheet = useCallback((id: SheetId) => hasOverlay(state, (o) => o.kind === "sheet" && o.id === id), [state]);
 
+  // Crisis activation (latches 24h no-nudge + opens crisis overlay)
+  const activateCrisis = useCallback(() => {
+    void suppressNudgesForCrisis();
+    openCrisis();
+  }, [openCrisis]);
+
+  // Episode support entry point (used by TodayScreen + ModeScreen)
+  const onEpisode = useCallback(() => go("episode"), [go]);
+
+  // Aux close animation timeout
+  useEffect(() => {
+    const aux = state.overlays.find((o) => o.kind === "aux" && o.closing);
+    if (aux) {
+      const t = setTimeout(() => closeAuxDone(), 200);
+      return () => clearTimeout(t);
+    }
+  }, [state.overlays, closeAuxDone]);
+
+  // Persistence error banner
   useEffect(() => onPersistError((failingKeys) => setSaveWarning(failingKeys.length > 0)), []);
 
-  // audit 2.23 — re-render the whole app when the language changes so translated strings update immediately.
+  // Language change re-render
   useEffect(() => {
     const h = () => setLangTick((n) => n + 1);
     window.addEventListener(LANGUAGE_CHANGED_EVENT, h);
     return () => window.removeEventListener(LANGUAGE_CHANGED_EVENT, h);
   }, []);
 
-  // Phase 20 — register notification action types (Snooze / Check in / Taken / Dismiss)
-  useEffect(() => {
-    void registerNotificationActionTypes();
-  }, []);
+  // Phase 20 — register notification action types
+  useEffect(() => { void registerNotificationActionTypes(); }, []);
 
   // Sync daily reminders
-  useEffect(() => {
-    void syncDailyReminders();
-  }, []);
+  useEffect(() => { void syncDailyReminders(); }, []);
 
-  // P6.6 — re-arm the Sunday weekly-review digest on every app open (idempotent: cancels + reschedules).
-  useEffect(() => {
-    void syncWeeklyDigest({ request: false });
-  }, []);
+  // Weekly digest
+  useEffect(() => { void syncWeeklyDigest({ request: false }); }, []);
 
-  // Phase 20 — re-arm the nightly wind-down reminder on every app open (idempotent).
-  useEffect(() => {
-    void syncWindDownReminder();
-  }, []);
+  // Wind-down reminder
+  useEffect(() => { void syncWindDownReminder(); }, []);
 
-  // Sync medication reminders on app open (health-critical: exempt from safety suppression).
+  // Medication reminders
   useEffect(() => {
     try {
       const meds = loadMedications();
@@ -224,37 +225,22 @@ export default function App() {
     } catch { /* best-effort */ }
   }, []);
 
-  // Retention: sync weekly insight notification (fires Wednesdays with one pattern insight).
-  useEffect(() => {
-    void syncInsightNotification();
-  }, []);
+  // Weekly insight notification
+  useEffect(() => { void syncInsightNotification(); }, []);
 
-  // Auto-detect wake/bed times from phone usage (social rhythm data without Health Connect).
-  // recordFirstOpenToday() captures the first app open as a wake-time proxy.
-  // recordLastCloseToday() captures the last background event as a bed-time proxy.
+  // Wake/bed time proxies
   useEffect(() => {
     recordFirstOpenToday();
-    const handleVisibility = () => {
-      if (document.visibilityState === "hidden") recordLastCloseToday();
-    };
+    const handleVisibility = () => { if (document.visibilityState === "hidden") recordLastCloseToday(); };
     document.addEventListener("visibilitychange", handleVisibility);
     window.addEventListener("beforeunload", recordLastCloseToday);
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibility);
-      window.removeEventListener("beforeunload", recordLastCloseToday);
-    };
+    return () => { document.removeEventListener("visibilitychange", handleVisibility); window.removeEventListener("beforeunload", recordLastCloseToday); };
   }, []);
 
-  // Record that the app was opened today (on-device retention instrumentation). Runs after SecureGate has
-  // hydrated the encrypted store; idempotent per calendar day, so StrictMode's double mount-effect is safe.
-  // Nothing is sent anywhere — the metric only leaves the device via the user-initiated export.
-  useEffect(() => {
-    recordAppOpen();
-    recordPositiveSession();
-  }, []);
+  // Retention metrics
+  useEffect(() => { recordAppOpen(); recordPositiveSession(); }, []);
 
-  // If enrolled in the opt-in research pilot, schedule the single endpoint check-in reminder once. The body
-  // is content-free (routes to the assessment view). No-op for everyone not enrolled.
+  // Pilot study endpoint reminder
   useEffect(() => {
     const p = getPilotState();
     if (p?.enrolled && !p.endpointReminderScheduled) {
@@ -263,132 +249,78 @@ export default function App() {
     }
   }, []);
 
-  // Re-roll EMA quick-check-in pings on every app open. Never prompts on startup; syncEmaCheckins bails if
-  // EMA is off, permission-denied, in quiet hours, or a crisis/elevation suppression window is active.
-  useEffect(() => {
-    void syncEmaCheckins({ request: false });
-  }, []);
+  // EMA check-ins
+  useEffect(() => { void syncEmaCheckins({ request: false }); }, []);
 
-  // Wake word integration
+  // Wake word
   useEffect(() => {
     const onWakeCb = () => { setWakeListening(false); };
     const handler = () => {
-      if (getWakeEnabled()) {
-        wakeWord.start(onWakeCb).then((ok) => setWakeListening(ok)).catch(() => setWakeListening(false));
-      } else {
-        void wakeWord.stop().then(() => setWakeListening(false));
-      }
+      if (getWakeEnabled()) { wakeWord.start(onWakeCb).then((ok) => setWakeListening(ok)).catch(() => setWakeListening(false)); }
+      else { void wakeWord.stop().then(() => setWakeListening(false)); }
     };
-    if (getWakeEnabled()) {
-      wakeWord.start(onWakeCb).then((ok) => setWakeListening(ok)).catch(() => setWakeListening(false));
-    }
+    if (getWakeEnabled()) { wakeWord.start(onWakeCb).then((ok) => setWakeListening(ok)).catch(() => setWakeListening(false)); }
     window.addEventListener("nilaWakePrefChanged", handler);
-    return () => {
-      window.removeEventListener("nilaWakePrefChanged", handler);
-      void wakeWord.stop();
-    };
+    return () => { window.removeEventListener("nilaWakePrefChanged", handler); void wakeWord.stop(); };
   }, []);
 
-  // Opening the crisis surface also latches a 24h no-nudge window and yanks any queued EMA pings —
-  // you never push a "how are you right now?" to someone mid-crisis (FEATURES_PLAN P6.4).
-  const activateCrisis = useCallback(() => {
-    void suppressNudgesForCrisis(); // latch 24h no-nudge + yank queued EMA/daily pings
-    setIsCrisisOpen(true);
+  // Episode-adaptive UI theme
+  useEffect(() => {
+    function applyAdaptive() {
+      const s = getUserState();
+      const m = computeAdaptiveMode(s);
+      const c = getAdaptiveCssClass(m);
+      const html = document.documentElement;
+      html.classList.remove("theme-elevated", "theme-low");
+      if (c) html.classList.add(c);
+    }
+    applyAdaptive();
+    document.addEventListener("visibilitychange", applyAdaptive);
+    const interval = setInterval(applyAdaptive, 30000);
+    return () => { document.removeEventListener("visibilitychange", applyAdaptive); clearInterval(interval); };
   }, []);
 
-  // ── Unified go() for Tools/You hub rows ──
-  const go = useCallback((target: string) => {
-    const res = resolveNavTarget(target);
-    if (res.kind === "crisis") { activateCrisis(); return; }
-    if (res.kind === "plan") { setIsGroundingOpen(true); return; }
-    if (res.kind === "tab") {
-      // "diary" and "plan" are logical tabs that map to Nila or sheets, not our 3-tab bar.
-      // Route them to Nila so the chat prompt handles them.
-      if (res.tab === "plan") { setIsGroundingOpen(true); return; }
-      if (res.tab === "nila" || res.tab === "today" || res.tab === "you") {
-        setActiveTab(res.tab as AppTab);
-        return;
-      }
-      // diary → open diary card screen via aux view
-      if (res.tab === "diary") { setActiveAuxView("diary" as AuxView); return; }
-      return;
-    }
-    if (res.kind === "aux") {
-      if (res.view === "settings") { setIsSettingsOpen(true); return; }
-      if (res.view === "dashboard") { setIsDashboardOpen(true); return; }
-      if (res.view === "medication") { setIsMedicationOpen(true); return; }
-      if (res.view === "caregiver") { setIsCaregiverOpen(true); return; }
-      setActiveAuxView(res.view);
-    }
-    // "caregiver" and other special targets — route to the right sheet
-    if (res.kind === "unknown") {
-      if (res.target === "caregiver") { setIsCaregiverOpen(true); return; }
-      if (res.target === "grounding") { setIsGroundingOpen(true); return; }
-      if (res.target === "breathing") { setIsBreathingOpen(true); return; }
-    }
-  }, [activateCrisis]);
-
-  const onEpisode = useCallback(() => go("episode"), [go]);
+  // Warm Vosk STT
+  useEffect(() => { warmVoskStt(); }, []);
 
   // Android hardware back button
   useEffect(() => {
     let handle: { remove: () => void } | undefined;
     let removed = false;
     CapApp.addListener("backButton", () => {
-      if (isCrisisOpen) { setIsCrisisOpen(false); return; }
-      if (isSettingsOpen) { setIsSettingsOpen(false); return; }
-      if (isDashboardOpen) { setIsDashboardOpen(false); return; }
-      if (isGroundingOpen) { setIsGroundingOpen(false); return; }
-      if (isMedicationOpen) { setIsMedicationOpen(false); return; }
-      if (isCaregiverOpen) { setIsCaregiverOpen(false); return; }
-      if (isBreathingOpen) { setIsBreathingOpen(false); return; }
-      if (activeAuxView) { setActiveAuxView(null); return; }
+      const top = topOverlay(state);
+      if (top?.kind === "crisis") { closeTop(); return; }
+      if (top?.kind === "sheet") { closeTop(); return; }
+      if (top?.kind === "aux") { closeAuxStart(); return; }
       if (modeScreenHasSheet) { setModeScreenHasSheet(false); return; }
-      if (activeTab !== "nila") { setActiveTab("nila"); return; }
+      if (state.tab !== "nila") { setTab("nila"); return; }
       void CapApp.exitApp();
     }).then((h) => { handle = h; if (removed) h.remove(); });
     return () => { removed = true; handle?.remove(); };
-  }, [isCrisisOpen, isSettingsOpen, isDashboardOpen, isGroundingOpen, isMedicationOpen, isCaregiverOpen, activeAuxView, activeTab, modeScreenHasSheet]);
+  }, [state, modeScreenHasSheet]);
 
-  // Route a tapped local notification to its screen via the existing go() router. Fires for EVERY tapped
-  // notification (daily/med/armed/ema); we route ONLY on a recognised content-free {view} payload and no-op
-  // otherwise (the OS already foregrounds the app). go() self-validates the target via resolveNavTarget.
+  // Local notification tap routing
   useEffect(() => {
     let handle: { remove: () => void } | undefined;
     let removed = false;
     LocalNotifications.addListener("localNotificationActionPerformed", (action) => {
       try {
         const actionId = action?.actionId as string | undefined;
-        // Phase 20: handle action button taps (Snooze, Check in, Taken, Dismiss)
-        if (actionId === "snooze_1h") {
-          enableDndFor(1); // 1-hour gentle snooze
-          return;
-        }
-        if (actionId === "snooze_3h") {
-          enableDndFor(3); // 3-hour pause
-          return;
-        }
+        if (actionId === "snooze_1h") { enableDndFor(1); return; }
+        if (actionId === "snooze_3h") { enableDndFor(3); return; }
         if (actionId === "taken") {
-          // Medication "Taken ✓" — dismiss and log adherence
           const medId = action?.notification?.extra?.medId;
-          if (medId) {
-            try { logMedication(medId, true, []); } catch { /* best-effort */ }
-          }
+          if (medId) { try { logMedication(medId, true, []); } catch { /* best-effort */ } }
           recordEngagement();
           return;
         }
         if (actionId === "remind_30m") {
-          // Reschedule medication reminder in 30 min
           const medName = action?.notification?.body?.replace("Time for ", "")?.split(" ")[0] || "";
           scheduleReminderAt(new Date(Date.now() + 30 * 60_000), `Time for ${medName} — gentle reminder`, "NilaMind", { channelId: "nila_medication" }).catch(() => {});
           return;
         }
-        if (actionId === "dismiss" || actionId === "not_now") {
-          recordDismissal(); // Phase 20: wire progressive cooldown
-          return;
-        }
+        if (actionId === "dismiss" || actionId === "not_now") { recordDismissal(); return; }
 
-        // Standard tap-to-open routing
         const view = action?.notification?.extra?.view;
         if (typeof view === "string" && view) {
           recordEngagement();
@@ -404,31 +336,26 @@ export default function App() {
     return () => { removed = true; handle?.remove(); };
   }, [go]);
 
-  // Phase 9: Episode-adaptive UI — watch user state and apply theme class on <html>.
-  // Polls every 30s and on visibility change (app foreground). Subtle CSS variable
-  // overrides adapt the visual tone: muted during elevation, warm during low.
+  // Adaptive theme
   useEffect(() => {
     function applyAdaptive() {
-      const state = getUserState();
-      const mode = computeAdaptiveMode(state);
-      const cls = getAdaptiveCssClass(mode);
+      const s = getUserState();
+      const m = computeAdaptiveMode(s);
+      const c = getAdaptiveCssClass(m);
       const html = document.documentElement;
       html.classList.remove("theme-elevated", "theme-low");
-      if (cls) html.classList.add(cls);
+      if (c) html.classList.add(c);
     }
     applyAdaptive();
     document.addEventListener("visibilitychange", applyAdaptive);
     const interval = setInterval(applyAdaptive, 30000);
-    return () => {
-      document.removeEventListener("visibilitychange", applyAdaptive);
-      clearInterval(interval);
-    };
+    return () => { document.removeEventListener("visibilitychange", applyAdaptive); clearInterval(interval); };
   }, []);
 
-  // Phase 11: Warm the on-device Vosk STT model on app start so there's no delay
-  // on the first voice use. Fire-and-forget — errors are silently handled inside.
+  // Warm Vosk STT
   useEffect(() => { warmVoskStt(); }, []);
 
+  // ── Main render ────────────────────────────────────────────────────────────
   return (
     <div className="relative isolate h-dvh bg-page text-slate-300 font-sans antialiased overflow-hidden flex flex-col">
       {/* Living aurora atmosphere */}
@@ -438,7 +365,6 @@ export default function App() {
 
       {/* Biometric gate — standalone, renders itself */}
       <BiometricGateHost />
-
       {/* Model setup gate — standalone, renders itself */}
       <ModelSetupGate />
 
@@ -460,34 +386,33 @@ export default function App() {
       )}
 
       {/* Listening indicator (wake word) */}
-      <ListeningIndicator active={wakeListening} onClick={() => setIsSettingsOpen(true)} />
+      <ListeningIndicator active={wakeListening} onClick={() => openSheet("settings")} />
 
-      {/* Main content area — each tab isolated in its own ErrorBoundary so one tab crashing
-          can't take down the others (redesign §5: localized failure). */}
-      <main className="flex-1 min-h-0 relative flex flex-col animate-tab-fade" key={activeTab} aria-label="Content">
-        {activeTab === "nila" && (
+      {/* Main content area — each tab isolated in its own ErrorBoundary */}
+      <main className="flex-1 min-h-0 relative flex flex-col animate-tab-fade" key={state.tab} aria-label="Content">
+        {state.tab === "nila" && (
           <ErrorBoundary name="nila" onError={(err: Error, info: React.ErrorInfo) => console.error("[ErrorBoundary:nila] caught:", err, info)}>
             <ModeScreen
-              onOpenSettings={() => setIsSettingsOpen(true)}
+              onOpenSettings={() => openSheet("settings")}
               onOpenCrisis={activateCrisis}
-              onOpenDashboard={() => setIsDashboardOpen(true)}
-              onOpenMedication={() => setIsMedicationOpen(true)}
-              onOpenGrounding={(idx) => { setIsGroundingOpen(true); setGroundingExpandIndex(idx); }}
-              onOpenDiary={() => setActiveAuxView("diary" as AuxView)}
-              onOpenReachOut={() => setActiveAuxView("reach_out" as AuxView)}
-              onOpenWindDown={() => setActiveAuxView("winddown" as AuxView)}
+              onOpenDashboard={() => openSheet("dashboard")}
+              onOpenMedication={() => openSheet("medication")}
+              onOpenGrounding={(idx) => { openSheet("grounding"); setGroundingExpandIndex(idx); }}
+              onOpenDiary={() => openAux("diary")}
+              onOpenReachOut={() => openAux("reach_out")}
+              onOpenWindDown={() => openAux("winddown")}
               onInternalSheetChange={(open) => setModeScreenHasSheet(open)}
             />
           </ErrorBoundary>
         )}
-        {activeTab === "today" && (
+        {state.tab === "today" && (
           <ErrorBoundary name="today" onError={(err: Error, info: React.ErrorInfo) => console.error("[ErrorBoundary:today] caught:", err, info)}>
             <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-12" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
               <TodayScreen go={go} phoneEnabled={phoneEnabled} onEpisode={onEpisode} onOpenCrisis={activateCrisis} />
             </div>
           </ErrorBoundary>
         )}
-        {activeTab === "you" && (
+        {state.tab === "you" && (
           <ErrorBoundary name="you" onError={(err: Error, info: React.ErrorInfo) => console.error("[ErrorBoundary:you] caught:", err, info)}>
             <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-12" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
               <YouScreen go={go} onOpenCrisis={activateCrisis} />
@@ -506,12 +431,12 @@ export default function App() {
           <button
             key={id}
             role="tab"
-            onClick={() => { setActiveTab(id); hapticLight(); }}
+            onClick={() => { setTab(id); hapticLight(); }}
             className={`flex flex-col items-center gap-0.5 py-2 px-4 rounded-lg transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] ${
-              activeTab === id ? "text-blue-400" : "text-slate-500 hover:text-slate-300"
+              state.tab === id ? "text-blue-400" : "text-slate-500 hover:text-slate-300"
             }`}
             aria-label={label}
-            aria-selected={activeTab === id}
+            aria-selected={state.tab === id}
           >
             <Icon className="w-5 h-5" aria-hidden="true" />
             <span className="text-[10px] font-medium">{label}</span>
@@ -520,80 +445,93 @@ export default function App() {
       </nav>
 
       {/* Crisis overlay */}
-      {isCrisisOpen && (
+      {state.overlays.some((o) => o.kind === "crisis") && (
         <div className="animate-slide-in">
           <CrisisOverlay
-            isOpen={isCrisisOpen}
-            onClose={() => setIsCrisisOpen(false)}
-            onNavigateToGrounding={() => { setIsCrisisOpen(false); setIsGroundingOpen(true); }}
-            onNavigateToBreathing={() => { setIsCrisisOpen(false); setIsGroundingOpen(true); }}
-            onBuildPlanLater={() => { setIsCrisisOpen(false); setActiveAuxView("safety_plan" as AuxView); }}
+            isOpen={true}
+            onClose={closeTop}
+            onNavigateToGrounding={() => { closeTop(); openSheet("grounding"); }}
+            onNavigateToBreathing={() => { closeTop(); openSheet("grounding"); }}
+            onBuildPlanLater={() => { closeTop(); openAux("safety_plan"); }}
           />
         </div>
       )}
 
-       {/* Grounding library */}
-       <Sheet
-         open={isGroundingOpen}
-         title="Grounding"
-         onClose={() => { setIsGroundingOpen(false); setGroundingExpandIndex(undefined); }}
-         id="grounding-sheet"
-       >
-         <GroundingLibraryScreen autoExpand={groundingExpandIndex} />
-       </Sheet>
+      {/* Grounding library */}
+      <Sheet
+        open={hasOverlay(state, (o) => o.kind === "sheet" && o.id === "grounding")}
+        title="Grounding"
+        onClose={() => { closeTop(); setGroundingExpandIndex(undefined); }}
+        id="grounding-sheet"
+      >
+        <GroundingLibraryScreen autoExpand={groundingExpandIndex} />
+      </Sheet>
 
-       {/* Settings sheet */}
-       <Sheet
-         open={isSettingsOpen}
-         title={t("settings")}
-         onClose={() => setIsSettingsOpen(false)}
-         id="settings-sheet"
-       >
-         <Suspense fallback={<ScreenFallback />}>
-           <SettingsScreen onOpenCaregiver={() => setIsCaregiverOpen(true)} onOpenLegal={() => setIsLegalOpen(true)} />
-         </Suspense>
-       </Sheet>
+      {/* Settings sheet */}
+      <Sheet
+        open={hasOverlay(state, (o) => o.kind === "sheet" && o.id === "settings")}
+        title={t("settings")}
+        onClose={closeTop}
+        id="settings-sheet"
+      >
+        <Suspense fallback={<ScreenFallback />}>
+          <SettingsScreen onOpenCaregiver={() => openSheet("caregiver")} onOpenLegal={() => openSheet("legal")} />
+        </Suspense>
+      </Sheet>
 
-       {/* Dashboard sheet */}
-       <Sheet open={isDashboardOpen} title={t("dashboard")} onClose={() => setIsDashboardOpen(false)} id="dashboard-sheet">
-         <Suspense fallback={<ScreenFallback />}><DashboardScreen /></Suspense>
-       </Sheet>
+      {/* Dashboard sheet */}
+      <Sheet open={hasOverlay(state, (o) => o.kind === "sheet" && o.id === "dashboard")} title={t("dashboard")} onClose={closeTop} id="dashboard-sheet">
+        <Suspense fallback={<ScreenFallback />}><DashboardScreen /></Suspense>
+      </Sheet>
 
-       {/* Medication sheet */}
-       <Sheet open={isMedicationOpen} title={t("medications")} onClose={() => setIsMedicationOpen(false)} id="medication-sheet" bodyClassName="p-4">
-         <Suspense fallback={<ScreenFallback />}><MedicationAdherenceScreen /></Suspense>
-       </Sheet>
+      {/* Medication sheet */}
+      <Sheet open={hasOverlay(state, (o) => o.kind === "sheet" && o.id === "medication")} title={t("medications")} onClose={closeTop} id="medication-sheet" bodyClassName="p-4">
+        <Suspense fallback={<ScreenFallback />}><MedicationAdherenceScreen /></Suspense>
+      </Sheet>
 
-       {/* Caregiver sheet */}
-       <Sheet open={isCaregiverOpen} title="Share with a trusted person" onClose={() => setIsCaregiverOpen(false)} id="caregiver-sheet" bodyClassName="p-4">
-         <Suspense fallback={<ScreenFallback />}><CaregiverShareScreen selectedContactId={selectedCaregiverContactId} /></Suspense>
-       </Sheet>
+      {/* Caregiver sheet */}
+      <Sheet open={hasOverlay(state, (o) => o.kind === "sheet" && o.id === "caregiver")} title="Share with a trusted person" onClose={closeTop} id="caregiver-sheet" bodyClassName="p-4">
+        <Suspense fallback={<ScreenFallback />}><CaregiverShareScreen selectedContactId={selectedCaregiverContactId} /></Suspense>
+      </Sheet>
 
-       {/* Legal sheet — Privacy Policy, Terms, OSS licenses */}
-       <Sheet open={isLegalOpen} title="Legal" onClose={() => setIsLegalOpen(false)} id="legal-sheet">
-         <Suspense fallback={<ScreenFallback />}><LegalScreen /></Suspense>
-       </Sheet>
+      {/* Legal sheet — Privacy Policy, Terms, OSS licenses */}
+      <Sheet open={hasOverlay(state, (o) => o.kind === "sheet" && o.id === "legal")} title="Legal" onClose={closeTop} id="legal-sheet">
+        <Suspense fallback={<ScreenFallback />}><LegalScreen /></Suspense>
+      </Sheet>
 
-       {/* Generic aux view sheet — all other screens (fault-isolated) */}
-       {(activeAuxView || closingAuxView) && (
-         <Sheet
-           open
-           title={auxViewLabel(activeAuxView || closingAuxView!)}
-           onClose={() => closeSheet(activeAuxView)}
-           closing={!!closingAuxView}
-           id="aux-view-sheet"
-           faultIsolated
-         >
-           <Suspense fallback={<ScreenFallback />}>{renderAuxView((activeAuxView || closingAuxView)!, activateCrisis, closeActiveAux, () => setIsGroundingOpen(true), go, (cid) => { setSelectedCaregiverContactId(cid); setIsCaregiverOpen(true); })}</Suspense>
-         </Sheet>
-       )}
+      {/* Generic aux view sheet — all other screens (fault-isolated) */}
+      {(() => {
+        const aux = state.overlays.find((o) => o.kind === "aux");
+        if (!aux) return null;
+        return (
+          <Sheet
+            open
+            title={auxViewLabel(aux.view)}
+            onClose={closeAuxStart}
+            closing={aux.closing}
+            id="aux-view-sheet"
+            faultIsolated
+          >
+            <Suspense fallback={<ScreenFallback />}>{renderAuxView(aux.view, activateCrisis, closeAuxStart, () => openSheet("grounding"), go, (cid) => { setSelectedCaregiverContactId(cid); openSheet("caregiver"); })}</Suspense>
+          </Sheet>
+        );
+      })()}
 
-       {/* Full-screen breathing experience */}
-       {isBreathingOpen && (
-         <Suspense fallback={null}>
-           <BreathingScreen onClose={() => setIsBreathingOpen(false)} />
-         </Suspense>
-       )}
-     </div>
-   );
+      {/* Full-screen breathing experience */}
+      {hasOverlay(state, (o) => o.kind === "sheet" && o.id === "breathing") && (
+        <Suspense fallback={null}>
+          <BreathingScreen onClose={closeTop} />
+        </Suspense>
+      )}
+    </div>
+  );
+}
+
+// ── Root component: wraps shell in NavProvider ───────────────────────────────
+export default function App() {
+  return (
+    <NavProvider>
+      <AppShell />
+    </NavProvider>
+  );
 }
