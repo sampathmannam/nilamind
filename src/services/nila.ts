@@ -19,7 +19,7 @@ import { buildPersonalContext, activeProtocolContextBlock } from "./nilaContext"
 import { getLatestReflection } from "./asyncReflection";
 import { distortionSteer, safeSpotDistortions } from "./distortionSpotter"; // 🟡 Safety: distortion spotting now §9‑gated, needs review
 import { checkAndStartProtocol } from "./protocolIntegration";
-import { retrieveConversationMemories, formatMemoryBlock } from "./conversationMemory";
+import { retrieveConversationMemories, formatMemoryBlock, memoryCallbackBlock } from "./conversationMemory";
 import { emotionalSteer } from "./emotionalIntelligence";
 import { personalRagBlock } from "./personalRag";
 import { ragGuidanceBlock } from "./ragWarmth";
@@ -312,9 +312,12 @@ const distortions = (() => {
   // Conversation memory: retrieve similar past conversations as few-shot context.
   const memories = query ? retrieveConversationMemories(query, 2) : [];
   const memoryBlock = formatMemoryBlock(memories);
+  // Memory callback: "you've felt this before" — when the current message strongly overlaps
+  // with a past conversation, surface a warm callback referencing the specific past exchange.
+  const memoryCallback = query ? memoryCallbackBlock(query) : "";
   // RAG warmth guidance: teaches model HOW to use retrieved data naturally
   const ragGuidance = ragGuidanceBlock(personalRag, skills, memoryBlock);
-  return [steer, persona, personalRag, context, activeProtocol, distortions, memoryBlock, skills, ragGuidance].filter(Boolean).join("\n\n");
+  return [steer, persona, personalRag, context, activeProtocol, distortions, memoryBlock, memoryCallback, skills, ragGuidance].filter(Boolean).join("\n\n");
 }
 
 /** A first message that sounds like a friend opening the door — not a clinical intake. */

@@ -53,9 +53,30 @@ function extractKeywords(text: string, keywords: string[]): string[] {
   return keywords.filter((kw) => lower.includes(kw));
 }
 
+/** Word-overlap similarity (Jaccard) — cheap, deterministic, used for dedup. */
+function wordOverlap(a: string, b: string): number {
+  const wordsA = new Set(a.toLowerCase().split(/\s+/));
+  const wordsB = new Set(b.toLowerCase().split(/\s+/));
+  const intersection = [...wordsA].filter((w) => wordsB.has(w)).length;
+  const union = new Set([...wordsA, ...wordsB]).size;
+  return union === 0 ? 0 : intersection / union;
+}
+
+/** History hygiene: skip storing near-duplicate turns. Threshold tuned for conversational text. */
+const DEDUP_THRESHOLD = 0.7;
+
 /** Store a conversation turn in memory. Capped at 365 entries (1 year). */
 export function storeConversationMemory(userText: string, nilaText: string): void {
   if (!userText || userText.trim().length < 3) return;
+
+  // History hygiene: skip near-duplicate turns (same topic + same wording = redundant memory)
+  try {
+    const all = loadMemories();
+    if (all.length > 0) {
+      const last = all[all.length - 1];
+      if (wordOverlap(userText, last.userText) >= DEDUP_THRESHOLD) return;
+    }
+  } catch { /* fall through to store */ }
 
   const entry: MemoryEntry = {
     id: "mem_" + Date.now(),
@@ -117,10 +138,34 @@ export function formatMemoryBlock(memories: MemoryEntry[]): string {
   const lines = memories.map((m, i) => {
     const date = new Date(m.timestamp).toLocaleDateString();
     const emotions = m.emotionWords.length > 0 ? ` (${m.emotionWords.slice(0, 3).join(", ")})` : "";
-    return `${i + 1}. ${date}${emotions}: They said "${m.userText.slice(0, 120)}..." → Nila responded.`;
+    const nilaSnippet = m.nilaText.slice(0, 100);
+    return `${i + 1}. ${date}${emotions}: They said "${m.userText.slice(0, 120)}..." → Nila: "${nilaSnippet}..."`;
   });
 
-  return "PAST CONVERSATIONS (you can reference these):\n" + lines.join("\n");
+  return "PAST CONVERSATIONS (you can reference these naturally):\n" + lines.join("\n");
+}
+
+/**
+ * Memory callback block: checks if the current message has strong overlap with a
+ * past conversation and produces a "you've felt this before" callback.
+ *
+ * Returns "" if no relevant memory is found. The callback is warm and specific,
+ * referencing the actual past exchange.
+ */
+export function memoryCallbackBlock(userMessage: string): string {
+  const memories = retrieveConversationMemories(userMessage, 1);
+  if (memories.length === 0) return "";
+
+  const best = memories[0];
+  const inputEmotions = new Set(extractKeywords(userMessage, EMOTION_KEYWORDS));
+  const overlapEmotions = best.emotionWords.filter((w) => inputEmotions.has(w));
+
+  // Only produce a callback if there's meaningful emotional overlap (2+ shared keywords)
+  if (overlapEmotions.length < 2) return "";
+
+  const date = new Date(best.timestamp).toLocaleDateString();
+  const snippet = best.userText.slice(0, 80);
+  return `MEMORY CALLBACK: On ${date}, they shared something similar: "${snippet}..." — they felt ${overlapEmotions.join(" and ")}. Acknowledge this pattern warmly, without lecturing.`;
 }
 
 /** Get memory count (for debugging/metrics). */

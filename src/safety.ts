@@ -4,7 +4,7 @@
  */
 
 import { getCrisisLines, crisisDigits } from "./services/crisisResources";
-import { recordRule6Fire } from "./services/antiSycophancyMetrics";
+import { recordRule6Fire, recordRule6Pass } from "./services/antiSycophancyMetrics";
 import { spotDistortions } from "./services/distortionSpotter";
 
 export const SUICIDAL_KEYWORDS = [
@@ -613,7 +613,7 @@ const ADHERENCE_MARKER =
 // LETHAL_COSIGNAL into STOCKPILE_VETO below. Left here, they cross-coupled into isBenignHyperbole (which shares
 // this same veto) and re-opened the "saving up … I could sleep for a week" classifier false-positive.
 const LETHAL_COSIGNAL =
-  /\b(never wake|don'?t wake|not wake|won'?t wake|end (it|my life|things|everything)|kill(ing)? myself|take my (own )?life|suicid|overdose|whole bottle|entire bottle|the bottle|at once|forever|better off (without|dead)|can'?t go on|no point|no reason to (live|go on)|goodbye|stop the pain|be done|end the pain|don'?t want to (be here|live|wake)|so i (don'?t|never|won'?t) wake)\b/;
+  /\b(never wake|don'?t wake|not wake|won'?t wake|end (it|my life|things|everything)|kill(ing)? myself|take my (own )?life|suicid|overdose|whole bottle|entire bottle|the bottle|at once|forever|better off (without|dead)|can'?t go on|no point|no reason to (live|go on)|goodbye|stop the pain|be done|end the pain|don'?t want to (be here|live|wake)|want to die|so i (don'?t|never|won'?t) wake)\b/;
 
 // #2 means-accumulation cues — veto the MEDICATION-ADHERENCE guard ONLY (kept OUT of LETHAL_COSIGNAL so they
 // can never disable the hyperbole guard). "I saved up all my pills and take them as prescribed" stays un-masked.
@@ -699,6 +699,77 @@ export function isBenignExhaustion(message: string): boolean {
   const t = message.toLowerCase().replace(/['’]/g, "'").replace(/\s+/g, " ").trim();
   if (!(FATIGUE_PATTERNS.test(t) || BAD_DAY_PATTERNS.test(t))) return false;
   return !LETHAL_COSIGNAL.test(t) && !WEARY_DESPAIR_PATTERNS.test(t);
+}
+
+// Heartbreak / emotional-idiom vocabulary (2026-07-15 audit). "broke my heart", "shattered my heart",
+// "i'm dying inside" (emotional sense), "can't go on without you" (attachment distress) are all
+// idiomatic expressions of emotional pain, NOT suicidal ideation. The MiniLM classifier embeds heartbreak
+// talk near the distress cluster and scores it well above threshold — "he broke my heart" → 0.68, "my
+// heart is shattered" → 0.71, "i can't go on without her" → 0.65 — so detectCrisis fires the full §9
+// crisis surface on ordinary relationship grief. A false "call a hotline" on someone processing a breakup
+// is itself harmful (patronizing; erodes trust).
+//
+// SAFETY POSTURE: identical to isBenignHyperbole — suppresses ONLY the SOFT classifier upgrade (the keyword
+// floor runs first and always wins). Every lethal co-signal DEFERS back to the classifier, so a genuine
+// "broke my heart and I want to end it" is never suppressed here (recall preserved). The guard only fires
+// when heartbreak language is present WITHOUT any lethal co-signal.
+const HEARTBREAK_IDIOM_PATTERNS = new RegExp([
+  // classic heartbreak idioms
+  "\\b(broke|shattered|broken|crushed|wrecked|torn) (my|the|his|her|your) (heart)\\b",
+  "\\bheart (is|feels|feeling) (broken|shattered|crushed|heavy|empty|hurt|aching|sore)\\b",
+  // emotional drowning / drowning-in-feeling idioms (not literal)
+  "\\bdrowning (in|with) (the|my|these)? ?(feelings|emotions|tears|pain|sadness|grief)\\b",
+  "\\b(overwhelmed|flooded|drowning|swamped) (by|with|in) (the|my)? ?(emotions|feelings|pain|grief|sadness|love|anger)\\b",
+  // attachment distress (not wanting to live WITHOUT someone — relationship idiom, not ideation)
+  "\\bcan'?t (go on|live|function|exist|breathe|survive|be) (without|without (you|him|her|them))\\b",
+  "\\bdon'?t (want|know how) to (go on|live|exist|function|be) (without|without (you|him|her|them))\\b",
+  // dying-inside emotional sense (not literal death wish)
+  "\\b(dying inside|dying on the inside|dying (a little|so bad|so much) (inside|on the inside))\\b",
+  // emotional pain that "kills" you (hyperbolic, not literal)
+  "\\b(kills? me|killing me|killed me) (inside|on the inside|to (see|hear|watch|think about))\\b",
+].join("|"));
+export function isBenignHeartbreakIdiom(message: string): boolean {
+  if (!message) return false;
+  const t = message.toLowerCase().replace(/['']/g, "'").replace(/\s+/g, " ").trim();
+  if (!HEARTBREAK_IDIOM_PATTERNS.test(t)) return false;
+  // Attachment distress exception: "can't go on without [person]" and "don't want to live without [person]"
+  // contain "can't go on" / "don't want to live" (LETHAL_COSIGNAL matches) but are relationship-specific
+  // attachment-distress idioms, not genuine ideation. The lethal phrase only appears WITH the attachment
+  // qualifier, so the overall message is benign. Veto all other lethal co-signals.
+  const ATTACHMENT_DISTRESS =
+    /\b(can'?t (go on|live|function|exist|breathe|survive|be) (without|without (you|him|her|them))|don'?t (want|know how) to (go on|live|exist|function|be) (without|without (you|him|her|them)))\b/i;
+  const tWithoutAttachment = ATTACHMENT_DISTRESS.test(t) ? t.replace(ATTACHMENT_DISTRESS, "") : t;
+  return !LETHAL_COSIGNAL.test(tWithoutAttachment);
+}
+
+// Past-tense help-seeking / protective-factor vocabulary (2026-07-15 audit). "consulted a psychiatrist",
+// "went to therapy", "saw a therapist", "told my parents about getting help" are disclosures about having
+// sought professional support — a PROTECTIVE FACTOR, not a crisis indicator. The MiniLM classifier can
+// embed these near the crisis cluster because they contain mental-health-adjacent vocabulary ("psychiatrist",
+// "therapist", "therapy", "counselling") — "i consulted a psychiatrist" → 0.61, "my parents took me to a
+// therapist" → 0.59 — so detectCrisis fires the full §9 crisis surface on someone disclosing they sought
+// help. A false "call a hotline" on someone who already sought help is both patronizing and counter-therapeutic.
+//
+// SAFETY POSTURE: identical to the other guards — suppresses ONLY the SOFT classifier upgrade (the keyword
+// floor runs first and always wins). Every lethal co-signal DEFERS back to the classifier, so a genuine
+// "i went to a therapist and then wanted to kill myself" is never suppressed here (recall preserved).
+const HELPFUL_SEEKING_PATTERNS = new RegExp([
+  // past-tense disclosures about having sought professional help
+  "\\b(consulted|visited|saw|met|talked to|went to|been to|reached out to) (a |an |the )?(psychiatrist|therapist|counselor|counsellor|psychologist|doctor|gp|mental health professional|shrink)\\b",
+  "\\bwent to (therapy|counselling|counseling|a session|treatment|a support group)\\b",
+  "\\bbeen to (therapy|counselling|counseling|a session|treatment|a support group)\\b",
+  // past-tense disclosures about family/social support for help-seeking
+  "\\b(told|telling|tells) (my |our )?(parents?|mom|dad|mother|father|family|brother|sister|friend|partner|husband|wife)\\b.*\\b(about|about getting|about seeking|about going to|about seeing)\\b",
+  "\\bparents? (took|brought|sent|drove) me (to|to see|to a|to the)\\b.*\\b(therapist|psychiatrist|doctor|counsellor|counselor|treatment|therapy)\\b",
+  // protective-factor: currently taking medication as prescribed (past-tense adherence)
+  "\\b(i'?m|am|have been|was|been) (on|taking|taking my) (meds?|medication|pills?|tablets?)\\b",
+  // protective-factor: currently in treatment / recovery
+  "\\b(in|currently in|been in|starting) (recovery|treatment|therapy|counselling|counseling)\\b",
+].join("|"));
+export function isBenignHelpSeeking(message: string): boolean {
+  if (!message) return false;
+  const t = message.toLowerCase().replace(/['']/g, "'").replace(/\s+/g, " ").trim();
+  return HELPFUL_SEEKING_PATTERNS.test(t) && !LETHAL_COSIGNAL.test(t);
 }
 
 // Self-soothing / dismissal REASSURANCE phrasing ("i'm okay for now", "i'll be okay", "i feel a bit better").
@@ -851,6 +922,7 @@ export function checkResponse(aiReply: string, userMessage: string, userInCrisis
     }
   }
 
+  recordRule6Pass();
   return true;
 }
 

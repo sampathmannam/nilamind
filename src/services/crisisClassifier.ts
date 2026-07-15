@@ -23,7 +23,7 @@
  * device-verified — see crisisEmbedder.example.ts.
  */
 import weights from "./crisisClassifier.weights.json";
-import { scanForCrisis, isBenignMedicationAdherence, isBenignHyperbole, isBenignExhaustion, isBenignOkayReassurance, isBenignExistentialReferent } from "../safety";
+import { scanForCrisis, isBenignMedicationAdherence, isBenignHyperbole, isBenignExhaustion, isBenignOkayReassurance, isBenignExistentialReferent, isBenignHeartbreakIdiom, isBenignHelpSeeking } from "../safety";
 
 /** Returns a NORMALIZED (L2) sentence embedding of `dim` floats. The head was trained on normalized MiniLM
  *  mean-pooled embeddings, so the embedder MUST mean-pool + L2-normalize (Transformers.js:
@@ -208,6 +208,16 @@ export async function detectCrisisSignal(text: string): Promise<CrisisSignal> {
   // as benign (see isBenignExistentialReferent's docstring in safety.ts for the full root-cause story and the
   // real-model scores).
   if (isBenignExistentialReferent(text)) return { hit: false, source: null, tier: null };
+  // 2026-07-15 audit: heartbreak idioms ("broke my heart", "drowning in grief", "can't go on without her")
+  // are emotional expressions of relationship pain, not suicidal ideation. The MiniLM classifier embeds
+  // heartbreak talk near the distress cluster and scores it above threshold. Same posture: suppresses ONLY
+  // the SOFT classifier upgrade after a keyword-floor MISS, and vetoed by any lethal co-signal.
+  if (isBenignHeartbreakIdiom(text)) return { hit: false, source: null, tier: null };
+  // 2026-07-15 audit: past-tense help-seeking ("consulted a psychiatrist", "went to therapy", "told my parents
+  // about getting help") is a PROTECTIVE FACTOR, not a crisis indicator. The MiniLM classifier can embed
+  // mental-health-adjacent vocabulary near the crisis cluster. Same posture: suppresses ONLY the SOFT classifier
+  // upgrade after a keyword-floor MISS, and vetoed by any lethal co-signal.
+  if (isBenignHelpSeeking(text)) return { hit: false, source: null, tier: null };
   const p = await scoreCrisis(text);
   if (p === null || p < CRISIS_THRESHOLD) return { hit: false, source: null, tier: null };
   // 2026-07-12 Bug 1 fix: tier is SCORE-based within classifier hits, not automatically "soft" just because

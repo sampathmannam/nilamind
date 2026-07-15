@@ -62,6 +62,8 @@ async function getExemplarEmbeddings(): Promise<Float32Array[]> {
 export interface SearchOptions {
   limit?: number;
   minScore?: number;
+  /** If set, only return exemplars whose move matches one of these values. */
+  moves?: string[];
 }
 
 /** Cosine-rank the corpus against a query. Throws if no embedder is set. */
@@ -88,8 +90,13 @@ export async function searchExemplars(
     return { exemplar, score: Math.max(0, dot) };
   });
 
-  return scored
-    .filter((r) => r.score >= minScore)
+  let filtered = scored.filter((r) => r.score >= minScore);
+  if (opts.moves && opts.moves.length > 0) {
+    const moveSet = new Set(opts.moves);
+    filtered = filtered.filter((r) => r.exemplar.move && moveSet.has(r.exemplar.move));
+  }
+
+  return filtered
     .sort((a, b) => b.score - a.score)
     .slice(0, limit);
 }
@@ -101,6 +108,34 @@ export async function retrieveExemplarsForQuery(query: string, k = 2): Promise<N
   try {
     const ranked = await searchExemplars(query, { limit: k, minScore: EXEMPLAR_MIN_SCORE });
     return ranked.map((r) => r.exemplar);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Move-aware retrieval: retrieve exemplars filtered by move type.
+ *
+ * Strategy: retrieve top-k *with* the move filter. If that yields < 1 result,
+ * fall back to unfiltered retrieval (quality over move-matching). This ensures
+ * the model always gets a good few-shot example even if the corpus is sparse
+ * for a particular move.
+ */
+export async function retrieveExemplarsForMove(
+  query: string,
+  moves: string[],
+  k = 2,
+): Promise<NilaExemplar[]> {
+  if (!query.trim()) return [];
+  try {
+    const moveFiltered = await searchExemplars(query, {
+      limit: k,
+      minScore: EXEMPLAR_MIN_SCORE,
+      moves,
+    });
+    if (moveFiltered.length >= 1) return moveFiltered.map((r) => r.exemplar);
+    // Fallback: unfiltered retrieval (move-matching is aspirational, not mandatory)
+    return retrieveExemplarsForQuery(query, k);
   } catch {
     return [];
   }

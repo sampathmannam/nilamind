@@ -199,9 +199,11 @@ describe("sendToNila — crisisSource threading (2026-07-12 Wave 3, two-tier cri
     const rec = recordingBackend("unused");
     registerLocalLlmBackend(rec.backend);
     const r = await sendToNila([{ role: "user", content: "this is a marginal phrase" }], "companion", noopDelta);
-    expect(r.blocked).toBe(true);
-    expect(r.crisisSource).toBe("classifier");
-    expect(r.crisisTier).toBe("soft");
+    // Soft-tier presentation split: the model runs and the companion reply is shown,
+    // with a CrisisPill below it. blocked===false, softCrisis===true.
+    expect(r.blocked).toBeFalsy();
+    expect(r.softCrisis).toBe(true);
+    expect(r.reachedAI).toBe(true);
   });
 });
 

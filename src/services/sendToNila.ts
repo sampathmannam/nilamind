@@ -46,6 +46,9 @@ export interface NilaSendResult {
    *  inline SoftCrisisCard (a classifier hit that clears the base gate but not the higher-confidence bar).
    *  2026-07-12 Bug 1 fix — this, NOT crisisSource, is what the UI must branch on. */
   crisisTier?: "full" | "soft";
+  /** Soft-tier crisis: the model's companion reply is shown, with a CrisisPill below it.
+   *  Set when the classifier fires a soft-tier hit but the model still ran. */
+  softCrisis?: boolean;
   navigate?: AgentView;
   openSkillId?: string;
 }
@@ -82,7 +85,10 @@ export async function sendToNila(
   // `?? "full"` are fail-closed fallbacks — if `hit` is ever true with a null source/tier, default to the
   // MORE severe (full-takeover) surface, never less.
   const crisisSignal = await crisisSignalForSend(userText);
-  if (crisisSignal.hit) {
+  // SOFT-tier presentation split: soft classifier hits let the model respond normally, then
+  // show the CrisisPill below the companion reply. Only full-tier / keyword hits block the model.
+  const isSoftCrisis = crisisSignal.hit && crisisSignal.tier === "soft" && crisisSignal.source === "classifier";
+  if (crisisSignal.hit && !isSoftCrisis) {
     return {
       reply: getCrisisReply(),
       reachedAI: false,
@@ -125,7 +131,7 @@ export async function sendToNila(
       const cleaned = cleanResponse(r.reply);
       const safe = applyOutputSafety(cleaned, userText, true); // INVARIANT 3
       storeConversationMemory(userText, safe); // Lever 6: store for future retrieval
-      return { reply: safe, reachedAI: true, navigate: r.navigate, openSkillId: r.openSkillId };
+      return { reply: safe, reachedAI: true, softCrisis: isSoftCrisis, navigate: r.navigate, openSkillId: r.openSkillId };
     }
     return { reply: r.reply, reachedAI: false, navigate: r.navigate, openSkillId: r.openSkillId };
   }

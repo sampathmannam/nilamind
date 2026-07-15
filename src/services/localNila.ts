@@ -13,7 +13,9 @@ import { detectElevationRisk, elevationGuardNote, elevationOutputNote, energyEle
 import { emaElevationSignal } from "./ema";
 import { suppressNudgesForCrisis } from "./notifications";
 import { retrievePsychoedForQuery, psychoedContextBlock } from "./psychoedRetrieval";
-import { retrieveExemplarsForQuery, exemplarFewShotBlock } from "./exemplarRetrieval";
+import { retrieveExemplarsForQuery, retrieveExemplarsForMove, exemplarFewShotBlock } from "./exemplarRetrieval";
+import { resolveMove, type MoveResult } from "./moveEngine";
+import { runOutputGuards } from "./outputGuards";
 import type { AgentView } from "./agent";
 
 export interface LocalNilaResult {
@@ -37,6 +39,17 @@ export async function askNilaLocalStream(
   // sycophancy→mania amplification harm: the on-device model can't be trusted to reality-test, so we steer
   // it here and, for the stopping-meds case, append a reliable scripted line below.
   const lastUser = [...messages].reverse().find((m) => m.role === "user")?.content ?? "";
+
+  // ── Move engine: classify this turn's conversational move ──────────────────────────────
+  // Resolves the target reply strategy BEFORE the model runs. The move steer is injected into the
+  // system prompt, and move-aware exemplar retrieval filters the few-shot corpus by move type.
+  const recentNilaReplies = messages.filter((m) => m.role === "assistant").map((m) => m.content);
+  const recentUserMessages = messages.filter((m) => m.role === "user").map((m) => m.content);
+  const moveResult: MoveResult = resolveMove(lastUser, {
+    recentNilaReplies,
+    recentUserMessages,
+  });
+
   const textElevation = detectElevationRisk(lastUser);
   // P3.7 — EMA elevation signal: rising valence+energy across today's micro-check-ins.
   // Used as a softer signal alongside text-based detection. If both fire, use the higher level.
@@ -61,6 +74,11 @@ export async function askNilaLocalStream(
   if (combinedLevel !== "none") void suppressNudgesForCrisis();
   let system = buildNilaSystem(lastUser) + elevationGuardNote(combinedLevel);
 
+  // ── Move steer: inject the conversational strategy into the system prompt ──────────────
+  // Placed AFTER persona + context (so the model knows WHO it is and WHAT it knows about the user)
+  // but BEFORE exemplars and individual steers (so the move frames how it uses the few-shot examples).
+  if (moveResult.steer) system += "\n\n" + moveResult.steer;
+
   // B4: if the user's words match a vetted psychoeducation topic, feed a grounded snippet into the
   // model's awareness (RAG grounding — kills hallucination on clinical facts). Best-effort: if the
   // store/embedder read fails, continue without the block rather than break the chat.
@@ -80,10 +98,11 @@ export async function askNilaLocalStream(
 
   // Exemplar-RAG (dynamic few-shot): the 1B imitates far better than it obeys. Retrieve the 1-2 nearest
   // gold exchanges for THIS message and inject their replies as on-target demonstrations of length/voice.
-  // Placed LAST (most salient, closest to generation). Fail-open — no match/embedder just drops the block,
-  // leaving the persona's static examples. Reuses the same MiniLM (the crisis embedder memoized lastUser).
+  // MOVE-AWARE: filter exemplars by the classified move type first. Fallback to unfiltered retrieval if
+  // the move-filtered set is empty (quality over move-matching). Placed LAST (most salient, closest to
+  // generation). Fail-open — no match/embedder just drops the block, leaving the persona's static examples.
   try {
-    const exemplars = await retrieveExemplarsForQuery(lastUser, 2);
+    const exemplars = await retrieveExemplarsForMove(lastUser, moveResult.exemplarMoves, 2);
     const block = exemplarFewShotBlock(exemplars);
     if (block) system += "\n\n" + block;
   } catch {
@@ -107,7 +126,6 @@ export async function askNilaLocalStream(
   // replies both ended in "?", steer THIS turn toward reflection only — see the GUARDRAIL comment on
   // consecutiveQuestionSteer in nila.ts before treating this as a reflections:questions ratio (it isn't
   // one; Magill et al. 2018 found the ratio itself isn't outcome-linked).
-  const recentNilaReplies = messages.filter((m) => m.role === "assistant").map((m) => m.content);
   const questionCapSteer = consecutiveQuestionSteer(recentNilaReplies);
   if (questionCapSteer) system += "\n\n" + questionCapSteer;
 
@@ -122,7 +140,25 @@ export async function askNilaLocalStream(
     });
     const base = (reply || "").trim();
     const medsNote = elevationOutputNote(combinedLevel); // reliable scripted belt for the stopping-meds case
-    return { reply: base && medsNote ? `${base}\n\n${medsNote}` : base, reachedAI: true };
+    const finalReply = base && medsNote ? `${base}\n\n${medsNote}` : base;
+
+    // ── Output guards: structural validation (advisory, never blocks) ─────────────────────
+    // Runs AFTER streaming completes. All guards are advisory-only — they flag issues but never
+    // block the reply. Hard blocking is reserved for the §9 safety gate (applyOutputSafety in
+    // sendToNila.ts). These guards are for debugging/telemetry, not for production blocking.
+    if (finalReply) {
+      runOutputGuards({
+        reply: finalReply,
+        userMessage: lastUser,
+        move: moveResult.move,
+        questionAllowed: moveResult.questionAllowed,
+        recentReplies: recentNilaReplies.slice(-3),
+      });
+      // Advisory: all results logged but never acted on in production.
+      // In the future, soft warnings could surface as quality hints to the user.
+    }
+
+    return { reply: finalReply, reachedAI: true };
   } catch {
     // Device tried and failed (OOM, load error, cancel, hang-timeout). Stay local → offline; never cloud.
     return { reply: "", reachedAI: false };

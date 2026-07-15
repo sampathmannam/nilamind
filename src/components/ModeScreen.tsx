@@ -45,6 +45,7 @@ import { abandonProtocol } from "../services/protocolProgress";
 import { logNilaTurn } from "../services/nilaSessions";
 import { speakIfEnabled, speak, listenOnce, stopSpeaking } from "../services/voice";
 import { startVoiceSession, endVoiceSession } from "../services/voicePatterns";
+import { checkSttCoherence } from "../services/sttCoherenceGate";
 import LearnScreen from "./LearnScreen";
 import { parseSafetyPlan } from "../services/safetyPlan";
 import { shouldPromptReview, isFirstFollowUpDue, markFirstFollowUpDone, markSafetyPlanReviewed } from "../services/safetyPlanFollowUp";
@@ -400,6 +401,12 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
         if (result.reply) setMessages((prev) => [...prev, { role: "assistant", content: result.reply }]);
         return;
       }
+      // SOFT-tier presentation split: the model's companion reply is shown, then the CrisisPill
+      // (SoftCrisisCard) appears below it. No full takeover — the user can keep chatting while
+      // the soft card is visible. The card is dismissed by the user or cleared on the next turn.
+      if (result.softCrisis) {
+        setSoftCrisisCard(true);
+      }
       crisisPendingRef.current = false; // #5-out: §9 verdict is NOT a crisis → this turn may now persist
       // Manic-first: if the user typed manic content this turn (deterministic, LLM-independent), latch it so
       // the interface settles — the pixel-level half of the elevation guard (which also steers Nila's words).
@@ -455,6 +462,18 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
       const text = await listenOnce();
       endVoiceSession(vsId, text);
       if (text) {
+        // STT incoherence gate: check if the transcript is garbled before sending to the model.
+        // Only applies to voice input — typed input bypasses this check.
+        const coherence = checkSttCoherence(text);
+        if (!coherence.coherent) {
+          // Garbled transcript — show a gentle "didn't catch that" instead of sending to the model.
+          setMessages((prev) => [
+            ...prev,
+            { role: "user", content: text },
+            { role: "assistant", content: "I didn't quite catch that — could you say that again?" },
+          ]);
+          return;
+        }
         handleSendMessage(text);
       }
     } catch {
