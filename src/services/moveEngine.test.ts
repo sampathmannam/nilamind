@@ -60,6 +60,45 @@ describe("moveEngine — classifyMove", () => {
     // "my episode" in a third-person context — user is talking about sister, not self
     expect(classifyMove("my sister told everyone about my episode")).toBe("REFLECT_ASK");
   });
+
+  // ─────────────────── REGRESSION GUARDS (false-positive precision) ───────────────────
+  // The diagnostic report §7 (F5) demands the loaded-word fix but warns about broader precision:
+  // a regression that catches "Have you seen the news" as help-seeking degrades ALL conversation
+  // quality — a wider net is more harmful than a narrower one. Paired benign-control tests
+  // are mandatory (AGENTS.md: "every safety keyword list has PAIRED benign-control tests").
+
+  // HELP_SEEKING_CUES precision: must NOT capture generic "seen"/"doctor" usage.
+  it("does NOT misclassify generic 'seen' as help-seeking", () => {
+    expect(classifyMove("have you seen the news")).toBe("REFLECT_ASK"); // default
+    expect(classifyMove("she has seen her sister lately")).toBe("REFLECT_ASK"); // default
+    expect(classifyMove("I haven't seen anyone like that")).toBe("REFLECT_ASK"); // default
+  });
+
+  it("does NOT misclassify generic 'doctor' as help-seeking when doctor ≠ own professional", () => {
+    // "appointment with" can mean any professional — only flag when clearly therapeutic
+    expect(classifyMove("I have an appointment with my lawyer")).toBe("REFLECT_ASK"); // default
+    expect(classifyMove("did the doctor say anything about it")).toBe("REFLECT_ASK"); // doctor ≠ mental-health
+  });
+
+  // EPISODE_CUES precision: must NOT capture non-mood-episode uses of "episode".
+  it("does NOT misclassify 'the doctor episode' or tv 'episode' as CLARIFY", () => {
+    // "the doctor episode" = a TV show / a chapter / a non-mood context
+    expect(classifyMove("the doctor episode was great")).toBe("REFLECT_ASK"); // default
+    expect(classifyMove("I watched the latest episode")).toBe("REFLECT_ASK"); // default
+    expect(classifyMove("that TV show has 10 episodes")).toBe("REFLECT_ASK"); // default
+  });
+
+  // — KEY positive cases must still fire. Paired with the negatives above. —
+  it("still classifies self-referential mood episodes as CLARIFY (F5 core requirement)", () => {
+    expect(classifyMove("I had an episode")).toBe("CLARIFY");
+    expect(classifyMove("i had an episode today")).toBe("CLARIFY");
+  });
+
+  it("still classifies clear help-seeking as REFLECT_ASK", () => {
+    expect(classifyMove("I consulted a psychiatrist in October")).toBe("REFLECT_ASK");
+    expect(classifyMove("I started therapy last month")).toBe("REFLECT_ASK");
+    expect(classifyMove("I went to therapy last year")).toBe("REFLECT_ASK");
+  });
 });
 
 describe("moveEngine — resolveMove", () => {

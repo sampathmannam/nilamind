@@ -289,11 +289,15 @@ export function topicGroundingGuard(
 
   // Hard block: user said something specific (3+ nouns), reply is long (20+ words),
   // but reply uses none of the user's words = invented topic, not hearing them.
+  // This is `pass: false` AND `blockGeneration: true` — the F3 hallucinated-topic
+  // failure mode is genuinely user-harming (a doctor-job analysis when the user said
+  // "classes") and must be suppressed before display, not just flagged.
   if (grounded.length < 1 && userNouns.size >= 3) {
     return {
       pass: false,
       reason: `Reply references 0 of the user's ${userNouns.size} content nouns — generic response, not hearing them`,
       fix: "Rephrase. Reflect back at least one specific word or phrase the user just said.",
+      blockGeneration: true,
     };
   }
 
@@ -352,6 +356,7 @@ export function questionContractGuard(
       pass: false,
       reason: `HOLD move has ${questionCount} question(s) — should have 0`,
       fix: "Remove the question. In HOLD mode, just hold the weight.",
+      blockGeneration: true,
     };
   }
 

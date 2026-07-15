@@ -71,14 +71,43 @@ const USER_ANSWER_CUES =
  * "episode" is the single highest-value word in a bipolar disclosure.
  * It must ALWAYS be asked about, no matter what else is in the message.
  * Ash treated "episode" as the most important word in the sentence.
- * Match: standalone "episode" or "an/the episode" (not "tv episode"). */
-const EPISODE_CUES = /\b(had? an? episode|an? episode today|what episode|explain.*episode|an? episode happened|called? an? episode|(?<!my |his |her |their )episode$)\b/i;
+ *
+ * Match ONLY explicit mood-episode collocations. Each pattern anchors on a
+ * mood-episode verb (had / called it/that / happened) so a bare "episode"
+ * at end-of-string (TV chapters, narration, generic references) does NOT
+ * fire CLARIFY. The negative-lookbehind possessive coverage is dropped
+ * in favour of explicit verb-anchored patterns for higher precision.
+ * False-positive guards (paired benign controls — see moveEngine.test.ts):
+ *   ✓ "I had an episode" / "I had the episode" / "I had another episode"
+ *   ✓ "an episode today" / "the episode happened"
+ *   ✓ "I called it/that an episode" (reflexive, post-event reflection)
+ *   ✗ "I watched the latest episode" (TV chapter)
+ *   ✗ "that TV show has 10 episodes" (noun-bare plural)
+ *   ✗ "the doctor episode was great" (TV/fiction)
+ *   ✗ "my sister told everyone about my episode" (third-person narration)
+ *   ✗ "she explained what happened in the episode" (third-person narration)
+ *   ✗ "I called him an episode" (comparative, not self-referential) */
+const EPISODE_CUES = /\b(had? an? episode|had? the episode|had? another episode|an? episode today|the episode happened|called? (it|that) an? episode|called? it the episode)\b/i;
 
 /** Help-seeking language — user already sought professional care.
  * Must be acknowledged as positive action, not crisis.
- * This is the inverse of a crisis signal: it shows agency and coping. */
+ * This is the inverse of a crisis signal: it shows agency and coping.
+ *
+ * PRECISION REQUIREMENT: a false positive here (e.g. "have you seen the news"
+ * matching `\bseen\b`) downgrades ALL conversation quality — the model treats
+ * a generic sentence as a help-seeking disclosure and produces a sub-optimal
+ * REFLECT_ASK instead of the right move. So every pattern here must be tightly
+ * scoped to a help-seeking COLOCATION, not a single ambiguous word like
+ * "seen" or "doctor". Paired benign-control tests in moveEngine.test.ts.
+ *   - "I consulted a psychiatrist" ✓ (saw a doctor for mental health)
+ *   - "started therapy" / "went to therapy" / "in therapy" ✓ (explicit therapy)
+ *   - "my therapist said" ✓ (collocation)
+ *   - "psychiatrist appointment" ✓ (collocation)
+ *   - "have you seen the news" ✗ — bare "seen" is too broad
+ *   - "appointment with my lawyer" ✗ — "appointment with" is too broad
+ *   - "did the doctor say" ✗ — bare "doctor" is too broad (could be any clinician) */
 const HELP_SEEKING_CUES =
-  /\b(consulted|seen|a psychiatrist|a therapist|doctor|mental health professional|got professional help|started therapy|went to therapy|appointment with|booked.*therapist|psychiatrist appointment)\b/i;
+  /\b(consulted a (psychiatrist|therapist|mental health (?:professional|expert))|started therapy|went to therapy|in therapy|seeing a (psychiatrist|therapist)|seeing my therapist|my therapist (said|thinks|recommends)|psychiatrist appointment|therapy session)\b/i;
 
 // ---------------------------------------------------------------------------
 // Conversation context helpers

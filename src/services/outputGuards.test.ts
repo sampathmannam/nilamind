@@ -10,6 +10,7 @@ import {
   circularRamblingGuard,
   runOutputGuards,
   hasHardFailure,
+  hasGenerationBlockingFailure,
   hasSoftWarnings,
 } from "./outputGuards";
 
@@ -243,8 +244,8 @@ describe("outputGuards — circularRamblingGuard", () => {
     expect(r.pass).toBe(true);
   });
 
-  it("hard-blocks when 2+ sentence pairs have >60% content-word overlap (F10)", () => {
-    // F10: same idea stated 3 times mid-reply with different words
+  it("hard-blocks when the same content bigram appears across 2+ sentences (F10 mid-reply repetition)", () => {
+    // F10: same idea restated 3 times with different surrounding words
     const f10Reply =
       "Your brain is saying 'I'm feeling something.' And that something is usually not good. " +
       "It just processes everything and says, 'I'm feeling something.'";
@@ -287,10 +288,24 @@ describe("outputGuards — runOutputGuards", () => {
   });
 });
 
-describe("outputGuards — hasHardFailure / hasSoftWarnings", () => {
+describe("outputGuards — hasHardFailure / hasGenerationBlockingFailure / hasSoftWarnings", () => {
   it("hasHardFailure detects any pass:false", () => {
     expect(hasHardFailure([{ pass: false, reason: "test" }])).toBe(true);
     expect(hasHardFailure([{ pass: true }])).toBe(false);
+  });
+
+  it("hasGenerationBlockingFailure only catches pass:false WITH blockGeneration:true", () => {
+    expect(
+      hasGenerationBlockingFailure([{ pass: false, blockGeneration: true, reason: "test" }])
+    ).toBe(true);
+    // Advisory pass:false without blockGeneration — must NOT block generation
+    expect(
+      hasGenerationBlockingFailure([{ pass: false, blockGeneration: undefined, reason: "advisory" }])
+    ).toBe(false);
+    expect(
+      hasGenerationBlockingFailure([{ pass: false, blockGeneration: false, reason: "advisory" }])
+    ).toBe(false);
+    expect(hasGenerationBlockingFailure([{ pass: true }])).toBe(false);
   });
 
   it("hasSoftWarnings detects advisory warnings", () => {
@@ -300,5 +315,93 @@ describe("outputGuards — hasHardFailure / hasSoftWarnings", () => {
     expect(hasSoftWarnings([{ pass: true, reason: "hard fail" }])).toBe(
       false
     );
+  });
+});
+
+describe("outputGuards — blockGeneration semantics", () => {
+  // Each canary verifies that the guard sets blockGeneration correctly.
+  // Hard-block guards MUST set blockGeneration:true so the v1.16 companion pipeline may suppress them.
+  // Advisory guards MUST set blockGeneration:undefined OR false so they flag but never suppress.
+
+  it("loopGuard on near-duplicate sets blockGeneration:true", () => {
+    const r = loopGuard("that sounds really hard", ["that sounds really hard"]);
+    expect(r.pass).toBe(false);
+    expect(r.blockGeneration).toBe(true);
+  });
+
+  it("degenerationGuard on repeated tris sets blockGeneration:true", () => {
+    const r = degenerationGuard("the same the same the same the same");
+    expect(r.pass).toBe(false);
+    expect(r.blockGeneration).toBe(true);
+  });
+
+  it("scaffold leak sets blockGeneration:true", () => {
+    const r = scaffoldLeakGuard('Them: "hi" Nila: "hello"');
+    expect(r.pass).toBe(false);
+    expect(r.blockGeneration).toBe(true);
+  });
+
+  it("circularRamblingGuard sets blockGeneration:true (F10 mid-reply repetition)", () => {
+    const r = circularRamblingGuard(
+      "Your brain is saying feeling something. And that feeling something usually not good. " +
+      "It just processes everything and says feeling something again."
+    );
+    expect(r.pass).toBe(false);
+    expect(r.blockGeneration).toBe(true);
+  });
+
+  it("topicGroundingGuard hard-block sets blockGeneration:true (F3 invented-topic fix)", () => {
+    // 20+ word reply with zero content-noun overlap and 3+ user nouns
+    const r = topicGroundingGuard(
+      "Quitting a job is a significant decision and there are pros and cons to weigh carefully. " +
+      "You might want to consider your financial situation before making any changes.",
+      "my sister betrayed my trust at the family dinner and I feel shattered"
+    );
+    expect(r.pass).toBe(false);
+    expect(r.blockGeneration).toBe(true);
+  });
+
+  it("questionContractGuard on HOLD-with-questions sets blockGeneration:true", () => {
+    const r = questionContractGuard("That sounds hard. How are you?", "HOLD", false);
+    expect(r.pass).toBe(false);
+    expect(r.blockGeneration).toBe(true);
+  });
+
+  it("lectureGuard on HOLD-with-lists sets blockGeneration:true", () => {
+    const r = lectureGuard(
+      "Here are some tips:\n- Try this\n- Try that\n- Try the other",
+      "HOLD"
+    );
+    expect(r.pass).toBe(false);
+    expect(r.blockGeneration).toBe(true);
+  });
+
+  it("topicGroundingGuard short-reply exemption does NOT block", () => {
+    // Brief "That sounds difficult." to a 3+-noun user message — legitimate brief validation, not hallucination
+    const r = topicGroundingGuard(
+      "That sounds difficult.",
+      "my sister betrayed my trust at the family dinner"
+    );
+    expect(r.pass).toBe(true);
+    expect(r.blockGeneration).toBeFalsy();
+  });
+
+  it("topicGroundingGuard partial-grounding advisory does NOT block", () => {
+    const r = topicGroundingGuard(
+      "I am really sorry to hear that something painful happened and this seems heavy. " +
+      "I can feel the weight of what you are carrying right now.",
+      "my sister told everyone about my episode at the family dinner and I feel broken"
+    );
+    expect(r.pass).toBe(true);
+    expect(r.blockGeneration).toBeFalsy();
+    expect(r.reason).toContain("advisory");
+  });
+
+  it("lengthGuard too-long advisory does NOT block", () => {
+    const long = Array(150).fill("word").join(" ");
+    const r = lengthGuard(long, "REFLECT_ASK");
+    expect(r.pass).toBe(true);
+    expect(r.blockGeneration).toBeFalsy();
+    expect(r.reason).toContain("advisory");
   });
 });
