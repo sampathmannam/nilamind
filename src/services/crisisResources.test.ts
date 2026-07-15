@@ -26,7 +26,6 @@ describe("crisisResources", () => {
     const names = getCrisisLines().map((l) => l.name);
     expect(names).toContain("iCall");
     expect(names).toContain("Vandrevala Foundation");
-    expect(names).toContain("KIRAN (Govt. of India)");
     expect(names).toContain("AASRA");
   });
 
@@ -38,10 +37,10 @@ describe("crisisResources", () => {
     expect(lines[0].note).toMatch(/24\/7/);
   });
 
-  it("still includes KIRAN for India — never silently dropped", () => {
+  it("does not list KIRAN — merged into Tele-MANAS in February 2024, no longer a separate line", () => {
     setRegionCode("IN");
     const names = getCrisisLines().map((l) => l.name);
-    expect(names).toContain("KIRAN (Govt. of India)");
+    expect(names.some((n) => /kiran/i.test(n))).toBe(false);
   });
 
   it("lists all supported regions", () => {
