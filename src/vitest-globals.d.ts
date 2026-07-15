@@ -1,4 +1,9 @@
 /// <reference types="vitest/globals" />
+
+// Vite-injected build constant (see vite.config.ts `define`). Available at
+// runtime; declared here so tsc is satisfied without importing package.json.
+declare const __APP_VERSION__: string;
+
 declare namespace vi {
   function fn<T extends (...args: unknown[]) => unknown>(implementation?: T): Mock<T>;
   function mock(moduleName: string, factory?: () => unknown, options?: { virtual?: boolean }): void;

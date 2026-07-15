@@ -15,7 +15,8 @@ import { suppressNudgesForCrisis } from "./notifications";
 import { retrievePsychoedForQuery, psychoedContextBlock } from "./psychoedRetrieval";
 import { retrieveExemplarsForQuery, retrieveExemplarsForMove, exemplarFewShotBlock } from "./exemplarRetrieval";
 import { resolveMove, type MoveResult } from "./moveEngine";
-import { runOutputGuards } from "./outputGuards";
+import { runOutputGuards, hasGenerationBlockingFailure, type GuardResult } from "./outputGuards";
+import { offlineFallbackReply } from "./nilaReflect";
 import type { AgentView } from "./agent";
 
 export interface LocalNilaResult {
@@ -129,38 +130,87 @@ export async function askNilaLocalStream(
   const questionCapSteer = consecutiveQuestionSteer(recentNilaReplies);
   if (questionCapSteer) system += "\n\n" + questionCapSteer;
 
-  try {
-    // generateGuarded races a hang-timeout (Gate 6) so a true native deadlock still falls back to the
-    // calm offline path instead of hanging forever — shared by every on-device caller (see localLlm.ts).
-    const reply = await generateGuarded({
-      system,
-      messages: messages.map((m) => ({ role: m.role, content: m.content })),
-      onToken: opts.onDelta,
-      signal: opts.signal,
-    });
-    const base = (reply || "").trim();
-    const medsNote = elevationOutputNote(combinedLevel); // reliable scripted belt for the stopping-meds case
-    const finalReply = base && medsNote ? `${base}\n\n${medsNote}` : base;
+  // ── Generate with output-guard hard-blocks + one-shot regeneration ─────────────────
+  // Guard failures are deterministic structural issues (loop, degeneration, scaffold leak,
+  // topic drift, circular rambling) — not ambiguous quality preferences. We try once, and
+  // if a hard guard fires we regenerate with a targeted anti-pattern reminder. Two strikes
+  // then fall back to the offline reflector so the user never sees garbage.
+  const generationParams = {
+    system,
+    messages: messages.map((m) => ({ role: m.role, content: m.content })),
+    onToken: opts.onDelta,
+    signal: opts.signal,
+  };
 
-    // ── Output guards: structural validation (advisory, never blocks) ─────────────────────
-    // Runs AFTER streaming completes. All guards are advisory-only — they flag issues but never
-    // block the reply. Hard blocking is reserved for the §9 safety gate (applyOutputSafety in
-    // sendToNila.ts). These guards are for debugging/telemetry, not for production blocking.
-    if (finalReply) {
-      runOutputGuards({
-        reply: finalReply,
+  let reply = "";
+  let regenAttempts = 0;
+  const MAX_REGEN = 1;
+
+  while (regenAttempts <= MAX_REGEN) {
+    try {
+      const generated = await generateGuarded(generationParams);
+      const base = (generated || "").trim();
+      const medsNote = elevationOutputNote(combinedLevel);
+      const candidate = base && medsNote ? `${base}\n\n${medsNote}` : base;
+
+      if (!candidate) { reply = ""; break; }
+
+      const guardResults = runOutputGuards({
+        reply: candidate,
         userMessage: lastUser,
         move: moveResult.move,
         questionAllowed: moveResult.questionAllowed,
         recentReplies: recentNilaReplies.slice(-3),
       });
-      // Advisory: all results logged but never acted on in production.
-      // In the future, soft warnings could surface as quality hints to the user.
-    }
 
-    return { reply: finalReply, reachedAI: true };
-  } catch {
-    // Device tried and failed (OOM, load error, cancel, hang-timeout). Stay local → offline; never cloud.
-    return { reply: "", reachedAI: false };
+      if (!hasGenerationBlockingFailure(guardResults)) {
+        reply = candidate;
+        break;
+      }
+
+      // Guard failure on first attempt: inject targeted anti-pattern reminder and retry once.
+      // The guard result tells us WHICH guard fired — be surgical, not broad.
+      if (regenAttempts < MAX_REGEN) {
+        const failedBy = guardResults.filter((r: GuardResult) => !r.pass).map((r: GuardResult) => r.reason).join("; ");
+        const antiPatternRemind = `ANTI-PATTERN REMINDER: ${failedBy}. Regenerate with different words and structure. Do not repeat any phrase from your previous reply.`;
+        const altSystem = system + "\n\n" + antiPatternRemind;
+
+        const retryGenerated = await generateGuarded({ ...generationParams, system: altSystem });
+        const retryBase = (retryGenerated || "").trim();
+        const retryCandidate = retryBase && medsNote ? `${retryBase}\n\n${medsNote}` : "";
+
+        if (retryCandidate) {
+          const retryResults = runOutputGuards({
+            reply: retryCandidate,
+            userMessage: lastUser,
+            move: moveResult.move,
+            questionAllowed: moveResult.questionAllowed,
+            recentReplies: recentNilaReplies.slice(-3),
+          });
+          if (!hasGenerationBlockingFailure(retryResults)) {
+            reply = retryCandidate;
+            break;
+          }
+        }
+      }
+
+      // Second guard failure (or regen threw) → offline fallback
+      reply = "";
+      break;
+    } catch {
+      reply = "";
+      break;
+    }
+    regenAttempts++;
   }
+
+  // Passthrough hydration: if we got "" (e.g. stream interrupted before guard check), fall back
+  // to the offline reflector rather than showing an empty reply. But NEVER show a guard-failed
+  // reply — the whole point of the gate is that some replies are too broken to show.
+  if (!reply) {
+    const fallback = offlineFallbackReply(lastUser);
+    return { reply: fallback, reachedAI: false };
+  }
+
+  return { reply, reachedAI: true };
 }

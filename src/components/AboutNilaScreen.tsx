@@ -115,9 +115,12 @@ export default function AboutNilaScreen() {
         </p>
       </div>
 
-      <p className="text-[11px] text-slate-500 text-center leading-relaxed px-4">
-        NilaMind is a support alongside — not a substitute for — professional care.
-      </p>
+       <p className="text-[11px] text-slate-500 text-center leading-relaxed px-4">
+         NilaMind is a support alongside — not a substitute for — professional care.
+       </p>
+       <p className="text-[10px] text-slate-600 text-center">
+         Version {typeof __APP_VERSION__ === "string" ? __APP_VERSION__ : "dev"}
+       </p>
     </div>
   );
 }

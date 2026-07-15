@@ -5,6 +5,8 @@ import path from 'path';
 import {defineConfig, type Connect, type ViteDevServer} from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
+const pkg = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'package.json'), 'utf-8'));
+
 // @huggingface/transformers emits its own copy of the onnxruntime-web wasm via `new URL(...)`, which vite
 // bundles into dist/assets (~22 MB). But the crisis classifier overrides ORT's wasmPaths to "/ort/" (served
 // from public/ort/, the single asyncify variant that actually loads in the Capacitor WebView), so this
@@ -61,6 +63,9 @@ function serveOrtGlueInDev() {
 
 export default defineConfig(({ mode }) => {
   return {
+    define: {
+      __APP_VERSION__: JSON.stringify(pkg.version),
+    },
     // Strip console.*/debugger from RELEASE bundles only (production + store) so nothing reaches logcat, where
     // a co-located app with READ_LOGS could read it. Dev + test keep their logs for debugging.
     esbuild: mode === 'production' || mode === 'store' ? { drop: ['console', 'debugger'] } : {},

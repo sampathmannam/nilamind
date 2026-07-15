@@ -19,6 +19,14 @@ export interface GuardResult {
   pass: boolean;
   reason?: string;
   fix?: string;
+  /**
+   * When true, this failure is a genuinely-degenerate reply (loop, degeneration,
+   * scaffold leak, listening-mode lecture, circular rambling) that should block
+   * generation in the companion pipeline. Advisory guards (topic grounding,
+   * question contract, length) stay false so they flag but never suppress a
+   * normal reply — hard blocking is reserved for the §9 safety gate.
+   */
+  blockGeneration?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -211,6 +219,7 @@ export function loopGuard(
         pass: false,
         reason: `Reply is ${Math.round(sim * 100)}% similar to a recent reply (threshold: ${Math.round(threshold * 100)}%)`,
         fix: "Rephrase. Use a different angle, different words, or a different question.",
+        blockGeneration: true,
       };
     }
   }
@@ -234,6 +243,7 @@ export function degenerationGuard(reply: string): GuardResult {
       pass: false,
       reason: `Repeated trigram appears ${maxTrigram} times`,
       fix: "The model is looping. Force a new angle or question.",
+      blockGeneration: true,
     };
   }
   if (maxBigram >= 4) {
@@ -241,6 +251,7 @@ export function degenerationGuard(reply: string): GuardResult {
       pass: false,
       reason: `Repeated bigram appears ${maxBigram} times`,
       fix: "Rephrase to avoid repeating the same phrase.",
+      blockGeneration: true,
     };
   }
   return { pass: true };
@@ -251,9 +262,18 @@ export function degenerationGuard(reply: string): GuardResult {
 // ---------------------------------------------------------------------------
 
 /**
- * Warns if the reply contains fewer than 2 content nouns from the user message.
- * This catches "I feel so overwhelmed" → generic "That sounds hard" replies
- * that don't reflect the user's specific situation.
+ * Hard-blocks a reply that references zero of the user's content nouns ONLY when:
+ *  - The user message has 3+ content nouns (they said something specific)
+ *  - The reply is 20+ words (long enough to have been expected to reflect the user's words)
+ *  - Zero of the user's content nouns appear in the reply
+ *
+ * This catches F3: "I don't know I'm feeling bad today morning, I didn't went to classes"
+ * → "quitting your job pros and cons" — a completely invented topic, not hearing them.
+ *
+ * Short replies (< 20 words) are exempt because "hey, I hear you" to "rough day"
+ * is a legitimate brief validation, not a hallucination.
+ *
+ * Advisory-warns when only 1 of 3+ nouns is referenced (partial grounding).
  */
 export function topicGroundingGuard(
   reply: string,
@@ -262,14 +282,30 @@ export function topicGroundingGuard(
   const userNouns = new Set(extractContentNouns(userMessage));
   const replyNouns = extractContentNouns(reply);
   const grounded = replyNouns.filter((n) => userNouns.has(n));
+  const replyWords = reply.split(/\s+/).length;
 
-  if (grounded.length < 1 && userNouns.size >= 2) {
+  // Exempt short replies — "hey, I hear you" to "rough day" is fine
+  if (replyWords < 20) return { pass: true };
+
+  // Hard block: user said something specific (3+ nouns), reply is long (20+ words),
+  // but reply uses none of the user's words = invented topic, not hearing them.
+  if (grounded.length < 1 && userNouns.size >= 3) {
     return {
-      pass: true,
-      reason: `Reply references 0 of the user's ${userNouns.size} content nouns (advisory)`,
-      fix: "Consider reflecting back a specific detail from their message.",
+      pass: false,
+      reason: `Reply references 0 of the user's ${userNouns.size} content nouns — generic response, not hearing them`,
+      fix: "Rephrase. Reflect back at least one specific word or phrase the user just said.",
     };
   }
+
+  // Advisory: partial grounding (only 1 of 3+ nouns)
+  if (grounded.length < 2 && userNouns.size >= 3) {
+    return {
+      pass: true,
+      reason: `Reply only references ${grounded.length} of the user's ${userNouns.size} nouns (advisory)`,
+      fix: "Name more specifics from what they shared.",
+    };
+  }
+
   return { pass: true };
 }
 
@@ -288,6 +324,7 @@ export function scaffoldLeakGuard(reply: string): GuardResult {
         pass: false,
         reason: `Reply contains scaffold marker: ${marker.source}`,
         fix: "Strip internal formatting before showing to the user.",
+        blockGeneration: true,
       };
     }
   }
@@ -355,6 +392,7 @@ export function lectureGuard(reply: string, move: Move): GuardResult {
       pass: false,
       reason: `${move} move should not contain lists`,
       fix: "Remove the list. Use plain, warm sentences.",
+      blockGeneration: true,
     };
   }
 
@@ -406,6 +444,53 @@ export function lengthGuard(reply: string, move: Move): GuardResult {
 }
 
 // ---------------------------------------------------------------------------
+// Guard: Within-reply circular rambling (F10)
+// ---------------------------------------------------------------------------
+
+/**
+ * Detects mid-reply circular rambling: the same idea (a recurring content
+ * phrase) stated multiple times with different surrounding words. The existing
+ * degenerationGuard catches token-level repetition (same words repeated). This
+ * catches semantic-level repetition:
+ * "your brain is saying 'I'm feeling something'. And that something is usually
+ * not good... It just processes everything and says 'I'm feeling something.'"
+ * The repeated phrase ("feeling something") is short relative to each sentence,
+ * so full-sentence similarity misses it. Instead we build a content-word bigram
+ * set per sentence and flag any bigram that recurs across 2+ sentences — that
+ * is the same idea restated.
+ */
+export function circularRamblingGuard(reply: string): GuardResult {
+  const sentences = reply.split(/[.!?]+/).map((s) => s.trim()).filter((s) => s.length > 10);
+  if (sentences.length < 3) return { pass: true };
+
+  function contentBigrams(text: string): Set<string> {
+    const words = text.toLowerCase().split(/[^a-z']+/).filter((w) => w.length >= 4);
+    const grams = new Set<string>();
+    for (let i = 0; i < words.length - 1; i++) grams.add(`${words[i]} ${words[i + 1]}`);
+    return grams;
+  }
+
+  const seen = new Map<string, number>();
+  for (const sentence of sentences) {
+    for (const gram of contentBigrams(sentence)) {
+      seen.set(gram, (seen.get(gram) ?? 0) + 1);
+    }
+  }
+
+  for (const [gram, count] of seen) {
+    if (count >= 2) {
+      return {
+        pass: false,
+        reason: `Reply restates the same phrase ("${gram}") across ${count} sentences — circular rambling detected`,
+        fix: "Say it once. Don't restate the same idea in different words.",
+        blockGeneration: true,
+      };
+    }
+  }
+  return { pass: true };
+}
+
+// ---------------------------------------------------------------------------
 // Composite: run all guards
 // ---------------------------------------------------------------------------
 
@@ -428,6 +513,7 @@ export function runOutputGuards(opts: RunGuardsOpts): GuardResult[] {
     questionContractGuard(reply, move, questionAllowed),
     lengthGuard(reply, move),
     topicGroundingGuard(reply, userMessage),
+    circularRamblingGuard(reply),
   ];
 
   return results;
@@ -439,6 +525,18 @@ export function runOutputGuards(opts: RunGuardsOpts): GuardResult[] {
  */
 export function hasHardFailure(results: GuardResult[]): boolean {
   return results.some((r) => !r.pass);
+}
+
+/**
+ * Generation-blocking failure: a genuinely-degenerate reply (loop, degeneration,
+ * scaffold leak, listening-mode lecture, circular rambling) that should suppress
+ * the candidate in the companion pipeline. Advisory guards (topic grounding,
+ * question contract, length) are intentionally excluded — they flag but never
+ * suppress a normal reply, per the v1.16.0 design ("hard blocking is reserved
+ * for the §9 safety gate").
+ */
+export function hasGenerationBlockingFailure(results: GuardResult[]): boolean {
+  return results.some((r) => !r.pass && r.blockGeneration === true);
 }
 
 /**

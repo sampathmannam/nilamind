@@ -7,6 +7,7 @@ import {
   questionContractGuard,
   lengthGuard,
   topicGroundingGuard,
+  circularRamblingGuard,
   runOutputGuards,
   hasHardFailure,
   hasSoftWarnings,
@@ -183,18 +184,77 @@ describe("outputGuards — topicGroundingGuard", () => {
     expect(r.pass).toBe(true);
   });
 
-  it("passes when user message has few nouns", () => {
-    const r = topicGroundingGuard("That sounds hard.", "i feel bad");
+  it("passes when user message has too few content nouns to judge", () => {
+    const r = topicGroundingGuard("That sounds hard.", "i am sad");
     expect(r.pass).toBe(true);
   });
 
-  it("warns when reply has zero user nouns (advisory)", () => {
+  it("hard-blocks when reply has zero user nouns AND is 20+ words (F3 generic response)", () => {
+    // F3: "I didn't go to classes" → "quitting your job pros and cons" — an invented
+    // topic, not hearing them. 20-word threshold: a brief "that sounds hard" is fine
+    // but a long paragraph that never touches the user's words is a hard fail.
+    const r = topicGroundingGuard(
+      "That is a painful experience and I am sitting with you in it right now. " +
+      "You do not have to explain or justify anything. Whenever you want, we can " +
+      "talk about what would help you cope with everything that happened.",
+      "my sister betrayed my trust at the family dinner and I feel shattered"
+    );
+    expect(r.pass).toBe(false);
+    expect(r.reason).toContain("0 of the user's");
+  });
+
+  it("passes short replies even with zero noun overlap (legitimate brief validation)", () => {
+    // "hey I hear you" to "rough day" is fine — not every short reply needs to echo the user
     const r = topicGroundingGuard(
       "That sounds difficult.",
       "my sister betrayed my trust at the family dinner"
     );
     expect(r.pass).toBe(true);
+  });
+
+  it("advisory-warns when reply only references 1 of 3+ user nouns AND is 20+ words", () => {
+    const r = topicGroundingGuard(
+      "I am really sorry to hear that something painful happened with your family " +
+      "and I can see this has been weighing on you heavily for some time now.",
+      "my sister told everyone about my episode at the family dinner and I feel broken"
+    );
+    expect(r.pass).toBe(true);
     expect(r.reason).toContain("advisory");
+  });
+});
+
+describe("outputGuards — circularRamblingGuard", () => {
+  // F10: the same idea restated 3+ times with different words mid-reply
+  it("passes normal multi-sentence reply", () => {
+    const r = circularRamblingGuard(
+      "That sounds really hard. I'm hearing how much this weighed on you. What do you think triggered it?"
+    );
+    expect(r.pass).toBe(true);
+  });
+
+  it("passes 2 sentences (minimum for circular check)", () => {
+    const r = circularRamblingGuard(
+      "That sounds exhausting. You're not imagining it."
+    );
+    expect(r.pass).toBe(true);
+  });
+
+  it("hard-blocks when 2+ sentence pairs have >60% content-word overlap (F10)", () => {
+    // The F10 diagnostic transcript: same idea three times with different words
+    const f10Reply =
+      "Your brain is saying 'I'm feeling something.' And that something is usually not good. " +
+      "It just processes everything and says 'I'm feeling something.'";
+    const r = circularRamblingGuard(f10Reply);
+    expect(r.pass).toBe(false);
+    expect(r.reason).toContain("circular rambling");
+  });
+
+  it("passes when sentences are genuinely different", () => {
+    const r = circularRamblingGuard(
+      "You mentioned feeling numb. I'm also noticing you said the headache started this morning. " +
+      "How long have you been feeling this way?"
+    );
+    expect(r.pass).toBe(true);
   });
 });
 
@@ -209,6 +269,17 @@ describe("outputGuards — runOutputGuards", () => {
     });
     expect(Array.isArray(results)).toBe(true);
     expect(results.length).toBeGreaterThan(0);
+  });
+
+  it("returns 8 guards (loop, degeneration, scaffold, lecture, question, length, grounding, circular)", () => {
+    const results = runOutputGuards({
+      reply: "I hear you. That sounds hard. How are you feeling?",
+      userMessage: "my sister betrayed me",
+      move: "REFLECT_ASK",
+      questionAllowed: true,
+      recentReplies: [],
+    });
+    expect(results.length).toBe(8);
   });
 });
 
