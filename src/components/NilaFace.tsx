@@ -25,40 +25,40 @@ interface OrbPalette {
   core: string;
 }
 
-// Orb identity — TEAL (user pick, 2026-07-15; replaced the washed-out amber/pink). One calming hue
-// across the non-crisis states, which differ by BRIGHTNESS/saturation rather than clashing hues, so
-// the orb reads as one consistent identity: calm = base teal, anxious = grounded deeper teal, low =
-// soft light teal, elevated = brighter energetic teal. Crisis stays a distinct red — it's a safety
-// signal and must not blend into the identity hue. (NilaOrb.tsx, the first-run onboarding/setup orb,
-// still uses the pink app-icon color — aligning that + the launcher icon is a separate branding step.)
+// Orb identity — MAGENTA PINK (user pick, 2026-07-15; the app-icon color, matching NilaOrb.tsx). One
+// hue across the non-crisis states, which differ by BRIGHTNESS/saturation rather than clashing hues,
+// so the orb reads as one consistent identity: calm = base pink-magenta, anxious = grounded deeper
+// magenta, low = soft light pink, elevated = brighter magenta. Crisis stays a distinct red — it's a
+// safety signal and must not blend into the identity hue. The light/cream-theme render (below) is
+// kept vivid/luminous (not the old washed-out low-alpha tint).
 const PALETTES: Record<string, OrbPalette> = {
   calm: {
-    primary: "#2FB8A6",   // base teal (resting identity)
-    secondary: "#7FD8CC", // lighter teal (specular / upper glow)
-    glow: "rgba(47,184,166,0.28)",
-    ring: "rgba(47,184,166,0.18)",
-    core: "#CFF1EA",      // near-white teal highlight (bright core)
+    primary: "#EC5B9E",   // icon pink-magenta (resting identity; matches NilaOrb.tsx)
+    secondary: "#F58CC0", // lighter pink (specular / upper glow)
+    glow: "rgba(236,91,158,0.28)",
+    ring: "rgba(236,91,158,0.18)",
+    core: "#FBD9EC",      // near-white pink highlight (bright core)
   },
   anxious: {
-    primary: "#229E8E",   // grounded deeper teal ("I'm here with you")
-    secondary: "#6BC7BA",
-    glow: "rgba(34,158,142,0.25)",
-    ring: "rgba(34,158,142,0.15)",
-    core: "#C2E9E2",
+    primary: "#D63C87",   // grounded deeper magenta ("I'm here with you")
+    secondary: "#E982B3",
+    glow: "rgba(214,60,135,0.25)",
+    ring: "rgba(214,60,135,0.15)",
+    core: "#F5C2DC",
   },
   low: {
-    primary: "#6FC3B6",   // soft, light, desaturated teal (gentle)
-    secondary: "#A3D9D0",
-    glow: "rgba(111,195,182,0.20)",
-    ring: "rgba(111,195,182,0.12)",
-    core: "#DCEFEB",
+    primary: "#F0A0C6",   // soft, light pink (gentle)
+    secondary: "#F6C4DC",
+    glow: "rgba(240,160,198,0.20)",
+    ring: "rgba(240,160,198,0.12)",
+    core: "#FCE3EF",
   },
   elevated: {
-    primary: "#12BFA9",   // brighter, energetic teal (settles an activated state)
-    secondary: "#66DED0",
-    glow: "rgba(18,191,169,0.28)",
-    ring: "rgba(18,191,169,0.18)",
-    core: "#C9F4EC",
+    primary: "#F5479F",   // brighter, energetic magenta (settles an activated state)
+    secondary: "#FA80BF",
+    glow: "rgba(245,71,159,0.28)",
+    ring: "rgba(245,71,159,0.18)",
+    core: "#FDCBE6",
   },
   crisis: {
     primary: "#B5614E",   // --color-rose-500 (deeper crisis red — distinct from anxious rose-400)

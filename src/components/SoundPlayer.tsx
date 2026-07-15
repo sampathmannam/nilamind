@@ -7,6 +7,7 @@ import {
   getAmbientState,
   getNoiseInfo,
   allNoiseTypes,
+  subscribeAmbient,
   type NoiseType,
 } from "../services/ambientSound";
 import { hapticLight } from "../hooks/useHaptics";
@@ -30,8 +31,9 @@ const TIMER_OPTIONS = [
 ];
 
 /**
- * SoundPlayer — minimal, beautiful ambient sound player.
- * Uses Web Audio API to generate noise on-device. No files, no network.
+ * SoundPlayer — minimal, beautiful ambient sound player. Noise is generated on-device and played
+ * through an <audio> element (see ambientSound.ts) so it survives backgrounding and gets a media
+ * notification with play/pause. No files, no network.
  * Inspired by Calm's sound mixer and Headspace's ambient sounds.
  */
 export default function SoundPlayer({ compact = false }: Props) {
@@ -43,12 +45,17 @@ export default function SoundPlayer({ compact = false }: Props) {
   const [timerRemaining, setTimerRemaining] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Sync with actual audio state
+  // Sync with actual audio state — on mount AND whenever playback changes (e.g. the user hits
+  // play/pause from the media notification while this screen is open, so the button stays in sync).
   useEffect(() => {
-    const state = getAmbientState();
-    setPlaying(state.playing);
-    if (state.type) setSelectedType(state.type);
-    if (state.volume > 0) setVolumeState(state.volume);
+    const sync = () => {
+      const state = getAmbientState();
+      setPlaying(state.playing);
+      if (state.type) setSelectedType(state.type);
+      if (state.volume > 0) setVolumeState(state.volume);
+    };
+    sync();
+    return subscribeAmbient(sync);
   }, []);
 
   // Timer countdown
