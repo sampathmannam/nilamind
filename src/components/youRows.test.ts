@@ -39,6 +39,21 @@ describe("You hub rows (redesign §2)", () => {
   it("buildYouGroups exposes the Manage and Resources groups in order", () => {
     expect(buildYouGroups().map((g) => g.title)).toEqual(["Manage", "Resources"]);
   });
+
+  it("marks informational/niche rows as 'more' (hidden behind a toggle, not shown by default)", () => {
+    const all = buildYouGroups().flatMap((g) => g.rows);
+    const moreIds = all.filter((r) => r.more).map((r) => r.id);
+    expect(moreIds).toEqual(["about_nila", "nila_memory", "thought_record", "learn", "episode_marker"]);
+  });
+
+  it("does not mark Manage rows or core Resources (insights, wellbeing) as 'more'", () => {
+    const all = buildYouGroups().flatMap((g) => g.rows);
+    for (const id of ["dashboard", "your_data", "settings", "caregiver_settings", "insights", "wellbeing"]) {
+      const row = all.find((r) => r.id === id)!;
+      expect(row).toBeDefined();
+      expect(row.more).toBeUndefined();
+    }
+  });
 });
 
 describe("You hub localization", () => {

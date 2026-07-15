@@ -31,7 +31,7 @@ describe("vite.config.ts manualChunks — bundle-size cleanup (C2)", () => {
     expect(configSrc).toMatch(/recharts:\s*\[/);
   });
 
-  it("splits jspdf into its own chunk (391 KB, used by WhyScreen)", () => {
+  it("splits jspdf into its own chunk (391 KB, used by export features)", () => {
     expect(configSrc).toMatch(/jspdf:\s*\[/);
   });
 

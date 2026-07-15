@@ -25,7 +25,6 @@ const ThoughtRecordScreen = lazy(() => import("./components/ThoughtRecordScreen"
 const AssessmentScreen = lazy(() => import("./components/AssessmentScreen"));
 const SkillsLibraryScreen = lazy(() => import("./components/SkillsLibraryScreen"));
 const YourDataScreen = lazy(() => import("./components/YourDataScreen"));
-const WhyScreen = lazy(() => import("./components/WhyScreen"));
 const NilaMemoryScreen = lazy(() => import("./components/NilaMemoryScreen"));
 const WindDownScreen = lazy(() => import("./components/WindDownScreen"));
 const SocialRhythmScreen = lazy(() => import("./components/SocialRhythmScreen"));
@@ -33,17 +32,13 @@ const SocialRhythmScreen = lazy(() => import("./components/SocialRhythmScreen"))
 // flashed Suspense, and discarded the user's unsaved emotion sliders / notes on any parent state change).
 const DiaryCardScreen = lazy(() => import("./components/DiaryCardScreen"));
 const ReachOutScreen = lazy(() => import("./components/ReachOutScreen"));
-const PactScreen = lazy(() => import("./components/PactScreen"));
 const LearnScreen = lazy(() => import("./components/LearnScreen"));
-const CrisisRehearsalScreen = lazy(() => import("./components/CrisisRehearsalScreen"));
-const PeerSupportScreen = lazy(() => import("./components/PeerSupportScreen"));
 const ProblemSolvingScreen = lazy(() => import("./components/ProblemSolvingScreen"));
 const ValuesToActionScreen = lazy(() => import("./components/ValuesToActionScreen"));
 const ExposureHierarchyScreen = lazy(() => import("./components/ExposureHierarchyScreen"));
 const RelapsePlanScreen = lazy(() => import("./components/RelapsePlanScreen"));
 const EpisodeSupportScreen = lazy(() => import("./components/EpisodeSupportScreen"));
 const EmaCheckInScreen = lazy(() => import("./components/EmaCheckIn"));
-const ArmedCheckInScreen = lazy(() => import("./components/ArmedCheckInScreen"));
 const WellbeingScreen = lazy(() => import("./components/WellbeingScreen"));
 const EpisodeMarkerScreen = lazy(() => import("./components/EpisodeMarkerScreen"));
 const CaregiverSettingsScreen = lazy(() => import("./components/CaregiverSettingsScreen"));
@@ -102,15 +97,11 @@ const AUX_LABELS: Partial<Record<AuxView, string>> = {
   assessment: "Screenings",
   skills: "Skills library",
   your_data: "Your data",
-  why: "Why we built this",
   nila_memory: "What Nila remembers",
   winddown: "Wind down",
   social_rhythm: "Social rhythm",
   reach_out: "Reach out",
-  pact: "PACT plan",
   learn: "Learn",
-  crisis_rehearsal: "Crisis rehearsal",
-  peer_support: "Peer support",
   problem_solving: "Problem solving",
   values_work: "Values work",
   exposure: "Exposure hierarchy",
@@ -118,7 +109,6 @@ const AUX_LABELS: Partial<Record<AuxView, string>> = {
   behaviour: "Phone patterns",
   diary: "Diary card",
   episode: "Episode support",
-  armed_checkin: "Armed check‑in",
   ema_checkin: "Quick check‑in",
   wellbeing: "Wellbeing over time",
   episode_marker: "Episode markers",
@@ -139,15 +129,11 @@ function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () 
     case "assessment": return <AssessmentScreen onActivateCrisis={onActivateCrisis} />;
     case "skills": return <SkillsLibraryScreen />;
     case "your_data": return <YourDataScreen />;
-    case "why": return <WhyScreen />;
     case "nila_memory": return <NilaMemoryScreen />;
     case "winddown": return <WindDownScreen />;
     case "social_rhythm": return <SocialRhythmScreen />;
     case "reach_out": return <ReachOutScreen />;
-    case "pact": return <PactScreen />;
     case "learn": return <LearnScreen />;
-    case "crisis_rehearsal": return <CrisisRehearsalScreen />;
-    case "peer_support": return <PeerSupportScreen />;
     case "problem_solving": return <ProblemSolvingScreen />;
     case "values_work": // retired — renders the active values_to_action screen
       return <ValuesToActionScreen />;
@@ -156,7 +142,6 @@ function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () 
     case "behaviour": return <DashboardScreen onOpenView={onOpenView} />;
     case "diary": return <DiaryCardScreen />;
     case "episode": return <EpisodeSupportScreen onSessionEnded={onClose} onNavigateToGrounding={() => { onClose(); onOpenGrounding(); }} onNavigateToBreathing={() => { onClose(); onOpenGrounding(); }} />;
-    case "armed_checkin": return <ArmedCheckInScreen onClose={onClose} />;
     case "ema_checkin": return <EmaCheckInScreen onLogged={onClose} onCrisis={() => { onClose(); onActivateCrisis(); }} />;
     case "wellbeing": return <WellbeingScreen onClose={onClose} onActivateCrisis={onActivateCrisis} onTake={() => onOpenView("assessment")} />;
     case "episode_marker": return <EpisodeMarkerScreen onClose={onClose} />;

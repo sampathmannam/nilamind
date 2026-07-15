@@ -21,7 +21,7 @@ describe("Tools hub rows (redesign §2)", () => {
     expect(rowIds(false)).toEqual([
       "plan", "winddown", "sounds", "reach_out", "episode",
       "ema_checkin", "diary", "assessment", "medication", "social_rhythm",
-      "problem_solving", "values_to_action", "exposure", "peer_support", "crisis_rehearsal", "relapse_plan",
+      "problem_solving", "values_to_action", "exposure", "relapse_plan",
     ]);
   });
 
@@ -78,6 +78,25 @@ describe("Tools hub rows (redesign §2)", () => {
     const all = rowIds(true);
     expect(all).not.toContain("values_work");
     expect(all).toContain("values_to_action");
+  });
+
+  it("marks the Skills & practice group as 'more' (hidden behind a toggle, not shown by default)", () => {
+    const groups = buildToolGroups({ ...STUB, phoneEnabled: false });
+    const skills = groups.find((g) => g.rows.some((r) => r.id === "problem_solving"))!;
+    expect(skills).toBeDefined();
+    expect(skills.more).toBe(true);
+  });
+
+  it("does not mark In the moment or Log & track as 'more'", () => {
+    const groups = buildToolGroups({ ...STUB, phoneEnabled: false });
+    for (const g of groups) {
+      if (g.rows.some((r) => r.id === "plan" || r.id === "winddown")) {
+        expect(g.more).toBeUndefined();
+      }
+      if (g.rows.some((r) => r.id === "ema_checkin" || r.id === "diary")) {
+        expect(g.more).toBeUndefined();
+      }
+    }
   });
 
   it("routes the values_to_action row through go(), same as every other Skills & practice row", () => {

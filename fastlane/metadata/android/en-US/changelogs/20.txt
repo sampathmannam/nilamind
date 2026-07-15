@@ -1,0 +1,13 @@
+v1.10.0 — UX overhaul:
+- Warm, hand-drawn custom illustrations throughout — Nila greets you in context, empty states feel human.
+- Ambient soundscapes (rain, fire, breeze) via on-device Web Audio — no streaming, no network.
+- Immersive breathing exercises with animated gradients and haptic guidance.
+- Emotional onboarding: a gentle mood check-in on first launch helps Nila greet you the right way.
+- Adaptive home screen: time-aware hero card, contextual daily summary, smarter highlights.
+- Data visualization: Year in Pixels, mood trend charts, episode-phase timeline.
+- Micro-interactions: haptic feedback, spring animations, celebrations on milestones.
+- Nila's voice: companion personality templates tuned for warmth — feels like talking to a person, not a bot.
+- Gentle gamification: achievements, streak milestones with constellation metaphor, celebrations.
+- World-class notification system: insight-aware nudges, wind-down prompts, check-in reminders.
+- Quick check-in fixes, model download progress display, onboarding safe-area polish.
+- Still 100% on-device — nothing leaves your phone. Open source, Apache-2.0.

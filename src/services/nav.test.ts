@@ -37,11 +37,21 @@ describe("resolveNavTarget", () => {
     expect(resolveNavTarget("episode_agent")).toEqual({ kind: "unknown", target: "episode_agent" });
     expect(resolveNavTarget("nila_voice")).toEqual({ kind: "unknown", target: "nila_voice" });
     expect(resolveNavTarget("totally_made_up")).toEqual({ kind: "unknown", target: "totally_made_up" });
+    expect(resolveNavTarget("pact")).toEqual({ kind: "unknown", target: "pact" });
+    expect(resolveNavTarget("armed_checkin")).toEqual({ kind: "unknown", target: "armed_checkin" });
+    expect(resolveNavTarget("crisis_rehearsal")).toEqual({ kind: "unknown", target: "crisis_rehearsal" });
+    expect(resolveNavTarget("peer_support")).toEqual({ kind: "unknown", target: "peer_support" });
+    expect(resolveNavTarget("why")).toEqual({ kind: "unknown", target: "why" });
   });
   it("exposes stable allowlists", () => {
     expect(KNOWN_AUX_VIEWS).not.toContain("values_to_action");
     expect(KNOWN_AUX_VIEWS).toContain("insights");
     expect(KNOWN_AUX_VIEWS).not.toContain("nila_voice");
+    expect(KNOWN_AUX_VIEWS).not.toContain("pact");
+    expect(KNOWN_AUX_VIEWS).not.toContain("armed_checkin");
+    expect(KNOWN_AUX_VIEWS).not.toContain("crisis_rehearsal");
+    expect(KNOWN_AUX_VIEWS).not.toContain("peer_support");
+    expect(KNOWN_AUX_VIEWS).not.toContain("why");
     expect(TAB_TARGETS).toContain("today");
     expect(TAB_TARGETS).toContain("nila");
     expect(TAB_TARGETS).not.toContain("tools");

@@ -1,6 +1,6 @@
 import {
   Wind, NotebookPen, Activity, LifeBuoy, TrendingUp, Moon, MessageCircle,
-  Shield, Users, Pill, Lightbulb, Compass, Mountain, AlertTriangle, Smile, Clock3, Volume2,
+  Pill, Lightbulb, Compass, Mountain, AlertTriangle, Smile, Clock3, Volume2,
   type LucideIcon,
 } from "lucide-react";
 import { t } from "../services/i18n";
@@ -32,6 +32,10 @@ export interface ToolRow {
 export interface ToolGroup {
   title: string;
   rows: ToolRow[];
+  /** When true, the group is hidden behind a "Show more" toggle — niche tools with low self-directed
+   *  engagement (exposure, crisis rehearsal, relapse prevention, etc.) are kept accessible but not
+   *  surfaced by default, matching Woebot/Wysa's conversational-routing model. */
+  more?: true;
 }
 
 export interface ToolRowDeps {
@@ -64,12 +68,11 @@ export function buildToolGroups({ go, onEpisode, phoneEnabled }: ToolRowDeps): T
     },
     {
       title: t("tool_group_skills"),
+      more: true,
       rows: [
         { id: "problem_solving", label: t("tool_problem_solving_label"), sub: t("tool_problem_solving_sub"), Icon: Lightbulb, iconClass: "w-5 h-5 text-amber-400", onTap: () => go("problem_solving") },
         { id: "values_to_action", label: t("tool_values_work_label"), sub: t("tool_values_work_sub"), Icon: Compass, iconClass: "w-5 h-5 text-violet-400", onTap: () => go("values_to_action") },
         { id: "exposure", label: t("tool_exposure_label"), sub: t("tool_exposure_sub"), Icon: Mountain, iconClass: "w-5 h-5 text-orange-400", onTap: () => go("exposure") },
-        { id: "peer_support", label: t("tool_peer_support_label"), sub: t("tool_peer_support_sub"), Icon: Users, iconClass: "w-5 h-5 text-emerald-400", onTap: () => go("peer_support") },
-        { id: "crisis_rehearsal", label: t("tool_crisis_rehearsal_label"), sub: t("tool_crisis_rehearsal_sub"), Icon: Shield, iconClass: "w-5 h-5 text-rose-400", onTap: () => go("crisis_rehearsal") },
         { id: "relapse_plan", label: t("tool_relapse_label"), sub: t("tool_relapse_sub"), Icon: AlertTriangle, iconClass: "w-5 h-5 text-amber-400", onTap: () => go("relapse_plan") },
       ],
     },

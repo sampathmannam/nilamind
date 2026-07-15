@@ -1,5 +1,5 @@
-import React from "react";
-import { ChevronRight, Sparkles, TrendingUp, Target, CheckCircle, X, Circle } from "lucide-react";
+import React, { useState } from "react";
+import { ChevronRight, Sparkles, TrendingUp, Target, CheckCircle, X, Circle, Lightbulb } from "lucide-react";
 import { buildYouGroups } from "./youRows";
 import { useLanguage } from "../services/i18n";
 import { computeCompassionateStreak } from "../services/streaks";
@@ -96,6 +96,7 @@ function getActiveDaysInRange(): string[] {
 export default function YouScreen({ go }: { go: (target: string) => void }) {
   useLanguage();
   const groups = buildYouGroups();
+  const [showMoreResources, setShowMoreResources] = useState(false);
   const weekSnapshot = getWeekSnapshot();
   const [intention, setIntentionState] = React.useState(getIntention());
   const [showPicker, setShowPicker] = React.useState(false);
@@ -267,11 +268,14 @@ export default function YouScreen({ go }: { go: (target: string) => void }) {
         </div>
       )}
 
-      {groups.map((g) => (
+      {groups.map((g) => {
+        const visible = showMoreResources ? g.rows : g.rows.filter((r) => !r.more);
+        if (visible.length === 0) return null;
+        return (
         <section key={g.title} className="space-y-2">
           <h2 className="text-[11px] font-mono uppercase tracking-widest text-slate-500 px-1">{g.title}</h2>
           <div className="space-y-2">
-            {g.rows.map((r) => (
+            {visible.map((r) => (
               <button
                 key={r.id}
                 onClick={() => go(r.id)}
@@ -288,7 +292,18 @@ export default function YouScreen({ go }: { go: (target: string) => void }) {
             ))}
           </div>
         </section>
-      ))}
+        );
+      })}
+
+      {!showMoreResources && groups.some((g) => g.rows.some((r) => r.more)) && (
+        <button
+          onClick={() => setShowMoreResources(true)}
+          className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-dashed border-slate-700/50 hover:border-slate-600/50 text-slate-400 hover:text-slate-300 text-sm font-medium transition-all cursor-pointer active:scale-[0.99]"
+        >
+          <Lightbulb className="w-4 h-4 text-amber-400" aria-hidden="true" />
+          More resources
+        </button>
+      )}
 
       <p className="text-[11px] text-slate-500 text-center leading-relaxed px-4">
         NilaMind is a support alongside — not a substitute for — professional care.

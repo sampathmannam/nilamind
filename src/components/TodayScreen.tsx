@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Wind, MessageCircle, Moon, LayoutGrid, Sparkles, ChevronRight, HeartHandshake, Sparkle, Clock3, Target, LineChart, Activity } from "lucide-react";
+import { Wind, MessageCircle, Moon, LayoutGrid, Sparkles, ChevronRight, HeartHandshake, Sparkle, Clock3, Target, LineChart, Activity, Lightbulb } from "lucide-react";
 import { getTimeMode, getUserState, getGreeting } from "../services/modeEngine";
 import { hasCheckinToday } from "../services/checkin";
 import { secureLocal } from "../services/secureLocal";
@@ -27,7 +27,7 @@ const GOAL_TOOL_PRIORITY: Record<string, string[]> = {
   "Managing stress": ["plan", "winddown", "diary"],
   "Managing anxiety": ["plan", "exposure", "diary"],
   "Tracking moods": ["ema_checkin", "diary", "assessment", "social_rhythm"],
-  "Building skills": ["problem_solving", "peer_support", "exposure"],
+  "Building skills": ["problem_solving", "exposure"],
   "Just curious": [],
 };
 
@@ -158,6 +158,7 @@ export default function TodayScreen({
   onEpisode: () => void;
 }) {
   const [showAllTools, setShowAllTools] = useState(false);
+  const [showMoreSkills, setShowMoreSkills] = useState(false);
   const [showExtraCards, setShowExtraCards] = useState(false);
   useLanguage();
   const { timeOfDay } = useTimeOfDay();
@@ -494,7 +495,7 @@ export default function TodayScreen({
       {/* Expandable tools list */}
       {showAllTools && (
         <div className="space-y-5 animate-tab-fade">
-          {groups.map((g) => (
+          {groups.filter((g) => showMoreSkills || !g.more).map((g) => (
             <section key={g.title} className="space-y-2">
               <h2 className="text-[11px] font-mono uppercase tracking-widest text-slate-500 px-1">{g.title}</h2>
               <div className="space-y-2">
@@ -516,6 +517,15 @@ export default function TodayScreen({
               </div>
             </section>
           ))}
+          {!showMoreSkills && groups.some((g) => g.more) && (
+            <button
+              onClick={() => setShowMoreSkills(true)}
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-dashed border-slate-700/50 hover:border-slate-600/50 text-slate-400 hover:text-slate-300 text-sm font-medium transition-all cursor-pointer active:scale-[0.99]"
+            >
+              <Lightbulb className="w-4 h-4 text-amber-400" aria-hidden="true" />
+              Skills & practice
+            </button>
+          )}
         </div>
       )}
     </div>
