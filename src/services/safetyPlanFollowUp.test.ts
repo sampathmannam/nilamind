@@ -13,6 +13,9 @@ import {
   safetyPlanFollowUpContextBlock,
   shouldPromptReview,
   isFirstFollowUpDue,
+  hasMeaningfulSafetyPlanContent,
+  shouldNudgeToCreateSafetyPlan,
+  dismissCreateSafetyPlanNudge,
 } from "./safetyPlanFollowUp";
 import type { SafetyPlan } from "../types";
 
@@ -194,5 +197,46 @@ describe("safetyPlanFollowUpContextBlock", () => {
     const block = safetyPlanFollowUpContextBlock(plan50DaysAgo);
     const alarmPatterns = /must\b|should\b|need to\b|warning\b|danger\b|urgent\b|immediate\b|critical\b/;
     expect(block.toLowerCase()).not.toMatch(alarmPatterns);
+  });
+});
+
+const blankPlan: SafetyPlan = {
+  warningSigns: "",
+  internalCoping: "",
+  socialDistractors: "",
+  trustedPeople: "",
+  professionals: "",
+  safeEnvironment: "",
+};
+
+describe("hasMeaningfulSafetyPlanContent (Gamarra et al. 2015 — quality, not completeness, predicts outcomes)", () => {
+  it("false for a fully blank plan", () => {
+    expect(hasMeaningfulSafetyPlanContent(blankPlan)).toBe(false);
+  });
+
+  it("false for whitespace-only fields", () => {
+    expect(hasMeaningfulSafetyPlanContent({ ...blankPlan, warningSigns: "   " })).toBe(false);
+  });
+
+  it("false for a scrap shorter than the meaningful-content floor", () => {
+    expect(hasMeaningfulSafetyPlanContent({ ...blankPlan, internalCoping: "walk" })).toBe(false);
+  });
+
+  it("true when at least one field has a real personalized sentence", () => {
+    expect(hasMeaningfulSafetyPlanContent({ ...blankPlan, warningSigns: "not sleeping, going quiet" })).toBe(true);
+  });
+});
+
+describe("shouldNudgeToCreateSafetyPlan (the create-nudge that doesn't exist today — only review-nudges do)", () => {
+  it("true for a blank plan with no prior dismissal", () => {
+    expect(shouldNudgeToCreateSafetyPlan(blankPlan)).toBe(true);
+  });
+
+  it("false once the plan has meaningful content", () => {
+    expect(shouldNudgeToCreateSafetyPlan({ ...blankPlan, warningSigns: "not sleeping, going quiet" })).toBe(false);
+  });
+
+  it("dismissCreateSafetyPlanNudge never throws even with no storage backing (node env)", () => {
+    expect(() => dismissCreateSafetyPlanNudge()).not.toThrow();
   });
 });

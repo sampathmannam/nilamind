@@ -13,6 +13,7 @@
 import type { SafetyPlan } from "../types";
 import { secureLocal } from "./secureLocal";
 import { parseSafetyPlan } from "./safetyPlan";
+import { ls } from "./storageUtils";
 
 /** Stanley-Brown evidence: first follow-up within 48h, then every 14 days. */
 const FIRST_FOLLOW_UP_HOURS = 48;
@@ -125,5 +126,57 @@ export function markSafetyPlanReviewed(): boolean {
     return true;
   } catch {
     return false;
+  }
+}
+
+/** Minimum trimmed length for a field to count as genuinely personalized rather than blank/a scrap.
+ *  Matches the evidence that plan QUALITY, not completeness, predicts outcomes (Gamarra et al. 2015,
+ *  Crisis 36(6):433-443) — one real sentence counts; six empty fields don't. */
+const MEANINGFUL_CONTENT_MIN_LENGTH = 10;
+
+const SAFETY_PLAN_FIELDS: (keyof SafetyPlan)[] = [
+  "warningSigns",
+  "internalCoping",
+  "socialDistractors",
+  "trustedPeople",
+  "professionals",
+  "safeEnvironment",
+];
+
+/** True when at least one field has genuinely personalized content (not just blank/whitespace/a scrap). */
+export function hasMeaningfulSafetyPlanContent(plan: SafetyPlan): boolean {
+  return SAFETY_PLAN_FIELDS.some((f) => {
+    const v = plan[f];
+    return typeof v === "string" && v.trim().length >= MEANINGFUL_CONTENT_MIN_LENGTH;
+  });
+}
+
+const CREATE_NUDGE_DISMISSED_KEY = "nilamind_safetyplan_create_nudge_dismissed_at";
+const CREATE_NUDGE_COOLDOWN_DAYS = 7;
+
+/** Gate for the Today-tab "set up your coping plan" nudge — the create-nudge that (unlike the 48h/14-day
+ *  review nudges above) fires for users who never started a plan. Most at-risk help-seekers don't know
+ *  the safety-plan concept exists (Rainbow et al. 2024, J Affect Disord). Never fires once the plan has
+ *  real content; otherwise respects a dismiss cooldown so it never nags — same shape as ratingPrompt.ts. */
+export function shouldNudgeToCreateSafetyPlan(plan: SafetyPlan): boolean {
+  if (hasMeaningfulSafetyPlanContent(plan)) return false;
+  try {
+    const raw = ls()?.getItem(CREATE_NUDGE_DISMISSED_KEY);
+    if (raw) {
+      const daysSince = (Date.now() - Number(raw)) / (1000 * 60 * 60 * 24);
+      if (daysSince < CREATE_NUDGE_COOLDOWN_DAYS) return false;
+    }
+  } catch {
+    /* best effort — default to showing the nudge */
+  }
+  return true;
+}
+
+/** Records that the user dismissed the create-nudge, starting the cooldown. */
+export function dismissCreateSafetyPlanNudge(): void {
+  try {
+    ls()?.setItem(CREATE_NUDGE_DISMISSED_KEY, String(Date.now()));
+  } catch {
+    /* best effort */
   }
 }
