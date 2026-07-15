@@ -37,10 +37,12 @@ export default function CloudApiSection() {
         <p className="text-[11px] text-amber-200/90 leading-relaxed flex gap-2">
           <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5 text-amber-400" />
           <span>
-            <strong>Privacy notice:</strong> When cloud API is enabled, your messages and Nila's
-            replies leave your device and are sent to the external endpoint you configure.
-            NilaMind cannot see or store these messages — they go directly to your chosen provider.
-            The on-device safety gates (crisis detection, output screening) still run locally.
+            <strong>Privacy notice:</strong> When cloud API is enabled, your chat and voice-call
+            messages (and Nila's replies) leave your device and go directly to the endpoint you
+            configure — NilaMind cannot see or store them. Everything else stays on your phone:
+            background features (daily reflection, memory, coach insights) never use the cloud,
+            and the on-device safety gates (crisis detection, output screening) always run locally.
+            Takes effect from your next message — no restart needed.
           </span>
         </p>
       </div>

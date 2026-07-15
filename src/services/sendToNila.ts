@@ -1,10 +1,12 @@
 // src/services/sendToNila.ts
 // The single typed entry point for talking to Nila. Two modes keep SEPARATE send paths behind one
 // signature so prompts/tools never blend:
-//   companion -> askNilaLocalStream (on-device Gemma + buildNilaSystem, streamed)
-//   episode   -> generateOnDevice with the EPISODE system instruction (+ last-5 episodes), no tools
-// Both run fully ON-DEVICE — there is no cloud transport. With no model loaded each mode returns the
-// calm offline experience (never the network).
+//   companion -> askNilaLocalStream (on-device model + buildNilaSystem, streamed; routes to the user's
+//                opt-in cloud tier at the localLlm seam when they enabled it in Settings)
+//   episode   -> generateOnDevice with the EPISODE system instruction (+ last-5 episodes), no tools —
+//                ALWAYS on-device, even with cloud enabled (episode records are sensitive derived data)
+// The DEFAULT path is fully ON-DEVICE — cloud exists only as the user's explicit opt-in. With no brain
+// available each mode returns the calm offline experience (never the network).
 //
 // Safety invariants enforced here via tested pure helpers:
 //   #1 shouldBlockForCrisis() short-circuits BEFORE the model runs, in both modes.
@@ -108,9 +110,10 @@ export async function sendToNila(
     // Stream guard: suppress unsafe tokens LIVE (method + "how to") before they render. The broad
     // final gate (applyOutputSafety) still runs on the finished reply as the authority.
     const guard = createStreamGuard(opts.onDelta);
-    // ON-DEVICE ONLY — Nila has no cloud brain. When no model is loaded the chat returns the offline
-    // experience (grounding / tools / crisis), never the network. The §9 stream guard + output gate
-    // still wrap whatever the local model produces.
+    // ON-DEVICE by default; the user's opt-in cloud tier (Settings) is routed beneath this at the
+    // localLlm seam. When no brain is available the chat returns the offline experience (grounding /
+    // tools / crisis), never the network. The §9 stream guard + output gate wrap whatever the model —
+    // local or cloud — produces, so safety is identical on both paths.
     if (!isLocalLlmReady()) return { reply: "", reachedAI: false };
     const r = await askNilaLocalStream(outgoing as NilaMessage[], { onDelta: guard.onDelta });
     if (r.reachedAI) {
