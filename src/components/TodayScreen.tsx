@@ -15,6 +15,7 @@ import { getDailyIntention } from "../services/weeklyIntention";
 import DailyIntentionCard, { type DailyIntentionCardHandle } from "./DailyIntentionCard";
 import DailyContentCard from "./DailyContentCard";
 import RatingPromptCard from "./RatingPromptCard";
+import SafetyPlanNudgeCard from "./SafetyPlanNudgeCard";
 import { useTimeOfDay, heroGradient, contextualSummary } from "../hooks/useTimeOfDay";
 import { buildNilaMessage } from "../services/nilaVoice";
 import { getTopAssessmentPrompt } from "../services/assessmentPrompts";
@@ -262,6 +263,9 @@ export default function TodayScreen({
 
       {/* Gentle Play Store rating prompt — only after 5+ positive sessions */}
       <RatingPromptCard />
+
+      {/* Nudge to set up a coping plan — the create-nudge that didn't exist before this redesign */}
+      <SafetyPlanNudgeCard go={go} />
 
       {/* Welcome back — returning after absence */}
       {hasAnyCheckins && !checkedIn && (() => {
