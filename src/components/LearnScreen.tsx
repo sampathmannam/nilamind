@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { BookOpen, Search, X, ChevronDown, LifeBuoy, AlertTriangle, FlaskConical, Heart } from "lucide-react";
+import { BookOpen, Search, X, ChevronDown, LifeBuoy, AlertTriangle, FlaskConical, Heart, Sparkles, ChevronRight } from "lucide-react";
 import { searchLearn, type LearnResult, type LearnSource } from "../services/learnLibrary";
 import { checkPsychoedQuery } from "../services/psychoed";
 import { getCrisisReply } from "../safety";
-import { getSkill } from "../services/skillsLibrary";
+import { getSkill, SKILL_GROUPS, groupMeta, skillForEmotion, type Skill } from "../services/skillsLibrary";
 import { PSYCHOED_TOPICS } from "../services/psychoed";
 import { WHY_WE_BUILT_THIS } from "../data/whyWeBuiltThis";
+import { secureLocal } from "../services/secureLocal";
 import CrisisLines from "./CrisisLines";
+import TIPPTool from "./TIPPTool";
 
 // Unified reading library: one screen consuming searchLearn (Skills + Understand + Why).
 // §9-gated: a crisis query surfaces help instead of library content. Pure, on-device; no model, no network.
@@ -46,8 +48,24 @@ export default function LearnScreen() {
   const [query, setQuery] = useState("");
   const [crisis, setCrisis] = useState(false);
   const [sourceFilter, setSourceFilter] = useState<LearnSource | null>(null);
+  const [groupFilter, setGroupFilter] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [allResults, setAllResults] = useState<LearnResult[]>([]);
+
+  // Emotion-based recommendation from last check-in
+  const [recommended, setRecommended] = useState<Skill | null>(null);
+  const [dismissedRec, setDismissedRec] = useState(false);
+  useEffect(() => {
+    try {
+      const raw = secureLocal.getItem("nilamind_checkins");
+      const arr = raw ? JSON.parse(raw) : [];
+      const last = Array.isArray(arr) && arr.length ? arr[arr.length - 1] : null;
+      if (last?.emotion) {
+        const emo = String(last.emotion).replace(/\s*\([^)]*\)\s*$/, "").trim();
+        setRecommended(skillForEmotion(emo));
+      }
+    } catch { /* */ }
+  }, []);
 
   // Async search — embedding-RAG for psychoeducation (B4)
   useEffect(() => {
@@ -57,10 +75,18 @@ export default function LearnScreen() {
     });
     return () => { cancelled = true; };
   }, [query]);
-  const results = useMemo(
-    () => (sourceFilter ? allResults.filter((r) => r.source === sourceFilter) : allResults),
-    [allResults, sourceFilter],
-  );
+  const results = useMemo(() => {
+    let filtered = sourceFilter ? allResults.filter((r) => r.source === sourceFilter) : allResults;
+    if (groupFilter) {
+      filtered = filtered.filter((r) => {
+        if (r.source !== "skill") return true;
+        const raw = r.id.includes(":") ? r.id.split(":").slice(1).join(":") : r.id;
+        const s = getSkill(raw);
+        return s?.group === groupFilter;
+      });
+    }
+    return filtered;
+  }, [allResults, sourceFilter, groupFilter]);
 
   function onQueryChange(v: string) {
     if (checkPsychoedQuery(v)) { setCrisis(true); setQuery(""); return; }
@@ -111,6 +137,37 @@ export default function LearnScreen() {
             <span className="flex-1 min-w-0 text-[13px] font-semibold text-rose-200">Need support right now?</span>
           </button>
 
+          {/* In a hard moment — jump to crisis/distress-tolerance skills */}
+          <button
+            onClick={() => { setQuery(""); setSourceFilter("skill"); setGroupFilter("crisis"); }}
+            id="learn-hard-moment"
+            className="w-full flex items-center gap-3 bg-rose-500/10 border border-rose-500/30 hover:border-rose-500/50 rounded-2xl p-3.5 cursor-pointer text-left transition-colors"
+          >
+            <LifeBuoy className="w-5 h-5 text-rose-400 shrink-0" />
+            <span className="flex-1 min-w-0">
+              <span className="block text-[13px] font-semibold text-rose-200">In a hard moment right now?</span>
+              <span className="block text-[11px] text-rose-300/80">Jump to the get-through-it skills</span>
+            </span>
+            <ChevronRight className="w-5 h-5 text-rose-400/70 shrink-0" />
+          </button>
+
+          {/* Emotion-based recommendation from last check-in */}
+          {recommended && !dismissedRec && (
+            <div className="bg-card border border-blue-500/30 rounded-2xl p-4 space-y-2.5" id="learn-recommended">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono uppercase tracking-widest text-blue-300 flex items-center gap-1.5"><Sparkles className="w-3 h-3" /> For how you've been feeling</span>
+                <button onClick={() => setDismissedRec(true)} aria-label="Dismiss recommendation" className="flex items-center justify-center w-8 h-8 -m-1.5 text-slate-500 hover:text-slate-300 cursor-pointer"><X className="w-3.5 h-3.5" /></button>
+              </div>
+              <button onClick={() => { setSourceFilter("skill"); setGroupFilter(null); setQuery(recommended.name); setExpanded((prev) => new Set(prev).add(`skill:${recommended.id}`)); }} className="w-full flex items-center gap-3 text-left cursor-pointer" id="learn-rec-open">
+                <span className="flex-1 min-w-0">
+                  <span className="block text-sm font-bold text-slate-100">{recommended.name}</span>
+                  <span className="block text-[11px] text-slate-400 leading-snug">{recommended.purpose}</span>
+                </span>
+                <ChevronRight className="w-5 h-5 text-blue-400 shrink-0" />
+              </button>
+            </div>
+          )}
+
           <div className="relative">
             <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
@@ -144,6 +201,27 @@ export default function LearnScreen() {
               </button>
             ))}
           </div>
+
+          {/* Group filter — only relevant for skills */}
+          {(sourceFilter === null || sourceFilter === "skill") && (
+            <div className="flex flex-wrap gap-1.5">
+              <button
+                onClick={() => setGroupFilter(null)}
+                className={`px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all cursor-pointer ${groupFilter === null ? "bg-slate-200/20 border-slate-400/50 text-slate-100" : "bg-page border-slate-800 text-slate-400 hover:text-slate-200"}`}
+              >
+                All skills
+              </button>
+              {SKILL_GROUPS.map((g) => (
+                <button
+                  key={g.id}
+                  onClick={() => setGroupFilter(groupFilter === g.id ? null : g.id)}
+                  className={`px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all cursor-pointer ${groupFilter === g.id ? "bg-blue-500/20 border-blue-500/50 text-blue-200" : "bg-page border-slate-800 text-slate-400 hover:text-slate-200"}`}
+                >
+                  {g.label}
+                </button>
+              ))}
+            </div>
+          )}
 
           <div className="space-y-2" id="learn-results">
             <div className="text-[10px] uppercase font-mono tracking-widest text-slate-500">{results.length} result{results.length === 1 ? "" : "s"}</div>
@@ -184,16 +262,22 @@ function LearnCard({ result, open, onToggle }: { result: LearnResult; open: bool
 
       {open && detail && (
         <div className="px-4 pb-4 -mt-1 space-y-3">
-          {result.source === "skill" && detail.steps && (
-            <ol className="space-y-1.5">
-              {detail.steps.map((step, i) => (
-                <li key={i} className="flex gap-2 text-xs text-slate-300 leading-relaxed">
-                  <span className="shrink-0 w-4 h-4 rounded-full bg-blue-500 text-[9px] font-bold text-[#171311] flex items-center justify-center mt-0.5">{i + 1}</span>
-                  <span>{step}</span>
-                </li>
-              ))}
-            </ol>
-          )}
+          {result.source === "skill" && (() => {
+            const raw = result.id.includes(":") ? result.id.split(":").slice(1).join(":") : result.id;
+            const skill = getSkill(raw);
+            if (skill?.interactive) return <TIPPTool />;
+            if (detail.steps) return (
+              <ol className="space-y-1.5">
+                {detail.steps.map((step, i) => (
+                  <li key={i} className="flex gap-2 text-xs text-slate-300 leading-relaxed">
+                    <span className="shrink-0 w-4 h-4 rounded-full bg-blue-500 text-[9px] font-bold text-[#171311] flex items-center justify-center mt-0.5">{i + 1}</span>
+                    <span>{step}</span>
+                  </li>
+                ))}
+              </ol>
+            );
+            return null;
+          })()}
           {result.source === "understand" && (
             <>
               {detail.emergencyCaveat && (

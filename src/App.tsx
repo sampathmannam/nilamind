@@ -23,7 +23,6 @@ const CaregiverShareScreen = lazy(() => import("./components/CaregiverShareScree
 // LAZY — aux view screens (module-scoped so lazy() runs once, not per render)
 const ThoughtRecordScreen = lazy(() => import("./components/ThoughtRecordScreen"));
 const AssessmentScreen = lazy(() => import("./components/AssessmentScreen"));
-const SkillsLibraryScreen = lazy(() => import("./components/SkillsLibraryScreen"));
 const YourDataScreen = lazy(() => import("./components/YourDataScreen"));
 const NilaMemoryScreen = lazy(() => import("./components/NilaMemoryScreen"));
 const WindDownScreen = lazy(() => import("./components/WindDownScreen"));
@@ -39,7 +38,6 @@ const ExposureHierarchyScreen = lazy(() => import("./components/ExposureHierarch
 const RelapsePlanScreen = lazy(() => import("./components/RelapsePlanScreen"));
 const EpisodeSupportScreen = lazy(() => import("./components/EpisodeSupportScreen"));
 const EmaCheckInScreen = lazy(() => import("./components/EmaCheckIn"));
-const WellbeingScreen = lazy(() => import("./components/WellbeingScreen"));
 const EpisodeMarkerScreen = lazy(() => import("./components/EpisodeMarkerScreen"));
 const CaregiverSettingsScreen = lazy(() => import("./components/CaregiverSettingsScreen"));
 const BreathingScreen = lazy(() => import("./components/BreathingScreen"));
@@ -78,7 +76,7 @@ import ModelSetupGate from "./components/ModelSetupGate";
 import OnboardingGate from "./components/OnboardingGate";
 import { hasCompletedOnboarding } from "./services/onboarding";
 import { resolveNavTarget, type AuxView, type TabView } from "./services/nav";
-import { getArmedCheckin, armedCheckinBody } from "./services/armedCheckin";
+
 import { recordAppOpen } from "./services/retentionMetrics";
 import { recordPositiveSession } from "./services/ratingPrompt";
 import { getPilotState, markEndpointReminderScheduled, PILOT_ENDPOINT_REMINDER_BODY } from "./services/pilotStudy";
@@ -97,7 +95,6 @@ const AUX_LABELS: Partial<Record<AuxView, string>> = {
   insights: "Your patterns",
   thought_record: "Thought record",
   assessment: "Screenings",
-  skills: "Skills library",
   your_data: "Your data",
   nila_memory: "What Nila remembers",
   winddown: "Wind down",
@@ -112,7 +109,6 @@ const AUX_LABELS: Partial<Record<AuxView, string>> = {
   diary: "Diary card",
   episode: "Episode support",
   ema_checkin: "Quick check‑in",
-  wellbeing: "Wellbeing over time",
   episode_marker: "Episode markers",
   caregiver_settings: "Caregiver settings",
   legal: "Legal",
@@ -130,7 +126,6 @@ function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () 
     case "insights": return <InsightsScreen onClose={onClose} />;
     case "thought_record": return <ThoughtRecordScreen />;
     case "assessment": return <AssessmentScreen onActivateCrisis={onActivateCrisis} />;
-    case "skills": return <SkillsLibraryScreen />;
     case "your_data": return <YourDataScreen />;
     case "nila_memory": return <NilaMemoryScreen />;
     case "winddown": return <WindDownScreen />;
@@ -146,7 +141,6 @@ function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () 
     case "diary": return <DiaryCardScreen />;
     case "episode": return <EpisodeSupportScreen onSessionEnded={onClose} onNavigateToGrounding={() => { onClose(); onOpenGrounding(); }} onNavigateToBreathing={() => { onClose(); onOpenGrounding(); }} />;
     case "ema_checkin": return <EmaCheckInScreen onLogged={onClose} onCrisis={() => { onClose(); onActivateCrisis(); }} />;
-    case "wellbeing": return <WellbeingScreen onClose={onClose} onActivateCrisis={onActivateCrisis} onTake={() => onOpenView("assessment")} />;
     case "episode_marker": return <EpisodeMarkerScreen onClose={onClose} />;
     case "caregiver_settings": return <CaregiverSettingsScreen onClose={onClose} onOpenCaregiverShare={onOpenCaregiverShare} />;
     case "sounds": return <SoundPlayer onClose={onClose} />;
@@ -267,17 +261,6 @@ export default function App() {
   // EMA is off, permission-denied, in quiet hours, or a crisis/elevation suppression window is active.
   useEffect(() => {
     void syncEmaCheckins({ request: false });
-  }, []);
-
-  // Schedule any pending armed check‑in as a notification on app start.
-  // re-audit #2 (privacy): the notification body is the CONTENT-FREE armedCheckinBody() — never
-  // armedCheckinPrompt(), which embeds the user's own words. A lock-screen must not leak a mental-health
-  // disclosure (mirrors notifications.ts notifyReplyReady). The private context stays inside the app.
-  useEffect(() => {
-    const entry = getArmedCheckin();
-    if (entry && isCategoryEnabled("armed")) { // P6.5: armed-check-in category toggle
-      void scheduleReminderAt(new Date(entry.triggerAt), armedCheckinBody(), "NilaMind", { view: "armed_checkin" });
-    }
   }, []);
 
   // Wake word integration

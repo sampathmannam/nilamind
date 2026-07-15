@@ -5,17 +5,17 @@
 // not like a "model not available" error message.
 
 import { crisisLinesInline } from "./crisisResources";
+import {
+  WELCOME_FIRST, WELCOME_RETURNING, CRISIS_RESPONSE,
+  detectEmotionUnified,
+} from "./personaConfig";
 
 const OFFLINE_RESPONSES: Record<string, string[]> = {
   // Warm opening responses — the first thing a new user sees
-  welcome: [
-    "Hey — I'm really glad you're here. I'm Nila. Think of me as a friend in your corner who gets this stuff. I'm an AI, not a therapist, but I'm here alongside you. No agenda — how are you doing right now?",
-  ],
+  welcome: [WELCOME_FIRST],
 
   // Greeting responses for returning users
-  returning: [
-    "Hey — good to see you again. I'm still here. How are you doing right now?",
-  ],
+  returning: [WELCOME_RETURNING],
 
   // Anxiety responses
   anxious: [
@@ -45,9 +45,7 @@ const OFFLINE_RESPONSES: Record<string, string[]> = {
   ],
 
   // Crisis responses — always include crisis lines
-  crisis: [
-    "What you just shared matters more than anything. Please reach out to someone right now — [CRISIS_LINES]. You're not alone.",
-  ],
+  crisis: [CRISIS_RESPONSE.replace("[REGION_CRISIS_LINES]", "[CRISIS_LINES]")],
 
   // Neutral/fallback
   neutral: [
@@ -57,26 +55,11 @@ const OFFLINE_RESPONSES: Record<string, string[]> = {
 };
 
 /**
- * Detect primary emotion from user message for offline responses.
- * Same keyword-based approach as emotionalIntelligence.ts (consistent behavior).
- */
-function detectOfflineEmotion(message: string): string {
-  const lower = message.toLowerCase();
-  if (/suicide|kill.*self|want.*die|can't go on|end.*life/i.test(lower)) return "crisis";
-  if (/anxious|panic|worried|scared|fear|freaking/i.test(lower)) return "anxious";
-  if (/sad|depressed|crying|down|low|heavy|hopeless/i.test(lower)) return "sad";
-  if (/angry|furious|rage|pissed/i.test(lower)) return "angry";
-  if (/numb|empty|nothing|void|hollow|flat/i.test(lower)) return "numb";
-  if (/great|amazing|wonderful|happy|grateful/i.test(lower)) return "happy";
-  return "neutral";
-}
-
-/**
  * Get a warm, emotionally-appropriate offline response.
  * Uses deterministic rotation so the user never sees the same response twice in a row.
  */
 export function enhancedOfflineReply(userMessage: string): string {
-  const emotion = detectOfflineEmotion(userMessage);
+  const emotion = detectEmotionUnified(userMessage);
   const responses = OFFLINE_RESPONSES[emotion] ?? OFFLINE_RESPONSES.neutral;
 
   // Deterministic rotation based on message length (not time — avoids same response on refresh)
@@ -114,7 +97,7 @@ export function getWelcomeMessage(isReturning: boolean = false): string {
   else prefix = "Good night";
 
   if (isReturning) {
-    return `${prefix} — really good to see you again. I'm still right here (an AI, not a therapist, but in your corner). How are you doing right now?`;
+    return `${prefix} — ${WELCOME_RETURNING}`;
   }
-  return `${prefix} — I'm really glad you're here. I'm Nila. Think of me as a friend in your corner who gets this stuff (I'm an AI, not a therapist, but I'm here alongside you) — and for a lot of people, knowing that upfront makes it easier to say the honest thing. No agenda — how are you doing right now?`;
+  return `${prefix} — ${WELCOME_FIRST}`;
 }

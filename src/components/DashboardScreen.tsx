@@ -482,7 +482,7 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
         )}
 
        {/* Longitudinal wellbeing — fortnightly WHO-5 trend + cadence */}
-       <WellbeingTrendCard onOpen={() => onOpenView?.("wellbeing")} />
+       <WellbeingTrendCard onTakeCheck={() => onOpenView?.("assessment")} />
 
        {/* Episode-phase marker — current phase if active */}
        <EpisodeMarkerCard onOpen={() => onOpenView?.("episode_marker")} />

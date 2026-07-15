@@ -37,7 +37,7 @@ export interface Skill {
   purpose: string; // when/why to reach for it
   steps: string[];
   basis: string;
-  /** When true, SkillsLibraryScreen mounts the skill's dedicated interactive component (currently
+  /** When true, LearnScreen mounts the skill's dedicated interactive component (currently
    *  only "tipp" → TIPPTool, 2026-07-12 Wave 3 Group E) instead of a plain expandable steps list. */
   interactive?: boolean;
 }

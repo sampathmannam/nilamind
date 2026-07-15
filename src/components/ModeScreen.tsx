@@ -13,6 +13,7 @@ import { clearChatElevation, noteChatElevation } from "../services/chatElevation
 import { detectElevationRisk } from "../services/elevationGuard";
 import { hasCheckinToday, getSkipFlag } from "../services/checkin";
 import { t } from "../services/i18n";
+import { WELCOME_SEED, STATE_MESSAGES, WELCOME_BACK_LONG, WELCOME_BACK_MEDIUM, WELCOME_BACK_SHORT } from "../services/personaConfig";
 import { useTypingSession } from "../hooks/useTypingSession";
 import { getSuggestions, timeSlot } from "../services/chatSuggestions";
 import { stripChatMarkdown } from "../services/chatText";
@@ -87,7 +88,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
     if (saved.length) return saved;
     // Seed a warm greeting on first launch — so the chat is never blank.
     // Previously messages started empty and the user had to type first.
-    return [{ role: "assistant", content: "Hi — I'm Nila. I'm here to listen and help you reflect. Nothing you say leaves your phone." }];
+    return [{ role: "assistant", content: WELCOME_SEED }];
   });
   const [inputText, setInputText] = useState(() => modeDraftCache); // #22: restore draft after a tab-switch remount
   const [loading, setLoading] = useState(false);
@@ -277,10 +278,10 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
         if (dismissed !== new Date().toISOString().split("T")[0]) {
           const days = streak.daysSinceLast;
           setWelcomeBack(days >= 7
-            ? "It's been a while — no pressure, no rush. I'm here whenever you want to talk."
+            ? WELCOME_BACK_LONG
             : days >= 3
-            ? "Haven't seen you in a few days. Just a gentle check-in — I'm here."
-            : "Haven't seen you in a bit — I'm here whenever you're ready.");
+            ? WELCOME_BACK_MEDIUM
+            : WELCOME_BACK_SHORT);
         }
       }
     } catch { /* best-effort */ }
@@ -709,9 +710,9 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           <p className="text-lg text-slate-200 font-display">{question}</p>
           {mode.userState && mode.userState !== "calm" && (
             <p className="text-xs text-slate-400">
-              {mode.userState === "anxious" && "I'm here with you. Take your time."}
-              {mode.userState === "low" && "You're not alone in this."}
-              {mode.userState === "elevated" && "Let's slow things down together."}
+              {mode.userState === "anxious" && STATE_MESSAGES.anxious}
+              {mode.userState === "low" && STATE_MESSAGES.low}
+              {mode.userState === "elevated" && STATE_MESSAGES.elevated}
             </p>
           )}
         </div>
