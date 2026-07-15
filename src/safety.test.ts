@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isStreamingHarm, scanForCrisis, checkResponse, isBenignMedicationAdherence, isBenignHyperbole, isBenignExhaustion, isBenignOkayReassurance, isBenignExistentialReferent, METHOD_INTENT_PHRASES, SYCOPHANTIC_AFFIRMATIONS, ROMANIZED_IDEATION, SLANG_IDEATION, getCrisisReply } from "./safety";
+import { isStreamingHarm, scanForCrisis, checkResponse, isBenignMedicationAdherence, isBenignHyperbole, isBenignExhaustion, isBenignOkayReassurance, isBenignExistentialReferent, isBenignHeartbreakDisclosure, METHOD_INTENT_PHRASES, SYCOPHANTIC_AFFIRMATIONS, ROMANIZED_IDEATION, SLANG_IDEATION, getCrisisReply } from "./safety";
 
 // Phase 0 — anti-sycophancy / reality-testing gate. Research basis (docs/NILA_AGENT_RESEARCH_BASIS.md): sycophancy
 // — a model VALIDATING a harmful belief — is THE documented harm mechanism of LLM mental-health tools (OpenAI's
@@ -235,6 +235,54 @@ describe("isBenignExhaustion — narrow negative guard for the semantic §9 gate
     expect(isBenignExhaustion("the world would be lighter without me in it")).toBe(false); // real euphemism, no fatigue frame
     expect(isBenignExhaustion("i had a nice walk this evening and felt pretty calm")).toBe(false); // positive
     expect(isBenignExhaustion("")).toBe(false);
+  });
+});
+
+// Benign HEARTBREAK-DISCLOSURE negative guard (device-QA 2026-07-15). The semantic §9 classifier scores
+// heartbreak-impact language ("broke my heart", "shattered me") ABOVE threshold when it co-occurs with
+// retrospective professional-help-seeking language ("i consulted a psychiatrist", "i saw a therapist") — a
+// real device transcript ("...it broke my heart and shattered me. since then in october i consulted
+// psychiatrist", a betrayal disclosure with NO suicidal ideation) scored 0.6030 against the real bundled model
+// (measured; see crisisClassifier.realmodel.test.ts), clearing CRISIS_THRESHOLD and firing the full §9
+// crisis-template takeover at the exact moment the user most needed to be heard, not redirected to a helpline.
+// Past-tense professional help-seeking is itself a PROTECTIVE signal (the user already sought care), not a
+// crisis marker. isBenignHeartbreakDisclosure mirrors the other guards: heartbreak-impact language AND
+// past-help-seeking language (BOTH required — heartbreak language alone stays well under threshold, measured
+// 0.43) AND NO lethal co-signal AND NO life-weariness/despair cue. It only ever suppresses the SOFT classifier
+// upgrade (never the deterministic keyword floor), and any weariness/despair/lethal phrasing DEFERS back to
+// the classifier, so recall on real disclosures is unchanged.
+describe("isBenignHeartbreakDisclosure — narrow negative guard for the semantic §9 gate (betrayal+help-seeking FP)", () => {
+  it.each([
+    "it broke my heart and shattered me. since then in october i consulted psychiatrist",
+    "my friend betrayed my trust and it broke my heart and shattered me. since then i consulted a psychiatrist",
+    "she betrayed me and it shattered me, i saw a therapist about it",
+    "it broke my heart and shattered me, i consulted a psychiatrist",
+    "that betrayal shattered me, i went to counseling",
+    "he shattered my trust completely, i started therapy last month",
+    "it broke my heart, i'm seeing a psychiatrist about it now",
+  ])("guards heartbreak-impact + past professional help-seeking: %j", (s) => {
+    expect(isBenignHeartbreakDisclosure(s)).toBe(true);
+  });
+
+  // MUST NOT guard — life-weariness/despair or a lethal co-signal co-occurring with the same heartbreak +
+  // help-seeking language. Each DEFERS to the classifier (which the keyword floor also independently catches
+  // for the explicit ones) instead of being suppressed.
+  it.each([
+    "it broke my heart and shattered me, i consulted a psychiatrist, i don't want to live anymore",
+    "she shattered me, i saw a therapist, but i just want the pain to stop forever",
+    "it broke my heart and shattered me, i consulted a psychiatrist, i can't go on",
+    "it broke my heart and shattered me, i started therapy, but i feel hopeless about everything",
+    "he shattered my trust, i've been seeing a counselor, i feel like giving up",
+  ])("does NOT guard heartbreak + help-seeking + despair/lethal co-signal: %j", (s) => {
+    expect(isBenignHeartbreakDisclosure(s)).toBe(false);
+  });
+
+  it("does NOT guard heartbreak language with no help-seeking co-signal, help-seeking alone, or empty input", () => {
+    expect(isBenignHeartbreakDisclosure("it broke my heart and shattered me")).toBe(false); // no help-seeking clause
+    expect(isBenignHeartbreakDisclosure("my heart is shattered after the breakup")).toBe(false);
+    expect(isBenignHeartbreakDisclosure("i consulted a psychiatrist last month")).toBe(false); // no heartbreak-impact clause
+    expect(isBenignHeartbreakDisclosure("the world would be lighter without me in it")).toBe(false); // real euphemism, no heartbreak frame
+    expect(isBenignHeartbreakDisclosure("")).toBe(false);
   });
 });
 

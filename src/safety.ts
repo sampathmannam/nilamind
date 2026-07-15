@@ -701,6 +701,39 @@ export function isBenignExhaustion(message: string): boolean {
   return !LETHAL_COSIGNAL.test(t) && !WEARY_DESPAIR_PATTERNS.test(t);
 }
 
+// Heartbreak-IMPACT language ("broke my heart", "shattered me") that, alone, stays well below CRISIS_THRESHOLD
+// (measured ~0.43 for a full betrayal backstory with no help-seeking clause), but climbs to 0.60-0.75 when it
+// co-occurs with retrospective professional-help-seeking language below — see isBenignHeartbreakDisclosure.
+const HEARTBREAK_IMPACT_MARKER =
+  /\b(broke my heart|broken[ -]?hearted|heart[ -]?broken|shattered me|i'?m shattered|(she|he|it|that) shattered me|shattered my (trust|heart)|it (broke|shattered) me)\b/;
+
+// Retrospective / ongoing professional help-seeking — a PROTECTIVE signal (the user already sought care), not
+// a crisis marker on its own.
+const PAST_HELP_SEEKING_MARKER =
+  /\b(consulted (a |the )?(psychiatrist|therapist|counsel(l)?or|psychologist)|saw a (psychiatrist|therapist|counsel(l)?or|psychologist)|seeing a (psychiatrist|therapist|counsel(l)?or|psychologist)|(went|going) to (therapy|counsel(l)?ing)|start(ed|ing) (therapy|counsel(l)?ing)|in therapy|been in therapy)\b/;
+
+/**
+ * Narrow NEGATIVE GUARD for the semantic §9 gate (device-QA 2026-07-15): a betrayal/heartbreak disclosure that
+ * also recounts past-tense professional help-seeking ("...it broke my heart and shattered me. since then in
+ * october i consulted psychiatrist" — NO suicidal ideation) scores 0.6030 against the real bundled model,
+ * clearing CRISIS_THRESHOLD and firing the full-screen §9 crisis takeover at the exact moment the user most
+ * needed to be heard, not redirected to a helpline they didn't ask for (see crisisClassifier.realmodel.test.ts
+ * for the measured scores). Heartbreak language ALONE stays well under threshold (measured ~0.43) — it is
+ * specifically the co-occurrence with help-seeking phrasing that pushes the score up, so this guard requires
+ * BOTH markers, mirroring the AND-gated precision of scanForEuphemism / scanForDivestmentReadiness above.
+ *
+ * SAFETY POSTURE: identical to the other guards — suppresses ONLY the SOFT classifier upgrade (the
+ * deterministic keyword floor runs first and always wins), and any life-weariness/despair or lethal co-signal
+ * DEFERS back to the classifier instead of being suppressed, so recall on a genuine disclosure that happens to
+ * mention heartbreak/therapy is unchanged.
+ */
+export function isBenignHeartbreakDisclosure(message: string): boolean {
+  if (!message) return false;
+  const t = message.toLowerCase().replace(/['’]/g, "'").replace(/\s+/g, " ").trim();
+  if (!(HEARTBREAK_IMPACT_MARKER.test(t) && PAST_HELP_SEEKING_MARKER.test(t))) return false;
+  return !LETHAL_COSIGNAL.test(t) && !WEARY_DESPAIR_PATTERNS.test(t);
+}
+
 // Self-soothing / dismissal REASSURANCE phrasing ("i'm okay for now", "i'll be okay", "i feel a bit better").
 const REASSURANCE_PATTERNS =
   /\b(i'?m (okay|ok|fine|alright|all right|good)( now| for now| again)?|i'?ll be (okay|ok|fine|alright|all right)|i (think|feel like) i'?m (okay|ok|fine)|feeling (better|okay|fine)|feel (a bit |much |a little )?better|doing (okay|better|fine)|i'?m good now)\b/;

@@ -351,3 +351,77 @@ describe("crisisClassifier — REAL MiniLM regression: existential-referent clas
     expect(sig.tier).toBe("full");
   }, 60_000);
 });
+
+/**
+ * CRITICAL device-observed regression (2026-07-15 device-QA): a real device transcript sent NilaMind a
+ * betrayal/heartbreak disclosure with NO suicidal ideation — "My sister called me today morning, she's not my
+ * own sister... it broke my heart and shattered me. Since then in October I consulted psychiatrist" — and the
+ * app fired the full-screen crisis takeover (helpline numbers, safety-plan card) on someone who was simply
+ * sharing something painful and had already sought professional care for it. Confirmed against the REAL
+ * bundled model: the full message scores 0.6030 (above CRISIS_THRESHOLD 0.5796), and several shorter
+ * heartbreak+help-seeking phrasings score even higher (0.62-0.75, some clearing CRISIS_HIGH_CONFIDENCE_
+ * THRESHOLD 0.71 — i.e. this specific false positive was reaching the FULL takeover tier, not just the soft
+ * card). Heartbreak-impact language ALONE stays well under threshold (measured 0.43 for the same backstory
+ * minus the psychiatrist clause) — it is specifically the co-occurrence with retrospective professional
+ * help-seeking language that pushes the score up. The fix is isBenignHeartbreakDisclosure (safety.ts), wired
+ * into detectCrisisSignal exactly like the other five guards. These assertions lock in: the model still SCORES
+ * the phrases high (we did NOT retrain/re-threshold), yet the end-to-end verdict is now safe, while a genuine
+ * disclosure that happens to mention heartbreak/therapy AND despair/lethal intent still fires at tier:"full".
+ */
+describe("crisisClassifier — REAL MiniLM regression: heartbreak+help-seeking disclosure false positive (2026-07-15 device-QA)", () => {
+  beforeAll(async () => {
+    setCrisisClassifierEnabled(true);
+    setCrisisEmbedder(realEmbedder);
+    await realEmbedder("warmup");
+  }, 120_000);
+
+  it("the raw model STILL scores the exact device-transcript message above CRISIS_THRESHOLD (fix is the guard, not the model)", async () => {
+    const p = await scoreCrisis(
+      "my sister called me today morning, she's not my own sister, we met during our academy in 2024 august, since then we are like own sister and brother, back in 2025 august i got to know that she is also talking to my friend very closely, but she created a perception like she hated him, when i overheard her conversation, it broke my heart and shattered me. since then in october i consulted psychiatrist"
+    );
+    expect(p).not.toBeNull();
+    expect(p as number).toBeGreaterThan(CRISIS_THRESHOLD); // measured ~0.6030
+  }, 60_000);
+
+  const BENIGN_HEARTBREAK_HELP_SEEKING = [
+    "it broke my heart and shattered me. since then in october i consulted psychiatrist",
+    "my friend betrayed my trust and it broke my heart and shattered me. since then i consulted a psychiatrist",
+    "she betrayed me and it shattered me, i saw a therapist about it",
+    "it broke my heart and shattered me, i consulted a psychiatrist",
+  ];
+
+  it.each(BENIGN_HEARTBREAK_HELP_SEEKING)(
+    "does NOT trigger the full-screen crisis takeover on a heartbreak+help-seeking disclosure: %j",
+    async (s) => {
+      const sig = await detectCrisisSignal(s);
+      expect(sig).toEqual({ hit: false, source: null, tier: null });
+    },
+    60_000
+  );
+
+  it("does NOT fire on heartbreak-impact language alone (no help-seeking clause; already well under threshold)", async () => {
+    const p = await scoreCrisis("it broke my heart and shattered me");
+    expect(p).not.toBeNull();
+    expect(p as number).toBeLessThan(CRISIS_THRESHOLD); // measured ~0.25 — the guard isn't even needed here
+    expect(await detectCrisis("it broke my heart and shattered me")).toBe(false);
+  }, 60_000);
+
+  // Genuine disclosures that happen to mention heartbreak/therapy AND despair or lethal intent must STILL fire
+  // at the full takeover — recall is unchanged. Each keeps a keyword-floor hit (the explicit ones) or trips
+  // the guard's own lethal/despair veto independently of the keyword floor.
+  it.each([
+    "it broke my heart and shattered me, i consulted a psychiatrist, i don't want to live anymore",
+    "she shattered me, i saw a therapist, but i just want the pain to stop forever",
+  ])("genuine heartbreak+help-seeking disclosure WITH a lethal co-signal still resolves tier:'full': %j", async (s) => {
+    const sig = await detectCrisisSignal(s);
+    expect(sig.hit).toBe(true);
+    expect(sig.tier).toBe("full");
+  }, 60_000);
+
+  it("genuine heartbreak+help-seeking disclosure WITH despair (no explicit keyword) still fires via the classifier (guard veto, not keyword floor)", async () => {
+    const s = "she shattered me, i saw a therapist, i feel completely empty inside"; // measured 0.9047
+    const sig = await detectCrisisSignal(s);
+    expect(sig.source).toBe("classifier"); // proves this reaches the classifier rather than the keyword floor
+    expect(sig.hit).toBe(true);
+  }, 60_000);
+});

@@ -23,7 +23,7 @@
  * device-verified — see crisisEmbedder.example.ts.
  */
 import weights from "./crisisClassifier.weights.json";
-import { scanForCrisis, isBenignMedicationAdherence, isBenignHyperbole, isBenignExhaustion, isBenignOkayReassurance, isBenignExistentialReferent } from "../safety";
+import { scanForCrisis, isBenignMedicationAdherence, isBenignHyperbole, isBenignExhaustion, isBenignOkayReassurance, isBenignExistentialReferent, isBenignHeartbreakDisclosure } from "../safety";
 
 /** Returns a NORMALIZED (L2) sentence embedding of `dim` floats. The head was trained on normalized MiniLM
  *  mean-pooled embeddings, so the embedder MUST mean-pool + L2-normalize (Transformers.js:
@@ -208,6 +208,14 @@ export async function detectCrisisSignal(text: string): Promise<CrisisSignal> {
   // as benign (see isBenignExistentialReferent's docstring in safety.ts for the full root-cause story and the
   // real-model scores).
   if (isBenignExistentialReferent(text)) return { hit: false, source: null, tier: null };
+  // 2026-07-15 device-QA (§9 FALSE POSITIVE at the worst possible moment): a betrayal/heartbreak disclosure
+  // that also recounts past-tense professional help-seeking ("...it broke my heart and shattered me. since
+  // then in october i consulted psychiatrist" — NO suicidal ideation) scores 0.6030 against the real bundled
+  // model, clearing CRISIS_THRESHOLD and firing the full-screen crisis takeover on someone who was simply
+  // sharing something painful and had already sought care for it. Same posture as the other five guards: only
+  // suppresses the classifier's contribution after a keyword-floor MISS, vetoed by any lethal co-signal or
+  // life-weariness/despair phrasing. See isBenignHeartbreakDisclosure in safety.ts.
+  if (isBenignHeartbreakDisclosure(text)) return { hit: false, source: null, tier: null };
   const p = await scoreCrisis(text);
   if (p === null || p < CRISIS_THRESHOLD) return { hit: false, source: null, tier: null };
   // 2026-07-12 Bug 1 fix: tier is SCORE-based within classifier hits, not automatically "soft" just because

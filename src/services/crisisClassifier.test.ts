@@ -155,6 +155,25 @@ describe("crisisClassifier — additive, fail-closed §9 gate", () => {
     // a genuine euphemism with no existential-family phrasing at all is untouched by this guard.
     expect(await detectCrisis(EUPHEMISM)).toBe(true);
   });
+
+  // NEGATIVE GUARD wiring (2026-07-15 device-QA — §9 false positive at the worst possible moment): a
+  // betrayal/heartbreak disclosure that also recounts past-tense professional help-seeking must NOT be
+  // upgraded even at score≈1. Deterministic proof of the guard's placement in detectCrisis; the real-model
+  // end-to-end lives in crisisClassifier.realmodel.test.ts.
+  it("ON: isBenignHeartbreakDisclosure suppresses a high-scoring betrayal+help-seeking MISS", async () => {
+    setCrisisClassifierEnabled(true);
+    setCrisisEmbedder(constEmbedder([...COEF])); // score ≈ 1 ≥ threshold
+    expect(await detectCrisis("it broke my heart and shattered me. since then in october i consulted psychiatrist")).toBe(false);
+    expect(await detectCrisis("she betrayed me and it shattered me, i saw a therapist about it")).toBe(false);
+    // life-weariness/despair or a lethal co-signal co-occurring with the same language DEFERS to the
+    // classifier — the guard must NOT suppress it.
+    expect(await detectCrisis("it broke my heart and shattered me, i consulted a psychiatrist, i don't want to live anymore")).toBe(true);
+    expect(await detectCrisis("it broke my heart and shattered me, i started therapy, but i feel hopeless about everything")).toBe(true);
+    // heartbreak language with no help-seeking co-signal is untouched by this guard.
+    expect(await detectCrisis("it broke my heart and shattered me")).toBe(true);
+    // a genuine euphemism with no heartbreak/help-seeking phrasing at all is untouched by this guard.
+    expect(await detectCrisis(EUPHEMISM)).toBe(true);
+  });
 });
 
 // A TEXT-AWARE mock embedder (unlike constEmbedder, which ignores the input entirely): scores high only for
