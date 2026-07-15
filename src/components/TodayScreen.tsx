@@ -1,12 +1,12 @@
 import { useRef, useState, useMemo } from "react";
 import { Wind, MessageCircle, Moon, LayoutGrid, Sparkles, ChevronRight, HeartHandshake, Sparkle, Clock3, Target, LineChart, Activity, Lightbulb, LifeBuoy, Search, X } from "lucide-react";
-import { getTimeMode, getUserState, getGreeting } from "../services/modeEngine";
+import { getTimeMode, getUserState } from "../services/modeEngine";
 import { hasCheckinToday } from "../services/checkin";
 import { secureLocal } from "../services/secureLocal";
 import { buildToolGroups, type ToolGroup } from "./toolsRows";
 import { useLanguage, t } from "../services/i18n";
 import { loadInsights } from "../services/nilaInsights";
-import { loadAssessments } from "../services/assessments";
+import { loadAssessments, INSTRUMENTS } from "../services/assessments";
 import { isWellbeingDue } from "../services/wellbeingTrack";
 import { getCapacityLevel } from "../services/capacitySignal";
 import { hasRhythmToday, loadTodayAnchors, RHYTHM_ANCHORS } from "../services/socialRhythm";
@@ -173,7 +173,16 @@ export default function TodayScreen({
   const timeMode = getTimeMode();
   const userState = getUserState();
   const capacity = getCapacityLevel(userState);
-  const greeting = getGreeting(timeMode);
+  // Same greeting source as the Nila tab's header (t("greeting_*")) so the two tabs agree on wording
+  // and both stay localized — this previously called modeEngine's English-only getGreeting() directly,
+  // so a non-English user saw a translated greeting on Nila but untranslated English here.
+  const greetingMap: Record<TimeMode, string> = {
+    morning: t("greeting_morning"),
+    day: t("greeting_day"),
+    evening: t("greeting_evening"),
+    night: t("greeting_night"),
+  };
+  const greeting = greetingMap[timeMode];
   const checkedIn = hasCheckinToday(new Date().toISOString().split("T")[0]);
   const todayMood = getTodayMood();
   const dailyIntentionSet = !!getDailyIntention();
@@ -267,8 +276,8 @@ export default function TodayScreen({
             <p className="text-sm font-semibold text-slate-100">Welcome to NilaMind</p>
           </div>
           <p className="text-xs text-slate-400 leading-relaxed">
-            Everything here stays on your device. Start with a check-in — it takes two taps.
-            Nila will suggest tools based on how you're feeling.
+            Everything here stays on your device. Nila will suggest tools based on how you're feeling —
+            just tap "How are you feeling right now?" below to get started.
           </p>
         </div>
       )}
@@ -336,23 +345,25 @@ export default function TodayScreen({
         </div>
       )}
 
-      {/* Proactive assessment suggestion — contextual or routine */}
+      {/* Proactive assessment suggestion — contextual or routine. Uses the instrument's plain-language
+          `measures` field (not the raw clinical acronym) as the headline, with the acronym kept as a
+          small secondary label so it still matches what the user sees once they open the screening.
+          Styled like every other suggestion card here (no amber "warning" tint) — this is a supportive
+          nudge, not an alert, and shouldn't read as one. */}
       {assessmentPrompt && (
         <button
           onClick={() => go("assessment")}
-          className={`w-full p-4 rounded-2xl text-left transition-all cursor-pointer ${
-            assessmentPrompt.priority === "high"
-              ? "bg-amber-500/5 border border-amber-500/20 hover:bg-amber-500/10"
-              : "glass hover:brightness-110"
-          }`}
+          className="w-full glass hover:brightness-125 p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left flex items-center gap-3"
         >
-          <div className="flex items-center gap-2">
-            <Activity className={`w-4 h-4 ${assessmentPrompt.priority === "high" ? "text-amber-400" : "text-blue-400"}`} />
-            <p className="text-sm font-semibold text-slate-200">
-              {assessmentPrompt.instrument} {assessmentPrompt.kind === "contextual" ? "suggested" : "due"}
-            </p>
-          </div>
-          <p className="text-[11px] text-slate-400 leading-relaxed mt-1">{assessmentPrompt.reason}</p>
+          <span className="shrink-0 text-blue-400"><Activity className="w-5 h-5" aria-hidden="true" /></span>
+          <span className="flex-1 min-w-0">
+            <span className="block text-sm font-bold text-slate-100">
+              {INSTRUMENTS[assessmentPrompt.instrument].measures} check {assessmentPrompt.kind === "contextual" ? "suggested" : "due"}
+              <span className="text-slate-500 font-normal"> ({assessmentPrompt.instrument})</span>
+            </span>
+            <span className="block text-[11px] text-slate-400 mt-0.5">{assessmentPrompt.reason}</span>
+          </span>
+          <ChevronRight className="w-5 h-5 text-slate-500 shrink-0" aria-hidden="true" />
         </button>
       )}
 
@@ -368,6 +379,7 @@ export default function TodayScreen({
           <p className="text-sm font-semibold text-slate-200">Quick breathe</p>
           <p className="text-[11px] text-slate-500">A 5-minute breathing session to settle your body</p>
         </div>
+        <ChevronRight className="w-5 h-5 text-slate-500 shrink-0" aria-hidden="true" />
       </button>
 
       {/* Mood card — prompt to log if not checked in, show reflection if done */}

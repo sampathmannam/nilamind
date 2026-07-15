@@ -169,7 +169,10 @@ export function getNilaQuestion(
   if (timeMode === "day") {
     if (userState === "anxious") return "How are you feeling right now?";
     if (userState === "low") return "How's your day going?";
-    if (userState === "elevated") return "Let's take a breath. How are you?";
+    // Not "Let's take a breath..." — the elevated-state sub-message shown right below this question
+    // (STATE_MESSAGES.elevated, "Let's slow things down together.") already opens with "Let's", so a
+    // matching lead-in here read as two back-to-back "Let's" sentences saying nearly the same thing.
+    if (userState === "elevated") return "How are you feeling right now?";
     return "How's your day going?";
   }
 

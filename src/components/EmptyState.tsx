@@ -87,7 +87,7 @@ export const EMPTY_STATES = {
   noWellbeingChecks: {
     nilaState: "calm" as NilaState,
     title: "Track your wellbeing over time",
-    body: "A fortnightly WHO-5 check takes 2 minutes and shows how your wellbeing trends over months.",
+    body: "A 2-week WHO-5 check takes 2 minutes and shows how your wellbeing trends over months.",
   },
   noAssessments: {
     nilaState: "supporting" as NilaState,

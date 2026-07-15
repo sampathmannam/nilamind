@@ -94,7 +94,7 @@ function buildSummary(
   cadence: WellbeingCadence,
 ): string {
   if (h.length === 0) {
-    return "No wellbeing check-ins yet. A fortnightly check helps you notice the long view, not just daily swings.";
+    return "No wellbeing check-ins yet. A 2-week check helps you notice the long view, not just daily swings.";
   }
   const latest = h[h.length - 1];
   const trendWord =

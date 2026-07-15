@@ -766,7 +766,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                     {m.role === "user" ? m.content : stripChatMarkdown(m.content)}
                   </div>
                   {m.role === "assistant" && !ratedMessages.has(i) && (
-                    <div className="flex gap-1 mt-1">
+                    <div className="flex gap-2 mt-1">
                       <button
                         onClick={() => {
                           recordFeedback(m.content, "up");

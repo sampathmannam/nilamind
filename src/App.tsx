@@ -479,14 +479,14 @@ export default function App() {
         )}
         {activeTab === "today" && (
           <ErrorBoundary name="today" onError={(err: Error, info: React.ErrorInfo) => console.error("[ErrorBoundary:today] caught:", err, info)}>
-            <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-6" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
+            <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-12" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
               <TodayScreen go={go} phoneEnabled={phoneEnabled} onEpisode={onEpisode} onOpenCrisis={activateCrisis} />
             </div>
           </ErrorBoundary>
         )}
         {activeTab === "you" && (
           <ErrorBoundary name="you" onError={(err: Error, info: React.ErrorInfo) => console.error("[ErrorBoundary:you] caught:", err, info)}>
-            <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-6" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
+            <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-12" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
               <YouScreen go={go} onOpenCrisis={activateCrisis} />
             </div>
           </ErrorBoundary>
