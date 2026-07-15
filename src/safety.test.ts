@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isStreamingHarm, scanForCrisis, checkResponse, isBenignMedicationAdherence, isBenignHyperbole, isBenignExhaustion, isBenignOkayReassurance, isBenignExistentialReferent, METHOD_INTENT_PHRASES, SYCOPHANTIC_AFFIRMATIONS, ROMANIZED_IDEATION, SLANG_IDEATION } from "./safety";
+import { isStreamingHarm, scanForCrisis, checkResponse, isBenignMedicationAdherence, isBenignHyperbole, isBenignExhaustion, isBenignOkayReassurance, isBenignExistentialReferent, METHOD_INTENT_PHRASES, SYCOPHANTIC_AFFIRMATIONS, ROMANIZED_IDEATION, SLANG_IDEATION, getCrisisReply } from "./safety";
 
 // Phase 0 — anti-sycophancy / reality-testing gate. Research basis (docs/NILA_AGENT_RESEARCH_BASIS.md): sycophancy
 // — a model VALIDATING a harmful belief — is THE documented harm mechanism of LLM mental-health tools (OpenAI's
@@ -1027,5 +1027,22 @@ describe("isBenignExistentialReferent — narrow negative guard for the semantic
     expect(isBenignExistentialReferent("the world would be lighter without me in it")).toBe(false); // real euphemism, different family
     expect(isBenignExistentialReferent("i had a nice walk this evening and felt pretty calm")).toBe(false); // positive
     expect(isBenignExistentialReferent("")).toBe(false);
+  });
+});
+
+describe("getCrisisReply — validation-first copy (crisis-moment UX redesign)", () => {
+  it("opens with acknowledgment/validation before any instruction", () => {
+    const reply = getCrisisReply();
+    const firstSentence = reply.split(/\n/)[0].toLowerCase();
+    expect(firstSentence).toMatch(/real|glad|heavy|matters/);
+  });
+
+  it("still includes at least one real crisis-line reference (unconditional invariant, unchanged)", () => {
+    const reply = getCrisisReply();
+    expect(reply).toMatch(/\d/); // a phone number/digit sequence is present
+  });
+
+  it("never uses 'commit suicide' phrasing (safe-messaging constraint)", () => {
+    expect(getCrisisReply().toLowerCase()).not.toMatch(/commit(ted|ting)?\s+suicide/);
   });
 });

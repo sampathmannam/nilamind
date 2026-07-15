@@ -882,9 +882,9 @@ function replyMentionsCrisisResource(reply: string): boolean {
   );
 }
 
-/** The deterministic crisis reply — solution-forward: immediate coping actions first, then helplines. */
+/** The deterministic crisis reply — validation-first, then solution-forward: immediate coping actions, then helplines. */
 export function getCrisisReply(): string {
-  return `This moment is heavy. Let's find one thing to steady through it.
+  return `What you're feeling right now is real, and I'm glad you're still here. This moment is heavy — let's find one thing to steady through it together.
 
 → Try 5-4-3-2-1 grounding: name 5 things you can see, 4 you can touch, 3 you can hear, 2 you can smell, 1 thing you can taste.
 
@@ -894,7 +894,7 @@ Or reach for a human right now — trained listeners who know what this feels li
 
 ${getCrisisLines().map((l) => `📞 ${l.name}: ${l.display}`).join("\n")}
 
-These are free, confidential, available right now. Your safety plan is just below this screen.`;
+These are free, confidential, available right now. I'm still here too — your safety plan and more ways to steady are just below.`;
 }
 
 /** Short fallback when an AI reply is judged unsafe — still points to a real crisis line. */
