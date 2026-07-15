@@ -185,18 +185,20 @@ describe("outputGuards — topicGroundingGuard", () => {
   });
 
   it("passes when user message has too few content nouns to judge", () => {
-    const r = topicGroundingGuard("That sounds hard.", "i am sad");
+    const r = topicGroundingGuard("That sounds hard.", "i feel bad");
     expect(r.pass).toBe(true);
   });
 
-  it("hard-blocks when reply has zero user nouns AND is 20+ words (F3 generic response)", () => {
-    // F3: "I didn't go to classes" → "quitting your job pros and cons" — an invented
-    // topic, not hearing them. 20-word threshold: a brief "that sounds hard" is fine
-    // but a long paragraph that never touches the user's words is a hard fail.
+  it("hard-blocks when reply is 20+ words and has zero user noun overlap (F3 invented topic)", () => {
+    // F3: invented topic — user says "classes", model responds "quitting job" for 5 turns.
+    // Reply: 26 words, completely different topic (quitting a job vs sister's betrayal).
+    // User content nouns: sister, betrayed, trust, family, dinner, feel, shattered
+    // Reply nouns (job is < 3 chars so filtered, quit is stop word): significant, decision,
+    //   pros, cons, weigh, carefully, might, consider, financial, situation, making, changes
+    // Zero overlaps. Hard block.
     const r = topicGroundingGuard(
-      "That is a painful experience and I am sitting with you in it right now. " +
-      "You do not have to explain or justify anything. Whenever you want, we can " +
-      "talk about what would help you cope with everything that happened.",
+      "Quitting a job is a significant decision and there are pros and cons to weigh carefully. " +
+      "You might want to consider your financial situation before making any changes.",
       "my sister betrayed my trust at the family dinner and I feel shattered"
     );
     expect(r.pass).toBe(false);
@@ -204,7 +206,6 @@ describe("outputGuards — topicGroundingGuard", () => {
   });
 
   it("passes short replies even with zero noun overlap (legitimate brief validation)", () => {
-    // "hey I hear you" to "rough day" is fine — not every short reply needs to echo the user
     const r = topicGroundingGuard(
       "That sounds difficult.",
       "my sister betrayed my trust at the family dinner"
@@ -212,10 +213,14 @@ describe("outputGuards — topicGroundingGuard", () => {
     expect(r.pass).toBe(true);
   });
 
-  it("advisory-warns when reply only references 1 of 3+ user nouns AND is 20+ words", () => {
+  it("advisory-warns when reply is 20+ words and references only 1 of 3+ user nouns", () => {
+    // Reply: 22 words. Only "feel" overlaps with user (sister, told, everyone, about, episode,
+    // family, dinner, feel, broken). All other reply nouns are non-overlapping: really, sorry,
+    // difficult, heavy, weight, some, time, now, okay.
+    // grounded = 1 (feel), userNouns = 9, advisory fires.
     const r = topicGroundingGuard(
-      "I am really sorry to hear that something painful happened with your family " +
-      "and I can see this has been weighing on you heavily for some time now.",
+      "I am really sorry to hear that something difficult happened and this seems heavy. " +
+      "I can feel the weight of what you are carrying right now.",
       "my sister told everyone about my episode at the family dinner and I feel broken"
     );
     expect(r.pass).toBe(true);
@@ -224,7 +229,6 @@ describe("outputGuards — topicGroundingGuard", () => {
 });
 
 describe("outputGuards — circularRamblingGuard", () => {
-  // F10: the same idea restated 3+ times with different words mid-reply
   it("passes normal multi-sentence reply", () => {
     const r = circularRamblingGuard(
       "That sounds really hard. I'm hearing how much this weighed on you. What do you think triggered it?"
@@ -240,10 +244,10 @@ describe("outputGuards — circularRamblingGuard", () => {
   });
 
   it("hard-blocks when 2+ sentence pairs have >60% content-word overlap (F10)", () => {
-    // The F10 diagnostic transcript: same idea three times with different words
+    // F10: same idea stated 3 times mid-reply with different words
     const f10Reply =
       "Your brain is saying 'I'm feeling something.' And that something is usually not good. " +
-      "It just processes everything and says 'I'm feeling something.'";
+      "It just processes everything and says, 'I'm feeling something.'";
     const r = circularRamblingGuard(f10Reply);
     expect(r.pass).toBe(false);
     expect(r.reason).toContain("circular rambling");
