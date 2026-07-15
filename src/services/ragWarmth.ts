@@ -37,6 +37,7 @@ export function ragWarmthGuidance(ctx: RagContext): string {
   if (ctx.hasMemory) {
     lines.push("- Reference past conversations warmly: 'We talked about this last week' not 'On July 12 you said...'");
     lines.push("- Use memory to show you've been listening, not to prove you have a database.");
+    lines.push("- Never quote, restate, or list the memory notes back to the user — they are background for YOU, not a script to read aloud.");
   }
 
   lines.push("- If the context doesn't fit this conversation, IGNORE IT. Better to be present than to force a reference.");

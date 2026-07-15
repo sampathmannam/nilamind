@@ -110,17 +110,34 @@ export function retrieveConversationMemories(userMessage: string, k = 3): Memory
     .map((s) => s.entry);
 }
 
-/** Format retrieved memories as a few-shot context block for the model. */
+/**
+ * Format retrieved memories as background-fact context for the model.
+ *
+ * Device-QA 2026-07-15 root cause: this block is spliced directly into the system prompt as few-shot context
+ * (see nila.ts). The prior shape — `${i+1}. ${date}${emotions}: They said "${snippet}..." → Nila responded.` —
+ * is a dialogue-TURN template ending in a content-free placeholder response ("→ Nila responded.", nothing
+ * after it). Small on-device models imitate conversation HISTORY over system-prompt instructions (an
+ * established finding in this project), so the model mimicked this exact shape verbatim instead of generating
+ * a real reply: "Sure! Here's what you said: > '...' → Nila responded..." (a real device transcript). Fixed by
+ * dropping the "They said / → responded" dialogue-quoting verbs entirely — declarative fact-bullets only — plus
+ * an explicit anti-restatement instruction so a model that still tries to imitate the block's shape is told not
+ * to surface it as a reply.
+ */
 export function formatMemoryBlock(memories: MemoryEntry[]): string {
   if (memories.length === 0) return "";
 
   const lines = memories.map((m, i) => {
     const date = new Date(m.timestamp).toLocaleDateString();
-    const emotions = m.emotionWords.length > 0 ? ` (${m.emotionWords.slice(0, 3).join(", ")})` : "";
-    return `${i + 1}. ${date}${emotions}: They said "${m.userText.slice(0, 120)}..." → Nila responded.`;
+    const emotions = m.emotionWords.length > 0 ? `, feeling ${m.emotionWords.slice(0, 3).join(", ")}` : "";
+    const snippet = m.userText.slice(0, 120);
+    const ellipsis = m.userText.length > 120 ? "..." : "";
+    return `${i + 1}. ${date}${emotions} — topic: "${snippet}${ellipsis}"`;
   });
 
-  return "PAST CONVERSATIONS (you can reference these):\n" + lines.join("\n");
+  return (
+    "MEMORY NOTES (background facts only — never quote, restate, or list these lines back to the user; " +
+    "write your own fresh, natural reply):\n" + lines.join("\n")
+  );
 }
 
 /** Get memory count (for debugging/metrics). */
