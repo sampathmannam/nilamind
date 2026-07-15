@@ -67,6 +67,19 @@ const OVERWHELM_CUES =
 const USER_ANSWER_CUES =
   /\b(yes|no|yeah|nah|nahi|haan|right|exactly|actually|well)\b/i;
 
+/** F5 fix: loaded word "episode" → highest-priority CLARIFY.
+ * "episode" is the single highest-value word in a bipolar disclosure.
+ * It must ALWAYS be asked about, no matter what else is in the message.
+ * Ash treated "episode" as the most important word in the sentence.
+ * Match: standalone "episode" or "an/the episode" (not "tv episode"). */
+const EPISODE_CUES = /\b(had? an? episode|an? episode today|what episode|explain.*episode|episode$|the episode happened|called? an? episode)\b/i;
+
+/** Help-seeking language — user already sought professional care.
+ * Must be acknowledged as positive action, not crisis.
+ * This is the inverse of a crisis signal: it shows agency and coping. */
+const HELP_SEEKING_CUES =
+  /\b(consulted|seen|a psychiatrist|a therapist|doctor|mental health professional|got professional help|started therapy|went to therapy|appointment with|booked.*therapist|psychiatrist appointment)\b/i;
+
 // ---------------------------------------------------------------------------
 // Conversation context helpers
 // ---------------------------------------------------------------------------
@@ -97,6 +110,47 @@ function hasAnyQuestion(text: string): boolean {
   return /\?/.test(text);
 }
 
+/** Extract content words (deterministic, no network). Used for topic tracking. */
+function extractContentWords(text: string): Set<string> {
+  const stopWords = new Set([
+    "i", "me", "my", "you", "your", "we", "our", "a", "an", "the", "is", "are",
+    "was", "were", "be", "been", "being", "have", "has", "had", "do", "does",
+    "did", "will", "would", "could", "should", "can", "to", "of", "in", "for",
+    "on", "with", "at", "by", "from", "as", "into", "about", "just", "really",
+    "very", "so", "like", "right", "yeah", "okay", "well", "that", "this",
+    "these", "those", "what", "how", "why", "when", "where", "who", "which",
+    "there", "here", "then", "now", "it", "its", "not", "no", "don", "doesn",
+    "didn", "wasn", "isn", "aren", "won", "can", "couldn", "wouldn", "shouldn",
+    "ve", "ll", "re", "s", "t", "m", "d", "and", "but", "or", "if", "than",
+    "because", "him", "her", "us", "them", "all", "some", "any",
+  ]);
+  return new Set(
+    text.toLowerCase().split(/[^a-z']+/).filter((w) => w.length >= 4 && !stopWords.has(w))
+  );
+}
+
+/**
+ * Compute topic overlap between the current user message and the last N user messages.
+ * Used to detect when the user is circling the same topic (triggers DEEPEN escalation).
+ * Returns 0-1 Jaccard score.
+ */
+function computeTopicOverlap(currentMsg: string, recentUserMessages: string[]): number {
+  if (recentUserMessages.length === 0) return 0;
+  const lastFew = recentUserMessages.slice(-3);
+  const currentWords = extractContentWords(currentMsg);
+  if (currentWords.size === 0) return 0;
+
+  let totalOverlap = 0;
+  for (const msg of lastFew) {
+    const msgWords = extractContentWords(msg);
+    if (msgWords.size === 0) continue;
+    const intersection = [...currentWords].filter((w) => msgWords.has(w)).length;
+    const union = new Set([...currentWords, ...msgWords]).size;
+    totalOverlap += union === 0 ? 0 : intersection / union;
+  }
+  return totalOverlap / lastFew.length;
+}
+
 // ---------------------------------------------------------------------------
 // Move classifier — priority-ordered, deterministic
 // ---------------------------------------------------------------------------
@@ -119,20 +173,28 @@ export function classifyMove(
   // 2. Overwhelm / soft disclosure → REPAIR
   if (OVERWHELM_CUES.test(msg) && sentenceCount(msg) <= 2) return "REPAIR";
 
-  // 3. Venting (long emotional dump, no question) → HOLD
+  // 3. F5 fix — loaded word "episode" → CLARIFY (highest content priority).
+  // Ash's #1 rule: "episode" is the most important word. Always ask what it was.
+  if (EPISODE_CUES.test(msg)) return "CLARIFY";
+
+  // 4. Help-seeking language → REFLECT_ASK with positive acknowledgment.
+  // "I saw a psychiatrist" = user took agency, not a crisis. Acknowledge it.
+  if (HELP_SEEKING_CUES.test(msg)) return "REFLECT_ASK";
+
+  // 5. Venting (long emotional dump, no question) → HOLD
   if (!hasAnyQuestion(msg) && sentenceCount(msg) >= 3 && VENTING_CUES.test(msg))
     return "HOLD";
 
-  // 4. Vague / confused → CLARIFY
+  // 6. Vague / confused → CLARIFY
   if (VAGUE_CUES.test(msg) && !hasAnyQuestion(msg)) return "CLARIFY";
 
-  // 5. Factual question → ANSWER
+  // 7. Factual question → ANSWER
   if (hasAnyQuestion(msg) && FACTUAL_QUESTIONS.test(msg)) return "ANSWER";
 
-  // 6. User answering a previous question → REFLECT_ASK (reflect what they said + one follow-up)
+  // 8. User answering a previous question → REFLECT_ASK (reflect what they said + one follow-up)
   if (userIsAnswering(ctx)) return "REFLECT_ASK";
 
-  // 7. Default → REFLECT_ASK
+  // 9. Default → REFLECT_ASK
   return "REFLECT_ASK";
 }
 
@@ -149,6 +211,10 @@ const STEER_REFLECT_ASK = `You are in REFLECT_ASK mode. They shared something re
 2. Name the emotional core in one plain line.
 3. Connect to history if you have a relevant memory, otherwise skip.
 4. End with ONE question that moves them forward.
+
+CRITICAL: If they mention "episode" — that is ALWAYS the most important word.
+Ask what happened during it. "What was that episode like for you?" is the right response.
+Never treat "episode" as a passing reference. It is always the door to something real.
 
 Do NOT give advice. Do NOT list options. Do NOT number anything. Keep it 2-5 short paragraphs, roughly 80 words.`;
 
@@ -237,7 +303,8 @@ const MOVE_EXEMPLAR_MAP: Record<Move, string[]> = {
 // ---------------------------------------------------------------------------
 
 /**
- * Classify a user turn and return the full move result:
+ * Classify a user turn and return the full move result.
+ * Computes topic overlap internally and escalates to DEEPEN when appropriate.
  * - move: the classified move
  * - steer: the system-prompt steer text for this move
  * - exemplarMoves: which exemplar move-tags to retrieve
@@ -249,51 +316,38 @@ export function resolveMove(
 ): MoveResult {
   const move = classifyMove(userMessage, ctx);
 
+  // Build the base result
+  let result: MoveResult;
   switch (move) {
     case "CLARIFY":
-      return {
-        move,
-        steer: STEER_CLARIFY,
-        exemplarMoves: MOVE_EXEMPLAR_MAP.CLARIFY,
-        questionAllowed: true,
-      };
+      result = { move, steer: STEER_CLARIFY, exemplarMoves: MOVE_EXEMPLAR_MAP.CLARIFY, questionAllowed: true };
+      break;
     case "DEEPEN":
-      return {
-        move,
-        steer: STEER_DEEPEN,
-        exemplarMoves: MOVE_EXEMPLAR_MAP.DEEPEN,
-        questionAllowed: true,
-      };
+      result = { move, steer: STEER_DEEPEN, exemplarMoves: MOVE_EXEMPLAR_MAP.DEEPEN, questionAllowed: true };
+      break;
     case "HOLD":
-      return {
-        move,
-        steer: STEER_HOLD,
-        exemplarMoves: MOVE_EXEMPLAR_MAP.HOLD,
-        questionAllowed: false,
-      };
+      result = { move, steer: STEER_HOLD, exemplarMoves: MOVE_EXEMPLAR_MAP.HOLD, questionAllowed: false };
+      break;
     case "REPAIR":
-      return {
-        move,
-        steer: STEER_REPAIR,
-        exemplarMoves: MOVE_EXEMPLAR_MAP.REPAIR,
-        questionAllowed: true,
-      };
+      result = { move, steer: STEER_REPAIR, exemplarMoves: MOVE_EXEMPLAR_MAP.REPAIR, questionAllowed: true };
+      break;
     case "ANSWER":
-      return {
-        move,
-        steer: STEER_ANSWER,
-        exemplarMoves: MOVE_EXEMPLAR_MAP.ANSWER,
-        questionAllowed: true,
-      };
+      result = { move, steer: STEER_ANSWER, exemplarMoves: MOVE_EXEMPLAR_MAP.ANSWER, questionAllowed: true };
+      break;
     case "REFLECT_ASK":
     default:
-      return {
-        move: "REFLECT_ASK",
-        steer: STEER_REFLECT_ASK,
-        exemplarMoves: MOVE_EXEMPLAR_MAP.REFLECT_ASK,
-        questionAllowed: true,
-      };
+      result = { move: "REFLECT_ASK", steer: STEER_REFLECT_ASK, exemplarMoves: MOVE_EXEMPLAR_MAP.REFLECT_ASK, questionAllowed: true };
+      break;
   }
+
+  // DEEPEN escalation: if REFLECT_ASK and topic overlap is high (user circling same topic),
+  // escalate to DEEPEN to gently widen the frame instead of re-reflecting.
+  if (ctx?.recentUserMessages && ctx.recentUserMessages.length > 0) {
+    const topicOverlap = computeTopicOverlap(userMessage, ctx.recentUserMessages);
+    return maybeEscalateToDeepen(result, topicOverlap);
+  }
+
+  return result;
 }
 
 /**
