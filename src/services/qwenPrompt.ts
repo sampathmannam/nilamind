@@ -99,3 +99,33 @@ export function toQwenPrompt(
   }
   return out + "<|im_start|>assistant\n";
 }
+
+// ─── Qwen3 (non-thinking) ────────────────────────────────────────────────────
+// Qwen3 is a HYBRID thinking model. For the companion chat we always run it in NON-thinking mode:
+// the official hard switch (enable_thinking=false in the HF chat template) renders the assistant
+// generation cue PREFILLED with an empty <think></think> block, and the model then answers directly
+// (Qwen3 model card → "Switching Between Thinking and Non-Thinking Mode"). We mirror that exact
+// rendering in the raw-prompt path. Thinking mode is deliberately NOT offered: hidden reasoning
+// would burn the token budget (slow CPU decode) and could leak deliberation into a companion reply.
+const QWEN3_NOTHINK_PREFILL = "<think>\n\n</think>\n\n";
+
+/** Render a raw Qwen3 ChatML prompt with the empty-think (non-thinking) assistant prefill. */
+export function toQwen3Prompt(
+  system: string,
+  messages: { role: "user" | "assistant"; content: string }[],
+): string {
+  return toQwenPrompt(system, messages) + QWEN3_NOTHINK_PREFILL;
+}
+
+/**
+ * Strip <think>…</think> blocks a Qwen3 model may still emit despite the non-thinking prefill.
+ * FAIL-CLOSED on an UNCLOSED block: everything from the dangling <think> onward is dropped, because
+ * leaked hidden reasoning must never be shown as Nila's reply (it can contain raw deliberation about
+ * the user's state that was never meant to be read).
+ */
+export function stripThinkBlocks(text: string): string {
+  let out = text.replace(/<think>[\s\S]*?<\/think>/g, "");
+  const dangling = out.indexOf("<think>");
+  if (dangling !== -1) out = out.slice(0, dangling);
+  return out.trim();
+}

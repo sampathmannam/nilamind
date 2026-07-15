@@ -22,7 +22,7 @@ import type { PromptFormat } from "./modelCatalog";
 import { toGemmaPrompt, windowMessages } from "./gemmaPrompt";
 // Sentence-boundary trim + copied-speaker-label strip for the reply (pure, unit-tested).
 import { trimToLastSentence, stripSpeakerLabel } from "./chatText";
-import { toQwenPrompt, windowQwenMessages } from "./qwenPrompt";
+import { toQwenPrompt, toQwen3Prompt, stripThinkBlocks, windowQwenMessages } from "./qwenPrompt";
 
 // Side-loaded GGUF in the app's own external files dir (adb push, mirrors the capgo .task path). The
 // PRODUCTION path is downloadModel() on first run — deferred; side-load validates the end-to-end brain.
@@ -36,6 +36,25 @@ interface FormatConfig {
   windowMessages: (messages: { role: "user" | "assistant"; content: string }[], maxChars?: number, system?: string) => { role: "user" | "assistant"; content: string }[];
   stop: string[];
   turnPattern: RegExp; // strip any fabricated future-turn markers from output
+  /**
+   * Per-model-family sampling profile. Sampling is NOT one-size-fits-all across families:
+   * each vendor publishes recommended decode settings, and small models are the most sensitive to
+   * getting them wrong. min_p is the min-p sampler (Nguyen et al., "Turning Up the Heat: Min-p
+   * Sampling for Creative and Coherent LLM Outputs", ICLR 2025 oral, arXiv:2407.01082) — a
+   * confidence-scaled truncation floor that keeps small-model outputs coherent where plain top-p
+   * lets low-probability junk through. penalty_present is the classic presence penalty, which the
+   * Qwen3 model card recommends (0–2) against the repetition loops quantized small models fall into
+   * (device-observed here — see the 2026-07-11 repetition-loop fix).
+   */
+  sampling: {
+    temperature: number;
+    top_k: number;
+    top_p: number;
+    min_p: number;
+    penalty_present?: number;
+  };
+  /** Optional format-specific output cleanup (e.g. Qwen3 think-block stripping). */
+  postProcess?: (text: string) => string;
 }
 
 const FORMAT_CONFIGS: Record<PromptFormat, FormatConfig> = {
@@ -45,6 +64,7 @@ const FORMAT_CONFIGS: Record<PromptFormat, FormatConfig> = {
     windowMessages,
     stop: ["<end_of_turn>", "<start_of_turn>"],
     turnPattern: /<(?:end|start)_of_turn>/,
+    sampling: { temperature: 0.6, top_k: 40, top_p: 0.95, min_p: 0.05 },
   },
   qwen: {
     n_ctx: 4096, // expanded from 2048 — q4_0 KV cache ~200MB, q8_0 was ~350MB. Qwen2.5 supports native 32K via YaRN rope scaling.
@@ -52,6 +72,18 @@ const FORMAT_CONFIGS: Record<PromptFormat, FormatConfig> = {
     windowMessages: windowQwenMessages,
     stop: ["<|im_end|>", "<|im_start|>"],
     turnPattern: /<\|im_(?:end|start)\|>/,
+    sampling: { temperature: 0.6, top_k: 40, top_p: 0.95, min_p: 0.05 },
+  },
+  qwen3: {
+    n_ctx: 4096, // Qwen3 native 32K; 4096 matches the qwen budget (same KV-cache RAM math)
+    buildPrompt: toQwen3Prompt, // ChatML + empty-<think> prefill = official non-thinking hard switch
+    windowMessages: windowQwenMessages,
+    stop: ["<|im_end|>", "<|im_start|>"],
+    turnPattern: /<\|im_(?:end|start)\|>/,
+    // Official Qwen3 model-card settings for NON-thinking mode: temp 0.7, top_p 0.8, top_k 20,
+    // min_p 0 — plus presence_penalty (card recommends 0–2) against quantized-model loops.
+    sampling: { temperature: 0.7, top_k: 20, top_p: 0.8, min_p: 0, penalty_present: 1.0 },
+    postProcess: stripThinkBlocks, // defence-in-depth: never show leaked hidden reasoning
   },
 };
 
@@ -114,7 +146,7 @@ export function createLlamaCppBackend(
       return warmPromise;
     },
 
-    generate: async ({ system, messages, onToken, signal }: LocalGenParams): Promise<string> => {
+    generate: async ({ system, messages, onToken, signal, jsonSchema }: LocalGenParams): Promise<string> => {
       if (!ctx) throw new Error("llama-cpp context not ready");
       generating = true;
       if (warmPromise) {
@@ -134,9 +166,19 @@ export function createLlamaCppBackend(
           {
             prompt,
             n_predict: 128, // enough for 3-5 sentence companion replies (~100-150 tokens)
-            temperature: 0.6, // moderate diversity — warm companion voice, not robotic repetition
-            top_k: 40, // standard diversity — lets the model find the right empathetic register
-            top_p: 0.95,
+            // Per-family sampling profile (see FormatConfig.sampling for the research basis):
+            // min-p floor for coherent small-model decoding, vendor-recommended temp/top_p/top_k.
+            temperature: fmt.sampling.temperature,
+            top_k: fmt.sampling.top_k,
+            top_p: fmt.sampling.top_p,
+            min_p: fmt.sampling.min_p,
+            ...(fmt.sampling.penalty_present !== undefined ? { penalty_present: fmt.sampling.penalty_present } : {}),
+            // Grammar-constrained structured output (extraction tasks only — reflection/memory). The
+            // binding converts the JSON schema to a GBNF grammar so the decoder CANNOT emit invalid
+            // JSON. Never used for chat: format constraints measurably degrade open-ended/reasoning
+            // quality (Tam et al., "Let Me Speak Freely?", EMNLP Industry 2024, arXiv:2408.02442),
+            // but are benign-to-positive for extraction — exactly the reflection case.
+            ...(jsonSchema ? { json_schema: JSON.stringify(jsonSchema) } : {}),
             penalty_repeat: 1.10, // standard repetition penalty — avoids loops while keeping natural phrasing
             penalty_last_n: 128, // shorter penalty window matches shorter replies
             dry_multiplier: 1.0, // stronger: 0.8 was too mild, model would still loop phrases
@@ -156,8 +198,12 @@ export function createLlamaCppBackend(
         );
         if (aborted) throw new Error("aborted");
         let text = (res?.text || full).trim();
+        // Schema-constrained output IS the payload — the grammar guarantees its shape, and the
+        // prose-oriented cleanups below (sentence trim, speaker-label strip) would corrupt it.
+        if (jsonSchema) return text;
         const cut = text.search(fmt.turnPattern);
         if (cut !== -1) text = text.slice(0, cut).trim();
+        if (fmt.postProcess) text = fmt.postProcess(text);
         // A small model sometimes copies the few-shot 'Nila: "..."' framing into its own reply — strip it.
         text = stripSpeakerLabel(text);
         // If the length cap (not the stop token) ended the reply, it may dangle mid-sentence —

@@ -228,3 +228,22 @@ describe("shouldReflectToday", () => {
     expect(shouldReflectToday("2099-01-01")).toBe(true);
   });
 });
+
+describe("runReflection — schema-constrained generation", () => {
+  beforeEach(() => { store.clear(); ls.clear(); registerLocalLlmBackend(null); (globalThis as any).__resetReflectionBootGuard?.(); });
+
+  it("passes a jsonSchema constraining output to an array of {kind∈INSIGHT_KINDS, text}", async () => {
+    const seen: any[] = [];
+    registerLocalLlmBackend({
+      id: "fake", isReady: () => true,
+      generate: async (params: any) => { seen.push(params.jsonSchema); return "[]"; },
+    } as LocalLlmBackend);
+    await runReflection("Check-ins (30d): 3.");
+    expect(seen).toHaveLength(1);
+    const schema = seen[0];
+    expect(schema).toBeTruthy();
+    expect(schema.type).toBe("array");
+    expect(schema.items.required).toEqual(["kind", "text"]);
+    expect(schema.items.properties.kind.enum).toEqual(["working_through", "what_helps", "pattern", "context", "value"]);
+  });
+});

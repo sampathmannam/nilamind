@@ -6,7 +6,7 @@
 // and architectural efficiency (GQA, better llama.cpp support) than the older Gemma-3-1B.
 // The Gemma entry is preserved below (commented) as a one-line revert for the old speed A/B.
 export type ModelRuntime = "task" | "gguf";
-export type PromptFormat = "gemma" | "qwen";
+export type PromptFormat = "gemma" | "qwen" | "qwen3";
 
 export interface CatalogModel {
   id: string;
@@ -27,16 +27,9 @@ export interface CatalogModel {
 }
 
 export const MODELS: CatalogModel[] = [
-  {
-    id: "quality",
-    label: "Nila's brain (thoughtful)",
-    detail: "Qwen2.5-3B · ~1.9 GB · more empathetic & nuanced · runs entirely on your phone",
-    filename: "qwen2.5-3b-instruct-q4_k_m.gguf",
-    url: "https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF/resolve/main/qwen2.5-3b-instruct-q4_k_m.gguf",
-    sizeBytes: 1985000000,
-    runtime: "gguf",
-    promptFormat: "qwen",
-  },
+  // MODELS[0] IS THE FIRST-RUN DOWNLOAD (ModelSetupScreen downloads exactly this entry). It must stay
+  // the DEVICE-VERIFIED brain — flipping it requires an on-device load + chat QA first (the MiniCPM
+  // lesson: native-load is THE risk). Guarded by modelCatalog.test.ts.
   {
     id: "fast",
     label: "Nila's brain (fast)",
@@ -46,6 +39,19 @@ export const MODELS: CatalogModel[] = [
     sizeBytes: 1117320736,
     // SHA-256 from HF LFS pointer (2026-07-11): model Qwen/Qwen2.5-1.5B-Instruct-GGUF
     sha256: "6a1a2eb6d15622bf3c96857206351ba97e1af16c30d7a74ee38970e434e9407e",
+    runtime: "gguf",
+    promptFormat: "qwen",
+  },
+  {
+    id: "quality",
+    label: "Nila's brain (thoughtful)",
+    detail: "Qwen2.5-3B · ~2.1 GB · more empathetic & nuanced · runs entirely on your phone",
+    filename: "qwen2.5-3b-instruct-q4_k_m.gguf",
+    url: "https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF/resolve/main/qwen2.5-3b-instruct-q4_k_m.gguf",
+    // 2026-07-15 FIX: was the rounded placeholder 1985000000 — the EXACT-match integrity check would
+    // have rejected every completed download at 100%. Real LFS byte length + sha from the public HF API.
+    sizeBytes: 2104932768,
+    sha256: "626b4a6678b86442240e33df819e00132d3ba7dddfe1cdc4fbb18e0a9615c62d",
     runtime: "gguf",
     promptFormat: "qwen",
   },
@@ -73,25 +79,27 @@ export const MODELS: CatalogModel[] = [
   //   runtime: "gguf",
   //   promptFormat: "gemma",
   // },
-  // --- Qwen3-1.7B upgrade (better reasoning, same size class as the 1.5B) -------------------------------
-  // TODO(maintainer, gated-model): Qwen3-1.7B-Instruct-GGUF is AUTH-GATED on HuggingFace — an authenticated
-  // session is required to read its exact byte size / SHA-256, so they could not be filled here. The catalog
-  // REQUIRES an EXACT sizeBytes match for download integrity (partial/corrupt transfers are rejected), so DO
-  // NOT uncomment this until you paste the verified sizeBytes + sha256 from an authenticated `curl -sIL` of the
-  // resolve URL. Prompt format is "qwen" (Qwen3 shares Qwen2.5's <|im_start|>/<|im_end|> template), so no prompt
-  // code change is needed once the size is filled. The registration path is already dynamic (modelDownload
-  // passes the real on-disk path), so once uncommented this becomes a selectable, downloadable brain.
-  // {
-  //   id: "fast3",
-  //   label: "Nila's brain (fast, smarter)",
-  //   detail: "Qwen3-1.7B · ~1.3 GB · better reasoning than 1.5B · runs entirely on your phone",
-  //   filename: "qwen3-1.7b-instruct-q4_k_m.gguf",
-  //   url: "https://huggingface.co/Qwen/Qwen3-1.7B-Instruct-GGUF/resolve/main/qwen3-1.7b-instruct-q4_k_m.gguf",
-  //   sizeBytes: 0, // TODO(maintainer): exact byte length from authenticated HF resolve HEAD
-  //   sha256: "",    // TODO(maintainer): SHA-256 from authenticated HF resolve HEAD
-  //   runtime: "gguf",
-  //   promptFormat: "qwen",
-  // },
+  // --- Qwen3-1.7B upgrade (newer generation, same size class as the 1.5B) -------------------------------
+  // 2026-07-15: the earlier "auth-gated" TODO here was STALE — the OFFICIAL repo is Qwen/Qwen3-1.7B-GGUF
+  // (public, Apache-2.0); "Qwen3-1.7B-Instruct-GGUF" never existed. sizeBytes + sha256 below were read from
+  // the public HF API LFS pointers for that repo. Q8_0 is deliberate, not Q4_K_M: quantization noise hurts
+  // sub-3B models disproportionately (limited redundancy to absorb it — see docs/LLM_STRENGTHENING.md for
+  // the research basis), so the smallest brain gets the highest-fidelity quant. Prompt format is "qwen3":
+  // same ChatML tokens as Qwen2.5 PLUS the non-thinking empty-<think> assistant prefill and think-block
+  // output stripping (Qwen3 is a hybrid thinking model; companion chat always runs non-thinking).
+  // NOT the default until device-verified (native-load is THE risk — same gate as the MiniCPM swap).
+  {
+    id: "fast3",
+    label: "Nila's brain (sharper)",
+    detail: "Qwen3-1.7B · ~1.8 GB · newer generation, better instruction-following · runs entirely on your phone",
+    filename: "Qwen3-1.7B-Q8_0.gguf",
+    url: "https://huggingface.co/Qwen/Qwen3-1.7B-GGUF/resolve/main/Qwen3-1.7B-Q8_0.gguf",
+    sizeBytes: 1834426016,
+    // SHA-256 from the public HF API LFS pointer (2026-07-15): model Qwen/Qwen3-1.7B-GGUF
+    sha256: "061b54daade076b5d3362dac252678d17da8c68f07560be70818cace6590cb1a",
+    runtime: "gguf",
+    promptFormat: "qwen3",
+  },
 ];
 
 /** Human-readable size for the UI (e.g. "2.5 GB"). */

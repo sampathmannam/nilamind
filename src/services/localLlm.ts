@@ -36,6 +36,14 @@ export interface LocalGenParams {
   onToken: (t: string) => void;
   /** Optional cancel signal. */
   signal?: AbortSignal;
+  /**
+   * Optional JSON Schema for grammar-constrained structured output (llama.cpp converts it to a GBNF
+   * grammar, so the decoder cannot emit invalid JSON). EXTRACTION tasks only (reflection/memory) —
+   * never chat, where format constraints degrade open-ended quality (arXiv:2408.02442). Backends
+   * without grammar support (cloud, reflect, ollama) may ignore it; callers must keep their parse
+   * fallback.
+   */
+  jsonSchema?: object;
 }
 
 export interface LocalLlmBackend {
@@ -185,7 +193,7 @@ export async function generateOnDevice(
   messages: { role: "user" | "assistant"; content: string }[],
   onToken: (t: string) => void = () => {},
   signal?: AbortSignal,
-  opts?: { wait?: boolean },
+  opts?: { wait?: boolean; jsonSchema?: object },
 ): Promise<string | null> {
   if (!backend || !backend.isReady()) return null;
   // Never start a second completion on the one plugin thread. AUX callers (reflection, coachAssist "Ask Nila")
@@ -194,7 +202,7 @@ export async function generateOnDevice(
   // it WAITS its turn and always produces a reply, rather than dropping the user to the offline walkthrough.
   const run = opts?.wait ? runExclusive : tryRunExclusive;
   try {
-    const reply = await run(() => rawGuardedGenerate({ system, messages, onToken, signal }, backend));
+    const reply = await run(() => rawGuardedGenerate({ system, messages, onToken, signal, jsonSchema: opts?.jsonSchema }, backend));
     return reply === null ? null : reply.trim() || null;
   } catch {
     return null;

@@ -2,7 +2,12 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("llama-cpp-capacitor", () => ({ initLlama: vi.fn() }));
 vi.mock("./gemmaPrompt", () => ({ toGemmaPrompt: vi.fn(), windowMessages: vi.fn() }));
-vi.mock("./qwenPrompt", () => ({ toQwenPrompt: vi.fn(), windowQwenMessages: vi.fn() }));
+vi.mock("./qwenPrompt", () => ({
+  toQwenPrompt: vi.fn(),
+  toQwen3Prompt: vi.fn(),
+  stripThinkBlocks: vi.fn((t: string) => t),
+  windowQwenMessages: vi.fn(),
+}));
 
 import { initLlama } from "llama-cpp-capacitor";
 import { toGemmaPrompt, windowMessages } from "./gemmaPrompt";

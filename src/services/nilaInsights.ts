@@ -190,6 +190,26 @@ const MAX_INPUT_CHARS = 6000;
 const MAX_PROPOSED = 8;
 const MAX_TEXT = 200;
 
+// Grammar constraint for the reflection output. A 1-2B model asked for free-form JSON regularly emits
+// prose/fences/trailing commas — every parse failure silently LOSES that day's reflection (status
+// "empty" consumes the day). With this schema the llama.cpp backend compiles a GBNF grammar so the
+// decoder cannot produce anything but a valid insight array. Extraction is exactly the task class
+// where constrained decoding is harmless-to-helpful (arXiv:2408.02442); the JSON.parse fallback below
+// stays for backends that ignore the schema (reflect/ollama/old bindings).
+const REFLECTION_SCHEMA = {
+  type: "array",
+  maxItems: MAX_PROPOSED,
+  items: {
+    type: "object",
+    properties: {
+      kind: { enum: INSIGHT_KINDS },
+      text: { type: "string", maxLength: MAX_TEXT },
+    },
+    required: ["kind", "text"],
+    additionalProperties: false,
+  },
+} as const;
+
 const REFLECTION_SYSTEM =
   "You are Nila, an AI companion who keeps a small, private set of durable notes about a friend you " +
   "support, so you understand them over time instead of starting over each talk. You'll be given a " +
@@ -232,7 +252,13 @@ type ReflectResult =
 
 async function fetchReflection(digest: string): Promise<ReflectResult> {
   // On-device reflection. No model loaded => null => treat as transient (skip this round, retry later).
-  const raw = await generateOnDevice(REFLECTION_SYSTEM, [{ role: "user", content: buildReflectionInput(digest) }]);
+  const raw = await generateOnDevice(
+    REFLECTION_SYSTEM,
+    [{ role: "user", content: buildReflectionInput(digest) }],
+    undefined,
+    undefined,
+    { jsonSchema: REFLECTION_SCHEMA },
+  );
   if (raw === null) return { status: "transient" };
 
   let text = raw.trim();
