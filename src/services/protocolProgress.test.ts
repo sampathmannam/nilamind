@@ -160,7 +160,7 @@ describe("protocolProgress — completions log (2026-07-12 QA: finishing a progr
     const raw = JSON.parse(store["nilamind_protocol_completions"]);
     expect(raw).toHaveLength(1);
     expect(raw[0].protocolId).toBe("behavioral-activation");
-    expect(typeof raw[0].at).toBe("string");
+    expect(typeof raw[0].date).toBe("string");
   });
 
   it("does NOT append a completion record when the program is merely abandoned", async () => {

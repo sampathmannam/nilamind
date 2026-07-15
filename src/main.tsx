@@ -4,6 +4,7 @@ import App from './App.tsx';
 import AgeGate from './components/AgeGate.tsx';
 import SecureGate from './components/SecureGate.tsx';
 import IdentityGate from './components/IdentityGate.tsx';
+import ErrorBoundary from './components/ErrorBoundary.tsx';
 import { Capacitor } from '@capacitor/core';
 import { initTheme } from './services/theme';
 import './index.css';
@@ -212,12 +213,14 @@ if ("serviceWorker" in navigator) {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <AgeGate>
-      <SecureGate>
-        <IdentityGate>
-          <App />
-        </IdentityGate>
-      </SecureGate>
-    </AgeGate>
+    <ErrorBoundary name="root" onError={(err: Error, info: React.ErrorInfo) => console.error("[ErrorBoundary:root] caught:", err, info)}>
+      <AgeGate>
+        <SecureGate>
+          <IdentityGate>
+            <App />
+          </IdentityGate>
+        </SecureGate>
+      </AgeGate>
+    </ErrorBoundary>
   </StrictMode>,
 );

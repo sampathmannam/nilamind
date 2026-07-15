@@ -613,7 +613,7 @@ const ADHERENCE_MARKER =
 // LETHAL_COSIGNAL into STOCKPILE_VETO below. Left here, they cross-coupled into isBenignHyperbole (which shares
 // this same veto) and re-opened the "saving up … I could sleep for a week" classifier false-positive.
 const LETHAL_COSIGNAL =
-  /\b(never wake|don'?t wake|not wake|won'?t wake|end (it|my life|things|everything)|kill(ing)? myself|take my (own )?life|suicid|overdose|whole bottle|entire bottle|the bottle|at once|forever|better off (without|dead)|can'?t go on|no point|no reason to (live|go on)|goodbye|stop the pain|be done|end the pain|don'?t want to (be here|live|wake)|want to die|so i (don'?t|never|won'?t) wake)\b/;
+  /\b(never wake|don'?t wake|not wake|won'?t wake|end (it|my life|things|everything)|kill(ing)? myself|take my (own )?life|suicid|overdose|whole bottle|entire bottle|the bottle|all (my )?pills? at once|forever\b(?=.*(goodbye|pain|stop|end|gone))|better off (without|dead)|can'?t go on|no point|no reason to (live|go on)|goodbye|stop the pain|(ready|want) to be done|end the pain|don'?t want to (be here|live|wake)|want to die|so i (don'?t|never|won'?t) wake)\b/;
 
 // #2 means-accumulation cues — veto the MEDICATION-ADHERENCE guard ONLY (kept OUT of LETHAL_COSIGNAL so they
 // can never disable the hyperbole guard). "I saved up all my pills and take them as prescribed" stays un-masked.

@@ -165,7 +165,7 @@ export function createLlamaCppBackend(
         const res = await ctx.completion(
           {
             prompt,
-            n_predict: 128, // enough for 3-5 sentence companion replies (~100-150 tokens)
+            n_predict: 192, // enough for 5-7 sentence companion replies (~150-200 tokens); 128 was truncating longer emotional-support turns
             // Per-family sampling profile (see FormatConfig.sampling for the research basis):
             // min-p floor for coherent small-model decoding, vendor-recommended temp/top_p/top_k.
             temperature: fmt.sampling.temperature,
@@ -180,7 +180,7 @@ export function createLlamaCppBackend(
             // but are benign-to-positive for extraction — exactly the reflection case.
             ...(jsonSchema ? { json_schema: JSON.stringify(jsonSchema) } : {}),
             penalty_repeat: 1.10, // standard repetition penalty — avoids loops while keeping natural phrasing
-            penalty_last_n: 128, // shorter penalty window matches shorter replies
+            penalty_last_n: 192, // matches n_predict window
             dry_multiplier: 1.0, // stronger: 0.8 was too mild, model would still loop phrases
             dry_base: 2.0, // higher baseline makes penalty more effective for short replies
             dry_allowed_length: 2, // catch both 2-token and 3-token repeats (DRY original recommendation)

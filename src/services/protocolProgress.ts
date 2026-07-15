@@ -4,48 +4,11 @@
 // Deliberately tiny: just {which protocol, which step}. Nila reads this to continue where the person left off.
 import { secureLocal } from "./secureLocal";
 import { getProtocol, routeToProtocol, type Protocol, type ProtocolStep } from "./protocols";
+import { recordProtocolCompletion, completionCountFor } from "./nOf1";
+
+export { completionCountFor } from "./nOf1";
 
 const KEY = "nilamind_protocol_progress";
-// Append-only completion log (2026-07-12 QA: dashboard analytics dead-counters, F14). Separate from KEY above —
-// KEY is the single-slot "where am I now" pointer and is CLEARED on completion; this is a durable record of
-// every finished program so usageAnalytics.protocolCompletions() has real data instead of a hardcoded 0.
-const COMPLETIONS_KEY = "nilamind_protocol_completions";
-
-interface CompletionRecord {
-  protocolId: string;
-  at: string; // ISO timestamp
-}
-
-function recordCompletion(protocolId: string): void {
-  try {
-    const raw = secureLocal.getItem(COMPLETIONS_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    const list: CompletionRecord[] = Array.isArray(parsed) ? parsed : [];
-    list.push({ protocolId, at: new Date().toISOString() });
-    secureLocal.setItem(COMPLETIONS_KEY, JSON.stringify(list));
-  } catch {
-    /* best-effort — a failed completion-log write must never block the program from finishing */
-  }
-}
-
-/**
- * How many times has this exact protocol been finished before? (2026-07-12 Wave 3, Group H.) A read of
- * startProtocol()/advanceProtocol() confirmed restarting a completed protocol was NEVER blocked — there is
- * no gating state anywhere. So this is not a restart fix; it's the "completion-count surface" the plan
- * scoped this task down to: a cheap read over the existing append-only completions log (recordCompletion
- * above), so a caller can show a "you've done this before" / "Nth time" framing instead of restart being
- * silently invisible.
- */
-export function completionCountFor(protocolId: string): number {
-  try {
-    const raw = secureLocal.getItem(COMPLETIONS_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    const list: CompletionRecord[] = Array.isArray(parsed) ? parsed : [];
-    return list.filter((r) => r && r.protocolId === protocolId).length;
-  } catch {
-    return 0;
-  }
-}
 
 interface Progress {
   protocolId: string;
@@ -132,7 +95,8 @@ export function advanceProtocol(): ActiveStep | { done: true; protocol: Protocol
   if (next >= p.steps.length) {
     // Persist a completion record (2026-07-12 QA: finishing a program left ZERO trace — the single-slot
     // pointer was simply removed, and usageAnalytics.protocolCompletions() was a hardcoded-0 stub).
-    recordCompletion(a.protocolId);
+    const today = new Date().toISOString().split("T")[0];
+    recordProtocolCompletion(a.protocolId, today, a.stepIndex);
     active = null;
     persist();
     return { done: true, protocol: p };

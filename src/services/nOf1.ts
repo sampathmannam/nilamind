@@ -59,6 +59,11 @@ export function recordProtocolCompletion(protocolId: string, date: string, stepI
   writeCompletions(completions);
 }
 
+/** How many times has this protocol been completed? Shared by protocolProgress.ts and nOf1 analytics. */
+export function completionCountFor(protocolId: string): number {
+  return readCompletions().filter((r) => r && r.protocolId === protocolId).length;
+}
+
 /** Backfill completions from existing protocolProgress (for migration). */
 export function backfillNof1(): void {
   try {
