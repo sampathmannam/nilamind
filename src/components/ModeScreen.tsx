@@ -17,7 +17,7 @@ import { t } from "../services/i18n";
 import { WELCOME_SEED, STATE_MESSAGES, WELCOME_BACK_LONG, WELCOME_BACK_MEDIUM, WELCOME_BACK_SHORT } from "../services/personaConfig";
 import { useTypingSession } from "../hooks/useTypingSession";
 import { getSuggestions, timeSlot } from "../services/chatSuggestions";
-import { stripChatMarkdown } from "../services/chatText";
+import { stripChatMarkdown, ensureListBreaks } from "../services/chatText";
 import { suggestSkill } from "../services/skillSuggest";
 import { deriveInMomentInsight } from "../services/inMomentInsight";
 import { filterSkills, type Skill } from "../services/skillsLibrary";
@@ -776,13 +776,13 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
               >
                 <div>
                   <div
-                   className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${
+                   className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap break-words ${
                      m.role === "user"
                        ? "bg-purple-600/70 text-white"
                        : "bg-slate-800/80 text-slate-200"
                    }`}
                   >
-                    {m.role === "user" ? m.content : stripChatMarkdown(m.content)}
+                    {m.role === "user" ? m.content : ensureListBreaks(stripChatMarkdown(m.content))}
                   </div>
                   {m.role === "assistant" && !ratedMessages.has(i) && (
                     <div className="flex gap-2 mt-1">

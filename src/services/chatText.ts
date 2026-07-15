@@ -18,6 +18,21 @@ export function stripChatMarkdown(text: string): string {
     .trim();
 }
 
+/** Put numbered / bulleted list items on their own lines. The chat bubble renders with
+ *  `whitespace-pre-wrap`, so a model that emits real newlines already lays out as a list — but some
+ *  small models run the items inline ("…suggestions: 1. A … 2. B …"), which then reads as one wall of
+ *  text. This inserts a break before an inline list marker. Conservative to avoid false positives:
+ *   - numbers: only "N." / "N)" that FOLLOW sentence punctuation (. ! ? :) and are FOLLOWED by a
+ *     capital / "(" — so decimals ("9.0"), times ("30-60 seconds"), and "5 seconds. Then" are untouched.
+ *   - bullets: a "•"/"‣" glyph that isn't already at the start of a line. */
+export function ensureListBreaks(text: string): string {
+  return text
+    .replace(/([.!?:])[ \t]+(?=\d{1,2}[.)][ \t]+[A-Z(])/g, "$1\n")
+    .replace(/([^\n \t])[ \t]+(?=[•‣][ \t]+)/g, "$1\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
 /** Strip a leading speaker label ("Nila:", "You:", "Them:") and unwrap a fully-quoted reply. A small
  *  model sometimes copies the few-shot examples' `Nila: "..."` format straight into its own output. */
 export function stripSpeakerLabel(text: string): string {

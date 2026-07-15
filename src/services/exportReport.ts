@@ -201,21 +201,98 @@ export function buildClinicalJson(input: ClinicalExportInput): string {
   );
 }
 
-/** Generate a PDF blob from report text using jsPDF. Returns null if jsPDF is unavailable. */
+/**
+ * Render a report string into a properly formatted, branded PDF (not the old raw line-dump).
+ * The report builders (clinicianReport.ts / buildTextReport) emit a consistent structure — a title
+ * line, a short meta block, a `---`/`===` separator, then col-0 section headers with indented body
+ * lines and `•` bullets — so we style from that: brand title, section headers with a magenta accent
+ * rule, muted meta, indented body, and a page footer. Returns null if jsPDF is unavailable.
+ */
 export function generatePdfBlob(text: string): Blob | null {
   try {
     const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const margin = 20;
-    const maxWidth = pageWidth - margin * 2;
-    let y = margin;
+    const pageW = doc.internal.pageSize.getWidth();   // 210mm
+    const pageH = doc.internal.pageSize.getHeight();  // 297mm
+    const M = 16;
+    const maxW = pageW - M * 2;
+    const BRAND: [number, number, number] = [236, 91, 158]; // NilaMind magenta (#EC5B9E)
+    const INK: [number, number, number] = [45, 45, 52];
+    const MUTE: [number, number, number] = [125, 125, 135];
 
-    const lines = doc.splitTextToSize(text, maxWidth);
-    for (const line of lines) {
-      if (y > 280) { doc.addPage(); y = margin; }
-      doc.text(line, margin, y);
-      y += 5;
+    let page = 1;
+    let y = 0;
+
+    const footer = () => {
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(7.5);
+      doc.setTextColor(...MUTE);
+      doc.text("Generated on-device · Private — not a diagnosis", M, pageH - 8);
+      doc.text(String(page), pageW - M, pageH - 8, { align: "right" });
+    };
+    const beginPage = () => {
+      doc.setFillColor(...BRAND);
+      doc.rect(0, 0, pageW, 2.5, "F"); // top accent bar
+      y = M + 2;
+    };
+    const ensure = (h: number) => {
+      if (y + h > pageH - 14) { footer(); doc.addPage(); page++; beginPage(); }
+    };
+    const isSep = (s: string) => /^[=\-·—]{3,}$/.test(s.trim());
+
+    beginPage();
+
+    const rawLines = text.replace(/\r/g, "").split("\n");
+    let ti = rawLines.findIndex((l) => l.trim().length > 0);
+    if (ti < 0) ti = 0;
+
+    // Title
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(17);
+    doc.setTextColor(...BRAND);
+    for (const tl of doc.splitTextToSize(rawLines[ti].trim(), maxW)) {
+      ensure(9); doc.text(tl, M, y); y += 8;
     }
+    y += 1;
+
+    let inMeta = true; // the title's sub-block (period label etc.), until the first separator
+    for (let i = ti + 1; i < rawLines.length; i++) {
+      const line = rawLines[i];
+      const trimmed = line.trim();
+
+      if (isSep(trimmed)) { inMeta = false; y += 2.5; continue; }
+      if (!trimmed) { y += inMeta ? 1.5 : 2.5; continue; }
+
+      if (inMeta) {
+        doc.setFont("helvetica", "normal"); doc.setFontSize(9.5); doc.setTextColor(...MUTE);
+        for (const w of doc.splitTextToSize(trimmed, maxW)) { ensure(5); doc.text(w, M, y); y += 4.6; }
+        continue;
+      }
+
+      const indented = /^\s/.test(line);
+      // A section header is a col-0 line with no "key: value" and no trailing period (rules out wrapped
+      // body continuations like "interactions."), and either short or followed by indented body.
+      let j = i + 1;
+      while (j < rawLines.length && !rawLines[j].trim()) j++;
+      const nextIndented = j < rawLines.length && /^\s/.test(rawLines[j]);
+      const isHeader = !indented && !/:\s*\S/.test(trimmed) && !/[.]$/.test(trimmed) && (nextIndented || trimmed.length <= 42);
+
+      if (isHeader) {
+        ensure(12);
+        y += 3.5;
+        doc.setFont("helvetica", "bold"); doc.setFontSize(11.5); doc.setTextColor(...INK);
+        doc.text(trimmed, M, y);
+        y += 1.8;
+        doc.setDrawColor(...BRAND); doc.setLineWidth(0.5); doc.line(M, y, M + 20, y);
+        y += 4;
+      } else {
+        const indentCols = (line.match(/^\s*/)?.[0].length ?? 0);
+        const x = M + Math.min(indentCols, 6) * 1.7;
+        doc.setFont("helvetica", "normal"); doc.setFontSize(9.5); doc.setTextColor(...INK);
+        for (const w of doc.splitTextToSize(trimmed, maxW - (x - M))) { ensure(5); doc.text(w, x, y); y += 4.8; }
+      }
+    }
+
+    footer();
     return doc.output("blob");
   } catch {
     return null;
