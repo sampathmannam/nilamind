@@ -76,6 +76,7 @@ import ListeningIndicator from "./components/ListeningIndicator";
 import BiometricGateHost from "./components/BiometricGateHost";
 import ModelSetupGate from "./components/ModelSetupGate";
 import OnboardingGate from "./components/OnboardingGate";
+import SafetyPlanScreen from "./components/SafetyPlanScreen";
 import { hasCompletedOnboarding } from "./services/onboarding";
 import { resolveNavTarget, type AuxView, type TabView } from "./services/nav";
 import { getArmedCheckin, armedCheckinBody } from "./services/armedCheckin";
@@ -117,6 +118,7 @@ const AUX_LABELS: Partial<Record<AuxView, string>> = {
   caregiver_settings: "Caregiver settings",
   legal: "Legal",
   sounds: "Ambient sounds",
+  safety_plan: "My Safety Plan",
 };
 
 function auxViewLabel(view: AuxView): string {
@@ -151,6 +153,7 @@ function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () 
     case "caregiver_settings": return <CaregiverSettingsScreen onClose={onClose} onOpenCaregiverShare={onOpenCaregiverShare} />;
     case "sounds": return <SoundPlayer onClose={onClose} />;
     case "legal": return <LegalScreen />;
+    case "safety_plan": return <SafetyPlanScreen />;
     default: return <div className="p-6 text-slate-400 text-sm text-center">Not available</div>;
   }
 }

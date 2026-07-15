@@ -111,3 +111,12 @@ describe("nav — insights aux view", () => {
     expect(KNOWN_AUX_VIEWS).toContain("insights");
   });
 });
+
+describe("nav — safety_plan aux view", () => {
+  it("resolves safety_plan to an aux view", () => {
+    expect(resolveNavTarget("safety_plan")).toEqual({ kind: "aux", view: "safety_plan" });
+  });
+  it("lists safety_plan in the allowlist", () => {
+    expect(KNOWN_AUX_VIEWS).toContain("safety_plan");
+  });
+});

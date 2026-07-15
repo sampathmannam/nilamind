@@ -34,7 +34,8 @@ export type AuxView =
   | "episode_marker"
   | "caregiver_settings"
   | "legal"
-  | "sounds";
+  | "sounds"
+  | "safety_plan";
 
 export const TAB_TARGETS: readonly TabView[] = [
   "diary", "plan", "nila", "today", "you",
@@ -52,6 +53,7 @@ export const KNOWN_AUX_VIEWS: readonly AuxView[] = [
   "caregiver_settings",
   "legal",
   "sounds",
+  "safety_plan",
     ];
 
 export type NavResolution =
