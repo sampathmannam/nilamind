@@ -84,7 +84,15 @@ export default function Sheet({
           <X className="w-4 h-4" aria-hidden="true" />
         </button>
       </div>
-      <div className={`flex-1 min-h-0 overflow-y-auto ${bodyClassName ?? ""}`}>{body}</div>
+      {/* Bottom safe-area padding so the last item in long, scrollable sheets (Settings → Advanced,
+          Safety Plan → Means-safety coaching) clears the Android gesture bar instead of being cut off
+          at the screen edge (device screenshots 2026-07-15). Composes with any bodyClassName padding. */}
+      <div
+        className={`flex-1 min-h-0 overflow-y-auto ${bodyClassName ?? ""}`}
+        style={{ paddingBottom: "max(20px, env(safe-area-inset-bottom))" }}
+      >
+        {body}
+      </div>
     </div>
   );
 }

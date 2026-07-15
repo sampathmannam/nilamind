@@ -190,11 +190,17 @@ export default function TodayScreen({
   const intentionCardRef = useRef<DailyIntentionCardHandle>(null);
   const groups = personalizeToolOrder(buildToolGroups({ go, onEpisode, phoneEnabled }), getUserGoals());
 
-  // Tool search filter
+  // Tool search filter. The hero card above already promotes one tool (Grounding & breathing when
+  // anxious/elevated, Wind down at night, etc.), so drop that same tool from the "All tools" list to
+  // avoid showing it twice (device screenshot 2026-07-15 — "Grounding & breathing" appeared as both
+  // the hero and an In-the-moment row). hero.id "daily_intention"/"nila" match no tool row → no-op.
   const filteredGroups = useMemo(() => {
-    if (!toolSearch.trim()) return groups;
+    const base = groups
+      .map((g) => ({ ...g, rows: g.rows.filter((r) => r.id !== hero.id) }))
+      .filter((g) => g.rows.length > 0);
+    if (!toolSearch.trim()) return base;
     const q = toolSearch.toLowerCase();
-    return groups
+    return base
       .map((g) => ({
         ...g,
         rows: g.rows.filter(
@@ -202,7 +208,7 @@ export default function TodayScreen({
         ),
       }))
       .filter((g) => g.rows.length > 0);
-  }, [groups, toolSearch]);
+  }, [groups, toolSearch, hero.id]);
   const weekInsight = getWeekInsight();
   const nilaReflection = getNilaReflection();
   const hasAnyCheckins = (() => {

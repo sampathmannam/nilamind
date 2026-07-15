@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Play, Pause, Volume2, VolumeX, Timer, X } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, Timer } from "lucide-react";
 import {
   startNoise,
   stopNoise,
@@ -13,6 +13,10 @@ import { hapticLight } from "../hooks/useHaptics";
 import { useLanguage } from "../services/i18n";
 
 interface Props {
+  /**
+   * No-op, retained for call-site compatibility. This screen is always hosted inside the app's
+   * <Sheet>, which owns the header title + close button — SoundPlayer must not render its own.
+   */
   onClose?: () => void;
   /** Compact mode for inline display (no close button, smaller layout). */
   compact?: boolean;
@@ -30,7 +34,7 @@ const TIMER_OPTIONS = [
  * Uses Web Audio API to generate noise on-device. No files, no network.
  * Inspired by Calm's sound mixer and Headspace's ambient sounds.
  */
-export default function SoundPlayer({ onClose, compact = false }: Props) {
+export default function SoundPlayer({ compact = false }: Props) {
   useLanguage();
   const [playing, setPlaying] = useState(false);
   const [selectedType, setSelectedType] = useState<NoiseType>("brown");
@@ -142,18 +146,11 @@ export default function SoundPlayer({ onClose, compact = false }: Props) {
 
   return (
     <div className="space-y-4" id="sound-player">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-semibold text-slate-200">Ambient sounds</p>
-          <p className="text-xs text-slate-500">Generated on-device — no files, no network</p>
-        </div>
-        {onClose && (
-          <button onClick={onClose} className="p-1.5 rounded-lg text-slate-500 hover:text-slate-300 cursor-pointer">
-            <X className="w-4 h-4" />
-          </button>
-        )}
-      </div>
+      {/* No header here — this screen is always mounted inside the app's <Sheet>, which already
+          renders the "Ambient sounds" title + close button (App.tsx renderAuxView). Rendering our
+          own header duplicated both (device screenshot 2026-07-15). We keep only the unique
+          on-device privacy caption, which the Sheet chrome does not provide. */}
+      <p className="text-xs text-slate-500">Generated on-device — no files, no network</p>
 
       {/* Sound grid */}
       <div className="grid grid-cols-2 gap-2">

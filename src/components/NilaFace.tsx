@@ -25,38 +25,40 @@ interface OrbPalette {
   core: string;
 }
 
-// Custom-theme palette — uses the app's warm lavender/terracotta/honey colors (defined in index.css
-// as --color-blue-*, --color-rose-*, --color-amber-*) instead of Tailwind-default indigo/blue/red.
-// These match the custom theme and respond correctly on both dark and light backgrounds.
+// Orb identity — TEAL (user pick, 2026-07-15; replaced the washed-out amber/pink). One calming hue
+// across the non-crisis states, which differ by BRIGHTNESS/saturation rather than clashing hues, so
+// the orb reads as one consistent identity: calm = base teal, anxious = grounded deeper teal, low =
+// soft light teal, elevated = brighter energetic teal. Crisis stays a distinct red — it's a safety
+// signal and must not blend into the identity hue. (NilaOrb.tsx, the first-run onboarding/setup orb,
+// still uses the pink app-icon color — aligning that + the launcher icon is a separate branding step.)
 const PALETTES: Record<string, OrbPalette> = {
   calm: {
-    // Nila's identity color — the pink-magenta of the app icon (matches NilaOrb.tsx: white core → pink → magenta).
-    primary: "#EC5B9E",   // icon pink-magenta (primary accent for the home orb)
-    secondary: "#F58CC0", // lighter pink (specular / upper glow)
-    glow: "rgba(236,91,158,0.28)",
-    ring: "rgba(236,91,158,0.18)",
-    core: "#FBD9EC",      // near-white pink highlight (icon's bright core)
+    primary: "#2FB8A6",   // base teal (resting identity)
+    secondary: "#7FD8CC", // lighter teal (specular / upper glow)
+    glow: "rgba(47,184,166,0.28)",
+    ring: "rgba(47,184,166,0.18)",
+    core: "#CFF1EA",      // near-white teal highlight (bright core)
   },
   anxious: {
-    primary: "#CE8470",   // --color-rose-400 (terracotta)
-    secondary: "#DDA593", // --color-rose-300
-    glow: "rgba(206,132,112,0.25)",
-    ring: "rgba(206,132,112,0.15)",
-    core: "#ECC2B6",      // --color-rose-200
+    primary: "#229E8E",   // grounded deeper teal ("I'm here with you")
+    secondary: "#6BC7BA",
+    glow: "rgba(34,158,142,0.25)",
+    ring: "rgba(34,158,142,0.15)",
+    core: "#C2E9E2",
   },
   low: {
-    primary: "#BEA4D0",   // --color-purple-400 (warm lavender)
-    secondary: "#D1BFDF", // --color-purple-300
-    glow: "rgba(190,164,208,0.20)",
-    ring: "rgba(190,164,208,0.12)",
-    core: "#E2D6EC",      // --color-purple-200
+    primary: "#6FC3B6",   // soft, light, desaturated teal (gentle)
+    secondary: "#A3D9D0",
+    glow: "rgba(111,195,182,0.20)",
+    ring: "rgba(111,195,182,0.12)",
+    core: "#DCEFEB",
   },
   elevated: {
-    primary: "#DDB463",   // --color-amber-400 (warm honey)
-    secondary: "#E8C98C", // --color-amber-300
-    glow: "rgba(221,180,99,0.28)",
-    ring: "rgba(221,180,99,0.18)",
-    core: "#ECCF94",      // --color-amber-200
+    primary: "#12BFA9",   // brighter, energetic teal (settles an activated state)
+    secondary: "#66DED0",
+    glow: "rgba(18,191,169,0.28)",
+    ring: "rgba(18,191,169,0.18)",
+    core: "#C9F4EC",
   },
   crisis: {
     primary: "#B5614E",   // --color-rose-500 (deeper crisis red — distinct from anxious rose-400)
@@ -100,12 +102,16 @@ export default function NilaFace({ state, onClick, onLongPress, size = 160, isLi
   const activePalette = isListening
     ? { ...palette, glow: palette.glow.replace("0.25", "0.45").replace("0.20", "0.45").replace("0.28", "0.50").replace("0.35", "0.55").replace("0.40", "0.60") }
     : palette;
+  // Light/cream theme previously rendered the orb with very low alphas (…55/…22 fill, …66 border,
+  // …33 shadow), so it faded to a faint washed-out tint on the cream background (device feedback
+  // 2026-07-15). Render it as a solid, luminous, saturated sphere instead — same identity hues, far
+  // more presence: near-opaque radial fill, a soft specular top-left, a solid rim, and a warm glow.
   const bodyBackground = isLight
-    ? `radial-gradient(circle at 35% 35%, ${activePalette.secondary}70, ${activePalette.primary}55 55%, ${activePalette.primary}22 100%)`
+    ? `radial-gradient(circle at 34% 30%, #ffffffcc 0%, ${activePalette.secondary} 26%, ${activePalette.primary} 68%, ${activePalette.primary}dd 100%)`
     : `radial-gradient(circle at 35% 35%, ${activePalette.secondary}10, ${activePalette.primary}20 60%, #0f172a 100%)`;
-  const bodyBorder = isLight ? `1.5px solid ${activePalette.primary}66` : `1px solid ${activePalette.ring}`;
+  const bodyBorder = isLight ? `1.5px solid ${activePalette.primary}` : `1px solid ${activePalette.ring}`;
   const bodyShadow = isLight
-    ? `0 6px ${size * 0.28}px ${activePalette.primary}33, inset 0 0 ${size * 0.15}px rgba(255,255,255,0.25)`
+    ? `0 8px ${size * 0.36}px ${activePalette.primary}66, inset 0 ${size * 0.06}px ${size * 0.14}px rgba(255,255,255,0.45), inset 0 -${size * 0.05}px ${size * 0.12}px ${activePalette.primary}55`
     : `0 0 ${size * 0.3}px ${activePalette.glow}, inset 0 0 ${size * 0.15}px rgba(255,255,255,0.03)`;
 
   // Haptic on state transition: light tap for most state changes, warning for crisis.

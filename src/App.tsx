@@ -151,7 +151,7 @@ function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () 
     case "ema_checkin": return <EmaCheckInScreen onLogged={onClose} onCrisis={() => { onClose(); onActivateCrisis(); }} />;
     case "episode_marker": return <EpisodeMarkerScreen onClose={onClose} />;
     case "caregiver_settings": return <CaregiverSettingsScreen onClose={onClose} onOpenCaregiverShare={onOpenCaregiverShare} />;
-    case "sounds": return <SoundPlayer onClose={onClose} />;
+    case "sounds": return <SoundPlayer />;
     case "legal": return <LegalScreen />;
     case "safety_plan": return <SafetyPlanScreen />;
     default: return <div className="p-6 text-slate-400 text-sm text-center">Not available</div>;
@@ -422,8 +422,13 @@ function AppShell() {
         )}
         {state.tab === "you" && (
           <ErrorBoundary name="you" onError={(err: Error, info: React.ErrorInfo) => console.error("[ErrorBoundary:you] caught:", err, info)}>
-            <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-12" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
-              <YouScreen go={go} onOpenCrisis={activateCrisis} />
+            <div className="flex-1 min-h-0 flex flex-col">
+              {/* Opaque status-bar mask — same fix as the Today tab above. Non-scrolling bg-page bar
+                  keeps scrolled content from bleeding into the edge-to-edge status bar. */}
+              <div className="shrink-0 bg-page" style={{ height: 'max(12px, env(safe-area-inset-top))' }} />
+              <div className="flex-1 min-h-0 overflow-y-auto px-4 pt-2 pb-12">
+                <YouScreen go={go} onOpenCrisis={activateCrisis} />
+              </div>
             </div>
           </ErrorBoundary>
         )}
