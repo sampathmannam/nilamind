@@ -45,6 +45,22 @@ describe("moveEngine — classifyMove", () => {
   it("classifies 'i should just disappear' as REPAIR", () => {
     expect(classifyMove("i should just disappear")).toBe("REPAIR");
   });
+
+  // F5 fix: "episode" as high-priority loaded word — must always be asked about
+  it("classifies 'I had an episode' as CLARIFY (loaded word F5)", () => {
+    expect(classifyMove("i had an episode today morning")).toBe("CLARIFY");
+    expect(classifyMove("I don't know why I had the episode")).toBe("CLARIFY");
+  });
+
+  it("classifies help-seeking as REFLECT_ASK (positive coping, not crisis)", () => {
+    expect(classifyMove("I consulted a psychiatrist in October")).toBe("REFLECT_ASK");
+    expect(classifyMove("I started therapy last month")).toBe("REFLECT_ASK");
+  });
+
+  it("does NOT classify 'my sister told everyone about my episode' as CLARIFY", () => {
+    // "my episode" in a third-person context — user is talking about sister, not self
+    expect(classifyMove("my sister told everyone about my episode")).toBe("REFLECT_ASK");
+  });
 });
 
 describe("moveEngine — resolveMove", () => {
@@ -107,6 +123,16 @@ describe("moveEngine — maybeEscalateToDeepen", () => {
     const result = resolveMove("i'm a worthless burden");
     const escalated = maybeEscalateToDeepen(result, 0.8);
     expect(escalated.move).toBe("REPAIR");
+  });
+
+  // DEEPEN wiring: resolveMove now computes topic overlap internally and calls
+  // maybeEscalateToDeepen automatically — caller doesn't need to do it themselves.
+  it("resolveMove internally escalates to DEEPEN (topic overlap computed automatically)", () => {
+    const result = resolveMove("i keep thinking about the same thing", {
+      recentNilaReplies: ["That sounds hard."],
+      recentUserMessages: ["i keep thinking about the same thing", "i keep thinking about the same thing"],
+    });
+    expect(result.move).toBe("DEEPEN");
   });
 });
 
