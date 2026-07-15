@@ -80,7 +80,7 @@ export default function EpisodeMarkerScreen({ onClose }: Props) {
 
       {/* Add marker */}
       <div className="glass rounded-2xl p-4 space-y-3">
-        <p className="text-[10px] uppercase font-mono tracking-widest text-slate-400">{t("em_add_marker")}</p>
+        <p className="text-xs uppercase font-mono tracking-widest text-slate-400">{t("em_add_marker")}</p>
 
         <div className="grid grid-cols-2 gap-2">
           {PHASES.map((p) => (
@@ -144,7 +144,7 @@ export default function EpisodeMarkerScreen({ onClose }: Props) {
 
       {/* Past markers */}
       <div className="space-y-2">
-        <p className="text-[10px] uppercase font-mono tracking-widest text-slate-400">{t("em_past")}</p>
+        <p className="text-xs uppercase font-mono tracking-widest text-slate-400">{t("em_past")}</p>
         {sorted.length === 0 ? (
           <EmptyState
             illustration="🌿"

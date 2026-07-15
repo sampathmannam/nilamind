@@ -55,7 +55,7 @@ export default function StreakCounter({ current, longest, totalActiveDays, celeb
               {current > 0 ? `${current}-day streak` : "Start your streak"}
             </p>
             {current > 0 && (
-              <p className="text-[10px] text-slate-500">
+              <p className="text-xs text-slate-500">
                 Longest: {longest} · {totalActiveDays} active days all-time
               </p>
             )}
@@ -76,7 +76,7 @@ export default function StreakCounter({ current, longest, totalActiveDays, celeb
                 style={{ width: `${Math.min(progress * 100, 100)}%` }}
               />
             </div>
-            <p className="text-[9px] text-slate-500 text-right">
+            <p className="text-xs text-slate-500 text-right">
               Next: {MILESTONES.find((m) => m > current) ?? "∞"} days
             </p>
           </div>

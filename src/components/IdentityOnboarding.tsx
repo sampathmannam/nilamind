@@ -96,7 +96,7 @@ export default function IdentityOnboarding({ onDone }: { onDone: () => void }) {
         <div className="grid grid-cols-3 gap-2" id="identity-phrase-grid">
           {words.map((w, i) => (
             <div key={i} className="bg-page border border-slate-800 rounded-lg px-2 py-2 text-xs text-slate-200 flex items-center gap-1.5">
-              <span className="text-slate-600 font-mono text-[10px] w-4">{i + 1}</span>
+              <span className="text-slate-600 font-mono text-xs w-4">{i + 1}</span>
               <span className="font-semibold">{w}</span>
             </div>
           ))}

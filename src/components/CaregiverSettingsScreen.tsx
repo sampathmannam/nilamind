@@ -141,13 +141,13 @@ export default function CaregiverSettingsScreen({ onClose, onOpenCaregiverShare 
               <div className="flex items-center justify-between">
                 <div>
                   <span className="text-sm font-semibold text-slate-100">{c.name}</span>
-                  {c.relationship ? <span className="text-[10px] text-slate-400 ml-2">({c.relationship})</span> : null}
+                  {c.relationship ? <span className="text-xs text-slate-400 ml-2">({c.relationship})</span> : null}
                 </div>
                 <button onClick={(e) => { e.stopPropagation(); remove(c.id); }} className="text-slate-500 hover:text-rose-400 cursor-pointer">
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
-              <p className="text-[10px] text-slate-500 mt-0.5">{c.phoneOrEmail}</p>
+              <p className="text-xs text-slate-500 mt-0.5">{c.phoneOrEmail}</p>
             </button>
           ))
         )}
@@ -197,7 +197,7 @@ export default function CaregiverSettingsScreen({ onClose, onOpenCaregiverShare 
       {/* Per-contact preferences */}
       {selectedId && selectedPrefs ? (
         <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 space-y-4" id="caregiver-prefs-panel">
-          <p className="text-[10px] uppercase font-mono tracking-widest text-slate-400">{t("cg_share_categories")}</p>
+          <p className="text-xs uppercase font-mono tracking-widest text-slate-400">{t("cg_share_categories")}</p>
 
           {CATEGORY_LABELS.map(({ key, label }) => (
             <label key={key} className="flex items-center justify-between cursor-pointer">
@@ -216,8 +216,8 @@ export default function CaregiverSettingsScreen({ onClose, onOpenCaregiverShare 
           ))}
 
           <div className="pt-3 border-t border-slate-700">
-            <p className="text-[10px] uppercase font-mono tracking-widest text-slate-400 mb-2">{t("cg_auto_alert")}</p>
-            <p className="text-[10px] text-slate-500 mb-2">{t("cg_auto_alert_desc")}</p>
+            <p className="text-xs uppercase font-mono tracking-widest text-slate-400 mb-2">{t("cg_auto_alert")}</p>
+            <p className="text-xs text-slate-500 mb-2">{t("cg_auto_alert_desc")}</p>
             <label className="flex items-center justify-between mb-2">
               <span className="text-[11px] text-slate-300">Enable</span>
               <button
@@ -234,7 +234,7 @@ export default function CaregiverSettingsScreen({ onClose, onOpenCaregiverShare 
             {selectedPrefs.autoAlert.enabled ? (
               <div className="grid grid-cols-2 gap-2">
                 <label className="space-y-0.5">
-                  <span className="text-[10px] text-slate-400">{t("cg_threshold_days")}</span>
+                  <span className="text-xs text-slate-400">{t("cg_threshold_days")}</span>
                   <input
                     type="number" min={1} max={14}
                     value={selectedPrefs.autoAlert.thresholdDays}
@@ -243,7 +243,7 @@ export default function CaregiverSettingsScreen({ onClose, onOpenCaregiverShare 
                   />
                 </label>
                 <label className="space-y-0.5">
-                  <span className="text-[10px] text-slate-400">{t("cg_min_intensity")}</span>
+                  <span className="text-xs text-slate-400">{t("cg_min_intensity")}</span>
                   <input
                     type="number" min={1} max={10}
                     value={selectedPrefs.autoAlert.minIntensity}

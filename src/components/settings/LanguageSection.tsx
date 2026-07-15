@@ -33,7 +33,7 @@ export default function LanguageSection() {
             }`}
           >
             <span className="block font-medium">{l.native}</span>
-            <span className="block text-[10px] text-slate-500">{l.label}</span>
+            <span className="block text-xs text-slate-500">{l.label}</span>
           </button>
         ))}
       </div>

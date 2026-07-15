@@ -55,7 +55,7 @@ function StreakConstellation({ activeDays }: { activeDays: string[] }) {
           className={`w-3.5 h-3.5 ${active ? "text-emerald-400 fill-emerald-400/50" : "text-slate-600"}`}
           aria-hidden="true"
         />
-        <span className="text-[9px] font-mono text-slate-600">{dayLabels[i]}</span>
+        <span className="text-xs font-mono text-slate-600">{dayLabels[i]}</span>
       </div>
     );
   }
@@ -160,13 +160,13 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
             <div className="mt-3 pt-3 border-t border-slate-800">
               <StreakConstellation activeDays={activeDays} />
             </div>
-            <p className="text-[10px] text-slate-500 text-center mt-1.5">
+            <p className="text-xs text-slate-500 text-center mt-1.5">
               {streak.totalActiveDays} day{streak.totalActiveDays !== 1 ? "s" : ""} this week
             </p>
           </>
         )}
         {capacity === "low" && (
-          <p className="text-[10px] text-slate-500 mt-2 text-center italic">
+          <p className="text-xs text-slate-500 mt-2 text-center italic">
             Today might feel heavy — that's okay. Just being here is enough.
           </p>
         )}

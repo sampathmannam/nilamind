@@ -63,7 +63,7 @@ export default function PeerSupportScreen() {
 
       {showCreate ? (
         <div className="glass rounded-2xl p-4 space-y-3">
-          <div className="text-[10px] uppercase font-mono tracking-widest text-slate-500">Create your profile</div>
+          <div className="text-xs uppercase font-mono tracking-widest text-slate-500">Create your profile</div>
           <select value={stage} onChange={(e) => setStage(e.target.value)} className="w-full glass rounded-xl px-3 py-2 text-sm text-slate-200">
             <option value="early">Early — just starting to reach out</option>
             <option value="building">Building — getting more comfortable</option>
@@ -77,24 +77,24 @@ export default function PeerSupportScreen() {
         </div>
       ) : profile && (
         <div className="glass rounded-2xl p-4 space-y-2">
-          <div className="text-[10px] uppercase font-mono tracking-widest text-slate-500">Your profile</div>
+          <div className="text-xs uppercase font-mono tracking-widest text-slate-500">Your profile</div>
           <p className="text-xs text-slate-300">Stage: {profile.stage}</p>
           <p className="text-xs text-slate-400">Goals: {profile.goals.join(", ")}</p>
-          <p className="text-[10px] text-slate-500">Style: {profile.style} · Availability: {profile.availability}</p>
+          <p className="text-xs text-slate-500">Style: {profile.style} · Availability: {profile.availability}</p>
         </div>
       )}
 
       {showLog ? (
         <div className="glass rounded-2xl p-4 space-y-3">
-          <div className="text-[10px] uppercase font-mono tracking-widest text-slate-500">Log a connection</div>
+          <div className="text-xs uppercase font-mono tracking-widest text-slate-500">Log a connection</div>
           <input value={contactName} onChange={(e) => setContactName(e.target.value)} placeholder="Who did you connect with?" className="w-full glass rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-500" />
           <div className="flex gap-4">
             <div className="flex-1 space-y-1">
-              <label className="text-[10px] text-slate-500">Mood before: {moodBefore}/10</label>
+              <label className="text-xs text-slate-500">Mood before: {moodBefore}/10</label>
               <input type="range" min={1} max={10} value={moodBefore} onChange={(e) => setMoodBefore(+e.target.value)} className="w-full" />
             </div>
             <div className="flex-1 space-y-1">
-              <label className="text-[10px] text-slate-500">Mood after: {moodAfter}/10</label>
+              <label className="text-xs text-slate-500">Mood after: {moodAfter}/10</label>
               <input type="range" min={1} max={10} value={moodAfter} onChange={(e) => setMoodAfter(+e.target.value)} className="w-full" />
             </div>
           </div>
@@ -111,7 +111,7 @@ export default function PeerSupportScreen() {
 
       {sessions.length > 0 && (
         <div className="space-y-2">
-          <div className="text-[10px] uppercase font-mono tracking-widest text-slate-500">Recent sessions</div>
+          <div className="text-xs uppercase font-mono tracking-widest text-slate-500">Recent sessions</div>
           {sessions.slice(-5).reverse().map((s) => (
             <div key={s.id} className="glass rounded-xl p-3 text-xs text-slate-400">
               <div className="flex justify-between">
@@ -125,7 +125,7 @@ export default function PeerSupportScreen() {
       )}
 
       <div className="space-y-2">
-        <div className="text-[10px] uppercase font-mono tracking-widest text-slate-500">Message templates</div>
+        <div className="text-xs uppercase font-mono tracking-widest text-slate-500">Message templates</div>
         {templates.map((t) => (
           <div key={t.id} className="glass border-l-4 border-l-emerald-500 rounded-r-2xl p-3">
             <p className="text-sm font-semibold text-slate-100">{t.label}</p>

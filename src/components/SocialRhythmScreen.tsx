@@ -142,7 +142,7 @@ export default function SocialRhythmScreen() {
             <Sunrise className="w-4 h-4 text-indigo-400" /> Wake-time insight
           </div>
           <p className="text-xs text-slate-400 leading-relaxed">{wakeInsight.guidance}</p>
-          <p className="text-[10px] text-slate-500 leading-relaxed">
+          <p className="text-xs text-slate-500 leading-relaxed">
             Wake time is the anchor most emphasized in Interpersonal &amp; Social Rhythm Therapy (Frank et
             al., 2005; Monk, Frank, Potts &amp; Kupfer, 2002).
           </p>
@@ -185,7 +185,7 @@ export default function SocialRhythmScreen() {
       </div>
 
       {/* Honest basis + limit */}
-      <p className="text-[10px] text-slate-500 leading-relaxed px-1">
+      <p className="text-xs text-slate-500 leading-relaxed px-1">
         Based on the Social Rhythm Metric (Monk et al., 1990/1991) as used in Interpersonal &amp; Social
         Rhythm Therapy (Frank et al., 2005). The evidence for rhythm regularity is strongest for bipolar
         disorder and rests on a small number of trials; the bands here are a self-reflection aid, not a
@@ -197,10 +197,10 @@ export default function SocialRhythmScreen() {
       <div className="glass rounded-2xl p-4 space-y-3" id="rhythm-timeline">
         <div className="text-sm font-semibold text-slate-200">Last 7 days</div>
         <div className="flex gap-1 items-end">
-          <div className="w-28 shrink-0 text-[10px] text-slate-500">Mood</div>
+          <div className="w-28 shrink-0 text-xs text-slate-500">Mood</div>
           {timeline.days.map((d) => (
             <div key={d} className="flex-1 flex flex-col items-center gap-1">
-              <span className="text-[9px] text-slate-500">{WEEKDAY[new Date(d + "T00:00:00").getDay()]}</span>
+              <span className="text-xs text-slate-500">{WEEKDAY[new Date(d + "T00:00:00").getDay()]}</span>
               <span
                 className="h-2 w-2 rounded-full ring-1 ring-slate-700"
                 style={{ background: moodDot(moodByDay.get(d) ?? null) }}
@@ -238,7 +238,7 @@ export default function SocialRhythmScreen() {
             </div>
           );
         })}
-        <p className="text-[10px] text-slate-500 leading-relaxed">
+        <p className="text-xs text-slate-500 leading-relaxed">
           Each dot is when that anchor happened that day. Dots close together = a steady rhythm; spread out = more
           variation. The grey band shows the range across the week. The top row is how your mood averaged that day.
         </p>

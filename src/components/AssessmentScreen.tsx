@@ -198,7 +198,7 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
               <div className="space-y-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-bold text-slate-100">{it.name}</span>
-                  <span className="text-[10px] uppercase tracking-wider text-slate-500 font-mono">{it.measures}</span>
+                  <span className="text-xs uppercase tracking-wider text-slate-500 font-mono">{it.measures}</span>
                 </div>
                 <p className="text-[11px] text-slate-400">{it.fullName}</p>
                 {last && tone ? (
@@ -210,7 +210,7 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
                     {isSameRecallWindowRetake(last) && (
                       // Soft, non-blocking heads-up only — never disables the button below. PHQ-9/GAD-7's
                       // 2-week recall window means a same-week retake mostly re-scores the last one.
-                      <p className="text-[10px] text-slate-600 italic">
+                      <p className="text-xs text-slate-600 italic">
                         Taken this recently — a retake now will likely look similar, and that's expected.
                       </p>
                     )}
@@ -246,7 +246,7 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
         <header className="space-y-2">
           <div className="flex items-center gap-2">
             <h2 className="text-lg font-bold text-slate-100">{inst.name}</h2>
-            <span className="text-[10px] uppercase tracking-wider text-slate-500 font-mono">{inst.measures}</span>
+            <span className="text-xs uppercase tracking-wider text-slate-500 font-mono">{inst.measures}</span>
           </div>
           <p className="text-xs text-slate-300 leading-relaxed glass rounded-xl p-3">
             {inst.prompt}
@@ -360,8 +360,8 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
         {/* Score card */}
         <div className={`rounded-2xl p-5 border ${tone.bg} ${tone.border} space-y-3`}>
           <div className="flex items-center justify-between">
-            <span className="text-[10px] uppercase tracking-widest font-mono text-slate-400">{inst.name} · {inst.measures}</span>
-            <span className="text-[10px] text-slate-500">{new Date().toLocaleDateString()}</span>
+            <span className="text-xs uppercase tracking-widest font-mono text-slate-400">{inst.name} · {inst.measures}</span>
+            <span className="text-xs text-slate-500">{new Date().toLocaleDateString()}</span>
           </div>
           <div className="flex items-end gap-2">
             <span className={`text-4xl font-black ${tone.text}`}>{result.total}</span>
@@ -415,7 +415,7 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
               <p className="text-[11px] text-slate-300 leading-relaxed">{inst.cutPoint.note}</p>
             </div>
           )}
-          <p className="text-[10px] text-slate-500 leading-relaxed">
+          <p className="text-xs text-slate-500 leading-relaxed">
             <span className="text-slate-400 font-semibold">Not a diagnosis.</span> This is a validated
             screening questionnaire. Only a qualified professional can diagnose — but they use exactly
             these scores as a starting point. Source: {inst.citation}
@@ -476,7 +476,7 @@ function TrendBlock({ instrumentId, history }: { instrumentId: InstrumentId; his
 
   return (
     <div className="glass rounded-2xl p-4 space-y-2">
-      <h4 className="text-[10px] uppercase font-mono tracking-widest text-slate-400">
+      <h4 className="text-xs uppercase font-mono tracking-widest text-slate-400">
         {inst.name} trend · last {data.length}
       </h4>
       <div className="h-36 -ml-2" role="img" aria-label={`${inst.name} trend chart over last ${data.length} assessments`}>
@@ -516,14 +516,14 @@ function TrendBlock({ instrumentId, history }: { instrumentId: InstrumentId; his
             }
           </span>
           {status.recovery === "recovered" && (
-            <span className="flex items-center gap-1 text-emerald-400 ml-auto text-[10px]">
+            <span className="flex items-center gap-1 text-emerald-400 ml-auto text-xs">
               <ShieldCheck className="w-3 h-3" /> Below threshold
             </span>
           )}
         </div>
       )}
 
-      <p className="text-[10px] text-slate-600">Dashed line = screening threshold ({inst.cutPoint.score}). {inst.higherIsBetter ? "Higher is better." : "Lower is calmer."} RCI {inst.cutPoint.score > 0 ? "≥±" + Math.round(reliableChangeThreshold(instrumentId) * 10) / 10 : ""}</p>
+      <p className="text-xs text-slate-600">Dashed line = screening threshold ({inst.cutPoint.score}). {inst.higherIsBetter ? "Higher is better." : "Lower is calmer."} RCI {inst.cutPoint.score > 0 ? "≥±" + Math.round(reliableChangeThreshold(instrumentId) * 10) / 10 : ""}</p>
     </div>
   );
 }

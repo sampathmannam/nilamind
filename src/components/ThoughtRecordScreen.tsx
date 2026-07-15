@@ -317,7 +317,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
                       <span className="opacity-80 block mt-0.5">{t.desc}</span>
                     </div>
                     {isSelected && (
-                      <span className="bg-blue-600 text-white text-[10px] px-2 py-0.5 rounded font-bold font-mono">
+                      <span className="bg-blue-600 text-white text-xs px-2 py-0.5 rounded font-bold font-mono">
                         Active
                       </span>
                     )}

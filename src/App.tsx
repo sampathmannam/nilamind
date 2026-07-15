@@ -430,6 +430,8 @@ export default function App() {
     <div className="relative isolate h-dvh bg-page text-slate-300 font-sans antialiased overflow-hidden flex flex-col">
       {/* Living aurora atmosphere */}
       <div className="aurora-field" aria-hidden="true" />
+      {/* Skip link for keyboard navigation */}
+      <a href="#chat-input" className="skip-link">Skip to chat</a>
 
       {/* Biometric gate — standalone, renders itself */}
       <BiometricGateHost />
@@ -459,7 +461,7 @@ export default function App() {
 
       {/* Main content area — each tab isolated in its own ErrorBoundary so one tab crashing
           can't take down the others (redesign §5: localized failure). */}
-      <main className="flex-1 min-h-0 relative flex flex-col animate-tab-fade" key={activeTab}>
+      <main className="flex-1 min-h-0 relative flex flex-col animate-tab-fade" key={activeTab} aria-label="Content">
         {activeTab === "nila" && (
           <ErrorBoundary name="nila" onError={(err: Error, info: React.ErrorInfo) => console.error("[ErrorBoundary:nila] caught:", err, info)}>
             <ModeScreen

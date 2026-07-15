@@ -59,12 +59,12 @@ export default function IdentitySection() {
             <button onClick={copyPhrase} className="text-[11px] text-slate-300 hover:text-slate-100 cursor-pointer flex items-center gap-1">
               {copied ? <><Check className="w-3 h-3 text-emerald-400" /> Copied</> : <><Copy className="w-3 h-3" /> Copy</>}
             </button>
-            <p className="text-[10px] text-amber-300/80">Keep it private — anyone with it can restore your data.</p>
+            <p className="text-xs text-amber-300/80">Keep it private — anyone with it can restore your data.</p>
           </>
         ) : (
           <p className="text-[11px] text-slate-500">Hidden. Tap Reveal only when no one's looking.</p>
         )}
-        <p className="text-[10px] text-slate-500 leading-relaxed">{bioAvail === false ? "🔒 No device lock set on this phone — wiping data, showing this phrase, and exporting each ask you to confirm in-app first." : "🔒 Wiping data, showing this phrase, and exporting a backup each ask for your fingerprint or device lock first."}</p>
+        <p className="text-xs text-slate-500 leading-relaxed">{bioAvail === false ? "🔒 No device lock set on this phone — wiping data, showing this phrase, and exporting each ask you to confirm in-app first." : "🔒 Wiping data, showing this phrase, and exporting a backup each ask for your fingerprint or device lock first."}</p>
       </div>
 
       <div className="border border-slate-800 rounded-xl p-3 bg-page space-y-2">

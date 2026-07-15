@@ -106,7 +106,7 @@ export default function ReachOutScreen() {
           {/* draft kept (read-only here) + DEMOTED send ── */}
           {draft.trim() && (
             <div className="bg-page border border-slate-800 rounded-xl p-3 space-y-1">
-              <p className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold">Your message (kept)</p>
+              <p className="text-xs uppercase tracking-wider text-slate-500 font-semibold">Your message (kept)</p>
               <p className="text-xs text-slate-300 leading-relaxed whitespace-pre-wrap">{draft.trim()}</p>
             </div>
           )}
@@ -155,7 +155,7 @@ export default function ReachOutScreen() {
 
           {/* opener chooser */}
           <div className="space-y-2">
-            <p className="text-[10px] uppercase font-mono tracking-widest text-slate-500">Start with…</p>
+            <p className="text-xs uppercase font-mono tracking-widest text-slate-500">Start with…</p>
             {REACH_OPENERS.map((o) => (
               <button
                 key={o.id}

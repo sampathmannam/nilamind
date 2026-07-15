@@ -7,6 +7,7 @@ import { Heart, Wind, ShieldAlert, ArrowLeft } from "lucide-react";
 import CrisisLines from "./CrisisLines";
 import { offerPostCrisisCheckIn } from "../services/postCrisisCheckIn";
 import RideTheWaveCard from "./RideTheWaveCard";
+import { useFocusTrap } from "../hooks/useFocusTrap";
 
 interface CrisisOverlayProps {
   isOpen: boolean;
@@ -28,6 +29,7 @@ export default function CrisisOverlay({
   // silently — offerPostCrisisCheckIn() only fires if this is explicitly checked before "I feel steadier now".
   const [wantsCheckIn, setWantsCheckIn] = useState(false);
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const trapRef = useFocusTrap<HTMLDivElement>(isOpen, onClose);
 
   useEffect(() => {
     if (isOpen) {
@@ -61,11 +63,13 @@ export default function CrisisOverlay({
 
   return (
     <div
+      ref={trapRef}
       className="fixed inset-0 z-[70] bg-page text-slate-300 overflow-y-auto"
       id="crisis-overlay-container"
       role="dialog"
       aria-modal="true"
       aria-labelledby="crisis-overlay-heading"
+      tabIndex={-1}
     >
       {/* Red safety top header */}
       <div className="bg-rose-500/10 border-b border-rose-500/25 py-6 px-4 text-center">
@@ -128,7 +132,7 @@ export default function CrisisOverlay({
           </h2>
 
           <CrisisLines tone="rose" />
-          <p className="text-[10px] text-slate-500 text-center">Free, confidential helplines for your region — change in Settings.</p>
+          <p className="text-xs text-slate-500 text-center">Free, confidential helplines for your region — change in Settings.</p>
         </div>
 
         {/* Your coping plan — decluttered: only sections with real content render */}

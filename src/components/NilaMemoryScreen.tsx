@@ -110,7 +110,7 @@ export default function NilaMemoryScreen() {
               <div key={f.id} className="px-4 py-3 flex items-start gap-2">
                 <span className="flex-1 min-w-0">
                   <span className="block text-sm text-slate-200 leading-relaxed">{f.text}</span>
-                  {f.when && <span className="block text-[10px] text-slate-500 mt-0.5">{f.when}</span>}
+                  {f.when && <span className="block text-xs text-slate-500 mt-0.5">{f.when}</span>}
                 </span>
                 <button onClick={() => removeFo(f.id)} aria-label="Delete" className="p-1 text-slate-500 hover:text-rose-400 shrink-0 cursor-pointer">
                   <Trash2 className="w-4 h-4" />
@@ -183,7 +183,7 @@ export default function NilaMemoryScreen() {
                   : <TrendingDown className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />}
                 <span className="flex-1 min-w-0">
                   <span className="block text-sm text-slate-200 leading-relaxed">{n.detail}</span>
-                  <span className="block text-[10px] text-slate-500 mt-0.5">{n.basis}</span>
+                  <span className="block text-xs text-slate-500 mt-0.5">{n.basis}</span>
                 </span>
                 <button onClick={() => dismissNoticed(n.id)} aria-label="Dismiss" className="p-1 text-slate-500 hover:text-rose-400 shrink-0 cursor-pointer">
                   <X className="w-4 h-4" />
@@ -192,7 +192,7 @@ export default function NilaMemoryScreen() {
             ))}
           </div>
         )}
-        <p className="text-[10px] text-slate-500 px-1 leading-relaxed">
+        <p className="text-xs text-slate-500 px-1 leading-relaxed">
           Computed on your device and never sent anywhere. Nila only mentions these in chat if you turn it on in Settings.
         </p>
       </section>
@@ -205,7 +205,7 @@ export default function NilaMemoryScreen() {
               <p className="text-sm text-slate-200 leading-relaxed">
                 You've rated <strong>{fb.total}</strong> {fb.total === 1 ? "reply" : "replies"} — {fb.up} 👍, {fb.down} 👎{fb.suggestions ? `, and suggested ${fb.suggestions} better ${fb.suggestions === 1 ? "reply" : "replies"}` : ""}.
               </p>
-              <p className="text-[10px] text-slate-500 leading-relaxed">
+              <p className="text-xs text-slate-500 leading-relaxed">
                 It all stays on this device — it's how Nila learns to do better over time, and you can wipe it any time.
               </p>
               <button onClick={clearFb} className="text-[11px] font-semibold text-slate-400 hover:text-rose-400 cursor-pointer">
@@ -231,7 +231,7 @@ export default function NilaMemoryScreen() {
                           <span className="text-slate-500">Your suggestion:</span> {preview.betterReply || "(none)"}
                         </div>
                         {preview.blockedByCrisis ? (
-                          <p className="text-[10px] text-rose-400">This can't be shared — it contains crisis content.</p>
+                          <p className="text-xs text-rose-400">This can't be shared — it contains crisis content.</p>
                         ) : (
                           <div className="flex gap-2 justify-end">
                             <button onClick={closePreview} className="text-[11px] text-slate-400 hover:text-slate-200 cursor-pointer px-2 py-1">Cancel</button>
@@ -251,7 +251,7 @@ export default function NilaMemoryScreen() {
                   </div>
                 </div>
               ))}
-              <p className="text-[10px] text-slate-500 leading-relaxed">
+              <p className="text-xs text-slate-500 leading-relaxed">
                 Each donation is only Nila's reply + your suggested wording — scrubbed of emails, phone numbers, and links. Nothing leaves your phone until a future upload step.
               </p>
             </div>
@@ -261,7 +261,7 @@ export default function NilaMemoryScreen() {
               <p className="text-sm text-slate-200 leading-relaxed">
                 You've chosen to share <strong>{donations}</strong> {donations === 1 ? "example" : "examples"} to help train Nila.
               </p>
-              <p className="text-[10px] text-slate-500 leading-relaxed">
+              <p className="text-xs text-slate-500 leading-relaxed">
                 Nothing has left your phone. You can withdraw any time.
               </p>
               <button onClick={withdrawAll} className="text-[11px] font-semibold text-slate-400 hover:text-rose-400 cursor-pointer">

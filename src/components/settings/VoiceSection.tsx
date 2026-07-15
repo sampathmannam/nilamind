@@ -44,7 +44,7 @@ export default function VoiceSection() {
       <div className="border border-slate-800 rounded-xl p-3 flex items-center justify-between bg-page">
         <div className="space-y-0.5">
           <div className="text-sm font-medium text-slate-200">Read aloud</div>
-          <div className="text-[10px] text-slate-500">Nila speaks replies; read-aloud buttons appear.</div>
+          <div className="text-xs text-slate-500">Nila speaks replies; read-aloud buttons appear.</div>
         </div>
         <button
           onClick={() => update({ enabled: !prefs.enabled })}
@@ -99,7 +99,7 @@ export default function VoiceSection() {
       <div className="border border-slate-800 rounded-xl p-3 flex items-center justify-between bg-page" id="settings-ondevice-stt">
         <div className="space-y-0.5 pr-3">
           <div className="text-sm font-medium text-slate-200">On-device voice (private)</div>
-          <div className="text-[10px] text-slate-500 leading-relaxed">
+          <div className="text-xs text-slate-500 leading-relaxed">
             Turn your speech into text right on the phone, so your voice never leaves it. Turn off to use your device's system voice typing — often more accurate, but it may send your audio to the cloud.
           </div>
         </div>
@@ -135,7 +135,7 @@ export default function VoiceSection() {
                   <VoiceRow key={v.id} label={v.name} sub={`${v.lang} · ${v.local ? "on-device" : "network"}`} selected={prefs.voiceId === v.id} onClick={() => pickVoice(v.id)} />
                 ))}
               </div>
-              <p className="text-[10px] text-slate-500 leading-relaxed">
+              <p className="text-xs text-slate-500 leading-relaxed">
                 Tap one to hear it. <span className="text-slate-400">af_heart</span> is a warm neural voice synthesised on your own server (private, a touch slower). <span className="text-slate-400">On-device</span> voices never leave your phone; <span className="text-slate-400">network</span> ones are richer but fetched by your device's engine.
               </p>
             </div>
@@ -177,7 +177,7 @@ function VoiceRow({ label, sub, selected, onClick }: { label: string; sub: strin
     >
       <span className="min-w-0">
         <span className="block text-xs font-medium text-slate-200 truncate">{label}</span>
-        <span className="block text-[10px] text-slate-500">{sub}</span>
+        <span className="block text-xs text-slate-500">{sub}</span>
       </span>
       {selected ? <Check className="w-3.5 h-3.5 text-blue-400 shrink-0" /> : <Play className="w-3 h-3 text-slate-500 shrink-0" />}
     </button>

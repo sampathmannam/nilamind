@@ -63,12 +63,12 @@ export default function AchievementBadge({ achievement, locked = false, compact 
           </div>
         </div>
         {achievement.unlockedAt && !locked && (
-          <p className="text-[9px] text-slate-500">
+          <p className="text-xs text-slate-500">
             Unlocked {new Date(achievement.unlockedAt).toLocaleDateString()}
           </p>
         )}
         {locked && (
-          <p className="text-[9px] text-slate-600 italic">Keep going to unlock</p>
+          <p className="text-xs text-slate-600 italic">Keep going to unlock</p>
         )}
       </div>
     </Wrapper>

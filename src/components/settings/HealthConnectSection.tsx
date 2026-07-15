@@ -59,7 +59,7 @@ export default function HealthConnectSection() {
       <div className="border border-slate-800 rounded-xl p-3 flex items-center justify-between bg-page">
         <div className="space-y-0.5">
           <div className="text-sm font-medium text-slate-200">Use Health Connect</div>
-          <div className="text-[10px] text-slate-500">
+          <div className="text-xs text-slate-500">
             {status.available ? "Available on this device" : "Not available on this device"}
           </div>
         </div>

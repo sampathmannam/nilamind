@@ -307,7 +307,7 @@ export default function DiaryCardScreen() {
           {quickNoteTags.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mt-2">
               {quickNoteTags.map((tag, idx) => (
-                <span key={idx} className="bg-blue-900/40 text-blue-300 px-2 py-0.5 rounded-full text-[10px] font-medium border border-blue-900/50">
+                <span key={idx} className="bg-blue-900/40 text-blue-300 px-2 py-0.5 rounded-full text-xs font-medium border border-blue-900/50">
                   {tag}
                 </span>
               ))}

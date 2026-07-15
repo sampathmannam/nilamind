@@ -35,19 +35,19 @@ export default function RelapsePlanScreen() {
       <div className="flex items-center gap-2 text-xs">
         <span className="text-slate-500">Current phase:</span>
         <span className="font-semibold text-slate-200">{phaseLabel(phase)}</span>
-        {saved && <span className="text-emerald-400 text-[10px]">✓ Saved</span>}
+        {saved && <span className="text-emerald-400 text-xs">✓ Saved</span>}
       </div>
 
       {PHASES.map((p) => (
         <div key={p} className={`glass rounded-2xl p-4 space-y-3 border-l-4 ${PHASE_COLORS[p]}`}>
           <div className="flex items-center gap-2">
             <span className={`text-sm font-bold text-slate-100 ${p === phase ? "" : "text-slate-400"}`}>{phaseLabel(p)}</span>
-            {p === phase && <span className="text-[9px] font-mono uppercase tracking-wider bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded">current</span>}
+            {p === phase && <span className="text-xs font-mono uppercase tracking-wider bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded">current</span>}
           </div>
-          <p className="text-[10px] text-slate-500">{phaseDescription(p)}</p>
+          <p className="text-xs text-slate-500">{phaseDescription(p)}</p>
 
           <div className="space-y-2">
-            <div className="text-[10px] uppercase font-mono tracking-widest text-slate-500">Warning signs</div>
+            <div className="text-xs uppercase font-mono tracking-widest text-slate-500">Warning signs</div>
             {fields.map((f) => (
               <input key={f.key} value={plan[p].signals[f.key]} onChange={(e) => updateSignal(p, f.key, e.target.value)}
                 placeholder={f.placeholder} className={`w-full glass rounded-xl px-3 py-2 text-xs text-slate-200 placeholder-slate-600 ${p === phase ? PHASE_BG[p] : ""}`} />
@@ -55,7 +55,7 @@ export default function RelapsePlanScreen() {
           </div>
 
           <div className="space-y-2">
-            <div className="text-[10px] uppercase font-mono tracking-widest text-slate-500">Things I can do</div>
+            <div className="text-xs uppercase font-mono tracking-widest text-slate-500">Things I can do</div>
             {(["selfCare", "copingSkills", "reachOut", "crisisHelp"] as const).map((k) => (
               <input key={k} value={plan[p].actions[k].join(", ")} onChange={(e) => updateActions(p, k, e.target.value)}
                 placeholder={`${k}...`} className="w-full glass rounded-xl px-3 py-2 text-xs text-slate-200 placeholder-slate-600" />

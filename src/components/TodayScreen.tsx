@@ -1,5 +1,5 @@
-import { useRef, useState } from "react";
-import { Wind, MessageCircle, Moon, LayoutGrid, Sparkles, ChevronRight, HeartHandshake, Sparkle, Clock3, Target, LineChart, Activity, Lightbulb, LifeBuoy } from "lucide-react";
+import { useRef, useState, useMemo } from "react";
+import { Wind, MessageCircle, Moon, LayoutGrid, Sparkles, ChevronRight, HeartHandshake, Sparkle, Clock3, Target, LineChart, Activity, Lightbulb, LifeBuoy, Search, X } from "lucide-react";
 import { getTimeMode, getUserState, getGreeting } from "../services/modeEngine";
 import { hasCheckinToday } from "../services/checkin";
 import { secureLocal } from "../services/secureLocal";
@@ -167,6 +167,7 @@ export default function TodayScreen({
   const [showAllTools, setShowAllTools] = useState(false);
   const [showMoreSkills, setShowMoreSkills] = useState(false);
   const [showExtraCards, setShowExtraCards] = useState(false);
+  const [toolSearch, setToolSearch] = useState("");
   useLanguage();
   const { timeOfDay } = useTimeOfDay();
   const timeMode = getTimeMode();
@@ -179,6 +180,20 @@ export default function TodayScreen({
   const hero = getHeroAction(timeMode, userState, dailyIntentionSet);
   const intentionCardRef = useRef<DailyIntentionCardHandle>(null);
   const groups = personalizeToolOrder(buildToolGroups({ go, onEpisode, phoneEnabled }), getUserGoals());
+
+  // Tool search filter
+  const filteredGroups = useMemo(() => {
+    if (!toolSearch.trim()) return groups;
+    const q = toolSearch.toLowerCase();
+    return groups
+      .map((g) => ({
+        ...g,
+        rows: g.rows.filter(
+          (r) => r.label.toLowerCase().includes(q) || r.sub.toLowerCase().includes(q),
+        ),
+      }))
+      .filter((g) => g.rows.length > 0);
+  }, [groups, toolSearch]);
   const weekInsight = getWeekInsight();
   const nilaReflection = getNilaReflection();
   const hasAnyCheckins = (() => {
@@ -295,7 +310,7 @@ export default function TodayScreen({
       {/* Morning focus — if morning and not checked in yet */}
       {timeOfDay === "morning" && checkedIn && weekInsight && (
         <div className="glass p-3 rounded-2xl space-y-1">
-          <p className="text-[10px] uppercase font-mono tracking-widest text-slate-500">This week</p>
+          <p className="text-xs uppercase font-mono tracking-widest text-slate-500">This week</p>
           <p className="text-[11px] text-slate-300">
             {weekInsight.checkinCount} check-in{weekInsight.checkinCount !== 1 ? "s" : ""}
             {weekInsight.topEmotion ? ` · mostly feeling ${weekInsight.topEmotion}` : ""}
@@ -519,7 +534,29 @@ export default function TodayScreen({
       {/* Expandable tools list */}
       {showAllTools && (
         <div className="space-y-5 animate-tab-fade">
-          {groups.filter((g) => showMoreSkills || !g.more).map((g) => (
+          {/* Search input */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" aria-hidden="true" />
+            <input
+              type="text"
+              value={toolSearch}
+              onChange={(e) => setToolSearch(e.target.value)}
+              placeholder="Search tools..."
+              className="w-full pl-9 pr-8 py-2.5 rounded-xl bg-slate-800/50 border border-slate-700/50 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500/50 transition-colors"
+              aria-label="Search tools"
+            />
+            {toolSearch && (
+              <button
+                onClick={() => setToolSearch("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 cursor-pointer"
+                aria-label="Clear search"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+
+          {filteredGroups.filter((g) => showMoreSkills || !g.more).map((g) => (
             <section key={g.title} className="space-y-2">
               <h2 className="text-[11px] font-mono uppercase tracking-widest text-slate-500 px-1">{g.title}</h2>
               <div className="space-y-2">
@@ -541,7 +578,10 @@ export default function TodayScreen({
               </div>
             </section>
           ))}
-          {!showMoreSkills && groups.some((g) => g.more) && (
+          {filteredGroups.filter((g) => showMoreSkills || !g.more).length === 0 && toolSearch && (
+            <p className="text-sm text-slate-500 text-center py-4">No tools match "{toolSearch}"</p>
+          )}
+          {!showMoreSkills && filteredGroups.some((g) => g.more) && !toolSearch && (
             <button
               onClick={() => setShowMoreSkills(true)}
               className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-dashed border-slate-700/50 hover:border-slate-600/50 text-slate-400 hover:text-slate-300 text-sm font-medium transition-all cursor-pointer active:scale-[0.99]"

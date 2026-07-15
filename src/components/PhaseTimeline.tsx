@@ -75,7 +75,7 @@ export default function PhaseTimeline({ markers, days = 365 }: Props) {
     <div className="glass rounded-2xl p-4 space-y-3" role="img" aria-label="Episode phase timeline">
       <div className="flex items-center justify-between">
         <p className="text-sm font-semibold text-slate-200">Episode Timeline</p>
-        <span className="text-[10px] text-slate-500">{totalDays} days</span>
+        <span className="text-xs text-slate-500">{totalDays} days</span>
       </div>
 
       {/* Timeline bar */}
@@ -98,7 +98,7 @@ export default function PhaseTimeline({ markers, days = 365 }: Props) {
       </div>
 
       {/* Legend */}
-      <div className="flex flex-wrap gap-3 text-[10px]">
+      <div className="flex flex-wrap gap-3 text-xs">
         {(Object.keys(PHASE_COLORS) as EpisodePhase[]).map((phase) => {
           const colors = PHASE_COLORS[phase];
           return (

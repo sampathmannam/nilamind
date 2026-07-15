@@ -32,7 +32,7 @@ export default function DailyContentCard() {
         <Quote className="w-4 h-4 text-purple-400 shrink-0 mt-0.5" />
         <div>
           <p className="text-sm text-slate-200 italic leading-relaxed">"{content.quote}"</p>
-          <p className="text-[10px] text-slate-500 mt-0.5">— {content.attribution}</p>
+          <p className="text-xs text-slate-500 mt-0.5">— {content.attribution}</p>
         </div>
       </div>
 

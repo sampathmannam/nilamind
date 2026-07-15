@@ -158,7 +158,7 @@ export default function BreathingScreen({ onClose, defaultPattern = "box" }: Pro
               key={p}
               onClick={() => { reset(); setPattern(p); }}
               disabled={playing}
-              className={`text-[10px] px-2 py-1 rounded-lg font-medium transition-colors cursor-pointer disabled:opacity-40 ${
+              className={`text-xs px-2 py-1 rounded-lg font-medium transition-colors cursor-pointer disabled:opacity-40 ${
                 pattern === p ? "bg-blue-500/20 text-blue-300" : "text-slate-500 hover:text-slate-300"
               }`}
             >

@@ -124,7 +124,7 @@ export default function SoundPlayer({ onClose, compact = false }: Props) {
               <button
                 key={type}
                 onClick={() => selectType(type)}
-                className={`px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-colors cursor-pointer ${
+                className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
                   selectedType === type
                     ? "bg-blue-500/20 text-blue-300"
                     : "bg-slate-800/50 text-slate-500 hover:text-slate-300"
@@ -146,7 +146,7 @@ export default function SoundPlayer({ onClose, compact = false }: Props) {
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm font-semibold text-slate-200">Ambient sounds</p>
-          <p className="text-[10px] text-slate-500">Generated on-device — no files, no network</p>
+          <p className="text-xs text-slate-500">Generated on-device — no files, no network</p>
         </div>
         {onClose && (
           <button onClick={onClose} className="p-1.5 rounded-lg text-slate-500 hover:text-slate-300 cursor-pointer">
@@ -174,7 +174,7 @@ export default function SoundPlayer({ onClose, compact = false }: Props) {
                   <p className={`text-xs font-semibold ${isSelected ? "text-blue-300" : "text-slate-300"}`}>
                     {info.name}
                   </p>
-                  <p className="text-[9px] text-slate-500 truncate">{info.description}</p>
+                  <p className="text-xs text-slate-500 truncate">{info.description}</p>
                 </div>
               </div>
             </button>
@@ -215,16 +215,16 @@ export default function SoundPlayer({ onClose, compact = false }: Props) {
           className="flex-1 h-1 bg-slate-700 rounded-full appearance-none cursor-pointer accent-blue-400"
           aria-label="Volume"
         />
-        <span className="text-[10px] text-slate-500 w-8 text-right">{Math.round(volume * 100)}%</span>
+        <span className="text-xs text-slate-500 w-8 text-right">{Math.round(volume * 100)}%</span>
       </div>
 
       {/* Timer */}
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <Timer className="w-3.5 h-3.5 text-slate-500" />
-          <span className="text-[10px] text-slate-500">Auto-stop</span>
+          <span className="text-xs text-slate-500">Auto-stop</span>
           {timerRemaining > 0 && (
-            <span className="text-[10px] text-amber-400 font-mono ml-auto">{formatTime(timerRemaining)}</span>
+            <span className="text-xs text-amber-400 font-mono ml-auto">{formatTime(timerRemaining)}</span>
           )}
         </div>
         <div className="flex gap-1.5">
@@ -232,7 +232,7 @@ export default function SoundPlayer({ onClose, compact = false }: Props) {
             <button
               key={opt.minutes}
               onClick={() => { setTimerMinutes(opt.minutes); hapticLight(); }}
-              className={`flex-1 px-2 py-1.5 rounded-lg text-[10px] font-medium transition-colors cursor-pointer ${
+              className={`flex-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
                 timerMinutes === opt.minutes
                   ? "bg-blue-500/20 text-blue-300"
                   : "bg-slate-800/50 text-slate-500 hover:text-slate-300"

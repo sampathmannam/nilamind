@@ -112,7 +112,7 @@ export default function PrivacyLockSection() {
               id="settings-pin-confirm"
               className="w-full glass rounded-lg px-3 py-2.5 text-sm text-slate-100 tracking-widest placeholder:tracking-normal placeholder:text-slate-600 focus:outline-none focus:border-blue-500/50"
             />
-            <p id="pin-warning" className="text-[10px] text-amber-300/80 leading-relaxed flex items-start gap-1">
+            <p id="pin-warning" className="text-xs text-amber-300/80 leading-relaxed flex items-start gap-1">
               <AlertTriangle className="w-3 h-3 shrink-0 mt-0.5" /> If you forget this PIN, your encrypted entries cannot be recovered. There's no reset.
             </p>
             {error && <p className="text-[11px] text-rose-400">{error}</p>}

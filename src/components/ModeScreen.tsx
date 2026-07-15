@@ -1115,6 +1115,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                   {listening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
                 </button>
                 <input
+                  id="chat-input"
                   type="text"
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}

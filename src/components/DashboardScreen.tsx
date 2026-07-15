@@ -411,14 +411,14 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
 
 {/* This-week summary */}
        <div className="bg-blue-500/5 border border-blue-500/20 rounded-2xl p-4">
-          <div className="text-[10px] uppercase font-mono tracking-widest text-blue-400 mb-1">{t("this_week")}</div>
+          <div className="text-xs uppercase font-mono tracking-widest text-blue-400 mb-1">{t("this_week")}</div>
          <p className="text-sm text-slate-200 leading-relaxed">{moodSummary}</p>
        </div>
 
        {/* Monthly narrative */}
        {monthlyNarrative && (
          <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4">
-            <div className="text-[10px] uppercase font-mono tracking-widest text-emerald-400 mb-1">{t("your_month")}</div>
+            <div className="text-xs uppercase font-mono tracking-widest text-emerald-400 mb-1">{t("your_month")}</div>
            <p className="text-sm text-slate-200 leading-relaxed">
              This month has been <span className="font-semibold text-slate-100">{monthlyNarrative.word}</span>{" "}
              with mood averaging <span className="font-semibold text-slate-100">{monthlyNarrative.avgIntensity}/10</span> (
@@ -467,8 +467,8 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
         {getAchievementCount() > 0 && (
           <div className="glass rounded-2xl p-4 space-y-2">
             <div className="flex items-center justify-between">
-              <p className="text-[10px] uppercase font-mono tracking-widest text-slate-500">Achievements</p>
-              <span className="text-[10px] text-slate-500">{getAchievementCount()}/{getAllAchievements().length}</span>
+              <p className="text-xs uppercase font-mono tracking-widest text-slate-500">Achievements</p>
+              <span className="text-xs text-slate-500">{getAchievementCount()}/{getAllAchievements().length}</span>
             </div>
             <div className="flex flex-wrap gap-1.5">
               {getAllAchievements()
@@ -514,7 +514,7 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
        {/* Behaviour Insights — patterns Nila noticed */}
        {behaviourInsights.length > 0 && (
          <div className="space-y-2">
-           <p className="text-[10px] uppercase font-mono tracking-widest text-slate-500">Nila noticed</p>
+           <p className="text-xs uppercase font-mono tracking-widest text-slate-500">Nila noticed</p>
            {behaviourInsights.slice(0, 3).map((insight, i) => (
              <InsightCard
                key={i}
@@ -544,36 +544,36 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
       {/* Usage Analytics — on-device summary of all engagement */}
       {usageSummary.totalCheckins > 0 && (
         <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 space-y-3">
-            <p className="text-[10px] uppercase font-mono tracking-widest text-slate-400 flex items-center gap-1.5">
+            <p className="text-xs uppercase font-mono tracking-widest text-slate-400 flex items-center gap-1.5">
               <Activity className="w-3.5 h-3.5" /> {t("your_usage")}
             </p>
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-page p-2.5 rounded-xl text-center border border-slate-850">
               <p className="text-lg font-bold text-slate-100 font-mono">{usageSummary.totalCheckins}</p>
-              <p className="text-[9px] text-slate-500 uppercase tracking-wide">{t("usage_checkins")}</p>
+              <p className="text-xs text-slate-500 uppercase tracking-wide">{t("usage_checkins")}</p>
             </div>
             <div className="bg-page p-2.5 rounded-xl text-center border border-slate-850">
               <p className="text-lg font-bold text-slate-100 font-mono">{usageSummary.protocols.completed}</p>
-              <p className="text-[9px] text-slate-500 uppercase tracking-wide">{t("usage_programs")}</p>
+              <p className="text-xs text-slate-500 uppercase tracking-wide">{t("usage_programs")}</p>
             </div>
             <div className="bg-page p-2.5 rounded-xl text-center border border-slate-850">
               <p className="text-lg font-bold text-slate-100 font-mono">{Object.keys(usageSummary.assessments).length}</p>
-              <p className="text-[9px] text-slate-500 uppercase tracking-wide">{t("usage_assessments")}</p>
+              <p className="text-xs text-slate-500 uppercase tracking-wide">{t("usage_assessments")}</p>
             </div>
             <div className="bg-page p-2.5 rounded-xl text-center border border-slate-850">
               <p className="text-lg font-bold text-slate-100 font-mono">{usageSummary.features.length}</p>
-              <p className="text-[9px] text-slate-500 uppercase tracking-wide">{t("usage_features")}</p>
+              <p className="text-xs text-slate-500 uppercase tracking-wide">{t("usage_features")}</p>
             </div>
           </div>
           {usageSummary.avgMood != null && (
-            <p className="text-[10px] text-slate-400 text-center">
+            <p className="text-xs text-slate-400 text-center">
               Avg mood: <span className="font-mono text-slate-300">{usageSummary.avgMood.toFixed(1)}/10</span>
               {usageSummary.topEmotion && <> · Top: <span className="text-slate-300 capitalize">{usageSummary.topEmotion}</span></>}
               {usageSummary.features.includes("values_snapshot") && <> · <span className="text-emerald-400">Values set ✓</span></>}
             </p>
           )}
           {usageSummary.moodSleepCorrelation && (
-            <p className="text-[10px] text-slate-500 text-center">
+            <p className="text-xs text-slate-500 text-center">
               Sleep: {usageSummary.moodSleepCorrelation.highSleepMood.toFixed(1)}/10 with ≥7h sleep · {usageSummary.moodSleepCorrelation.lowSleepMood.toFixed(1)}/10 with &lt;7h
               {usageSummary.sleepTrend && (
                 <> · Last 3-check-in avg: <span className={usageSummary.sleepTrend.recentAvg >= usageSummary.sleepTrend.olderAvg ? "text-emerald-400" : "text-amber-400"}>{usageSummary.sleepTrend.recentAvg.toFixed(1)}h</span></>
@@ -586,23 +586,23 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
       {/* Protocol adherence — programs completed vs abandoned */}
       {protocolAdherence.totalStarted > 0 && (
         <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 space-y-2">
-          <p className="text-[10px] uppercase font-mono tracking-widest text-slate-400 flex items-center gap-1.5">
+          <p className="text-xs uppercase font-mono tracking-widest text-slate-400 flex items-center gap-1.5">
             <ClipboardCheck className="w-3.5 h-3.5" /> Your programs
           </p>
           <div className="flex items-center justify-between">
             <div className="flex gap-4">
               <div>
                 <p className="text-lg font-bold text-slate-100 font-mono">{protocolAdherence.totalCompleted}</p>
-                <p className="text-[9px] text-slate-500 uppercase tracking-wide">completed</p>
+                <p className="text-xs text-slate-500 uppercase tracking-wide">completed</p>
               </div>
               <div>
                 <p className="text-lg font-bold text-slate-100 font-mono">{protocolAdherence.totalAbandoned}</p>
-                <p className="text-[9px] text-slate-500 uppercase tracking-wide">incomplete</p>
+                <p className="text-xs text-slate-500 uppercase tracking-wide">incomplete</p>
               </div>
             </div>
             <div className="text-right">
               <p className="text-xl font-bold text-slate-100">{Math.round(protocolAdherence.adherenceRate * 100)}%</p>
-              <p className="text-[9px] text-slate-500 uppercase tracking-wide">completion rate</p>
+              <p className="text-xs text-slate-500 uppercase tracking-wide">completion rate</p>
             </div>
           </div>
           {protocolAdherence.perProtocol.filter((p) => p.started > 0).length > 0 && (
@@ -618,7 +618,7 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
               ))}
             </div>
           )}
-          <p className="text-[10px] text-slate-500">Programs you've started and completed. Not a measure of you.</p>
+          <p className="text-xs text-slate-500">Programs you've started and completed. Not a measure of you.</p>
         </div>
       )}
 
@@ -643,7 +643,7 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
                 ? "Your check-in frequency has been tapering off — no pressure, just noticing."
                 : "Your recent engagement has been lower — whenever you're ready."}
             </p>
-            <p className="text-[10px] text-slate-500 mt-1">A gentle observation, not a measure of you.</p>
+            <p className="text-xs text-slate-500 mt-1">A gentle observation, not a measure of you.</p>
           </div>
         </div>
       )}
@@ -662,7 +662,7 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
           </div>
           <div className="text-right">
             <p className="text-xl font-bold text-slate-100">{medSummary.avgAdherence}%</p>
-            <p className="text-[10px] text-slate-500">last 7 days</p>
+            <p className="text-xs text-slate-500">last 7 days</p>
           </div>
         </div>
       )}
@@ -680,7 +680,7 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
               {typingSignal === "depression" && "Your recent typing has been slower with more pauses — a gentle check-in could be worth it."}
               {typingSignal === "anxiety" && "Your recent typing shows a lot of starts and stops — maybe take a slow breath when you're ready."}
             </p>
-            <p className="text-[10px] text-slate-500 mt-1">Private: only timing is stored, never what you typed.</p>
+            <p className="text-xs text-slate-500 mt-1">Private: only timing is stored, never what you typed.</p>
           </div>
         </div>
       )}
@@ -698,7 +698,7 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
               {voiceSignal === "depression" && "Your recent speech has been slower with shorter responses — a gentle check-in could be worth it."}
               {voiceSignal === "anxiety" && "Your recent speech pattern shows some variability — maybe take a slow breath when you're ready."}
             </p>
-            <p className="text-[10px] text-slate-500 mt-1">Opt-in: only speaking rate is stored locally, never what you said.</p>
+            <p className="text-xs text-slate-500 mt-1">Opt-in: only speaking rate is stored locally, never what you said.</p>
           </div>
         </div>
       )}
@@ -717,7 +717,7 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
               </span>
             </div>
             <p className="text-[11px] text-slate-400 leading-relaxed mt-1">{circadian.note}</p>
-            <p className="text-[10px] text-slate-500 mt-1">From {circadian.nights} nights of self-reported sleep. Avg {circadian.avgSleep}h.</p>
+            <p className="text-xs text-slate-500 mt-1">From {circadian.nights} nights of self-reported sleep. Avg {circadian.avgSleep}h.</p>
           </div>
         </div>
       )}
@@ -759,7 +759,7 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
               </div>
             ))}
           </div>
-          <p className="text-[10px] text-slate-500">
+          <p className="text-xs text-slate-500">
             Over {rhythmReg.daysLogged} days · <span className="italic">Smaller ± is steadier</span>
           </p>
         </div>
@@ -782,7 +782,7 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
               </div>
             );
           })}
-          <p className="text-[10px] text-slate-500">Your own pattern, from completed programs. Not a diagnosis.</p>
+          <p className="text-xs text-slate-500">Your own pattern, from completed programs. Not a diagnosis.</p>
         </div>
       )}
 
@@ -795,7 +795,7 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
               <div className="flex bg-page border border-slate-800 rounded-lg overflow-hidden p-0.5">
                 {(["7d", "30d"] as const).map((r) => (
                   <button key={r} onClick={() => setTimeRange(r)} aria-label={`Show ${r === "7d" ? "7 day" : "30 day"} trend`} aria-pressed={timeRange === r}
-                    className={`text-[10px] px-2 py-1 rounded-md font-medium transition-colors ${timeRange === r ? "bg-slate-800 text-slate-200" : "text-slate-500 hover:text-slate-300"}`}>
+                    className={`text-xs px-2 py-1 rounded-md font-medium transition-colors ${timeRange === r ? "bg-slate-800 text-slate-200" : "text-slate-500 hover:text-slate-300"}`}>
                     {r.toUpperCase()}
                   </button>
                 ))}
@@ -803,13 +803,13 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
             </div>
             <div className="flex bg-page border border-slate-800 rounded-lg overflow-hidden p-0.5 self-start">
               <button onClick={() => setChartTab("emotion")} aria-label="Show emotion trend" aria-pressed={chartTab === "emotion"}
-                className={`text-[10px] px-2 py-1 rounded-md font-medium transition-colors ${chartTab === "emotion" ? "bg-purple-500/20 text-purple-400" : "text-slate-500 hover:text-slate-300"}`}>Emotion</button>
+                className={`text-xs px-2 py-1 rounded-md font-medium transition-colors ${chartTab === "emotion" ? "bg-purple-500/20 text-purple-400" : "text-slate-500 hover:text-slate-300"}`}>Emotion</button>
               <button onClick={() => setChartTab("context")} aria-label="Show sleep and social context" aria-pressed={chartTab === "context"}
-                className={`text-[10px] px-2 py-1 rounded-md font-medium transition-colors ${chartTab === "context" ? "bg-blue-500/20 text-blue-400" : "text-slate-500 hover:text-slate-300"}`}>Context</button>
+                className={`text-xs px-2 py-1 rounded-md font-medium transition-colors ${chartTab === "context" ? "bg-blue-500/20 text-blue-400" : "text-slate-500 hover:text-slate-300"}`}>Context</button>
               <button onClick={() => setChartTab("energy")} aria-label="Show mood vs energy scatter" aria-pressed={chartTab === "energy"}
-                className={`text-[10px] px-2 py-1 rounded-md font-medium transition-colors ${chartTab === "energy" ? "bg-amber-500/20 text-amber-400" : "text-slate-500 hover:text-slate-300"}`}>Energy</button>
+                className={`text-xs px-2 py-1 rounded-md font-medium transition-colors ${chartTab === "energy" ? "bg-amber-500/20 text-amber-400" : "text-slate-500 hover:text-slate-300"}`}>Energy</button>
               <button onClick={() => setChartTab("sleep-mood")} aria-label="Show sleep vs mood correlation" aria-pressed={chartTab === "sleep-mood"}
-                className={`text-[10px] px-2 py-1 rounded-md font-medium transition-colors ${chartTab === "sleep-mood" ? "bg-emerald-500/20 text-emerald-400" : "text-slate-500 hover:text-slate-300"}`}>Sleep-Mood</button>
+                className={`text-xs px-2 py-1 rounded-md font-medium transition-colors ${chartTab === "sleep-mood" ? "bg-emerald-500/20 text-emerald-400" : "text-slate-500 hover:text-slate-300"}`}>Sleep-Mood</button>
             </div>
           </div>
           <div className="w-full h-48" role="img" aria-label={chartTab === "emotion" ? "Line chart showing emotional intensity trend over time. Lower values indicate calmer states." : chartTab === "energy" ? "Scatter plot of mood intensity vs energy level. Each dot is one check-in." : chartTab === "sleep-mood" ? "Dual-axis line chart showing sleep hours and mood intensity over time." : "Line chart showing sleep hours and social connection over time."}>
@@ -858,7 +858,7 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
               )}
             </ResponsiveContainer>
           </div>
-          <p className="text-[10px] text-slate-600">{chartTab === "emotion" ? "Lower is calmer. Per-day average of your check-ins." : chartTab === "energy" ? "Each dot is one check-in. Lower distress + higher energy = Vibrant; higher distress + lower energy = Sluggish." : chartTab === "sleep-mood" ? "Sleep hours vs distress. Lower sleep often correlates with higher distress." : "Sleep hours and felt-connection, per day."}</p>
+          <p className="text-xs text-slate-600">{chartTab === "emotion" ? "Lower is calmer. Per-day average of your check-ins." : chartTab === "energy" ? "Each dot is one check-in. Lower distress + higher energy = Vibrant; higher distress + lower energy = Sluggish." : chartTab === "sleep-mood" ? "Sleep hours vs distress. Lower sleep often correlates with higher distress." : "Sleep hours and felt-connection, per day."}</p>
         </div>
       ) : (
         <EmptyCard illustration="📊" text="Your trend will appear here after a couple of check-ins." />
@@ -897,13 +897,13 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
               </BarChart>
             </ResponsiveContainer>
           </div>
-          <p className="text-[10px] text-slate-600">Average distress by day of week. Based on {weeklyBars.reduce((s, b) => s + b.count, 0)} check-ins.</p>
+          <p className="text-xs text-slate-600">Average distress by day of week. Based on {weeklyBars.reduce((s, b) => s + b.count, 0)} check-ins.</p>
         </div>
       )}
 
       {/* Validated assessments (unchanged Dashboard section) */}
       <div className="space-y-2">
-        <div className="text-[10px] uppercase font-mono tracking-widest text-slate-400 flex items-center gap-1.5"><ClipboardCheck className="w-3.5 h-3.5" /> Validated check-ins</div>
+        <div className="text-xs uppercase font-mono tracking-widest text-slate-400 flex items-center gap-1.5"><ClipboardCheck className="w-3.5 h-3.5" /> Validated check-ins</div>
         {(["PHQ-9", "GAD-7"] as InstrumentId[]).some((id) => latestFor(id, assessments)) ? (
           (["PHQ-9", "GAD-7"] as InstrumentId[]).map((id) => {
             const last = latestFor(id, assessments);
@@ -947,7 +947,7 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
         <div className="glass p-5 rounded-2xl space-y-3">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400 font-mono flex items-center gap-1.5">
             <Lightbulb className="w-3.5 h-3.5 text-amber-400" /> Behaviour insights
-            {behaviourDays > 0 && <span className="text-[10px] text-slate-600 normal-case tracking-normal ml-1">({behaviourDays} days of paired data)</span>}
+            {behaviourDays > 0 && <span className="text-xs text-slate-600 normal-case tracking-normal ml-1">({behaviourDays} days of paired data)</span>}
           </h2>
           <ul className="space-y-3">
             {behaviourInsights.map((ins) => (
@@ -972,7 +972,7 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
             {topTags.map(([tag, count]) => (
               <div key={tag} className="flex items-center bg-page border border-blue-900/50 rounded-lg px-2.5 py-1.5 overflow-hidden">
                 <span className="text-xs font-medium text-blue-300 mr-2">{tag}</span>
-                <span className="text-[10px] text-slate-500 font-mono bg-slate-900 px-1.5 rounded">{count}</span>
+                <span className="text-xs text-slate-500 font-mono bg-slate-900 px-1.5 rounded">{count}</span>
               </div>
             ))}
           </div>
@@ -987,17 +987,17 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
           </h2>
           <div className="grid grid-cols-2 gap-3" id="episode-stat-cards">
             <div className="bg-page p-3 rounded-xl border border-slate-850 text-center space-y-1">
-              <span className="text-[9px] uppercase font-mono tracking-widest text-slate-500">Peak spikes</span>
+              <span className="text-xs uppercase font-mono tracking-widest text-slate-500">Peak spikes</span>
               <p className="text-2xl font-bold text-amber-500 capitalize flex items-center justify-center gap-1 font-mono">
                 <Clock className="w-4 h-4 text-slate-500" /> {epPatterns.mostCommonTime || "Night"}
               </p>
             </div>
             <div className="bg-page p-3 rounded-xl border border-slate-850 text-center space-y-1">
-              <span className="text-[9px] uppercase font-mono tracking-widest text-slate-500">Avg duration</span>
+              <span className="text-xs uppercase font-mono tracking-widest text-slate-500">Avg duration</span>
               <p className="text-2xl font-bold text-purple-400 font-mono">{epPatterns.avgDuration} min</p>
             </div>
             <div className="bg-page col-span-2 p-3.5 rounded-xl border border-slate-850 text-center space-y-1">
-              <span className="text-[9px] uppercase font-mono tracking-widest text-slate-500">Avg intensity drop per episode</span>
+              <span className="text-xs uppercase font-mono tracking-widest text-slate-500">Avg intensity drop per episode</span>
               <p className="text-base text-emerald-400 font-extrabold font-sans">{epPatterns.avgDrop} points</p>
             </div>
           </div>
@@ -1007,11 +1007,11 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
       {/* Recent Nila (unchanged Dashboard section) */}
       {nila.recent.length > 0 && (
         <div className="space-y-2">
-          <div className="text-[10px] uppercase font-mono tracking-widest text-slate-400 flex items-center gap-1.5"><MessageSquare className="w-3.5 h-3.5" /> Recent Nila sessions</div>
+          <div className="text-xs uppercase font-mono tracking-widest text-slate-400 flex items-center gap-1.5"><MessageSquare className="w-3.5 h-3.5" /> Recent Nila sessions</div>
           {nila.recent.slice(0, 5).map((t) => (
             <div key={t.id} className="glass rounded-xl p-3 flex items-start justify-between gap-2">
               <span className="text-[11px] text-slate-300 italic min-w-0">"{t.snippet}{t.snippet.length >= 80 ? "…" : ""}"</span>
-              <span className="text-[10px] text-slate-600 shrink-0">{t.surface === "episode" ? "episode" : "coach"} · {t.date.slice(5)}</span>
+              <span className="text-xs text-slate-600 shrink-0">{t.surface === "episode" ? "episode" : "coach"} · {t.date.slice(5)}</span>
             </div>
           ))}
         </div>
@@ -1058,7 +1058,7 @@ function Stat({ icon, value, label }: { icon: React.ReactNode; value: string; la
     <div className="glass rounded-2xl py-3 px-2 text-center">
       <div className="flex justify-center mb-1">{icon}</div>
       <div className="text-lg font-black text-slate-100 font-mono leading-none">{value}</div>
-      <div className="text-[9px] text-slate-500 uppercase tracking-wide mt-1">{label}</div>
+      <div className="text-xs text-slate-500 uppercase tracking-wide mt-1">{label}</div>
     </div>
   );
 }

@@ -37,7 +37,7 @@ export default function InMomentInsightCard({
             </p>
             <p className="text-[13px] text-slate-200 leading-snug mt-0.5">{explainerTitle}</p>
             <p className="text-[12px] text-slate-400 leading-snug mt-1">{explainerSummary}</p>
-            <p className="text-[10px] text-slate-500 mt-1 italic">Research: {explainerBasis}</p>
+            <p className="text-xs text-slate-500 mt-1 italic">Research: {explainerBasis}</p>
           </div>
         </div>
       )}

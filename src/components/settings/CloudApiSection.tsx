@@ -51,7 +51,7 @@ export default function CloudApiSection() {
       <div className="border border-slate-800 rounded-xl p-3 flex items-center justify-between bg-page" id="cloud-api-toggle">
         <div className="space-y-0.5">
           <div className="text-sm font-medium text-slate-200">Enable cloud API</div>
-          <div className="text-[10px] text-slate-500">
+          <div className="text-xs text-slate-500">
             {enabled ? "Cloud model active — messages sent externally" : "Disabled — on-device only (recommended)"}
           </div>
         </div>
@@ -102,7 +102,7 @@ export default function CloudApiSection() {
                 {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
-            <p className="text-[10px] text-slate-500">Your key stays on this device. It is sent only to the endpoint below.</p>
+            <p className="text-xs text-slate-500">Your key stays on this device. It is sent only to the endpoint below.</p>
           </div>
 
           {/* API URL */}
@@ -118,7 +118,7 @@ export default function CloudApiSection() {
               placeholder="https://api.openai.com/v1/chat/completions"
               className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 font-mono focus:outline-none focus:ring-1 focus:ring-purple-500"
             />
-            <p className="text-[10px] text-slate-500">
+            <p className="text-xs text-slate-500">
               Any OpenAI-compatible endpoint (OpenAI, Together, Groq, etc.)
             </p>
           </div>
@@ -136,7 +136,7 @@ export default function CloudApiSection() {
               placeholder="gpt-3.5-turbo"
               className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 font-mono focus:outline-none focus:ring-1 focus:ring-purple-500"
             />
-            <p className="text-[10px] text-slate-500">
+            <p className="text-xs text-slate-500">
               The model to use (e.g. gpt-4o, claude-3-haiku, llama-3-70b)
             </p>
           </div>

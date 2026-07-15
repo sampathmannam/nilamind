@@ -172,7 +172,7 @@ export default function WindDownScreen() {
                 }`}
               />
               <div className="z-10 text-center">
-                <p className="text-[10px] font-mono tracking-widest text-slate-500 uppercase">
+                <p className="text-xs font-mono tracking-widest text-slate-500 uppercase">
                   {breathing ? (phase === "In" ? "Inhale" : "Exhale") : "Ready"}
                 </p>
                 <p className="text-3xl font-black text-slate-100 font-mono mt-0.5">{breathing ? count : "0"}</p>
@@ -209,9 +209,9 @@ export default function WindDownScreen() {
           </div>
 
           <div className="p-4 rounded-r-xl bg-indigo-500/5 border-l-4 border-indigo-500 border-y border-r border-slate-800/40 space-y-1">
-            <p className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold">One gentle habit</p>
+            <p className="text-xs uppercase tracking-wider text-slate-500 font-semibold">One gentle habit</p>
             <p className="text-xs text-slate-200 leading-relaxed">{tip.text}</p>
-            <p className="text-[10px] text-slate-500 italic">{tip.basis}</p>
+            <p className="text-xs text-slate-500 italic">{tip.basis}</p>
           </div>
 
           <div className="glass p-4 rounded-2xl space-y-3">
@@ -241,12 +241,12 @@ export default function WindDownScreen() {
                   onChange={(e) => setTime(e.target.value)}
                   className="bg-page border border-slate-800 rounded-lg px-2 py-1 text-xs text-slate-300 focus:outline-none focus:border-indigo-500"
                 />
-                {reminderMsg && <span className="text-[10px] text-slate-500">{reminderMsg}</span>}
+                {reminderMsg && <span className="text-xs text-slate-500">{reminderMsg}</span>}
               </div>
             )}
           </div>
 
-          <p className="text-[10px] text-slate-600 leading-relaxed px-1">
+          <p className="text-xs text-slate-600 leading-relaxed px-1">
             These are gentle habits, not rules. If sleep stays hard for weeks — or your body clock feels far off — a
             GP or sleep clinician can help more than tips can.
           </p>

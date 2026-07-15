@@ -27,7 +27,7 @@ interface SettingsScreenProps {
 function SettingsGroup({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
   return (
     <div className="space-y-3">
-      <h2 className="text-[10px] font-mono uppercase tracking-widest text-slate-500 px-1 flex items-center gap-1.5">
+      <h2 className="text-xs font-mono uppercase tracking-widest text-slate-500 px-1 flex items-center gap-1.5">
         {icon}
         {title}
       </h2>
@@ -118,7 +118,7 @@ export default function SettingsScreen({ onOpenCaregiver, onOpenLegal }: Setting
         onClick={() => setShowAdvanced(!showAdvanced)}
         className="w-full flex items-center justify-between py-2 px-1 text-slate-500 hover:text-slate-300 cursor-pointer transition-colors"
       >
-        <span className="text-[10px] uppercase tracking-widest font-mono flex items-center gap-1.5">
+        <span className="text-xs uppercase tracking-widest font-mono flex items-center gap-1.5">
           <Cpu className="w-3 h-3 text-slate-500" /> Advanced
         </span>
         {showAdvanced ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
@@ -151,7 +151,7 @@ export default function SettingsScreen({ onOpenCaregiver, onOpenLegal }: Setting
             <div className="border border-slate-800 rounded-xl p-3 flex items-center justify-between bg-page">
               <div className="space-y-0.5">
                 <div className="text-sm font-medium text-slate-200">Check for updates</div>
-                <div className="text-[10px] text-slate-500">{autoUpdateOn ? "GitHub release check enabled" : "Disabled — no network requests"}</div>
+                <div className="text-xs text-slate-500">{autoUpdateOn ? "GitHub release check enabled" : "Disabled — no network requests"}</div>
               </div>
               <button
                 type="button"

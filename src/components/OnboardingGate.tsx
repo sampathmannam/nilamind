@@ -226,7 +226,7 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
                   }`}
                 >
                   <span className="text-2xl">{opt.emoji}</span>
-                  <span className={`text-[10px] ${baselineMood === opt.value ? "text-blue-300" : "text-slate-500"}`}>{opt.label}</span>
+                  <span className={`text-xs ${baselineMood === opt.value ? "text-blue-300" : "text-slate-500"}`}>{opt.label}</span>
                 </button>
               ))}
             </div>

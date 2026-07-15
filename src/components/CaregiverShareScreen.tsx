@@ -82,7 +82,7 @@ export default function CaregiverShareScreen({ selectedContactId }: Props) {
         </button>
       </div>
 
-      <p className="text-[10px] text-slate-500 text-center">
+      <p className="text-xs text-slate-500 text-center">
         This is a wellness snapshot, not a clinical summary. NilaMind is not a substitute for professional care.
       </p>
     </div>

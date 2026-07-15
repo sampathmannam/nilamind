@@ -158,7 +158,7 @@ export default function TrendChart({
       </ResponsiveContainer>
 
       {/* Legend */}
-      <div className="flex flex-wrap gap-2 text-[9px] text-slate-500">
+      <div className="flex flex-wrap gap-2 text-xs text-slate-500">
         {bands.map((band, i) => (
           <div key={i} className="flex items-center gap-1">
             <div className="w-2 h-2 rounded-full" style={{ backgroundColor: band.color }} />
@@ -175,10 +175,10 @@ function TrendBadge({ first, last }: { first: number; last: number }) {
   const diff = last - first;
   const absDiff = Math.abs(diff);
   if (absDiff < 3) {
-    return <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-700 text-slate-400">Stable</span>;
+    return <span className="text-xs px-2 py-0.5 rounded-full bg-slate-700 text-slate-400">Stable</span>;
   }
   if (diff < 0) {
-    return <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">Improving ↓</span>;
+    return <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">Improving ↓</span>;
   }
-  return <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400">Worsening ↑</span>;
+  return <span className="text-xs px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400">Worsening ↑</span>;
 }

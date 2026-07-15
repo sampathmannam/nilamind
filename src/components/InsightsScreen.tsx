@@ -47,17 +47,17 @@ function InsightCard({ insight, index }: { insight: Insight; index: number }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <h3 className="text-sm font-semibold text-slate-100">{insight.title}</h3>
-            <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${colors.bg} ${colors.text}`}>
+            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${colors.bg} ${colors.text}`}>
               {insight.direction === 'risk' ? 'Risk factor' : insight.direction === 'protective' ? 'Protective' : 'Neutral'}
             </span>
           </div>
           <p className="text-xs text-slate-300 mt-1 leading-relaxed">{insight.finding}</p>
           <div className="flex items-center gap-2 mt-2">
-            <span className="text-[10px] text-slate-500 flex items-center gap-1">
+            <span className="text-xs text-slate-500 flex items-center gap-1">
               <ShieldCheck className="w-3 h-3" /> {insight.dataPoints} days of data
             </span>
             <button
-              className="text-[10px] text-blue-400 hover:text-blue-300 flex items-center gap-1 underline"
+              className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 underline"
               aria-label={`View research basis for ${insight.title}`}
             >
               <HelpCircle className="w-3 h-3" /> Research
@@ -68,10 +68,10 @@ function InsightCard({ insight, index }: { insight: Insight; index: number }) {
 
       {/* Research basis expandable */}
       <details className="mt-3">
-        <summary className="text-[10px] text-slate-500 hover:text-slate-400 cursor-pointer flex items-center gap-1">
+        <summary className="text-xs text-slate-500 hover:text-slate-400 cursor-pointer flex items-center gap-1">
           Show research citation
         </summary>
-        <div className="mt-2 p-3 bg-slate-900/50 rounded-xl text-[10px] text-slate-400 leading-relaxed border border-slate-800">
+        <div className="mt-2 p-3 bg-slate-900/50 rounded-xl text-xs text-slate-400 leading-relaxed border border-slate-800">
           {insight.basis}
         </div>
       </details>

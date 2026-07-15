@@ -155,7 +155,7 @@ export default function LearnScreen() {
           {recommended && !dismissedRec && (
             <div className="bg-card border border-blue-500/30 rounded-2xl p-4 space-y-2.5" id="learn-recommended">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-mono uppercase tracking-widest text-blue-300 flex items-center gap-1.5"><Sparkles className="w-3 h-3" /> For how you've been feeling</span>
+                <span className="text-xs font-mono uppercase tracking-widest text-blue-300 flex items-center gap-1.5"><Sparkles className="w-3 h-3" /> For how you've been feeling</span>
                 <button onClick={() => setDismissedRec(true)} aria-label="Dismiss recommendation" className="flex items-center justify-center w-8 h-8 -m-1.5 text-slate-500 hover:text-slate-300 cursor-pointer"><X className="w-3.5 h-3.5" /></button>
               </div>
               <button onClick={() => { setSourceFilter("skill"); setGroupFilter(null); setQuery(recommended.name); setExpanded((prev) => new Set(prev).add(`skill:${recommended.id}`)); }} className="w-full flex items-center gap-3 text-left cursor-pointer" id="learn-rec-open">
@@ -224,7 +224,7 @@ export default function LearnScreen() {
           )}
 
           <div className="space-y-2" id="learn-results">
-            <div className="text-[10px] uppercase font-mono tracking-widest text-slate-500">{results.length} result{results.length === 1 ? "" : "s"}</div>
+            <div className="text-xs uppercase font-mono tracking-widest text-slate-500">{results.length} result{results.length === 1 ? "" : "s"}</div>
             {results.length === 0 ? (
               <div className="glass rounded-2xl p-5 text-center text-xs text-slate-400">
                 {query ? <>Nothing matches "{query}". Try a feeling, a skill name, or a topic.</> : "Loading library…"}
@@ -253,7 +253,7 @@ function LearnCard({ result, open, onToggle }: { result: LearnResult; open: bool
         <div className="min-w-0 space-y-1.5">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-sm font-bold text-slate-100">{result.title}</span>
-            <span className={`text-[9px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded border ${badge.cls}`}>{badge.label}</span>
+            <span className={`text-xs font-mono uppercase tracking-wider px-1.5 py-0.5 rounded border ${badge.cls}`}>{badge.label}</span>
           </div>
           <p className="text-[11px] text-slate-400 leading-relaxed">{result.snippet}</p>
         </div>
@@ -270,7 +270,7 @@ function LearnCard({ result, open, onToggle }: { result: LearnResult; open: bool
               <ol className="space-y-1.5">
                 {detail.steps.map((step, i) => (
                   <li key={i} className="flex gap-2 text-xs text-slate-300 leading-relaxed">
-                    <span className="shrink-0 w-4 h-4 rounded-full bg-blue-500 text-[9px] font-bold text-[#171311] flex items-center justify-center mt-0.5">{i + 1}</span>
+                    <span className="shrink-0 w-4 h-4 rounded-full bg-blue-500 text-xs font-bold text-[#171311] flex items-center justify-center mt-0.5">{i + 1}</span>
                     <span>{step}</span>
                   </li>
                 ))}
@@ -283,7 +283,7 @@ function LearnCard({ result, open, onToggle }: { result: LearnResult; open: bool
               {detail.emergencyCaveat && (
                 <div className="flex gap-2 items-start bg-rose-500/10 border border-rose-500/30 rounded-lg px-3 py-2">
                   <AlertTriangle className="w-3.5 h-3.5 text-rose-300 shrink-0 mt-0.5" />
-                  <p className="text-[10px] text-rose-200/90 leading-relaxed">{detail.emergencyCaveat}</p>
+                  <p className="text-xs text-rose-200/90 leading-relaxed">{detail.emergencyCaveat}</p>
                 </div>
               )}
               {detail.body && <p className="text-xs text-slate-300 leading-relaxed">{detail.body}</p>}
@@ -300,7 +300,7 @@ function LearnCard({ result, open, onToggle }: { result: LearnResult; open: bool
               )}
               {detail.research && detail.research.length > 0 && (
                 <div className="border-t border-slate-800/70 pt-2.5 space-y-1.5">
-                  <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate-500">
                     <FlaskConical className="w-3 h-3" /> The research
                   </div>
                   {detail.research.map((r, i) => (
@@ -317,7 +317,7 @@ function LearnCard({ result, open, onToggle }: { result: LearnResult; open: bool
               )}
             </div>
           )}
-          {detail.basis && <p className="text-[10px] text-slate-500 italic leading-relaxed border-t border-slate-800 pt-2">{detail.basis}</p>}
+          {detail.basis && <p className="text-xs text-slate-500 italic leading-relaxed border-t border-slate-800 pt-2">{detail.basis}</p>}
         </div>
       )}
     </div>

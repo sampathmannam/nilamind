@@ -147,7 +147,7 @@ export default function PerformanceDashboard() {
               </div>
             );
           })}
-          <p className="text-[10px] text-slate-500 leading-relaxed pt-1">
+          <p className="text-xs text-slate-500 leading-relaxed pt-1">
             Core Web Vitals are collected automatically. Use the app to populate real measurements.
           </p>
         </div>
@@ -164,7 +164,7 @@ export default function PerformanceDashboard() {
               {[...errors].reverse().map((e, i) => (
                 <div key={i} className="bg-page rounded-lg p-2 border border-slate-800">
                   <div className="text-[11px] text-rose-300 break-words">{e.message}</div>
-                  <div className="text-[10px] text-slate-500">{new Date(e.timestamp).toLocaleString()}</div>
+                  <div className="text-xs text-slate-500">{new Date(e.timestamp).toLocaleString()}</div>
                 </div>
               ))}
             </div>
@@ -179,7 +179,7 @@ function Stat({ label, value, color }: { label: string; value: string | number; 
   return (
     <div className="bg-page rounded-xl p-3">
       <div className={`text-2xl font-bold ${color}`}>{value}</div>
-      <div className="text-[10px] text-slate-400">{label}</div>
+      <div className="text-xs text-slate-400">{label}</div>
     </div>
   );
 }

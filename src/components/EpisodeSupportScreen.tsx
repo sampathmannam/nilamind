@@ -376,7 +376,7 @@ export default function EpisodeSupportScreen({
             </button>
           </div>
 
-          <p className="text-[10px] text-center text-slate-500 leading-relaxed font-sans">
+          <p className="text-xs text-center text-slate-500 leading-relaxed font-sans">
             Nila runs entirely on your device — no connection needed. If the model is still loading, the secure Guided Mode runs automatically.
           </p>
         </div>
@@ -395,7 +395,7 @@ export default function EpisodeSupportScreen({
               <LogOut className="w-3.5 h-3.5" /> End Session
             </button>
             {connectedLive && (
-              <div className="flex items-center gap-1 text-[10px] font-medium text-emerald-400" id="episode-live-badge" title="Nila is running on-device">
+              <div className="flex items-center gap-1 text-xs font-medium text-emerald-400" id="episode-live-badge" title="Nila is running on-device">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                 <span>Nila · on-device</span>
               </div>
@@ -443,7 +443,7 @@ export default function EpisodeSupportScreen({
           {/* Controls Segment */}
           <div className="p-3 bg-card border-t border-slate-800">
             <div className="pb-2 space-y-1.5">
-              <p className="text-[10px] text-slate-500 font-mono tracking-wider uppercase text-center">
+              <p className="text-xs text-slate-500 font-mono tracking-wider uppercase text-center">
                 Not a therapist. Not a diagnosis tool.
               </p>
               {/* Real tappable crisis lines (tel: links) — the numbers were previously plain text. */}
@@ -780,14 +780,14 @@ export default function EpisodeSupportScreen({
           {/* Intenisty Side-by-Side comparator mapping */}
           <div className="grid grid-cols-2 gap-4 bg-page p-4 rounded-xl border border-slate-850">
             <div className="text-center space-y-1">
-              <span className="text-[10px] text-slate-500 uppercase tracking-wide">When you started</span>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">When you started</span>
               <p className="text-4xl font-extrabold text-amber-500 font-mono">
                 {intensityList[0] || 8}/10
               </p>
             </div>
             
             <div className="text-center space-y-1 border-l border-slate-800">
-              <span className="text-[10px] text-slate-500 uppercase tracking-wide">Highest point</span>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Highest point</span>
               <p className="text-4xl font-extrabold text-rose-400 font-mono">
                 {Math.max(...intensityList, intensityList[0] || 8)}/10
               </p>

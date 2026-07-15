@@ -41,9 +41,10 @@ export default function ChatLoading() {
         }
         .shimmer-bar {
           background: linear-gradient(90deg,
-            rgba(236,91,158,0.13) 25%,
-            rgba(236,91,158,0.28) 50%,
-            rgba(236,91,158,0.13) 75%);
+            var(--color-purple-400, #AC8FC2) 25%,
+            var(--color-purple-500, #8E72B4) 50%,
+            var(--color-purple-400, #AC8FC2) 75%);
+          opacity: 0.15;
           background-size: 400px 100%;
           animation: chat-shimmer 1.5s ease-in-out infinite;
           border-radius: 999px;
@@ -51,7 +52,7 @@ export default function ChatLoading() {
         .typing-dot {
           width: 7px; height: 7px;
           border-radius: 50%;
-          background: #EC5B9E;
+          background: var(--color-purple-400, #AC8FC2);
           display: inline-block;
         }
         .typing-dot:nth-child(1) { animation: chat-dot-bounce 1.4s ease-in-out infinite; }
@@ -85,7 +86,7 @@ export default function ChatLoading() {
             className="breathing-orb w-12 h-12 rounded-full bg-gradient-to-br from-purple-400/40 to-purple-600/30 border border-purple-400/20 flex items-center justify-center"
             aria-hidden="true"
           />
-          <p className="text-[10px] text-slate-500 leading-relaxed text-center max-w-[16rem] transition-all duration-500" key={tipIndex}>
+          <p className="text-xs text-slate-500 leading-relaxed text-center max-w-[16rem] transition-all duration-500" key={tipIndex}>
             {WAITING_TIPS[tipIndex]}
           </p>
         </div>

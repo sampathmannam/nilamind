@@ -57,7 +57,7 @@ export default function PilotSection() {
               ? " · ready — take your endpoint check-in"
               : ` · ${summary.daysRemaining} days to go`)}
           </div>
-          <p className="text-[10px] text-slate-500 leading-relaxed">
+          <p className="text-xs text-slate-500 leading-relaxed">
             When you're done, export your report from Your Data or the Dashboard to share it.
           </p>
           <button

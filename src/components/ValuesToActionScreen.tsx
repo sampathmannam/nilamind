@@ -229,7 +229,7 @@ export default function ValuesToActionScreen() {
         {valuesMode === "rate" ? (
           <>
             <div className="bg-rose-500/5 border border-rose-500/20 rounded-xl p-3">
-              <p className="text-[10px] text-slate-500 leading-relaxed">
+              <p className="text-xs text-slate-500 leading-relaxed">
                 For each area, rate how <span className="text-slate-300 font-semibold">important</span> it is
                 to you and how <span className="text-slate-300 font-semibold">consistently</span> you've lived
                 it recently. There are no right answers and no judgement. (Structure: Valued Living
@@ -243,7 +243,7 @@ export default function ValuesToActionScreen() {
                   <div key={dom.id} className="glass rounded-2xl p-4 space-y-3" id={`vta-domain-${dom.id}`}>
                     <div>
                       <h3 className="text-sm font-bold text-slate-100">{dom.label}</h3>
-                      <p className="text-[10px] text-slate-500 italic">{dom.examples}</p>
+                      <p className="text-xs text-slate-500 italic">{dom.examples}</p>
                     </div>
                     <CompactSlider label="Importance" tone="rose" value={r.importance} onChange={(v) => setRatingFor(dom.id, "importance", v)} />
                     <CompactSlider label="Lived recently" tone="sky" value={r.consistency} onChange={(v) => setRatingFor(dom.id, "consistency", v)} />
@@ -261,7 +261,7 @@ export default function ValuesToActionScreen() {
         ) : (
           <>
             <div className="flex items-start justify-between gap-2">
-              <h3 className="text-[10px] uppercase font-mono tracking-widest text-slate-400 flex items-center gap-1.5 pt-1">
+              <h3 className="text-xs uppercase font-mono tracking-widest text-slate-400 flex items-center gap-1.5 pt-1">
                 <Target className="w-3.5 h-3.5" /> Why — highest-leverage areas
               </h3>
               <button onClick={() => setValuesMode("rate")} className="shrink-0 text-[11px] font-semibold text-slate-400 hover:text-slate-100 flex items-center gap-1 cursor-pointer glass rounded-lg px-2.5 py-1.5">
@@ -282,7 +282,7 @@ export default function ValuesToActionScreen() {
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-bold text-slate-100">{g.label}</span>
                       {g.gap > 0 && (
-                        <span className="text-[10px] font-bold text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded-full px-2 py-0.5">gap {g.gap}</span>
+                        <span className="text-xs font-bold text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded-full px-2 py-0.5">gap {g.gap}</span>
                       )}
                     </div>
                     <div className="space-y-1.5">
@@ -312,11 +312,11 @@ export default function ValuesToActionScreen() {
 
       {/* ═══ DO — pick an activity ═══ */}
       <section className="space-y-3" id="vta-do">
-        <h3 className="text-[10px] uppercase font-mono tracking-widest text-slate-400 flex items-center gap-1.5">
+        <h3 className="text-xs uppercase font-mono tracking-widest text-slate-400 flex items-center gap-1.5">
           <Footprints className="w-3.5 h-3.5 text-emerald-400" /> Do — one small thing
         </h3>
         <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-3">
-          <p className="text-[10px] text-slate-500 leading-relaxed">
+          <p className="text-xs text-slate-500 leading-relaxed">
             Acting on a plan rather than a mood is the core of Behavioural Activation, which on its own
             matches full CBT and antidepressants for depression. (Jacobson et al., 1996; Dimidjian et
             al., 2006; Ekers et al., 2014)
@@ -325,7 +325,7 @@ export default function ValuesToActionScreen() {
 
         {insight.done > 0 && (
           <div className="glass rounded-2xl p-4 space-y-3" id="vta-insight">
-            <h4 className="text-[10px] uppercase font-mono tracking-widest text-slate-400 flex items-center gap-1.5">
+            <h4 className="text-xs uppercase font-mono tracking-widest text-slate-400 flex items-center gap-1.5">
               <TrendingUp className="w-3.5 h-3.5" /> Your pattern · {insight.done} done
             </h4>
             {insight.avgMastery !== null && insight.avgPleasure !== null ? (
@@ -366,7 +366,7 @@ export default function ValuesToActionScreen() {
                     <span className={`text-xs font-medium ${on ? "text-blue-200" : "text-slate-200"}`}>{idea.title}</span>
                     {on && <Check className="w-3.5 h-3.5 text-blue-300 shrink-0" />}
                   </div>
-                  <span className="text-[10px] text-slate-500">Tiny version: {idea.tiny}</span>
+                  <span className="text-xs text-slate-500">Tiny version: {idea.tiny}</span>
                 </button>
               );
             })}
@@ -393,13 +393,13 @@ export default function ValuesToActionScreen() {
       {/* ═══ Unified TO-DO list (activities + committed steps) ═══ */}
       {todo.length > 0 && (
         <section className="space-y-2" id="vta-todo">
-          <h3 className="text-[10px] uppercase font-mono tracking-widest text-slate-400">To do</h3>
+          <h3 className="text-xs uppercase font-mono tracking-widest text-slate-400">To do</h3>
           {todo.map((item) =>
             item.kind === "activity" && item.activity ? (
               <div key={item.id} className="glass rounded-xl p-3 flex items-center justify-between gap-2">
                 <div className="min-w-0">
                   <span className="text-xs text-slate-200 font-medium">{item.title}</span>
-                  <span className={`block text-[10px] ${TONE[categoryMeta(item.activity.category).tone].text}`}>{categoryMeta(item.activity.category).label}</span>
+                  <span className={`block text-xs ${TONE[categoryMeta(item.activity.category).tone].text}`}>{categoryMeta(item.activity.category).label}</span>
                 </div>
                 <div className="flex gap-1.5 shrink-0">
                   <button onClick={() => startRating(item.activity!.title, item.activity!.category, item.id)} className="bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold px-3 py-1.5 rounded-lg cursor-pointer">Done</button>
@@ -410,7 +410,7 @@ export default function ValuesToActionScreen() {
               <div key={item.id} className="glass rounded-xl p-3 flex items-center justify-between gap-2">
                 <div className="min-w-0">
                   <span className="text-xs text-slate-200">{item.title}</span>
-                  <span className="block text-[10px] text-rose-300 flex items-center gap-1"><ArrowRight className="w-3 h-3" /> {domainLabel(item.step.domainId)}</span>
+                  <span className="block text-xs text-rose-300 flex items-center gap-1"><ArrowRight className="w-3 h-3" /> {domainLabel(item.step.domainId)}</span>
                 </div>
                 <button onClick={() => markStepDone(item.step!)} className="shrink-0 bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold px-3 py-1.5 rounded-lg cursor-pointer flex items-center gap-1"><Check className="w-3.5 h-3.5" /> Done</button>
               </div>
@@ -422,15 +422,15 @@ export default function ValuesToActionScreen() {
       {/* ═══ Recently done (both kinds) ═══ */}
       {completed.length > 0 && (
         <section className="space-y-2" id="vta-done">
-          <h3 className="text-[10px] uppercase font-mono tracking-widest text-slate-600">You acted</h3>
+          <h3 className="text-xs uppercase font-mono tracking-widest text-slate-600">You acted</h3>
           {completed.map((item) =>
             item.kind === "activity" && item.activity ? (
               <div key={item.id} className={`rounded-xl p-3 border ${TONE[categoryMeta(item.activity.category).tone].bg} ${TONE[categoryMeta(item.activity.category).tone].border}`}>
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-xs text-slate-200 font-medium">{item.title}</span>
-                  <span className="text-[10px] text-slate-500">{item.date.slice(5)}</span>
+                  <span className="text-xs text-slate-500">{item.date.slice(5)}</span>
                 </div>
-                <div className="flex gap-3 mt-1.5 text-[10px]">
+                <div className="flex gap-3 mt-1.5 text-xs">
                   <span className="text-amber-300">Mastery {item.activity.mastery ?? "–"}/10</span>
                   <span className="text-purple-300">Pleasure {item.activity.pleasure ?? "–"}/10</span>
                   {typeof item.activity.moodBefore === "number" && typeof item.activity.moodAfter === "number" && (
@@ -443,7 +443,7 @@ export default function ValuesToActionScreen() {
               <div key={item.id} className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-2.5 flex items-center gap-2">
                 <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                 <span className="text-[11px] text-slate-300 line-through decoration-slate-600">{item.title}</span>
-                <span className="ml-auto text-[10px] text-emerald-400/70">{domainLabel(item.step.domainId)}</span>
+                <span className="ml-auto text-xs text-emerald-400/70">{domainLabel(item.step.domainId)}</span>
               </div>
             ) : null,
           )}

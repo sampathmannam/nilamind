@@ -809,11 +809,11 @@ valuesClarified: []
               >
                 <div className="min-w-0 flex-1">
                   <div className="text-xs text-slate-200 capitalize">{e.kind} · {e.scope}</div>
-                  <div className="text-[10px] text-slate-500">{new Date(e.timestamp).toLocaleString()}</div>
-                  {e.filename && <div className="text-[9px] font-mono text-slate-600 truncate max-w-[260px]">{e.filename}</div>}
+                  <div className="text-xs text-slate-500">{new Date(e.timestamp).toLocaleString()}</div>
+                  {e.filename && <div className="text-xs font-mono text-slate-600 truncate max-w-[260px]">{e.filename}</div>}
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                  <span className="text-[10px] font-mono text-slate-400">{e.destination}</span>
+                  <span className="text-xs font-mono text-slate-400">{e.destination}</span>
                   {e.filename && <Share2 className="w-3 h-3 text-slate-500" />}
                 </div>
               </div>

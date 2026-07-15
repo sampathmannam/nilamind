@@ -45,11 +45,11 @@ export default function OnDeviceSection() {
       <div className="border border-slate-800 rounded-xl p-3 flex items-center justify-between bg-page" id="settings-ondevice-status">
         <div className="space-y-0.5">
           <div className="text-sm font-medium text-slate-200">On-device brain</div>
-          <div className="text-[10px] text-slate-500">{modelId ? `Running on ${modelId}` : "Loading model…"}</div>
+          <div className="text-xs text-slate-500">{modelId ? `Running on ${modelId}` : "Loading model…"}</div>
         </div>
         <div
           aria-label={modelId ? "On-device model active" : "On-device model loading"}
-          className={`inline-flex items-center gap-1.5 text-[10px] font-mono px-2 py-1 rounded-full ${modelId ? "bg-violet-500/15 text-violet-300" : "bg-slate-700/50 text-slate-400"}`}
+          className={`inline-flex items-center gap-1.5 text-xs font-mono px-2 py-1 rounded-full ${modelId ? "bg-violet-500/15 text-violet-300" : "bg-slate-700/50 text-slate-400"}`}
         >
           <span aria-hidden="true" className={`w-1.5 h-1.5 rounded-full ${modelId ? "bg-violet-400" : "bg-slate-500"}`} />
           {modelId ? "Active" : "Loading"}

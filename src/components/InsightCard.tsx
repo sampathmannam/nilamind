@@ -72,7 +72,7 @@ export default function InsightCard({ insight, onClick }: Props) {
 
       {/* Citation */}
       {insight.citation && (
-        <p className="text-[9px] text-slate-500 italic">Source: {insight.citation}</p>
+        <p className="text-xs text-slate-500 italic">Source: {insight.citation}</p>
       )}
     </Wrapper>
   );

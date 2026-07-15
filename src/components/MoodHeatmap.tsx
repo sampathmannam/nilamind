@@ -102,7 +102,7 @@ export default function MoodHeatmap({ moods, days = 182 }: Props) {
           {monthHeaders.map((mh, i) => (
             <div
               key={i}
-              className="text-[9px] text-slate-500 absolute"
+              className="text-xs text-slate-500 absolute"
               style={{ left: 28 + mh.col * (cellSize + gap) }}
             >
               {mh.label}
@@ -116,7 +116,7 @@ export default function MoodHeatmap({ moods, days = 182 }: Props) {
             {dayLabels.map((label, i) => (
               <div
                 key={i}
-                className="text-[9px] text-slate-500 flex items-center"
+                className="text-xs text-slate-500 flex items-center"
                 style={{ height: cellSize }}
               >
                 {label}
@@ -152,7 +152,7 @@ export default function MoodHeatmap({ moods, days = 182 }: Props) {
         </div>
 
         {/* Legend */}
-        <div className="flex items-center gap-1.5 mt-2 text-[9px] text-slate-500">
+        <div className="flex items-center gap-1.5 mt-2 text-xs text-slate-500">
           <span>Calm</span>
           {[1, 3, 5, 7, 10].map((v) => (
             <div

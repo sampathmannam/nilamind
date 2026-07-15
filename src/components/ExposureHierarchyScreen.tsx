@@ -94,12 +94,12 @@ export default function ExposureHierarchyScreen() {
         <div className="flex gap-4 text-center">
           <div className="glass rounded-xl p-3 flex-1">
             <div className="text-lg font-bold text-orange-300">{rate}%</div>
-            <div className="text-[10px] text-slate-500">Completed</div>
+            <div className="text-xs text-slate-500">Completed</div>
           </div>
           {sudReduction != null && (
             <div className="glass rounded-xl p-3 flex-1">
               <div className="text-lg font-bold text-blue-300">-{Math.round(sudReduction)}</div>
-              <div className="text-[10px] text-slate-500">Avg SUDS drop</div>
+              <div className="text-xs text-slate-500">Avg SUDS drop</div>
             </div>
           )}
         </div>
@@ -117,15 +117,15 @@ export default function ExposureHierarchyScreen() {
 
         {completingStep ? (
           <div className="glass rounded-2xl p-4 space-y-3 border-l-4 border-l-emerald-500">
-            <div className="text-[10px] uppercase font-mono tracking-widest text-slate-500">Complete this step</div>
+            <div className="text-xs uppercase font-mono tracking-widest text-slate-500">Complete this step</div>
             <div className="space-y-1">
-              <label className="text-[10px] text-slate-500">SUDS after exposure: {postSuds}</label>
+              <label className="text-xs text-slate-500">SUDS after exposure: {postSuds}</label>
               <input type="range" min={0} max={100} value={postSuds} onChange={(e) => setPostSuds(+e.target.value)} className="w-full" />
             </div>
             {/* Guided reflection: expectancy-violation prompts, the primary lever for durable exposure
                 learning per Craske, Treanor, Conway, Zbozinek & Vervliet (2014) — previously built but unused. */}
             <div className="space-y-1.5">
-              <div className="text-[10px] text-slate-500">A few things worth reflecting on:</div>
+              <div className="text-xs text-slate-500">A few things worth reflecting on:</div>
               <ul className="space-y-1 list-disc list-inside">
                 {inhibitoryLearningPrompts().map((prompt) => (
                   <li key={prompt} className="text-[11px] text-slate-400 leading-relaxed">{prompt}</li>
@@ -137,7 +137,7 @@ export default function ExposureHierarchyScreen() {
               <button onClick={() => handleCompleteStep(completingStep)} className="flex-1 glass rounded-xl py-2 text-xs text-emerald-300 cursor-pointer">Save</button>
               <button onClick={() => setCompletingStep(null)} className="glass rounded-xl px-3 py-2 text-xs text-slate-400 cursor-pointer">Cancel</button>
             </div>
-            <p className="text-[10px] text-slate-600 leading-relaxed">
+            <p className="text-xs text-slate-600 leading-relaxed">
               Reflection prompts based on the inhibitory-learning model (Craske, Treanor, Conway, Zbozinek &amp; Vervliet, 2014) —
               noticing what actually happened, versus what you predicted, is what research suggests makes exposure learning last.
             </p>
@@ -146,18 +146,18 @@ export default function ExposureHierarchyScreen() {
           <div className="space-y-2">
             {sorted.map((step, i) => (
               <div key={step.id} className={`glass rounded-xl p-3 flex items-center gap-3 ${step.completed ? "opacity-60" : ""}`}>
-                <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-400 shrink-0">
+                <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-400 shrink-0">
                   {i + 1}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-slate-200">{step.description}</p>
-                  <p className="text-[10px] text-slate-500">
+                  <p className="text-xs text-slate-500">
                     SUDS: {step.suds}
                     {step.completed && ` → ${step.postSuds} (completed)`}
                   </p>
                 </div>
                 {!step.completed && (
-                  <button onClick={() => setCompletingStep(step.id)} className="text-[10px] text-emerald-400 cursor-pointer shrink-0">Complete</button>
+                  <button onClick={() => setCompletingStep(step.id)} className="text-xs text-emerald-400 cursor-pointer shrink-0">Complete</button>
                 )}
                 {!step.completed && <button onClick={() => handleRemoveStep(step.id)} className="text-slate-600 hover:text-slate-400 cursor-pointer shrink-0"><X className="w-3 h-3" /></button>}
               </div>
@@ -170,7 +170,7 @@ export default function ExposureHierarchyScreen() {
           <div className="glass rounded-2xl p-3 space-y-2">
             <input value={stepText} onChange={(e) => setStepText(e.target.value)} placeholder="Exposure step..." className="w-full glass rounded-xl px-3 py-2 text-xs text-slate-200 placeholder-slate-500" />
             <div className="flex items-center gap-2">
-              <label className="text-[10px] text-slate-500 shrink-0">SUDS: {suds}</label>
+              <label className="text-xs text-slate-500 shrink-0">SUDS: {suds}</label>
               <input type="range" min={0} max={100} value={suds} onChange={(e) => setSuds(+e.target.value)} className="flex-1" />
             </div>
             <button onClick={handleAddStep} className="w-full glass rounded-xl py-2 text-xs text-blue-300 cursor-pointer">Add step</button>

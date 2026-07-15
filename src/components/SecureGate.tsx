@@ -130,7 +130,7 @@ function UnlockScreen({ onUnlocked }: { onUnlocked: () => void }) {
           </button>
         </div>
 
-        <p className="text-[10px] text-slate-600 leading-relaxed">
+        <p className="text-xs text-slate-600 leading-relaxed">
           Your PIN never leaves this device and isn't stored anywhere — it only unlocks your data.
           If you've forgotten it, your encrypted entries can't be recovered.
         </p>

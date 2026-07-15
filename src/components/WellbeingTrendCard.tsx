@@ -44,7 +44,7 @@ export default function WellbeingTrendCard({ onTakeCheck }: { onTakeCheck?: () =
             <LineChartIcon className="w-4 h-4 text-emerald-400" />
             <span className="text-sm font-bold text-slate-100">{t("you_wellbeing_label")}</span>
           </div>
-          {wb.taken && <span className="text-[10px] text-slate-500">{wb.latest?.date}</span>}
+          {wb.taken && <span className="text-xs text-slate-500">{wb.latest?.date}</span>}
         </div>
         {wb.taken ? (
           <>
@@ -65,7 +65,7 @@ export default function WellbeingTrendCard({ onTakeCheck }: { onTakeCheck?: () =
       {/* Sparkline chart */}
       {wb.taken && chartData.length >= 2 && (
         <div className="glass rounded-2xl p-4 space-y-2">
-          <h4 className="text-[10px] uppercase font-mono tracking-widest text-slate-400">
+          <h4 className="text-xs uppercase font-mono tracking-widest text-slate-400">
             {t("you_wellbeing_label")} · {chartData.length}
           </h4>
           <div className="h-36 -ml-2" role="img" aria-label="Wellbeing trend over time">
@@ -82,7 +82,7 @@ export default function WellbeingTrendCard({ onTakeCheck }: { onTakeCheck?: () =
               </LineChart>
             </ResponsiveContainer>
           </div>
-          <p className="text-[10px] text-slate-600">Dashed line = wellbeing threshold (50). Higher is better. This is a pattern over time, not a diagnosis.</p>
+          <p className="text-xs text-slate-600">Dashed line = wellbeing threshold (50). Higher is better. This is a pattern over time, not a diagnosis.</p>
         </div>
       )}
 
