@@ -5,8 +5,13 @@ import { render, screen, cleanup, fireEvent } from "@testing-library/react";
 // audit #27: the app had NO component render tests — the vitest env was node-only and only *.test.ts. So the
 // §9 crisis surface (the most safety-relevant UI) was never mounted/asserted. This is the first render test:
 // it mounts the real CrisisOverlay and checks the crisis affordances render and the close/handoff wiring fires.
+const store = new Map<string, string>();
 vi.mock("../services/secureLocal", () => ({
-  secureLocal: { getItem: () => null, setItem: () => {}, removeItem: () => {} },
+  secureLocal: {
+    getItem: (k: string) => store.get(k) ?? null,
+    setItem: (k: string, v: string) => { store.set(k, v); },
+    removeItem: (k: string) => { store.delete(k); },
+  },
 }));
 
 const offerPostCrisisCheckInMock = vi.fn();
@@ -18,7 +23,7 @@ vi.mock("../services/postCrisisCheckIn", () => ({
 
 import CrisisOverlay from "./CrisisOverlay";
 
-afterEach(cleanup);
+afterEach(() => { cleanup(); store.clear(); });
 const noop = () => {};
 
 describe("CrisisOverlay — §9 crisis surface renders (audit #27)", () => {
@@ -29,7 +34,18 @@ describe("CrisisOverlay — §9 crisis surface renders (audit #27)", () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it("mounts the crisis dialog with helplines, grounding/breathing shortcuts and the safety plan", () => {
+  it("mounts the crisis dialog with helplines, grounding/breathing shortcuts, and filled safety-plan sections", () => {
+    store.set(
+      "nilamind_safetyplan",
+      JSON.stringify({
+        warningSigns: "not sleeping, going quiet",
+        internalCoping: "cold water on my face",
+        socialDistractors: "",
+        trustedPeople: "",
+        professionals: "",
+        safeEnvironment: "",
+      }),
+    );
     render(<CrisisOverlay isOpen onClose={noop} onNavigateToGrounding={noop} onNavigateToBreathing={noop} />);
     expect(screen.getByRole("dialog")).toBeTruthy();
     expect(screen.getByText(/you reached for this/i)).toBeTruthy();
@@ -38,7 +54,51 @@ describe("CrisisOverlay — §9 crisis surface renders (audit #27)", () => {
     expect(document.getElementById("grounding-shortcut-btn")).toBeTruthy();
     expect(document.getElementById("breathing-shortcut-btn")).toBeTruthy();
     expect(screen.getAllByText(/coping plan/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/warning signs i notice/i)).toBeTruthy(); // safety-plan section 1 renders
+    expect(screen.getByText(/warning signs i notice/i)).toBeTruthy(); // filled section 1 renders
+  });
+
+  it("declutters: a fully blank plan shows an invitation instead of six empty placeholder sections", () => {
+    render(<CrisisOverlay isOpen onClose={noop} onNavigateToGrounding={noop} onNavigateToBreathing={noop} />);
+    expect(screen.queryByText(/warning signs i notice/i)).toBeNull();
+    expect(screen.queryByText(/things i can do on my own to cope/i)).toBeNull();
+    expect(screen.getByText(/haven't built a coping plan yet/i)).toBeTruthy();
+  });
+
+  it("declutters: only filled sections render when the plan is partially filled", () => {
+    store.set(
+      "nilamind_safetyplan",
+      JSON.stringify({
+        warningSigns: "not sleeping",
+        internalCoping: "",
+        socialDistractors: "",
+        trustedPeople: "",
+        professionals: "",
+        safeEnvironment: "",
+      }),
+    );
+    render(<CrisisOverlay isOpen onClose={noop} onNavigateToGrounding={noop} onNavigateToBreathing={noop} />);
+    expect(screen.getByText(/warning signs i notice/i)).toBeTruthy();
+    expect(screen.queryByText(/things i can do on my own to cope/i)).toBeNull();
+  });
+
+  it("renders the Ride the Wave de-escalation content", () => {
+    render(<CrisisOverlay isOpen onClose={noop} onNavigateToGrounding={noop} onNavigateToBreathing={noop} />);
+    expect(document.getElementById("ride-the-wave-card")).toBeTruthy();
+  });
+
+  it("calls onBuildPlanLater from the blank-plan invitation when provided", () => {
+    const onBuildPlanLater = vi.fn();
+    render(
+      <CrisisOverlay
+        isOpen
+        onClose={noop}
+        onNavigateToGrounding={noop}
+        onNavigateToBreathing={noop}
+        onBuildPlanLater={onBuildPlanLater}
+      />,
+    );
+    fireEvent.click(document.getElementById("crisis-build-plan-later-btn")!);
+    expect(onBuildPlanLater).toHaveBeenCalledOnce();
   });
 
   it("calls onClose when 'I feel steadier now' is tapped", () => {

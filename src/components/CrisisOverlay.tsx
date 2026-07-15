@@ -6,12 +6,14 @@ import { parseSafetyPlan } from "../services/safetyPlan";
 import { Heart, Wind, ShieldAlert, ArrowLeft } from "lucide-react";
 import CrisisLines from "./CrisisLines";
 import { offerPostCrisisCheckIn } from "../services/postCrisisCheckIn";
+import RideTheWaveCard from "./RideTheWaveCard";
 
 interface CrisisOverlayProps {
   isOpen: boolean;
   onClose: () => void;
   onNavigateToGrounding: () => void;
   onNavigateToBreathing: () => void;
+  onBuildPlanLater?: () => void;
 }
 
 export default function CrisisOverlay({
@@ -19,6 +21,7 @@ export default function CrisisOverlay({
   onClose,
   onNavigateToGrounding,
   onNavigateToBreathing,
+  onBuildPlanLater,
 }: CrisisOverlayProps) {
   const [safetyPlan, setSafetyPlan] = useState<SafetyPlan>(INITIAL_SAFETY_PLAN);
   // 2026-07-12 Wave 3, Task 1.4: opt-in, unchecked-by-default post-crisis check-in toggle. Never scheduled
@@ -44,6 +47,15 @@ export default function CrisisOverlay({
     }
     return () => { document.body.style.overflow = ""; };
   }, [isOpen]);
+
+  const hasContent = (v: string) => v.trim().length > 0;
+  const anyContent =
+    hasContent(safetyPlan.warningSigns) ||
+    hasContent(safetyPlan.internalCoping) ||
+    hasContent(safetyPlan.socialDistractors) ||
+    hasContent(safetyPlan.trustedPeople) ||
+    hasContent(safetyPlan.professionals) ||
+    hasContent(safetyPlan.safeEnvironment);
 
   if (!isOpen) return null;
 
@@ -106,6 +118,9 @@ export default function CrisisOverlay({
           </button>
         </div>
 
+        {/* Ride out the next few minutes — the de-escalation content that was missing */}
+        <RideTheWaveCard />
+
         {/* Crisis lines — secondary, always available */}
         <div className="space-y-3">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
@@ -116,75 +131,84 @@ export default function CrisisOverlay({
           <p className="text-[10px] text-slate-500 text-center">Free, confidential helplines for your region — change in Settings.</p>
         </div>
 
-        {/* Your coping plan */}
-        <div className="space-y-4 pt-2">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-            Your coping plan
-          </h2>
+        {/* Your coping plan — decluttered: only sections with real content render */}
+        {anyContent ? (
+          <div className="space-y-4 pt-2">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Your coping plan
+            </h2>
 
-          {/* Section 1 */}
-          <div className="bg-card border border-slate-800 p-4 rounded-xl">
-            <h3 className="text-slate-100 font-semibold text-sm mb-1">
-              1. Warning signs I notice:
-            </h3>
-            <p className="text-slate-300 text-sm whitespace-pre-wrap">
-              {safetyPlan.warningSigns || "This part is still blank — and that's okay. You're here now, and that counts."}
-            </p>
-          </div>
+            {hasContent(safetyPlan.warningSigns) && (
+              <div className="bg-card border border-slate-800 p-4 rounded-xl">
+                <h3 className="text-slate-100 font-semibold text-sm mb-1">
+                  1. Warning signs I notice:
+                </h3>
+                <p className="text-slate-300 text-sm whitespace-pre-wrap">{safetyPlan.warningSigns}</p>
+              </div>
+            )}
 
-          {/* Section 2 */}
-          <div className="bg-card border border-slate-800 p-4 rounded-xl">
-            <h3 className="text-slate-100 font-semibold text-sm mb-1">
-              2. Things I can do on my own to cope:
-            </h3>
-            <p className="text-slate-300 text-sm whitespace-pre-wrap">
-              {safetyPlan.internalCoping || "Nothing written here yet — that's okay."}
-            </p>
-          </div>
+            {hasContent(safetyPlan.internalCoping) && (
+              <div className="bg-card border border-slate-800 p-4 rounded-xl">
+                <h3 className="text-slate-100 font-semibold text-sm mb-1">
+                  2. Things I can do on my own to cope:
+                </h3>
+                <p className="text-slate-300 text-sm whitespace-pre-wrap">{safetyPlan.internalCoping}</p>
+              </div>
+            )}
 
-          {/* Section 3 */}
-          <div className="bg-card border border-slate-800 p-4 rounded-xl">
-            <h3 className="text-slate-100 font-semibold text-sm mb-1">
-              3. People and places that distract me:
-            </h3>
-            <p className="text-slate-300 text-sm whitespace-pre-wrap">
-              {safetyPlan.socialDistractors || "Nothing here yet — that's okay."}
-            </p>
-          </div>
+            {hasContent(safetyPlan.socialDistractors) && (
+              <div className="bg-card border border-slate-800 p-4 rounded-xl">
+                <h3 className="text-slate-100 font-semibold text-sm mb-1">
+                  3. People and places that distract me:
+                </h3>
+                <p className="text-slate-300 text-sm whitespace-pre-wrap">{safetyPlan.socialDistractors}</p>
+              </div>
+            )}
 
-          {/* Section 4 */}
-          <div className="bg-card border border-slate-800 p-4 rounded-xl">
-            <h3 className="text-slate-100 font-semibold text-sm mb-1">
-              4. People I can reach out to for help:
-            </h3>
-            <p className="text-slate-300 text-sm whitespace-pre-wrap">
-              {safetyPlan.trustedPeople || "No names here yet — reaching even one person right now can help."}
-            </p>
-          </div>
+            {hasContent(safetyPlan.trustedPeople) && (
+              <div className="bg-card border border-slate-800 p-4 rounded-xl">
+                <h3 className="text-slate-100 font-semibold text-sm mb-1">
+                  4. People I can reach out to for help:
+                </h3>
+                <p className="text-slate-300 text-sm whitespace-pre-wrap">{safetyPlan.trustedPeople}</p>
+              </div>
+            )}
 
-          {/* Section 5 */}
-          <div className="bg-card border border-slate-800 p-4 rounded-xl">
-            <h3 className="text-slate-100 font-semibold text-sm mb-1">
-              5. Professionals and crisis lines:
-            </h3>
-            <p className="text-slate-300 text-sm whitespace-pre-wrap">
-              {safetyPlan.professionals}
-            </p>
-            <div className="mt-3">
-              <CrisisLines tone="rose" compact />
-            </div>
-          </div>
+            {hasContent(safetyPlan.professionals) && (
+              <div className="bg-card border border-slate-800 p-4 rounded-xl">
+                <h3 className="text-slate-100 font-semibold text-sm mb-1">
+                  5. Professionals and crisis lines:
+                </h3>
+                <p className="text-slate-300 text-sm whitespace-pre-wrap">{safetyPlan.professionals}</p>
+              </div>
+            )}
 
-          {/* Section 6 */}
-          <div className="bg-card border border-slate-800 p-4 rounded-xl">
-            <h3 className="text-slate-100 font-semibold text-sm mb-1">
-              6. Making my space safer:
-            </h3>
-            <p className="text-slate-300 text-sm whitespace-pre-wrap">
-              {safetyPlan.safeEnvironment || "Nothing here yet — that's okay."}
-            </p>
+            {hasContent(safetyPlan.safeEnvironment) && (
+              <div className="bg-card border border-slate-800 p-4 rounded-xl">
+                <h3 className="text-slate-100 font-semibold text-sm mb-1">
+                  6. Making my space safer:
+                </h3>
+                <p className="text-slate-300 text-sm whitespace-pre-wrap">{safetyPlan.safeEnvironment}</p>
+              </div>
+            )}
           </div>
-        </div>
+        ) : (
+          <div className="bg-card border border-slate-800 p-4 rounded-xl text-center space-y-3">
+            <p className="text-sm text-slate-300 leading-relaxed">
+              You haven't built a coping plan yet — and this moment isn't the time to start one. Once this
+              passes, I can help you put one together in a couple of minutes.
+            </p>
+            {onBuildPlanLater && (
+              <button
+                onClick={onBuildPlanLater}
+                className="text-xs font-semibold text-rose-300 hover:text-rose-200 underline underline-offset-2 cursor-pointer"
+                id="crisis-build-plan-later-btn"
+              >
+                Build it when I'm ready
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Gentle non-abrupt Exit Footer */}
         <div className="pt-4 text-center space-y-3">

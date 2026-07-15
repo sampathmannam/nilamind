@@ -539,6 +539,7 @@ export default function App() {
             onClose={() => setIsCrisisOpen(false)}
             onNavigateToGrounding={() => { setIsCrisisOpen(false); setIsGroundingOpen(true); }}
             onNavigateToBreathing={() => { setIsCrisisOpen(false); setIsGroundingOpen(true); }}
+            onBuildPlanLater={() => { setIsCrisisOpen(false); setActiveAuxView("safety_plan" as AuxView); }}
           />
         </div>
       )}
