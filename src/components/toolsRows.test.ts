@@ -34,10 +34,10 @@ describe("Tools hub rows (redesign §2)", () => {
 
   it("groups rows under the redesigned section titles", () => {
     expect(buildToolGroups({ ...STUB, phoneEnabled: false }).map((g) => g.title)).toEqual([
-      "⚡ In the moment", "📝 Log & track", "🧠 Skills & practice",
+      "In the moment", "Log & track", "Skills & practice",
     ]);
     expect(buildToolGroups({ ...STUB, phoneEnabled: true }).map((g) => g.title)).toEqual([
-      "⚡ In the moment", "📝 Log & track", "🧠 Skills & practice", "📊 Patterns",
+      "In the moment", "Log & track", "Skills & practice", "Patterns",
     ]);
   });
 

@@ -45,14 +45,14 @@ describe("personalizeToolOrder", () => {
   it("promotes anxiety-relevant tools to the front of their group for Managing anxiety", () => {
     const groups = buildToolGroups(STUB);
     const result = personalizeToolOrder(groups, ["Managing anxiety"]);
-    const inTheMoment = result.find((g) => g.title === "⚡ In the moment")!;
+    const inTheMoment = result.find((g) => g.title === "In the moment")!;
     expect(inTheMoment.rows[0].id).toBe("plan");
   });
 
   it("promotes mood-tracking tools to the front for Tracking moods", () => {
     const groups = buildToolGroups(STUB);
     const result = personalizeToolOrder(groups, ["Tracking moods"]);
-    const logTrack = result.find((g) => g.title === "📝 Log & track")!;
+    const logTrack = result.find((g) => g.title === "Log & track")!;
     expect(logTrack.rows[0].id).toBe("ema_checkin");
   });
 
