@@ -13,6 +13,7 @@ import ModeScreen from "./components/ModeScreen";
 import TodayScreen from "./components/TodayScreen";
 import YouScreen from "./components/YouScreen";
 import ErrorBoundary from "./components/ErrorBoundary";
+import Sheet from "./components/Sheet";
 
 // LAZY — detail screens only when explicitly opened
 const SettingsScreen = lazy(() => import("./components/SettingsScreen"));
@@ -84,7 +85,7 @@ import { getPilotState, markEndpointReminderScheduled, PILOT_ENDPOINT_REMINDER_B
 import { getUserState } from "./services/modeEngine";
 import { computeAdaptiveMode, getAdaptiveCssClass } from "./services/adaptiveTheme";
 import { warmVoskStt } from "./services/voskStt";
-import { MessageSquare, LayoutGrid, User, X } from "lucide-react";
+import { MessageSquare, LayoutGrid, User } from "lucide-react";
 
 import { hapticLight } from "./hooks/useHaptics";
 
@@ -532,96 +533,59 @@ export default function App() {
       )}
 
        {/* Grounding library */}
-      {isGroundingOpen && (
-        <div className="fixed inset-0 z-50 bg-page flex flex-col animate-slide-in" id="grounding-sheet">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
-            <span className="text-sm font-semibold text-slate-100">Grounding</span>
-            <button onClick={() => { setIsGroundingOpen(false); setGroundingExpandIndex(undefined); }} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Close"><X className="w-4 h-4" aria-hidden="true" /></button>
-          </div>
-          <div className="flex-1 min-h-0 overflow-y-auto">
-            <GroundingLibraryScreen autoExpand={groundingExpandIndex} />
-          </div>
-        </div>
-      )}
+       <Sheet
+         open={isGroundingOpen}
+         title="Grounding"
+         onClose={() => { setIsGroundingOpen(false); setGroundingExpandIndex(undefined); }}
+         id="grounding-sheet"
+       >
+         <GroundingLibraryScreen autoExpand={groundingExpandIndex} />
+       </Sheet>
 
-      {/* Settings sheet */}
-      {isSettingsOpen && (
-        <div className="fixed inset-0 z-50 bg-page flex flex-col animate-slide-in" id="settings-sheet">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
-            <span className="text-sm font-semibold text-slate-100">{t("settings")}</span>
-            <button onClick={() => setIsSettingsOpen(false)} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Close"><X className="w-4 h-4" aria-hidden="true" /></button>
-          </div>
-          <div className="flex-1 min-h-0 overflow-y-auto">
-            <Suspense fallback={<ScreenFallback />}>
-              <SettingsScreen onOpenCaregiver={() => setIsCaregiverOpen(true)} onOpenLegal={() => setIsLegalOpen(true)} />
-            </Suspense>
-          </div>
-        </div>
-      )}
+       {/* Settings sheet */}
+       <Sheet
+         open={isSettingsOpen}
+         title={t("settings")}
+         onClose={() => setIsSettingsOpen(false)}
+         id="settings-sheet"
+       >
+         <Suspense fallback={<ScreenFallback />}>
+           <SettingsScreen onOpenCaregiver={() => setIsCaregiverOpen(true)} onOpenLegal={() => setIsLegalOpen(true)} />
+         </Suspense>
+       </Sheet>
 
-      {/* Dashboard sheet */}
-      {isDashboardOpen && (
-        <div className="fixed inset-0 z-50 bg-page flex flex-col animate-slide-in" id="dashboard-sheet">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
-            <span className="text-sm font-semibold text-slate-100">{t("dashboard")}</span>
-            <button onClick={() => setIsDashboardOpen(false)} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Close"><X className="w-4 h-4" aria-hidden="true" /></button>
-          </div>
-          <div className="flex-1 min-h-0 overflow-y-auto">
-            <Suspense fallback={<ScreenFallback />}><DashboardScreen /></Suspense>
-          </div>
-        </div>
-      )}
+       {/* Dashboard sheet */}
+       <Sheet open={isDashboardOpen} title={t("dashboard")} onClose={() => setIsDashboardOpen(false)} id="dashboard-sheet">
+         <Suspense fallback={<ScreenFallback />}><DashboardScreen /></Suspense>
+       </Sheet>
 
-      {/* Medication sheet */}
-      {isMedicationOpen && (
-        <div className="fixed inset-0 z-50 bg-page flex flex-col animate-slide-in" id="medication-sheet">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
-            <span className="text-sm font-semibold text-slate-100">{t("medications")}</span>
-            <button onClick={() => setIsMedicationOpen(false)} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Close"><X className="w-4 h-4" aria-hidden="true" /></button>
-          </div>
-          <div className="flex-1 min-h-0 overflow-y-auto p-4">
-            <Suspense fallback={<ScreenFallback />}><MedicationAdherenceScreen /></Suspense>
-          </div>
-        </div>
-      )}
+       {/* Medication sheet */}
+       <Sheet open={isMedicationOpen} title={t("medications")} onClose={() => setIsMedicationOpen(false)} id="medication-sheet" bodyClassName="p-4">
+         <Suspense fallback={<ScreenFallback />}><MedicationAdherenceScreen /></Suspense>
+       </Sheet>
 
-      {/* Caregiver sheet */}
-      {isCaregiverOpen && (
-        <div className="fixed inset-0 z-50 bg-page flex flex-col animate-slide-in" id="caregiver-sheet">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
-            <span className="text-sm font-semibold text-slate-100">Share with a trusted person</span>
-            <button onClick={() => setIsCaregiverOpen(false)} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Close"><X className="w-4 h-4" aria-hidden="true" /></button>
-          </div>
-          <div className="flex-1 min-h-0 overflow-y-auto p-4">
-            <Suspense fallback={<ScreenFallback />}><CaregiverShareScreen selectedContactId={selectedCaregiverContactId} /></Suspense>
-          </div>
-        </div>
-      )}
+       {/* Caregiver sheet */}
+       <Sheet open={isCaregiverOpen} title="Share with a trusted person" onClose={() => setIsCaregiverOpen(false)} id="caregiver-sheet" bodyClassName="p-4">
+         <Suspense fallback={<ScreenFallback />}><CaregiverShareScreen selectedContactId={selectedCaregiverContactId} /></Suspense>
+       </Sheet>
 
-      {/* Legal sheet — Privacy Policy, Terms, OSS licenses */}
-      {isLegalOpen && (
-        <div className="fixed inset-0 z-50 bg-page flex flex-col animate-slide-in" id="legal-sheet">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
-            <span className="text-sm font-semibold text-slate-100">Legal</span>
-            <button onClick={() => setIsLegalOpen(false)} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Close"><X className="w-4 h-4" aria-hidden="true" /></button>
-          </div>
-          <div className="flex-1 min-h-0 overflow-y-auto">
-            <Suspense fallback={<ScreenFallback />}><LegalScreen /></Suspense>
-          </div>
-        </div>
-      )}
+       {/* Legal sheet — Privacy Policy, Terms, OSS licenses */}
+       <Sheet open={isLegalOpen} title="Legal" onClose={() => setIsLegalOpen(false)} id="legal-sheet">
+         <Suspense fallback={<ScreenFallback />}><LegalScreen /></Suspense>
+       </Sheet>
 
-      {/* Generic aux view sheet — all other screens */}
-      {(activeAuxView || closingAuxView) && (
-        <div className={`fixed inset-0 z-50 bg-page flex flex-col ${closingAuxView ? "animate-slide-out" : "animate-slide-in"}`} id="aux-view-sheet">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
-            <span className="text-sm font-semibold text-slate-100">{auxViewLabel(activeAuxView || closingAuxView!)}</span>
-            <button onClick={() => closeSheet(activeAuxView)} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Close"><X className="w-4 h-4" aria-hidden="true" /></button>
-           </div>
-           <div className="flex-1 min-h-0 overflow-y-auto">
-             <Suspense fallback={<ScreenFallback />}>{renderAuxView((activeAuxView || closingAuxView)!, activateCrisis, closeActiveAux, () => setIsGroundingOpen(true), go, (cid) => { setSelectedCaregiverContactId(cid); setIsCaregiverOpen(true); })}</Suspense>
-           </div>
-         </div>
+       {/* Generic aux view sheet — all other screens (fault-isolated) */}
+       {(activeAuxView || closingAuxView) && (
+         <Sheet
+           open
+           title={auxViewLabel(activeAuxView || closingAuxView!)}
+           onClose={() => closeSheet(activeAuxView)}
+           closing={!!closingAuxView}
+           id="aux-view-sheet"
+           faultIsolated
+         >
+           <Suspense fallback={<ScreenFallback />}>{renderAuxView((activeAuxView || closingAuxView)!, activateCrisis, closeActiveAux, () => setIsGroundingOpen(true), go, (cid) => { setSelectedCaregiverContactId(cid); setIsCaregiverOpen(true); })}</Suspense>
+         </Sheet>
        )}
 
        {/* Full-screen breathing experience */}
