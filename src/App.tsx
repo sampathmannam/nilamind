@@ -104,6 +104,7 @@ const AUX_LABELS: Partial<Record<AuxView, string>> = {
   learn: "Learn",
   problem_solving: "Problem solving",
   values_work: "Values work",
+  values_to_action: "Values work",
   exposure: "Exposure hierarchy",
   relapse_plan: "Relapse prevention",
   behaviour: "Phone patterns",
@@ -135,8 +136,9 @@ function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () 
     case "reach_out": return <ReachOutScreen />;
     case "learn": return <LearnScreen />;
     case "problem_solving": return <ProblemSolvingScreen />;
-    case "values_work": // retired — renders the active values_to_action screen
-      return <ValuesToActionScreen />;
+      case "values_work": // retired alias — renders the active values_to_action screen
+      case "values_to_action":
+        return <ValuesToActionScreen />;
     case "exposure": return <ExposureHierarchyScreen />;
     case "relapse_plan": return <RelapsePlanScreen />;
     case "behaviour": return <DashboardScreen onOpenView={onOpenView} />;
