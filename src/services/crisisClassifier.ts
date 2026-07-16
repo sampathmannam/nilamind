@@ -23,7 +23,7 @@
  * device-verified — see crisisEmbedder.example.ts.
  */
 import weights from "./crisisClassifier.weights.json";
-import { scanForCrisis, isBenignMedicationAdherence, isBenignHyperbole, isBenignExhaustion, isBenignOkayReassurance, isBenignExistentialReferent, isBenignHeartbreakIdiom, isBenignHelpSeeking } from "../safety";
+import { scanForCrisis, isBenignMedicationAdherence, isBenignHyperbole, isBenignExhaustion, isBenignOkayReassurance, isBenignExistentialReferent, isBenignHeartbreakIdiom, isBenignHelpSeeking, isBenignSleepRequest } from "../safety";
 
 /** Returns a NORMALIZED (L2) sentence embedding of `dim` floats. The head was trained on normalized MiniLM
  *  mean-pooled embeddings, so the embedder MUST mean-pool + L2-normalize (Transformers.js:
@@ -218,6 +218,12 @@ export async function detectCrisisSignal(text: string): Promise<CrisisSignal> {
   // mental-health-adjacent vocabulary near the crisis cluster. Same posture: suppresses ONLY the SOFT classifier
   // upgrade after a keyword-floor MISS, and vetoed by any lethal co-signal.
   if (isBenignHelpSeeking(text)) return { hit: false, source: null, tier: null };
+  // 2026-07-16 device report: "Help me to sleep" scores 0.7249 against the real bundled model — above
+  // CRISIS_HIGH_CONFIDENCE_THRESHOLD — triggering the full crisis takeover (grounding + hotlines) on an
+  // ordinary sleep-help request. Same posture: suppresses ONLY the SOFT classifier upgrade after a keyword-floor
+  // MISS, and vetoed by any lethal co-signal, life-weariness/despair, minimization/farewell, or sleep-as-death
+  // euphemism phrasing. See isBenignSleepRequest in safety.ts.
+  if (isBenignSleepRequest(text)) return { hit: false, source: null, tier: null };
   const p = await scoreCrisis(text);
   if (p === null || p < CRISIS_THRESHOLD) return { hit: false, source: null, tier: null };
   // 2026-07-12 Bug 1 fix: tier is SCORE-based within classifier hits, not automatically "soft" just because

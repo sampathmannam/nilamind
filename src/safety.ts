@@ -675,9 +675,13 @@ const WEARY_DESPAIR_PATTERNS = new RegExp([
   // despair / hopelessness markers
   "\\b(hopeless|worthless|pointless|what'?s the point|don'?t see the point|no point|the point anymore)\\b",
   "\\bhate (myself|my life|being alive|everything|this life)\\b",
-  "\\bcan'?t (take|cope|do this|keep going|keep doing this|go on|hold on)\\b",
+  "\\bcan'?t (take|cope|handle|do this|keep going|keep doing this|go on|hold on)\\b",
   "\\b(give up|giving up|gave up)\\b", "\\b(falling apart|breaking down|fall apart)\\b",
   "\\b(nothing matters|empty inside|numb inside|no future|no way out)\\b",
+  // 2026-07-16 audit (isBenignSleepRequest adversarial review): had-enough / end-of-rope / life-is-too-much
+  // despair phrasing — previously missed by the list above, letting despair paired with a sleep-help opener
+  // ("help me sleep, I've had enough") slip through the guard as benign.
+  "\\bhad enough\\b", "\\bend of my rope\\b", "\\blife is too much\\b",
 ].join("|"));
 
 /**
@@ -801,6 +805,33 @@ export function isBenignOkayReassurance(message: string): boolean {
   const t = message.toLowerCase().replace(/['’]/g, "'").replace(/\s+/g, " ").trim();
   if (!REASSURANCE_PATTERNS.test(t)) return false;
   return !LETHAL_COSIGNAL.test(t) && !WEARY_DESPAIR_PATTERNS.test(t) && !MINIMIZATION_PATTERNS.test(t);
+}
+
+// Ordinary insomnia / sleep-help requests (2026-07-16 device report). "Help me to sleep" scores 0.7249 against
+// the real bundled MiniLM — above CRISIS_HIGH_CONFIDENCE_THRESHOLD (0.71) — because the classifier embeds plain
+// requests for sleep help near the self-harm-by-euphemism cluster ("help me sleep forever", "put me to sleep").
+// A false FULL crisis takeover (grounding + hotlines) on someone asking for help falling asleep is itself
+// harmful (patronizing; erodes trust), the same posture as the other guards above.
+const SLEEP_HELP_PATTERNS =
+  /\bhelp (me|us)? ?(to |get to |fall )?a?sleep\b|\bcan'?t (get to )?(fall a)?sleep\b|\b(trouble|difficulty|a hard time) (sleeping|falling asleep)\b|\bhow (do|can) i (fall asleep|get to sleep|sleep better)\b|\binsomnia\b/;
+// Sleep-as-death euphemism — "sleep forever", "put me to sleep permanently", "sleep for good" — must DEFER to
+// the classifier, never be suppressed. Generous on purpose (erring toward vetoing is the safe direction, same
+// posture as WEARY_DESPAIR_PATTERNS): a false veto only means "let the classifier decide."
+const SLEEP_DEATH_VETO =
+  /\bsleep forever\b|\bsleep permanently\b|\bsleep for good\b|\bput (me|myself|him|her) to sleep\b/;
+/**
+ * SAFETY POSTURE: suppresses ONLY the SOFT classifier upgrade after a keyword-floor MISS (the keyword floor
+ * always wins). Vetoed by any lethal co-signal, life-weariness/despair phrasing (WEARY_DESPAIR_PATTERNS —
+ * shared with isBenignExhaustion/isBenignOkayReassurance), crisis-minimization/farewell phrasing
+ * (MINIMIZATION_PATTERNS — shared with isBenignOkayReassurance), or a sleep-as-death euphemism, so a genuine
+ * disclosure opened with "help me sleep" (2026-07-16 adversarial review: "help me sleep, I've had enough",
+ * "help me sleep, when I'm gone don't worry about anything") still defers to the classifier.
+ */
+export function isBenignSleepRequest(message: string): boolean {
+  if (!message) return false;
+  const t = message.toLowerCase().replace(/['’]/g, "'").replace(/\s+/g, " ").trim();
+  if (!SLEEP_HELP_PATTERNS.test(t)) return false;
+  return !LETHAL_COSIGNAL.test(t) && !WEARY_DESPAIR_PATTERNS.test(t) && !MINIMIZATION_PATTERNS.test(t) && !SLEEP_DEATH_VETO.test(t);
 }
 
 // Contrast/refutation markers (2026-07-12 adversarial-review hardening, FIX SET 4): Rule 3 previously did a
