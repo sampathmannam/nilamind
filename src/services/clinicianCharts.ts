@@ -7,12 +7,14 @@
 //    "not enough data yet" state instead of a chart that implies more certainty than exists
 //    (cf. uncertainty-visualization research: hard/confident-looking charts on sparse data
 //    cause viewers to misread them as settled fact).
-//  - Risk factors are anchored to the same named constructs the risk engine already computes
-//    (temporalRiskAssessment.ts), not a new taxonomy — consistent with grounding a clinician
-//    report in recognizable clinical constructs rather than a proprietary score.
+//  - No composite risk score/gauge here on purpose: FDA's 2022 Final CDS Guidance excludes
+//    software that surfaces "a risk probability or risk score for a disease" from the
+//    Non-Device CDS exemption unless it discloses validation methodology, which this never
+//    had; automation-bias research (Khera, Simon, Ross 2023, JAMA; Putica et al. 2025,
+//    Psychological Medicine) is the other reason. A gauge is a *more* verdict-like
+//    presentation of the same score than text, not a safer one.
 
 import type { CheckInEntry } from "../types";
-import type { RiskAssessment, RiskFactors } from "./temporalRiskAssessment";
 import type { ClinicianMedication } from "./clinicianReport";
 
 /** Below this many distinct days, a line chart implies a trend that isn't there. */
@@ -60,53 +62,9 @@ export function buildSleepSeries(checkins: CheckInEntry[], cutoff: string): Slee
   return { points, sufficient: points.length >= MIN_TREND_POINTS };
 }
 
-export interface RiskGaugeSpec {
-  scorePct: number;
-  confidencePct: number;
-  level: RiskAssessment["riskLevel"];
-  trend: RiskAssessment["trend"];
-}
-
-/** Percent-rounded gauge spec, or null when no risk assessment ran (e.g. not enough data yet). */
-export function buildRiskGaugeSpec(risk: RiskAssessment | undefined): RiskGaugeSpec | null {
-  if (!risk) return null;
-  return {
-    scorePct: Math.round(risk.riskScore * 100),
-    confidencePct: Math.round(risk.confidence * 100),
-    level: risk.riskLevel,
-    trend: risk.trend,
-  };
-}
-
 export interface FactorBar {
   label: string;
   pct: number;
-}
-
-// Clinician-readable labels for the named constructs the risk engine tracks. Deliberately excludes
-// the internal acuteRisk/subacuteRisk composites — those are the engine's own weighting, not a
-// clinical construct a clinician would recognize on the chart.
-const FACTOR_LABELS: Partial<Record<keyof RiskFactors, string>> = {
-  sleepDeprivation: "Sleep deprivation",
-  sleepVariability: "Sleep variability",
-  rhythmIrregularity: "Rhythm irregularity",
-  moodDeterioration: "Mood deterioration",
-  affectiveLability: "Affective lability",
-  socialWithdrawal: "Social withdrawal",
-  depressionSeverity: "Depression severity",
-  anxietySeverity: "Anxiety severity",
-  suicidalIdeation: "Suicidal ideation",
-};
-
-const TOP_FACTORS = 5;
-
-/** Top risk factors by magnitude, for a scannable bar chart instead of a flat bullet list. */
-export function buildRiskFactorBars(factors: RiskFactors | undefined): FactorBar[] {
-  if (!factors) return [];
-  return (Object.entries(FACTOR_LABELS) as Array<[keyof RiskFactors, string]>)
-    .map(([key, label]) => ({ label, pct: Math.round((factors[key] ?? 0) * 100) }))
-    .sort((a, b) => b.pct - a.pct)
-    .slice(0, TOP_FACTORS);
 }
 
 /** Medication adherence as labeled bars. */

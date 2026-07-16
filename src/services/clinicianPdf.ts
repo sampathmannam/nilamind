@@ -7,13 +7,13 @@
 //    for it. Time-pressured clinicians scan the dashboard; the detail is there if they need it.
 //  - Every chart is paired with the actual current number in text, never left to be read off the
 //    line alone (graphs are faster for trends but worse than a plain number for a single value).
-//  - No hard-edged "risk zone" boundaries on the risk gauge: the confidence marker is drawn as a
-//    soft, low-opacity halo whose size scales inversely with confidence, so a low-confidence score
-//    cannot look as certain as a high-confidence one drawn the same way.
-//  - Bands are a monotonic gray ramp with text labels, not a red/amber/green scheme — this stays
-//    legible on a B&W printer and doesn't rely on color perception alone.
 //  - Any series without enough distinct days (see MIN_TREND_POINTS in clinicianCharts.ts) renders
 //    an explicit "not enough data yet" state instead of a line that implies a trend that isn't there.
+//  - No risk gauge / risk-factor-bars section (2026-07-16 redesign): a gauge is a more prominent,
+//    more verdict-like presentation of a computed risk score than the equivalent text section
+//    would be — removed from clinicianReport.ts for the same reason (see that file's history:
+//    automation bias, FDA's Non-Device CDS exemption test). A chart doesn't make an unvalidated
+//    score safer to show a clinician, it makes it more persuasive.
 
 import { jsPDF } from "jspdf";
 import { PdfCanvas, BRAND, INK, MUTE, renderTitle, renderMetaLine, renderBody, splitReportText } from "./exportReport";
@@ -22,13 +22,10 @@ import type { CheckInEntry } from "../types";
 import {
   buildIntensitySeries,
   buildSleepSeries,
-  buildRiskGaugeSpec,
-  buildRiskFactorBars,
   buildAdherenceBars,
   buildEngagementStrip,
   type IntensitySeries,
   type SleepSeries,
-  type RiskGaugeSpec,
   type FactorBar,
   type EngagementDay,
 } from "./clinicianCharts";
@@ -181,66 +178,7 @@ function drawSleepChart(canvas: PdfCanvas, series: SleepSeries): void {
   canvas.y = top + H + 4;
 }
 
-/** Risk gauge: a monotonic gray-scale band with a confidence-aware marker (no hard edges on
- *  low-confidence estimates — the halo grows and fades as confidence drops). */
-function drawRiskGauge(canvas: PdfCanvas, spec: RiskGaugeSpec | null): void {
-  const { doc, M, maxW } = canvas;
-  const H = 34;
-
-  if (!spec) {
-    drawMutedNote(canvas, "Risk assessment not yet available for this period.", 12);
-    return;
-  }
-
-  canvas.ensure(H + 6);
-  const top = canvas.y;
-  const barX = M;
-  const barW = maxW;
-  const barY = top + 8; // headroom above the bar for the confidence halo to render into
-  const barH = 6;
-
-  const bands: Array<{ label: string; from: number; to: number; shade: [number, number, number] }> = [
-    { label: "LOW", from: 0, to: 25, shade: [235, 235, 238] },
-    { label: "MODERATE", from: 25, to: 50, shade: [205, 205, 210] },
-    { label: "HIGH", from: 50, to: 75, shade: [165, 165, 172] },
-    { label: "IMMINENT", from: 75, to: 100, shade: [120, 120, 128] },
-  ];
-  const bandLabelY = barY + barH + 6;
-  for (const b of bands) {
-    const x = barX + (b.from / 100) * barW;
-    const w = ((b.to - b.from) / 100) * barW;
-    doc.setFillColor(...b.shade);
-    doc.rect(x, barY, w, barH, "F");
-    doc.setFont("helvetica", "normal"); doc.setFontSize(6); doc.setTextColor(...MUTE);
-    doc.text(b.label, x + 1, bandLabelY);
-  }
-  doc.setDrawColor(...MUTE); doc.setLineWidth(0.2); doc.rect(barX, barY, barW, barH, "S");
-
-  // Confidence-aware marker: a soft, low-opacity halo (bigger + fainter the lower the confidence)
-  // behind a small solid dot for the point estimate — never a single hard-edged pin, so a 37%-
-  // confidence score cannot visually read the same as a 90%-confidence one. Capped at 4.5mm so it
-  // stays clear of the band labels below even at zero confidence.
-  const markerX = barX + (spec.scorePct / 100) * barW;
-  const markerY = barY + barH / 2;
-  const haloR = 1.5 + (1 - spec.confidencePct / 100) * 3; // 1.5mm (full confidence) .. 4.5mm (no confidence)
-  const gs = new (doc as any).GState({ opacity: 0.35 });
-  doc.setGState(gs);
-  doc.setFillColor(...INK);
-  doc.circle(markerX, markerY, haloR, "F");
-  doc.setGState(new (doc as any).GState({ opacity: 1 }));
-  doc.setFillColor(...BRAND);
-  doc.circle(markerX, markerY, 1.1, "F");
-
-  const labelY = bandLabelY + 7;
-  doc.setFont("helvetica", "bold"); doc.setFontSize(9); doc.setTextColor(...INK);
-  doc.text(`${spec.level.toUpperCase()} · ${spec.scorePct}/100`, barX, labelY);
-  doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(...MUTE);
-  doc.text(`Confidence ${spec.confidencePct}% · Trend: ${spec.trend}`, barX + 55, labelY);
-
-  canvas.y = labelY + 4;
-}
-
-/** Reusable labeled horizontal-bar list — used for both risk factors and medication adherence. */
+/** Reusable labeled horizontal-bar list — used for medication adherence. */
 function drawBarList(canvas: PdfCanvas, bars: FactorBar[], emptyNote: string): void {
   const { doc, M, maxW } = canvas;
   if (bars.length === 0) {
@@ -304,8 +242,8 @@ function drawEngagementStrip(canvas: PdfCanvas, days: EngagementDay[], periodDay
 }
 
 /**
- * Builds the full clinician PDF: a one-glance chart dashboard (hero intensity trend, risk gauge,
- * top risk factors, sleep, medication adherence, engagement), followed by the existing full-detail
+ * Builds the full clinician PDF: a one-glance chart dashboard (hero intensity trend, sleep,
+ * medication adherence, engagement), followed by the existing full-detail
  * text report (screening trajectories, episode log, phenomenological notes, disclaimer) on the
  * pages after — see the file header for why this shape, not a chart-only replacement.
  */
@@ -322,12 +260,6 @@ export function generateClinicianPdfBlob(input: ClinicianReportInput, chartInput
 
     drawSectionHeading(canvas, "Distress Intensity Trend");
     drawIntensityChart(canvas, buildIntensitySeries(chartInputs.checkins, chartInputs.cutoff));
-
-    drawSectionHeading(canvas, "Risk Assessment");
-    drawRiskGauge(canvas, buildRiskGaugeSpec(input.temporalRiskAssessment));
-
-    drawSectionHeading(canvas, "Top Risk Factors");
-    drawBarList(canvas, buildRiskFactorBars(input.temporalRiskAssessment?.factors), "No risk-factor data for this period.");
 
     drawSectionHeading(canvas, "Sleep");
     drawSleepChart(canvas, buildSleepSeries(chartInputs.checkins, chartInputs.cutoff));

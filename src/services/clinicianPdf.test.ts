@@ -14,7 +14,7 @@ const baseInput: ClinicianReportInput = {
   socialRhythmVariability: null,
   assessmentTrajectories: [],
   medications: [],
-  episodes: { count: 0, byTimeOfDay: "", avgDurationMin: null },
+  episodes: { count: 0, byTimeOfDay: "", avgDurationMin: null, entries: [] },
   protocolsCompleted: 0,
   nilaSessions: 0,
   featuresUsed: [],
@@ -33,7 +33,7 @@ function mockCheckin(overrides: Partial<CheckInEntry> = {}): CheckInEntry {
 }
 
 describe("generateClinicianPdfBlob", () => {
-  it("renders a PDF for the sparse-data case (1 check-in, no risk assessment) without throwing", () => {
+  it("renders a PDF for the sparse-data case (1 check-in) without throwing", () => {
     const blob = generateClinicianPdfBlob(baseInput, {
       checkins: [mockCheckin()],
       activeDayKeys: ["2026-07-15"],
@@ -45,7 +45,7 @@ describe("generateClinicianPdfBlob", () => {
     expect(blob!.size).toBeGreaterThan(0);
   });
 
-  it("renders a PDF for the rich-data case (full check-in history, risk assessment, medications)", () => {
+  it("renders a PDF for the rich-data case (full check-in history, medications)", () => {
     const checkins: CheckInEntry[] = Array.from({ length: 20 }, (_, i) =>
       mockCheckin({
         date: `2026-06-${String(16 + Math.floor(i / 2)).padStart(2, "0")}`,
@@ -61,29 +61,6 @@ describe("generateClinicianPdfBlob", () => {
         { name: "Lamotrigine", dose: "200mg", adherenceRate: 92, commonSideEffects: [] },
         { name: "Quetiapine", dose: "50mg", adherenceRate: 78, commonSideEffects: ["drowsiness"] },
       ],
-      temporalRiskAssessment: {
-        timestamp: "2026-07-15T00:00:00.000Z",
-        riskLevel: "moderate",
-        riskScore: 0.42,
-        trend: "worsening",
-        confidence: 0.8,
-        windowDays: 28,
-        recommendations: ["Maintain regular sleep schedule and bedtime routine"],
-        factors: {
-          sleepDeprivation: 0.6,
-          sleepVariability: 0.5,
-          rhythmIrregularity: 0.3,
-          moodDeterioration: 0.7,
-          affectiveLability: 0.4,
-          socialWithdrawal: 0.2,
-          activityReduction: 0.1,
-          depressionSeverity: 0.5,
-          anxietySeverity: 0.3,
-          suicidalIdeation: 0,
-          acuteRisk: 0.4,
-          subacuteRisk: 0.3,
-        },
-      },
     };
     const blob = generateClinicianPdfBlob(richInput, {
       checkins,
