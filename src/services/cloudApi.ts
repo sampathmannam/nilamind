@@ -72,7 +72,7 @@ export type CloudProvider = "groq" | "openai-compatible";
 const DEFAULT_PROVIDER: CloudProvider = "groq";
 
 /** Resolve the default URL / model for a given provider. Pure. */
-function providerDefaults(p: CloudProvider): { url: string; model: string } {
+export function providerDefaults(p: CloudProvider): { url: string; model: string } {
   if (p === "groq") return { url: GROQ_DEFAULT_URL, model: GROQ_DEFAULT_MODEL };
   return { url: OPENAI_COMPATIBLE_URL, model: OPENAI_COMPATIBLE_MODEL };
 }
