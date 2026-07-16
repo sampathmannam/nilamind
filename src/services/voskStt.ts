@@ -19,10 +19,7 @@
 import type { createModel } from "vosk-browser";
 import { Capacitor } from "@capacitor/core";
 import { SpeechRecognition } from "@capacitor-community/speech-recognition";
-
-// Shared with wakeWord.ts by path (same bundled asset). Loaded lazily so the ~6 MB vosk-browser WASM
-// glue + ~40 MB model only cost anything when on-device voice is actually used.
-const MODEL_URL = "/models/vosk-model-small-en-us-0.15.tgz";
+import { ON_DEVICE_ASSETS, getAssetUrl } from "./onDeviceAssets";
 
 type AnyModel = Awaited<ReturnType<typeof createModel>>;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -39,13 +36,18 @@ let source: MediaStreamAudioSourceNode | null = null;
 let recognizer: AnyRecognizer | null = null;
 let finishActive: ((text: string) => void) | null = null; // set while a capture is running; stopVosk() calls it
 
-/** Load (and cache) the Vosk model. De-duped so concurrent callers share one load. */
+/** Load (and cache) the Vosk model. De-duped so concurrent callers share one load. The model asset is
+ *  runtime-downloaded (onDeviceAssets.ts, shared with wakeWord.ts by asset id), not bundled in the app —
+ *  so this first call is a network fetch on a fresh install, cached on disk thereafter. */
 function loadModel(): Promise<AnyModel> {
   if (model) return Promise.resolve(model);
   if (!modelLoading) {
     modelLoading = (async () => {
-      const { createModel } = await import("vosk-browser");
-      model = await createModel(MODEL_URL);
+      const [{ createModel }, modelUrl] = await Promise.all([
+        import("vosk-browser"),
+        getAssetUrl(ON_DEVICE_ASSETS.voskStt),
+      ]);
+      model = await createModel(modelUrl);
       return model;
     })().catch((e) => {
       modelLoading = null; // allow a retry on next call
@@ -55,7 +57,7 @@ function loadModel(): Promise<AnyModel> {
   return modelLoading;
 }
 
-/** Whether on-device STT can run here. Native only (the model + WASM are bundled in the app). */
+/** Whether on-device STT can run here. Native only (Filesystem-backed model download + WASM). */
 export function voskSttAvailable(): boolean {
   return Capacitor.isNativePlatform();
 }
