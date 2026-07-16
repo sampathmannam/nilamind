@@ -120,6 +120,23 @@ describe("crisisClassifier — additive, fail-closed §9 gate", () => {
     expect(await detectCrisis(EUPHEMISM)).toBe(true);
   });
 
+  // NEGATIVE GUARD wiring (2026-07-16 device report) — "Help me to sleep" must NOT be upgraded even at
+  // score≈1 (the reported full-screen crisis takeover on an ordinary sleep-help request).
+  it("ON: isBenignSleepRequest suppresses a high-scoring 'help me to sleep' MISS", async () => {
+    setCrisisClassifierEnabled(true);
+    setCrisisEmbedder(constEmbedder([...COEF])); // score ≈ 1 ≥ threshold
+    expect(await detectCrisis("Help me to sleep")).toBe(false);
+    expect(await detectCrisis("help me fall asleep")).toBe(false);
+    expect(await detectCrisis("I can't sleep, please help")).toBe(false);
+    // sleep-as-death euphemism / lethal co-signal / despair / minimization phrasing DEFERS to the
+    // classifier — must NOT be suppressed (2026-07-16 adversarial review).
+    expect(await detectCrisis("help me sleep forever")).toBe(true);
+    expect(await detectCrisis("help me go to sleep and never wake up")).toBe(true);
+    expect(await detectCrisis("help me sleep, I've had enough")).toBe(true);
+    expect(await detectCrisis("help me sleep, when I'm gone don't worry about anything")).toBe(true);
+    expect(await detectCrisis(EUPHEMISM)).toBe(true);
+  });
+
   // NEGATIVE GUARD wiring — self-soothing dismissal ("i'm okay for now") must NOT be upgraded even at score≈1,
   // so an affirmative dismissal after a §9 surface clears instead of re-tripping (latch investigation).
   it("ON: isBenignOkayReassurance suppresses a high-scoring 'i'm okay' MISS", async () => {
