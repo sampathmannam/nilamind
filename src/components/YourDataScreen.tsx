@@ -17,10 +17,6 @@ import type { ClinicianReportInput, ClinicianMedication, AssessmentTrajectory } 
 import { generateClinicianPdfBlob } from "../services/clinicianPdf";
 import { readEpisodeMarkers } from "../services/episodeMarker";
 import { gatherClinicianUsage, protocolsCompletedInPeriod, periodCutoffIso, type ReportPeriod } from "../services/clinicianPeriod";
-import { assessTemporalRisk } from "../services/temporalRiskAssessment";
-import { CrisisMetricsTracker } from "../services/crisisSafetyValidation";
-import type { CrisisMetrics } from "../services/crisisSafetyValidation";
-import type { RiskAssessment } from "../services/temporalRiskAssessment";
 import { loadInsights } from "../services/nilaInsights";
 import { loadRhythm, computeRhythmRegularity, parseTime, type RhythmEntry, type AnchorKey, type RhythmAnchors } from "../services/socialRhythm";
 import { loadMoodHistory } from "../services/moodHistory";
@@ -599,10 +595,23 @@ valuesClarified: []
         .sort(([, a], [, b]) => b - a)
         .map(([k, v]) => `${k} (${v})`)
         .join(", ");
+      const sortedEpisodes = [...periodEpisodes].sort((a: any, b: any) => (a.date + a.time < b.date + b.time ? 1 : -1));
       const episodes = {
         count: periodEpisodes.length,
         avgDurationMin: ep?.avgDuration ?? null,
         byTimeOfDay: byTimeOfDayStr,
+        entries: sortedEpisodes.map((e: any) => ({
+          date: e.date,
+          time: e.time,
+          dayOfWeek: e.dayOfWeek,
+          timeOfDay: e.timeOfDay,
+          trigger: e.trigger,
+          startIntensity: e.startIntensity,
+          peakIntensity: e.peakIntensity,
+          endIntensity: e.endIntensity,
+          durationMinutes: e.durationMinutes,
+          skillsHelpful: e.skillsHelpful ?? [],
+        })),
       };
 
       // Phase-18 bipolar-phase markers overlapping the window (self-logged, user-owned).
@@ -632,14 +641,7 @@ valuesClarified: []
 
       // On-device usage + sleep for the window (no OS-level call logs — privacy promise).
       const usage = gatherClinicianUsage(periodDays, now);
-       
-       // Get crisis metrics for the reporting period
-       const crisisTracker = new CrisisMetricsTracker();
-       const crisisMetrics = await crisisTracker.getMetrics();
-       
-       // Get temporal risk assessment
-       const temporalRiskAssessment = await assessTemporalRisk();
-       
+
        // Calculate enhanced summaries for clinician report
        const checkins = loadCheckins();
        const moodHistory = loadMoodHistory();
@@ -670,8 +672,6 @@ valuesClarified: []
           nilaSessions: usage.nilaTurns,
           featuresUsed,
           usage,
-          crisisMetrics, // Add crisis metrics to the report
-          temporalRiskAssessment, // Add temporal risk assessment to the report
           emotionalStateSummary,
           contextualAnalysis,
           whatHelpedSummary,
