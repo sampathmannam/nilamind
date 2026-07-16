@@ -1,13 +1,17 @@
-import { secureLocal } from "./secureLocal";
 // PhoneBehaviourService — passive behaviour signals for NilaMind's Behaviour Intelligence
-// (Part 12 of the plan). Metadata only: app-usage TIME and category, last-pickup time, and
-// location VARIANCE (left home y/n + distance) — never message content, never websites,
-// never raw GPS coordinates. Native signals only run on Android; web/iOS return nulls so the
-// app still works in the browser and degrades gracefully.
+// (Part 12 of the plan). Metadata only: app-usage TIME and category, and last-pickup time —
+// never message content, never websites. Native signals only run on Android; web/iOS return
+// nulls so the app still works in the browser and degrades gracefully.
+//
+// Location variance (leftHome/maxDistanceKm below) was removed: @capacitor/geolocation compiles
+// Google Play Services (com.google.android.gms:play-services-location) directly into the APK via
+// its own native Kotlin source, which fails F-Droid's from-source build review — not something a
+// recipe-level fix can work around, since the proprietary dependency is baked into the plugin
+// itself, not just declared availability. The fields stay in BehaviourSnapshot (always null now)
+// so storage/schema and patternInsights.ts's already-graceful null-handling don't need to change.
 
 import { Capacitor } from '@capacitor/core';
 import { CapacitorUsageStatsManager } from '@capgo/capacitor-android-usagestatsmanager';
-import { Geolocation } from '@capacitor/geolocation';
 
 export type AppCategory = 'social' | 'entertainment' | 'communication' | 'productivity' | 'other';
 
@@ -111,62 +115,6 @@ export async function openUsageAccessSettings(): Promise<void> {
   }
 }
 
-// ── Home baseline: the home coordinates ARE stored (encrypted at rest via secureLocal — the key is in
-//    SENSITIVE_KEYS) and used only to compute distance-from-home VARIANCE for behaviour signals; the variance,
-//    not the coordinates, is what feeds downstream logic. This phone-sensor feature is OFF entirely in store /
-//    F-Droid builds (PHONE_FEATURES_ENABLED). ──
-const HOME_KEY = 'nilamind_home_coords';
-
-export function setHomeLocation(lat: number, lon: number): void {
-  secureLocal.setItem(HOME_KEY, JSON.stringify({ lat, lon }));
-}
-export function getHomeLocation(): { lat: number; lon: number } | null {
-  try {
-    const v = secureLocal.getItem(HOME_KEY);
-    return v ? JSON.parse(v) : null;
-  } catch {
-    return null;
-  }
-}
-export function hasHomeLocation(): boolean {
-  return getHomeLocation() !== null;
-}
-
-/** Ask for location once and store the current spot as "home" (just the point — no tracking, no history). */
-export async function markCurrentLocationAsHome(): Promise<boolean> {
-  if (!isPhoneDataAvailable()) return false;
-  try {
-    await Geolocation.requestPermissions();
-    const pos = await Geolocation.getCurrentPosition({ enableHighAccuracy: false, timeout: 10000 });
-    setHomeLocation(pos.coords.latitude, pos.coords.longitude);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function haversineKm(a: { lat: number; lon: number }, b: { lat: number; lon: number }): number {
-  const R = 6371;
-  const dLat = ((b.lat - a.lat) * Math.PI) / 180;
-  const dLon = ((b.lon - a.lon) * Math.PI) / 180;
-  const s =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos((a.lat * Math.PI) / 180) * Math.cos((b.lat * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(s), Math.sqrt(1 - s));
-}
-
-async function collectLocationVariance(): Promise<{ leftHome: boolean | null; maxDistanceKm: number | null }> {
-  if (!isPhoneDataAvailable()) return { leftHome: null, maxDistanceKm: null };
-  const home = getHomeLocation();
-  if (!home) return { leftHome: null, maxDistanceKm: null };
-  try {
-    const pos = await Geolocation.getCurrentPosition({ enableHighAccuracy: false, timeout: 10000 });
-    const km = haversineKm(home, { lat: pos.coords.latitude, lon: pos.coords.longitude });
-    return { leftHome: km > 0.2, maxDistanceKm: Math.round(km * 10) / 10 }; // coords discarded here
-  } catch {
-    return { leftHome: null, maxDistanceKm: null };
-  }
-}
 
 /**
  * Build today's behaviour snapshot from whatever signals are available + permitted.
@@ -213,8 +161,6 @@ export async function getTodaySnapshot(): Promise<BehaviourSnapshot> {
     }
     apps.sort((a, b) => b.minutes - a.minutes);
 
-    const loc = await collectLocationVariance();
-
     return {
       ...base,
       source: 'android',
@@ -222,8 +168,7 @@ export async function getTodaySnapshot(): Promise<BehaviourSnapshot> {
       categoryMinutes,
       topApps: apps.slice(0, 8),
       lastPickupTime: lastUsed ? hhmm(lastUsed) : null,
-      leftHome: loc.leftHome,
-      maxDistanceKm: loc.maxDistanceKm,
+      // leftHome/maxDistanceKm stay null — see file header (geolocation removed for F-Droid).
     };
   } catch {
     return { ...base, source: 'android' }; // query failed → empty-but-on-android snapshot

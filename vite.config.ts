@@ -8,8 +8,8 @@ import { VitePWA } from 'vite-plugin-pwa';
 const pkg = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'package.json'), 'utf-8'));
 
 // @huggingface/transformers emits its own copy of the onnxruntime-web wasm via `new URL(...)`, which vite
-// bundles into dist/assets (~22 MB). But the crisis classifier overrides ORT's wasmPaths to "/ort/" (served
-// from public/ort/, the single asyncify variant that actually loads in the Capacitor WebView), so this
+// bundles into dist/assets (~22 MB). But the crisis classifier overrides ORT's wasmPaths (object form: the
+// `mjs` glue from public/ort/, the `wasm` binary runtime-downloaded — see onDeviceAssets.ts), so this
 // bundled copy is NEVER fetched — pure APK/download bloat. Drop it from the output. Worst case (ORT somehow
 // falls back to the bundled path) it 404s and the classifier fails closed to the deterministic keyword §9
 // scan — still safe. publicDir files (public/ort/*) aren't part of this bundle, so only the dup is removed.
@@ -25,7 +25,7 @@ function dropRedundantOrtWasm() {
 }
 
 // DEV-SERVER ONLY. The on-device §9 crisis classifier (crisisEmbedder.ts) points onnxruntime-web at the wasm
-// glue in public/ort/ via `env.backends.onnx.wasm.wasmPaths = "/ort/"`, and ORT loads that glue with a
+// glue in public/ort/ via `env.backends.onnx.wasm.wasmPaths.mjs`, and ORT loads that glue with a
 // dynamic `import("/ort/ort-wasm-simd-threaded.asyncify.mjs")`. Vite's dep pipeline requests that URL with a
 // `?import` query, which makes Vite's servePublicMiddleware skip it (it treats `?import` as a source import)
 // and hand it to the transform middleware — which HARD-ERRORS because the file lives in /public ("...should
@@ -89,29 +89,14 @@ export default defineConfig(({ mode }) => {
           // vosk-browser WASM chunk (~6 MB) exceeds the 2 MiB SW default;
           // exclude it from precache — it is fetched lazily at runtime instead.
           maximumFileSizeToCacheInBytes: 8 * 1024 * 1024, // 8 MiB
-          // The on-device crisis classifier bundles MiniLM (.onnx, ~22 MB) + onnxruntime wasm (.wasm,
-          // 12-26 MB). NEVER precache these — they're served directly from the bundle (native WebView)
-          // or fetched on demand (web). Globbing them makes vite-plugin-pwa hard-error on the size limit.
+          // MiniLM weights (.onnx, ~22 MB) and the ORT JS glue (.mjs) still ship in public/models and
+          // public/ort respectively. NEVER precache these — served directly from the bundle. Globbing
+          // them makes vite-plugin-pwa hard-error on the size limit. The Vosk model (.tgz) and the ORT
+          // wasm binary (.wasm) are runtime-downloaded (onDeviceAssets.ts, native-only — see its
+          // docstring) and no longer live under public/ at all, so there's nothing here to precache or
+          // runtime-cache for them; a web/PWA build simply doesn't get the STT / semantic-classifier
+          // tiers (it falls back to the always-bundled deterministic keyword §9 floor).
           globIgnores: ['**/*.wasm', '**/*.onnx', 'models/**', 'ort/**'],
-          // OFFLINE §9 PARITY (2026-07-06 audit #12): precache-excluding the classifier assets meant a
-          // returning PWA user OFFLINE dropped to the keyword-only crisis floor — the semantic tier (which
-          // catches the euphemistic disclosures the keyword list misses) silently failed to load. Runtime-
-          // cache them CacheFirst so the FIRST online crisis-check populates the cache and every subsequent
-          // (incl. offline) check keeps the semantic tier. CacheFirst (not precache) avoids a ~46 MB
-          // download for every visitor who never triggers §9. The deterministic keyword floor (statically
-          // bundled) still works offline regardless — this only restores the ADDITIVE semantic layer.
-          runtimeCaching: [
-            {
-              urlPattern: ({ url }) => url.pathname.startsWith('/models/') || url.pathname.startsWith('/ort/'),
-              handler: 'CacheFirst',
-              options: {
-                cacheName: 'nila-crisis-model-v1',
-                expiration: { maxEntries: 32, maxAgeSeconds: 60 * 60 * 24 * 90 },
-                cacheableResponse: { statuses: [0, 200] },
-                rangeRequests: true,
-              },
-            },
-          ],
         },
         devOptions: {
           enabled: true

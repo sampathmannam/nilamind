@@ -9,6 +9,7 @@ import type { createModel } from "vosk-browser";
 import type { ServerMessagePartialResult } from "vosk-browser/dist/interfaces";
 import { Capacitor } from "@capacitor/core";
 import { SpeechRecognition } from "@capacitor-community/speech-recognition";
+import { ON_DEVICE_ASSETS, getAssetUrl } from "./onDeviceAssets";
 
 /** True iff `partial` contains the whole word "nila" or a phonetic variant (case-insensitive, word-boundary).
  *  Accept-set: "nila" (correct), "neela" (long-vowel misrecognition), "nyla" (y-insertion),
@@ -17,11 +18,6 @@ import { SpeechRecognition } from "@capacitor-community/speech-recognition";
 export function matchesWakeWord(partial: string): boolean {
   return /\b(nila|neela|nyla|nee la|nil a|kneel a)\b/i.test(partial || "");
 }
-
-// Fix 1: Use .tgz extension — Android aapt strips .gz files during APK bundling, leaving the
-// compressed payload unreadable. .tgz is left byte-for-byte intact; vosk-browser detects gzip
-// by magic bytes (0x1f 0x8b), not filename, so the WASM libarchive unpacks it correctly.
-const MODEL_URL = "/models/vosk-model-small-en-us-0.15.tgz";
 
 type AnyModel = Awaited<ReturnType<typeof createModel>>;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -65,10 +61,14 @@ export const wakeWord = {
 
       // Load model once; keep it alive for subsequent start() calls. Dynamic import keeps the ~6 MB
       // vosk-browser WASM glue out of the boot bundle — it's only fetched when the user enables the
-      // wake word and start() actually runs.
+      // wake word and start() actually runs. The model asset itself is runtime-downloaded
+      // (onDeviceAssets.ts, shared with voskStt.ts by asset id), not bundled in the app.
       if (!model) {
-        const { createModel } = await import("vosk-browser");
-        model = await createModel(MODEL_URL);
+        const [{ createModel }, modelUrl] = await Promise.all([
+          import("vosk-browser"),
+          getAssetUrl(ON_DEVICE_ASSETS.voskStt),
+        ]);
+        model = await createModel(modelUrl);
       }
 
       // Acquire the WebView microphone.
