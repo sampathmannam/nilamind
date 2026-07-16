@@ -13,6 +13,7 @@
 import { secureLocal } from "./secureLocal";
 import { computeCompassionateStreak } from "./streaks";
 import { recentMemoryLines } from "./nilaMemory";
+import { loadNilaMemories } from "./nilaMemory";
 import { getActiveProgress } from "./protocolProgress";
 import { insightsContextBlock } from "./nilaInsights";
 import { profileContextBlock } from "./nilaProfile";
@@ -47,6 +48,11 @@ import { computeProactiveMoment, proactiveContextBlock } from "./proactiveEngine
 import { loadAlliance } from "./allianceSignal";
 import { getDisengagementContextBlock } from "./disengagementPredictor";
 import { getAdherenceSummary } from "./protocolAdherence";
+import { dependencyContextBlock } from "./dependencyTracker";
+import { memoryBiasBlock } from "./realityTesting";
+import { checkUsageCeiling, getTodayTurns } from "./usageCeilings";
+import { connectionContextBlock } from "./humanConnection";
+import { getContextBlock as getPopulationPriorBlock } from "./populationPriors";
 
 function readArray(key: string): any[] {
   try {
@@ -521,6 +527,10 @@ export function buildPersonalContext(): string {
   if (memory) {
     out.push("From your past talks with them (your own notes):");
     out.push(memory);
+    // Reality-testing: flag negative bias in recent memories so Nila checks evidence, not just echoes.
+    const rawMemories = loadNilaMemories();
+    const biasBlock = memoryBiasBlock(rawMemories.slice(-5));
+    if (biasBlock) out.push(biasBlock);
   }
   if (lines.length) {
     out.push("From their check-ins (recently):");
@@ -586,6 +596,46 @@ export function buildPersonalContext(): string {
   // Only included when risk is moderate or higher and the budget allows. Used for tone awareness.
   if (disengagementBlock && !overBudget()) {
     out.push(disengagementBlock);
+  }
+
+  // Dependency signal — gentle nudge when usage patterns suggest over-reliance.
+  // Budget-droppable, lowest priority.
+  if (!overBudget()) {
+    const depBlock = dependencyContextBlock();
+    if (depBlock) out.push(depBlock);
+  }
+
+  // Usage ceiling — when user has hit daily turn limit, nudge a break.
+  if (!overBudget()) {
+    const ceiling = checkUsageCeiling(getTodayTurns());
+    if (ceiling.status === "ceiling_reached") {
+      out.push(`[Usage ceiling reached today (${ceiling.turnsToday} turns). Gently suggest a break: "${ceiling.message}"]`);
+    }
+  }
+
+  // Human connection — encourage real-world contact when social interaction is low.
+  if (!overBudget()) {
+    const connBlock = connectionContextBlock();
+    if (connBlock) out.push(connBlock);
+  }
+
+  // Population priors — calibration-period context for first 30 days.
+  if (!overBudget()) {
+    try {
+      const allCheckins = readArray("nilamind_checkins");
+      if (allCheckins.length > 0) {
+        const earliest = allCheckins.reduce((min: string, c: any) => {
+          const d = c?.date;
+          return d && d < min ? d : min;
+        }, allCheckins[0]?.date ?? new Date().toISOString().split("T")[0]);
+        // Try to extract age from profile facts
+        const profileFacts = readArray("nilamind_profile_facts");
+        const ageFact = profileFacts.find((f) => /\b(\d{2})\s*(years?\s*old|yo)\b/i.test(f?.text ?? ""));
+        const age = ageFact ? parseInt((ageFact.text.match(/\b(\d{2})\s*(?:years?\s*old|yo)\b/i) ?? [])[1] ?? "30", 10) : 30;
+        const popBlock = getPopulationPriorBlock(earliest, age);
+        if (popBlock) out.push(popBlock);
+      }
+    } catch { /* best-effort */ }
   }
 
   return out.join("\n");

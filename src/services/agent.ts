@@ -12,6 +12,8 @@ import { secureLocal, appendToSecureArray } from "./secureLocal";
 import { computeCompassionateStreak } from "./streaks";
 import { scheduleReminderAt, formatTime } from "./notifications";
 import { mapEmotion, parseIntensity } from "./emotionParse";
+import { mapSomaticExpression } from "./somatization";
+import { mapCulturalIdiom } from "./culturalIdiomMapping";
 import { CheckInEntry } from "../types";
 import { armCheckin } from "./armedCheckin";
 
@@ -49,7 +51,13 @@ const KNOWN_EMOTIONS = [
 function extractEmotion(text: string): string | null {
   const lower = (text || "").toLowerCase();
   const hit = KNOWN_EMOTIONS.find((k) => new RegExp(`\\b${k}\\b`).test(lower));
-  return hit ? mapEmotion(hit) : null;
+  if (hit) return mapEmotion(hit);
+  // Somatization fallback: "my head hurts" → "stressed", "chest tight" → "anxious", etc.
+  const somatic = mapSomaticExpression(lower);
+  if (somatic) return mapEmotion(somatic);
+  // Cultural idiom fallback: "tension" → "anxious", "heavy heart" → "sad", etc.
+  const idiom = mapCulturalIdiom(lower);
+  return idiom ? mapEmotion(idiom) : null;
 }
 
 /** Parse a time expression into the next future Date it refers to, or null. */

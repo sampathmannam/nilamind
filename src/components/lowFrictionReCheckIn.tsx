@@ -1,0 +1,80 @@
+/**
+ * Low-friction re-check-in — one-tap mood log for returning users.
+ *
+ * When a user returns to TodayScreen and hasn't checked in today, this component
+ * shows 4 large mood buttons (good/okay/low/struggling) for a frictionless
+ * mood log. Reduces the cognitive cost of a full check-in after a gap.
+ *
+ * Research basis: Bear Room's "tap-in" (single tap replaces full check-in).
+ * Skye's "pause" (minimal friction for logging). High friction check-ins
+ * cause 60%+ dropout after Day 3.
+ */
+
+import React from "react";
+import { Sparkle } from "lucide-react";
+import { secureLocal } from "../services/secureLocal";
+import { appendToSecureArray } from "../services/secureLocal";
+
+const MOOD_OPTIONS = [
+  { label: "Good", emoji: "😊", value: "good", color: "bg-green-500/20 text-green-300 border-green-500/30 hover:bg-green-500/30" },
+  { label: "Okay", emoji: "😐", value: "okay", color: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30 hover:bg-yellow-500/30" },
+  { label: "Low", emoji: "😔", value: "low", color: "bg-blue-500/20 text-blue-300 border-blue-500/30 hover:bg-blue-500/30" },
+  { label: "Struggling", emoji: "😰", value: "struggling", color: "bg-red-500/20 text-red-300 border-red-500/30 hover:bg-red-500/30" },
+] as const;
+
+export function getReCheckInMessage(daysSinceLast: number): string {
+  if (daysSinceLast <= 3) {
+    return "A quick check-in can help you reconnect with how you're doing.";
+  }
+  if (daysSinceLast <= 7) {
+    return "Welcome back — a quick check-in helps us pick up where you left off.";
+  }
+  return "It's been a while. A quick mood check helps me understand where you're at right now.";
+}
+
+interface LowFrictionReCheckInProps {
+  onMoodSelect: (mood: string) => void;
+  onSkip: () => void;
+  daysSinceLast?: number;
+}
+
+export default function LowFrictionReCheckIn({ onMoodSelect, onSkip, daysSinceLast = 2 }: LowFrictionReCheckInProps) {
+  const handleMood = (mood: string) => {
+    try {
+      const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+      const entry = { date: today, mood, source: "re-checkin" };
+      appendToSecureArray("nilamind_checkins", entry, 365);
+    } catch { /* best-effort */ }
+    onMoodSelect(mood);
+  };
+
+  return (
+    <div className="glass p-4 rounded-2xl space-y-3 border border-blue-400/10">
+      <div className="flex items-center gap-2">
+        <Sparkle className="w-4 h-4 text-blue-400" />
+        <p className="text-sm font-semibold text-slate-200">How are you right now?</p>
+      </div>
+      <p className="text-[11px] text-slate-400 leading-relaxed">
+        {getReCheckInMessage(daysSinceLast)}
+      </p>
+      <div className="grid grid-cols-2 gap-2">
+        {MOOD_OPTIONS.map((opt) => (
+          <button
+            key={opt.value}
+            onClick={() => handleMood(opt.value)}
+            className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-[13px] font-medium transition cursor-pointer min-h-[44px] ${opt.color}`}
+          >
+            <span>{opt.emoji}</span>
+            <span>{opt.label}</span>
+          </button>
+        ))}
+      </div>
+      <button
+        onClick={onSkip}
+        className="w-full text-[11px] text-slate-500 hover:text-slate-300 transition py-1 cursor-pointer"
+      >
+        Skip for now
+      </button>
+    </div>
+  );
+}

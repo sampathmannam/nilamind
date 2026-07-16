@@ -33,10 +33,14 @@ import { computeRetention } from "../services/retentionMetrics";
 import { computeUsageSummary } from "../services/usageAnalytics";
 import { getAdherenceSummary } from "../services/protocolAdherence";
 import { assessDisengagementRisk } from "../services/disengagementPredictor";
+import { assessDependency, loadSessions } from "../services/dependencyTracker";
+import { checkUsageCeiling, getTodayTurns } from "../services/usageCeilings";
+import { assessConnection, loadConnections } from "../services/humanConnection";
 import { buildWeeklyReport } from "../services/weeklyReport";
 import { isPilotEnrolled, computePilotSummary } from "../services/pilotStudy";
 import CrisisCard from "./CrisisCard";
 import WellbeingTrendCard from "./WellbeingTrendCard";
+import CalibrationPeriodCard from "./calibrationPeriod";
 import EpisodeMarkerCard from "./EpisodeMarkerCard";
 import MoodHeatmap from "./MoodHeatmap";
 import PhaseTimeline from "./PhaseTimeline";
@@ -145,10 +149,45 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
       rhythmVariabilityMin: rhythmReg.overallVariabilityMin,
     }) : null;
 
-    return { mood, streak, compassionateStreak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian, nOf1, usageSummary, circadianFeedback, rhythmReg, protocolAdherence, disengagementRisk, episodeMarkers };
+    // Dependency tracking
+    let depLevel: string | null = null;
+    let depReason = "";
+    try {
+      const sessions = loadSessions();
+      const dep = assessDependency(sessions);
+      if (dep.level !== "none") {
+        depLevel = dep.level;
+        depReason = dep.reason;
+      }
+    } catch { /* best-effort */ }
+
+    // Usage ceiling
+    let ceilingStatus: string | null = null;
+    let ceilingMessage = "";
+    try {
+      const ceiling = checkUsageCeiling(getTodayTurns());
+      if (ceiling.status === "ceiling_reached") {
+        ceilingStatus = ceiling.status;
+        ceilingMessage = ceiling.message;
+      }
+    } catch { /* best-effort */ }
+
+    // Human connection
+    let connLevel: string | null = null;
+    let connReason = "";
+    let connTotal = 0;
+    try {
+      const connections = loadConnections();
+      const conn = assessConnection(connections);
+      connLevel = conn.level;
+      connReason = conn.reason;
+      connTotal = conn.totalConnections;
+    } catch { /* best-effort */ }
+
+    return { mood, streak, compassionateStreak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian, nOf1, usageSummary, circadianFeedback, rhythmReg, protocolAdherence, disengagementRisk, episodeMarkers, depLevel, depReason, ceilingStatus, ceilingMessage, connLevel, connReason, connTotal };
   }, []);
 
-  const { mood, streak, compassionateStreak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian, nOf1, usageSummary, circadianFeedback, rhythmReg, protocolAdherence, disengagementRisk, episodeMarkers } = data;
+  const { mood, streak, compassionateStreak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian, nOf1, usageSummary, circadianFeedback, rhythmReg, protocolAdherence, disengagementRisk, episodeMarkers, depLevel, depReason, ceilingStatus, ceilingMessage, connLevel, connReason, connTotal } = data;
 
   // Load behaviour snapshots async and compute daily-behaviour insights
   useEffect(() => {
@@ -478,6 +517,11 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
        {/* Longitudinal wellbeing — fortnightly WHO-5 trend + cadence */}
        <WellbeingTrendCard onTakeCheck={() => onOpenView?.("assessment")} />
 
+       {/* Calibration period — "learning your patterns" for first 30 days */}
+       {checkins.length > 0 && (
+         <CalibrationPeriodCard startDate={checkins[0]?.date ?? new Date().toISOString()} />
+       )}
+
        {/* Episode-phase marker — current phase if active */}
        <EpisodeMarkerCard onOpen={() => onOpenView?.("episode_marker")} />
 
@@ -638,6 +682,48 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
                 : "Your recent engagement has been lower — whenever you're ready."}
             </p>
             <p className="text-xs text-slate-500 mt-1">A gentle observation, not a measure of you.</p>
+          </div>
+        </div>
+      )}
+
+      {/* Dependency signal — when usage suggests over-reliance */}
+      {depLevel && depLevel !== "none" && (
+        <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 flex items-start gap-3">
+          <div className={`p-2 rounded-xl ${depLevel === "severe" ? "bg-rose-500/10 text-rose-400" : depLevel === "moderate" ? "bg-amber-500/10 text-amber-400" : "bg-blue-500/10 text-blue-400"}`}>
+            <Activity className="w-5 h-5" />
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-slate-100">Usage balance</p>
+            <p className="text-[11px] text-slate-400 leading-relaxed mt-1">{depReason}</p>
+            <p className="text-xs text-slate-500 mt-1">Nila is here when you need her — real connections matter too.</p>
+          </div>
+        </div>
+      )}
+
+      {/* Usage ceiling — daily turn limit reached */}
+      {ceilingStatus && (
+        <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 flex items-start gap-3">
+          <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400">
+            <Clock className="w-5 h-5" />
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-slate-100">Take a breather</p>
+            <p className="text-[11px] text-slate-400 leading-relaxed mt-1">{ceilingMessage}</p>
+            <p className="text-xs text-slate-500 mt-1">This resets tomorrow. No pressure.</p>
+          </div>
+        </div>
+      )}
+
+      {/* Human connection — social interaction metric */}
+      {connLevel && connLevel === "low" && (
+        <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 flex items-start gap-3">
+          <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400">
+            <MessageSquare className="w-5 h-5" />
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-slate-100">Social connection</p>
+            <p className="text-[11px] text-slate-400 leading-relaxed mt-1">{connReason}</p>
+            <p className="text-xs text-slate-500 mt-1">Even a quick message counts.</p>
           </div>
         </div>
       )}

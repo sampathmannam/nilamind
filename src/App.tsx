@@ -46,6 +46,7 @@ const SoundPlayer = lazy(() => import("./components/SoundPlayer"));
 const AboutNilaScreen = lazy(() => import("./components/AboutNilaScreen"));
 const LegalScreen = lazy(() => import("./components/LegalScreen"));
 const InsightsScreen = lazy(() => import("./components/InsightsScreen"));
+const PeerSupportScreen = lazy(() => import("./components/PeerSupportScreen"));
 
 // Calm fallback while lazy chunks load
 import { Skeleton, SkeletonCard, SkeletonList, SkeletonChart } from "./components/Skeleton";
@@ -120,6 +121,7 @@ const AUX_LABELS: Partial<Record<AuxView, string>> = {
   legal: "Legal",
   sounds: "Ambient sounds",
   safety_plan: "My Safety Plan",
+  peer_support: "Peer Support",
 };
 
 function auxViewLabel(view: AuxView): string {
@@ -154,6 +156,7 @@ function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () 
     case "sounds": return <SoundPlayer />;
     case "legal": return <LegalScreen />;
     case "safety_plan": return <SafetyPlanScreen />;
+    case "peer_support": return <PeerSupportScreen go={onOpenView} />;
     default: return <div className="p-6 text-slate-400 text-sm text-center">Not available</div>;
   }
 }

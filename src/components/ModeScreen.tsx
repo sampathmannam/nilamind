@@ -14,7 +14,7 @@ import { detectElevationRisk } from "../services/elevationGuard";
 import { hasCheckinToday, getSkipFlag } from "../services/checkin";
 import { stripProvenance } from "../services/emotionParse";
 import { t } from "../services/i18n";
-import { WELCOME_SEED, STATE_MESSAGES, WELCOME_BACK_LONG, WELCOME_BACK_MEDIUM, WELCOME_BACK_SHORT } from "../services/personaConfig";
+import { WELCOME_SEED, STATE_MESSAGES } from "../services/personaConfig";
 import { useTypingSession } from "../hooks/useTypingSession";
 import { getSuggestions, timeSlot } from "../services/chatSuggestions";
 import { stripChatMarkdown, ensureListBreaks } from "../services/chatText";
@@ -26,6 +26,7 @@ import ChatLoading from "./ChatLoading";
 import SkillOfferCard from "./SkillOfferCard";
 import InMomentInsightCard from "./InMomentInsightCard";
 import PactNoticeCard from "./PactNoticeCard";
+import WelcomeBackCard from "./welcomeBack";
 import { activePactNotice, dismissPactNoticeToday, type PactNotice } from "../services/pactNotice";
 import type { CheckInEntry } from "../types";
 import { secureLocal } from "../services/secureLocal";
@@ -57,7 +58,7 @@ import { checkProactiveCheckIn, recordProactiveCheckIn } from "../services/proac
 import { computeUsageSummary } from "../services/usageAnalytics";
 import { loadMoodHistory } from "../services/moodHistory";
 import { computeCompassionateStreak } from "../services/streaks";
-import { Settings, Mic, Send, MicOff, Keyboard, X, ShieldCheck, ThumbsUp, ThumbsDown, MessageCircle, Brain, Moon, SquarePen } from "lucide-react";
+import { Settings, Mic, Send, MicOff, Keyboard, X, ShieldCheck, ThumbsUp, ThumbsDown, Brain, Moon, SquarePen } from "lucide-react";
 import { hapticLight, hapticMedium } from "../hooks/useHaptics";
 import { recordFeedback, attachSuggestion } from "../services/nilaFeedback";
 import { isCloudApiEnabled, getCloudApiKey } from "../services/cloudApi";
@@ -110,7 +111,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   // Phase: UX clutter fix — cap non-crisis nudges at 2 (crisis cards always shown)
   const MAX_NUDGES = 2;
   const [confirmNewChat, setConfirmNewChat] = useState(false); // "new conversation" confirm dialog
-  const [welcomeBack, setWelcomeBack] = useState<string | null>(null);
+  const [welcomeBack, setWelcomeBack] = useState<string | null>(null); // lastVisitDate ISO or null
 
   // Compute which non-crisis nudges are visible (cap at MAX_NUDGES)
   const nonCrisisNudges = [
@@ -278,12 +279,8 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
       if (streak.daysSinceLast >= 2) {
         const dismissed = (globalThis as any).localStorage?.getItem("nilamind_welcome_back_dismissed");
         if (dismissed !== new Date().toISOString().split("T")[0]) {
-          const days = streak.daysSinceLast;
-          setWelcomeBack(days >= 7
-            ? WELCOME_BACK_LONG
-            : days >= 3
-            ? WELCOME_BACK_MEDIUM
-            : WELCOME_BACK_SHORT);
+          const d = new Date(); d.setDate(d.getDate() - streak.daysSinceLast);
+          setWelcomeBack(d.toISOString());
         }
       }
     } catch { /* best-effort */ }
@@ -1065,31 +1062,13 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           {/* Welcome-back card — gentle nudge after inactivity (>= 2 days). §9 clears it. */}
           {/* Welcome back — capped by priority system */}
           {visibleNudgeIds.has("welcome") && welcomeBack && (
-            <div className="w-full px-3 py-2.5 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-200 text-xs">
-              <div className="flex items-start gap-2">
-                <MessageCircle className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" />
-                <div className="flex-1">
-                  <p className="leading-relaxed">{welcomeBack}</p>
-<div className="flex gap-2 mt-2">
-                    <button
-                      onClick={() => {
-                        try { (globalThis as any).localStorage?.setItem("nilamind_welcome_back_dismissed", new Date().toISOString().split("T")[0]); } catch { /* best-effort */ }
-                        setWelcomeBack(null);
-                      }}
-                      className="px-3 py-2 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-200 font-medium transition-colors cursor-pointer min-h-[44px] focus-ring"
-                    >
-                      Got it
-                    </button>
-                    <button
-                      onClick={() => { setWelcomeBack(null); }}
-                      className="px-3 py-2 rounded-lg hover:bg-blue-500/15 text-blue-200/80 transition-colors cursor-pointer min-h-[44px] focus-ring"
-                    >
-                      Dismiss
-                    </button>
-</div>
-                </div>
-              </div>
-            </div>
+            <WelcomeBackCard
+              lastVisitDate={welcomeBack}
+              onDismiss={() => {
+                try { (globalThis as any).localStorage?.setItem("nilamind_welcome_back_dismissed", new Date().toISOString().split("T")[0]); } catch { /* best-effort */ }
+                setWelcomeBack(null);
+              }}
+            />
           )}
 
           {/* #30 (audit): pact surface — the user's own letter + a tap-to-text handoff, when a real shift

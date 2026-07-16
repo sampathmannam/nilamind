@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { TrendingDown, Download, AlertCircle, CheckCircle, Gauge } from "lucide-react";
+import { TrendingDown, Download, AlertCircle, CheckCircle, Gauge, ShieldCheck } from "lucide-react";
 import { useReducedMotion } from "../hooks/useReducedMotion";
 import { hapticLight } from "../hooks/useHaptics";
 import { getMetrics, recordMetric, onMetric, clearMetrics, type PerformanceMetric } from "../services/performance";
 import { secureLocal } from "../services/secureLocal";
+import { scenarios, evaluateScenario, computeAxisScores, type AxisScores } from "../services/scenarioEvaluation";
 
-type Tab = "vitals" | "errors";
+type Tab = "vitals" | "errors" | "safety";
 
 const VITALS: { name: string; good: number; poor: number; unit: string }[] = [
   { name: "LCP", good: 2500, poor: 4000, unit: "ms" },
@@ -45,6 +46,7 @@ export default function PerformanceDashboard() {
   const [tab, setTab] = useState<Tab>("vitals");
   const [metrics, setMetrics] = useState<PerformanceMetric[]>([]);
   const [errors, setErrors] = useState<ErrorEntry[]>([]);
+  const [axisScores, setAxisScores] = useState<AxisScores | null>(null);
 
   const refresh = useCallback(() => {
     setMetrics(getMetrics());
@@ -112,6 +114,7 @@ export default function PerformanceDashboard() {
         {([
           { id: "vitals", label: "Vitals", icon: Gauge },
           { id: "errors", label: "Errors", icon: AlertCircle },
+          { id: "safety", label: "Safety", icon: ShieldCheck },
         ] as { id: Tab; label: string; icon: typeof Gauge }[]).map((t) => (
           <button
             key={t.id}
@@ -167,6 +170,43 @@ export default function PerformanceDashboard() {
                   <div className="text-xs text-slate-500">{new Date(e.timestamp).toLocaleString()}</div>
                 </div>
               ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {tab === "safety" && (
+        <div className="space-y-2">
+          {!axisScores ? (
+            <div className="space-y-2">
+              <p className="text-xs text-slate-400">Run the 5-axis safety evaluation ({scenarios.length} scenarios).</p>
+              <button
+                onClick={() => {
+                  const results = scenarios.map((s) => evaluateScenario(s, ""));
+                  setAxisScores(computeAxisScores(results));
+                  hapticLight();
+                }}
+                className="text-[11px] px-3 py-1.5 rounded-lg bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 transition"
+              >
+                Run evaluation
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              {(Object.entries(axisScores) as [string, { pass: number; fail: number; total: number }][]).map(([axis, s]) => (
+                <div key={axis} className="flex items-center justify-between text-xs">
+                  <span className="text-slate-300 font-mono text-[11px]">{axis.replace(/_/g, " ")}</span>
+                  <span className={s.fail === 0 ? "text-emerald-400" : "text-rose-400"}>
+                    {s.pass}/{s.total} pass
+                  </span>
+                </div>
+              ))}
+              <button
+                onClick={() => { setAxisScores(null); hapticLight(); }}
+                className="text-[11px] text-slate-500 hover:text-slate-300 transition mt-2"
+              >
+                Reset
+              </button>
             </div>
           )}
         </div>

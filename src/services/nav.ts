@@ -34,7 +34,8 @@ export type AuxView =
   | "legal"
   | "sounds"
   | "safety_plan"
-  | "values_to_action";
+  | "values_to_action"
+  | "peer_support";
 
 export const TAB_TARGETS: readonly TabView[] = [
   "diary", "plan", "nila", "today", "you",
@@ -53,7 +54,8 @@ export const KNOWN_AUX_VIEWS: readonly AuxView[] = [
    "sounds",
    "safety_plan",
    "values_to_action",
-     ];
+   "peer_support",
+      ];
 
 export type NavResolution =
   | { kind: "crisis" }

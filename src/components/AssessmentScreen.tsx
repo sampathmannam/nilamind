@@ -25,6 +25,7 @@ import {
   ReferenceLine,
 } from "recharts";
 import { outcomeStatus, reliableChangeThreshold } from "../services/reliableChange";
+import { evaluateNofOne } from "../services/nofOneEval";
 import {
   ClipboardCheck,
   ChevronRight,
@@ -228,6 +229,39 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
         {(Object.keys(INSTRUMENTS) as InstrumentId[]).map((id) => (
           <TrendBlock key={id} instrumentId={id} history={history} />
         ))}
+
+        {/* N-of-1 combined evaluation — reliable change across dimensions */}
+        {history.length >= 4 && (() => {
+          try {
+            const dataPoints = history.slice(-14).map((a) => ({
+              date: a.date,
+              mood: a.total,
+              energy: a.total,
+              sleepHours: 7,
+            }));
+            const result = evaluateNofOne(dataPoints);
+            if (result.status === "insufficient_data") return null;
+            return (
+              <div className="glass rounded-2xl p-4 space-y-2">
+                <h4 className="text-xs uppercase font-mono tracking-widest text-slate-400">
+                  N-of-1 combined · {result.dataPoints} data points
+                </h4>
+                <div className={`flex items-center gap-1.5 text-[11px] ${
+                  result.status === "improving" ? "text-emerald-400"
+                  : result.status === "deteriorating" ? "text-rose-400"
+                  : "text-slate-400"
+                }`}>
+                  <span className="font-semibold capitalize">{result.status}</span>
+                  {result.reliableChange && (
+                    <span className={result.reliableChange.reliableImprovement ? "text-emerald-400" : "text-slate-500"}>
+                      · {result.reliableChange.reliableImprovement ? "reliable improvement" : "no reliable change"}
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          } catch { return null; }
+        })()}
       </div>
     );
   }

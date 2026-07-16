@@ -16,6 +16,7 @@ import DailyIntentionCard, { type DailyIntentionCardHandle } from "./DailyIntent
 import DailyContentCard from "./DailyContentCard";
 import RatingPromptCard from "./RatingPromptCard";
 import SafetyPlanNudgeCard from "./SafetyPlanNudgeCard";
+import LowFrictionReCheckIn from "./lowFrictionReCheckIn";
 import { useTimeOfDay, heroGradient, contextualSummary } from "../hooks/useTimeOfDay";
 import { buildNilaMessage } from "../services/nilaVoice";
 import { getTopAssessmentPrompt } from "../services/assessmentPrompts";
@@ -297,7 +298,7 @@ export default function TodayScreen({
       {/* Nudge to set up a coping plan — the create-nudge that didn't exist before this redesign */}
       <SafetyPlanNudgeCard go={go} />
 
-      {/* Welcome back — returning after absence */}
+      {/* Low-friction re-check-in — one-tap mood log for returning users after a gap */}
       {hasAnyCheckins && !checkedIn && (() => {
         try {
           const raw = secureLocal.getItem("nilamind_checkins");
@@ -311,15 +312,14 @@ export default function TodayScreen({
           return daysSince >= 2;
         } catch { return false; }
       })() && (
-        <div className="glass p-4 rounded-2xl space-y-1.5 border border-blue-400/10">
-          <div className="flex items-center gap-2">
-            <Sparkle className="w-4 h-4 text-blue-400" />
-            <p className="text-sm font-semibold text-slate-200">Welcome back</p>
-          </div>
-          <p className="text-[11px] text-slate-400 leading-relaxed">
-            It's been a little while — no pressure. A quick check-in can help you reconnect with how you're doing.
-          </p>
-        </div>
+        <LowFrictionReCheckIn
+          onMoodSelect={() => {
+            go("ema_checkin");
+          }}
+          onSkip={() => {
+            go("ema_checkin");
+          }}
+        />
       )}
 
       {/* Morning focus — if morning and not checked in yet */}
