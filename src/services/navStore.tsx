@@ -35,6 +35,14 @@ export type NavAction =
 
 export const initialNavState: NavState = { tab: "today", overlays: [] };
 
+// A mid-close aux overlay (closing:true, pending its ~200ms slide-out before CLOSE_AUX_DONE
+// removes it) must never survive something new opening on top of it — otherwise a chained
+// "close current aux, open new overlay" (e.g. App.tsx's onNavigateToGrounding/onCrisis) leaves
+// [{aux, closing:true}, {newOverlay}], and closing the new overlay later re-reveals the stale aux
+// instead of returning to the base tab.
+const dropClosingAux = (overlays: Overlay[]): Overlay[] =>
+  overlays.filter((o) => !(o.kind === "aux" && o.closing));
+
 export function navReducer(state: NavState, action: NavAction): NavState {
   switch (action.type) {
     case "SET_TAB":
@@ -44,11 +52,11 @@ export function navReducer(state: NavState, action: NavAction): NavState {
       return { ...state, overlays: [...overlays, { kind: "aux", view: action.view, closing: false }] };
     }
     case "OPEN_SHEET": {
-      const overlays = state.overlays.filter((o) => !(o.kind === "sheet" && o.id === action.id));
+      const overlays = dropClosingAux(state.overlays).filter((o) => !(o.kind === "sheet" && o.id === action.id));
       return { ...state, overlays: [...overlays, { kind: "sheet", id: action.id }] };
     }
     case "OPEN_CRISIS":
-      return { ...state, overlays: [...state.overlays, { kind: "crisis" }] };
+      return { ...state, overlays: [...dropClosingAux(state.overlays), { kind: "crisis" }] };
     case "CLOSE_AUX_START": {
       const overlays = state.overlays.slice();
       for (let i = overlays.length - 1; i >= 0; i--) {
@@ -63,7 +71,7 @@ export function navReducer(state: NavState, action: NavAction): NavState {
     case "CLOSE_AUX_DONE":
       return { ...state, overlays: state.overlays.filter((o) => !(o.kind === "aux" && o.closing)) };
     case "CLOSE_TOP":
-      return { ...state, overlays: state.overlays.slice(0, -1) };
+      return { ...state, overlays: dropClosingAux(state.overlays.slice(0, -1)) };
     case "CLOSE_ALL":
       return { ...state, overlays: [] };
     default:
