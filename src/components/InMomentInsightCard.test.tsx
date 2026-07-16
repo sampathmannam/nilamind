@@ -95,4 +95,20 @@ describe("InMomentInsightCard", () => {
     expect(screen.queryByText("A skill that may help")).toBeNull();
     expect(screen.queryByText("TIPP")).toBeNull();
   });
+
+  it("renders nothing (no empty bordered box) when skillDismissed and no explainer", () => {
+    const { container } = render(
+      <InMomentInsightCard
+        explainerTitle=""
+        explainerSummary=""
+        explainerBasis=""
+        skillEmoji="💙"
+        skillName="Opposite Action"
+        skillReason="Low mood or emptiness"
+        onTrySkill={() => {}}
+        skillDismissed
+      />,
+    );
+    expect(container.firstChild).toBeNull();
+  });
 });

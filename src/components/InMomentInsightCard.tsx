@@ -28,6 +28,7 @@ export default function InMomentInsightCard({
   skillDismissed,
 }: InMomentInsightCardProps) {
   const showSkill = !!skillName && !skillDismissed;
+  if (!explainerTitle && !showSkill) return null;
 
   return (
     <div
