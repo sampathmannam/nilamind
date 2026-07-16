@@ -48,7 +48,7 @@ import { getAllAchievements, getAchievementCount } from "../services/achievement
 import { stripProvenance } from "../services/emotionParse";
 import {
   emotionDistribution, derivedObservations, episodePatterns, quickNoteTags,
-  moodTrend, contextTrend, sleepMoodTrend, weeklyRhythmBars,
+  moodTrend, contextTrend, sleepMoodTrend, weeklyRhythmBars, mergeEmaIntoTrend,
 } from "../services/dashboardInsights";
 import { getRecentSnapshots } from "../db/behaviourDb";
 import type { CheckInEntry, DiaryCardEntry, EpisodeRecord } from "../types";
@@ -201,16 +201,10 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
   const emotionTrend = useMemo(() => moodTrend(mood, timeRange), [mood, timeRange]);
   const ctxTrend = useMemo(() => contextTrend(mood, timeRange), [mood, timeRange]);
   const sleepMoodTrendData = useMemo(() => sleepMoodTrend(mood, timeRange), [mood, timeRange]);
-  const emaPoints = useMemo(() => {
-    const entries = loadEmaEntries();
-    const dateSet = new Set(emotionTrend.map(p => p.date));
-    return entries
-      .filter(e => dateSet.has(e.date.slice(5)))
-      .map(e => ({
-        date: e.date.slice(5),
-        intensity: Math.round(((e.valence + 3) / 6) * 9) + 1, // map -3..+3 to 1..10 roughly
-      }));
-  }, [emotionTrend]);
+  const emotionTrendWithEma = useMemo(
+    () => mergeEmaIntoTrend(emotionTrend, loadEmaEntries()),
+    [emotionTrend],
+  );
   const trendLength = chartTab === "emotion" ? emotionTrend.length : chartTab === "energy" ? energyScatter.length : chartTab === "sleep-mood" ? sleepMoodTrendData.length : ctxTrend.length;
 
   const moodSummary = (() => {
@@ -815,15 +809,18 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
           <div className="w-full h-48" role="img" aria-label={chartTab === "emotion" ? "Line chart showing emotional intensity trend over time. Lower values indicate calmer states." : chartTab === "energy" ? "Scatter plot of mood intensity vs energy level. Each dot is one check-in." : chartTab === "sleep-mood" ? "Dual-axis line chart showing sleep hours and mood intensity over time." : "Line chart showing sleep hours and social connection over time."}>
             <ResponsiveContainer width="100%" height="100%">
               {chartTab === "emotion" ? (
-                <ComposedChart data={emotionTrend}>
+                <ComposedChart data={emotionTrendWithEma}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#2E2922" vertical={false} />
                   <XAxis dataKey="date" stroke="#948A7E" fontSize={10} tickLine={false} axisLine={false} />
                   <YAxis stroke="#948A7E" fontSize={10} domain={[1, 10]} allowDecimals={false} tickLine={false} axisLine={false} />
                   <Tooltip contentStyle={{ backgroundColor: "#171311", borderColor: "#2E2922", borderRadius: "8px" }} labelStyle={{ color: "#ECE5DA" }} itemStyle={{ color: "#9479B0" }} />
                   <Line type="monotone" dataKey="intensity" name="Intensity" stroke="#9479B0" strokeWidth={3} activeDot={{ r: 6, fill: "#D8B4FE", stroke: "#9479B0" }} dot={{ r: 4, fill: "#211C17" }} />
                   {/* EMA micro-check-in dots (re-audit #4): Scatter belongs in a ComposedChart — inside a
-                      LineChart recharts silently drops it. dataKey ties each dot to the shared date axis. */}
-                  <Scatter data={emaPoints} dataKey="intensity" name="Quick check-in" fill="#D8A657" />
+                      LineChart recharts silently drops it. Reads emaIntensity off the SAME array as the
+                      Line (mergeEmaIntoTrend) rather than a separately-ordered array — otherwise Recharts
+                      merges the two arrays' orderings into a jumbled, non-chronological date axis (device
+                      screenshot 2026-07-16: loadEmaEntries() is newest-first, emotionTrend is oldest-first). */}
+                  <Scatter dataKey="emaIntensity" name="Quick check-in" fill="#D8A657" />
                 </ComposedChart>
               ) : chartTab === "energy" ? (
                 <ScatterChart>

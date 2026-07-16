@@ -189,7 +189,7 @@ describe("quickNoteTags", () => {
   });
 });
 
-import { moodTrend, contextTrend, sleepMoodTrend, weeklyRhythmBars } from "./dashboardInsights";
+import { moodTrend, contextTrend, sleepMoodTrend, weeklyRhythmBars, mergeEmaIntoTrend } from "./dashboardInsights";
 import type { MoodPoint } from "./patternInsights";
 function checkin(date: string, intensity: number): CheckInEntry {
   return { id: "t", date, timestamp: `${date}T12:00:00.000Z`, emotion: "Low", intensity, context: "" };
@@ -221,6 +221,38 @@ describe("moodTrend", () => {
 
   it("labels date as mm-dd", () => {
     expect(moodTrend([mp("2026-06-09", 4)], "30d")[0].date).toBe("06-09");
+  });
+});
+
+// Regression (device screenshot, 2026-07-16): the emotion trend chart's X-axis showed jumbled,
+// non-chronological dates ("07-15, 07-16, 07-16, 07-15") because the Line series read from
+// `emotionTrend` (sorted oldest-first) while the Scatter series read from a SEPARATE `emaPoints`
+// array derived from loadEmaEntries(), which is sorted NEWEST-first — Recharts merged the two
+// mismatched-order arrays into a jumbled shared category axis. The fix: attach EMA intensity as an
+// extra field ON the already-sorted trend array, so there's only ever one array driving the axis.
+describe("mergeEmaIntoTrend", () => {
+  it("preserves the trend array's chronological order regardless of EMA entry order", () => {
+    const trend = moodTrend([mp("2026-07-15", 5), mp("2026-07-16", 8)], "30d");
+    // EMA entries deliberately newest-first, as loadEmaEntries() returns them.
+    const emaEntriesNewestFirst = [
+      { date: "2026-07-16", valence: 1 },
+      { date: "2026-07-15", valence: -2 },
+    ];
+    const merged = mergeEmaIntoTrend(trend, emaEntriesNewestFirst);
+    expect(merged.map((p) => p.date)).toEqual(["07-15", "07-16"]);
+  });
+
+  it("attaches emaIntensity only to dates with a matching EMA entry", () => {
+    const trend = moodTrend([mp("2026-07-15", 5), mp("2026-07-16", 8)], "30d");
+    const merged = mergeEmaIntoTrend(trend, [{ date: "2026-07-16", valence: 3 }]);
+    expect(merged[0].emaIntensity).toBeUndefined();
+    expect(merged[1].emaIntensity).toBeGreaterThan(0);
+  });
+
+  it("does not add extra rows for EMA entries with no matching trend date", () => {
+    const trend = moodTrend([mp("2026-07-16", 8)], "30d");
+    const merged = mergeEmaIntoTrend(trend, [{ date: "2026-07-01", valence: 0 }]);
+    expect(merged.length).toBe(1);
   });
 });
 

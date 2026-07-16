@@ -28,3 +28,16 @@ describe("SoundPlayer — no duplicate Sheet chrome", () => {
     expect(screen.queryByText(/Generated on-device — no files, no network/i)).not.toBeNull();
   });
 });
+
+// Regression (device screenshot, 2026-07-16): the noise-type grid, volume %, and "60 min" auto-stop
+// button rendered flush against the right screen edge (truncated descriptions, clipped button) because
+// SoundPlayer's root lacked the `max-w-md mx-auto` every sibling aux-view screen uses (ReachOutScreen,
+// GroundingLibraryScreen, ...) to keep content within a safe, centered width on this device's viewport.
+describe("SoundPlayer — matches sibling aux-view screens' width constraint", () => {
+  it("root container has max-w-md and mx-auto, like every other aux-view screen", () => {
+    const { container } = render(<SoundPlayer />);
+    const root = container.querySelector("#sound-player");
+    expect(root?.className).toMatch(/\bmax-w-md\b/);
+    expect(root?.className).toMatch(/\bmx-auto\b/);
+  });
+});

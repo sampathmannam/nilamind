@@ -152,7 +152,7 @@ export default function SoundPlayer({ compact = false }: Props) {
   }
 
   return (
-    <div className="space-y-4" id="sound-player">
+    <div className="space-y-4 max-w-md mx-auto" id="sound-player">
       {/* No header here — this screen is always mounted inside the app's <Sheet>, which already
           renders the "Ambient sounds" title + close button (App.tsx renderAuxView). Rendering our
           own header duplicated both (device screenshot 2026-07-15). We keep only the unique

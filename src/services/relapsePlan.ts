@@ -110,3 +110,12 @@ export function signalFields(): { key: keyof PhaseSignals; label: string; placeh
     { key: "physical", label: "Physical", placeholder: "What does your body feel? (e.g. tight chest, can't sleep, racing heart)" },
   ];
 }
+
+export function actionFields(): { key: keyof PhaseActions; label: string; placeholder: string }[] {
+  return [
+    { key: "selfCare", label: "Self-care", placeholder: "What self-care helps? (e.g. sleep, eat, shower, go outside)" },
+    { key: "copingSkills", label: "Coping skills", placeholder: "Which skills help here? (e.g. box breathing, grounding, journaling)" },
+    { key: "reachOut", label: "Reach out", placeholder: "Who could you contact? (e.g. a friend, family member, therapist)" },
+    { key: "crisisHelp", label: "Crisis help", placeholder: "What crisis resources apply here? (e.g. helpline, ER, trusted contact)" },
+  ];
+}

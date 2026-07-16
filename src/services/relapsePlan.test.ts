@@ -16,6 +16,7 @@ import {
   currentPhase,
   phaseLabel,
   signalFields,
+  actionFields,
   EMPTY_SIGNALS,
   EMPTY_ACTIONS,
 } from "./relapsePlan";
@@ -70,6 +71,16 @@ describe("relapsePlan", () => {
   it("signalFields returns 4 signal categories", () => {
     expect(signalFields()).toHaveLength(4);
     expect(signalFields()[0].key).toBe("thoughts");
+  });
+
+  it("actionFields returns 4 action categories with real prompts, not raw keys", () => {
+    const fields = actionFields();
+    expect(fields).toHaveLength(4);
+    expect(fields.map((f) => f.key)).toEqual(["selfCare", "copingSkills", "reachOut", "crisisHelp"]);
+    for (const f of fields) {
+      expect(f.placeholder).not.toBe(`${f.key}...`);
+      expect(f.placeholder.length).toBeGreaterThan(10);
+    }
   });
 
   it("EMPTY_SIGNALS and EMPTY_ACTIONS are consistent", () => {
