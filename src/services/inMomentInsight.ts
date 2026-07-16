@@ -9,7 +9,7 @@
 // stripped before any model call (buildOutgoing maps only role/content) so it never leaves
 // the device and never reaches the LLM.
 
-import { searchPsychoed, topMatchTermCoverage, type PsychoedTopic } from "./psychoed";
+import { searchPsychoed, termCoverageForTopic, type PsychoedTopic } from "./psychoed";
 import { embeddingSearchPsychoed, type PsychoedResult } from "./psychoedRetrieval";
 import { suggestSkill, type SkillSuggestion } from "./skillSuggest";
 import { scanForCrisis } from "../safety";
@@ -88,18 +88,17 @@ async function resolveExplainer(
   let ranked: PsychoedResult[];
   try {
     ranked = await embeddingSearchPsychoed(text, { limit: 2, minScore: EXPLAINER_MIN_SCORE });
-    if (ranked.length === 0) throw new Error("No embeddings found"); // Trigger fallback
   } catch {
     // A single generic tag hit (e.g. "good") can score identically to a genuinely specific match
-    // (e.g. "heart"+"racing") under raw lexical scoring — require at least 2 matched terms before
-    // trusting the lexical fallback enough to show it as an asserted explainer card.
+    // (e.g. "heart"+"racing") under raw lexical scoring — require at least 2 matched terms from
+    // EVERY candidate before trusting it enough to surface as an asserted explainer card (checked
+    // per-candidate, not just on the top result, so repeat-avoidance can't fall through to an
+    // unvetted #2 match).
     const MIN_LEXICAL_TERM_COVERAGE = 2;
-    if (topMatchTermCoverage(text) < MIN_LEXICAL_TERM_COVERAGE) {
-      ranked = [];
-    } else {
-      const lex = searchPsychoed(text).slice(0, 2);
-      ranked = lex.map((t, i) => ({ topic: t, score: i === 0 ? 1 : 0.5 }));
-    }
+    const lex = searchPsychoed(text)
+      .filter((t) => termCoverageForTopic(text, t.id) >= MIN_LEXICAL_TERM_COVERAGE)
+      .slice(0, 2);
+    ranked = lex.map((t, i) => ({ topic: t, score: i === 0 ? 1 : 0.5 }));
   }
   return pickExplainer(ranked, userState, previousExplainerId);
 }

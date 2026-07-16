@@ -4,6 +4,7 @@ import {
   EMERGENCY_CAVEAT,
   searchPsychoed,
   checkPsychoedQuery,
+  termCoverageForTopic,
 } from "./psychoed";
 
 describe("PSYCHOED_TOPICS corpus", () => {
@@ -80,5 +81,31 @@ describe("checkPsychoedQuery (search-box §9 gate)", () => {
     expect(checkPsychoedQuery("I want to kill myself")).toBe(true);
     expect(checkPsychoedQuery("why do i overthink")).toBe(false);
     expect(checkPsychoedQuery("")).toBe(false);
+  });
+});
+
+describe("termCoverageForTopic", () => {
+  it("counts each distinct query term that matches the given topic's own tags/title/summary/body", () => {
+    // "heart" and "racing" both appear in anxiety-alarm's tags/summary; "panicky" appears nowhere
+    // in that topic's fields, so coverage is 2, not 3.
+    expect(termCoverageForTopic("my heart is racing and I feel panicky", "anxiety-alarm")).toBe(2);
+  });
+
+  it("counts exactly 1 when only one query term matches the given topic", () => {
+    // "good" appears in negativity-bias's title/tags; "hey", "nila", "morning" do not.
+    expect(termCoverageForTopic("hey nila, good morning", "negativity-bias")).toBe(1);
+  });
+
+  it("returns 0 when no query term matches the given topic", () => {
+    expect(termCoverageForTopic("completely unrelated gibberish gonzo", "anxiety-alarm")).toBe(0);
+  });
+
+  it("returns 0 for an empty or whitespace-only query, regardless of topic", () => {
+    expect(termCoverageForTopic("", "anxiety-alarm")).toBe(0);
+    expect(termCoverageForTopic("   ", "rumination-loop")).toBe(0);
+  });
+
+  it("returns 0 for an unknown topic id, regardless of query", () => {
+    expect(termCoverageForTopic("my heart is racing", "not-a-real-topic-id")).toBe(0);
   });
 });

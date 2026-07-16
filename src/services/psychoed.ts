@@ -520,16 +520,15 @@ export function searchPsychoed(query: string): PsychoedTopic[] {
   return scored.map((s) => s.topic);
 }
 
-/** How many distinct query terms matched the single best result from `searchPsychoed`. Used by
+/** How many distinct query terms matched a given topic's own tags/title/summary/body. Used by
  *  callers that need a precision floor beyond "matched something" — a message that only hits one
- *  generic, broadly-tagged word (e.g. "good") scores identically to a message that hits two
- *  specific, meaningful tags, so raw score alone can't separate a real signal from a coincidence. */
-export function topMatchTermCoverage(query: string): number {
+ *  generic, broadly-tagged word (e.g. "good") scores identically under `searchPsychoed` to a
+ *  message that hits two specific, meaningful tags, so raw score alone can't separate a real
+ *  signal from a coincidence. Returns 0 for an empty query or an unknown topic id. */
+export function termCoverageForTopic(query: string, topicId: string): number {
   const terms = new Set(tokenize(query));
   if (terms.size === 0) return 0;
-  const top = searchPsychoed(query)[0];
-  if (!top) return 0;
-  const entry = INDEX.find((e) => e.topic.id === top.id);
+  const entry = INDEX.find((e) => e.topic.id === topicId);
   if (!entry) return 0;
   let coverage = 0;
   for (const t of terms) if (entry.weights.has(t)) coverage++;
