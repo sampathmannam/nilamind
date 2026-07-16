@@ -157,7 +157,7 @@ export function phaseConsistencyNote(
   if (phase === "stable") return null;
 
   const hasUpSignals = elevationSignals.energy || elevationSignals.nap || elevationSignals.sleep;
-  const hasDownSignals = !elevationSignals.energy && !elevationSignals.nap;
+  const hasDownSignals = !hasUpSignals;
 
   if (phase === "elevated" && hasDownSignals) {
     return "You've marked this as elevated, but your recent data doesn't show elevated signals. " +

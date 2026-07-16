@@ -19,6 +19,7 @@ import {
   currentPhase,
   episodeMarkerSummary,
   validateMarker,
+  phaseConsistencyNote,
   type EpisodeMarker,
   type EpisodePhase,
 } from "./episodeMarker";
@@ -96,5 +97,33 @@ describe("episodeMarkerSummary", () => {
   });
   it("returns '' with no markers", () => {
     expect(episodeMarkerSummary([], "2026-03-15")).toBe("");
+  });
+});
+
+describe("phaseConsistencyNote", () => {
+  it("returns null for a stable phase regardless of signals", () => {
+    expect(phaseConsistencyNote("stable", { energy: true, nap: true, sleep: true })).toBeNull();
+  });
+
+  it("returns null when elevated signals are present and phase is elevated", () => {
+    expect(phaseConsistencyNote("elevated", { energy: true, nap: false, sleep: false })).toBeNull();
+  });
+
+  it("flags elevated phase with no signals at all", () => {
+    expect(phaseConsistencyNote("elevated", { energy: false, nap: false, sleep: false })).toMatch(/doesn't show elevated signals/);
+  });
+
+  it("does not flag elevated phase when only the sleep signal is present", () => {
+    // Regression: hasDownSignals used to ignore `sleep`, so {energy:false, nap:false, sleep:true}
+    // was treated as both "has up signals" and "has down signals" — sleep-only elevation went unrecognized.
+    expect(phaseConsistencyNote("elevated", { energy: false, nap: false, sleep: true })).toBeNull();
+  });
+
+  it("flags depressed phase when elevated signals are present", () => {
+    expect(phaseConsistencyNote("depressed", { energy: false, nap: false, sleep: true })).toMatch(/shows some elevated signals/);
+  });
+
+  it("returns null for depressed phase with no elevated signals", () => {
+    expect(phaseConsistencyNote("depressed", { energy: false, nap: false, sleep: false })).toBeNull();
   });
 });
