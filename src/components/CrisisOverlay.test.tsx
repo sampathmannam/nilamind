@@ -26,6 +26,24 @@ import CrisisOverlay from "./CrisisOverlay";
 afterEach(() => { cleanup(); store.clear(); });
 const noop = () => {};
 
+// Regression (device QA): this same overlay opens from BOTH an actual crisis-phrase detection
+// (where "you reached for this" — a specific means — fits) AND the generic, always-visible SOS
+// icon on every tab (which anyone can tap for any reason — anxiety, curiosity, wanting grounding
+// tools). The header must not presume a specific means-related trigger for the generic case, while
+// staying warm and validating for whoever is here, however they got here.
+describe("CrisisOverlay — header copy works for a generic, no-detected-trigger open", () => {
+  it("does not presume the person reached for a specific harmful means", () => {
+    render(<CrisisOverlay isOpen onClose={noop} onNavigateToGrounding={noop} onNavigateToBreathing={noop} />);
+    expect(screen.queryByText(/you reached for this/i)).toBeNull();
+  });
+
+  it("still validates being here and offers to help, warmly", () => {
+    render(<CrisisOverlay isOpen onClose={noop} onNavigateToGrounding={noop} onNavigateToBreathing={noop} />);
+    expect(screen.getByText(/not alone/i)).toBeTruthy();
+    expect(screen.getByText(/strong thing/i)).toBeTruthy();
+  });
+});
+
 describe("CrisisOverlay — §9 crisis surface renders (audit #27)", () => {
   it("renders nothing when closed", () => {
     const { container } = render(
@@ -48,7 +66,7 @@ describe("CrisisOverlay — §9 crisis surface renders (audit #27)", () => {
     );
     render(<CrisisOverlay isOpen onClose={noop} onNavigateToGrounding={noop} onNavigateToBreathing={noop} />);
     expect(screen.getByRole("dialog")).toBeTruthy();
-    expect(screen.getByText(/you reached for this/i)).toBeTruthy();
+    expect(screen.getByText(/not alone/i)).toBeTruthy();
     // ≥1 crisis line always renders (registry guarantees a non-empty International fallback)
     expect((document.getElementById("crisis-lines")?.children.length ?? 0)).toBeGreaterThan(0);
     expect(document.getElementById("grounding-shortcut-btn")).toBeTruthy();

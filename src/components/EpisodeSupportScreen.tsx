@@ -10,6 +10,7 @@ import { sendToNila } from "../services/sendToNila";
 import { NilaUiMessage } from "../services/nilaSend";
 import { notifyReplyReady } from "../services/notifications";
 import TIPPTool from "./TIPPTool";
+import ChatLoading from "./ChatLoading";
 
 interface EpisodeSupportScreenProps {
   onSessionEnded: () => void;
@@ -427,14 +428,7 @@ export default function EpisodeSupportScreen({
 
             {loading && (
               <div className="flex justify-start">
-                <div className="bg-card border-y border-r border-slate-850 border-l-4 border-l-amber-500 rounded-2xl rounded-bl-none px-4 py-3 text-xs text-slate-400 flex items-center gap-2">
-                  <span className="flex gap-0.5 animate-pulse">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                  </span>
-                  <span>Nila is thinking...</span>
-                </div>
+                <ChatLoading />
               </div>
             )}
             <div ref={bottomRef} />

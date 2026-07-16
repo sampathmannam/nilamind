@@ -23,7 +23,7 @@ vi.mock("./modeEngine", () => ({ getUserState: () => modeMocks.userState }));
 const suppressMocks = vi.hoisted(() => ({ suppressed: false }));
 vi.mock("./notificationSuppress", () => ({ isSafetySuppressed: () => suppressMocks.suppressed }));
 
-import { calmSafetyPlanNudge, dismissCalmSafetyPlanNudge } from "./proactiveEngine";
+import { calmSafetyPlanNudge, dismissCalmSafetyPlanNudge, hasDiaryEntryToday } from "./proactiveEngine";
 
 const BLANK_PLAN = JSON.stringify({
   warningSigns: "", internalCoping: "", socialDistractors: "", trustedPeople: "", professionals: "", safeEnvironment: "",
@@ -36,6 +36,28 @@ beforeEach(() => {
   store.clear();
   modeMocks.userState = "calm";
   suppressMocks.suppressed = false;
+});
+
+// Regression: the evening diary reminder read secureLocal key "nilamind_diary_" + today, which is
+// never written anywhere — DiaryCardScreen stores all entries as one JSON object under the single
+// key "nilamind_diary", keyed internally by date. The reminder therefore always saw `null` and
+// fired every evening regardless of whether a diary entry actually existed for today.
+describe("hasDiaryEntryToday", () => {
+  const today = new Date().toISOString().split("T")[0];
+
+  it("returns false when nothing has been saved", () => {
+    expect(hasDiaryEntryToday()).toBe(false);
+  });
+
+  it("returns false when the diary blob has entries for OTHER dates only", () => {
+    store.set("nilamind_diary", JSON.stringify({ "2020-01-01": { date: "2020-01-01" } }));
+    expect(hasDiaryEntryToday()).toBe(false);
+  });
+
+  it("returns true once today's entry has actually been saved (real storage key)", () => {
+    store.set("nilamind_diary", JSON.stringify({ [today]: { date: today, emotions: {}, skillsUsed: [] } }));
+    expect(hasDiaryEntryToday()).toBe(true);
+  });
 });
 
 describe("calmSafetyPlanNudge — calm-moment-only, never crisis-moment (2026-07-12 Wave 3, Task 1.5)", () => {

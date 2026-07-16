@@ -75,6 +75,20 @@ const SCAFFOLD_MARKERS = [
   /\b(user|assistant)\s*:\s*"/i,
 ];
 
+// Mirrors nila.ts's "NEVER SAY (anti-patterns)" list. A small on-device model occasionally falls
+// back to its pretrained-assistant default (e.g. "Hello! How can I assist you today?") on
+// low-signal turns, silently violating the persona prompt with nothing enforcing it in code.
+// lengthGuard already flags these as too-short but is deliberately advisory (see its docstring),
+// so a short-but-clearly-boilerplate reply could otherwise still reach the user unblocked.
+const GENERIC_ASSISTANT_PHRASES = [
+  /\bhow (can|may) i (assist|help) you\b/i,
+  /\bis there anything else\b/i,
+  /\blet me know what else\b/i,
+  /\bi'm sorry to hear that\b/i,
+  /\bthat's a great question\b/i,
+  /\bi understand completely\b/i,
+];
+
 // ---------------------------------------------------------------------------
 // Topic grounding helpers
 // ---------------------------------------------------------------------------
@@ -335,6 +349,26 @@ export function scaffoldLeakGuard(reply: string): GuardResult {
   return { pass: true };
 }
 
+/**
+ * Hard block: catches generic-assistant boilerplate ("How can I assist you today?") that
+ * violates the persona's own NEVER SAY list. Unlike lengthGuard, this is not advisory — a reply
+ * that says this is never in-persona regardless of length, so there's no legitimate-short-reply
+ * case to avoid over-blocking.
+ */
+export function genericAssistantPhraseGuard(reply: string): GuardResult {
+  for (const phrase of GENERIC_ASSISTANT_PHRASES) {
+    if (phrase.test(reply)) {
+      return {
+        pass: false,
+        reason: `Reply contains generic-assistant boilerplate: ${phrase.source}`,
+        fix: "Drop the boilerplate. Reply in Nila's voice: validate, then a short specific question or offer.",
+        blockGeneration: true,
+      };
+    }
+  }
+  return { pass: true };
+}
+
 // ---------------------------------------------------------------------------
 // Guard: Question contract
 // ---------------------------------------------------------------------------
@@ -519,6 +553,7 @@ export function runOutputGuards(opts: RunGuardsOpts): GuardResult[] {
     lengthGuard(reply, move),
     topicGroundingGuard(reply, userMessage),
     circularRamblingGuard(reply),
+    genericAssistantPhraseGuard(reply),
   ];
 
   return results;

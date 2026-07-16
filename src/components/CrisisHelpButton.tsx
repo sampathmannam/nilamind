@@ -52,7 +52,7 @@ export default function CrisisHelpButton({ variant = "bar" }: { variant?: "bar" 
             <div className="flex items-start justify-between gap-3 mb-3">
               <div className="flex items-center gap-2 text-rose-200">
                 <LifeBuoy className="w-5 h-5 shrink-0" />
-                <h2 className="text-base font-semibold">You reached for this — support is here</h2>
+                <h2 className="text-base font-semibold">You're not alone — support is here</h2>
               </div>
               <button
                 type="button"

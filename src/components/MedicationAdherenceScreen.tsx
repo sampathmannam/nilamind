@@ -144,7 +144,7 @@ export default function MedicationAdherenceScreen() {
       )}
 
       <div className="space-y-3">
-        {medications.length === 0 && (
+        {medications.length === 0 && !showForm && (
           <EmptyState
             nilaState={EMPTY_STATES.noMedications.nilaState}
             title={EMPTY_STATES.noMedications.title}

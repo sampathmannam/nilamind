@@ -35,6 +35,9 @@ import { ACT_TRAINING } from "./protocolACT";
 import { ASSERTION_TRAINING } from "./protocolAssertion";
 import { CBTI_SLEEP } from "./protocolCBTI";
 import { SOCIAL_RHYTHM_PROTOCOL } from "./protocolSocialRhythm";
+import { RELAPSE_PREVENTION } from "./protocolRelapsePrevention";
+import { MINDFULNESS_PRACTICE } from "./protocolMindfulness";
+import { BEHAVIORAL_EXPERIMENTS } from "./protocolBehavioralExperiments";
 
 export const PROTOCOLS: Protocol[] = [
   {
@@ -43,7 +46,11 @@ export const PROTOCOLS: Protocol[] = [
     basis:
       "Evidence-based for depression; internet-delivered BA reduces depressive symptoms with g ≈ −0.49 post-" +
       "treatment (apps specifically ≈ −0.39); unguided BA was not significant, and the effect was not sustained " +
-      "at 6-month follow-up (Alber et al., 2023; Jia et al., 2025, JMIR). See docs/NILA_AGENT_RESEARCH_BASIS.md.",
+      "at 6-month follow-up (Alber et al., 2023; Jia et al., 2025, JMIR). Meta-analytic support: " +
+      "Cuijpers et al. (2007, Behav Res Ther) found BA comparable to full CBT for depression; " +
+      "Ekers et al. (2014, BMC Psychiatry) meta-analysis confirmed moderate effects; " +
+      "Dimidjian et al. (2006, JCCP) showed BA matched antidepressants for moderate-severe depression. " +
+      "See docs/NILA_AGENT_RESEARCH_BASIS.md.",
     forConcerns: [
       "no energy", "low energy", "no motivation", "pointless", "nothing matters", "what's the point",
       "whats the point", "can't get out of bed", "cant get out of bed", "stopped doing", "don't enjoy",
@@ -107,8 +114,11 @@ export const PROTOCOLS: Protocol[] = [
     title: "Self-Compassion",
     basis:
       "Self-compassion (CFT / Mindful Self-Compassion) reduces self-criticism and boosts self-compassion in " +
-      "clinical + non-clinical samples (meta-analyses of ~20–27 RCTs; evidence real but quality-limited). See " +
-      "docs/NILA_AGENT_RESEARCH_BASIS.md.",
+      "clinical + non-clinical samples. Meta-analytic support: MacBeth & Gumley (2012, Clin Psych Rev) " +
+      "found a large inverse relationship between self-compassion and psychopathology (r = −0.54); " +
+      "Zessin et al. (2015, Health Psychol Rev) confirmed self-compassion predicts well-being; " +
+      "Neff (2011, Self Identity) established the three-component model (kindness, common humanity, mindfulness). " +
+      "See docs/NILA_AGENT_RESEARCH_BASIS.md.",
     forConcerns: [
       "hate myself", "harsh on myself", "self-critical", "self critical", "inner critic", "beat myself up",
       "beating myself up", "not good enough", "never good enough", "i'm a failure", "im a failure", "ashamed",
@@ -309,8 +319,13 @@ export const PROTOCOLS: Protocol[] = [
     title: "Gratitude Practice",
     basis:
       "Gratitude journaling and active appreciation exercises consistently improve subjective wellbeing " +
-      "with moderate effect sizes (Emmons & McCullough, 2003; Wood et al., 2010). The key mechanism is " +
-      "shifting attentional bias away from negative information, not toxic positivity — genuine noticing, not forced cheerfulness.",
+      "with moderate effect sizes (Emmons & McCullough, 2003; Wood et al., 2010). Meta-analytic support: " +
+      "Davis et al. (2016, J Happiness Stud) confirmed gratitude interventions improve well-being (d = 0.31); " +
+      "Dickens (2017, J Psychosom Res) meta-analysis found small but significant effects on sleep quality. " +
+      "Note: evidence for gratitude interventions specifically in bipolar populations is limited; " +
+      "this protocol is generally safe but manic states may produce inflated gratitude — we frame it as " +
+      "genuine noticing, not forced positivity. The key mechanism is shifting attentional bias away from " +
+      "negative information, not toxic positivity.",
     forConcerns: [
       "gratitude", "grateful", "good things", "notice the good", "only see the bad", "negative lens",
       "focus on bad", "what went well", "positive focus", "silver lining", "blessing", "blessed",
@@ -402,6 +417,9 @@ export const PROTOCOLS: Protocol[] = [
   ASSERTION_TRAINING,
   CBTI_SLEEP,
   SOCIAL_RHYTHM_PROTOCOL,
+  RELAPSE_PREVENTION,
+  MINDFULNESS_PRACTICE,
+  BEHAVIORAL_EXPERIMENTS,
 ];
 
 /**

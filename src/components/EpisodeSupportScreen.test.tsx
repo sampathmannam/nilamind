@@ -60,6 +60,35 @@ async function startAndReachOfflineGuided(intensity: number) {
   fireEvent.click(screen.getByRole("button", { name: String(intensity) }));
 }
 
+// Regression (device QA, crisis flow): while waiting for a reply — which can take well over a
+// minute for the episode flow's larger prompt — the screen showed only a static "Nila is
+// thinking..." bubble with no progress or reassurance, unlike the main chat (ModeScreen), which
+// already uses <ChatLoading /> (escalating reassurance copy + grounding tips). A person in crisis
+// staring at a frozen bubble for two minutes is the actual harm this fixes.
+describe("EpisodeSupportScreen — loading state reuses the escalating-reassurance ChatLoading UI", () => {
+  it("renders ChatLoading (not a static 'thinking' bubble) while waiting for a reply", async () => {
+    let resolveSend!: (v: { reply: string; reachedAI: boolean; blocked: boolean }) => void;
+    sendToNilaMock.mockReturnValue(new Promise((resolve) => { resolveSend = resolve; }));
+
+    render(
+      <EpisodeSupportScreen
+        onSessionEnded={() => {}}
+        onNavigateToGrounding={() => {}}
+        onNavigateToBreathing={() => {}}
+      />
+    );
+    fireEvent.change(screen.getByLabelText("Message Nila"), { target: { value: "I feel awful" } });
+    fireEvent.click(screen.getByText("Start Episode Support"));
+    await waitFor(() => expect(screen.getByText(/how intense/i)).toBeTruthy());
+    fireEvent.click(screen.getByRole("button", { name: "3" }));
+
+    await waitFor(() => expect(document.querySelector("#chat-loading")).not.toBeNull());
+
+    resolveSend({ reply: "I hear you.", reachedAI: true, blocked: false });
+    await waitFor(() => expect(document.querySelector("#chat-loading")).toBeNull());
+  });
+});
+
 describe("EpisodeSupportScreen — offline-guided extreme path mounts TIPPTool", () => {
   it("mounts the full 4-tab interactive TIPP tool (T·I·P·P) for an 8-10 intensity report, no longer skipping PMR", async () => {
     await startAndReachOfflineGuided(9);

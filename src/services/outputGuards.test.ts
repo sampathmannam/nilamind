@@ -8,6 +8,7 @@ import {
   lengthGuard,
   topicGroundingGuard,
   circularRamblingGuard,
+  genericAssistantPhraseGuard,
   runOutputGuards,
   hasHardFailure,
   hasGenerationBlockingFailure,
@@ -263,6 +264,31 @@ describe("outputGuards — circularRamblingGuard", () => {
   });
 });
 
+describe("outputGuards — genericAssistantPhraseGuard", () => {
+  // Regression (device QA): on a low-signal chat turn, the on-device model fell back to its
+  // pretrained-assistant default ("Hello! How can I assist you today?"), silently violating the
+  // persona's own "NEVER SAY" list (nila.ts) with no code-level enforcement. lengthGuard already
+  // flagged this reply as too-short but is deliberately advisory (see its docstring) so it never
+  // suppressed the reply. This guard hard-blocks the exact banned phrases regardless of length,
+  // so it can't be defeated by padding the reply with extra words.
+  it("passes clean, in-persona text", () => {
+    const r = genericAssistantPhraseGuard("That sounds really hard. What's the hardest part?");
+    expect(r.pass).toBe(true);
+  });
+
+  it("fails on 'how can/may I assist/help you' (helpdesk boilerplate)", () => {
+    const r = genericAssistantPhraseGuard("Hello! How can I assist you today?");
+    expect(r.pass).toBe(false);
+    expect(r.blockGeneration).toBe(true);
+  });
+
+  it("fails on other NEVER-SAY anti-patterns from the persona prompt", () => {
+    expect(genericAssistantPhraseGuard("I'm sorry to hear that.").pass).toBe(false);
+    expect(genericAssistantPhraseGuard("That's a great question!").pass).toBe(false);
+    expect(genericAssistantPhraseGuard("Is there anything else I can help with?").pass).toBe(false);
+  });
+});
+
 describe("outputGuards — runOutputGuards", () => {
   it("returns array of guard results", () => {
     const results = runOutputGuards({
@@ -276,7 +302,7 @@ describe("outputGuards — runOutputGuards", () => {
     expect(results.length).toBeGreaterThan(0);
   });
 
-  it("returns 8 guards (loop, degeneration, scaffold, lecture, question, length, grounding, circular)", () => {
+  it("returns 9 guards (loop, degeneration, scaffold, lecture, question, length, grounding, circular, generic-assistant-phrase)", () => {
     const results = runOutputGuards({
       reply: "I hear you. That sounds hard. How are you feeling?",
       userMessage: "my sister betrayed me",
@@ -284,7 +310,18 @@ describe("outputGuards — runOutputGuards", () => {
       questionAllowed: true,
       recentReplies: [],
     });
-    expect(results.length).toBe(8);
+    expect(results.length).toBe(9);
+  });
+
+  it("a generic-assistant reply through the full pipeline blocks generation", () => {
+    const results = runOutputGuards({
+      reply: "Hello! How can I assist you today?",
+      userMessage: "hi nila, just testing",
+      move: "REFLECT_ASK",
+      questionAllowed: true,
+      recentReplies: [],
+    });
+    expect(hasGenerationBlockingFailure(results)).toBe(true);
   });
 });
 

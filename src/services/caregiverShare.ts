@@ -6,6 +6,17 @@
 //
 // Phase 19 — enhanced with phase markers, wellbeing trajectory, sleep patterns,
 // and checkin frequency, all gated by per-contact share-category preferences.
+//
+// CAREGIVER PSYCHOEDUCATION:
+//   - Miklowitz (2010, Family-Focused Therapy) — psychoeducation for families of BD patients reduces
+//     relapse rates and improves communication
+//   - Colom et al. (2003, 2008, Barcelona BD Program) — group psychoeducation for caregivers improved
+//     knowledge and reduced burden (two RCTs)
+//   - R-bipolar RCT (2024, Trials) — testing group psychoeducation for BD caregivers (6 sessions,
+//     2h each, groups of 20-40)
+//   - Zauszniewski et al. (2024, J Psychiatr Nurs) — caregivers of BD patients experience higher
+//     distress than caregivers of patients with other mental illnesses; need for self-management
+//     interventions is critical
 
 import { computeStreak } from "./streaks";
 import { loadMoodHistory } from "./moodHistory";
@@ -132,4 +143,68 @@ export function caregiverSummaryText(prefs?: CaregiverPreferences): string {
     "If they're in crisis:",
     ...s.crisisLines.map((l) => "• " + l),
   ].join("\n");
+}
+
+// ── Caregiver psychoeducation content ─────────────────────────────────────────
+// Brief, culturally sensitive psychoeducation for family caregivers of people with
+// bipolar disorder. Based on Miklowitz (2010, FFT) and Barcelona program (Colom 2003, 2008).
+// Framed for Indian context where family caregiving is the norm.
+
+export interface CaregiverPsychoed {
+  title: string;
+  lines: string[];
+}
+
+/** Brief psychoeducation content for caregivers, organized by topic. */
+export const CAREGIVER_PSYCHOEDUCATION: CaregiverPsychoed[] = [
+  {
+    title: "What is bipolar disorder?",
+    lines: [
+      "Bipolar disorder is a condition where mood shifts between elevated (high energy, less sleep, " +
+      "racing thoughts) and depressed (low energy, withdrawal, hopelessness) periods.",
+      "These shifts are not choices or character flaws — they are part of the condition.",
+      "With proper support (medication, routine, stress management), most people with bipolar " +
+      "can live stable, fulfilling lives.",
+    ],
+  },
+  {
+    title: "How you can help",
+    lines: [
+      "Consistency matters: help maintain regular sleep, meal, and medication schedules.",
+      "Listen without fixing: sometimes they need to be heard, not advised.",
+      "Notice shifts gently: 'I've noticed you seem a bit different lately' is better than " +
+      "'You're acting manic/depressed.'",
+      "Take care of yourself too: you can't pour from an empty cup.",
+    ],
+  },
+  {
+    title: "What to avoid",
+    lines: [
+      "Don't minimize: 'Just think positive' or 'Everyone gets sad' invalidates their experience.",
+      "Don't take mood episodes personally: the condition affects mood, not their love for you.",
+      "Don't try to be their therapist: your role is support, not treatment.",
+      "Don't ignore your own needs: caregiver burnout is real and affects everyone.",
+    ],
+  },
+  {
+    title: "When to seek professional help",
+    lines: [
+      "If they express suicidal thoughts → contact emergency services immediately.",
+      "If mood episodes are frequent or severe despite medication → encourage a psychiatrist visit.",
+      "If YOU feel overwhelmed → it's okay to seek support for yourself too.",
+      "This app is a wellness companion, not a substitute for professional care.",
+    ],
+  },
+];
+
+/** Get caregiver psychoeducation content by topic index. */
+export function getCaregiverPsychoed(index: number): CaregiverPsychoed | null {
+  return CAREGIVER_PSYCHOEDUCATION[index] ?? null;
+}
+
+/** Get all caregiver psychoeducation topics as a summary. */
+export function caregiverPsychoedSummary(): string {
+  return CAREGIVER_PSYCHOEDUCATION.map((topic) =>
+    `${topic.title}:\n${topic.lines.map((l) => `  • ${l}`).join("\n")}`
+  ).join("\n\n");
 }

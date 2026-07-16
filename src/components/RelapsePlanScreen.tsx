@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { AlertTriangle, ChevronLeft, Save } from "lucide-react";
-import { createEmptyPlan, loadRelapsePlan, saveRelapsePlan, currentPhase, phaseLabel, phaseDescription, signalFields, type RelapsePlan, type PlanPhase } from "../services/relapsePlan";
+import { createEmptyPlan, loadRelapsePlan, saveRelapsePlan, currentPhase, phaseLabel, phaseDescription, signalFields, actionFields, type RelapsePlan, type PlanPhase } from "../services/relapsePlan";
 
 const PHASES: PlanPhase[] = ["green", "orange", "red"];
 const PHASE_COLORS: Record<PlanPhase, string> = { green: "border-emerald-500", orange: "border-amber-500", red: "border-rose-500" };
@@ -56,9 +56,9 @@ export default function RelapsePlanScreen() {
 
           <div className="space-y-2">
             <div className="text-xs uppercase font-mono tracking-widest text-slate-500">Things I can do</div>
-            {(["selfCare", "copingSkills", "reachOut", "crisisHelp"] as const).map((k) => (
-              <input key={k} value={plan[p].actions[k].join(", ")} onChange={(e) => updateActions(p, k, e.target.value)}
-                placeholder={`${k}...`} className="w-full glass rounded-xl px-3 py-2 text-xs text-slate-200 placeholder-slate-600" />
+            {actionFields().map((f) => (
+              <input key={f.key} value={plan[p].actions[f.key].join(", ")} onChange={(e) => updateActions(p, f.key, e.target.value)}
+                placeholder={f.placeholder} className="w-full glass rounded-xl px-3 py-2 text-xs text-slate-200 placeholder-slate-600" />
             ))}
           </div>
         </div>

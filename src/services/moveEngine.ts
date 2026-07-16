@@ -1,6 +1,22 @@
 /**
  * Move Engine — Ash-style conversational move classifier.
  *
+ * RESEARCH BASIS: The underlying conversational techniques are evidence-based:
+ *   - Reflective listening (REFLECT_ASK): Miller & Rollnick (2013, MI 3rd ed.) — foundational MI skill
+ *   - Complex reflections: Brown et al. (2024, JMIR Mental Health) — GPT-4 can generate MI reflections
+ *     comparable to human-authored ones (88% acceptability rate)
+ *   - Open questions (CLARIFY, ANSWER): Miller & Rollnick (2013); Clark (1986, CBT Socratic questioning)
+ *   - Validation + absolving (REPAIR): Linehan (2015, DBT Skills Training) — core DBT validation
+ *   - Gentle challenge (DEEPEN): Beck (1979, Cognitive Therapy); Padesky (1990, Socratic questioning)
+ *   - Holding without question (HOLD): Rogers (1951, Client-Centered Therapy) — unconditional positive regard
+ *
+ * IMPORTANT CAVEAT: The specific 6-move classification scheme (CLARIFY, REFLECT_ASK, DEEPEN, HOLD,
+ * REPAIR, ANSWER) and the deterministic lexical cue detection are NilaMind's internal design, NOT a
+ * validated clinical instrument. Each move's steering text is clinically grounded, but the classification
+ * accuracy has not been validated against human-rated transcripts. The priority ordering prevents
+ * double-fire and ensures safety-critical moves (REPAIR) take precedence.
+ * RESEARCH TODO: Validate move classifier against human-rated therapeutic conversation transcripts.
+ *
  * Classifies each user turn into one of six moves, then selects
  * the appropriate steer prompt + exemplar filter for the reply.
  *

@@ -130,6 +130,21 @@ function daysSinceLastCheckin(): number {
 }
 
 /** Check if medication was logged today. */
+/** Whether today's DiaryCardEntry has actually been saved. Reads the real storage shape
+ *  DiaryCardScreen uses — one JSON object under "nilamind_diary", keyed by date — rather than a
+ *  per-date key that's never written. */
+export function hasDiaryEntryToday(): boolean {
+  const today = new Date().toISOString().split("T")[0];
+  try {
+    const raw = secureLocal.getItem("nilamind_diary");
+    if (!raw) return false;
+    const entries = JSON.parse(raw);
+    return !!entries?.[today];
+  } catch {
+    return false;
+  }
+}
+
 function medicationLoggedToday(): boolean {
   const today = new Date().toISOString().split("T")[0];
   try {
@@ -213,9 +228,7 @@ export function computeProactiveMoment(): ProactiveMoment | null {
 
   // 5. Evening diary reminder (after 6pm, if no diary today)
   if (hour >= 18 && hour <= 23) {
-    const diaryKey = "nilamind_diary_" + today;
-    const hasDiary = secureLocal.getItem(diaryKey);
-    if (!hasDiary) {
+    if (!hasDiaryEntryToday()) {
       const key = "diary_evening";
       if (!isProactiveDismissed(key)) {
         moments.push({

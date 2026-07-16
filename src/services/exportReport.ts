@@ -201,6 +201,147 @@ export function buildClinicalJson(input: ClinicalExportInput): string {
   );
 }
 
+// Brand palette shared by every PDF surface (the plain-text report renderer below, and the
+// clinician chart dashboard in clinicianPdf.ts) so the two visually match.
+export const BRAND: [number, number, number] = [236, 91, 158]; // NilaMind magenta (#EC5B9E)
+export const INK: [number, number, number] = [45, 45, 52];
+export const MUTE: [number, number, number] = [125, 125, 135];
+
+/** A page's worth of jsPDF drawing state (margins, cursor, pagination), reused by both the
+ *  plain-text report renderer (below) and clinicianPdf.ts's chart dashboard so headers, footers,
+ *  and pagination behave identically across every PDF NilaMind generates. */
+export class PdfCanvas {
+  doc: jsPDF;
+  pageW: number;
+  pageH: number;
+  M = 16;
+  maxW: number;
+  page = 1;
+  y = 0;
+
+  constructor(doc: jsPDF) {
+    this.doc = doc;
+    this.pageW = doc.internal.pageSize.getWidth(); // 210mm
+    this.pageH = doc.internal.pageSize.getHeight(); // 297mm
+    this.maxW = this.pageW - this.M * 2;
+  }
+
+  footer(): void {
+    const { doc, pageW, pageH, M, page } = this;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7.5);
+    doc.setTextColor(...MUTE);
+    doc.text("Generated on-device · Private — not a diagnosis", M, pageH - 8);
+    doc.text(String(page), pageW - M, pageH - 8, { align: "right" });
+  }
+
+  beginPage(): void {
+    this.doc.setFillColor(...BRAND);
+    this.doc.rect(0, 0, this.pageW, 2.5, "F"); // top accent bar
+    this.y = this.M + 2;
+  }
+
+  /** Ensures `h` mm of vertical space remains on the current page, paginating (with footer) if not. */
+  ensure(h: number): void {
+    if (this.y + h > this.pageH - 14) {
+      this.footer();
+      this.doc.addPage();
+      this.page++;
+      this.beginPage();
+    }
+  }
+
+  /** Explicit page break (used between the chart dashboard and the full-detail text pages). */
+  newPage(): void {
+    this.footer();
+    this.doc.addPage();
+    this.page++;
+    this.beginPage();
+  }
+}
+
+const isSep = (s: string) => /^[=\-·—]{3,}$/.test(s.trim());
+
+/** Draws the brand-colored title line(s). Returns nothing; advances canvas.y. */
+export function renderTitle(canvas: PdfCanvas, title: string): void {
+  const { doc, M, maxW } = canvas;
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(17);
+  doc.setTextColor(...BRAND);
+  for (const tl of doc.splitTextToSize(title.trim(), maxW)) {
+    canvas.ensure(9);
+    doc.text(tl, M, canvas.y);
+    canvas.y += 8;
+  }
+  canvas.y += 1;
+}
+
+/** Draws one muted meta line (e.g. the period label under the title). */
+export function renderMetaLine(canvas: PdfCanvas, line: string): void {
+  const { doc, M, maxW } = canvas;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9.5);
+  doc.setTextColor(...MUTE);
+  for (const w of doc.splitTextToSize(line, maxW)) {
+    canvas.ensure(5);
+    doc.text(w, M, canvas.y);
+    canvas.y += 4.6;
+  }
+}
+
+/**
+ * Renders the body of a report from `rawLines[fromIndex..]`: col-0 lines are detected as section
+ * headers (bold ink + a short magenta accent rule) vs. indented/bulleted body text, matching the
+ * structure clinicianReport.ts / buildTextReport emit. Shared by generatePdfBlob and clinicianPdf.ts
+ * (the latter reuses it for the full-detail pages that follow the chart dashboard).
+ */
+export function renderBody(canvas: PdfCanvas, rawLines: string[], fromIndex: number): void {
+  const { doc, M, maxW } = canvas;
+  for (let i = fromIndex; i < rawLines.length; i++) {
+    const line = rawLines[i];
+    const trimmed = line.trim();
+
+    if (isSep(trimmed)) { canvas.y += 2.5; continue; }
+    if (!trimmed) { canvas.y += 2.5; continue; }
+
+    const indented = /^\s/.test(line);
+    // A section header is a col-0 line with no "key: value" and no trailing period (rules out wrapped
+    // body continuations like "interactions."), and either short or followed by indented body.
+    let j = i + 1;
+    while (j < rawLines.length && !rawLines[j].trim()) j++;
+    const nextIndented = j < rawLines.length && /^\s/.test(rawLines[j]);
+    const isHeader = !indented && !/:\s*\S/.test(trimmed) && !/[.]$/.test(trimmed) && (nextIndented || trimmed.length <= 42);
+
+    if (isHeader) {
+      canvas.ensure(12);
+      canvas.y += 3.5;
+      doc.setFont("helvetica", "bold"); doc.setFontSize(11.5); doc.setTextColor(...INK);
+      doc.text(trimmed, M, canvas.y);
+      canvas.y += 1.8;
+      doc.setDrawColor(...BRAND); doc.setLineWidth(0.5); doc.line(M, canvas.y, M + 20, canvas.y);
+      canvas.y += 4;
+    } else {
+      const indentCols = (line.match(/^\s*/)?.[0].length ?? 0);
+      const x = M + Math.min(indentCols, 6) * 1.7;
+      doc.setFont("helvetica", "normal"); doc.setFontSize(9.5); doc.setTextColor(...INK);
+      for (const w of doc.splitTextToSize(trimmed, maxW - (x - M))) { canvas.ensure(5); doc.text(w, x, canvas.y); canvas.y += 4.8; }
+    }
+  }
+}
+
+/** Splits report text into `{ rawLines, titleIndex, bodyIndex }`: `bodyIndex` is the first line
+ *  after the title's meta block and its `---`/`===` separator, ready for `renderBody`. */
+export function splitReportText(text: string): { rawLines: string[]; titleIndex: number; bodyIndex: number } {
+  const rawLines = text.replace(/\r/g, "").split("\n");
+  let titleIndex = rawLines.findIndex((l) => l.trim().length > 0);
+  if (titleIndex < 0) titleIndex = 0;
+  let bodyIndex = rawLines.length;
+  for (let i = titleIndex + 1; i < rawLines.length; i++) {
+    if (isSep(rawLines[i].trim())) { bodyIndex = i + 1; break; }
+  }
+  return { rawLines, titleIndex, bodyIndex };
+}
+
 /**
  * Render a report string into a properly formatted, branded PDF (not the old raw line-dump).
  * The report builders (clinicianReport.ts / buildTextReport) emit a consistent structure — a title
@@ -211,88 +352,20 @@ export function buildClinicalJson(input: ClinicalExportInput): string {
 export function generatePdfBlob(text: string): Blob | null {
   try {
     const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-    const pageW = doc.internal.pageSize.getWidth();   // 210mm
-    const pageH = doc.internal.pageSize.getHeight();  // 297mm
-    const M = 16;
-    const maxW = pageW - M * 2;
-    const BRAND: [number, number, number] = [236, 91, 158]; // NilaMind magenta (#EC5B9E)
-    const INK: [number, number, number] = [45, 45, 52];
-    const MUTE: [number, number, number] = [125, 125, 135];
+    const canvas = new PdfCanvas(doc);
+    canvas.beginPage();
 
-    let page = 1;
-    let y = 0;
-
-    const footer = () => {
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(7.5);
-      doc.setTextColor(...MUTE);
-      doc.text("Generated on-device · Private — not a diagnosis", M, pageH - 8);
-      doc.text(String(page), pageW - M, pageH - 8, { align: "right" });
-    };
-    const beginPage = () => {
-      doc.setFillColor(...BRAND);
-      doc.rect(0, 0, pageW, 2.5, "F"); // top accent bar
-      y = M + 2;
-    };
-    const ensure = (h: number) => {
-      if (y + h > pageH - 14) { footer(); doc.addPage(); page++; beginPage(); }
-    };
-    const isSep = (s: string) => /^[=\-·—]{3,}$/.test(s.trim());
-
-    beginPage();
-
-    const rawLines = text.replace(/\r/g, "").split("\n");
-    let ti = rawLines.findIndex((l) => l.trim().length > 0);
-    if (ti < 0) ti = 0;
-
-    // Title
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(17);
-    doc.setTextColor(...BRAND);
-    for (const tl of doc.splitTextToSize(rawLines[ti].trim(), maxW)) {
-      ensure(9); doc.text(tl, M, y); y += 8;
+    const { rawLines, titleIndex, bodyIndex } = splitReportText(text);
+    renderTitle(canvas, rawLines[titleIndex]);
+    for (let i = titleIndex + 1; i < bodyIndex - 1; i++) {
+      const trimmed = rawLines[i].trim();
+      if (!trimmed) { canvas.y += 1.5; continue; }
+      renderMetaLine(canvas, trimmed);
     }
-    y += 1;
+    canvas.y += 2.5; // matches the separator's spacing in the original single-pass renderer
+    renderBody(canvas, rawLines, bodyIndex);
 
-    let inMeta = true; // the title's sub-block (period label etc.), until the first separator
-    for (let i = ti + 1; i < rawLines.length; i++) {
-      const line = rawLines[i];
-      const trimmed = line.trim();
-
-      if (isSep(trimmed)) { inMeta = false; y += 2.5; continue; }
-      if (!trimmed) { y += inMeta ? 1.5 : 2.5; continue; }
-
-      if (inMeta) {
-        doc.setFont("helvetica", "normal"); doc.setFontSize(9.5); doc.setTextColor(...MUTE);
-        for (const w of doc.splitTextToSize(trimmed, maxW)) { ensure(5); doc.text(w, M, y); y += 4.6; }
-        continue;
-      }
-
-      const indented = /^\s/.test(line);
-      // A section header is a col-0 line with no "key: value" and no trailing period (rules out wrapped
-      // body continuations like "interactions."), and either short or followed by indented body.
-      let j = i + 1;
-      while (j < rawLines.length && !rawLines[j].trim()) j++;
-      const nextIndented = j < rawLines.length && /^\s/.test(rawLines[j]);
-      const isHeader = !indented && !/:\s*\S/.test(trimmed) && !/[.]$/.test(trimmed) && (nextIndented || trimmed.length <= 42);
-
-      if (isHeader) {
-        ensure(12);
-        y += 3.5;
-        doc.setFont("helvetica", "bold"); doc.setFontSize(11.5); doc.setTextColor(...INK);
-        doc.text(trimmed, M, y);
-        y += 1.8;
-        doc.setDrawColor(...BRAND); doc.setLineWidth(0.5); doc.line(M, y, M + 20, y);
-        y += 4;
-      } else {
-        const indentCols = (line.match(/^\s*/)?.[0].length ?? 0);
-        const x = M + Math.min(indentCols, 6) * 1.7;
-        doc.setFont("helvetica", "normal"); doc.setFontSize(9.5); doc.setTextColor(...INK);
-        for (const w of doc.splitTextToSize(trimmed, maxW - (x - M))) { ensure(5); doc.text(w, x, y); y += 4.8; }
-      }
-    }
-
-    footer();
+    canvas.footer();
     return doc.output("blob");
   } catch {
     return null;

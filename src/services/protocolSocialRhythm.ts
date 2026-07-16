@@ -3,7 +3,7 @@ import type { Protocol } from "./protocols";
 export const SOCIAL_RHYTHM_PROTOCOL: Protocol = {
   id: "social-rhythm",
   title: "Social Rhythm Therapy",
-  basis: "Interpersonal and Social Rhythm Therapy (IPSRT) reduces bipolar relapse by 2-3× vs treatment as usual by regularising daily routines — wake time, first contact, meals, and bedtime (Frank et al. 2005, Arch Gen Psychiatry; Frank et al. 2015, Am J Psychiatry). Circadian rhythm disruption is the single strongest prodrome for both manic and depressive episodes (Gold & Bunney 2018, Annu Rev Clin Psychol).",
+  basis: "Interpersonal and Social Rhythm Therapy (IPSRT) reduces bipolar relapse by 2-3× vs treatment as usual by regularising daily routines — wake time, first contact, meals, and bedtime (Frank et al. 2005, Arch Gen Psychiatry; Frank et al. 2015, Am J Psychiatry). Circadian rhythm disruption is the single strongest prodrome for both manic and depressive episodes (Gold & Bunney 2018, Annu Rev Clin Psychol). Cultural note: meal times, social contact patterns, and family structures vary significantly across cultures — adapt these anchors to your actual life, not a generic Western schedule.",
   forConcerns: ["routine", "rhythm", "schedule", "sleep schedule", "daily routine", "stabilize", "stability", "regular", "anchor", "circadian", "social rhythm"],
   steps: [
     {
@@ -16,7 +16,7 @@ export const SOCIAL_RHYTHM_PROTOCOL: Protocol = {
       id: "ipsrt-2",
       kind: "plan",
       title: "Track your 5 anchors",
-      prompt: "Let's note the 5 key moments in your day: wake time, first social contact, start of main activity, dinner, and bedtime. For the next few days, just observe and log them — no changes yet. Want to begin tracking?",
+      prompt: "Let's note the 5 key moments in your day: wake time, first social contact, start of main activity, dinner, and bedtime. In Indian households, dinner may be later (8-10pm) and family contact continuous — that's fine, the key is consistency not timing. For the next few days, just observe and log them — no changes yet. Want to begin tracking?",
     },
     {
       id: "ipsrt-3",
@@ -34,7 +34,7 @@ export const SOCIAL_RHYTHM_PROTOCOL: Protocol = {
       id: "ipsrt-5",
       kind: "plan",
       title: "Set a regular meal time",
-      prompt: "Meal times — especially dinner — are powerful social cues for your body clock. What dinner time could you anchor to most days? It's okay if it's approximate, just aim for the same 30-minute window.",
+      prompt: "Meal times — especially dinner — are powerful social cues for your body clock. In Indian culture, meals are often family-centered and may shift with festivals or weekends — that's normal. What dinner time could you anchor to most weekdays? It's okay if weekends differ slightly, just aim for the same 30-minute window on work/school days.",
     },
     {
       id: "ipsrt-6",

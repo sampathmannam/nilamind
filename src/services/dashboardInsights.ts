@@ -187,6 +187,30 @@ export function moodTrend(mood: MoodPoint[], range: "7d" | "30d"): TrendPoint[] 
   }));
 }
 
+export interface TrendPointWithEma extends TrendPoint {
+  emaIntensity?: number;
+}
+
+/**
+ * Attaches EMA micro-check-in intensity onto the (already-sorted) trend array by date, instead of
+ * handing the chart a second, separately-ordered array. loadEmaEntries() returns newest-first;
+ * merging by value here — rather than letting Recharts reconcile two differently-ordered `data`
+ * arrays across a Line and a Scatter series — keeps the chart's category axis chronological.
+ */
+export function mergeEmaIntoTrend(
+  trend: TrendPoint[],
+  emaEntries: { date: string; valence: number }[],
+): TrendPointWithEma[] {
+  const byDate = new Map<string, number>();
+  for (const e of emaEntries) {
+    byDate.set(e.date.slice(5), Math.round(((e.valence + 3) / 6) * 9) + 1); // map -3..+3 to 1..10 roughly
+  }
+  return trend.map((p) => {
+    const emaIntensity = byDate.get(p.date);
+    return emaIntensity === undefined ? p : { ...p, emaIntensity };
+  });
+}
+
 export interface WeeklyBar {
   day: string; // "Monday" … "Sunday"
   avg: number; // average intensity
