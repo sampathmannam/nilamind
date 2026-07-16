@@ -35,6 +35,18 @@ const baseInput: ClinicianReportInput = {
     count: 3,
     byTimeOfDay: "evening (2), afternoon (1)",
     avgDurationMin: 45,
+    entries: [
+      {
+        date: "2026-07-12", time: "11:42 PM", dayOfWeek: "Sunday", timeOfDay: "night",
+        trigger: "argument with roommate", startIntensity: 8, peakIntensity: 9, endIntensity: 3,
+        durationMinutes: 42, skillsHelpful: ["TIPP", "calling a friend"],
+      },
+      {
+        date: "2026-07-08", time: "6:10 PM", dayOfWeek: "Wednesday", timeOfDay: "evening",
+        trigger: null, startIntensity: 7, peakIntensity: 7, endIntensity: 5,
+        durationMinutes: 20, skillsHelpful: [],
+      },
+    ],
   },
   protocolsCompleted: 4,
   nilaSessions: 12,
@@ -106,6 +118,47 @@ describe("buildClinicianReport", () => {
     expect(report).toContain("45 min");
   });
 
+  it("includes per-episode narrative entries with trigger, intensity arc, and skills that helped", () => {
+    const report = buildClinicianReport(baseInput);
+    expect(report).toContain("2026-07-12 (Sunday) 11:42 PM");
+    expect(report).toContain("argument with roommate");
+    expect(report).toContain("8 → 9 → 3");
+    expect(report).toContain("42 min");
+    expect(report).toContain("TIPP, calling a friend");
+  });
+
+  it("labels a skipped trigger as not recorded rather than omitting the entry", () => {
+    const report = buildClinicianReport(baseInput);
+    expect(report).toContain("2026-07-08 (Wednesday) 6:10 PM");
+    expect(report).toContain("trigger not recorded");
+  });
+
+  it("caps rendered episode entries at 8 and notes how many more exist", () => {
+    const manyEntries = Array.from({ length: 12 }, (_, i) => ({
+      date: `2026-07-${String(i + 1).padStart(2, "0")}`, time: "9:00 PM", dayOfWeek: "Monday",
+      timeOfDay: "evening", trigger: "test", startIntensity: 5, peakIntensity: 6, endIntensity: 4,
+      durationMinutes: 10, skillsHelpful: [],
+    }));
+    const report = buildClinicianReport({
+      ...baseInput,
+      episodes: { count: 12, byTimeOfDay: "evening (12)", avgDurationMin: 10, entries: manyEntries },
+    });
+    expect(report).toContain("showing most recent 8 of 12");
+  });
+
+  it("never renders a Temporal Risk Assessment section — F11/F12/F13/F14: computed risk scores shown to a clinician risk automation bias and fail FDA's Non-Device CDS exemption without disclosed validation", () => {
+    const report = buildClinicianReport(baseInput);
+    expect(report).not.toContain("Temporal Risk Assessment");
+    expect(report).not.toContain("Risk Score");
+    expect(report).not.toContain("Suicidal Ideation:");
+  });
+
+  it("never renders a Crisis Detection Performance section — this is model-QA telemetry (the classifier's own sensitivity/specificity), not patient information", () => {
+    const report = buildClinicianReport(baseInput);
+    expect(report).not.toContain("Crisis Detection Performance");
+    expect(report).not.toContain("Sensitivity (Recall)");
+  });
+
   it("includes engagement section", () => {
     const report = buildClinicianReport(baseInput);
     expect(report).toContain("4");
@@ -146,7 +199,7 @@ describe("buildClinicianReport", () => {
   it("handles zero episodes gracefully", () => {
     const input: ClinicianReportInput = {
       ...baseInput,
-      episodes: { count: 0, byTimeOfDay: "", avgDurationMin: null },
+      episodes: { count: 0, byTimeOfDay: "", avgDurationMin: null, entries: [] },
     };
     const report = buildClinicianReport(input);
     expect(report).toContain("No episodes");

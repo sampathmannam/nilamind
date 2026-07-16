@@ -2,8 +2,6 @@
 // Privacy-first: generated on-device, user-initiated, never sent anywhere.
 // Designed for PDF output via generatePdfBlob in exportReport.ts.
 
-import type { CrisisMetrics } from "./crisisSafetyValidation";
-import type { RiskAssessment } from "./temporalRiskAssessment";
 import type { EpisodeMarker } from "./episodeMarker";
 import type { DiaryCardClinicianSummary } from "./diaryClinicianSummary";
 
@@ -28,10 +26,24 @@ export interface ClinicianMedication {
   commonSideEffects: string[];
 }
 
+export interface ClinicianEpisodeEntry {
+  date: string;
+  time: string;
+  dayOfWeek: string;
+  timeOfDay: string;
+  trigger: string | null;
+  startIntensity: number;
+  peakIntensity: number;
+  endIntensity: number;
+  durationMinutes: number;
+  skillsHelpful: string[];
+}
+
 export interface ClinicianEpisodeSummary {
   count: number;
   byTimeOfDay: string; // e.g. "evening (2), afternoon (1)"
   avgDurationMin: number | null;
+  entries: ClinicianEpisodeEntry[];
 }
 
 import type { ClinicianUsage } from "./clinicianPeriod";
@@ -57,8 +69,6 @@ export interface ClinicianReportInput {
   featuresUsed: string[];
   /** On-device usage + sleep signals for the window (no OS-level call logs — privacy promise). */
   usage?: ClinicianUsage;
-  crisisMetrics?: CrisisMetrics; // Optional crisis detection performance metrics
-  temporalRiskAssessment?: RiskAssessment; // Optional temporal risk assessment
   // Enhanced phenomenological summaries for better clinical insight
   emotionalStateSummary?: {
     intensityDistribution: { mild: number, moderate: number, severe: number };
@@ -170,12 +180,29 @@ export function buildClinicianReport(input: ClinicianReportInput): string {
     lines.push("");
   }
 
-  // Episodes
+  // Episodes — F1/F2/F3/F6/F9: retrospective recall of episodes is unreliable (5-17%
+  // sensitivity for extreme mood shifts); the value of this section is that entries were
+  // captured close to the moment via the Episode Support debrief, not reconstructed later.
+  // Do not collapse this back down to just count/avg/timing — that discards the one advantage
+  // this data has over the patient trying to recall it in the room.
   if (input.episodes.count > 0) {
     lines.push("Episode Log");
     lines.push(`  Episodes logged: ${input.episodes.count}`);
     if (input.episodes.avgDurationMin != null) lines.push(`  Avg duration: ${input.episodes.avgDurationMin} min`);
     if (input.episodes.byTimeOfDay) lines.push(`  Timing: ${input.episodes.byTimeOfDay}`);
+    const entries = input.episodes.entries;
+    if (entries.length > 0) {
+      lines.push("");
+      const shown = entries.slice(0, 8);
+      for (const e of shown) {
+        const triggerText = e.trigger && e.trigger !== "Skipped" ? `trigger: "${e.trigger}"` : "trigger not recorded";
+        const helpedText = e.skillsHelpful.length > 0 ? ` · helped: ${e.skillsHelpful.join(", ")}` : "";
+        lines.push(`  ${e.date} (${e.dayOfWeek}) ${e.time} — ${triggerText} · intensity ${e.startIntensity} → ${e.peakIntensity} → ${e.endIntensity} over ${e.durationMinutes} min${helpedText}`);
+      }
+      if (entries.length > 8) {
+        lines.push(`  (showing most recent 8 of ${entries.length})`);
+      }
+    }
     lines.push("");
   } else {
     lines.push("Episode Log");
@@ -267,100 +294,6 @@ export function buildClinicianReport(input: ClinicianReportInput): string {
     lines.push("");
   }
 
-// Crisis Detection Performance (if available)
-   if (input.crisisMetrics) {
-     const m = input.crisisMetrics;
-     lines.push("Crisis Detection Performance");
-     if (m.totalEvaluations > 0) {
-       lines.push(`  Evaluations: ${m.totalEvaluations}`);
-       lines.push(`  Sensitivity (Recall): ${(m.sensitivity! * 100).toFixed(1)}%`);
-       lines.push(`  Specificity: ${(m.specificity! * 100).toFixed(1)}%`);
-       lines.push(`  PPV (Precision): ${(m.ppv! * 100).toFixed(1)}%`);
-       lines.push(`  NPV: ${(m.npv! * 100).toFixed(1)}%`);
-       lines.push(`  F1 Score: ${m.f1!.toFixed(3)}`);
-       lines.push(`  Accuracy: ${(m.accuracy! * 100).toFixed(1)}%`);
-       
-       // Add calibration info if available
-       if (m.expectedCalibrationError !== undefined) {
-         lines.push(`  Expected Calibration Error: ${(m.expectedCalibrationError * 100).toFixed(1)}%`);
-       }
-       
-       // Add clinical interpretation
-       lines.push("");
-       lines.push(`  Clinical Interpretation:`);
-       if (m.sensitivity! >= 0.8) {
-         lines.push(`    • Good sensitivity: captures most genuine crisis signals`);
-       } else if (m.sensitivity! >= 0.6) {
-         lines.push(`    • Moderate sensitivity: may miss some crisis signals`);
-       } else {
-         lines.push(`    • Lower sensitivity: may miss crisis signals - consider clinical interview`);
-       }
-       
-       if (m.specificity! >= 0.8) {
-         lines.push(`    • Good specificity: few false alarms`);
-       } else if (m.specificity! >= 0.6) {
-         lines.push(`    • Moderate specificity: some false alerts possible`);
-       } else {
-         lines.push(`    • Lower sensitivity: more frequent alerts - review with clinical judgment`);
-       }
-     } else {
-       lines.push("  No crisis evaluation data available for this period.");
-       lines.push("  Crisis detection performance metrics require evaluated interactions.");
-     }
-     lines.push("");
-   }
-   
-// Temporal Risk Assessment (if available)
-    if (input.temporalRiskAssessment) {
-      const trauma = input.temporalRiskAssessment;
-      lines.push("Temporal Risk Assessment");
-      lines.push(`  Overall Risk Level: ${trauma.riskLevel.toUpperCase()}`);
-      lines.push(`  Risk Score: ${(trauma.riskScore * 100).toFixed(1)} / 100`);
-      lines.push(`  Assessment Confidence: ${(trauma.confidence * 100).toFixed(0)}%`);
-      lines.push(`  Trend: ${trauma.trend.toUpperCase()}`);
-      lines.push(`  Evaluation Period: ${trauma.windowDays}-day lookback`);
-      
-      lines.push("");
-      lines.push(`  Risk Factors:`);
-      lines.push(`    • Sleep Deprivation: ${(trauma.factors.sleepDeprivation * 100).toFixed(0)}%`);
-      lines.push(`    • Sleep Variability: ${(trauma.factors.sleepVariability * 100).toFixed(0)}%`);
-      lines.push(`    • Rhythm Irregularity: ${(trauma.factors.rhythmIrregularity * 100).toFixed(0)}%`);
-      lines.push(`    • Mood Deterioration: ${(trauma.factors.moodDeterioration * 100).toFixed(0)}%`);
-      lines.push(`    • Affective Lability: ${(trauma.factors.affectiveLability * 100).toFixed(0)}%`);
-      lines.push(`    • Social Withdrawal: ${(trauma.factors.socialWithdrawal * 100).toFixed(0)}%`);
-      lines.push(`    • Depression Severity: ${(trauma.factors.depressionSeverity * 100).toFixed(0)}%`);
-      lines.push(`    • Anxiety Severity: ${(trauma.factors.anxietySeverity * 100).toFixed(0)}%`);
-      lines.push(`    • Suicidal Ideation: ${(trauma.factors.suicidalIdeation * 100).toFixed(0)}%`);
-      
-      lines.push("");
-      lines.push(`  Clinical Interpretation:`);
-      switch (trauma.riskLevel) {
-        case 'low':
-          lines.push(`    • Low risk: Continue routine monitoring and self-care practices`);
-          break;
-        case 'moderate':
-          lines.push(`    • Moderate risk: Consider increasing self-monitoring and support`);
-          break;
-        case 'high':
-          lines.push(`    • High risk: Consider contacting mental health professional or trusted support`);
-          break;
-        case 'imminent':
-          lines.push(`    • Elevated risk: Strongly consider reaching out for immediate support`);
-          lines.push(`    • If experiencing crisis thoughts, use crisis resources or contact emergency services`);
-          break;
-      }
-      
-      if (trauma.recommendations.length > 0) {
-        lines.push("");
-        lines.push(`  Recommendations:`);
-        trauma.recommendations.forEach((rec, idx) => {
-          lines.push(`    • ${rec}`);
-        });
-      }
-      
-      lines.push("");
-    }
-    
     // Enhanced Phenomenological Summary (if available)
     if (input.emotionalStateSummary || input.contextualAnalysis || input.whatHelpedSummary || 
         input.enhancedSleepDetails || input.enhancedSocialRhythmDetails) {
