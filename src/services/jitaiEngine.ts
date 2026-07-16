@@ -212,6 +212,13 @@ export function assessJitai(params: {
 //    notificationSuppress.ts's existing crisis-suppression precedent treats safety signals as
 //    override-only-forward, never throttled. Gating this like a wellness nudge risks suppressing a genuine
 //    repeated safety signal.
+//
+// META-ANALYTIC CONTEXT: A 2025 BMJ Mental Health meta-analysis (K=23 studies, N=2563) found JITAIs
+// show a small between-group effect (g=0.15) on mental health, with moderate effects at follow-up
+// (g=0.65 at 3-6 months). The field acknowledges JITAIs are "still in early stages" (Frontiers 2025).
+// Most JITAIs lack empirical decision rules. These cooldown values should be validated via
+// micro-randomized trial (MRT) in future work.
+// RESEARCH TODO: cooldown durations are provisional — validate via MRT or factorial experiment.
 const JITAI_SHOWN_PREFIX = "nilamind_jitai_last_shown_";
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS_LOCAL = 24 * HOUR_MS;

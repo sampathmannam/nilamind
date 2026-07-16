@@ -2,6 +2,22 @@ import { secureLocal } from "./secureLocal";
 import { loadMoodHistory } from "./moodHistory";
 import { getProtocol } from "./protocols";
 
+// N-of-1 / Single Case Experimental Design (SCED) for protocol effectiveness ranking.
+//
+// RESEARCH BASIS: SCED methodology is well-established in clinical psychology:
+//   - Kazdin (2018, Behav Res Ther): SCEDs evaluate interventions in research and clinical practice
+//   - Kazdin (2020, J Exp Anal Behav): SCEDs are increasingly recognized for idiographic treatment evaluation
+//   - Vlaeyen et al. (2020, Psychol Record): SCEDs provide Level I evidence for treatment efficacy
+//   - South et al. (2026, Qualitative Health Research): N-of-1 designs appropriate for stable chronic
+//     conditions with safely discontinuable interventions
+//
+// IMPORTANT CAVEAT: This implementation is a SIMPLIFIED personal pattern observation, NOT a true SCED.
+// True SCEDs require: (a) randomization of intervention timing, (b) washout periods between conditions,
+// (c) counterbalancing of protocol order. This module uses a simple post-completion mood-delta comparison
+// which is correlational, not causal. The confidence tiers (low/medium/high) reflect completion count,
+// not statistical power.
+// RESEARCH TODO: Consider implementing proper counterbalancing (randomize protocol order) in v2.
+
 const COMPLETIONS_KEY = "nilamind_protocol_completions";
 
 export interface ProtocolCompletion {

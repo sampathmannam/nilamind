@@ -1,7 +1,15 @@
-// Structured DBT skills training: an 8-step protocol covering the four core DBT modules
+// Structured DBT skills training: a 10-step protocol covering the four core DBT modules
 // (mindfulness → distress tolerance → emotion regulation → interpersonal effectiveness),
 // modeled on Linehan 2015, DBT Skills Training Manual (2nd ed.) and the eDBT app structure.
 // Safe for all populations — no sleep restriction, no exposure hierarchy.
+//
+// RESEARCH BASIS:
+//   - Linehan (2015, DBT Skills Training Manual, 2nd ed.) — comprehensive DBT skills curriculum
+//   - Neacsiu et al. (2014, Behav Ther) — behavioral chain analysis as a core DBT skill for
+//     understanding and preventing problem behaviors
+//   - Ritschel et al. (2015, J Clin Psych) — chain analysis reduces emotion dysregulation
+//   - Meta-analyses show moderate-large effects for DBT skills training on emotion regulation
+//     and distress tolerance (Valentine et al., 2015, Clin Psych Rev)
 
 import { type Protocol } from "./protocols";
 
@@ -21,6 +29,8 @@ export const DBT_SKILLS_TRAINING: Protocol = {
     "can't say no", "cant say no", "emotionally unstable",
     "mood swings", "extreme feelings", "can't handle feelings", "cant handle feelings",
     "explosive", "shut down", "shutting down",
+    "chain analysis", "what happened", "why did i", "keep doing this", "pattern of behavior",
+    "self-sabotage", "self sabotage", "keep making the same mistake",
   ],
   steps: [
     {
@@ -101,6 +111,37 @@ export const DBT_SKILLS_TRAINING: Protocol = {
         "You've just touched one skill from each DBT module. The real shift comes from practice — " +
         "try picking one skill that resonated and use it this week. The in-app diary card is a great place to track " +
         "which skills you use and how they land. Which of today's skills will you try in real life?",
+    },
+    // ── Chain Analysis: a core DBT skill for understanding problem behaviors ──
+    // Linehan (2015); Neacsiu et al. (2014, Behav Ther): chain analysis helps identify the sequence
+    // of events, thoughts, emotions, and behaviors leading to a problem behavior, enabling targeted
+    // intervention at each link in the chain.
+    {
+      id: "dbt-9",
+      kind: "psychoed",
+      title: "Chain Analysis — understanding what happened",
+      prompt:
+        "When something goes wrong — an outburst, an urge you acted on, a moment you regret — chain analysis " +
+        "helps you understand HOW it happened, not just THAT it happened. Think of it as a map: " +
+        "vulnerability factors (what made you fragile?) → prompting event (what triggered it?) → " +
+        "thoughts and emotions (what went through your mind?) → the problem behavior itself → " +
+        "consequences (what happened after?). Each link is a place where you can intervene next time. " +
+        "Want to map one recent moment?",
+    },
+    {
+      id: "dbt-10",
+      kind: "reflect",
+      title: "Map the chain",
+      prompt:
+        "Think of one recent moment you'd like to understand better. Walk through it step by step:\n" +
+        "1. Vulnerability: What was already off? (Tired? Hungry? Stressed?)\n" +
+        "2. Prompting event: What specifically happened?\n" +
+        "3. Thoughts/feelings: What went through your mind? What did you feel?\n" +
+        "4. The behavior: What did you actually do or avoid?\n" +
+        "5. Consequences: What happened next — for you and others?\n\n" +
+        "Now look at the chain: where's one link you could intervene at next time? " +
+        "Maybe a skill at step 3 (Check the Facts) or step 4 (TIPP) could break the chain. " +
+        "What's your intervention point?",
     },
   ],
 };

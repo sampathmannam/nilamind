@@ -8,12 +8,13 @@ import { loadIdentity, exportBackup } from "../services/identity";
 import { requireAuth } from "../services/biometricGate";
 import { generateCsvReport, buildTextReport, generatePdfBlob, saveReport, buildClinicalJson } from "../services/exportReport";
 import { feedbackSummary } from "../services/nilaFeedback";
-import { computeRetention } from "../services/retentionMetrics";
+import { computeRetention, loadAppOpens } from "../services/retentionMetrics";
 import { isPilotEnrolled, computePilotSummary } from "../services/pilotStudy";
 import { loadAssessments, assessmentsFor } from "../services/assessments";
 import { buildFhirBundle } from "../services/fhirExport";
 import { recordExportAudit, getExportAudit, type ExportAuditEntry, type ExportKind } from "../services/exportAudit";
-import { buildClinicianReport, type ClinicianReportInput, type ClinicianMedication, type AssessmentTrajectory } from "../services/clinicianReport";
+import type { ClinicianReportInput, ClinicianMedication, AssessmentTrajectory } from "../services/clinicianReport";
+import { generateClinicianPdfBlob } from "../services/clinicianPdf";
 import { readEpisodeMarkers } from "../services/episodeMarker";
 import { gatherClinicianUsage, protocolsCompletedInPeriod, periodCutoffIso, type ReportPeriod } from "../services/clinicianPeriod";
 import { assessTemporalRisk } from "../services/temporalRiskAssessment";
@@ -664,8 +665,12 @@ valuesClarified: []
           userInsightsSummary
        };
 
-      const text = buildClinicianReport(input);
-      const blob = generatePdfBlob(text);
+      const blob = generateClinicianPdfBlob(input, {
+        checkins: allCheckins,
+        activeDayKeys: loadAppOpens(),
+        cutoff,
+        now,
+      });
       if (blob) {
         const filename = makeExportFilename("nilamind-clinician-report.pdf");
         const result = await saveReport(blob, filename, "application/pdf");

@@ -30,6 +30,12 @@ export interface ValueDomain {
 }
 
 // Adapted from the VLQ domains, worded inclusively (no assumption of partner/children/religion).
+// Indian cultural adaptation: added "duty" and "service" domains which are central to Indian
+// values frameworks (dharma/seva). These reflect collectivist cultural values where duty to family
+// and community service are core life directions, not just "work" or "community."
+// RESEARCH TODO: Validate these additional domains for Indian populations. The VLQ has not been
+// specifically validated in Indian samples; the original Wilson et al. (2010) domains are Western-
+// centric. These additions are culturally informed but empirically provisional.
 export const VALUE_DOMAINS: ValueDomain[] = [
   { id: "family", label: "Family", examples: "the kind of relative you want to be — present, patient, honest" },
   { id: "close", label: "Close relationships", examples: "intimacy, partnership, the people closest to you" },
@@ -41,6 +47,9 @@ export const VALUE_DOMAINS: ValueDomain[] = [
   { id: "meaning", label: "Spirituality or meaning", examples: "faith, nature, awe, a sense of something larger — whatever that is for you" },
   { id: "community", label: "Community & contribution", examples: "helping, citizenship, leaving things better" },
   { id: "nature", label: "Nature & environment", examples: "time outdoors, your relationship with the living world" },
+  // Indian cultural additions — reflecting dharma (duty/righteousness) and seva (service)
+  { id: "duty", label: "Duty & dharma", examples: "responsibilities to family, fulfilling your roles with integrity" },
+  { id: "service", label: "Service & seva", examples: "helping others, contributing to community, selfless action" },
 ];
 
 export interface DomainRating {

@@ -1,8 +1,21 @@
 // Circadian rhythm tracking — on-device, privacy-first.
-// Sleep regularity is a well-validated predictor of mood stability in bipolar spectrum conditions
-// (e.g., the Sleep Regularity Index literature; Phillips et al., 2017). We compute a simple regularity
-// score from the user's self-reported sleep hours (check-in "sleep last night" slider) and surface it
-// as an early-warning signal — never a diagnosis. All computation is local; no data leaves the device.
+// Sleep regularity is a well-validated predictor of mood stability in bipolar spectrum conditions.
+//
+// RESEARCH BASIS:
+//   - Phillips et al. (2017, Sci Rep): Sleep Regularity Index (SRI) — interdaily stability of sleep/wake
+//     timing predicts cognitive performance and mood. This implementation uses a simplified CV-based
+//     approximation rather than the full SRI formula, which requires minute-level actigraphy data.
+//   - Li DR et al. (2025, Psychol Medicine): Regular sleep patterns associated with reduced relapse risk
+//     (HR 0.62 regular vs irregular) in bipolar disorder.
+//   - Harvey (2008): Sleep variability as predictor of bipolar episode recurrence.
+//   - Gold & Bunney (2018, Annu Rev Clin Psychol): Circadian rhythm disruption is the single strongest
+//     prodrome for both manic and depressive episodes.
+//
+// NOTE: The regularity score is derived from coefficient of variation (CV) of self-reported sleep hours.
+// This is a simplified proxy for the full SRI, which requires minute-level actigraphy data. The CV-based
+// approach captures night-to-night variability but does not capture within-night fragmentation or
+// circadian phase alignment. Results should be interpreted as indicative, not definitive.
+// RESEARCH TODO: Consider implementing the actual SRI formula when actigraphy data is available.
 
 import { loadMoodHistory } from "./moodHistory";
 
