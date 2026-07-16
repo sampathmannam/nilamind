@@ -90,6 +90,16 @@ export interface ThoughtRecord {
   reRatedIntensity: number; // 1-100
 }
 
+export interface JournalEntry {
+  id: string;
+  date: string; // YYYY-MM-DD, for date-header grouping
+  timestamp: string; // ISO, for feed ordering + time-of-day display
+  mode: "free" | "gratitude";
+  text: string;
+  valence?: number; // -3..+3, same scale as EmaEntry — omitted if the user skipped the mood tap
+  energy?: number; // 1-4, same scale as EmaEntry
+}
+
 export interface EmaEntry {
   id: string;
   date: string; // YYYY-MM-DD
