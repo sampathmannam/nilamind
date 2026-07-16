@@ -412,7 +412,9 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
       // the interface settles — the pixel-level half of the elevation guard (which also steers Nila's words).
       // Not written on a §9 turn (that path returned above). Picked up by the setMode(getCurrentMode()) below.
       noteChatElevation(detectElevationRisk(msg).level);
-      const insight = deriveInMomentInsight(msg, mode.userState);
+      const previousExplainerId =
+        [...messages].reverse().find((m) => m.role === "assistant")?.insight?.explainer?.id ?? null;
+      const insight = await deriveInMomentInsight(msg, mode.userState, previousExplainerId);
       if (result.reply) {
         setMessages((prev) => [...prev, { role: "assistant", content: result.reply, insight: insight ?? undefined }]);
         if (result.reachedAI) {
