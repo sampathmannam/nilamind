@@ -19,8 +19,11 @@ export interface InMomentInsight {
   skill?: SkillSuggestion;
 }
 
-// Manic-first / state-driven preference: when we already know the user's state, prefer the
-// explainer that matches it (deterministic, always relevant) over a weaker lexical guess.
+// State-driven fallback: when we know the user's state but their message doesn't lexically
+// match anything more specific, fall back to the explainer for that state (deterministic,
+// always relevant) rather than showing nothing. A specific lexical match always wins over this
+// fallback — otherwise every turn in a known state shows the same fixed explainer regardless
+// of what the user is actually discussing.
 const STATE_TOPIC: Partial<Record<UserState, string>> = {
   anxious: "anxiety-alarm",
   low: "depression-action",
@@ -47,13 +50,14 @@ export function deriveInMomentInsight(
   // to surface — we never psychoeducate over benign chit-chat (precision over recall).
   const skill = suggestSkill(text);
 
-  // 1) "Why you might feel this way" — research-cited explainer. State-driven topics
-  // are strong signals, so they always show; the lexical fallback only shows when a
-  // co-occurring distress signal (skill) is present, to avoid a false explainer.
+  // 1) "Why you might feel this way" — research-cited explainer. The message's own content
+  // drives which explainer shows (gated by a co-occurring distress signal / skill, to avoid a
+  // false explainer over benign chit-chat); the state-matched topic is only a fallback for when
+  // no topic clears lexically, so a known state doesn't lock every turn to the same card.
   const stateId = userState ? STATE_TOPIC[userState] : undefined;
   const stateTopic = stateId ? PSYCHOED_TOPICS.find((t) => t.id === stateId) : undefined;
   const lexical = skill ? searchPsychoed(text)[0] : undefined; // relevance-gated by searchPsychoed
-  const explainer: PsychoedTopic | undefined = stateTopic ?? lexical;
+  const explainer: PsychoedTopic | undefined = lexical ?? stateTopic;
   if (explainer) insight.explainer = explainer;
 
   if (skill) insight.skill = skill;

@@ -31,10 +31,19 @@ describe("deriveInMomentInsight", () => {
     expect(insight!.explainer?.id).toBe("depression-action");
   });
 
-  it("elevated state prefers the circadian-bipolar explainer", () => {
+  it("elevated state falls back to the circadian-bipolar explainer when the message has no other lexical match", () => {
     const insight = deriveInMomentInsight("I haven't slept and feel unstoppable", "elevated");
     expect(insight).not.toBeNull();
     expect(insight!.explainer?.id).toBe("circadian-bipolar");
+  });
+
+  it("a known state does not override a message that clearly matches a different explainer", () => {
+    // Regression: STATE_TOPIC used to always win, so every "elevated" turn showed the same
+    // circadian-bipolar card regardless of what the user actually said. The message's own
+    // content should drive the explainer when it clearly matches something more specific.
+    const insight = deriveInMomentInsight("I keep ruminating and can't stop the spiral", "elevated");
+    expect(insight).not.toBeNull();
+    expect(insight!.explainer?.id).toBe("rumination-loop");
   });
 
   it("no state — lexical match still yields a relevant explainer when score clears", () => {
