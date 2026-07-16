@@ -5,4 +5,5 @@
     <string name="package_name">com.nilamind.app</string>
     <string name="custom_url_scheme">com.nilamind.app</string>
     <string name="widget_description">Your gentle check-in streak — tap to check in.</string>
+    <string name="quick_voice_widget_description">One tap straight to a voice check-in with Nila.</string>
 </resources>

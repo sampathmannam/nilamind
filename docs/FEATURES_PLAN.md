@@ -284,3 +284,13 @@ These are built, tested, research-backed features that are **invisible to users*
 4. **Nothing leaves the device** — PDF export is device-local only; no cloud sync
 5. **User controls every notification** — opt-in, frequency-capped, never during crisis
 6. **All new features TDD-first** — RED → GREEN → REFACTOR; `npm run guard` green before commit
+
+---
+
+## User-requested — Product Hunt launch feedback (2026-07-16)
+
+| # | Feature | Source | Status | Notes |
+|---|---|---|---|---|
+| U1 | **Home-screen "quick voice check-in" widget** — one tap from the home screen straight into Nila's voice input, for grounding moments that can't wait for app navigation | [Abdullah Boyu, PH launch comment](https://www.producthunt.com/products/nilamind): *"Love that everything stays on-device. One thing I'd really appreciate is a simple widget for quick voice check-ins without opening the app, maybe with a tap-to-talk button right on the home screen for those moments when you just need a few seconds of grounding."* | **Shipped (scoped v1)** — see below | v1 ships a second home-screen widget (alongside the existing streak widget) that deep-links straight to the Nila voice tab. Deliberately does **not** auto-start audio capture from the widget itself — first-run/permission/model-load edge cases make that unsafe to rush; the mic tap stays an explicit in-app action. |
+
+**Why this scope, not full in-widget audio capture:** true "record audio from the widget, no app UI at all" would need a foreground service invoking the on-device model + crisis-safety pipeline outside the app's normal lifecycle — meaningfully higher risk (harder to guarantee the crisis-detection gate runs correctly, mic-permission/first-run states aren't handled) for a same-day fix. The one-tap-to-mic-ready version captures most of the friction reduction the request is actually about, safely, using the same widget pattern already proven in production (`StreakWidget.java`, Phase 7).

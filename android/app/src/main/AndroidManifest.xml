@@ -20,6 +20,14 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- nilamind://voice — the quick voice check-in widget's deep link. Routes straight
+                 to the Nila tab via App.tsx's appUrlOpen listener (see QuickVoiceWidget.java). -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="nilamind" android:host="voice" />
+            </intent-filter>
         </activity>
 
         <provider
@@ -36,6 +44,15 @@
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/streak_widget_info" />
+        </receiver>
+
+        <!-- Quick voice check-in widget — answers a Product Hunt launch-day feature request
+             (docs/FEATURES_PLAN.md "User-requested" U1). -->
+        <receiver android:name=".QuickVoiceWidget" android:exported="true" android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/quick_voice_widget_info" />
         </receiver>
 
         <!-- Keep-resident foreground service: holds the process so the ~2.3GB model + its warmed page cache

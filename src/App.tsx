@@ -336,6 +336,29 @@ function AppShell() {
     return () => { removed = true; handle?.remove(); };
   }, [go]);
 
+  // Deep-link routing (nilamind://voice) — the home-screen "quick voice check-in" widget
+  // launches this URL instead of a generic app-open, landing directly on the Nila tab
+  // (one tap from the mic) instead of wherever the app last was. See docs/FEATURES_PLAN.md
+  // "User-requested — Product Hunt launch feedback" (U1) for the request this answers.
+  useEffect(() => {
+    let handle: { remove: () => void } | undefined;
+    let removed = false;
+    CapApp.addListener("appUrlOpen", (data) => {
+      try {
+        const url = new URL(data.url);
+        if (url.protocol === "nilamind:" && url.hostname === "voice") {
+          recordEngagement();
+          go("nila");
+        }
+      } catch (e) {
+        console.error("[App] appUrlOpen routing failed:", e);
+      }
+    })
+      .then((h) => { handle = h; if (removed) h.remove(); })
+      .catch((e) => console.error("[App] addListener(appUrlOpen) failed:", e));
+    return () => { removed = true; handle?.remove(); };
+  }, [go]);
+
   // Adaptive theme
   useEffect(() => {
     function applyAdaptive() {
