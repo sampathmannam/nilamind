@@ -5,7 +5,7 @@ import InMomentInsightCard from "./InMomentInsightCard";
 
 describe("InMomentInsightCard", () => {
   afterEach(cleanup);
-  it("renders the explainer + skill with citation and a Try button", () => {
+  it("renders the explainer + skill with citation and a Try this skill button", () => {
     const onTry = vi.fn();
     render(
       <InMomentInsightCard
@@ -23,7 +23,7 @@ describe("InMomentInsightCard", () => {
     expect(screen.getByText(/Barlow/)).toBeTruthy();
     expect(screen.getByText("A skill that may help")).toBeTruthy();
     expect(screen.getByText("TIPP")).toBeTruthy();
-    const btn = screen.getByText("Try it");
+    const btn = screen.getByText("Try this skill");
     btn.click();
     expect(onTry).toHaveBeenCalledOnce();
   });
@@ -57,6 +57,58 @@ describe("InMomentInsightCard", () => {
     );
     expect(screen.getByText("Why you might feel this way")).toBeTruthy();
     expect(screen.queryByText("A skill that may help")).toBeNull();
-    expect(screen.queryByText("Try it")).toBeNull();
+    expect(screen.queryByText("Try this skill")).toBeNull();
+  });
+
+  it("clicking Not now calls onDismissSkill", () => {
+    const onDismiss = vi.fn();
+    render(
+      <InMomentInsightCard
+        explainerTitle=""
+        explainerSummary=""
+        explainerBasis=""
+        skillEmoji="💙"
+        skillName="Opposite Action"
+        skillReason="Low mood or emptiness"
+        onTrySkill={() => {}}
+        onDismissSkill={onDismiss}
+      />,
+    );
+    screen.getByText("Not now").click();
+    expect(onDismiss).toHaveBeenCalledOnce();
+  });
+
+  it("hides the skill section entirely when skillDismissed is true, but keeps the explainer", () => {
+    render(
+      <InMomentInsightCard
+        explainerTitle="Why anxiety shows up in the body"
+        explainerSummary="A racing heart is the body's alarm switching on."
+        explainerBasis="Barlow (false-alarm model of anxiety)."
+        skillEmoji="🫀"
+        skillName="TIPP"
+        skillReason="Racing heart or panic sensation"
+        onTrySkill={() => {}}
+        skillDismissed
+      />,
+    );
+    expect(screen.getByText("Why you might feel this way")).toBeTruthy();
+    expect(screen.queryByText("A skill that may help")).toBeNull();
+    expect(screen.queryByText("TIPP")).toBeNull();
+  });
+
+  it("renders nothing (no empty bordered box) when skillDismissed and no explainer", () => {
+    const { container } = render(
+      <InMomentInsightCard
+        explainerTitle=""
+        explainerSummary=""
+        explainerBasis=""
+        skillEmoji="💙"
+        skillName="Opposite Action"
+        skillReason="Low mood or emptiness"
+        onTrySkill={() => {}}
+        skillDismissed
+      />,
+    );
+    expect(container.firstChild).toBeNull();
   });
 });

@@ -315,3 +315,25 @@ describe("ModeScreen — feedback-suggestion UI (2026-07-12 Wave 3, Group F)", (
     expect(document.getElementById("feedback-suggestion-prompt")).toBeNull();
   });
 });
+
+describe("in-moment skill suggestion (2026-07-16 dedupe)", () => {
+  it("shows exactly one skill suggestion (no pinned duplicate) and it uses buttons", async () => {
+    sendToNilaMock.mockResolvedValueOnce({ reply: "That sounds hard.", reachedAI: true, blocked: false });
+    render(<ModeScreen />);
+    await sendMessage("i feel so low and empty lately");
+    await waitFor(() => expect(screen.getByText("That sounds hard.")).toBeTruthy());
+    await waitFor(() => expect(screen.getByText("Try this skill")).toBeTruthy());
+    expect(document.getElementById("skill-offer-card")).toBeNull();
+    expect(screen.getAllByText("Opposite Action")).toHaveLength(1);
+  });
+
+  it("clicking Not now removes the skill suggestion without wiping the reply", async () => {
+    sendToNilaMock.mockResolvedValueOnce({ reply: "That sounds hard.", reachedAI: true, blocked: false });
+    render(<ModeScreen />);
+    await sendMessage("i feel so low and empty lately");
+    await waitFor(() => expect(screen.getByText("Try this skill")).toBeTruthy());
+    fireEvent.click(screen.getByText("Not now"));
+    await waitFor(() => expect(screen.queryByText("Try this skill")).toBeNull());
+    expect(screen.getByText("That sounds hard.")).toBeTruthy();
+  });
+});

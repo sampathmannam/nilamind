@@ -18,12 +18,10 @@ import { WELCOME_SEED, STATE_MESSAGES } from "../services/personaConfig";
 import { useTypingSession } from "../hooks/useTypingSession";
 import { getSuggestions, timeSlot } from "../services/chatSuggestions";
 import { stripChatMarkdown, ensureListBreaks } from "../services/chatText";
-import { suggestSkill } from "../services/skillSuggest";
 import { deriveInMomentInsight } from "../services/inMomentInsight";
 import { filterSkills, type Skill } from "../services/skillsLibrary";
 import NilaCheckIn from "./NilaCheckIn";
 import ChatLoading from "./ChatLoading";
-import SkillOfferCard from "./SkillOfferCard";
 import InMomentInsightCard from "./InMomentInsightCard";
 import PactNoticeCard from "./PactNoticeCard";
 import WelcomeBackCard from "./welcomeBack";
@@ -105,7 +103,6 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   const [sleepProdromeNudge, setSleepProdromeNudge] = useState<{ firing: boolean; detail: string } | null>(null);
   const [jitaiNudge, setJitaiNudge] = useState<JitaiDecision | null>(null);
   const [calmSafetyNudge, setCalmSafetyNudge] = useState<{ show: boolean; label: string } | null>(null); // Task 1.5
-  const [skillOffer, setSkillOffer] = useState<Skill | null>(null);
   const [softCrisisCard, setSoftCrisisCard] = useState(false); // 2026-07-12 Wave 3: soft tier, classifier-only hits
   const [pactNotice, setPactNotice] = useState<PactNotice | null>(null); // #30: surfaced pact (the human bridge)
   // Phase: UX clutter fix — cap non-crisis nudges at 2 (crisis cards always shown)
@@ -125,6 +122,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   const visibleNudgeIds = new Set(nonCrisisNudges.slice(0, MAX_NUDGES).map((n) => n.id));
 
   const [ratedMessages, setRatedMessages] = useState<Set<number>>(new Set());
+  const [dismissedSkillMessages, setDismissedSkillMessages] = useState<Set<number>>(new Set());
   // 2026-07-12 Wave 3, Group F: completes the already-built-but-unwired attachSuggestion() flow — a one-tap,
   // optional, dismissable "what would've helped?" follow-up after a thumbs-down. Never forced.
   const [suggestionPrompt, setSuggestionPrompt] = useState<{ index: number; feedbackId: string } | null>(null);
@@ -154,7 +152,6 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
     if (detected) {
       hadCrisisRef.current = true;
       clearSessionChat();      // the flagged crisis turn must never persist/restore
-      setSkillOffer(null);     // #7 (re-audit): don't offer coping-skill/protocol self-help in reply to a crisis
       setProtocolCard(null);
       void suppressNudgesForCrisis(); // P6.4: latch no-nudge + yank queued pings, same as App.tsx's activateCrisis
     }
@@ -429,8 +426,6 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
       // Chat-detected elevation may have latched during this turn (localNila → noteChatElevation) — recompute
       // the mode so the interface settles (orb slows, home thins) in response to what the user just typed.
       setMode(getCurrentMode());
-      // Suggest a relevant coping skill if the user expressed distress
-      setSkillOffer(insight?.skill?.skill ?? null);
     } catch (err) {
       crisisPendingRef.current = false; // model error is not a §9 crisis — let the turn persist
       const isCloud = isCloudApiEnabled() && getCloudApiKey();
@@ -550,7 +545,6 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
       ...prev,
       { role: "assistant", content: `**${skill.name}** — ${skill.purpose}\n\n${steps}\n\nTake your time with this. Even a small try counts. 💙` },
     ]);
-    setSkillOffer(null);
   };
 
   const handleQuickAction = (action: string) => {
@@ -629,10 +623,10 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   const startNewConversation = () => {
     clearSessionChat();
     setMessages([]);
-    setSkillOffer(null);
     setPactNotice(null);
     setWelcomeBack(null);
     setRatedMessages(new Set());
+    setDismissedSkillMessages(new Set());
     setProtocolCard(protocolOfferCard(""));
     hadCrisisRef.current = false;
     setConfirmNewChat(false);
@@ -819,6 +813,10 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                         skillEmoji={m.insight.skill?.emoji ?? ""}
                         skillName={m.insight.skill?.skill.name ?? ""}
                         skillReason={m.insight.skill?.reason ?? ""}
+                        skillDismissed={dismissedSkillMessages.has(i)}
+                        onDismissSkill={() =>
+                          setDismissedSkillMessages((prev) => new Set(prev).add(i))
+                        }
                         onTrySkill={
                           m.insight.skill
                             ? () => handleTrySkill(m.insight!.skill!.skill)
@@ -1078,17 +1076,6 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
             <PactNoticeCard
               notice={pactNotice}
               onDismiss={() => { dismissPactNoticeToday(); setPactNotice(null); }}
-            />
-          )}
-
-          {/* Skill suggestion card — appears when Nila detects distress */}
-          {skillOffer && (
-            <SkillOfferCard
-              skill={skillOffer}
-              reason={suggestSkill(messages.filter(m => m.role === "user").pop()?.content || "")?.reason || "This might help"}
-              emoji={suggestSkill(messages.filter(m => m.role === "user").pop()?.content || "")?.emoji || "💡"}
-              onTry={handleTrySkill}
-              onDismiss={() => setSkillOffer(null)}
             />
           )}
 
