@@ -7,6 +7,9 @@ export interface PsychoedTopic {
   id: string;
   title: string;
   summary: string;
+  /** Lexical search-index text only (see FIELD_WEIGHTS below) — NOT rendered by InMomentInsightCard
+   *  or shown anywhere in the UI. A citation caveat belongs in `summary` or `basis` (both rendered);
+   *  putting one only here ships a silently invisible hedge. */
   body: string;
   basis: string;
   tags: string[];
