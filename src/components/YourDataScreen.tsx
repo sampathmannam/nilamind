@@ -28,6 +28,8 @@ import { computeCircadianFeedback } from "../services/circadianFeedback";
 import type { BehaviourSnapshot, AppCategory } from "../services/phoneBehaviour";
 import { loadMedications, loadMedicationLogs, adherenceRate, commonSideEffects } from "../services/medicationAdherence";
 import { nilaStats } from "../services/nilaSessions";
+import { summarizeDiaryForClinician } from "../services/diaryClinicianSummary";
+import type { DiaryCardEntry } from "../types";
 import { featureAdoption } from "../services/usageAnalytics";
 import { episodePatterns } from "../services/dashboardInsights";
 
@@ -610,6 +612,19 @@ valuesClarified: []
       const stats = nilaStats();
       const featuresUsed = featureAdoption();
 
+      // DBT diary card entries within the window — urges/target behaviors, emotions, skills
+      // effectiveness (research-grounded redesign, 2026-07-16). Previously never reached the
+      // clinician report at all.
+      const diaryEntries = (() => {
+        try {
+          const raw = secureLocal.getItem("nilamind_diary");
+          if (!raw) return [];
+          const parsed = JSON.parse(raw) as Record<string, DiaryCardEntry>;
+          return Object.values(parsed);
+        } catch { return []; }
+      })();
+      const diaryCardSummary = summarizeDiaryForClinician(diaryEntries, cutoff, periodDays);
+
       // Protocol completions within the window (was hardcoded to 0).
       const completionsRaw = secureLocal.getItem("nilamind_protocol_completions");
       const allCompletions = completionsRaw ? JSON.parse(completionsRaw) : [];
@@ -650,6 +665,7 @@ valuesClarified: []
          medications,
           episodes,
            phaseMarkers,
+           diaryCardSummary,
            protocolsCompleted,
           nilaSessions: usage.nilaTurns,
           featuresUsed,

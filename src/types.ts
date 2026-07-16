@@ -11,6 +11,20 @@ export interface CheckInEntry {
   granularEmotion?: string; // Fine-grained emotion label (e.g. "Betrayed" vs just "Angry")
 }
 
+/** One DBT-style target-behavior urge rating for a day (Linehan diary card's core "life-threatening
+ *  behaviors" tier). Purely self-report — logging a rating, even a high one, never triggers any
+ *  live intervention; that's the point of a diary card (honest tracking without alarm). */
+export interface DiaryUrge {
+  key: string; // e.g. "selfHarm", "suicidal", "substanceUse", or a user-added custom key
+  label: string;
+  intensity: number; // 0-5, 0 = no urge
+  actedOn: boolean;
+}
+
+/** Effectiveness of a DBT skill actually tried that day — simplified from the official 0-7 Linehan
+ *  scale to a 3-state tap (unrated -> tried, didn't help -> tried, helped) to keep entry low-friction. */
+export type SkillEffectiveness = "tried_no_help" | "tried_helped";
+
 export interface DiaryCardEntry {
   date: string; // YYYY-MM-DD
   emotions: {
@@ -22,6 +36,11 @@ export interface DiaryCardEntry {
     love: number;
   };
   skillsUsed: string[];
+  /** Effectiveness per skill in skillsUsed. Optional for backward-compat reads of older entries
+   *  (pre-redesign entries have skillsUsed but no effectiveness rating). */
+  skillEffectiveness?: Record<string, SkillEffectiveness>;
+  /** Target-behavior urge ratings for the day. Optional for backward-compat reads. */
+  urges?: DiaryUrge[];
   quickNotes?: string;
   quickNoteTags?: string[];
   morningIntention?: string;

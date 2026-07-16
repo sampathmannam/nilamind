@@ -1,7 +1,7 @@
 import { secureLocal } from "../services/secureLocal";
 import React, { useState, useEffect } from "react";
-import { DiaryCardEntry } from "../types";
-import { ALL_DIARY_DBT_SKILLS } from "../data";
+import { DiaryCardEntry, DiaryUrge, SkillEffectiveness } from "../types";
+import { ALL_DIARY_DBT_SKILLS, DEFAULT_DIARY_URGE_DEFS } from "../data";
 import { Check, Clipboard, Calendar, MessageSquare, Sparkles, Loader2, Mic, MicOff, BellRing, X } from "lucide-react";
 import Markdown from "react-markdown";
 import { analyzeQuickNote } from "../services/coachAssist";
@@ -19,6 +19,20 @@ const MODE_PLACEHOLDER: Record<JournalMode, string> = {
   gratitude: "e.g., 1) The coffee actually tasted good today. 2) A stranger held the door. 3) I finished something I'd been putting off.",
 };
 
+// Research-grounded redesign (product-brainstorming session, 2026-07-16): the standard DBT diary
+// card's highest-priority tier — target-behavior urges (UW BRTC diary card; DBT Self Help) — was
+// missing entirely. Rating an urge, even a high one, is purely self-report: it never surfaces the
+// crisis flow on its own (user-confirmed design decision) — that's what makes honest tracking
+// possible without every entry feeling like an alarm.
+function defaultUrges(): DiaryUrge[] {
+  return DEFAULT_DIARY_URGE_DEFS.map((d) => ({ key: d.key, label: d.label, intensity: 0, actedOn: false }));
+}
+
+function mergeUrges(existing: DiaryUrge[] | undefined): DiaryUrge[] {
+  if (!existing || existing.length === 0) return defaultUrges();
+  return DEFAULT_DIARY_URGE_DEFS.map((d) => existing.find((u) => u.key === d.key) ?? { key: d.key, label: d.label, intensity: 0, actedOn: false });
+}
+
 export default function DiaryCardScreen() {
   const [selectedDate, setSelectedDate] = useState<string>(
     new Date().toISOString().split("T")[0]
@@ -33,7 +47,8 @@ export default function DiaryCardScreen() {
     love: 0,
   });
 
-  const [skillsUsed, setSkillsUsed] = useState<string[]>([]);
+  const [urges, setUrges] = useState<DiaryUrge[]>(defaultUrges());
+  const [skillEffectiveness, setSkillEffectiveness] = useState<Record<string, SkillEffectiveness>>({});
   const [quickNotes, setQuickNotes] = useState<string>("");
   const [quickNoteTags, setQuickNoteTags] = useState<string[]>([]);
   const [journalMode, setJournalMode] = useState<JournalMode>("free");
@@ -69,7 +84,12 @@ export default function DiaryCardScreen() {
         const existing = entries[selectedDate];
         if (existing) {
           setEmotions(existing.emotions);
-          setSkillsUsed(existing.skillsUsed || []);
+          setUrges(mergeUrges(existing.urges));
+          // Backward-compat: older entries have skillsUsed but no effectiveness map. Show them as
+          // "tried, no help" rather than fabricating a "helped" rating we never captured.
+          setSkillEffectiveness(
+            existing.skillEffectiveness ?? Object.fromEntries((existing.skillsUsed || []).map((s) => [s, "tried_no_help" as SkillEffectiveness])),
+          );
           setQuickNotes(existing.quickNotes || "");
           setQuickNoteTags(existing.quickNoteTags || []);
           setJournalMode(existing.journalMode || "free");
@@ -89,7 +109,8 @@ export default function DiaryCardScreen() {
       joy: 0,
       love: 0,
     });
-    setSkillsUsed([]);
+    setUrges(defaultUrges());
+    setSkillEffectiveness({});
     setQuickNotes("");
     setQuickNoteTags([]);
     setJournalMode("free");
@@ -100,10 +121,31 @@ export default function DiaryCardScreen() {
     setIsSaved(false);
   };
 
-  const toggleSkill = (skill: string) => {
-    setSkillsUsed((prev) =>
-      prev.includes(skill) ? prev.filter((s) => s !== skill) : [...prev, skill]
+  const handleUrgeIntensityChange = (key: string, intensity: number) => {
+    setUrges((prev) =>
+      prev.map((u) => (u.key === key ? { ...u, intensity, actedOn: intensity === 0 ? false : u.actedOn } : u))
     );
+    setIsSaved(false);
+  };
+
+  const toggleUrgeActedOn = (key: string) => {
+    setUrges((prev) => prev.map((u) => (u.key === key ? { ...u, actedOn: !u.actedOn } : u)));
+    setIsSaved(false);
+  };
+
+  // Simplified from the official Linehan 0-7 skills-effectiveness scale to a 3-state tap
+  // (unrated -> tried, didn't help -> tried, helped -> unrated) — an 8-option scale per skill is
+  // exactly the kind of entry friction linked to lower diary-app completion (JMIR 2021 economic
+  // evaluation of BPD diary apps found reduced clinical improvement vs. paper in year one).
+  const cycleSkillEffectiveness = (skill: string) => {
+    setSkillEffectiveness((prev) => {
+      const current = prev[skill];
+      const next = { ...prev };
+      if (current === undefined) next[skill] = "tried_no_help";
+      else if (current === "tried_no_help") next[skill] = "tried_helped";
+      else delete next[skill];
+      return next;
+    });
     setIsSaved(false);
   };
 
@@ -123,10 +165,13 @@ export default function DiaryCardScreen() {
     // store (weeklyIntention.ts's DailyIntention, via DailyIntentionCard) instead of its own
     // free-text field. The DiaryCardEntry type keeps the field (optional) for backward-compat
     // reads of older entries (see nilaContext.ts/coachAssist.ts's privacy scan, which still checks it).
+    const skillsUsed = Object.keys(skillEffectiveness);
     entries[selectedDate] = {
       date: selectedDate,
       emotions,
       skillsUsed,
+      skillEffectiveness,
+      urges,
       quickNotes,
       quickNoteTags,
       journalMode,
@@ -195,10 +240,81 @@ export default function DiaryCardScreen() {
       </div>
 
       <div className="glass p-5 rounded-2xl space-y-6">
+        {/* PART 0: Urges & Target Behaviors — the DBT diary card's highest-priority tier, added in
+            the 2026-07-16 research-grounded redesign. Purely self-report: never surfaces the
+            crisis flow on its own. */}
+        <div className="space-y-4">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-2">
+            1. Urges &amp; Target Behaviors (0 to 5)
+          </h3>
+          <p className="text-[11px] text-slate-500">
+            Rating an urge — even a high one — is just tracking. It's private and never flags anything on its own.
+          </p>
+
+          {urges.map((urge) => (
+            <div key={urge.key} className="space-y-1.5" id={`diary-urge-row-${urge.key}`}>
+              <div className="flex justify-between text-xs font-semibold text-slate-200">
+                <span>{urge.label}</span>
+                <span className="font-mono text-blue-400">{urge.intensity} / 5</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="range"
+                  min="0"
+                  max="5"
+                  value={urge.intensity}
+                  onChange={(e) => handleUrgeIntensityChange(urge.key, parseInt(e.target.value))}
+                  className="w-full h-1.5 rounded-lg bg-page accent-rose-500 cursor-pointer"
+                  aria-label={`${urge.label} intensity (0 to 5)`}
+                />
+
+                <div className="flex gap-0.5">
+                  {[0, 1, 2, 3, 4, 5].map((num) => (
+                    <button
+                      key={num}
+                      onClick={() => handleUrgeIntensityChange(urge.key, num)}
+                      className={`w-11 h-11 rounded-full text-xs font-bold flex items-center justify-center cursor-pointer transition-all ${
+                        urge.intensity === num
+                          ? "bg-rose-600 text-white"
+                          : "bg-page text-slate-500 border border-slate-800/80 hover:border-slate-700"
+                      }`}
+                      aria-label={`${urge.label} intensity ${num}`}
+                    >
+                      {num}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {urge.intensity > 0 && (
+                <div className="flex items-center justify-between bg-page border border-slate-800 rounded-xl p-2.5 mt-1" id={`diary-urge-actedon-${urge.key}`}>
+                  <span className="text-xs text-slate-400">Did you act on this urge today?</span>
+                  <button
+                    role="switch"
+                    aria-checked={urge.actedOn}
+                    aria-label={`Did you act on: ${urge.label} today?`}
+                    onClick={() => toggleUrgeActedOn(urge.key)}
+                    className={`w-10 h-5.5 rounded-full relative transition-all cursor-pointer ${
+                      urge.actedOn ? "bg-rose-600" : "bg-slate-800"
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-0.5 w-4.5 h-4.5 rounded-full bg-white transition-all ${
+                        urge.actedOn ? "left-[22px]" : "left-0.5"
+                      }`}
+                    />
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
         {/* PART 1: Slide indicators for emotions */}
         <div className="space-y-4">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-2">
-            1. Daily Emotion Peak Ratings (0 to 5)
+            2. Daily Emotion Peak Ratings (0 to 5)
           </h3>
 
           {Object.entries(emotions).map(([key, val]) => (
@@ -243,33 +359,51 @@ export default function DiaryCardScreen() {
           ))}
         </div>
 
-        {/* PART 2: Skills list checklist */}
+        {/* PART 2: Skills used, rated for effectiveness — not just checked off. Simplified from the
+            official Linehan 0-7 skills scale to a 3-state tap (research-grounded redesign,
+            2026-07-16): tried-no-help vs tried-helped is the clinically useful distinction; an
+            8-option scale per skill is friction the diary-app research links to lower completion. */}
         <div className="space-y-4">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-2">
-            2. Skills I Used Today
+            3. Skills I Used Today
           </h3>
-          
+          <p className="text-[11px] text-slate-500">Tap once for "tried, didn't help." Tap again for "tried, helped."</p>
+
           <div className="grid grid-cols-2 gap-2" id="skills-diary-grid">
             {ALL_DIARY_DBT_SKILLS.map((skill) => {
-              const isChecked = skillsUsed.includes(skill);
+              const effectiveness = skillEffectiveness[skill];
+              const isEngaged = effectiveness !== undefined;
+              const helped = effectiveness === "tried_helped";
               return (
                 <button
                   key={skill}
-                  onClick={() => toggleSkill(skill)}
+                  onClick={() => cycleSkillEffectiveness(skill)}
+                  aria-pressed={isEngaged}
                   className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-xs text-left transition-all cursor-pointer ${
-                    isChecked
+                    helped
                       ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-300 font-semibold"
+                      : isEngaged
+                      ? "bg-amber-500/10 border-amber-500/50 text-amber-300 font-semibold"
                       : "bg-page border-slate-800 text-slate-500 hover:text-slate-300 hover:border-slate-700"
                   }`}
                 >
-                  <div className={`w-4.5 h-4.5 rounded-md flex items-center justify-center border transition-all ${
-                    isChecked 
-                      ? "bg-emerald-500 border-emerald-500 text-[#171311]" 
+                  <div className={`w-4.5 h-4.5 rounded-md flex items-center justify-center border shrink-0 transition-all ${
+                    helped
+                      ? "bg-emerald-500 border-emerald-500 text-[#171311]"
+                      : isEngaged
+                      ? "bg-amber-500 border-amber-500 text-[#171311]"
                       : "border-slate-800"
                   }`}>
-                    {isChecked && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                    {isEngaged && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                   </div>
-                  <span>{skill}</span>
+                  <span className="flex flex-col">
+                    <span>{skill}</span>
+                    {isEngaged && (
+                      <span className="text-[10px] font-normal opacity-80">
+                        {helped ? "Tried — helped" : "Tried — didn't help"}
+                      </span>
+                    )}
+                  </span>
                 </button>
               );
             })}
@@ -283,7 +417,7 @@ export default function DiaryCardScreen() {
             on the Today hub stay in sync instead of drifting apart. */}
         <div className="space-y-4">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-2 flex items-center gap-2">
-            3. Today's Intention
+            4. Today's Intention
           </h3>
           <DailyIntentionCard defaultOpen />
         </div>
@@ -291,7 +425,7 @@ export default function DiaryCardScreen() {
         {/* PART 4: Quick Notes */}
         <div className="space-y-4">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-2">
-            4. Quick Notes
+            5. Quick Notes
           </h3>
           <p className="text-[11px] text-slate-500">
             Jot down transient thoughts, observations, or brief reflections on your day.

@@ -204,4 +204,38 @@ describe("buildClinicianReport", () => {
     const report = buildClinicianReport({ ...baseInput, phaseMarkers: [] });
     expect(report).not.toContain("Bipolar Phase Markers");
   });
+
+  it("renders the DBT diary card summary when provided", () => {
+    const report = buildClinicianReport({
+      ...baseInput,
+      diaryCardSummary: {
+        daysLogged: 18,
+        periodDays: 30,
+        urges: [
+          { key: "selfHarm", label: "Urge to self-harm", avgIntensity: 1.2, peakIntensity: 4, daysActedOn: 1 },
+          { key: "suicidal", label: "Suicidal urge", avgIntensity: 0.6, peakIntensity: 3, daysActedOn: 0 },
+        ],
+        emotionAverages: { misery: 2.1, shame: 1.4, anger: 1.8, fear: 1.2, joy: 2.6, love: 3.0 },
+        emotionPeaks: { misery: 4, shame: 3, anger: 4, fear: 2, joy: 5, love: 4 },
+        skills: [
+          { skill: "TIPP", timesUsed: 9, timesHelped: 7, timesNoHelp: 2 },
+          { skill: "Opposite Action", timesUsed: 4, timesHelped: 2, timesNoHelp: 2 },
+        ],
+        avgMisery: 2.1,
+        notableDays: [{ date: "2026-07-09", reason: "urge to self-harm acted on" }],
+      },
+    });
+    expect(report).toContain("DBT Diary Card Summary");
+    expect(report).toContain("Days logged: 18/30");
+    expect(report).toContain("Urge to self-harm: avg 1.2, peak 4 — acted on 1 day");
+    expect(report).toContain("Suicidal urge: avg 0.6, peak 3 — acted on 0 days");
+    expect(report).toContain("Misery 2.1");
+    expect(report).toContain("TIPP (used 9×, helped 7×, no help 2×)");
+    expect(report).toContain("2026-07-09: urge to self-harm acted on");
+  });
+
+  it("omits the diary card section when not provided", () => {
+    const report = buildClinicianReport(baseInput);
+    expect(report).not.toContain("DBT Diary Card Summary");
+  });
 });
