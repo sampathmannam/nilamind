@@ -38,6 +38,15 @@ export const ALL_DIARY_DBT_SKILLS = [
   "Check the Facts", "Wave Surfing", "DEAR MAN", "Radical Acceptance", "Self-Compassion Break"
 ];
 
+// Default target-behavior urges tracked on the diary card — the standard DBT diary card's
+// "life-threatening behaviors" tier (UW BRTC diary card; DBT Self Help). Rating an urge, even a
+// high one, is purely self-report: it never triggers any live intervention on its own.
+export const DEFAULT_DIARY_URGE_DEFS: { key: string; label: string }[] = [
+  { key: "selfHarm", label: "Urge to self-harm" },
+  { key: "suicidal", label: "Suicidal urge" },
+  { key: "substanceUse", label: "Urge to use substances" },
+];
+
 export const INITIAL_SAFETY_PLAN: SafetyPlan = {
   warningSigns: "",
   internalCoping: "",
