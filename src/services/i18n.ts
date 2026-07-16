@@ -190,6 +190,28 @@ export type I18nKey =
   | "sec_cloud_apiSub"
   | "sec_region"
   | "sec_pilot"
+  // Cloud API — Groq fast-path (2026-07-16)
+  | "cloud_api_provider_label"
+  | "cloud_api_groq_recommended"
+  | "cloud_api_custom_label"
+  | "cloud_api_status_active"
+  | "cloud_api_status_disabled"
+  | "cloud_api_get_key_label"
+  | "cloud_api_groq_key_label"
+  | "cloud_api_groq_key_placeholder"
+  | "cloud_api_groq_key_hint_ok"
+  | "cloud_api_groq_key_hint_empty"
+  | "cloud_api_openai_key_hint"
+  | "cloud_api_advanced_label"
+  | "cloud_api_endpoint_label"
+  | "cloud_api_endpoint_hint_groq"
+  | "cloud_api_endpoint_hint_custom"
+  | "cloud_api_model_label"
+  | "cloud_api_model_hint_groq"
+  | "cloud_api_model_hint_custom"
+  | "cloud_api_model_custom_option"
+  | "cloud_api_privacy_groq"
+  | "cloud_api_privacy_generic"
   // Phase 17 — Longitudinal wellbeing
   | "you_wellbeing_label"
   | "you_wellbeing_sub"
@@ -409,6 +431,32 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     sec_cloud_apiSub: "Connect your own API key for a cloud model (messages leave your device)",
     sec_region: "Crisis lines & region",
     sec_pilot: "Research pilot",
+    cloud_api_provider_label: "Provider",
+    cloud_api_groq_recommended: "Groq (recommended)",
+    cloud_api_custom_label: "Custom (OpenAI-compatible)",
+    cloud_api_status_active: "Cloud model active",
+    cloud_api_status_disabled: "Disabled — on-device only (recommended).",
+    cloud_api_get_key_label: "Get your free Groq API key",
+    cloud_api_groq_key_label: "Groq API Key",
+    cloud_api_groq_key_placeholder: "gsk_…",
+    cloud_api_groq_key_hint_empty: "Your key stays on this device. Groq keys start with gsk_.",
+    cloud_api_groq_key_hint_ok: "✓ Looks like a Groq key.",
+    cloud_api_openai_key_hint: "Your key stays on this device.",
+    cloud_api_advanced_label: "Advanced",
+    cloud_api_endpoint_label: "Endpoint",
+    cloud_api_endpoint_hint_groq:
+      "Defaults to Groq's OpenAI-compatible surface. Override only if you proxy through a custom endpoint.",
+    cloud_api_endpoint_hint_custom:
+      "Any OpenAI-compatible endpoint (OpenAI, Together, Fireworks, a self-hosted proxy). By default NilaMind recommends Groq.",
+    cloud_api_model_label: "Model",
+    cloud_api_model_hint_groq:
+      "Any Groq model id works. Defaults to llama-3.1-8b-instant (fast & capable).",
+    cloud_api_model_hint_custom: "Defaults to gpt-3.5-turbo on OpenAI.",
+    cloud_api_model_custom_option: "Custom model id…",
+    cloud_api_privacy_groq:
+      "Your chat and voice-call messages (and Nila's replies) leave your device and go directly to Groq. Groq's privacy notice states they do not train on your data and do not retain submitted content after the response.",
+    cloud_api_privacy_generic:
+      "When cloud API is enabled, your chat and voice-call messages (and Nila's replies) leave your device and go directly to the endpoint you configure — NilaMind cannot see or store them. Everything else stays on your phone: background features (daily reflection, memory, coach insights) never use the cloud, and the on-device safety gates (crisis detection, output screening) always run locally. Takes effect from your next message — no restart needed.",
     you_wellbeing_label: "Wellbeing over time",
     you_wellbeing_sub: "Your long-view trend",
     wellbeing_screen_intro: "A 2-week check of how you've been. The long view matters more than any single day.",
@@ -625,6 +673,27 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     sec_cloud_apiSub: "क्लाउड मॉडल के लिए अपनी API कुंजी कनेक्ट करें (संदेश आपके डिवाइस से बाहर जाते हैं)",
     sec_region: "संकट लाइनें और क्षेत्र",
     sec_pilot: "अनुसंधान पायलट",
+    cloud_api_provider_label: "प्रदाता",
+    cloud_api_groq_recommended: "Groq (अनुशंसित)",
+    cloud_api_custom_label: "कस्टम (OpenAI-संगत)",
+    cloud_api_status_active: "क्लाउड मॉडल सक्रिय",
+    cloud_api_status_disabled: "अक्षम — केवल ऑन-डिवाइस (अनुशंसित)।",
+    cloud_api_get_key_label: "अपनी मुफ़्त Groq API कुंजी प्राप्त करें",
+    cloud_api_groq_key_label: "Groq API कुंजी",
+    cloud_api_groq_key_placeholder: "gsk_…",
+    cloud_api_groq_key_hint_empty: "आपकी कुंजी इस डिवाइस पर रहती है। Groq कुंजियाँ gsk_ से शुरू होती हैं।",
+    cloud_api_groq_key_hint_ok: "✓ यह एक Groq कुंजी जैसी दिखती है।",
+    cloud_api_openai_key_hint: "आपकी कुंजी इस डिवाइस पर रहती है।",
+    cloud_api_advanced_label: "उन्नत",
+    cloud_api_endpoint_label: "एंडपॉइंट",
+    cloud_api_endpoint_hint_groq: "Groq की OpenAI-संगत सतह डिफ़ॉल्ट। कस्टम एंडपॉइंट के माध्यम से प्रॉक्सी होने पर ही ओवरराइड करें।",
+    cloud_api_endpoint_hint_custom: "कोई भी OpenAI-संगत एंडपॉइंट (OpenAI, Together, Fireworks, स्व-होस्टेड प्रॉक्सी)। NilaMind डिफ़ॉल्ट रूप से Groq की अनुशंसा करता है।",
+    cloud_api_model_label: "मॉडल",
+    cloud_api_model_hint_groq: "कोई भी Groq मॉडल आईडी काम करती है। डिफ़ॉल्ट: llama-3.1-8b-instant (तेज़ और सक्षम)।",
+    cloud_api_model_hint_custom: "OpenAI पर डिफ़ॉल्ट: gpt-3.5-turbo।",
+    cloud_api_model_custom_option: "कस्टम मॉडल आईडी…",
+    cloud_api_privacy_groq: "क्लाउड API सक्षम होने पर, आपके चैट और वॉइस-कॉल संदेश (और Nila के उत्तर) आपके डिवाइस से बाहर सीधे Groq पर जाते हैं। Groq की गोपनीयता सूचना के अनुसार वे आपके डेटा पर प्रशिक्षण नहीं लेते और उत्तर के बाद सबमिट की गई सामग्री को नहीं रखते।",
+    cloud_api_privacy_generic: "जब क्लाउड API सक्षम होता है, तो आपके चैट और वॉइस-कॉल संदेश (और Nila के उत्तर) आपके डिवाइस से बाहर सीधे आपके द्वारा कॉन्फ़िगर किए गए एंडपॉइंट पर जाते हैं। बाकी सब आपके फ़ोन पर ही रहता है।",
     you_wellbeing_label: "समय के साथ कल्याण",
     you_wellbeing_sub: "आपकी दीर्घकालिक प्रवृत्ति",
     wellbeing_screen_intro: "एक पखवाड़े में एक बार यह जाँच कि आप कैसे रहे हैं। लंबा नज़रिया किसी एक दिन से ज़्यादा मायने रखता है।",
@@ -840,6 +909,27 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     sec_cloud_apiSub: "கிளவுட் மாடலுக்கு உங்கள் API விசையை இணைக்கவும் (செய்திகள் உங்கள் சாதனத்தை விட்டு வெளியேறும்)",
     sec_region: "நெருக்கடி வரிகள் & பகுதி",
     sec_pilot: "ஆராய்ச்சி பைலட்",
+    cloud_api_provider_label: "வழங்குநர்",
+    cloud_api_groq_recommended: "Groq (பரிந்துரைக்கப்படுகிறது)",
+    cloud_api_custom_label: "தனிப்பயன் (OpenAI-இணக்கமான)",
+    cloud_api_status_active: "கிளவுட் மாடல் செயலில்",
+    cloud_api_status_disabled: "முடக்கப்பட்டது — ஆன்-டிவைஸ் மட்டும் (பரிந்துரைக்கப்படுகிறது).",
+    cloud_api_get_key_label: "உங்கள் இலவச Groq API விசையைப் பெறவும்",
+    cloud_api_groq_key_label: "Groq API விசை",
+    cloud_api_groq_key_placeholder: "gsk_…",
+    cloud_api_groq_key_hint_empty: "உங்கள் விசை இந்தச் சாதனத்திலேயே இருக்கும். Groq விசைகள் gsk_ இல் தொடங்கும்.",
+    cloud_api_groq_key_hint_ok: "✓ Groq விசை போல் தெரிகிறது.",
+    cloud_api_openai_key_hint: "உங்கள் விசை இந்தச் சாதனத்திலேயே இருக்கும்.",
+    cloud_api_advanced_label: "மேம்பட்ட",
+    cloud_api_endpoint_label: "எண்ட்பாயிண்ட்",
+    cloud_api_endpoint_hint_groq: "Groq இன் OpenAI-இணக்கமான மேற்பரப்பு இயல்புநிலை. தனிப்பயன் எண்ட்பாயிண்ட் வழியாக ப்ராக்ஸி செய்தால் மட்டுமே மேலெழுதவும்.",
+    cloud_api_endpoint_hint_custom: "எந்த OpenAI-இணக்கமான எண்ட்பாயிண்ட் (OpenAI, Together, Fireworks, சுய-ஹோஸ்ட் செய்யப்பட்ட ப்ராக்ஸி). NilaMind Groq ஐ இயல்பாக பரிந்துரைக்கிறது.",
+    cloud_api_model_label: "மாடல்",
+    cloud_api_model_hint_groq: "எந்த Groq மாடல் ஐடியும் வேலை செய்யும். இயல்புநிலை: llama-3.1-8b-instant (வேகமான & திறமையான).",
+    cloud_api_model_hint_custom: "OpenAI இல் இயல்புநிலை: gpt-3.5-turbo.",
+    cloud_api_model_custom_option: "தனிப்பயன் மாடல் ஐடி…",
+    cloud_api_privacy_groq: "கிளவுட் API இயக்கப்பட்டால், உங்கள் அரட்டை மற்றும் குரல் அழைப்பு செய்திகள் (மற்றும் Nila இன் பதில்கள்) உங்கள் சாதனத்திலிருந்து நேரடியாக Groq க்குச் செல்லும். Groq இன் தனியுரிமை அறிவிப்பின்படி, அவர்கள் உங்கள் தரவைக் கொண்டு训练的训练 செய்வதில்லை, மறுமொழிக்குப் பிறகு சமர்ப்பித்த உள்ளடக்கத்தைத் தக்கவைப்பதில்லை.",
+    cloud_api_privacy_generic: "கிளவுட் API இயக்கப்படும்போது, உங்கள் அரட்டை மற்றும் குரல் அழைப்பு செய்திகள் (மற்றும் Nila இன் பதில்கள்) உங்கள் சாதனத்திலிருந்து நேரடியாக நீங்கள் கட்டமைக்கும் எண்ட்பாயிண்டுக்குச் செல்லும். மற்ற அனைத்தும் உங்கள் தொலைபேசியில் இருக்கும்.",
     you_wellbeing_label: "காலப்போக்கில் நலன்",
     you_wellbeing_sub: "உங்கள் நீண்டகால போக்கு",
     wellbeing_screen_intro: "நீங்கள் எப்படி இருந்தீர்கள் என்பதை இரு வாரங்களுக்கு ஒருமுறை சரிபார்க்கவும். ஒரு நாளைக்கும் மேலாக நீண்ட பார்வை முக்கியம்.",
@@ -1055,6 +1145,27 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     sec_cloud_apiSub: "క్లౌడ్ మోడల్ కోసం మీ API కీని కనెక్ట్ చేయండి (సందేశాలు మీ పరికరం నుండి బయటకు వెళ్తాయి)",
     sec_region: "సంక్షోభ లైన్‌లు & ప్రాంతం",
     sec_pilot: "పరిశోధన పైలట్",
+    cloud_api_provider_label: "ప్రదాత",
+    cloud_api_groq_recommended: "Groq (సిఫార్సు చేయబడింది)",
+    cloud_api_custom_label: "అనుకూల (OpenAI-అనుకూల)",
+    cloud_api_status_active: "క్లౌడ్ మోడల్ చురుకుగా ఉంది",
+    cloud_api_status_disabled: "నిలిపివేయబడింది — ఆన్-డివైస్ మాత్రమే (సిఫార్సు చేయబడింది).",
+    cloud_api_get_key_label: "మీ ఉచిత Groq API కీని పొందండి",
+    cloud_api_groq_key_label: "Groq API కీ",
+    cloud_api_groq_key_placeholder: "gsk_…",
+    cloud_api_groq_key_hint_empty: "మీ కీ ఈ పరికరంలోనే ఉంటుంది. Groq కీలు gsk_ తో ప్రారంభమవుతాయి.",
+    cloud_api_groq_key_hint_ok: "✓ ఇది Groq కీ లాగా కనిపిస్తోంది.",
+    cloud_api_openai_key_hint: "మీ కీ ఈ పరికరంలోనే ఉంటుంది.",
+    cloud_api_advanced_label: "అధునాతన",
+    cloud_api_endpoint_label: "ఎండ్‌పాయింట్",
+    cloud_api_endpoint_hint_groq: "Groq యొక్క OpenAI-అనుకూల ఉపరితలం డిఫాల్ట్. కస్టమ్ ఎండ్‌పాయింట్ ద్వారా ప్రాక్సీ చేస్తే మాత్రమే దాన్ని భర్తీ చేయండి.",
+    cloud_api_endpoint_hint_custom: "ఏదైనా OpenAI-అనుకూల ఎండ్‌పాయింట్ (OpenAI, Together, Fireworks, స్వీయ-హోస్ట్ ప్రాక్సీ). NilaMind డిఫాల్ట్‌గా Groq ను సిఫారసు చేస్తుంది.",
+    cloud_api_model_label: "మోడల్",
+    cloud_api_model_hint_groq: "ఏదైనా Groq మోడల్ ఐడి పనిచేస్తుంది. డిఫాల్ట్: llama-3.1-8b-instant (వేగవంతమైన & సమర్థమైన).",
+    cloud_api_model_hint_custom: "OpenAI లో డిఫాల్ట్: gpt-3.5-turbo.",
+    cloud_api_model_custom_option: "అనుకూల మోడల్ ఐడి…",
+    cloud_api_privacy_groq: "క్లౌడ్ API ప్రారంభించబడినప్పుడు, మీ చాట్ మరియు వాయిస్-కాల్ సందేశాలు (మరియు Nila యొక్క ప్రతిస్పందనలు) మీ పరికరం నుండి నేరుగా Groq కి వెళ్తాయి. Groq యొక్క గోప్యతా నోటీస్ ప్రకారం, వారు మీ డేటాతో శిక్షణ పొందరు మరియు ప్రతిస్పందన తర్వాత సమర్పించిన కంటెంట్‌ను ఉంచరు.",
+    cloud_api_privacy_generic: "క్లౌడ్ API ప్రారంభించబడినప్పుడు, మీ చాట్ మరియు వాయిస్-కాల్ సందేశాలు (మరియు Nila యొక్క ప్రతిస్పందనలు) మీ పరికరం నుండి నేరుగా మీరు కాన్ఫిగర్ చేసిన ఎండ్‌పాయింట్‌కు వెళ్తాయి. మిగతావన్నీ మీ ఫోన్‌లో ఉంటాయి.",
     you_wellbeing_label: "కాలక్రమంలో శ్రేయస్సు",
     you_wellbeing_sub: "మీ దీర్ఘకాలిక ధోరణి",
     wellbeing_screen_intro: "మీరు ఎలా ఉన్నారో ప్రతి పక్షానికి ఒకసారి చెక్ చేయండి. ఏక రోజు కంటే దీర్ఘకాలిక దృష్టి ముఖ్యం.",
