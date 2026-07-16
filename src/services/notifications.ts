@@ -22,6 +22,7 @@ import { isCategoryEnabled } from "./notificationCategories";
 import { extractWeeklyFacts } from "./weeklySynthesis";
 import { loadMoodHistory } from "./moodHistory";
 import { secureLocal } from "./secureLocal";
+import { getDiaryReminderPrefs } from "./diaryReminderPrefs";
 
 // ── Proactive insight notification (Retention mechanic) ───────────────────────
 // Surfaces one pattern insight per week as a notification.
@@ -488,6 +489,62 @@ export async function syncDailyReminders(opts: { request?: boolean } = { request
 /** Turn reminders off and clear the scheduled nudge. */
 export async function clearDailyReminders(): Promise<void> {
   try { await LocalNotifications.cancel({ notifications: [{ id: DAILY_REMINDER_ID }] }); } catch (e) { console.error("[notifications] clearDailyReminders failed:", e); }
+}
+
+// ── Diary journal reminder ─────────────────────────────────────────────────────
+// A single, user-CHOSEN daily time to journal (diaryReminderPrefs.ts) — OFF by default, no streak, no
+// penalty copy. Deliberately simpler than syncDailyReminders (no learned-hour bias, no window): the
+// user picked one exact time, and that's the time we honor, nudged out of quiet hours only.
+const DIARY_REMINDER_ID = 1005;
+
+export async function syncDiaryReminder(opts: { request?: boolean } = { request: true }): Promise<SyncResult> {
+  try { await LocalNotifications.cancel({ notifications: [{ id: DIARY_REMINDER_ID }] }); } catch (e) { console.error("[notifications] syncDiaryReminder cancel failed:", e); }
+
+  if (isSafetySuppressed()) return { scheduled: false, reason: "unavailable" };
+  if (!isCategoryEnabled("diary")) return { scheduled: false, reason: "disabled" };
+  if (isDndActive()) return { scheduled: false, reason: "unavailable" };
+  if (skipActive() || peekRemaining() < 1) return { scheduled: false, reason: "unavailable" };
+
+  const prefs = getDiaryReminderPrefs();
+  if (!prefs.enabled) return { scheduled: false, reason: "disabled" };
+
+  let granted = false;
+  if (opts.request === false) {
+    try { granted = (await LocalNotifications.checkPermissions()).display === "granted"; } catch (e) { console.error("[notifications] checkPermissions failed:", e); granted = false; }
+  } else {
+    granted = await ensureNotificationPermission();
+  }
+  if (!granted) return { scheduled: false, reason: "denied" };
+
+  let [h, m] = prefs.time.split(":").map(Number);
+  if (withinQuietHours(timeToday(h || 0, m || 0))) {
+    [h, m] = getReminderPrefs().quietEnd.split(":").map(Number);
+  }
+  h = Math.min(23, Math.max(0, h || 0));
+  m = Math.min(59, Math.max(0, m || 0));
+
+  try {
+    await LocalNotifications.schedule({
+      notifications: [{
+        id: DIARY_REMINDER_ID,
+        title: "NilaMind",
+        body: "A quiet moment to write, if you'd like one — no pressure either way.",
+        schedule: { on: { hour: h, minute: m }, allowWhileIdle: true }, // repeats daily
+        smallIcon: "ic_stat_icon_config_sample",
+        channelId: CHANNEL.gentle,
+        actionTypeId: ACTION_TYPE.dismissOnly,
+      }],
+    });
+    commitClaim(1); // counts against the same per-day non-crisis nudge budget as the other gentle nudges
+    return { scheduled: true, at: `${pad(h)}:${pad(m)}` };
+  } catch (e) {
+    console.error("[notifications] syncDiaryReminder schedule failed:", e);
+    return { scheduled: false, reason: "unavailable" };
+  }
+}
+
+export async function clearDiaryReminder(): Promise<void> {
+  try { await LocalNotifications.cancel({ notifications: [{ id: DIARY_REMINDER_ID }] }); } catch (e) { console.error("[notifications] clearDiaryReminder failed:", e); }
 }
 
 // P6.6 — weekly digest: a Sunday "week in review" notification, independent of the daily nudge. Distinct id

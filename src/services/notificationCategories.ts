@@ -7,7 +7,7 @@
 
 import { ls } from "./storageUtils";
 
-export type NotificationCategoryId = "checkin" | "armed" | "insight" | "protocol" | "crisis_followup";
+export type NotificationCategoryId = "checkin" | "armed" | "insight" | "protocol" | "crisis_followup" | "diary";
 
 export interface NotificationCategory {
   id: NotificationCategoryId;
@@ -21,6 +21,7 @@ export const NOTIFICATION_CATEGORIES: NotificationCategory[] = [
   { id: "insight", label: "Insight nudges", description: "Your daily gentle nudge from Nila" },
   { id: "protocol", label: "Protocol continuation", description: "Offers to keep going with a wellness program" },
   { id: "crisis_followup", label: "Crisis follow-up", description: "Post-crisis aftercare check-in (still always reachable in crisis)" },
+  { id: "diary", label: "Journal reminder", description: "The time you chose to be reminded to write, if you turned it on" },
 ];
 
 export type CategoryPrefs = Record<NotificationCategoryId, boolean>;
@@ -33,6 +34,7 @@ export const defaultCategoryPrefs: CategoryPrefs = {
   insight: true,
   protocol: true,
   crisis_followup: true,
+  diary: true,
 };
 
 export function getCategoryPrefs(): CategoryPrefs {

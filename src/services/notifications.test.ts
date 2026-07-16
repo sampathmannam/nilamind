@@ -14,7 +14,7 @@ vi.mock("@capacitor/local-notifications", () => ({
 }));
 // notifications.ts imports ./reminders — stub it (unused by notifyReplyReady).
 // EMA + suppression + reminder deps — controllable via emaMocks (vi.hoisted so the mock factories can read it).
-const emaMocks = vi.hoisted(() => ({ enabled: true, frequency: 2, suppressed: false, elevation: "none" as string, times: [] as Date[], dailyEnabled: false, markSuppressCalls: 0, dnd: false, skip: false, budget: 3, catCheckin: true, catInsight: true, weeklyDigest: true, learnedHour: null as number | null }));
+const emaMocks = vi.hoisted(() => ({ enabled: true, frequency: 2, suppressed: false, elevation: "none" as string, times: [] as Date[], dailyEnabled: false, markSuppressCalls: 0, dnd: false, skip: false, budget: 3, catCheckin: true, catInsight: true, catDiary: true, weeklyDigest: true, learnedHour: null as number | null, diaryEnabled: false, diaryTime: "20:00" }));
 vi.mock("./reminders", () => ({
   withinQuietHours: () => false,
   getReminderPrefs: () => ({ enabled: emaMocks.dailyEnabled, windowStart: "10:00", windowEnd: "20:00", quietStart: "22:00", quietEnd: "08:00", weeklyDigest: emaMocks.weeklyDigest }),
@@ -30,10 +30,13 @@ vi.mock("./notificationBudget", () => ({
   recordNonCrisisSent: () => {},
 }));
 vi.mock("./notificationCategories", () => ({
-  isCategoryEnabled: (id: string) => (id === "checkin" ? emaMocks.catCheckin : id === "insight" ? emaMocks.catInsight : true),
+  isCategoryEnabled: (id: string) => (id === "checkin" ? emaMocks.catCheckin : id === "insight" ? emaMocks.catInsight : id === "diary" ? emaMocks.catDiary : true),
 }));
 vi.mock("./notificationEngagement", () => ({
   optimalFireHourNow: () => emaMocks.learnedHour,
+}));
+vi.mock("./diaryReminderPrefs", () => ({
+  getDiaryReminderPrefs: () => ({ enabled: emaMocks.diaryEnabled, time: emaMocks.diaryTime }),
 }));
 
 import { notifyReplyReady } from "./notifications";
@@ -273,6 +276,57 @@ describe("crisis suppression of nudges (P6.4)", () => {
     expect(schedule).not.toHaveBeenCalled();
     expect(cancel).toHaveBeenCalled();
     emaMocks.catInsight = true;
+  });
+});
+
+describe("syncDiaryReminder — user-chosen opt-in journal reminder", () => {
+  beforeEach(() => {
+    checkPermissions.mockReset(); schedule.mockReset(); cancel.mockReset();
+    emaMocks.suppressed = false; emaMocks.dnd = false; emaMocks.skip = false; emaMocks.budget = 3;
+    emaMocks.catDiary = true; emaMocks.diaryEnabled = true; emaMocks.diaryTime = "20:00";
+    checkPermissions.mockResolvedValue({ display: "granted" });
+    schedule.mockResolvedValue(undefined); cancel.mockResolvedValue(undefined);
+  });
+
+  it("bails (reason 'disabled') when the user hasn't turned the reminder on — the opt-in default", async () => {
+    emaMocks.diaryEnabled = false;
+    const { syncDiaryReminder } = await import("./notifications");
+    const res = await syncDiaryReminder();
+    expect(res).toEqual({ scheduled: false, reason: "disabled" });
+    expect(schedule).not.toHaveBeenCalled();
+    expect(cancel).toHaveBeenCalled(); // always clears any prior schedule first
+  });
+
+  it("schedules at the user's chosen time when enabled and permission is granted", async () => {
+    const { syncDiaryReminder } = await import("./notifications");
+    const res = await syncDiaryReminder();
+    expect(res).toEqual({ scheduled: true, at: "20:00" });
+    expect(schedule).toHaveBeenCalledOnce();
+    const n = (schedule.mock.calls[0][0] as { notifications: { id: number; body: string }[] }).notifications[0];
+    expect(n.id).toBe(1005);
+    expect(n.body.toLowerCase()).not.toMatch(/streak|miss|broke/); // no punitive/streak framing
+  });
+
+  it("bails cancel-only inside a crisis-suppression window", async () => {
+    emaMocks.suppressed = true;
+    const { syncDiaryReminder } = await import("./notifications");
+    const res = await syncDiaryReminder();
+    expect(res).toEqual({ scheduled: false, reason: "unavailable" });
+    expect(schedule).not.toHaveBeenCalled();
+  });
+
+  it("bails when the 'diary' category is toggled off", async () => {
+    emaMocks.catDiary = false;
+    const { syncDiaryReminder } = await import("./notifications");
+    const res = await syncDiaryReminder();
+    expect(res).toEqual({ scheduled: false, reason: "disabled" });
+  });
+
+  it("bails when DND 'give me space' is active", async () => {
+    emaMocks.dnd = true;
+    const { syncDiaryReminder } = await import("./notifications");
+    const res = await syncDiaryReminder();
+    expect(res).toEqual({ scheduled: false, reason: "unavailable" });
   });
 });
 

@@ -29,9 +29,9 @@ describe("notificationCategories — P6.5", () => {
     expect(prefs.crisis_followup).toBe(true);
   });
 
-  it("NOTIFICATION_CATEGORIES lists exactly the five spec'd types", () => {
+  it("NOTIFICATION_CATEGORIES lists exactly the spec'd types (+ diary, added for the journal reminder)", () => {
     const ids = NOTIFICATION_CATEGORIES.map((c) => c.id);
-    expect(ids).toEqual(["checkin", "armed", "insight", "protocol", "crisis_followup"]);
+    expect(ids).toEqual(["checkin", "armed", "insight", "protocol", "crisis_followup", "diary"]);
   });
 
   it("isCategoryEnabled reflects a toggled-off category", () => {
@@ -51,6 +51,6 @@ describe("notificationCategories — P6.5", () => {
   });
 
   it("defaultCategoryPrefs is a truthy map of all categories", () => {
-    expect(Object.keys(defaultCategoryPrefs).length).toBe(5);
+    expect(Object.keys(defaultCategoryPrefs).length).toBe(6);
   });
 });

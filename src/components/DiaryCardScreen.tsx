@@ -2,7 +2,7 @@ import { secureLocal } from "../services/secureLocal";
 import React, { useState, useEffect } from "react";
 import { DiaryCardEntry } from "../types";
 import { ALL_DIARY_DBT_SKILLS } from "../data";
-import { Check, Clipboard, Calendar, MessageSquare, Sparkles, Loader2, Mic, MicOff } from "lucide-react";
+import { Check, Clipboard, Calendar, MessageSquare, Sparkles, Loader2, Mic, MicOff, BellRing, X } from "lucide-react";
 import Markdown from "react-markdown";
 import { analyzeQuickNote } from "../services/coachAssist";
 import { useTypingSession } from "../hooks/useTypingSession";
@@ -10,6 +10,14 @@ import { hapticMedium } from "../hooks/useHaptics";
 import CrisisCard from "./CrisisCard";
 import { listenOnce, stopListening } from "../services/voice";
 import DailyIntentionCard from "./DailyIntentionCard";
+import { getDailyPrompt, JournalMode } from "../services/journalPrompt";
+import { getDiaryReminderPrefs, setDiaryReminderPrefs } from "../services/diaryReminderPrefs";
+import { syncDiaryReminder, clearDiaryReminder } from "../services/notifications";
+
+const MODE_PLACEHOLDER: Record<JournalMode, string> = {
+  free: "e.g., Felt a bit annoyed this morning before my meeting, but then practiced deep breathing. After lunch, I felt much more grounded.",
+  gratitude: "e.g., 1) The coffee actually tasted good today. 2) A stranger held the door. 3) I finished something I'd been putting off.",
+};
 
 export default function DiaryCardScreen() {
   const [selectedDate, setSelectedDate] = useState<string>(
@@ -28,13 +36,26 @@ export default function DiaryCardScreen() {
   const [skillsUsed, setSkillsUsed] = useState<string[]>([]);
   const [quickNotes, setQuickNotes] = useState<string>("");
   const [quickNoteTags, setQuickNoteTags] = useState<string[]>([]);
+  const [journalMode, setJournalMode] = useState<JournalMode>("free");
+  const [dailyPrompt, setDailyPrompt] = useState<string | null>(null);
+  const [promptDismissed, setPromptDismissed] = useState(false);
   const [isSaved, setIsSaved] = useState<boolean>(false);
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
   const [voiceListening, setVoiceListening] = useState(false);
+  const [reminderPrefs, setReminderPrefsState] = useState(getDiaryReminderPrefs());
 
   const diaryTyping = useTypingSession("diary");
   const [crisis, setCrisis] = useState<boolean>(false);
+
+  // Today's reflective prompt for the current mode — regenerated (or re-read from cache) whenever
+  // the mode changes. Never blocks typing: it degrades to a static prompt if the model isn't ready.
+  useEffect(() => {
+    let cancelled = false;
+    setPromptDismissed(false);
+    getDailyPrompt(journalMode).then((p) => { if (!cancelled) setDailyPrompt(p); });
+    return () => { cancelled = true; };
+  }, [journalMode]);
 
   // Load entry for date
   useEffect(() => {
@@ -51,6 +72,7 @@ export default function DiaryCardScreen() {
           setSkillsUsed(existing.skillsUsed || []);
           setQuickNotes(existing.quickNotes || "");
           setQuickNoteTags(existing.quickNoteTags || []);
+          setJournalMode(existing.journalMode || "free");
           return;
         }
       } catch {
@@ -70,6 +92,7 @@ export default function DiaryCardScreen() {
     setSkillsUsed([]);
     setQuickNotes("");
     setQuickNoteTags([]);
+    setJournalMode("free");
   }, [selectedDate]);
 
   const handleEmotionChange = (key: keyof typeof emotions, val: number) => {
@@ -106,12 +129,26 @@ export default function DiaryCardScreen() {
       skillsUsed,
       quickNotes,
       quickNoteTags,
+      journalMode,
     };
 
     secureLocal.setItem("nilamind_diary", JSON.stringify(entries));
     hapticMedium();
     setIsSaved(true);
     setTimeout(() => setIsSaved(false), 2000);
+  };
+
+  const handleReminderToggle = async (enabled: boolean) => {
+    setDiaryReminderPrefs({ enabled });
+    setReminderPrefsState(getDiaryReminderPrefs());
+    if (enabled) await syncDiaryReminder();
+    else await clearDiaryReminder();
+  };
+
+  const handleReminderTimeChange = async (time: string) => {
+    setDiaryReminderPrefs({ time });
+    setReminderPrefsState(getDiaryReminderPrefs());
+    if (getDiaryReminderPrefs().enabled) await syncDiaryReminder();
   };
 
   const handleAnalyze = async () => {
@@ -259,6 +296,41 @@ export default function DiaryCardScreen() {
           <p className="text-[11px] text-slate-500">
             Jot down transient thoughts, observations, or brief reflections on your day.
           </p>
+
+          {/* Journal mode — Free write / Gratitude. Evidence (Rude et al. 2012, Sohal et al. 2022)
+              says depth/specificity matters more than which structure you pick, so this is a light
+              framing toggle, not a different storage model: both write to the same quickNotes field. */}
+          <div className="flex gap-2" role="group" aria-label="Journal mode">
+            {(["free", "gratitude"] as JournalMode[]).map((mode) => (
+              <button
+                key={mode}
+                onClick={() => { setJournalMode(mode); setIsSaved(false); }}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium border cursor-pointer transition-all ${
+                  journalMode === mode
+                    ? "bg-blue-900/40 border-blue-700/50 text-blue-300"
+                    : "border-slate-800 text-slate-500 hover:text-slate-300 hover:border-slate-700"
+                }`}
+                aria-pressed={journalMode === mode}
+              >
+                {mode === "free" ? "Free write" : "Gratitude"}
+              </button>
+            ))}
+          </div>
+
+          {dailyPrompt && !promptDismissed && (
+            <div className="flex items-start gap-2 bg-page border border-slate-800 rounded-xl p-3 text-xs text-slate-400" id="diary-daily-prompt">
+              <Sparkles className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />
+              <span className="flex-1">Try writing about: {dailyPrompt}</span>
+              <button
+                onClick={() => setPromptDismissed(true)}
+                aria-label="Dismiss prompt"
+                className="text-slate-600 hover:text-slate-400 cursor-pointer shrink-0"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+
           <button
             onClick={async () => {
               if (voiceListening) {
@@ -299,7 +371,7 @@ export default function DiaryCardScreen() {
             onKeyUp={diaryTyping.onKeyUp}
             onFocus={diaryTyping.start}
             onBlur={() => diaryTyping.onBlur(quickNotes.length)}
-            placeholder="e.g., Felt a bit annoyed this morning before my meeting, but then practiced deep breathing. After lunch, I felt much more grounded."
+            placeholder={MODE_PLACEHOLDER[journalMode]}
             aria-label="Quick Notes"
             className="w-full bg-page border border-slate-800 rounded-xl p-3 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-blue-500/50 min-h-[100px] resize-y"
           />
@@ -313,6 +385,40 @@ export default function DiaryCardScreen() {
               ))}
             </div>
           )}
+
+          {/* Journal reminder — OFF by default, no streak, no penalty for skipping a day. The user
+              picks their own time (implementation-intention style) rather than the app choosing one. */}
+          <div className="flex items-center justify-between gap-2 mt-3 bg-page border border-slate-800 rounded-xl p-3" id="diary-reminder-row">
+            <div className="flex items-center gap-2 text-xs text-slate-400">
+              <BellRing className="w-3.5 h-3.5" />
+              <span>Remind me to journal</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="time"
+                value={reminderPrefs.time}
+                disabled={!reminderPrefs.enabled}
+                onChange={(e) => handleReminderTimeChange(e.target.value)}
+                aria-label="Journal reminder time"
+                className="bg-transparent text-xs text-slate-300 border border-slate-800 rounded-lg px-2 py-1 focus:outline-none disabled:opacity-40"
+              />
+              <button
+                role="switch"
+                aria-checked={reminderPrefs.enabled}
+                aria-label="Toggle journal reminder"
+                onClick={() => handleReminderToggle(!reminderPrefs.enabled)}
+                className={`w-10 h-5.5 rounded-full relative transition-all cursor-pointer ${
+                  reminderPrefs.enabled ? "bg-blue-600" : "bg-slate-800"
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 w-4.5 h-4.5 rounded-full bg-white transition-all ${
+                    reminderPrefs.enabled ? "left-[22px]" : "left-0.5"
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
 
           <div className="flex justify-end mt-2">
             <button

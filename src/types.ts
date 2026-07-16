@@ -25,6 +25,8 @@ export interface DiaryCardEntry {
   quickNotes?: string;
   quickNoteTags?: string[];
   morningIntention?: string;
+  /** Which journaling mode the quick note was written in. Optional for backward-compat reads. */
+  journalMode?: "free" | "gratitude";
 }
 
 export interface SafetyPlan {
