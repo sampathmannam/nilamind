@@ -77,10 +77,10 @@ export default function CrisisOverlay({
           <ShieldAlert className="text-rose-500 w-12 h-12 stroke-[2.5]" />
         </div>
         <h1 id="crisis-overlay-heading" ref={headingRef} tabIndex={-1} className="text-xl font-semibold tracking-tight text-slate-100 mb-1 outline-none">
-          You reached for this. Let's find something that helps.
+          You're not alone right now. Let's find something that helps.
         </h1>
         <p className="text-slate-400 text-sm max-w-md mx-auto leading-relaxed">
-          That is a strong thing to do. Ground yourself first, or reach a trained listener.
+          Reaching out is a strong thing to do, whatever brought you here. Ground yourself first, or reach a trained listener.
         </p>
       </div>
 
