@@ -22,6 +22,7 @@ import {
 
 const GROQ_KEYS_URL = "https://console.groq.com/keys";
 const GROQ_PRIVACY_URL = "https://wow.groq.com/privacy-notice/";
+const GOOGLE_AI_STUDIO_KEYS_URL = "https://aistudio.google.com/apikey";
 
 export default function CloudApiSection() {
   useLanguage();
@@ -370,6 +371,22 @@ function OpenAiCompatiblePanel(props: {
 }) {
   return (
     <>
+      <a
+        href={GOOGLE_AI_STUDIO_KEYS_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        id="cloud-api-google-getkey"
+        className="flex items-center justify-between w-full bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 rounded-xl px-3 py-2.5 transition-colors"
+      >
+        <span className="flex items-center gap-2">
+          <Sparkles className="w-4 h-4 text-emerald-400" />
+          <span className="text-xs font-medium text-emerald-100">
+            {t("cloud_api_get_key_label_custom")}
+         </span>
+       </span>
+        <ExternalLink className="w-3.5 h-3.5 text-emerald-300" />
+     </a>
+
       <div className="border border-slate-800 rounded-xl p-3 bg-page space-y-2" id="cloud-api-url">
         <label className="text-xs font-medium text-slate-300">
           {t("cloud_api_endpoint_label")}

@@ -197,6 +197,7 @@ export type I18nKey =
   | "cloud_api_status_active"
   | "cloud_api_status_disabled"
   | "cloud_api_get_key_label"
+  | "cloud_api_get_key_label_custom"
   | "cloud_api_groq_key_label"
   | "cloud_api_groq_key_placeholder"
   | "cloud_api_groq_key_hint_ok"
@@ -437,6 +438,7 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     cloud_api_status_active: "Cloud model active",
     cloud_api_status_disabled: "Disabled — on-device only (recommended).",
     cloud_api_get_key_label: "Get your free Groq API key",
+    cloud_api_get_key_label_custom: "Get your free Google AI Studio (Gemini) API key",
     cloud_api_groq_key_label: "Groq API Key",
     cloud_api_groq_key_placeholder: "gsk_…",
     cloud_api_groq_key_hint_empty: "Your key stays on this device. Groq keys start with gsk_.",
@@ -679,6 +681,7 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     cloud_api_status_active: "क्लाउड मॉडल सक्रिय",
     cloud_api_status_disabled: "अक्षम — केवल ऑन-डिवाइस (अनुशंसित)।",
     cloud_api_get_key_label: "अपनी मुफ़्त Groq API कुंजी प्राप्त करें",
+    cloud_api_get_key_label_custom: "अपनी मुफ़्त Google AI Studio (Gemini) API कुंजी प्राप्त करें",
     cloud_api_groq_key_label: "Groq API कुंजी",
     cloud_api_groq_key_placeholder: "gsk_…",
     cloud_api_groq_key_hint_empty: "आपकी कुंजी इस डिवाइस पर रहती है। Groq कुंजियाँ gsk_ से शुरू होती हैं।",
@@ -915,6 +918,7 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     cloud_api_status_active: "கிளவுட் மாடல் செயலில்",
     cloud_api_status_disabled: "முடக்கப்பட்டது — ஆன்-டிவைஸ் மட்டும் (பரிந்துரைக்கப்படுகிறது).",
     cloud_api_get_key_label: "உங்கள் இலவச Groq API விசையைப் பெறவும்",
+    cloud_api_get_key_label_custom: "உங்கள் இலவச Google AI Studio (Gemini) API விசையைப் பெறவும்",
     cloud_api_groq_key_label: "Groq API விசை",
     cloud_api_groq_key_placeholder: "gsk_…",
     cloud_api_groq_key_hint_empty: "உங்கள் விசை இந்தச் சாதனத்திலேயே இருக்கும். Groq விசைகள் gsk_ இல் தொடங்கும்.",
@@ -1151,6 +1155,7 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     cloud_api_status_active: "క్లౌడ్ మోడల్ చురుకుగా ఉంది",
     cloud_api_status_disabled: "నిలిపివేయబడింది — ఆన్-డివైస్ మాత్రమే (సిఫార్సు చేయబడింది).",
     cloud_api_get_key_label: "మీ ఉచిత Groq API కీని పొందండి",
+    cloud_api_get_key_label_custom: "మీ ఉచిత Google AI Studio (Gemini) API కీని పొందండి",
     cloud_api_groq_key_label: "Groq API కీ",
     cloud_api_groq_key_placeholder: "gsk_…",
     cloud_api_groq_key_hint_empty: "మీ కీ ఈ పరికరంలోనే ఉంటుంది. Groq కీలు gsk_ తో ప్రారంభమవుతాయి.",
