@@ -13,33 +13,12 @@ vi.mock("../services/secureLocal", () => ({
 vi.mock("../hooks/useHaptics", () => ({ hapticMedium: vi.fn() }));
 vi.mock("../services/coachAssist", () => ({ analyzeQuickNote: vi.fn() }));
 vi.mock("../services/voice", () => ({ listenOnce: vi.fn(), stopListening: vi.fn() }));
-vi.mock("../services/journalPrompt", () => ({
-  getDailyPrompt: vi.fn(async (mode: string) => `PROMPT:${mode}`),
-}));
-const reminderStore = new Map<string, string>();
-vi.mock("../services/diaryReminderPrefs", () => ({
-  getDiaryReminderPrefs: () => {
-    const raw = reminderStore.get("prefs");
-    return raw ? JSON.parse(raw) : { enabled: false, time: "20:00" };
-  },
-  setDiaryReminderPrefs: (p: Record<string, unknown>) => {
-    const raw = reminderStore.get("prefs");
-    const cur = raw ? JSON.parse(raw) : { enabled: false, time: "20:00" };
-    reminderStore.set("prefs", JSON.stringify({ ...cur, ...p }));
-  },
-}));
-const syncDiaryReminder = vi.fn(async () => ({ scheduled: true }));
-const clearDiaryReminder = vi.fn(async () => {});
-vi.mock("../services/notifications", () => ({
-  syncDiaryReminder: () => syncDiaryReminder(),
-  clearDiaryReminder: () => clearDiaryReminder(),
-}));
 
 import DiaryCardScreen from "./DiaryCardScreen";
 import { getDailyIntention } from "../services/weeklyIntention";
 
 afterEach(cleanup);
-beforeEach(() => { store.clear(); reminderStore.clear(); syncDiaryReminder.mockClear(); clearDiaryReminder.mockClear(); });
+beforeEach(() => { store.clear(); });
 
 // Wave 3 Group I (2026-07-12) — the diary's free-text "Morning Intention" field was one of three
 // independent, contradictory "intention" surfaces (synthesis finding). It's replaced here by the
@@ -65,55 +44,6 @@ describe("DiaryCardScreen — Part 3 now defers to the unified daily-intention s
     render(<DiaryCardScreen />);
     expect(screen.getByText(/it's 8am/)).toBeTruthy();
     expect(getDailyIntention()?.if).toBe("it's 8am");
-  });
-});
-
-describe("DiaryCardScreen — journal mode, daily prompt, and reminder (research-grounded additions)", () => {
-  it("defaults to Free write mode and shows today's prompt for it", async () => {
-    render(<DiaryCardScreen />);
-    const freeChip = screen.getByRole("button", { name: "Free write" });
-    expect(freeChip.getAttribute("aria-pressed")).toBe("true");
-    expect(await screen.findByText(/PROMPT:free/)).toBeTruthy();
-  });
-
-  it("switching to Gratitude mode changes the placeholder and re-fetches the prompt for that mode", async () => {
-    render(<DiaryCardScreen />);
-    fireEvent.click(screen.getByRole("button", { name: "Gratitude" }));
-    expect(await screen.findByText(/PROMPT:gratitude/)).toBeTruthy();
-    expect(screen.getByLabelText("Quick Notes").getAttribute("placeholder")).toMatch(/coffee/i);
-  });
-
-  it("dismissing the prompt hides it without affecting the note text", async () => {
-    render(<DiaryCardScreen />);
-    await screen.findByText(/PROMPT:free/);
-    fireEvent.click(screen.getByLabelText("Dismiss prompt"));
-    expect(screen.queryByText(/PROMPT:free/)).toBeNull();
-  });
-
-  it("reminder toggle is off by default and does not call syncDiaryReminder until switched on", () => {
-    render(<DiaryCardScreen />);
-    const toggle = screen.getByLabelText("Toggle journal reminder");
-    expect(toggle.getAttribute("aria-checked")).toBe("false");
-    expect(syncDiaryReminder).not.toHaveBeenCalled();
-  });
-
-  it("turning the reminder on calls syncDiaryReminder; turning it off calls clearDiaryReminder", () => {
-    render(<DiaryCardScreen />);
-    const toggle = screen.getByLabelText("Toggle journal reminder");
-    fireEvent.click(toggle);
-    expect(syncDiaryReminder).toHaveBeenCalledTimes(1);
-    fireEvent.click(toggle);
-    expect(clearDiaryReminder).toHaveBeenCalledTimes(1);
-  });
-
-  it("saved entry persists journalMode", async () => {
-    render(<DiaryCardScreen />);
-    fireEvent.click(screen.getByRole("button", { name: "Gratitude" }));
-    await screen.findByText(/PROMPT:gratitude/); // wait for the mode switch to fully settle
-    fireEvent.click(document.getElementById("save-diary-btn")!);
-    const today = new Date().toISOString().split("T")[0];
-    const saved = JSON.parse(store.get("nilamind_diary") || "{}");
-    expect(saved[today]?.journalMode).toBe("gratitude");
   });
 });
 

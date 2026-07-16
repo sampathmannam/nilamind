@@ -31,6 +31,7 @@ const SocialRhythmScreen = lazy(() => import("./components/SocialRhythmScreen"))
 // #21 (audit): module-scoped so it isn't re-created on every App render (which remounted DiaryCardScreen,
 // flashed Suspense, and discarded the user's unsaved emotion sliders / notes on any parent state change).
 const DiaryCardScreen = lazy(() => import("./components/DiaryCardScreen"));
+const JournalScreen = lazy(() => import("./components/JournalScreen"));
 const ReachOutScreen = lazy(() => import("./components/ReachOutScreen"));
 const LearnScreen = lazy(() => import("./components/LearnScreen"));
 const ProblemSolvingScreen = lazy(() => import("./components/ProblemSolvingScreen"));
@@ -113,7 +114,8 @@ const AUX_LABELS: Partial<Record<AuxView, string>> = {
   exposure: "Exposure hierarchy",
   relapse_plan: "Relapse prevention",
   behaviour: "Phone patterns",
-  diary: "Diary card",
+  diary: "Journal",
+  dbt_diary_card: "DBT diary card",
   episode: "Episode support",
   ema_checkin: "Quick check‑in",
   episode_marker: "Episode markers",
@@ -148,7 +150,8 @@ function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () 
     case "exposure": return <ExposureHierarchyScreen />;
     case "relapse_plan": return <RelapsePlanScreen />;
     case "behaviour": return <DashboardScreen onOpenView={onOpenView} />;
-    case "diary": return <DiaryCardScreen />;
+    case "diary": return <JournalScreen />;
+    case "dbt_diary_card": return <DiaryCardScreen />;
     case "episode": return <EpisodeSupportScreen onSessionEnded={onClose} onNavigateToGrounding={() => { onClose(); onOpenGrounding(); }} onNavigateToBreathing={() => { onClose(); onOpenGrounding(); }} />;
     case "ema_checkin": return <EmaCheckInScreen onLogged={onClose} onCrisis={() => { onClose(); onActivateCrisis(); }} />;
     case "episode_marker": return <EpisodeMarkerScreen onClose={onClose} />;

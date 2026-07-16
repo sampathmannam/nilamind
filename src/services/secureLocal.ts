@@ -30,6 +30,7 @@ import { ls } from "./storageUtils";
 export const SENSITIVE_KEYS = [
   "nilamind_checkins",
   "nilamind_diary",
+  "nilamind_journal",
   "nilamind_episodes",
   "nilamind_thought_records",
   "nilamind_safetyplan",

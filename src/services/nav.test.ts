@@ -31,6 +31,9 @@ describe("resolveNavTarget", () => {
     expect(resolveNavTarget("assessment")).toEqual({ kind: "aux", view: "assessment" });
     expect(resolveNavTarget("insights")).toEqual({ kind: "aux", view: "insights" });
   });
+  it("resolves dbt_diary_card as a known aux view (the relocated DBT diary card)", () => {
+    expect(resolveNavTarget("dbt_diary_card")).toEqual({ kind: "aux", view: "dbt_diary_card" });
+  });
   it("returns unknown (no-op) for removed/typo'd targets", () => {
     expect(resolveNavTarget("behavioural_activation")).toEqual({ kind: "unknown", target: "behavioural_activation" });
     expect(resolveNavTarget("values_compass")).toEqual({ kind: "unknown", target: "values_compass" });
