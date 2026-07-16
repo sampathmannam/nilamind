@@ -520,6 +520,22 @@ export function searchPsychoed(query: string): PsychoedTopic[] {
   return scored.map((s) => s.topic);
 }
 
+/** How many distinct query terms matched the single best result from `searchPsychoed`. Used by
+ *  callers that need a precision floor beyond "matched something" — a message that only hits one
+ *  generic, broadly-tagged word (e.g. "good") scores identically to a message that hits two
+ *  specific, meaningful tags, so raw score alone can't separate a real signal from a coincidence. */
+export function topMatchTermCoverage(query: string): number {
+  const terms = new Set(tokenize(query));
+  if (terms.size === 0) return 0;
+  const top = searchPsychoed(query)[0];
+  if (!top) return 0;
+  const entry = INDEX.find((e) => e.topic.id === top.id);
+  if (!entry) return 0;
+  let coverage = 0;
+  for (const t of terms) if (entry.weights.has(t)) coverage++;
+  return coverage;
+}
+
 /** Deterministic §9 gate for the Understand search box — wraps scanForCrisis. The screen surfaces crisis
  *  help on `true` BEFORE any lexical search, and never persists the text. scanForCrisis is untouched. */
 export function checkPsychoedQuery(text: string): boolean {

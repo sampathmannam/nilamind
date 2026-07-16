@@ -24,6 +24,7 @@ export function setPsychoedEmbedder(e: Embedder): void {
 
 /** Reset cached embeddings — used in tests. */
 export function resetPsychoedIndex(): void {
+  _embedder = null;
   _topicEmbeddings = null;
 }
 

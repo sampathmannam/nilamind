@@ -9,7 +9,7 @@
 // stripped before any model call (buildOutgoing maps only role/content) so it never leaves
 // the device and never reaches the LLM.
 
-import { searchPsychoed, type PsychoedTopic } from "./psychoed";
+import { searchPsychoed, topMatchTermCoverage, type PsychoedTopic } from "./psychoed";
 import { embeddingSearchPsychoed, type PsychoedResult } from "./psychoedRetrieval";
 import { suggestSkill, type SkillSuggestion } from "./skillSuggest";
 import { scanForCrisis } from "../safety";
@@ -55,14 +55,14 @@ export function pickExplainer(
 
   const stateId = userState ? STATE_TOPIC[userState] : undefined;
   let best = ranked[0];
-  const isSyntheticLexicalScores = ranked[0].score === 1 && ranked[1]?.score === 0.5;
-
-  if (stateId && ranked.length > 1 && ranked[0].topic.id !== stateId && ranked[1].topic.id === stateId) {
-    // For semantic search: apply state tie-break if scores are within epsilon
-    // For lexical fallback: always prefer state topic if available in results
-    if (isSyntheticLexicalScores || ranked[0].score - ranked[1].score <= TIE_BREAK_EPSILON) {
-      best = ranked[1];
-    }
+  if (
+    stateId &&
+    ranked.length > 1 &&
+    ranked[0].topic.id !== stateId &&
+    ranked[1].topic.id === stateId &&
+    ranked[0].score - ranked[1].score <= TIE_BREAK_EPSILON
+  ) {
+    best = ranked[1];
   }
 
   if (best.topic.id === previousExplainerId) {
@@ -90,8 +90,16 @@ async function resolveExplainer(
     ranked = await embeddingSearchPsychoed(text, { limit: 2, minScore: EXPLAINER_MIN_SCORE });
     if (ranked.length === 0) throw new Error("No embeddings found"); // Trigger fallback
   } catch {
-    const lex = searchPsychoed(text).slice(0, 2);
-    ranked = lex.map((t, i) => ({ topic: t, score: i === 0 ? 1 : 0.5 }));
+    // A single generic tag hit (e.g. "good") can score identically to a genuinely specific match
+    // (e.g. "heart"+"racing") under raw lexical scoring — require at least 2 matched terms before
+    // trusting the lexical fallback enough to show it as an asserted explainer card.
+    const MIN_LEXICAL_TERM_COVERAGE = 2;
+    if (topMatchTermCoverage(text) < MIN_LEXICAL_TERM_COVERAGE) {
+      ranked = [];
+    } else {
+      const lex = searchPsychoed(text).slice(0, 2);
+      ranked = lex.map((t, i) => ({ topic: t, score: i === 0 ? 1 : 0.5 }));
+    }
   }
   return pickExplainer(ranked, userState, previousExplainerId);
 }
