@@ -294,8 +294,9 @@ export default function TodayScreen({
         </div>
       )}
 
-      {/* Daily inspiration — quote + tip, dismissable, changes every day */}
-      <DailyContentCard />
+      {/* Daily inspiration — quote + tip. Informational, not a primary action → behind the "Your patterns"
+          fold so the home leads with one clear thing (2026-07-18 QA, per docs/UX_RESEARCH.md "~4 elements"). */}
+      {showExtraCards && <DailyContentCard />}
 
       {/* Gentle Play Store rating prompt — only after 5+ positive sessions */}
       <RatingPromptCard />
@@ -327,8 +328,8 @@ export default function TodayScreen({
         />
       )}
 
-      {/* Morning focus — if morning and not checked in yet */}
-      {timeOfDay === "morning" && checkedIn && weekInsight && (
+      {/* Morning focus — a this-week mini-stat. Informational → behind the "Your patterns" fold. */}
+      {showExtraCards && timeOfDay === "morning" && checkedIn && weekInsight && (
         <div className="glass p-3 rounded-2xl space-y-1">
           <p className="text-xs uppercase font-mono tracking-widest text-slate-500">This week</p>
           <p className="text-[11px] text-slate-300">
@@ -378,7 +379,9 @@ export default function TodayScreen({
         </button>
       )}
 
-      {/* Quick breathe — one-tap immersive breathing exercise */}
+      {/* Quick breathe — a breathing-tool shortcut. Tools live in the grounding library / Tools; behind
+          the fold here so the home isn't a tool list (2026-07-18 QA, per docs/UX_RESEARCH.md). */}
+      {showExtraCards && (
       <button
         onClick={() => go("breathing")}
         className="w-full glass hover:brightness-110 p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left flex items-center gap-3"
@@ -392,6 +395,7 @@ export default function TodayScreen({
         </div>
         <ChevronRight className="w-5 h-5 text-slate-500 shrink-0" aria-hidden="true" />
       </button>
+      )}
 
       {/* Mood card — prompt to log if not checked in, show reflection if done */}
       <button
