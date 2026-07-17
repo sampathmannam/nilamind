@@ -47,6 +47,7 @@ export interface ClinicianEpisodeSummary {
 }
 
 import type { ClinicianUsage } from "./clinicianPeriod";
+import type { ClinicianPactForReport } from "./clinicianAggregations";
 
 export interface ClinicianReportInput {
   periodLabel: string; // e.g. "Week ending 2026-07-12" or "Month ending 2026-07-12"
@@ -64,6 +65,12 @@ export interface ClinicianReportInput {
   phaseMarkers?: EpisodeMarker[];
   /** DBT diary card trends (urges/target behaviors, emotions, skills effectiveness). */
   diaryCardSummary?: DiaryCardClinicianSummary;
+  /**
+   * Phase 20.1 (B12): pact ("letter to my unwell self") status — exists / hasName / hasContact /
+   * writtenAt / ratifiedAt / isStale. Never the letter text, the person's name, or contact.
+   * Optional so legacy input fixtures (and any non-NilaMind callers) keep working.
+   */
+  pactState?: ClinicianPactForReport;
   protocolsCompleted: number;
   nilaSessions: number;
   featuresUsed: string[];
@@ -263,6 +270,29 @@ export function buildClinicianReport(input: ClinicianReportInput): string {
     }
 
     lines.push("  Note: self-reported via structured DBT-style daily card; 0=none, 5=extreme/highly effective.");
+    lines.push("");
+  }
+
+  // Phase 20.1 (B12) — Support Arrangement (pact). The patient, when well, named a trusted person and
+  // wrote themselves a letter for future unwell moments. The clinician benefits from knowing whether
+  // such an arrangement exists and whether it is fresh. Privacy: this block must never include the
+  // letter body, the trusted person's name, or their contact; only metadata the patient consents to
+  // by having stored the pact at all. Tested by privacy-guard tests in clinicianAggregations.test.ts
+  // AND the render-no-PII test in clinicianReport.test.ts.
+  if (input.pactState) {
+    const p = input.pactState;
+    lines.push("Support Arrangement (pact, self-authored)");
+    if (!p.exists) {
+      lines.push("  No pact on file in this period.");
+    } else {
+      lines.push("  Pact on file: yes");
+      lines.push(`  Trusted-person name recorded: ${p.hasName ? "yes" : "no"}`);
+      lines.push(`  Contact recorded: ${p.hasContact ? "yes" : "no"}`);
+      lines.push(`  Originally written (well-self): ${p.writtenAt ?? "—"}`);
+      lines.push(`  Last re-confirmed: ${p.ratifiedAt ?? "—"}`);
+      lines.push(`  Stale re-confirmation (>90d): ${p.isStale ? "yes — well-self should re-confirm" : "no"}`);
+    }
+    lines.push("  Note: self-authored support arrangement for context only — not a clinical directive.");
     lines.push("");
   }
 

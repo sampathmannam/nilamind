@@ -16,6 +16,8 @@ import { recordExportAudit, getExportAudit, type ExportAuditEntry, type ExportKi
 import type { ClinicianReportInput, ClinicianMedication, AssessmentTrajectory } from "../services/clinicianReport";
 import { generateClinicianPdfBlob } from "../services/clinicianPdf";
 import { readEpisodeMarkers } from "../services/episodeMarker";
+import { summarizePactForReport } from "../services/clinicianAggregations";
+import { loadPact } from "../services/pact";
 import { gatherClinicianUsage, protocolsCompletedInPeriod, periodCutoffIso, type ReportPeriod } from "../services/clinicianPeriod";
 import { loadInsights } from "../services/nilaInsights";
 import { loadRhythm, computeRhythmRegularity, parseTime, type RhythmEntry, type AnchorKey, type RhythmAnchors } from "../services/socialRhythm";
@@ -619,6 +621,11 @@ valuesClarified: []
       const allMarkers = readEpisodeMarkers();
       const phaseMarkers = allMarkers.filter((m) => m.endDate >= cutoff);
 
+      // Phase-20 (B12) — Support Arrangement (pact) summary. Privacy-respecting: never leaks the
+      // trusted person's name, contact, or letter; only the on/off/has-field flags. see plan
+      // docs/superpowers/plans/2026-07-17-clinician-report-holistic-research-and-design.md.
+      const pactState = summarizePactForReport(loadPact());
+
       const stats = nilaStats();
       const featuresUsed = featureAdoption();
 
@@ -666,9 +673,10 @@ valuesClarified: []
          socialRhythmVariability,
          assessmentTrajectories,
          medications,
-          episodes,
-           phaseMarkers,
-           diaryCardSummary,
+           episodes,
+            phaseMarkers,
+            pactState,
+            diaryCardSummary,
            protocolsCompleted,
           nilaSessions: usage.nilaTurns,
           featuresUsed,

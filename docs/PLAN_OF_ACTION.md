@@ -237,6 +237,59 @@ When new priorities emerge, they should be added here with autonomy tags and res
 - [ ] Employer/insurer dashboard — if B2B pivot chosen
 - ~~Longitudinal outcome tracking~~ — done (Phase 17)
 
+## Phase 20 — Holistic Clinician Report — New Aggregations 🟢 (planned 2026-07-17)
+
+**Why:** The clinician PDF (Phase 12 + 2026-07-16 research-redesign) already covers headline data. But ~10
+existing on-device data sources never reach the PDF at all. Plan = (a) pull them all in via pure deterministic
+aggregators, (b) add the patient's pre-visit note (the user-explicit gap: "I couldn't recollect … I don't want
+to remember those and tell them again"), (c) per-category redaction profile + consent modal + PDF cover page
++ SHA-256 integrity footer. Full research + product design:
+`docs/superpowers/plans/2026-07-17-clinician-report-holistic-research-and-design.md`.
+
+**Research basis:** F1–F16 (recall-degradation, EMA-vs-interview disclosure bias, NIMH Life Chart,
+automation bias, FDA 2022 CDS Guidance) inherited from the 2026-07-16 redesign. New citations: N1 IPSRT
+2024, N2 sleep→next-day-intensity EMA (Littlewood 2016), N4 WHO-5 (Topp 2015), N5 measurement-based care
+(Lambert 2003), N8 voice-prosody review, N10 India DPDP Act 2023, N11 HIPAA §164.524.
+
+**Ship order (owner-signed 2026-07-17): 20.1–20.4 first, then 20.5–20.9 as Phase 21.**
+
+| # | Item | Tag |
+|---|------|-----|
+| 20.1 | `clinicianAggregations.ts` — thought records, safety-plan state, social-contact log, pact state, what-didn't-help, BA / values history, exposure hierarchy (all deterministic readers of existing stores); extend `ClinicianReportInput` + render blocks | 🟢 |
+| 20.2 | `redactionPrefs.ts` (Minimal/Full presets + per-category overrides — mirrors `caregiverPreferences.ts`); consent modal in `YourDataScreen.tsx`; extend `exportAudit` with redaction-profile snapshot | 🟢 |
+| 20.3 | `visitNote.ts` (voice + text, optional safety-plan prompt, `nilamind_visit_note_<ISO>` last-4 rolling); gentle JITAI Dashboard card 'Notes for your next visit?' via `jitaiEngine` | 🟢 + 🟡 (jitai touch) |
+| 20.4 | `clinicianCorrelation.ts` — pure deterministic sleep→next-day-intensity, medication-adherence-vs-intensity, trigger→context→intensity; no labels, paired with sample size | 🟢 |
+| 20.5 | `clinicianRiskEvents.ts` — deterministic dated event-log builder. **No risk levels / scores / gauges / recommendations** (F11/F13/F14) | 🟡 (flagged pre-merge — guard test for "no level word appears" required) |
+| 20.6 | Voice-elevation (B4) — read `voicePatterns.ts`. Only included if user has voice sessions (opt-in by structure) | 🟢 |
+| 20.7 | WHO-5 wellbeing trajectory (P17 anchor) chart + text block — `MIN_TREND_POINTS` gate; Topp-2015 threshold line ≤13 | 🟢 |
+| 20.8 | `clinicianCover.ts` — cover, executive-summary page, SHA-256 integrity footer, 4-quarter annual stitching. Cover-page identifier defaults to **BIP39-derived pseudonymous ID** | 🟢 |
+| 20.9 | i18n (en/hi/ta/te) parity for every new `cr_*` key — same change as the feature | 🟢 / 🟡 (only if adaptiveTheme touched) |
+
+**Wire to (no fragmentation):** `YourDataScreen.tsx` "Share with your psychiatrist" card expanded in place;
+one JITAI Dashboard card in `DashboardScreen.tsx`; `exportAudit`; `secureLocal` keys
+`nilamind_redaction_prefs`, `nilamind_visit_note_<ISO>`. No new `youRows.ts` row.
+
+**Invariants preserved (no compromise):**
+- Wellness never therapy — language lock, plan §3 + §5.2.
+- §9 unchanged — no writes to `safety.ts` / `crisisClassifier*` / `elevationGuard` / `nilaSafetyGate` / `secureLocal`/`secureStore`.
+- No LLM-written prose (`localLlm` / `nilaReflect` banned during report generation, plan §5.4).
+- No risk *level / category / score / gauge / recommendation* — F11/F13/F14. Risk *events* only.
+- No telemetry. Privacy hard rule.
+- Patient pre-visit note → patient-written, never LLM-paraphrased.
+- Cover-page identifier default = BIP39-derived pseudonymous ID; user may override to a typed first name.
+- 18+ invariant preserved.
+
+**Definition of done:** TDD per item (RED → GREEN → REFACTOR) · `npm run guard` green · wired to a user
+surface · 🟡 diffs flagged pre-merge · no dead code (wire-what-you-build) · no deletion of
+`temporalRiskAssessment.ts` / `crisisSafetyValidation.ts` (orphaned by 2026-07-16; deletion is the owner's
+separate decision).
+
+**Owner decisions (2026-07-17):** ship 20.1–20.4 first · presets + per-category overrides · voice-elevation
+opt-in via structure · JITAI card in 20.3 · visit-note = voice+text+optional plan prompt · cover-ID
+BIP39-derived · med-correlation default-in · no telemetry.
+
+---
+
 ## All Phases Complete (2026-07-14)
 - Phases 1–20: All shipped
 - P4 Localization: Paused by user (~45 screens remain)

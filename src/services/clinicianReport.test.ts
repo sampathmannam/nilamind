@@ -146,6 +146,51 @@ describe("buildClinicianReport", () => {
     expect(report).toContain("showing most recent 8 of 12");
   });
 
+  // Phase 20.1 B12: pact state appears in the report as a privacy-respecting status block. The
+  // trusted person's identity must NEVER appear — only "name recorded" / "contact recorded".
+  it("renders the Support Arrangement (pact) block when pactState is supplied, without leaking PII", () => {
+    const report = buildClinicianReport({
+      ...baseInput,
+      pactState: {
+        exists: true,
+        hasName: true,
+        hasContact: false,
+        writtenAt: "2026-01-15",
+        ratifiedAt: "2026-06-30",
+        isStale: false,
+      },
+    });
+    expect(report).toContain("Support Arrangement");
+    expect(report).toContain("Trusted-person name recorded: yes");
+    expect(report).toContain("Contact recorded: no");
+    expect(report).toContain("2026-06-30");
+    expect(report).toContain("Stale re-confirmation");
+    // Privacy boundary: nothing sensitive should leak into the rendered text.
+    expect(report).not.toContain("Roommate Alex");
+    expect(report).not.toContain("alex@example.test");
+  });
+
+  it("renders the Support Arrangement block as 'no pact on file' when exists=false, never silently omitting", () => {
+    const report = buildClinicianReport({
+      ...baseInput,
+      pactState: {
+        exists: false,
+        hasName: false,
+        hasContact: false,
+        writtenAt: null,
+        ratifiedAt: null,
+        isStale: false,
+      },
+    });
+    expect(report).toContain("Support Arrangement");
+    expect(report).toContain("No pact on file");
+  });
+
+  it("omits the Support Arrangement block entirely when pactState is absent (legacy field optional)", () => {
+    const report = buildClinicianReport(baseInput);
+    expect(report).not.toContain("Support Arrangement");
+  });
+
   it("never renders a Temporal Risk Assessment section — F11/F12/F13/F14: computed risk scores shown to a clinician risk automation bias and fail FDA's Non-Device CDS exemption without disclosed validation", () => {
     const report = buildClinicianReport(baseInput);
     expect(report).not.toContain("Temporal Risk Assessment");
