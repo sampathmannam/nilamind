@@ -232,6 +232,73 @@ describe("buildClinicianReport", () => {
     expect(report).not.toContain("Social Connection");
   });
 
+  // Phase 20.1 B11 — what-didn't-help render
+  it("renders What Did Not Help section when whatDidntHelp has entries", () => {
+    const report = buildClinicianReport({
+      ...baseInput,
+      whatDidntHelp: {
+        totalCount: 2,
+        items: [
+          { source: "diary", skill: "TIPP", date: "2026-07-10" },
+          { source: "insight", text: "Caffeine worsens my anxiety", date: "2026-07-12" },
+        ],
+      },
+    });
+    expect(report).toContain("What Did Not Help");
+    expect(report).toContain("Skill not helpful: TIPP");
+    expect(report).toContain("Caffeine worsens my anxiety");
+  });
+
+  it("omits What Did Not Help when totalCount=0 or absent", () => {
+    const report = buildClinicianReport(baseInput);
+    expect(report).not.toContain("What Did Not Help");
+  });
+
+  // Phase 20.1 B1 — thought record summary render
+  it("renders Thought Record Summary section when thoughtRecords present", () => {
+    const report = buildClinicianReport({
+      ...baseInput,
+      thoughtRecords: {
+        count: 5,
+        topEmotions: [{ emotion: "Anxious", count: 3 }, { emotion: "Calm", count: 2 }],
+        topSituations: [{ theme: "work meeting", count: 2 }],
+        excerpt: { situation: "A conflict at work", emotion: "Anxious" },
+      },
+    });
+    expect(report).toContain("Thought Record Summary");
+    expect(report).toContain("Total records: 5");
+    expect(report).toContain("Anxious (3)");
+    expect(report).toContain("work meeting (2)");
+    expect(report).toContain("A conflict at work");
+  });
+
+  it("omits Thought Record Summary when count=0 or absent", () => {
+    const report = buildClinicianReport(baseInput);
+    expect(report).not.toContain("Thought Record Summary");
+  });
+
+  // Phase 20.1 B2 — safety plan state render
+  it("renders Safety Plan section when hasAnySection=true", () => {
+    const report = buildClinicianReport({
+      ...baseInput,
+      safetyPlan: {
+        hasAnySection: true,
+        sectionCounts: { warningSigns: 2, copingStrategies: 3 },
+        lastUpdated: "2026-06-20",
+      },
+    });
+    expect(report).toContain("Safety Plan (Stanley-Brown)");
+    expect(report).toContain("Sections with entries: 2");
+    expect(report).toContain("warningSigns: 2 entries");
+    expect(report).toContain("copingStrategies: 3 entries");
+    expect(report).toContain("Last updated: 2026-06-20");
+  });
+
+  it("omits Safety Plan section when hasAnySection=false or absent", () => {
+    const report = buildClinicianReport(baseInput);
+    expect(report).not.toContain("Safety Plan");
+  });
+
   it("never renders a Temporal Risk Assessment section — F11/F12/F13/F14: computed risk scores shown to a clinician risk automation bias and fail FDA's Non-Device CDS exemption without disclosed validation", () => {
     const report = buildClinicianReport(baseInput);
     expect(report).not.toContain("Temporal Risk Assessment");

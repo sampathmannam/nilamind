@@ -16,8 +16,9 @@ import { recordExportAudit, getExportAudit, type ExportAuditEntry, type ExportKi
 import type { ClinicianReportInput, ClinicianMedication, AssessmentTrajectory } from "../services/clinicianReport";
 import { generateClinicianPdfBlob } from "../services/clinicianPdf";
 import { readEpisodeMarkers } from "../services/episodeMarker";
-import { summarizePactForReport, summarizeConnectionsForReport } from "../services/clinicianAggregations";
+import { summarizePactForReport, summarizeConnectionsForReport, summarizeWhatDidntHelp, summarizeThoughtRecordsForReport, summarizeSafetyPlanForReport } from "../services/clinicianAggregations";
 import { loadPact } from "../services/pact";
+import { parseSafetyPlan } from "../services/safetyPlan";
 import { loadConnections } from "../services/humanConnection";
 import { gatherClinicianUsage, protocolsCompletedInPeriod, periodCutoffIso, type ReportPeriod } from "../services/clinicianPeriod";
 import { loadInsights } from "../services/nilaInsights";
@@ -648,6 +649,32 @@ valuesClarified: []
       })();
       const diaryCardSummary = summarizeDiaryForClinician(diaryEntries, cutoff, periodDays);
 
+      // Phase-20 (B11) — what didn't help. Derive from DBT diary skill ratings
+      // (tried_no_help per skill) + Nila insights tagged "what_doesnt_help".
+      const diarySkillsNoHelp: Array<{ skill: string; timesUsed: number; timesHelped: number; timesNoHelp: number }> = [];
+      const skillAgg = new Map<string, { used: number; helped: number; noHelp: number }>();
+      for (const entry of diaryEntries) {
+        if (!entry?.date || entry.date < cutoff) continue;
+        for (const skill of entry.skillsUsed ?? []) {
+          const prev = skillAgg.get(skill) ?? { used: 0, helped: 0, noHelp: 0 };
+          prev.used += 1;
+          const eff = entry.skillEffectiveness?.[skill];
+          if (eff === "tried_helped") prev.helped += 1;
+          if (eff === "tried_no_help") prev.noHelp += 1;
+          skillAgg.set(skill, prev);
+        }
+      }
+      for (const [skill, agg] of skillAgg) {
+        if (agg.noHelp > 0) {
+          diarySkillsNoHelp.push({ skill, timesUsed: agg.used, timesHelped: agg.helped, timesNoHelp: agg.noHelp });
+        }
+      }
+      const allInsights = (() => { try { return loadInsights(); } catch { return []; }})();
+      const insightsNoHelp = allInsights
+        .filter((i) => (i.kind as string) === "what_doesnt_help" && i.date >= cutoff)
+        .map((i) => ({ kind: i.kind, text: i.text, date: i.date }));
+      const whatDidntHelp = summarizeWhatDidntHelp(diarySkillsNoHelp, insightsNoHelp);
+
       // Protocol completions within the window (was hardcoded to 0).
       const completionsRaw = secureLocal.getItem("nilamind_protocol_completions");
       const allCompletions = completionsRaw ? JSON.parse(completionsRaw) : [];
@@ -668,6 +695,35 @@ valuesClarified: []
         const behavioralInsights = calculateBehavioralInsights();
         const userInsightsSummary = calculateUserInsightsSummary();
 
+       // Phase-20 (B1) — thought record summary. We extract `situation` + `emotion` fields
+       // (the only ones that reach the PDF — automatic thoughts, evidence, balanced thoughts
+       // are private to the patient/therapist); filter by date range; derive emotion +
+       // situation-theme recurrences. Never logs the full text.
+       const allThoughtRecords: Array<{ situation: string; emotion: string; date?: string }> = (() => {
+         try {
+           const raw = secureLocal.getItem("nilamind_thought_records");
+           if (!raw) return [];
+           const arr = JSON.parse(raw);
+           if (!Array.isArray(arr)) return [];
+           return arr
+             .filter((r: { situation?: unknown; emotion?: unknown; date?: unknown }) =>
+               typeof r?.situation === "string" && typeof r?.emotion === "string",
+             )
+             .map((r: { situation: string; emotion: string; date?: string }) => ({
+               situation: r.situation,
+               emotion: r.emotion,
+               date: typeof r.date === "string" ? r.date : undefined,
+             }));
+         } catch { return []; }
+       })();
+       const thoughtRecords = summarizeThoughtRecordsForReport(allThoughtRecords);
+
+       // Phase-20 (B2) — safety plan state metadata. Only structure (counts, last updated)
+       // reaches the clinician; section content never leaves.
+       const safetyPlanRaw = (() => { try { return secureLocal.getItem("nilamind_safetyplan"); }
+                                       catch { return null; } })();
+       const safetyPlan = summarizeSafetyPlanForReport(parseSafetyPlan(safetyPlanRaw));
+
        const input: ClinicianReportInput = {
          periodLabel,
          periodDays,
@@ -677,14 +733,17 @@ valuesClarified: []
          avgSleepHours,
          circadianScore,
          socialRhythmVariability,
-         assessmentTrajectories,
-         medications,
-           episodes,
-            phaseMarkers,
-            pactState,
-            connections,
-            diaryCardSummary,
-           protocolsCompleted,
+          assessmentTrajectories,
+          medications,
+          episodes,
+          phaseMarkers,
+          pactState,
+          connections,
+          whatDidntHelp,
+          thoughtRecords,
+          safetyPlan,
+          diaryCardSummary,
+          protocolsCompleted,
           nilaSessions: usage.nilaTurns,
           featuresUsed,
           usage,
