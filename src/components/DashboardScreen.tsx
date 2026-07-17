@@ -56,7 +56,7 @@ import {
 } from "../services/dashboardInsights";
 import { getRecentSnapshots } from "../db/behaviourDb";
 import type { CheckInEntry, DiaryCardEntry, EpisodeRecord } from "../types";
-import { DAY_MS } from "../services/storageUtils";
+import { DAY_MS, localDateKey} from "../services/storageUtils";
 import EmptyStateShared, { EMPTY_STATES } from "./EmptyState";
 
 const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -209,7 +209,7 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
 
   const energyScatter = useMemo(() => {
     const range = timeRange === "7d" ? 7 : 30;
-    const cutoff = new Date(Date.now() - range * DAY_MS).toISOString().split("T")[0];
+    const cutoff = localDateKey(new Date(Date.now() - range * DAY_MS));
     return checkins
       .filter((c) => c.date >= cutoff && typeof c.intensity === "number" && typeof c.energy === "number")
       .map((c) => ({
@@ -362,7 +362,7 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
     setShowExportMenu(false);
     try {
       const weekEnding = new Date();
-      const weekEndingStr = weekEnding.toISOString().split("T")[0];
+      const weekEndingStr = localDateKey(weekEnding);
       const oneWeekAgo = new Date(weekEnding.getTime() - 7 * 86400000);
       const weekCheckins = checkins.filter((c) => {
         const d = new Date(c.date + "T00:00:00");

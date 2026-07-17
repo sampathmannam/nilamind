@@ -4,6 +4,7 @@
 // aggregation step is the only thing that would ever leave, and only as COUNTS or explicitly-donated
 // examples, never the raw conversation. Encrypted at rest; the person can see the totals and clear it.
 
+import { localDateKey } from "./storageUtils";
 import { secureLocal } from "./secureLocal";
 
 export type Rating = "up" | "down";
@@ -22,7 +23,7 @@ const MAXLEN = 2000;
 
 let _seq = 0;
 const uid = (): string => `fb_${Date.now().toString(36)}_${(_seq++).toString(36)}`;
-const today = (): string => new Date().toISOString().split("T")[0];
+const today = (): string => localDateKey();
 
 export function loadFeedback(): ReplyFeedback[] {
   try {

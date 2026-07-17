@@ -8,6 +8,7 @@
 // them, or shift cut-offs, because the psychometrics only hold for the published form. Wellness,
 // never therapy: this tracks a pattern over time, it is not a diagnosis.
 
+import { localDateKey } from "./storageUtils";
 import {
   loadAssessments,
   latestFor,
@@ -57,7 +58,7 @@ export function readWellbeingHistory(all?: AssessmentEntry[]): AssessmentEntry[]
 }
 
 export function wellbeingCadence(history?: AssessmentEntry[], today?: string): WellbeingCadence {
-  const t = today ?? new Date().toISOString().split("T")[0];
+  const t = today ?? localDateKey();
   const h = history ?? readWellbeingHistory();
   const last = latestFor("WHO-5", h);
   if (!last) return { daysSinceLast: null, dueInDays: null, isDue: true };

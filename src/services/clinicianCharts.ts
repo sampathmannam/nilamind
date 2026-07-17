@@ -16,6 +16,7 @@
 
 import type { CheckInEntry } from "../types";
 import type { ClinicianMedication } from "./clinicianReport";
+import { localDateKey } from "./storageUtils";
 
 /** Below this many distinct days, a line chart implies a trend that isn't there. */
 const MIN_TREND_POINTS = 3;
@@ -91,7 +92,7 @@ export function buildEngagementStrip(activeDayKeys: string[], cutoff: string, no
   const active = new Set(activeDayKeys);
   const days: EngagementDay[] = [];
   const start = toUtcMidnight(cutoff);
-  const end = toUtcMidnight(now.toISOString().slice(0, 10));
+  const end = toUtcMidnight(localDateKey(now));
   for (let t = start; t <= end; t += DAY_MS) {
     const iso = new Date(t).toISOString().slice(0, 10);
     days.push({ date: iso, active: active.has(iso) });

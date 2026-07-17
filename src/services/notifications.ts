@@ -10,7 +10,7 @@ import { selfReportSleepSignal } from "./sleepInsight";
 import { getWindDownReminder } from "./windDown";
 import { topFireableSignal } from "./nilaInflection";
 import { getInflectionEnabled } from "./inflectionPrefs";
-import { DAY_MS } from "./storageUtils";
+import { DAY_MS, localDateKey } from "./storageUtils";
 import { computeCompassionateStreak } from "./streaks";
 import type { Medication } from "./medicationAdherence";
 import { getEmaEnabled, getEmaFrequency } from "./emaPrefs";
@@ -290,7 +290,7 @@ function nudgeForToday(): string {
       const raw = secureLocal.getItem("nilamind_medication_logs");
       if (!raw) return false;
       const logs = JSON.parse(raw);
-      const today = new Date().toISOString().split("T")[0];
+      const today = localDateKey();
       const todayLogs = Array.isArray(logs) ? logs.filter((l: any) => l?.date === today) : [];
       const todayMeds = (() => {
         try {
@@ -305,6 +305,11 @@ function nudgeForToday(): string {
   // Retention: check disengagement (7+ days since last activity)
   const disengaged = streak.lapsed && (streak.current === 0);
 
+  // W1 (2026-07-17 QA): a sustained EMA up-trajectory today should surface the manic-first elevation nudge.
+  // chooseNudge already ranks it (sleep > deterioration > disengagement > elevation > …); it was simply
+  // never passed, so ELEVATION_NUDGES was dead. emaElevationSignal() is dataless + on-device.
+  const elevationSignal = emaElevationSignal() !== "none";
+
   return chooseNudge({
     dayIndex,
     sleepFiring,
@@ -315,6 +320,7 @@ function nudgeForToday(): string {
     activeToday: streak.activeToday,
     medicationMissed,
     disengaged,
+    elevationSignal,
   });
 }
 
@@ -456,8 +462,12 @@ export async function syncDailyReminders(opts: { request?: boolean } = { request
   let [h, m] = prefs.windowStart.split(":").map(Number);
   const learned = optimalFireHourNow();
   if (learned !== null) {
-    const [ws, we] = prefs.windowStart.split(":").map(Number);
-    const inWindow = learned >= (ws || 0) && learned <= (we || 23);
+    // W2 (2026-07-17 QA): the upper bound must come from windowEND's HOUR. The old code destructured
+    // windowStart for both, so `we` was the START's minutes (usually 0) → the `<= 23` clamp was a no-op and
+    // the learned hour could escape the user's stated window (e.g. a 22:00 nudge on a 10:00–20:00 window).
+    const [ws] = prefs.windowStart.split(":").map(Number);
+    const [we] = prefs.windowEnd.split(":").map(Number);
+    const inWindow = learned >= (ws || 0) && learned <= (we ?? 23);
     if (inWindow && !withinQuietHours(timeToday(learned, 0))) h = learned;
   }
   if (withinQuietHours(timeToday(h || 0, m || 0))) {

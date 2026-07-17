@@ -1,3 +1,4 @@
+import { localDateKey } from "../services/storageUtils";
 import React, { useState, useEffect } from "react";
 import { Sparkles, X, Trash2, BellRing } from "lucide-react";
 import { JournalEntry } from "../types";
@@ -25,8 +26,8 @@ const MOOD_OPTIONS: { valence: number; label: string; glyph: string }[] = [
 ];
 
 function formatDateHeader(date: string): string {
-  const today = new Date().toISOString().split("T")[0];
-  const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+  const today = localDateKey();
+  const yesterday = localDateKey(new Date(Date.now() - 86400000));
   if (date === today) return "TODAY";
   if (date === yesterday) return "YESTERDAY";
   return date;
@@ -79,7 +80,7 @@ export default function JournalScreen() {
     const now = new Date();
     const entry: JournalEntry = {
       id: generateTinyId(),
-      date: now.toISOString().split("T")[0],
+      date: localDateKey(now),
       timestamp: now.toISOString(),
       mode,
       text: trimmed,

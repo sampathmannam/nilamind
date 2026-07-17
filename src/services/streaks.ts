@@ -5,13 +5,14 @@
 // Pure + local; reads the encrypted-at-rest data via secureLocal.
 
 import { secureLocal } from "./secureLocal";
-import { DAY_MS } from "./storageUtils";
-// UTC calendar frame — MUST match how check-ins/diary are stored (new Date().toISOString().split("T")[0],
-// see checkin.ts / DiaryCardScreen). Using LOCAL date components here (the pre-2026-07-09 bug, audit #7) meant
-// a fresh check-in stored under the UTC date wasn't credited for part of every day in any non-UTC timezone
-// (the whole evening in the Americas, 00:00–05:30 in IST). UTC also has no DST, so the DAY_MS day-walk below
-// is exact (audit #25).
-export const ymd = (d: Date): string => d.toISOString().slice(0, 10);
+import { DAY_MS, localDateKey } from "./storageUtils";
+// LOCAL calendar frame — MUST match how check-ins/diary are stored (localDateKey(), see checkin.ts /
+// DiaryCardScreen). The 2026-07-17 QA pass unified the whole day-bucketing system on the LOCAL day: with UTC
+// keys (the prior convention) a late-night IST entry (00:00–05:30) stamped yesterday, so streaks and the
+// activity strip silently dropped it. The DAY_MS day-walk below stays exact in the IST target market (no DST,
+// so −86_400_000 ms always lands on the previous local calendar day). Stored historical UTC keys are left
+// as-is (correct-forward): at most one near-midnight day may look off during the transition, then it self-heals.
+export const ymd = (d: Date): string => localDateKey(d);
 
 /** All dates (YYYY-MM-DD) on which the user did something — check-in or diary entry. */
 export function activeDates(): Set<string> {

@@ -1,3 +1,4 @@
+import { localDateKey } from "../services/storageUtils";
 import React, { useState } from "react";
 import { ChevronRight, Sparkles, TrendingUp, Target, CheckCircle, X, Circle, Lightbulb, LifeBuoy } from "lucide-react";
 import { buildYouGroups } from "./youRows";
@@ -17,7 +18,7 @@ function getWeekSnapshot(): { checkinDays: number; topEmotion: string | null } |
     const d = new Date();
     const day = d.getDay();
     const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-    const weekStart = new Date(d.getFullYear(), d.getMonth(), diff).toISOString().split("T")[0];
+    const weekStart = localDateKey(new Date(d.getFullYear(), d.getMonth(), diff));
     const weekEntries = list.filter((e: any) => e?.date && e.date >= weekStart);
     if (weekEntries.length === 0) return null;
     const counts: Record<string, number> = {};
@@ -47,7 +48,7 @@ function StreakConstellation({ activeDays }: { activeDays: string[] }) {
   for (let i = 0; i < 7; i++) {
     const d = new Date(monday);
     d.setDate(monday.getDate() + i);
-    const dateStr = d.toISOString().slice(0, 10);
+    const dateStr = localDateKey(d);
     const active = activeDays.includes(dateStr);
     dots.push(
       <div key={i} className="flex flex-col items-center gap-1" title={dateStr}>
@@ -73,7 +74,7 @@ function getLast7Days(): string[] {
   for (let i = 0; i < 7; i++) {
     const d = new Date(monday);
     d.setDate(monday.getDate() + i);
-    dates.push(d.toISOString().slice(0, 10));
+    dates.push(localDateKey(d));
   }
   return dates;
 }

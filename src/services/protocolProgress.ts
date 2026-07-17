@@ -2,6 +2,7 @@
 // program (see protocols.ts), so the person's position in it must PERSIST across leaving/reopening the app —
 // encrypted at rest via secureLocal (key registered in SENSITIVE_KEYS), exactly like the diary / session chat.
 // Deliberately tiny: just {which protocol, which step}. Nila reads this to continue where the person left off.
+import { localDateKey } from "./storageUtils";
 import { secureLocal } from "./secureLocal";
 import { getProtocol, routeToProtocol, type Protocol, type ProtocolStep } from "./protocols";
 import { recordProtocolCompletion, completionCountFor } from "./nOf1";
@@ -95,7 +96,7 @@ export function advanceProtocol(): ActiveStep | { done: true; protocol: Protocol
   if (next >= p.steps.length) {
     // Persist a completion record (2026-07-12 QA: finishing a program left ZERO trace — the single-slot
     // pointer was simply removed, and usageAnalytics.protocolCompletions() was a hardcoded-0 stub).
-    const today = new Date().toISOString().split("T")[0];
+    const today = localDateKey();
     recordProtocolCompletion(a.protocolId, today, a.stepIndex);
     active = null;
     persist();

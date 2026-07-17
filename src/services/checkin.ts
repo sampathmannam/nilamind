@@ -2,6 +2,7 @@
 // to the shared nilamind_checkins array via secureLocal (read-modify-write, byte-identical to every
 // existing writer), and manages the non-sensitive per-day skip flag in plain localStorage.
 
+import { localDateKey } from "./storageUtils";
 import { secureLocal, appendToSecureArray } from "./secureLocal";
 import type { CheckInEntry } from "../types";
 
@@ -13,7 +14,7 @@ const SKIP_KEY = "nilamind_checkin_skipped";    // non-sensitive UI flag — pla
 export function buildCheckinEntry(label: string, intensity: number, contextTag: string | null, granularEmotion?: string | null, energy?: number | null, sleepHours?: number | null): CheckInEntry {
   const entry: CheckInEntry = {
     id: "ch_" + Date.now(),
-    date: new Date().toISOString().split("T")[0],
+    date: localDateKey(),
     timestamp: new Date().toLocaleTimeString(),
     emotion: `${label} (Nila)`,
     intensity,

@@ -5,7 +5,7 @@
 import { selfReportSleepSignal } from "./sleepInsight";
 import { hasCheckinToday, getSkipFlag } from "./checkin";
 import { secureLocal } from "./secureLocal";
-import { DAY_MS } from "./storageUtils";
+import { DAY_MS, localDateKey } from "./storageUtils";
 import { currentCircadianFeedback } from "./circadianFeedback";
 import type { NilaCard } from "./nilaOrchestration";
 import { getUserState } from "./modeEngine";
@@ -18,7 +18,7 @@ import { parseSafetyPlan } from "./safetyPlan";
 const RHYTHM_STREAK_KEY = "nilamind_rhythm_low_streak";
 
 function rhythmLowStreak(): number {
-  const today = new Date().toISOString().split("T")[0];
+  const today = localDateKey();
   try {
     const raw = secureLocal.getItem(RHYTHM_STREAK_KEY);
     const prev = raw ? JSON.parse(raw) : null;
@@ -100,7 +100,7 @@ export function recordProactiveShown(): void {
 
 /** Read check-in count for today. */
 function checkinCountToday(): number {
-  const today = new Date().toISOString().split("T")[0];
+  const today = localDateKey();
   try {
     const raw = secureLocal.getItem("nilamind_checkins");
     if (!raw) return 0;
@@ -135,7 +135,7 @@ function daysSinceLastCheckin(): number {
  *  DiaryCardScreen uses — one JSON object under "nilamind_diary", keyed by date — rather than a
  *  per-date key that's never written. */
 export function hasDiaryEntryToday(): boolean {
-  const today = new Date().toISOString().split("T")[0];
+  const today = localDateKey();
   try {
     const raw = secureLocal.getItem("nilamind_diary");
     if (!raw) return false;
@@ -147,7 +147,7 @@ export function hasDiaryEntryToday(): boolean {
 }
 
 function medicationLoggedToday(): boolean {
-  const today = new Date().toISOString().split("T")[0];
+  const today = localDateKey();
   try {
     const raw = secureLocal.getItem("nilamind_med_log_" + today);
     if (!raw) return false;
@@ -163,7 +163,7 @@ export function computeProactiveMoment(): ProactiveMoment | null {
   if (!canShowProactive()) return null;
 
   const moments: ProactiveMoment[] = [];
-  const today = new Date().toISOString().split("T")[0];
+  const today = localDateKey();
   const hour = new Date().getHours();
 
   // 1. Check-in due (highest non-crisis priority)

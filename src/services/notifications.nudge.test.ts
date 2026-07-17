@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { chooseNudge, WARM_NUDGES } from "./notifications";
+import { chooseNudge, WARM_NUDGES, ELEVATION_NUDGES, DISENGAGEMENT_NUDGES } from "./notifications";
 
 // Audit finding (2026-07-06): the daily nudge was a static day-rotation blind to every signal. This adapts it
 // GENTLY — JITAI research says mistimed/irrelevant prompts backfire, and a notification must never state the
@@ -38,5 +38,20 @@ describe("chooseNudge — gently adapts the daily nudge to current signals (soft
   it("encourages continuing an active streak warmly", () => {
     const n = chooseNudge({ dayIndex: 2, streak: 4, activeToday: true });
     expect(n.toLowerCase()).toMatch(/streak|days|showing up|counts/);
+  });
+});
+
+describe("chooseNudge — elevation branch reachability (W1, 2026-07-17 QA)", () => {
+  it("surfaces the elevation nudge when elevationSignal is set", () => {
+    const n = chooseNudge({ dayIndex: 0, elevationSignal: true });
+    expect(ELEVATION_NUDGES).toContain(n);
+  });
+  it("ranks sleep-prodrome and deterioration ABOVE elevation", () => {
+    expect(ELEVATION_NUDGES).not.toContain(chooseNudge({ dayIndex: 0, sleepFiring: true, elevationSignal: true }));
+    expect(ELEVATION_NUDGES).not.toContain(chooseNudge({ dayIndex: 0, inflection: "deterioration", elevationSignal: true }));
+  });
+  it("ranks elevation ABOVE lapse/streak/medication", () => {
+    const n = chooseNudge({ dayIndex: 0, elevationSignal: true, lapsed: true, streak: 9, activeToday: true, medicationMissed: true });
+    expect(ELEVATION_NUDGES).toContain(n);
   });
 });

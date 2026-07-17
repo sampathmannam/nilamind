@@ -11,6 +11,8 @@ vi.mock("../services/storageUtils", () => ({
     removeItem: (k: string) => { store.delete(k); },
   }),
   DAY_MS: 86_400_000,
+  localDateKey: (d: Date = new Date()) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`,
 }));
 
 import CaregiverShareScreen from "./CaregiverShareScreen";

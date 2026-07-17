@@ -6,7 +6,7 @@
 import { stripProvenance } from "./emotionParse";
 import { skillForEmotion } from "./skillsLibrary";
 import { latestFor, daysSince } from "./assessments";
-import { DAY_MS } from "./storageUtils";
+import { DAY_MS, localDateKey } from "./storageUtils";
 import { shouldRunSynthesis, extractWeeklyFacts } from "./weeklySynthesis";
 import type { CheckInEntry } from "../types";
 
@@ -41,7 +41,7 @@ const ANX_MOOD = /anx|worr|overwhelm|panic|nervous/i;
 /** "Sustained mood": at least 3 of the last 5 check-ins (each within 14 days) have a base emotion
  *  matching `re` AND intensity >= 5. Suffix-stripped before matching. */
 function sustainedMood(recent: CheckInEntry[], re: RegExp): boolean {
-  const today = new Date(new Date().toISOString().split("T")[0] + "T00:00:00").getTime();
+  const today = new Date(localDateKey() + "T00:00:00").getTime();
   // Sort a shallow copy newest-first so slice(0,5) always picks the 5 most-recent entries
   // regardless of whether the caller passes oldest-first (storage order) or newest-first.
   const last5 = [...recent].sort((a, b) => (b.date > a.date ? 1 : b.date < a.date ? -1 : 0)).slice(0, 5);

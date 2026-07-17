@@ -32,9 +32,11 @@ const seedCreatedAt = (iso: string) =>
 beforeEach(() => store.clear());
 
 describe("dayKey", () => {
-  it("buckets to a UTC YYYY-MM-DD day", () => {
-    expect(dayKey(at("2026-07-11T23:59:00Z"))).toBe("2026-07-11");
-    expect(dayKey(at("2026-01-05T00:00:00Z"))).toBe("2026-01-05");
+  it("buckets to the LOCAL YYYY-MM-DD day (2026-07-17 unification — see streaks.ts)", () => {
+    // Local-constructed instants so the assertion holds in any timezone (unlike a UTC instant near midnight,
+    // which lands on a different local day — the exact bug this migration fixes).
+    expect(dayKey(new Date(2026, 6, 11, 12, 0))).toBe("2026-07-11"); // local midday Jul 11
+    expect(dayKey(new Date(2026, 0, 5, 12, 0))).toBe("2026-01-05");
   });
 });
 
@@ -62,8 +64,10 @@ describe("recordAppOpen", () => {
     expect(loadAppOpens()).toEqual(["2026-07-11"]);
   });
   it("is idempotent within the same calendar day (safe under StrictMode double-invoke)", () => {
-    recordAppOpen(at("2026-07-11T08:00:00Z"));
-    recordAppOpen(at("2026-07-11T20:00:00Z"));
+    // Two opens on the same LOCAL day (morning + evening) collapse to one entry. Local-constructed so the
+    // pair stays on one calendar day in any timezone.
+    recordAppOpen(new Date(2026, 6, 11, 8, 0));
+    recordAppOpen(new Date(2026, 6, 11, 20, 0));
     expect(loadAppOpens()).toEqual(["2026-07-11"]);
   });
   it("accumulates distinct days and keeps them sorted", () => {

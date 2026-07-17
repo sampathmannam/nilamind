@@ -5,6 +5,7 @@
 // see nilaAgent), and is fully viewable/deletable in "What Nila remembers". Nothing is auto-committed
 // silently and nothing leaves the phone.
 
+import { localDateKey } from "./storageUtils";
 import { secureLocal } from "./secureLocal";
 
 /** Core Profile — stable things about who they are / what they're living with. */
@@ -28,7 +29,7 @@ const FACTS_CAP = 12;
 const FOCUS_CAP = 6;
 
 const norm = (s: string): string => s.trim().toLowerCase().replace(/\s+/g, " ");
-const today = (): string => new Date().toISOString().split("T")[0];
+const today = (): string => localDateKey();
 
 // Unique id even for items added within the same millisecond (a monotonic counter disambiguates),
 // so removeFact/removeFocus never delete a sibling that happened to share a timestamp.

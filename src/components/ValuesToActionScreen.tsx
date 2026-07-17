@@ -1,3 +1,4 @@
+import { localDateKey } from "../services/storageUtils";
 import React, { useState, useEffect } from "react";
 import {
   BA_CATEGORIES,
@@ -51,7 +52,7 @@ const TONE: Record<string, { text: string; bg: string; border: string; bar: stri
   rose: { text: "text-rose-300", bg: "bg-rose-500/10", border: "border-rose-500/40", bar: "bg-rose-500", chipOn: "bg-rose-500/20 border-rose-500/50 text-rose-200" },
 };
 
-const todayStr = () => new Date().toISOString().split("T")[0];
+const todayStr = () => localDateKey();
 
 const emptyDraft = (): Record<string, DomainRating> => {
   const d: Record<string, DomainRating> = {};

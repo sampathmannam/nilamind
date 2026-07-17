@@ -4,7 +4,7 @@ import ErrorBoundary from "./ErrorBoundary";
 
 // Safe-area top inset shared by every sheet header so it isn't hard-coded
 // inline at each call site (was repeated 7× across App.tsx).
-const SAFE_TOP = "max(12px, env(safe-area-inset-top))";
+const SAFE_TOP = "var(--safe-top)";
 
 const CLOSE_BTN =
   "p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer " +

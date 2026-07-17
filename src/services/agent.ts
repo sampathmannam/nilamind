@@ -8,6 +8,7 @@
 // Design: `classify()` is PURE (no side effects) so it's unit-testable; `runAgent()` is the thin
 // async executor that performs the side effect (save / schedule) and returns a spoken confirmation.
 
+import { localDateKey } from "./storageUtils";
 import { secureLocal, appendToSecureArray } from "./secureLocal";
 import { computeCompassionateStreak } from "./streaks";
 import { scheduleReminderAt, formatTime } from "./notifications";
@@ -184,7 +185,7 @@ function saveMood(emotion: string, intensity: number | null): void {
   const now = new Date();
   const entry: CheckInEntry = {
     id: "ch_" + Date.now(),
-    date: now.toISOString().split("T")[0],
+    date: localDateKey(now),
     timestamp: now.toLocaleTimeString(),
     emotion: `${emotion} (Nila agent)`,
     intensity: intensity ?? 5,

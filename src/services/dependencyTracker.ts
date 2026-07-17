@@ -12,6 +12,7 @@
  * (Lucas et al., 2014).
  */
 
+import { localDateKey } from "./storageUtils";
 import { secureLocal, appendToSecureArray } from "./secureLocal";
 
 const STORAGE_KEY = "nilamind_session_log";
@@ -38,7 +39,7 @@ export interface DependencyAssessment {
  */
 export function trackSession(now: Date, durationMs: number, turnCount = 1): SessionRecord {
   return {
-    date: now.toISOString().split("T")[0],
+    date: localDateKey(now),
     durationMs,
     turnCount,
   };

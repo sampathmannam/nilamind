@@ -4,6 +4,7 @@
 // Everything here reads only on-device stores; nothing leaves the device.
 
 import { loadMoodHistory } from "./moodHistory";
+import { localDateKey } from "./storageUtils";
 import { loadAppOpens } from "./retentionMetrics";
 import { loadNilaTurns, type NilaTurn } from "./nilaSessions";
 import { featureAdoption, retentionSnapshot, type RetentionSnapshot } from "./usageAnalytics";
@@ -14,7 +15,7 @@ export type ReportPeriod = 7 | 30 | 90;
 export function periodCutoffIso(days: number, now: Date = new Date()): string {
   const d = new Date(now);
   d.setDate(d.getDate() - days);
-  return d.toISOString().slice(0, 10);
+  return localDateKey(d);
 }
 
 /** Keep only records whose `date` (YYYY-MM-DD) is within the window. Lexicographic compare is

@@ -87,6 +87,24 @@ const FORMAT_CONFIGS: Record<PromptFormat, FormatConfig> = {
   },
 };
 
+/** Pick n_threads from the device's available cores. llama.cpp busy-spins its worker pool, so asking for
+ *  more threads than cores doesn't degrade gracefully — it collapses (measured ~50 s/token with 8 threads
+ *  on a 3-vCPU device vs seconds/token at 2). On 8+ cores keep the device-verified 8; below that, leave one
+ *  core for the WebView UI thread, floor 2. */
+export function optimalThreads(cores: number | undefined): number {
+  const c = cores && cores > 0 ? cores : 8; // unknown → assume the verified flagship config
+  return c >= 8 ? 8 : Math.max(2, c - 1);
+}
+
+/** mlock pins the whole model in RAM — great on 8GB+ flagships (device-verified fast path), fatal on
+ *  low-RAM devices: on a 2GB device the lmkd killed the FOREGROUND app (plus launcher/GMS) mid-check-in
+ *  (Jul 17 emulator repro). navigator.deviceMemory rounds down to a power of 2 and caps at 8, so `8`
+ *  means an 8GB+ device; anything lower falls back to plain mmap — still fast, but evictable under
+ *  pressure instead of dying. */
+export function shouldMlock(deviceMemoryGB: number | undefined): boolean {
+  return (deviceMemoryGB ?? 0) >= 8;
+}
+
 export function createLlamaCppBackend(
   modelPath: string = DEFAULT_MODEL_PATH,
   label = "nila-llm",
@@ -105,7 +123,7 @@ export function createLlamaCppBackend(
       ctx = await initLlama({
         model: modelPath,
         n_ctx: fmt.n_ctx,
-        n_threads: 8, // ARMv9.2 fast cores — don't oversubscribe (8 physical cores, 12 would context-switch)
+        n_threads: optimalThreads(typeof navigator !== "undefined" ? navigator.hardwareConcurrency : undefined),
         n_batch: 1024, // prompt processing batch size — 1024 fits in L2 cache, faster prefill than default 512
         flash_attn: false, // disabled: Vulkan path crashed on Adreno (VK_ERROR_DEVICE_LOST), CPU path untested
         n_gpu_layers: 0,
@@ -117,7 +135,7 @@ export function createLlamaCppBackend(
                          // which would restore a STALE KV cache that doesn't match the RAG/elevation-injected
                          // prefix this turn — so we deliberately do NOT persist the session; see localLlm.ts).
         kv_unified: true, // single unified KV buffer (llama.cpp >= 14070) — slightly lower peak RAM, no behavior change
-        use_mlock: true,
+        use_mlock: shouldMlock(typeof navigator !== "undefined" ? (navigator as { deviceMemory?: number }).deviceMemory : undefined),
       });
       ready = true;
     } catch (e) {

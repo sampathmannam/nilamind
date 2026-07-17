@@ -10,6 +10,7 @@
  * (IPSRT) emphasizes regular interpersonal contact as a stabilizer.
  */
 
+import { localDateKey } from "./storageUtils";
 import { secureLocal, appendToSecureArray } from "./secureLocal";
 
 const STORAGE_KEY = "nilamind_connections";
@@ -35,7 +36,7 @@ export interface ConnectionAssessment {
  * Record a social connection.
  */
 export function trackConnection(type: ConnectionType, date?: string): ConnectionRecord {
-  const d = date ?? new Date().toISOString().split("T")[0];
+  const d = date ?? localDateKey();
   const rec = { type, date: d };
   appendToSecureArray<ConnectionRecord>(STORAGE_KEY, rec);
   return rec;

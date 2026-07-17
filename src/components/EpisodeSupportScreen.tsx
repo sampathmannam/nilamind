@@ -1,3 +1,4 @@
+import { localDateKey } from "../services/storageUtils";
 import { secureLocal, appendToSecureArray } from "../services/secureLocal";
 import React, { useState, useEffect, useRef } from "react";
 import { getCrisisReply } from "../safety";
@@ -282,7 +283,7 @@ export default function EpisodeSupportScreen({
     
     const epEntry: EpisodeRecord = {
       id: "ep_" + Date.now(),
-      date: new Date().toISOString().split("T")[0],
+      date: localDateKey(),
       time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       dayOfWeek: new Date().toLocaleDateString("en-US", { weekday: "long" }),
       timeOfDay: getParsedTimeOfDay(),

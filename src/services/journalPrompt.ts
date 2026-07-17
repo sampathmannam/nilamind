@@ -16,7 +16,7 @@
 
 import { generateOnDevice, isLocalLlmReady } from "./localLlm";
 import { insightsContextBlock } from "./nilaInsights";
-import { ls } from "./storageUtils";
+import { ls, localDateKey} from "./storageUtils";
 
 export type JournalMode = "free" | "gratitude";
 
@@ -83,7 +83,7 @@ const SYSTEM_GRATITUDE =
 /** Today's reflective prompt for the given mode. Tries the on-device model once, grounded in the
  *  user's durable insights context; falls back to a static, hand-written prompt (deterministic per
  *  day) if no model is loaded or generation fails/hangs. Cached per calendar day + mode. */
-export async function getDailyPrompt(mode: JournalMode, today: string = new Date().toISOString().split("T")[0]): Promise<string> {
+export async function getDailyPrompt(mode: JournalMode, today: string = localDateKey()): Promise<string> {
   const cache = readCache();
   if (cache?.date === today && cache[mode]) return cache[mode] as string;
 

@@ -10,6 +10,7 @@
  * Unbounded chat sessions correlate with rumination, not recovery.
  */
 
+import { localDateKey } from "./storageUtils";
 import { secureLocal, appendToSecureArray } from "./secureLocal";
 
 const STORAGE_KEY = "nilamind_daily_turns";
@@ -45,7 +46,7 @@ export function checkUsageCeiling(turnsToday: number, limit = DEFAULT_LIMIT): Us
  * Record a turn for today.
  */
 export function recordTurn(date?: string): void {
-  const today = date ?? new Date().toISOString().split("T")[0];
+  const today = date ?? localDateKey();
   appendToSecureArray<{ date: string; count: number }>(STORAGE_KEY, { date: today, count: 1 });
 }
 
@@ -53,7 +54,7 @@ export function recordTurn(date?: string): void {
  * Get today's turn count from stored records.
  */
 export function getTodayTurns(date?: string): number {
-  const today = date ?? new Date().toISOString().split("T")[0];
+  const today = date ?? localDateKey();
   try {
     const raw = secureLocal.getItem(STORAGE_KEY);
     if (!raw) return 0;

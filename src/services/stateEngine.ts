@@ -1,3 +1,4 @@
+import { localDateKey } from "./storageUtils";
 import { loadMoodHistory } from "./moodHistory";
 import { loadAssessments, type AssessmentEntry, INSTRUMENTS } from "./assessments";
 import { selfReportSleepSignal, selfReportedSleepNights } from "./sleepInsight";
@@ -98,7 +99,7 @@ export function runStateEngine(params: {
   lastUserText?: string;
   daysSinceLastCheckin: number;
 }): StateEngineOutput {
-  const today = new Date().toISOString().split("T")[0];
+  const today = localDateKey();
 
   // ── 1. Sleep / circadian (earliest manic prodrome) ──────────────────────
   const sleepSignal = selfReportSleepSignal(); // self-report available today

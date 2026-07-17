@@ -1,6 +1,7 @@
 // ModeScreen — the living interface that adapts to time + user state.
 // Replaces the static stream with a mode-based UI.
 
+import { localDateKey } from "../services/storageUtils";
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import NilaFace from "./NilaFace";
 import QuickActions from "./QuickActions";
@@ -275,7 +276,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
       const streak = computeCompassionateStreak();
       if (streak.daysSinceLast >= 2) {
         const dismissed = (globalThis as any).localStorage?.getItem("nilamind_welcome_back_dismissed");
-        if (dismissed !== new Date().toISOString().split("T")[0]) {
+        if (dismissed !== localDateKey()) {
           const d = new Date(); d.setDate(d.getDate() - streak.daysSinceLast);
           setWelcomeBack(d.toISOString());
         }
@@ -635,7 +636,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   return (
     <div className="flex flex-col h-full bg-page">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800/50" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
+      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800/50" style={{ paddingTop: 'var(--safe-top)' }}>
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold text-slate-100">{greeting}</span>
         </div>
@@ -1063,7 +1064,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
             <WelcomeBackCard
               lastVisitDate={welcomeBack}
               onDismiss={() => {
-                try { (globalThis as any).localStorage?.setItem("nilamind_welcome_back_dismissed", new Date().toISOString().split("T")[0]); } catch { /* best-effort */ }
+                try { (globalThis as any).localStorage?.setItem("nilamind_welcome_back_dismissed", localDateKey()); } catch { /* best-effort */ }
                 setWelcomeBack(null);
               }}
             />
@@ -1180,7 +1181,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
       {/* Aux view sheets */}
       {auxView === "learn" && (
         <div className="fixed inset-0 z-50 bg-page flex flex-col animate-slide-in" id="learn-sheet">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'var(--safe-top)' }}>
             <span className="text-sm font-semibold text-slate-100">Learn</span>
             <button
               onClick={() => setAuxView(null)}
@@ -1198,7 +1199,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
 
       {auxView === "thought_record" && (
         <div className="fixed inset-0 z-50 bg-page flex flex-col animate-slide-in" id="thought-record-sheet">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'var(--safe-top)' }}>
             <span className="text-sm font-semibold text-slate-100">Thought Record</span>
             <button
               onClick={() => { setAuxView(null); setThoughtRecordDraft(undefined); }}
@@ -1216,7 +1217,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
 
       {auxView === "values_to_action" && (
         <div className="fixed inset-0 z-50 bg-page flex flex-col animate-slide-in" id="values-to-action-sheet">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'var(--safe-top)' }}>
             <span className="text-sm font-semibold text-slate-100">Do one thing</span>
             <button
               onClick={() => setAuxView(null)}
@@ -1234,7 +1235,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
 
       {auxView === "safety_plan" && (
         <div className="fixed inset-0 z-50 bg-page flex flex-col animate-slide-in" id="safety-plan-sheet">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'var(--safe-top)' }}>
             <span className="text-sm font-semibold text-slate-100">My Safety Plan</span>
             <button
               onClick={() => setAuxView(null)}

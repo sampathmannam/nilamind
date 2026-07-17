@@ -1,3 +1,4 @@
+import { localDateKey } from "../services/storageUtils";
 import { secureLocal } from "../services/secureLocal";
 import React, { useState, useEffect } from "react";
 import { ThoughtRecord } from "../types";
@@ -110,7 +111,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
   const saveRecord = () => {
     const newRecord: ThoughtRecord = {
       id: "tr_" + Date.now(),
-      date: new Date().toISOString().split("T")[0],
+      date: localDateKey(),
       situation,
       feeling,
       initialIntensity,

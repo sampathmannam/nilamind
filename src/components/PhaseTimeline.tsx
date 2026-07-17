@@ -1,3 +1,4 @@
+import { localDateKey } from "../services/storageUtils";
 import React, { useMemo } from "react";
 import { useLanguage } from "../services/i18n";
 import type { EpisodeMarker, EpisodePhase } from "../services/episodeMarker";
@@ -37,7 +38,7 @@ export default function PhaseTimeline({ markers, days = 365 }: Props) {
 
     // Filter markers to the visible range and sort by start date
     const visible = markers
-      .filter((m) => m.startDate <= today.toISOString().split("T")[0] && m.endDate >= startDate.toISOString().split("T")[0])
+      .filter((m) => m.startDate <= localDateKey(today) && m.endDate >= localDateKey(startDate))
       .sort((a, b) => a.startDate.localeCompare(b.startDate));
 
     // Build segments: each phase occupies a percentage of the timeline

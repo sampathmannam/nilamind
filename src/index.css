@@ -103,6 +103,13 @@
   --color-page: #171311;    /* app background */
   --color-card: #211C17;    /* cards */
   --color-raised: #2A241D;  /* raised surfaces */
+
+  /* Status-bar-safe top inset. The app is edge-to-edge (viewport-fit=cover), so the WebView draws under
+     the status bar. On non-notch Android devices env(safe-area-inset-top) reports 0 even though the status
+     bar occupies ~24dp — so a bare 12px floor left headers (incl. the §9 crisis overlay) colliding with the
+     clock/icons on real devices (2026-07-17 emulator repro). A 24px floor clears the standard Android status
+     bar; notched devices still win via the larger env() value. ONE source of truth for every top-inset site. */
+  --safe-top: max(24px, env(safe-area-inset-top));
 }
 
 /* ── Light theme (opt-in via the `theme-light` class on <html>) ──────────────────────────────

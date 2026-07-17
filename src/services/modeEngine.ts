@@ -1,6 +1,7 @@
 // modeEngine — determines which mode to show based on time of day + user state.
 // Pure, deterministic, no network. The app's "brain" for UI adaptation.
 
+import { localDateKey } from "./storageUtils";
 import { hasCheckinToday, getSkipFlag } from "./checkin";
 import { selfReportSleepSignal } from "./sleepInsight";
 import { secureLocal } from "./secureLocal";
@@ -91,7 +92,7 @@ export function foldElevation(base: UserState | null, emaLevel: ElevationLevel):
  * Check if user has checked in today.
  */
 export function hasCheckedInToday(): boolean {
-  const today = new Date().toISOString().split("T")[0];
+  const today = localDateKey();
   return hasCheckinToday(today) || getSkipFlag() === today;
 }
 

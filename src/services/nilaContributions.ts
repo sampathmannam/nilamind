@@ -11,6 +11,7 @@
 // Encrypted at rest (nilamind_donations ∈ SENSITIVE_KEYS). The counts-only analytics channel lives
 // separately in nilaFeedback (feedbackSummary); this is the explicit-example channel.
 
+import { localDateKey } from "./storageUtils";
 import { secureLocal } from "./secureLocal";
 import { scanForCrisis } from "../safety";
 import type { ReplyFeedback } from "./nilaFeedback";
@@ -32,7 +33,7 @@ export interface DonationPreview {
   blockedByCrisis: boolean; // true => cannot donate (crisis content in the reply or the suggestion)
 }
 
-const today = (): string => new Date().toISOString().split("T")[0];
+const today = (): string => localDateKey();
 
 /** Deterministic PII scrub — emails, phone/long-digit runs, URLs, @handles. Best-effort by design; the
  *  VERBATIM preview is the real safeguard (the person sees exactly what would be sent before confirming).

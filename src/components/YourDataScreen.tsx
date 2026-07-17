@@ -28,6 +28,7 @@ import { summarizeDiaryForClinician } from "../services/diaryClinicianSummary";
 import type { DiaryCardEntry } from "../types";
 import { featureAdoption } from "../services/usageAnalytics";
 import { episodePatterns } from "../services/dashboardInsights";
+import { localDateKey } from "../services/storageUtils";
 
 // "Your data" (AUTOPILOT Phase 2): see exactly what's stored, export it (encrypted, user-controlled),
 // or delete everything. All on-device — this screen is the opposite of telemetry.
@@ -527,7 +528,7 @@ valuesClarified: []
         try {
           const now = new Date();
           const periodDays = reportPeriod;
-          const yyyymmdd = now.toISOString().slice(0, 10);
+          const yyyymmdd = localDateKey(now);
           const periodLabel = `${periodDays === 7 ? "Week" : periodDays === 90 ? "90 days" : "Month"} ending ${yyyymmdd}`;
           const cutoff = periodCutoffIso(periodDays);
 

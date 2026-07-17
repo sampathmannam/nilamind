@@ -2,6 +2,7 @@
 // Lightweight weekly micro-commitment (gentle, non-streak, user-driven).
 // The person picks one small intention for the week. No guilt, no pressure — just a quiet nudge.
 
+import { localDateKey } from "./storageUtils";
 import { secureLocal } from "./secureLocal";
 import { ymd } from "./streaks";
 
@@ -57,7 +58,7 @@ function getWeekStart(): string {
   const d = new Date();
   const day = d.getDay();
   const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-  return new Date(d.getFullYear(), d.getMonth(), diff).toISOString().split("T")[0];
+  return localDateKey(new Date(d.getFullYear(), d.getMonth(), diff));
 }
 
 export function setIntention(text: string): WeeklyIntention {

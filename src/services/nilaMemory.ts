@@ -7,6 +7,7 @@
 // high-level (no verbatim detail), capped, and is erased with the rest of their data. Best-effort and
 // fire-and-forget — it never blocks or interrupts the user.
 
+import { localDateKey } from "./storageUtils";
 import { generateOnDevice } from "./localLlm";
 import { secureLocal } from "./secureLocal";
 import { checkResponse } from "../safety";
@@ -38,7 +39,7 @@ function remember(note: string): void {
   const clean = (note || "").trim();
   if (!clean) return;
   const all = loadNilaMemories();
-  all.push({ date: new Date().toISOString().split("T")[0], note: clean });
+  all.push({ date: localDateKey(), note: clean });
   const trimmed = all.length > CAP ? all.slice(all.length - CAP) : all;
   try {
     secureLocal.setItem(KEY, JSON.stringify(trimmed));

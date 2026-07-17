@@ -10,6 +10,7 @@
  * cause 60%+ dropout after Day 3.
  */
 
+import { localDateKey } from "../services/storageUtils";
 import React from "react";
 import { Sparkle } from "lucide-react";
 import { secureLocal } from "../services/secureLocal";
@@ -41,7 +42,7 @@ interface LowFrictionReCheckInProps {
 export default function LowFrictionReCheckIn({ onMoodSelect, onSkip, daysSinceLast = 2 }: LowFrictionReCheckInProps) {
   const handleMood = (mood: string) => {
     try {
-      const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+      const today = localDateKey(); // YYYY-MM-DD
       const entry = { date: today, mood, source: "re-checkin" };
       appendToSecureArray("nilamind_checkins", entry, 365);
     } catch { /* best-effort */ }

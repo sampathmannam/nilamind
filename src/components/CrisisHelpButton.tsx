@@ -48,7 +48,7 @@ export default function CrisisHelpButton({ variant = "bar" }: { variant?: "bar" 
           aria-label="Crisis help"
           id="gate-crisis-panel"
         >
-          <div className="max-w-md mx-auto px-5 py-8" style={{ paddingTop: "max(env(safe-area-inset-top, 0px), 24px)" }}>
+          <div className="max-w-md mx-auto px-5 py-8" style={{ paddingTop: "calc(var(--safe-top) + 1rem)" }}>
             <div className="flex items-start justify-between gap-3 mb-3">
               <div className="flex items-center gap-2 text-rose-200">
                 <LifeBuoy className="w-5 h-5 shrink-0" />

@@ -12,7 +12,7 @@ vi.mock("./qwenPrompt", () => ({
 import { initLlama } from "llama-cpp-capacitor";
 import { toGemmaPrompt, windowMessages } from "./gemmaPrompt";
 import { toQwenPrompt, windowQwenMessages } from "./qwenPrompt";
-import { createLlamaCppBackend } from "./llamaCppLlmAdapter";
+import { createLlamaCppBackend, optimalThreads, shouldMlock } from "./llamaCppLlmAdapter";
 
 function deferred<T = never>(): {
   promise: Promise<T>;
@@ -278,4 +278,37 @@ it("initLlama enables KV-cache context shifting + unified KV buffer", async () =
   expect(initLlama).toHaveBeenCalledWith(
     expect.objectContaining({ ctx_shift: true, kv_unified: true }),
   );
+});
+
+describe("optimalThreads — adaptive n_threads (3-vCPU 50s/token cliff, Jul 17)", () => {
+  it("keeps the device-verified 8 on 8+ core flagships", () => {
+    expect(optimalThreads(8)).toBe(8);
+    expect(optimalThreads(10)).toBe(8);
+    expect(optimalThreads(12)).toBe(8);
+  });
+  it("leaves one core for the UI below 8 cores", () => {
+    expect(optimalThreads(6)).toBe(5);
+    expect(optimalThreads(4)).toBe(3);
+    expect(optimalThreads(3)).toBe(2);
+  });
+  it("never drops below 2, and assumes flagship when cores are unknown", () => {
+    expect(optimalThreads(2)).toBe(2);
+    expect(optimalThreads(1)).toBe(2);
+    expect(optimalThreads(0)).toBe(8);
+    expect(optimalThreads(undefined)).toBe(8);
+  });
+});
+
+describe("shouldMlock — adaptive model pinning (2GB lmkd kill-storm, Jul 17)", () => {
+  it("pins only on 8GB+ devices (deviceMemory caps at 8)", () => {
+    expect(shouldMlock(8)).toBe(true);
+  });
+  it("never pins below 8GB — mmap stays evictable instead of OOM-killing the app", () => {
+    expect(shouldMlock(4)).toBe(false);
+    expect(shouldMlock(2)).toBe(false);
+    expect(shouldMlock(0.5)).toBe(false);
+  });
+  it("fails safe (no pin) when deviceMemory is unavailable", () => {
+    expect(shouldMlock(undefined)).toBe(false);
+  });
 });

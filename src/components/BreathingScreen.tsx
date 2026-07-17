@@ -145,7 +145,7 @@ export default function BreathingScreen({ onClose, defaultPattern = "box" }: Pro
       />
 
       {/* Back button */}
-      <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 py-3" style={{ paddingTop: "max(12px, env(safe-area-inset-top))" }}>
+      <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 py-3" style={{ paddingTop: "var(--safe-top)" }}>
         <button
           onClick={onClose}
           className="text-xs font-semibold text-slate-400 hover:text-slate-100 flex items-center gap-1 cursor-pointer transition-colors"

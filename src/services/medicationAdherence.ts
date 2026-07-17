@@ -1,3 +1,4 @@
+import { localDateKey } from "./storageUtils";
 import { secureLocal, appendToSecureArray } from "./secureLocal";
 
 const MEDS_KEY = "nilamind_medications";
@@ -48,7 +49,7 @@ export function logMedication(medId: string, taken: boolean, sideEffects: SideEf
   const log: MedicationLog = {
     id: "mlog_" + Date.now(),
     medId,
-    date: new Date().toISOString().split("T")[0],
+    date: localDateKey(),
     taken,
     takenAt: taken ? new Date().toLocaleTimeString() : "",
     sideEffects,

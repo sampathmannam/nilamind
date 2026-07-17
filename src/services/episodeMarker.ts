@@ -22,6 +22,7 @@
 // The only consumer of the data is the user (and their clinician, via the device-local PDF). Nothing
 // leaves the device.
 
+import { localDateKey } from "./storageUtils";
 import { appendToSecureArray, secureLocal } from "./secureLocal";
 
 export type EpisodePhase = "elevated" | "depressed" | "mixed" | "stable";
@@ -81,13 +82,13 @@ function contains(m: EpisodeMarker, today: string): boolean {
 }
 
 /** The marker covering `today` (most recently created wins on overlap), or null. */
-export function currentPhase(all: EpisodeMarker[] = readEpisodeMarkers(), today: string = new Date().toISOString().split("T")[0]): EpisodeMarker | null {
+export function currentPhase(all: EpisodeMarker[] = readEpisodeMarkers(), today: string = localDateKey()): EpisodeMarker | null {
   const covering = all.filter((m) => contains(m, today));
   if (covering.length === 0) return null;
   return covering.sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
 }
 
-export function episodeMarkerSummary(all: EpisodeMarker[] = readEpisodeMarkers(), today: string = new Date().toISOString().split("T")[0]): string {
+export function episodeMarkerSummary(all: EpisodeMarker[] = readEpisodeMarkers(), today: string = localDateKey()): string {
   const cur = currentPhase(all, today);
   if (!cur) return "";
   const range = cur.startDate === cur.endDate ? cur.startDate : `${cur.startDate}–${cur.endDate}`;

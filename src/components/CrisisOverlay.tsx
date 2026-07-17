@@ -40,7 +40,11 @@ export default function CrisisOverlay({
         setSafetyPlan(INITIAL_SAFETY_PLAN);
       }
       setWantsCheckIn(false); // every fresh open starts unchecked, never carries a stale "yes" forward
-      headingRef.current?.focus();
+      // preventScroll: focusing the heading must NOT scroll the overlay. The real cause of the surface
+      // opening ~124px down (hiding its own "You're not alone" header behind the status bar — 2026-07-17 QA)
+      // was useFocusTrap focusing the first BUTTON without preventScroll; that's fixed at the source. This
+      // keeps the heading-focus here scroll-safe too.
+      headingRef.current?.focus({ preventScroll: true });
       // Lock background scroll while crisis overlay is open — a person in crisis
       // should never accidentally scroll away from the safety surface.
       document.body.style.overflow = "hidden";
@@ -71,8 +75,9 @@ export default function CrisisOverlay({
       aria-labelledby="crisis-overlay-heading"
       tabIndex={-1}
     >
-      {/* Red safety top header */}
-      <div className="bg-rose-500/10 border-b border-rose-500/25 py-6 px-4 text-center">
+      {/* Red safety top header. paddingTop clears the edge-to-edge status bar — WITHOUT it the §9 heading
+          rendered under the clock/status icons on real devices (2026-07-17 emulator repro). */}
+      <div className="bg-rose-500/10 border-b border-rose-500/25 pb-6 px-4 text-center" style={{ paddingTop: 'calc(var(--safe-top) + 1rem)' }}>
         <div className="flex justify-center mb-2">
           <ShieldAlert className="text-rose-500 w-12 h-12 stroke-[2.5]" />
         </div>

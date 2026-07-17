@@ -1,3 +1,4 @@
+import { localDateKey } from "./storageUtils";
 import { secureLocal } from "./secureLocal";
 import { loadMoodHistory } from "./moodHistory";
 import { getProtocol } from "./protocols";
@@ -87,7 +88,7 @@ export function backfillNof1(): void {
     if (!raw) return;
     const progress = JSON.parse(raw);
     if (!progress || !progress.protocolId) return;
-    const today = new Date().toISOString().split("T")[0];
+    const today = localDateKey();
     recordProtocolCompletion(progress.protocolId, today, progress.stepIndex || 0);
   } catch { /* ignore */ }
 }
@@ -150,7 +151,7 @@ function computeNof1RankingInternal(): No1RankingEntry[] {
       // 1-day window
       const nextDay = new Date(c.date);
       nextDay.setDate(nextDay.getDate() + 1);
-      const nextDayStr = nextDay.toISOString().split("T")[0];
+      const nextDayStr = localDateKey(nextDay);
       const nextIntensity = intensityByDate.get(nextDayStr);
       if (nextIntensity != null) {
         totalDelta1d += nextIntensity - todayIntensity;
@@ -163,7 +164,7 @@ function computeNof1RankingInternal(): No1RankingEntry[] {
       for (let i = 1; i <= 3; i++) {
         const d = new Date(c.date);
         d.setDate(d.getDate() + i);
-        const ds = d.toISOString().split("T")[0];
+        const ds = localDateKey(d);
         const val = intensityByDate.get(ds);
         if (val != null) { sum3d += val - todayIntensity; count3++; }
       }

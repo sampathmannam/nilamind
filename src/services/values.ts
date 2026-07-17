@@ -1,5 +1,5 @@
 import { secureLocal } from "./secureLocal";
-import { ls } from "./storageUtils";
+import { ls, localDateKey} from "./storageUtils";
 import { loadValuesWork, type ValueDomain as WorkDomain } from "./valuesWork";
 // Values Compass — the "engagement" side of Acceptance and Commitment Therapy (ACT): clarifying
 // what matters to you, noticing where your life has drifted from it, and taking small "toward" steps.
@@ -219,7 +219,7 @@ export function migrateValuesWorkToVlq(): ValuesMigrationResult {
   const ratings: Record<string, DomainRating> = existingSnapshot ? { ...existingSnapshot.ratings } : {};
   const existingActions = loadActions();
   const newActions: CommittedAction[] = [];
-  const today = new Date().toISOString().split("T")[0];
+  const today = localDateKey();
 
   for (const d of workDomains) {
     if (!hasWorkData(d)) continue; // untouched default-seeded domain — nothing to carry over

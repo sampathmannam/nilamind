@@ -27,7 +27,7 @@ import { wellbeingLongitudinal } from "./wellbeingTrack";
 import { episodeMarkerSummary } from "./episodeMarker";
 import { listCaregiverContacts } from "./caregiverContacts";
 import { topicContextBlock } from "./topicTracker";
-import { DAY_MS } from "./storageUtils";
+import { DAY_MS, localDateKey} from "./storageUtils";
 import { parseSafetyPlan } from "./safetyPlan";
 import { ANTI_SYCHOPHANCY_BLOCK } from "./personaConfig";
 import { safetyPlanFollowUpContextBlock } from "./safetyPlanFollowUp";
@@ -332,7 +332,7 @@ export function buildPersonalContext(): string {
   // ── Behavioural Activation (recent activity log) ─────────────────────────
   try {
     const baActs = loadActivities();
-    const twoWeeksAgo = new Date(Date.now() - 14 * 86400000).toISOString().split("T")[0];
+    const twoWeeksAgo = localDateKey(new Date(Date.now() - 14 * 86400000));
     const recent = baActs.filter((a: any) => a.date >= twoWeeksAgo);
     if (recent.length > 0) {
       const done = recent.filter((a: any) => a.status === "done");
@@ -627,7 +627,7 @@ export function buildPersonalContext(): string {
         const earliest = allCheckins.reduce((min: string, c: any) => {
           const d = c?.date;
           return d && d < min ? d : min;
-        }, allCheckins[0]?.date ?? new Date().toISOString().split("T")[0]);
+        }, allCheckins[0]?.date ?? localDateKey());
         // Try to extract age from profile facts
         const profileFacts = readArray("nilamind_profile_facts");
         const ageFact = profileFacts.find((f) => /\b(\d{2})\s*(years?\s*old|yo)\b/i.test(f?.text ?? ""));

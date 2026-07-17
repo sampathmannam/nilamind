@@ -43,7 +43,7 @@ describe("resolveNavTarget", () => {
     expect(resolveNavTarget("pact")).toEqual({ kind: "unknown", target: "pact" });
     expect(resolveNavTarget("armed_checkin")).toEqual({ kind: "unknown", target: "armed_checkin" });
     expect(resolveNavTarget("crisis_rehearsal")).toEqual({ kind: "unknown", target: "crisis_rehearsal" });
-    expect(resolveNavTarget("peer_support")).toEqual({ kind: "aux", view: "peer_support" });
+    expect(resolveNavTarget("reach_out")).toEqual({ kind: "aux", view: "reach_out" });
     expect(resolveNavTarget("why")).toEqual({ kind: "unknown", target: "why" });
   });
   it("exposes stable allowlists", () => {
@@ -54,7 +54,8 @@ describe("resolveNavTarget", () => {
     expect(KNOWN_AUX_VIEWS).not.toContain("pact");
     expect(KNOWN_AUX_VIEWS).not.toContain("armed_checkin");
     expect(KNOWN_AUX_VIEWS).not.toContain("crisis_rehearsal");
-    expect(KNOWN_AUX_VIEWS).toContain("peer_support");
+    expect(KNOWN_AUX_VIEWS).toContain("reach_out");
+    expect(KNOWN_AUX_VIEWS).not.toContain("peer_support");
     expect(KNOWN_AUX_VIEWS).not.toContain("why");
     expect(TAB_TARGETS).toContain("today");
     expect(TAB_TARGETS).toContain("nila");

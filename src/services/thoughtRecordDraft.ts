@@ -1,3 +1,4 @@
+import { localDateKey } from "./storageUtils";
 import { generateOnDevice } from "./localLlm";
 import { applyOutputSafety } from "./nilaSafetyGate";
 import { appendToSecureArray } from "./secureLocal";
@@ -84,7 +85,7 @@ export function saveThoughtRecord(record: ThoughtRecordDraft): void {
   const entry = {
     ...record,
     id: "tr_" + Date.now(),
-    date: new Date().toISOString().split("T")[0],
+    date: localDateKey(),
     timestamp: new Date().toLocaleTimeString(),
   };
   appendToSecureArray("nilamind_thought_records", entry);

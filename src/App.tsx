@@ -47,7 +47,6 @@ const SoundPlayer = lazy(() => import("./components/SoundPlayer"));
 const AboutNilaScreen = lazy(() => import("./components/AboutNilaScreen"));
 const LegalScreen = lazy(() => import("./components/LegalScreen"));
 const InsightsScreen = lazy(() => import("./components/InsightsScreen"));
-const PeerSupportScreen = lazy(() => import("./components/PeerSupportScreen"));
 
 // Calm fallback while lazy chunks load
 import { Skeleton, SkeletonCard, SkeletonList, SkeletonChart } from "./components/Skeleton";
@@ -123,7 +122,6 @@ const AUX_LABELS: Partial<Record<AuxView, string>> = {
   legal: "Legal",
   sounds: "Ambient sounds",
   safety_plan: "My Safety Plan",
-  peer_support: "Peer Support",
 };
 
 function auxViewLabel(view: AuxView): string {
@@ -159,7 +157,6 @@ function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () 
     case "sounds": return <SoundPlayer />;
     case "legal": return <LegalScreen />;
     case "safety_plan": return <SafetyPlanScreen />;
-    case "peer_support": return <PeerSupportScreen go={onOpenView} />;
     default: return <div className="p-6 text-slate-400 text-sm text-center">Not available</div>;
   }
 }
@@ -214,8 +211,10 @@ function AppShell() {
   // Phase 20 — register notification action types
   useEffect(() => { void registerNotificationActionTypes(); }, []);
 
-  // Sync daily reminders
-  useEffect(() => { void syncDailyReminders(); }, []);
+  // Sync daily reminders. request:false — on cold boot we only re-arm when permission is ALREADY granted;
+  // never fire the system permission dialog unprompted (matches syncEmaCheckins below). The grant is asked
+  // for intentionally from onboarding / Settings, not on every app open.
+  useEffect(() => { void syncDailyReminders({ request: false }); }, []);
 
   // Weekly digest
   useEffect(() => { void syncWeeklyDigest({ request: false }); }, []);
@@ -442,7 +441,7 @@ function AppShell() {
                   transparent scroll container, so scrolled content bled up into the status bar
                   (device screenshot 2026-07-15). The Nila tab avoids this via ModeScreen's own opaque
                   header; Today/You had none. A non-scrolling bg-page bar now masks the inset zone. */}
-              <div className="shrink-0 bg-page" style={{ height: 'max(12px, env(safe-area-inset-top))' }} />
+              <div className="shrink-0 bg-page" style={{ height: 'var(--safe-top)' }} />
               <div className="flex-1 min-h-0 overflow-y-auto px-4 pt-2 pb-12">
                 <TodayScreen go={go} phoneEnabled={phoneEnabled} onEpisode={onEpisode} onOpenCrisis={activateCrisis} />
               </div>
@@ -454,7 +453,7 @@ function AppShell() {
             <div className="flex-1 min-h-0 flex flex-col">
               {/* Opaque status-bar mask — same fix as the Today tab above. Non-scrolling bg-page bar
                   keeps scrolled content from bleeding into the edge-to-edge status bar. */}
-              <div className="shrink-0 bg-page" style={{ height: 'max(12px, env(safe-area-inset-top))' }} />
+              <div className="shrink-0 bg-page" style={{ height: 'var(--safe-top)' }} />
               <div className="flex-1 min-h-0 overflow-y-auto px-4 pt-2 pb-12">
                 <YouScreen go={go} onOpenCrisis={activateCrisis} />
               </div>

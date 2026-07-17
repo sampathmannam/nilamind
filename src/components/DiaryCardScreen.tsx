@@ -1,3 +1,4 @@
+import { localDateKey } from "../services/storageUtils";
 import { secureLocal } from "../services/secureLocal";
 import React, { useState, useEffect } from "react";
 import { DiaryCardEntry, DiaryUrge, SkillEffectiveness } from "../types";
@@ -27,7 +28,7 @@ function mergeUrges(existing: DiaryUrge[] | undefined): DiaryUrge[] {
 
 export default function DiaryCardScreen() {
   const [selectedDate, setSelectedDate] = useState<string>(
-    new Date().toISOString().split("T")[0]
+    localDateKey()
   );
   
   const [emotions, setEmotions] = useState({

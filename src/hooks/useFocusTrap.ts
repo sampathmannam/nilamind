@@ -19,14 +19,17 @@ export function useFocusTrap<T extends HTMLElement>(
     // Remember what had focus before the dialog opened
     previousFocus.current = document.activeElement as HTMLElement;
 
-    // Focus the first focusable element inside the container (or the container itself)
+    // Focus the first focusable element inside the container (or the container itself).
+    // preventScroll: the first focusable is often BELOW the modal's header; focusing it without this
+    // scrolls the dialog down and hides its own heading (on the §9 crisis overlay it pushed the
+    // "You're not alone" header off-screen — 2026-07-17 QA). A dialog must open at its top.
     const timer = setTimeout(() => {
       if (!containerRef.current) return;
       const first = containerRef.current.querySelector<HTMLElement>(FOCUSABLE);
       if (first) {
-        first.focus();
+        first.focus({ preventScroll: true });
       } else {
-        containerRef.current.focus();
+        containerRef.current.focus({ preventScroll: true });
       }
     }, 50);
 

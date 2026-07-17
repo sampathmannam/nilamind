@@ -1,6 +1,6 @@
 import {
   Wind, NotebookPen, Activity, LifeBuoy, TrendingUp, Moon, MessageCircle,
-  Pill, Lightbulb, Compass, Mountain, AlertTriangle, Smile, Clock3, Volume2, Users, Sliders,
+  Pill, Lightbulb, Compass, Mountain, AlertTriangle, Smile, Clock3, Volume2, Sliders,
   type LucideIcon,
 } from "lucide-react";
 import { t } from "../services/i18n";
@@ -53,7 +53,6 @@ export function buildToolGroups({ go, onEpisode, phoneEnabled }: ToolRowDeps): T
         { id: "winddown", label: t("tool_winddown_label"), sub: t("tool_winddown_sub"), Icon: Moon, iconClass: "w-5 h-5 text-indigo-400", onTap: () => go("winddown") },
         { id: "sounds", label: "Ambient sounds", sub: "White/brown/pink noise for focus, sleep, or calm", Icon: Volume2, iconClass: "w-5 h-5 text-emerald-400", onTap: () => go("sounds") },
         { id: "reach_out", label: t("tool_reach_out_label"), sub: t("tool_reach_out_sub"), Icon: MessageCircle, iconClass: "w-5 h-5 text-emerald-400", onTap: () => go("reach_out") },
-        { id: "peer_support", label: "Peer Support", sub: "Quick messages to reach out to people you trust", Icon: Users, iconClass: "w-5 h-5 text-teal-400", onTap: () => go("peer_support") },
         { id: "episode", label: t("tool_episode_label"), sub: t("tool_episode_sub"), Icon: LifeBuoy, iconClass: "w-5 h-5 text-rose-400", onTap: onEpisode },
       ],
     },

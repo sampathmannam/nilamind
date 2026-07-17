@@ -8,19 +8,22 @@
 // There is deliberately NO gamified "you opened the app N/30 days" surface — that is the exact
 // adherence-shaming a mental-health app should avoid; the numbers exist for honest measurement, not nudging.
 //
-// This records the DISTINCT DAYS the app was opened (UTC day keys, matching streaks/check-in/diary storage),
-// and derives individual retention metrics from that log plus the identity createdAt anchor.
+// This records the DISTINCT DAYS the app was opened (LOCAL day keys, matching streaks/check-in/diary storage
+// after the 2026-07-17 unification — see streaks.ts), and derives retention metrics from that log plus the
+// identity createdAt anchor.
 
 import { secureLocal } from "./secureLocal";
 import { loadIdentity } from "./identity";
+import { localDateKey } from "./storageUtils";
 
 const APP_OPENS_KEY = "nilamind_app_opens";
 const DAY_MS = 86_400_000;
 const DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
 
-/** UTC day key YYYY-MM-DD — matches streaks.ts `ymd()` and how check-ins/diary persist dates. */
+/** LOCAL day key YYYY-MM-DD — matches streaks.ts `ymd()` and how check-ins/diary persist dates
+ *  (unified on the local calendar day, 2026-07-17 QA — see streaks.ts). */
 export function dayKey(d: Date): string {
-  return d.toISOString().slice(0, 10);
+  return localDateKey(d);
 }
 
 /** Whole UTC days from day `a` to day `b` (b - a), both `YYYY-MM-DD`. */
@@ -28,7 +31,7 @@ function diffDays(a: string, b: string): number {
   return Math.round((Date.parse(`${b}T00:00:00Z`) - Date.parse(`${a}T00:00:00Z`)) / DAY_MS);
 }
 
-/** The sorted, de-duplicated list of UTC days the app was opened. Tolerant of absent/corrupt storage. */
+/** The sorted, de-duplicated list of local days the app was opened. Tolerant of absent/corrupt storage. */
 export function loadAppOpens(): string[] {
   try {
     const raw = secureLocal.getItem(APP_OPENS_KEY);

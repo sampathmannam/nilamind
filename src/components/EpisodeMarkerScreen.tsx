@@ -1,3 +1,4 @@
+import { localDateKey } from "../services/storageUtils";
 import React, { useState, useMemo } from "react";
 import { ChevronLeft, CalendarRange, Check } from "lucide-react";
 import { t, useLanguage, type I18nKey } from "../services/i18n";
@@ -20,7 +21,7 @@ const PHASES: EpisodePhase[] = ["elevated", "depressed", "mixed", "stable"];
 const phaseKey = (p: EpisodePhase): I18nKey =>
   p === "elevated" ? "em_phase_elevated" : p === "depressed" ? "em_phase_depressed" : p === "mixed" ? "em_phase_mixed" : "em_phase_stable";
 
-const today = () => new Date().toISOString().split("T")[0];
+const today = () => localDateKey();
 
 export default function EpisodeMarkerScreen({ onClose }: Props) {
   useLanguage();

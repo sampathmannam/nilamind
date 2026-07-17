@@ -1,3 +1,4 @@
+import { localDateKey } from "../services/storageUtils";
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   INSTRUMENTS,
@@ -144,7 +145,7 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
     const now = new Date();
     const entry: AssessmentEntry = {
       id: "as_" + Date.now(),
-      date: now.toISOString().split("T")[0],
+      date: localDateKey(now),
       timestamp: now.toLocaleTimeString(),
       instrument: inst.id,
       responses: nums,

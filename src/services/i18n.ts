@@ -121,8 +121,6 @@ export type I18nKey =
   | "tool_values_work_sub"
   | "tool_exposure_label"
   | "tool_exposure_sub"
-  | "tool_peer_support_label"
-  | "tool_peer_support_sub"
   | "tool_group_patterns"
   | "tool_behaviour_label"
   | "tool_behaviour_sub"
@@ -220,6 +218,8 @@ export type I18nKey =
   | "wellbeing_take"
   | "wellbeing_due_title"
   | "wellbeing_due_sub"
+  | "wellbeing_baseline_title"
+  | "wellbeing_baseline_sub"
   | "wellbeing_next_due_prefix"
   | "wellbeing_days"
   | "wellbeing_due_now"
@@ -367,8 +367,6 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     tool_values_work_sub: "Clarify what matters and notice where you align",
     tool_exposure_label: "Exposure hierarchy",
     tool_exposure_sub: "Build a fear ladder — work from the bottom up",
-    tool_peer_support_label: "Peer support",
-    tool_peer_support_sub: "Practice reaching out to people who get it",
     tool_group_patterns: "Patterns",
     tool_behaviour_label: "Phone patterns",
     tool_behaviour_sub: "Screen time & sleep vs. mood — on-device",
@@ -465,6 +463,8 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     wellbeing_take: "Take the 2-week check",
     wellbeing_due_title: "Your 2-week wellbeing check is due",
     wellbeing_due_sub: "It takes 2 minutes and helps you see the long view, not just daily swings.",
+    wellbeing_baseline_title: "Set your wellbeing baseline",
+    wellbeing_baseline_sub: "A 2-minute check now gives you a starting point — so later checks can show how things are trending.",
     wellbeing_next_due_prefix: "Next check in",
     wellbeing_days: "days",
     wellbeing_due_now: "Due now",
@@ -610,8 +610,6 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     tool_values_work_sub: "स्पष्ट करें कि क्या मायने रखता है और संरेखण देखें",
     tool_exposure_label: "एक्सपोज़र पदानुक्रम",
     tool_exposure_sub: "एक डर सीढ़ी बनाएं — नीचे से ऊपर काम करें",
-    tool_peer_support_label: "साथी समर्थन",
-    tool_peer_support_sub: "उन लोगों तक पहुंचने का अभ्यास करें जो समझते हैं",
     tool_group_patterns: "पैटर्न",
     tool_behaviour_label: "फ़ोन पैटर्न",
     tool_behaviour_sub: "स्क्रीन टाइम और नींद बनाम मूड — डिवाइस पर",
@@ -703,6 +701,8 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     wellbeing_take: "2-सप्ताह की जाँच लें",
     wellbeing_due_title: "आपकी पखवाड़े वाली कल्याण जाँच देय है",
     wellbeing_due_sub: "2 मिनट की जाँच आपको लंबा नज़रिया दिखाती है, न कि बस रोज़ के उतार-चढ़ाव।",
+    wellbeing_baseline_title: "अपना कल्याण आधार तय करें",
+    wellbeing_baseline_sub: "अभी 2 मिनट की जाँच आपको एक शुरुआती बिंदु देती है — ताकि आगे की जाँचें रुझान दिखा सकें।",
     wellbeing_next_due_prefix: "अगली जाँच",
     wellbeing_days: "दिन में",
     wellbeing_due_now: "अभी देय",
@@ -847,8 +847,6 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     tool_values_work_sub: "முக்கியமானதைத் தெளிவுபடுத்தி நீங்கள் ஒத்திசைவதைக் கவனியுங்கள்",
     tool_exposure_label: "வெளிப்பாடு படிநிலை",
     tool_exposure_sub: "ஒரு பயம் படிக்கட்டை உருவாக்குங்கள் — கீழிருந்து மேலே பணியுங்கள்",
-    tool_peer_support_label: "சக ஆதரவு",
-    tool_peer_support_sub: "உங்களைப் புரிந்துகொள்பவர்களைத் தொடர்பு கொள்வதைப் பயிற்சி செய்யுங்கள்",
     tool_group_patterns: "முறைகள்",
     tool_behaviour_label: "ஃபோன் முறைகள்",
     tool_behaviour_sub: "திரை நேரம் மற்றும் தூக்கம் எதிராக மனநிலை — சாதனத்தில்",
@@ -940,6 +938,8 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     wellbeing_take: "2-வார சோதனையை எடுக்கவும்",
     wellbeing_due_title: "உங்கள் இரு-வார நலன் சோதனை நிலுவையில் உள்ளது",
     wellbeing_due_sub: "2 நிமிடச் சோதனை நீண்ட பார்வையைக் காட்டும், தினசரி ஏற்றத்தாழ்வுகளை அல்ல.",
+    wellbeing_baseline_title: "உங்கள் நல அடிப்படையை அமைக்கவும்",
+    wellbeing_baseline_sub: "இப்போது 2 நிமிடச் சோதனை ஒரு தொடக்கப் புள்ளியைத் தரும் — பிற்கால சோதனைகள் போக்கைக் காட்ட.",
     wellbeing_next_due_prefix: "அடுத்த சோதனை",
     wellbeing_days: "நாட்களில்",
     wellbeing_due_now: "இப்போது நிலுவை",
@@ -1084,8 +1084,6 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     tool_values_work_sub: "ముఖ్యమైనదాన్ని స్పష్టం చేసుకుని మీరు సరిపోయేదాన్ని గమనించండి",
     tool_exposure_label: "ఎక్స్‌పోజర్ హైరార్కీ",
     tool_exposure_sub: "ఒక భయపు మెట్లు తయారు చేయండి — క్రింది నుండి పైకి పని చేయండి",
-    tool_peer_support_label: "సాటి మద్దతు",
-    tool_peer_support_sub: "మిమ్మల్ని అర్థం చేసుకునే వారిని సంప్రదించడం అభ్యాసం చేయండి",
     tool_group_patterns: "ప్యాటర్న్‌లు",
     tool_behaviour_label: "ఫోన్ ప్యాటర్న్‌లు",
     tool_behaviour_sub: "స్క్రీన్ టైం మరియు నిద్ర వర్సెస్ మూడ్ — పరికరంపై",
@@ -1177,6 +1175,8 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     wellbeing_take: "2-వారాల చెక్ తీసుకోండి",
     wellbeing_due_title: "మీ పాక్షిక శ్రేయస్సు చెక్ డ్యూ అయ్యింది",
     wellbeing_due_sub: "2 నిమిషాల చెక్ దీర్ఘకాలిక దృష్టిని చూపుతుంది, రోజువారీ హెచ్చుతగ్గులను కాదు.",
+    wellbeing_baseline_title: "మీ శ్రేయస్సు బేస్‌లైన్‌ను సెట్ చేయండి",
+    wellbeing_baseline_sub: "ఇప్పుడు 2 నిమిషాల చెక్ మీకు ఒక ప్రారంభ బిందువును ఇస్తుంది — తర్వాతి చెక్‌లు ధోరణిని చూపగలవు.",
     wellbeing_next_due_prefix: "తదుపరి చెక్",
     wellbeing_days: "రోజులలో",
     wellbeing_due_now: "ఇప్పుడు డ్యూ",

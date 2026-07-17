@@ -1,3 +1,4 @@
+import { localDateKey } from "../services/storageUtils";
 import { useRef, useState, useMemo } from "react";
 import { Wind, MessageCircle, Moon, LayoutGrid, Sparkles, ChevronRight, HeartHandshake, Sparkle, Clock3, Target, LineChart, Activity, Lightbulb, LifeBuoy, Search, X } from "lucide-react";
 import { getTimeMode, getUserState } from "../services/modeEngine";
@@ -7,7 +8,7 @@ import { buildToolGroups, type ToolGroup } from "./toolsRows";
 import { useLanguage, t } from "../services/i18n";
 import { loadInsights } from "../services/nilaInsights";
 import { loadAssessments, INSTRUMENTS } from "../services/assessments";
-import { isWellbeingDue } from "../services/wellbeingTrack";
+import { isWellbeingDue, wellbeingCadence } from "../services/wellbeingTrack";
 import { getCapacityLevel } from "../services/capacitySignal";
 import { hasRhythmToday, loadTodayAnchors, RHYTHM_ANCHORS } from "../services/socialRhythm";
 import { getUserGoals } from "../services/chatSuggestions";
@@ -65,7 +66,7 @@ function getTodayMood(): { label: string; emoji: string } | null {
     if (!raw) return null;
     const list = JSON.parse(raw);
     if (!Array.isArray(list) || list.length === 0) return null;
-    const today = new Date().toISOString().split("T")[0];
+    const today = localDateKey();
     const todays = list.filter((e: any) => e?.date === today);
     if (todays.length === 0) return null;
     const latest = todays[todays.length - 1];
@@ -119,7 +120,7 @@ function getWeekStart(): string {
   const d = new Date();
   const day = d.getDay();
   const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-  return new Date(d.getFullYear(), d.getMonth(), diff).toISOString().split("T")[0];
+  return localDateKey(new Date(d.getFullYear(), d.getMonth(), diff));
 }
 
 function getWeekInsight(): { checkinCount: number; topEmotion: string | null } | null {
@@ -184,7 +185,7 @@ export default function TodayScreen({
     night: t("greeting_night"),
   };
   const greeting = greetingMap[timeMode];
-  const checkedIn = hasCheckinToday(new Date().toISOString().split("T")[0]);
+  const checkedIn = hasCheckinToday(localDateKey());
   const todayMood = getTodayMood();
   const dailyIntentionSet = !!getDailyIntention();
   const hero = getHeroAction(timeMode, userState, dailyIntentionSet);
@@ -220,7 +221,11 @@ export default function TodayScreen({
       return Array.isArray(list) && list.length > 0;
     } catch { return false; }
   })();
-  const wellbeingDue = isWellbeingDue(loadAssessments());
+  const wellbeingAssessments = loadAssessments();
+  const wellbeingDue = isWellbeingDue(wellbeingAssessments);
+  // U2 (2026-07-17 QA): nothing is "due" on a fresh install — there's no prior check to be overdue against.
+  // Frame the very first prompt as establishing a baseline, not chasing a missed cadence.
+  const wellbeingFirstTime = wellbeingCadence(wellbeingAssessments).daysSinceLast === null;
 
   // Contextual summary — a warm one-liner based on recent check-ins and time of day
   const recentAvg = (() => {
@@ -338,9 +343,9 @@ export default function TodayScreen({
         <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-2xl p-4 space-y-2">
           <div className="flex items-center gap-2">
             <LineChart className="w-4 h-4 text-emerald-400" />
-            <p className="text-sm font-semibold text-slate-100">{t("wellbeing_due_title")}</p>
+            <p className="text-sm font-semibold text-slate-100">{t(wellbeingFirstTime ? "wellbeing_baseline_title" : "wellbeing_due_title")}</p>
           </div>
-          <p className="text-[11px] text-slate-400 leading-relaxed">{t("wellbeing_due_sub")}</p>
+          <p className="text-[11px] text-slate-400 leading-relaxed">{t(wellbeingFirstTime ? "wellbeing_baseline_sub" : "wellbeing_due_sub")}</p>
           <button
             onClick={() => go("assessment")}
             id="today-wellbeing-due"
@@ -364,7 +369,7 @@ export default function TodayScreen({
           <span className="shrink-0 text-blue-400"><Activity className="w-5 h-5" aria-hidden="true" /></span>
           <span className="flex-1 min-w-0">
             <span className="block text-sm font-bold text-slate-100">
-              {INSTRUMENTS[assessmentPrompt.instrument].measures} check {assessmentPrompt.kind === "contextual" ? "suggested" : "due"}
+              {INSTRUMENTS[assessmentPrompt.instrument].measures} check {assessmentPrompt.firstTime ? "— set your baseline" : assessmentPrompt.kind === "contextual" ? "suggested" : "due"}
               <span className="text-slate-500 font-normal"> ({assessmentPrompt.instrument})</span>
             </span>
             <span className="block text-[11px] text-slate-400 mt-0.5">{assessmentPrompt.reason}</span>

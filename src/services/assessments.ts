@@ -1,5 +1,5 @@
 import { secureLocal } from "./secureLocal";
-import { DAY_MS } from "./storageUtils";
+import { DAY_MS, localDateKey} from "./storageUtils";
 // Validated symptom-screening instruments (PHQ-9, GAD-7).
 //
 // These are the field-standard, research-validated self-report measures. Everything here —
@@ -349,7 +349,7 @@ export function latestFor(instrumentId: InstrumentId, all?: AssessmentEntry[]): 
 export function daysSince(entry: AssessmentEntry | null): number | null {
   if (!entry) return null;
   const then = new Date(entry.date + "T00:00:00").getTime();
-  const now = new Date(new Date().toISOString().split("T")[0] + "T00:00:00").getTime();
+  const now = new Date(localDateKey() + "T00:00:00").getTime();
   if (Number.isNaN(then)) return null;
   return Math.max(0, Math.floor((now - then) / DAY_MS));
 }

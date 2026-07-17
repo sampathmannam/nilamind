@@ -1,3 +1,4 @@
+import { localDateKey } from "./storageUtils";
 import { secureLocal } from "./secureLocal";
 import type { CheckInEntry } from "../types";
 
@@ -172,7 +173,7 @@ const ACTIVE_DAYS_KEY = "nilamind_active_days";
 
 function isoDay(d: Date | string): string {
   const dt = typeof d === "string" ? new Date(d) : d;
-  return dt.toISOString().split("T")[0]!;
+  return localDateKey(dt)!;
 }
 
 export function recordActiveDay(day?: Date | string): void {

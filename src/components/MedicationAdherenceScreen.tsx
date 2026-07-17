@@ -1,3 +1,4 @@
+import { localDateKey } from "../services/storageUtils";
 import React, { useEffect, useMemo, useState } from "react";
 import { Pill, Plus, Trash2, Check, X, Clock, Calendar } from "lucide-react";
 import {
@@ -25,7 +26,7 @@ export default function MedicationAdherenceScreen() {
   useEffect(() => {
     const meds = loadMedications();
     setMedications(meds);
-    const today = new Date().toISOString().split("T")[0];
+    const today = localDateKey();
     const logged = new Set(loadMedicationLogs().filter((l) => l.date === today && l.taken).map((l) => l.medId));
     setLogsToday(logged);
   }, []);

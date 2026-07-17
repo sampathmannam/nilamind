@@ -74,8 +74,10 @@ describe("recordRhythm / loadRhythm", () => {
   });
 
   it("merges anchors logged for the same day", () => {
-    recordRhythm({ wake: "07:00" }, at("2026-07-11T09:00:00Z"));
-    recordRhythm({ dinner: "19:00" }, at("2026-07-11T20:00:00Z"));
+    // Same LOCAL day (morning + evening), constructed locally so the pair stays on one calendar day in any
+    // timezone (2026-07-17 day-bucketing unification — see streaks.ts).
+    recordRhythm({ wake: "07:00" }, new Date(2026, 6, 11, 9, 0));
+    recordRhythm({ dinner: "19:00" }, new Date(2026, 6, 11, 20, 0));
     expect(loadRhythm()[0].anchors).toEqual({ wake: "07:00", dinner: "19:00" });
   });
 

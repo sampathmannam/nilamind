@@ -14,6 +14,9 @@ export interface AssessmentPrompt {
   priority: "high" | "medium" | "low";
   /** Whether this is a routine (time-based) or contextual (signal-based) prompt. */
   kind: "routine" | "contextual";
+  /** True when the user has NEVER taken this instrument — the prompt establishes a baseline rather than
+   *  chasing an elapsed cadence. Lets the UI avoid "due" framing on a fresh install (U2, 2026-07-17 QA). */
+  firstTime: boolean;
 }
 
 const ROUTINE_INTERVAL_DAYS = 14;
@@ -32,10 +35,11 @@ export function checkAssessmentPrompts(): AssessmentPrompt[] {
     prompts.push({
       instrument: "PHQ-9",
       reason: phq9Days === null
-        ? "You haven't taken a depression screening yet. A PHQ-9 takes 2 minutes and helps track your mood over time."
+        ? "Set a baseline for your mood — a PHQ-9 takes 2 minutes, so later check-ins can show how things trend."
         : `It's been ${phq9Days} days since your last PHQ-9. Regular check-ins help you spot patterns.`,
       priority: "low",
       kind: "routine",
+      firstTime: phq9Days === null,
     });
   }
 
@@ -44,10 +48,11 @@ export function checkAssessmentPrompts(): AssessmentPrompt[] {
     prompts.push({
       instrument: "WHO-5",
       reason: who5Days === null
-        ? "A WHO-5 wellbeing check takes 2 minutes and shows how your wellbeing trends over months."
+        ? "A WHO-5 wellbeing check takes 2 minutes and sets a baseline your future check-ins can build on."
         : `Your fortnightly wellbeing check is due. Last one was ${who5Days} days ago.`,
       priority: "low",
       kind: "routine",
+      firstTime: who5Days === null,
     });
   }
 
@@ -62,6 +67,7 @@ export function checkAssessmentPrompts(): AssessmentPrompt[] {
         reason: "Your energy has been rising recently. An ASRM takes 1 minute and helps you track whether this feels like a natural lift or something to watch.",
         priority: "high",
         kind: "contextual",
+        firstTime: asrmDays === null,
       });
     }
   }
@@ -76,6 +82,7 @@ export function checkAssessmentPrompts(): AssessmentPrompt[] {
         reason: "Things seem to be shifting. A quick PHQ-9 can help you track where you are right now.",
         priority: "medium",
         kind: "contextual",
+        firstTime: phq9DaysSince === null,
       });
     }
   }
@@ -90,6 +97,7 @@ export function checkAssessmentPrompts(): AssessmentPrompt[] {
         reason: "Your sleep has been shorter recently. When sleep drops, it's worth checking in on how you're feeling — an ASRM takes 1 minute.",
         priority: "medium",
         kind: "contextual",
+        firstTime: asrmDays === null,
       });
     }
   }
