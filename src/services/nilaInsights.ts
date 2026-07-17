@@ -6,6 +6,7 @@ import { secureLocal } from "./secureLocal";
 import { ymd } from "./streaks";
 import { generateOnDevice } from "./localLlm";
 import { loadNilaMemories } from "./nilaMemory";
+import { checkResponse } from "../safety";
 
 export type InsightKind = "working_through" | "what_helps" | "pattern" | "context" | "value";
 export const INSIGHT_KINDS: InsightKind[] = ["working_through", "what_helps", "pattern", "context", "value"];
@@ -279,6 +280,12 @@ async function fetchReflection(digest: string): Promise<ReflectResult> {
     const kind = (it as any).kind;
     const t = typeof (it as any).text === "string" ? (it as any).text.trim().slice(0, MAX_TEXT) : "";
     if (!INSIGHT_KINDS.includes(kind) || !t) continue;
+    // Output-safety gate on DURABLE memory (2026-07-18 QA): a persisted insight is re-injected into every
+    // future companion system prompt (insightsContextBlock), so an unsafe generation here would poison all
+    // later replies — worse than a one-turn failure. Run the same checkResponse gate every other generation
+    // path uses; drop any insight text carrying method/means, harmful affirmation, or death-peace content.
+    // userMessage="" so Rule 1 (crisis-resource requirement) is a no-op here; Rules 2–5 do the filtering.
+    if (!checkResponse(t, "")) continue;
     const fp = fingerprint(kind, t);
     if (seen.has(fp)) continue;
     seen.add(fp);

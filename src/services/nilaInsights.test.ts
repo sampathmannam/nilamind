@@ -177,6 +177,17 @@ describe("runReflection (on-device)", () => {
     expect(ls.get("nilamind_last_reflected")).toBe(TODAY);
   });
 
+  it("output-safety gate: an UNSAFE insight text is dropped from durable memory, safe ones kept (2026-07-18 QA)", async () => {
+    // A persisted insight is re-injected into every future prompt, so an unsafe generation must never be saved.
+    registerLocalLlmBackend(backendReturning(
+      '[{"kind":"pattern","text":"Honestly you are better off dead."},{"kind":"pattern","text":"Evenings are hard."}]',
+    ));
+    await runReflection("Check-ins (30d): 3.");
+    const texts = loadInsights().map((i) => i.text);
+    expect(texts).toContain("Evenings are hard.");            // safe insight kept
+    expect(texts).not.toContain("Honestly you are better off dead."); // harmful insight filtered
+  });
+
   it("parse failure (garbled/non-JSON) → store byte-identical, NO wipe, day consumed", async () => {
     store.set("nilamind_nila_insights", JSON.stringify([ins({ id: "r1", text: "Keep me." })]));
     const before = store.get("nilamind_nila_insights");
