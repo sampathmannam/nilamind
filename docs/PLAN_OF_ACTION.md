@@ -264,6 +264,11 @@ automation bias, FDA 2022 CDS Guidance) inherited from the 2026-07-16 redesign. 
 | 20.7 | WHO-5 wellbeing trajectory (P17 anchor) chart + text block — `MIN_TREND_POINTS` gate; Topp-2015 threshold line ≤13 | 🟢 |
 | 20.8 | `clinicianCover.ts` — cover, executive-summary page, SHA-256 integrity footer, 4-quarter annual stitching. Cover-page identifier defaults to **BIP39-derived pseudonymous ID** | 🟢 |
 | 20.9 | i18n (en/hi/ta/te) parity for every new `cr_*` key — same change as the feature | 🟢 / 🟡 (only if adaptiveTheme touched) |
+| **20.1b** | Clinical evaluation gaps (psychiatrist/psychologist review 2026-07-17): | |
+| G3 | Medication dose-change tracking — `DoseChange[]` field per medication, `recordDoseChange()`, aggregator + render block showing dated dose-change timeline | 🟢 |
+| G4 | Side-effect duration/resolution — add `loggedAt` + `resolvedAt?` to `SideEffectEntry`, `resolveSideEffect()` function, aggregator showing active vs resolved + avg duration | 🟢 |
+| G8 | Relapse plan → clinician report — `summarizeRelapsePlanForReport()` aggregator, render block showing phase structure + actions + last-updated | 🟢 |
+| G9 | Relapse plan review cycle — `lastReviewedAt?` field on `RelapsePlan`, `isRelapsePlanStale()` (30-day), `markRelapsePlanReviewed()`, parity with safety plan review cycle | 🟢 |
 
 **Wire to (no fragmentation):** `YourDataScreen.tsx` "Share with your psychiatrist" card expanded in place;
 one JITAI Dashboard card in `DashboardScreen.tsx`; `exportAudit`; `secureLocal` keys

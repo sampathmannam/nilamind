@@ -47,6 +47,7 @@ export interface ClinicianEpisodeSummary {
 }
 
 import type { ClinicianUsage } from "./clinicianPeriod";
+import type { RiskEventLogForReport } from "./clinicianRiskEvents";
 import type {
   ClinicianPactForReport,
   ClinicianConnectionsForReport,
@@ -55,6 +56,10 @@ import type {
   ClinicianSafetyPlanForReport,
   ClinicianMedCorrelationForReport,
   ClinicianSupportsRecapForReport,
+  ClinicianDoseChangesForReport,
+  ClinicianSideEffectDurationForReport,
+  ClinicianRelapsePlanForReport,
+  ClinicianWho5ForReport,
 } from "./clinicianAggregations";
 
 export interface ClinicianReportInput {
@@ -98,6 +103,20 @@ export interface ClinicianReportInput {
   supportsRecap?: ClinicianSupportsRecapForReport;
   /** Phase 20.6: voice signal — session count, avg speaking rate, mood signal (opt-in by structure). */
   voiceSignal?: { sessionCount: number; avgSpeakingRate: number; signal: "mania" | "depression" | "anxiety" | null };
+  /** Phase 20.1b G3: medication dose-change timeline — dated dose adjustments. */
+  doseChanges?: ClinicianDoseChangesForReport;
+  /** Phase 20.1b G4: side-effect duration/resolution — active vs resolved + avg duration. */
+  sideEffectDuration?: ClinicianSideEffectDurationForReport;
+  /** Phase 20.1b G8: relapse prevention plan — phase structure + actions + review status. */
+  relapsePlan?: ClinicianRelapsePlanForReport;
+  /** Phase 20.7: WHO-5 wellbeing trajectory — scores, trend, low-wellbeing flag. */
+  who5Trajectory?: ClinicianWho5ForReport;
+  /** Phase 20.4: sleep→next-day intensity correlation (Pearson r with sample size). */
+  sleepIntensityCorrelation?: { correlation: number; sampleSize: number } | null;
+  /** Phase 20.4: trigger→context distribution (top triggers + top contexts). */
+  triggerContextDistribution?: { topTriggers: Array<{ theme: string; count: number }>; topContexts: Array<{ context: string; count: number }> };
+  /** Phase 20.5: risk event log — dated timeline of events (no scores/levels). */
+  riskEventLog?: RiskEventLogForReport;
   protocolsCompleted: number;
   nilaSessions: number;
   featuresUsed: string[];
@@ -453,6 +472,102 @@ export function buildClinicianReport(input: ClinicianReportInput): string {
     lines.push(`  Sessions: ${vs.sessionCount}`);
     lines.push(`  Avg speaking rate: ${vs.avgSpeakingRate} wpm`);
     if (vs.signal) lines.push(`  Signal: ${vs.signal}`);
+    lines.push("");
+  }
+
+  // Phase 20.1b G3 — medication dose-change timeline. The clinician's core med-review
+  // question: "when did the dose change and what happened after?" Surfaces dated changes
+  // with old→new dose per medication. Privacy: only med name, doses, and dates.
+  if (input.doseChanges && input.doseChanges.hasData) {
+    lines.push("Medication Dose Changes");
+    for (const dc of input.doseChanges.changes) {
+      lines.push(`  ${dc.medName}: ${dc.oldDose} → ${dc.newDose} (${dc.date})`);
+    }
+    lines.push("");
+  }
+
+  // Phase 20.1b G4 — side-effect duration. Surfaces which side effects are still active,
+  // which resolved and how long they lasted, and average severity. Helps clinicians
+  // evaluate side-effect burden driving adherence decisions.
+  if (input.sideEffectDuration && input.sideEffectDuration.hasData) {
+    const se = input.sideEffectDuration;
+    lines.push("Side-Effect Duration");
+    for (const a of se.activeSideEffects) {
+      lines.push(`  Active: ${a.symptom} (${a.occurrenceCount}×, avg severity ${a.avgSeverity}/10)`);
+    }
+    for (const r of se.resolvedSideEffects) {
+      lines.push(`  Resolved: ${r.symptom} (${r.avgDurationDays} days avg)`);
+    }
+    lines.push("");
+  }
+
+  // Phase 20.1b G8 — relapse prevention plan. Surfaces whether a plan exists, which
+  // phases have signals and actions filled in, and when it was last updated/reviewed.
+  // Privacy: the actual content of signals and actions is NEVER exported — only counts.
+  if (input.relapsePlan && input.relapsePlan.hasData) {
+    const rp = input.relapsePlan;
+    lines.push("Relapse Prevention Plan");
+    lines.push(`  Green phase: ${rp.greenSignalsCount} signals, ${rp.greenActionsCount} actions`);
+    lines.push(`  Orange phase: ${rp.orangeSignalsCount} signals, ${rp.orangeActionsCount} actions`);
+    lines.push(`  Red phase: ${rp.redCrisisResources} crisis resources`);
+    if (rp.lastUpdated) lines.push(`  Last updated: ${rp.lastUpdated}`);
+    if (rp.lastReviewed) lines.push(`  Last reviewed: ${rp.lastReviewed}`);
+    lines.push("  Note: self-authored relapse prevention plan for context only — not a clinical directive.");
+    lines.push("");
+  }
+
+  // Phase 20.7 — WHO-5 wellbeing trajectory. World's most validated brief wellbeing measure.
+  // Per Topp 2015: scores ≤13 indicate "low wellbeing." The trajectory supports relapse-
+  // prevention discussion. MIN_TREND_POINTS gate: at least 2 entries required to show trend.
+  if (input.who5Trajectory && input.who5Trajectory.hasData) {
+    const w = input.who5Trajectory;
+    lines.push("Wellbeing Trajectory (WHO-5)");
+    for (const e of w.entries) {
+      lines.push(`  ${e.date}: ${e.score}/100 (${e.severity})`);
+    }
+    if (w.trend) lines.push(`  Trend: ${w.trend}`);
+    if (w.belowThresholdCount > 0) {
+      lines.push(`  Low wellbeing days (≤13): ${w.belowThresholdCount} of ${w.entries.length}`);
+    }
+    lines.push("  Note: WHO-5 Wellbeing Index; 0=lowest, 100=highest. ≤13 = low wellbeing (Topp 2015).");
+    lines.push("");
+  }
+
+  // Phase 20.4 — sleep→next-day intensity correlation. One number (Pearson r) with
+  // sample size. Negative r = less sleep correlates with more distress (IPSRT finding).
+  if (input.sleepIntensityCorrelation && input.sleepIntensityCorrelation !== null) {
+    const sic = input.sleepIntensityCorrelation;
+    const strength = Math.abs(sic.correlation) > 0.6 ? "moderate" : Math.abs(sic.correlation) > 0.3 ? "weak" : "negligible";
+    lines.push("Sleep–Mood Correlation");
+    lines.push(`  Pearson r = ${sic.correlation} (n=${sic.sampleSize}, ${strength})`);
+    lines.push("  Note: negative r = less sleep correlates with higher distress intensity.");
+    lines.push("");
+  }
+
+  // Phase 20.4 — trigger→context distribution. Top trigger themes and contexts.
+  if (input.triggerContextDistribution && (input.triggerContextDistribution.topTriggers.length > 0 || input.triggerContextDistribution.topContexts.length > 0)) {
+    const td = input.triggerContextDistribution;
+    lines.push("Trigger & Context Patterns");
+    if (td.topTriggers.length > 0) {
+      const triggerStr = td.topTriggers.map((t) => `"${t.theme}" (${t.count})`).join(", ");
+      lines.push(`  Top triggers: ${triggerStr}`);
+    }
+    if (td.topContexts.length > 0) {
+      const contextStr = td.topContexts.map((c) => `${c.context} (${c.count})`).join(", ");
+      lines.push(`  Top contexts: ${contextStr}`);
+    }
+    lines.push("");
+  }
+
+  // Phase 20.5 — risk event log. Deterministic dated timeline of events.
+  // 🟡 No risk levels / scores / gauges / recommendations. Events only.
+  if (input.riskEventLog && input.riskEventLog.hasData) {
+    lines.push("Event Timeline");
+    for (const ev of input.riskEventLog.events) {
+      const detail = ev.detail ? ` (${ev.detail})` : "";
+      lines.push(`  ${ev.date}: ${ev.type}${detail}`);
+    }
+    lines.push("  Note: structural event log — dates and types only, no severity or risk labels.");
     lines.push("");
   }
 

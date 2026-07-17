@@ -11,10 +11,11 @@
 import { isPactStale, type Pact } from "./pact";
 import { type ConnectionRecord } from "./humanConnection";
 import type { SafetyPlan } from "../types";
-import type { Medication, MedicationLog } from "./medicationAdherence";
+import type { Medication, MedicationLog, DoseChange } from "./medicationAdherence";
 import type { CheckInEntry } from "../types";
 import type { CaregiverContact } from "./caregiverContacts";
 import type { PeerSession } from "./peerSupport";
+import type { RelapsePlan } from "./relapsePlan";
 
 /** B8 — social connection log summary for the clinician PDF. Privacy: raw dates/people never leave. */
 
@@ -458,5 +459,244 @@ export function summarizeSupportsRecap(
     peerSessionCount,
     avgMoodImprovement,
     hasPeerData: peerSessionCount > 0,
+  };
+}
+
+// ---- G3: medication dose-change timeline --------------------------------
+
+export interface ClinicianDoseChangeEntry {
+  medName: string;
+  oldDose: string;
+  newDose: string;
+  date: string;
+}
+
+export interface ClinicianDoseChangesForReport {
+  hasData: boolean;
+  changes: ClinicianDoseChangeEntry[];
+}
+
+/** PURE. Summarise dose-change history across all medications for the clinician PDF.
+ *
+ *  The clinician gets a dated timeline of dose changes — essential for med-review.
+ *  Privacy: only medication name, old/new dose, and date — no patient-identifying info.
+ *
+ *  @param meds  Medication[] from secureLocal (all meds, including inactive — dose history matters).
+ *  @param _now  Unused; reserved for consistency with other aggregators.
+ */
+export function summarizeDoseChanges(
+  meds: Medication[],
+  _now: Date = new Date(),
+): ClinicianDoseChangesForReport {
+  const allChanges: ClinicianDoseChangeEntry[] = [];
+
+  for (const med of meds) {
+    if (!med.doseChanges || med.doseChanges.length === 0) continue;
+    for (const dc of med.doseChanges) {
+      allChanges.push({
+        medName: med.name,
+        oldDose: dc.oldDose,
+        newDose: dc.newDose,
+        date: dc.date,
+      });
+    }
+  }
+
+  // Sort by date descending (most recent first), cap at 10.
+  allChanges.sort((a, b) => b.date.localeCompare(a.date));
+  const capped = allChanges.slice(0, 10);
+
+  return { hasData: capped.length > 0, changes: capped };
+}
+
+// ---- G4: side-effect duration/resolution --------------------------------
+
+export interface ClinicianSideEffectSummaryItem {
+  symptom: string;
+  occurrenceCount: number;
+  avgSeverity: number;
+}
+
+export interface ClinicianResolvedSideEffectItem extends ClinicianSideEffectSummaryItem {
+  avgDurationDays: number;
+}
+
+export interface ClinicianSideEffectDurationForReport {
+  hasData: boolean;
+  activeSideEffects: ClinicianSideEffectSummaryItem[];
+  resolvedSideEffects: ClinicianResolvedSideEffectItem[];
+}
+
+/** PURE. Summarise side-effect duration and resolution across medication logs for the clinician PDF.
+ *
+ *  The clinician gets: which side effects are still active, which resolved and how long they lasted,
+ *  and average severity. This helps evaluate side-effect burden driving adherence decisions.
+ *  Privacy: only symptom names, counts, and severity — no log content or patient context.
+ *
+ *  @param logs  MedicationLog[] from secureLocal — pre-filtered by caller to the report window.
+ */
+export function summarizeSideEffectDuration(
+  logs: MedicationLog[],
+): ClinicianSideEffectDurationForReport {
+  if (!logs || logs.length === 0) {
+    return { hasData: false, activeSideEffects: [], resolvedSideEffects: [] };
+  }
+
+  // Collect all side-effect entries across logs.
+  const allSE = logs.flatMap((l) => l.sideEffects);
+  if (allSE.length === 0) {
+    return { hasData: false, activeSideEffects: [], resolvedSideEffects: [] };
+  }
+
+  // Group by symptom.
+  const bySymptom = new Map<string, { entries: typeof allSE }>();
+  for (const se of allSE) {
+    const bucket = bySymptom.get(se.symptom) ?? { entries: [] };
+    bucket.entries.push(se);
+    bySymptom.set(se.symptom, bucket);
+  }
+
+  const activeSideEffects: ClinicianSideEffectSummaryItem[] = [];
+  const resolvedSideEffects: ClinicianResolvedSideEffectItem[] = [];
+
+  for (const [symptom, { entries }] of bySymptom) {
+    const avgSeverity = Math.round((entries.reduce((s, e) => s + e.severity, 0) / entries.length) * 10) / 10;
+    const unresolved = entries.filter((e) => !e.resolvedAt);
+    const resolved = entries.filter((e) => e.resolvedAt && e.loggedAt);
+
+    if (unresolved.length > 0) {
+      activeSideEffects.push({ symptom, occurrenceCount: unresolved.length, avgSeverity });
+    }
+
+    if (resolved.length > 0) {
+      const durations = resolved.map((e) => {
+        const start = new Date(e.loggedAt!).getTime();
+        const end = new Date(e.resolvedAt!).getTime();
+        return Math.round((end - start) / (1000 * 60 * 60 * 24));
+      });
+      const avgDurationDays = Math.round(durations.reduce((a, b) => a + b, 0) / durations.length);
+      resolvedSideEffects.push({ symptom, occurrenceCount: resolved.length, avgSeverity, avgDurationDays });
+    }
+  }
+
+  return {
+    hasData: activeSideEffects.length > 0 || resolvedSideEffects.length > 0,
+    activeSideEffects,
+    resolvedSideEffects,
+  };
+}
+
+// ---- 20.7: WHO-5 wellbeing trajectory -----------------------------------
+
+export interface ClinicianWho5ForReport {
+  hasData: boolean;
+  entries: Array<{ date: string; score: number; severity: string }>;
+  trend: "improving" | "stable" | "worsening" | null;
+  latestScore: number | null;
+  /** WHO-5 threshold: ≤13 is "low wellbeing" per Topp 2015. */
+  belowThresholdCount: number;
+}
+
+/** PURE. Summarise the WHO-5 wellbeing trajectory for the clinician PDF.
+ *
+ *  The WHO-5 is the world's most validated brief wellbeing measure. The trajectory
+ *  directly supports relapse-prevention discussion. Per Topp 2015: scores ≤13 indicate
+ *  "low wellbeing" and warrant clinical attention.
+ *
+ *  Privacy: only the scores and severity labels the patient entered — no content.
+ *
+ *  @param entries  AssessmentEntry[] filtered to WHO-5 by the caller.
+ */
+export function summarizeWho5ForReport(
+  entries: Array<{ date: string; total: number; severity: string }>,
+): ClinicianWho5ForReport {
+  if (!entries || entries.length === 0) {
+    return { hasData: false, entries: [], trend: null, latestScore: null, belowThresholdCount: 0 };
+  }
+
+  const mapped = entries.map((e) => ({ date: e.date, score: e.total, severity: e.severity }));
+  const latestScore = mapped[mapped.length - 1].score;
+
+  // Trend: compare first third avg to last third avg (robust to sparse data).
+  let trend: "improving" | "stable" | "worsening" | null = null;
+  if (mapped.length >= 3) {
+    const third = Math.floor(mapped.length / 3);
+    const firstThirdAvg = mapped.slice(0, third).reduce((s, e) => s + e.score, 0) / third;
+    const lastThirdAvg = mapped.slice(-third).reduce((s, e) => s + e.score, 0) / third;
+    const diff = lastThirdAvg - firstThirdAvg;
+    if (diff > 5) trend = "improving";
+    else if (diff < -5) trend = "worsening";
+    else trend = "stable";
+  }
+
+  const belowThresholdCount = mapped.filter((e) => e.score <= 13).length;
+
+  return { hasData: true, entries: mapped, trend, latestScore, belowThresholdCount };
+}
+
+// ---- G8: relapse plan summary -------------------------------------------
+
+export interface ClinicianRelapsePlanForReport {
+  hasData: boolean;
+  greenSignalsCount: number;
+  greenActionsCount: number;
+  orangeSignalsCount: number;
+  orangeActionsCount: number;
+  redCrisisResources: number;
+  lastUpdated: string | null;
+  lastReviewed: string | null;
+}
+
+/** PURE. Summarise the patient's relapse prevention plan as metadata for the clinician PDF.
+ *
+ *  The clinician benefits from knowing (a) whether a plan exists, (b) which phases have
+ *  signals and actions filled in, (c) when it was last updated/reviewed.
+ *  Privacy: the actual content of signals and actions is NEVER exported — only counts.
+ *
+ *  @param plan  The RelapsePlan from secureLocal (or null).
+ */
+export function summarizeRelapsePlanForReport(
+  plan: RelapsePlan | null,
+): ClinicianRelapsePlanForReport {
+  if (!plan) {
+    return {
+      hasData: false,
+      greenSignalsCount: 0, greenActionsCount: 0,
+      orangeSignalsCount: 0, orangeActionsCount: 0,
+      redCrisisResources: 0,
+      lastUpdated: null, lastReviewed: null,
+    };
+  }
+
+  const countSignals = (signals: { thoughts: string; feelings: string; behaviors: string; physical: string }): number =>
+    [signals.thoughts, signals.feelings, signals.behaviors, signals.physical]
+      .filter((v) => v.trim().length > 0).length;
+
+  const greenSignalsCount = countSignals(plan.green.signals);
+  const greenActionsCount =
+    plan.green.actions.selfCare.length +
+    plan.green.actions.copingSkills.length +
+    plan.green.actions.reachOut.length;
+
+  const orangeSignalsCount = countSignals(plan.orange.signals);
+  const orangeActionsCount =
+    plan.orange.actions.selfCare.length +
+    plan.orange.actions.copingSkills.length +
+    plan.orange.actions.reachOut.length;
+
+  const redCrisisResources = plan.red.crisisLines.length + plan.red.emergencyContacts.length;
+
+  const lastUpdated = plan.updatedAt ? plan.updatedAt.slice(0, 10) : null;
+  const lastReviewed = plan.lastReviewedAt ? plan.lastReviewedAt.slice(0, 10) : null;
+
+  return {
+    hasData: true,
+    greenSignalsCount,
+    greenActionsCount,
+    orangeSignalsCount,
+    orangeActionsCount,
+    redCrisisResources,
+    lastUpdated,
+    lastReviewed,
   };
 }
