@@ -147,10 +147,22 @@ if ((import.meta as any).env?.DEV && (import.meta as any).env?.VITE_USE_FREE_API
 if (Capacitor.isNativePlatform()) {
   import("./services/localLlm").then(async () => {
     try {
-      const { findInstalledModel, registerDownloadedBackend } = await import("./services/modelDownload");
+      const { findInstalledModel, registerDownloadedBackend, cleanupOrphanedModelFiles, backgroundVerifyIfNeeded } = await import("./services/modelDownload");
       const installed = await findInstalledModel();
+      // Reclaim disk from model files left by a since-removed catalog entry (a swapped-out model's
+      // orphaned .part). Fire-and-forget after the install check so it never delays brain routing.
+      void cleanupOrphanedModelFiles().catch(() => {});
       if (installed) {
         await registerDownloadedBackend(installed);
+        // Close the recovery-path SHA bypass: if this file was promoted by the self-heal (never marked
+        // verified), re-hash it in the BACKGROUND. On a definitive mismatch the file is deleted — send the
+        // user back to first-run setup for a clean re-download. Never blocks the chat that's now usable.
+        void backgroundVerifyIfNeeded(installed).then(async (r) => {
+          if (r === "quarantined") {
+            const { setBrainStatus } = await import("./services/brainSetup");
+            setBrainStatus("needs-setup");
+          }
+        }).catch(() => {});
         return;
       }
     } catch {

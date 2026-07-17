@@ -39,6 +39,7 @@ vi.mock("@capacitor/filesystem", () => ({
     deleteFile: vi.fn(async ({ path }: { path: string }) => {
       h.files.delete(path);
     }),
+    readdir: vi.fn(async () => ({ files: [...h.files.keys()].map((name) => ({ name, type: "file" })) })),
     rename: vi.fn(async ({ from, to }: { from: string; to: string }) => {
       const f = h.files.get(from);
       if (!f) throw new Error("ENOENT");
@@ -56,7 +57,7 @@ vi.mock("@capacitor/filesystem", () => ({
 vi.mock("./localLlm", () => ({ registerLocalLlmBackend: vi.fn() }));
 
 import { Filesystem } from "@capacitor/filesystem";
-import { findInstalledModel, downloadModel, type DownloadProgress } from "./modelDownload";
+import { findInstalledModel, downloadModel, cleanupOrphanedModelFiles, backgroundVerifyIfNeeded, type DownloadProgress } from "./modelDownload";
 import { MODELS } from "./modelCatalog";
 
 const model = MODELS[0];
@@ -286,5 +287,73 @@ describe("downloadModel — a rename failure AFTER verification keeps the verifi
     const m = { ...model, sizeBytes: content.length, sha256: "f".repeat(64) }; // SHA mismatch → pre-rename fail
     await expect(downloadModel(m)).rejects.toThrow(/SHA-256|hash/i);
     expect(h.files.has(PART)).toBe(false); // bad partial reclaimed
+  });
+});
+
+describe("cleanupOrphanedModelFiles", () => {
+  it("deletes an orphaned .gguf.part from a since-removed catalog entry, keeps current + non-model files", async () => {
+    h.files.set("gemma-3-1b-it-Q4_K_M.gguf.part", { size: 133_000_000, magic: "GGUF" }); // retired model
+    h.files.set(model.filename, { size: model.sizeBytes, magic: "GGUF" });               // current model
+    h.files.set(`${model.filename}.part`, { size: 10, magic: "GGUF" });                  // current in-progress
+    h.files.set("vosk-model-small-en-us-0.15.tgz", { size: 40_000_000, magic: "\x1f\x8b" }); // non-model asset
+    h.files.set("ort-wasm-simd-threaded.wasm", { size: 23_000_000, magic: "\0asm" });        // non-model asset
+
+    const removed = await cleanupOrphanedModelFiles();
+
+    expect(removed).toBe(1);
+    expect(h.files.has("gemma-3-1b-it-Q4_K_M.gguf.part")).toBe(false); // orphan gone
+    expect(h.files.has(model.filename)).toBe(true);                    // current model kept
+    expect(h.files.has(`${model.filename}.part`)).toBe(true);          // current .part kept
+    expect(h.files.has("vosk-model-small-en-us-0.15.tgz")).toBe(true); // vosk kept
+    expect(h.files.has("ort-wasm-simd-threaded.wasm")).toBe(true);     // ort kept
+  });
+
+  it("is a no-op when readdir throws (dir not ready / web)", async () => {
+    vi.mocked(Filesystem.readdir).mockRejectedValueOnce(new Error("not mounted"));
+    await expect(cleanupOrphanedModelFiles()).resolves.toBe(0);
+  });
+});
+
+describe("backgroundVerifyIfNeeded — closes the recovery-path SHA bypass", () => {
+  // Minimal localStorage shim (node env has none); reset per test via beforeEach below.
+  const lsStore = new Map<string, string>();
+  beforeEach(() => {
+    lsStore.clear();
+    (globalThis as { localStorage?: unknown }).localStorage = {
+      getItem: (k: string) => lsStore.get(k) ?? null,
+      setItem: (k: string, v: string) => { lsStore.set(k, v); },
+      removeItem: (k: string) => { lsStore.delete(k); },
+    };
+  });
+
+  const content = new Uint8Array(Array.from({ length: 5000 }, (_, i) => (i * 31) % 256));
+  content.set([0x47, 0x47, 0x55, 0x46], 0); // "GGUF" magic
+  const goodHash = createHash("sha256").update(content).digest("hex");
+
+  it("skips when the catalog has no real digest", async () => {
+    expect(await backgroundVerifyIfNeeded(modelNoHash)).toBe("skipped");
+  });
+
+  it("verifies a matching file, marks it, and skips on the next boot", async () => {
+    const m = { ...model, sizeBytes: content.length, sha256: goodHash };
+    h.files.set(m.filename, { size: content.length, magic: "GGUF", content });
+    expect(await backgroundVerifyIfNeeded(m)).toBe("verified");
+    expect(h.files.has(m.filename)).toBe(true);          // good model kept
+    expect(await backgroundVerifyIfNeeded(m)).toBe("skipped"); // marker set → no re-hash
+  });
+
+  it("QUARANTINES a same-size, valid-magic but wrong-content file (the MITM/compromised-repo gap)", async () => {
+    const m = { ...model, sizeBytes: content.length, sha256: "a".repeat(64) }; // a digest the bytes can't match
+    h.files.set(m.filename, { size: content.length, magic: "GGUF", content });
+    expect(await backgroundVerifyIfNeeded(m)).toBe("quarantined");
+    expect(h.files.has(m.filename)).toBe(false);         // deleted so a clean re-download can start
+  });
+
+  it("returns 'unknown' and keeps the file on a transient read error", async () => {
+    const m = { ...model, sizeBytes: content.length, sha256: goodHash };
+    h.files.set(m.filename, { size: content.length, magic: "GGUF", content });
+    vi.mocked(Filesystem.readFile).mockRejectedValueOnce(new Error("read hiccup"));
+    expect(await backgroundVerifyIfNeeded(m)).toBe("unknown");
+    expect(h.files.has(m.filename)).toBe(true);          // never delete on a non-definitive failure
   });
 });

@@ -56,6 +56,33 @@ async function tryDelete(filename: string): Promise<void> {
   }
 }
 
+/** Delete model files (`*.gguf` / `*.gguf.part`) that belong to NO current catalog entry — e.g. the
+ *  ~133 MB `gemma-3-1b-…gguf.part` orphaned when the catalog was swapped to Qwen (2026-07-17 QA: it sat on
+ *  disk forever). Only touches model files: a current model, its in-progress `.part`, and every non-model
+ *  asset (vosk `.tgz`, ort `.wasm`) are preserved. Fail-safe — any error (dir not ready, readdir
+ *  unsupported on web) is a silent no-op. Runs once at boot, fire-and-forget. Returns the count removed. */
+export async function cleanupOrphanedModelFiles(): Promise<number> {
+  const keep = new Set<string>();
+  for (const m of MODELS) {
+    keep.add(m.filename);
+    keep.add(`${m.filename}.part`);
+  }
+  let removed = 0;
+  try {
+    const { files } = await Filesystem.readdir({ path: "", directory: Directory.External });
+    for (const entry of files) {
+      const name = (entry as { name?: string })?.name ?? (entry as unknown as string);
+      if (typeof name !== "string" || !/\.gguf(\.part)?$/i.test(name)) continue; // model files only
+      if (keep.has(name)) continue; // a current model or its in-progress/recovery .part
+      await tryDelete(name);
+      removed++;
+    }
+  } catch {
+    /* External dir not mounted yet, or readdir unavailable (web) — nothing to clean */
+  }
+  return removed;
+}
+
 /** Three-way size check, so callers can tell a transient stat FAILURE (file/dir not ready on a cold
  *  boot — must NOT delete) apart from a real size MISMATCH (a half-finished/corrupt file — safe to
  *  delete). "unknown" is the fail-safe: leave the file alone and retry later. */
@@ -279,6 +306,7 @@ export async function downloadModel(
     verified = true;
     await tryDelete(model.filename); // remove any old/partial final, then move the verified file into place
     await Filesystem.rename({ from: part, to: model.filename, directory: Directory.External });
+    markModelVerified(model); // record that THIS file passed the full SHA pass, so boot never re-hashes it
   } catch (e) {
     // Only reclaim a NOT-yet-verified partial. A verified .part (rename-phase failure) is kept for recovery.
     if (!verified) await tryDelete(part);
@@ -286,6 +314,47 @@ export async function downloadModel(
   } finally {
     await sub?.remove();
   }
+}
+
+// ── Verified-marker + background re-verify (closes the recovery-path SHA bypass) ──────────────────────
+// findInstalledModel's startup self-heal promotes a complete `.part` (killed mid-verify) WITHOUT re-running
+// the multi-minute SHA — deliberately, to avoid hanging boot. That leaves a narrow gap: a same-size,
+// valid-magic but content-different GGUF (only reachable via an HTTPS MITM or a compromised pinned HF repo)
+// could be promoted unverified, defeating the SHA pin. We close it WITHOUT blocking boot: a full download
+// writes a "verified" marker; a recovered/legacy model has none, so after boot we re-hash it in the
+// BACKGROUND and quarantine it only on a DEFINITIVE hash mismatch (never on a transient read error).
+const VERIFIED_KEY = "nilamind_model_verified";
+const verifiedTag = (m: CatalogModel) => `${m.filename}@${m.sha256 ?? "-"}`;
+
+function markModelVerified(m: CatalogModel): void {
+  try { localStorage.setItem(VERIFIED_KEY, verifiedTag(m)); } catch { /* private mode / quota — degrade */ }
+}
+
+/** True when this exact file+digest already passed a full SHA verify, so boot must NOT re-hash it. */
+function isModelVerified(m: CatalogModel): boolean {
+  try { return localStorage.getItem(VERIFIED_KEY) === verifiedTag(m); } catch { return false; }
+}
+
+/** Re-verify an on-disk model's SHA-256 in the BACKGROUND when it was never marked verified (i.e. it came
+ *  through the recovery self-heal, which skips SHA). No-op when the catalog has no real digest or the model
+ *  is already marked. On a definitive hash MISMATCH the file is deleted and "quarantined" is returned so the
+ *  caller can re-prompt a clean download; a read error returns "unknown" and leaves the file for a retry. */
+export async function backgroundVerifyIfNeeded(
+  model: CatalogModel,
+): Promise<"skipped" | "verified" | "quarantined" | "unknown"> {
+  if (!isRealSha256(model.sha256) || isModelVerified(model)) return "skipped";
+  let actual: string;
+  try {
+    actual = await fileSha256(model, model.filename);
+  } catch {
+    return "unknown"; // couldn't read the file (transient) — do not touch it; retry next boot
+  }
+  if (actual.toLowerCase() === model.sha256.toLowerCase()) {
+    markModelVerified(model);
+    return "verified";
+  }
+  await tryDelete(model.filename); // definitively wrong content → reclaim so a clean re-download can start
+  return "quarantined";
 }
 
 /** Register the native backend for a model that's on disk. Uses the CPU llama-cpp-capacitor adapter

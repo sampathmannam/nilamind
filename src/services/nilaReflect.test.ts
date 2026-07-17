@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { makeReflector, createReflectBackend } from "./nilaReflect";
+import { makeReflector, createReflectBackend, offlineBrainMessage } from "./nilaReflect";
 
 // nilaReflect is the deterministic, LLM-free "Nila listens" backend for the WEB front door (rung 0):
 // a small model doesn't exist in the browser, so warmth comes from reflective-listening scripts while
@@ -103,5 +103,24 @@ describe("createReflectBackend — conforms to the LocalLlmBackend seam", () => 
       onToken: () => {},
     });
     expect(full.toLowerCase()).toContain("overwhelmed");
+  });
+});
+
+describe("offlineBrainMessage — state-aware no-model reply (2026-07-17 QA)", () => {
+  it("explains a not-downloaded brain and points to Settings + tools", () => {
+    const m = offlineBrainMessage("none");
+    expect(m).toMatch(/isn't downloaded|set it up in Settings/i);
+    expect(m.length).toBeGreaterThan(20);
+  });
+  it("names the loading wait without alarming", () => {
+    expect(offlineBrainMessage("loading")).toMatch(/waking up|take a moment|few seconds/i);
+  });
+  it("explains a load failure and points to the offline tools", () => {
+    expect(offlineBrainMessage("error")).toMatch(/couldn't load|low on memory/i);
+  });
+  it("never returns an empty string (would re-create the silent-void bug)", () => {
+    for (const s of ["none", "loading", "ready", "error"] as const) {
+      expect(offlineBrainMessage(s).trim().length).toBeGreaterThan(0);
+    }
   });
 });

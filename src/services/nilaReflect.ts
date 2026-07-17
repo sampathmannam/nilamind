@@ -127,6 +127,20 @@ export function offlineFallbackReply(userText: string): string {
   return `${reflection}\n\nMy on-device voice is still waking up — but I'm here, and your grounding and safety tools are ready any time, just below.`;
 }
 
+/** A short, warm message for when a companion turn produced NO reply because the on-device brain isn't
+ *  answering. State-aware so the person learns WHY (still loading / not downloaded / failed) instead of
+ *  getting silence, and is pointed at the tools that work without it. This is the native skip-download path
+ *  (web registers a reflect backend, so isLocalLlmReady() is true there and this never fires) — 2026-07-17
+ *  QA: previously ModeScreen only surfaced an empty reply for the CLOUD case, so a native user who skipped
+ *  the model download typed into total silence. Deterministic (no model), so §9's output gate is moot. */
+export function offlineBrainMessage(state: "none" | "loading" | "ready" | "error"): string {
+  if (state === "loading")
+    return "I'm still waking up — the first load after setup can take a moment. Try again in a few seconds, or use a tool below in the meantime. 💙";
+  if (state === "error")
+    return "My on-device brain couldn't load — your phone may be low on memory. Freeing some up and reopening can help. The grounding and safety tools below work without it. 💙";
+  return "I can't chat just yet — my brain isn't downloaded on this device. You can set it up in Settings, and the tools just below are ready to use right now. 💙";
+}
+
 /** The web LLM-seam backend. Registered from main.tsx on web so isLocalLlmReady() becomes true and
  *  sendToNila routes here instead of returning the silent-offline empty reply. */
 export function createReflectBackend(): LocalLlmBackend {

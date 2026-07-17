@@ -422,6 +422,32 @@ export function formatTime(d: Date): string {
 
 export interface SyncResult { scheduled: boolean; at?: string; reason?: "disabled" | "denied" | "unavailable" }
 
+/** The shared gate for every gentle "insight" nudge (daily reminder + weekly digest): never fire inside a
+ *  crisis/elevation suppression window, when the insight category is off, during DND, or once the per-day
+ *  non-crisis budget is spent. Returns the failing SyncResult, or null to proceed. Consolidated 2026-07-17
+ *  QA — the daily/weekly copies were byte-identical duplicates, exactly the drift surface where W1/W2 hid. */
+function insightNudgeGate(): SyncResult | null {
+  if (isSafetySuppressed()) return { scheduled: false, reason: "unavailable" };
+  if (!isCategoryEnabled("insight")) return { scheduled: false, reason: "disabled" };
+  if (isDndActive()) return { scheduled: false, reason: "unavailable" };
+  if (skipActive() || peekRemaining() < 1) return { scheduled: false, reason: "unavailable" };
+  return null;
+}
+
+/** Resolve notification permission for a sync. On startup (request === false) only re-arm when permission is
+ *  ALREADY granted — never prompt out of the blue; from settings (request !== false) we may prompt. Returns a
+ *  "denied" SyncResult when the grant is missing, or null to proceed. */
+async function resolveNotifGrant(request: boolean | undefined): Promise<SyncResult | null> {
+  let granted = false;
+  if (request === false) {
+    try { granted = (await LocalNotifications.checkPermissions()).display === "granted"; }
+    catch (e) { console.error("[notifications] checkPermissions failed:", e); granted = false; }
+  } else {
+    granted = await ensureNotificationPermission();
+  }
+  return granted ? null : { scheduled: false, reason: "denied" };
+}
+
 /**
  * Reconcile the daily compassionate reminder with the user's prefs (AUTOPILOT Phase 7).
  * Frequency cap: exactly ONE gentle nudge per day (no nagging). The fire time is the start of the
@@ -432,29 +458,16 @@ export async function syncDailyReminders(opts: { request?: boolean } = { request
   // Always clear the previous schedule so we never stack duplicates.
   try { await LocalNotifications.cancel({ notifications: [{ id: DAILY_REMINDER_ID }] }); } catch (e) { console.error("[notifications] syncDailyReminders cancel failed:", e); }
 
-  // P6.4: the warm daily nudge is the same class of "how are you?" ping as EMA — never fire it inside a
-  // crisis/elevation suppression window (medication reminders are exempt: health-critical, not a nudge).
-  if (isSafetySuppressed()) return { scheduled: false, reason: "unavailable" };
-  // P6.5: category toggle — the daily nudge is the "insight nudge" category.
-  if (!isCategoryEnabled("insight")) return { scheduled: false, reason: "disabled" };
-  // P6.7: the user asked for space — the daily nudge is exactly the kind of ping DND suppresses.
-  if (isDndActive()) return { scheduled: false, reason: "unavailable" };
-  // P6.3: frequency cap — the daily nudge is 1 of the MAX_NON_CRISIS_PER_DAY budget; hold if the cap is hit
-  // or a progressive-cooldown window is active (crisis/medication paths are exempt and untouched above).
-  if (skipActive() || peekRemaining() < 1) return { scheduled: false, reason: "unavailable" };
+  // P6.3–6.7: the warm daily nudge is a gentle "insight" ping — held during crisis/elevation suppression,
+  // when the category is off, during DND, or once the per-day non-crisis budget is spent.
+  const gate = insightNudgeGate();
+  if (gate) return gate;
 
   const prefs = getReminderPrefs();
   if (!prefs.enabled) return { scheduled: false, reason: "disabled" };
 
-  // On startup (request:false) we only re-arm when permission is already granted — never prompt
-  // out of the blue. From settings (request:true) we may ask, since the user just opted in.
-  let granted = false;
-  if (opts.request === false) {
-    try { granted = (await LocalNotifications.checkPermissions()).display === "granted"; } catch (e) { console.error("[notifications] checkPermissions failed:", e); granted = false; }
-  } else {
-    granted = await ensureNotificationPermission();
-  }
-  if (!granted) return { scheduled: false, reason: "denied" };
+  const grant = await resolveNotifGrant(opts.request);
+  if (grant) return grant;
 
   // Choose a fire time inside the window; if it lands in quiet hours, defer to quiet-hours end.
   // P6.2: once we have a week of engagement signal, bias the fire hour toward when the person actually
@@ -564,20 +577,13 @@ const WEEKLY_DIGEST_ID = 1002;
 export async function syncWeeklyDigest(opts: { request?: boolean } = { request: false }): Promise<SyncResult> {
   try { await LocalNotifications.cancel({ notifications: [{ id: WEEKLY_DIGEST_ID }] }); } catch (e) { console.error("[notifications] syncWeeklyDigest cancel failed:", e); }
   // Crisis/elevation + DND + category + frequency-cap gates mirror the daily nudge — the digest is a nudge.
-  if (isSafetySuppressed()) return { scheduled: false, reason: "unavailable" };
-  if (!isCategoryEnabled("insight")) return { scheduled: false, reason: "disabled" };
-  if (isDndActive()) return { scheduled: false, reason: "unavailable" };
-  if (skipActive() || peekRemaining() < 1) return { scheduled: false, reason: "unavailable" };
+  const gate = insightNudgeGate();
+  if (gate) return gate;
   const prefs = getReminderPrefs();
   if (!prefs.weeklyDigest) return { scheduled: false, reason: "disabled" };
 
-  let granted = false;
-  if (opts.request === false) {
-    try { granted = (await LocalNotifications.checkPermissions()).display === "granted"; } catch (e) { console.error("[notifications] checkPermissions failed:", e); granted = false; }
-  } else {
-    granted = await ensureNotificationPermission();
-  }
-  if (!granted) return { scheduled: false, reason: "denied" };
+  const grant = await resolveNotifGrant(opts.request);
+  if (grant) return grant;
 
   let [h, m] = prefs.windowStart.split(":").map(Number);
   if (withinQuietHours(timeToday(h || 0, m || 0))) [h, m] = prefs.quietEnd.split(":").map(Number);

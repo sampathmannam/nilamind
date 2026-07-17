@@ -35,6 +35,7 @@ import { suppressNudgesForCrisis, notifyReplyReady } from "../services/notificat
 import SoftCrisisCard from "./SoftCrisisCard";
 import { getSessionChat, setSessionChat, clearSessionChat } from "../services/sessionChat";
 import { localLlmLoadState } from "../services/localLlm";
+import { offlineBrainMessage } from "../services/nilaReflect";
 import { safeDraftThoughtRecord, type ThoughtRecordDraft } from "../services/thoughtRecordDraft";
 import ThoughtRecordScreen from "./ThoughtRecordScreen";
 import ValuesToActionScreen from "./ValuesToActionScreen";
@@ -416,11 +417,14 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           speakIfEnabled(result.reply);
           if (document.hidden) void notifyReplyReady();
         }
-      } else if (!result.reachedAI && isCloudApiEnabled() && getCloudApiKey()) {
-        setMessages((prev) => [
-          ...prev,
-          { role: "assistant", content: "Cloud API returned an empty response — check your API key and endpoint in Settings → Advanced → Cloud API." },
-        ]);
+      } else if (!result.reachedAI) {
+        // No reply AND no model reached. Never leave the person in silence: explain WHY (cloud misconfigured,
+        // or the on-device brain isn't ready) and point to the tools that work regardless. (2026-07-17 QA:
+        // the on-device branch was missing entirely — a skip-download user typed into a void.)
+        const content = isCloudApiEnabled() && getCloudApiKey()
+          ? "Cloud API returned an empty response — check your API key and endpoint in Settings → Advanced → Cloud API."
+          : offlineBrainMessage(localLlmLoadState());
+        setMessages((prev) => [...prev, { role: "assistant", content }]);
       }
       // After Nila replies, refresh the protocol card (continue if active, else re-offer).
       setProtocolCard(protocolOfferCard(msg));
