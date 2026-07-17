@@ -471,3 +471,45 @@ describe("medCorrelation render (Phase 20.1 B7)", () => {
     expect(report).not.toContain("Medication-Mood Correlation");
   });
 });
+
+// Phase 20.1 B10 — supports recap render
+describe("supportsRecap render (Phase 20.1 B10)", () => {
+  it("renders Supports Recap when supportsRecap has data", () => {
+    const report = buildClinicianReport({
+      ...baseInput,
+      supportsRecap: {
+        caregiverCount: 3,
+        relationships: ["parent", "sibling"],
+        peerSessionCount: 5,
+        avgMoodImprovement: 1.8,
+        hasPeerData: true,
+      },
+    });
+    expect(report).toContain("Supports Recap");
+    expect(report).toContain("Caregiver contacts: 3");
+    expect(report).toContain("parent, sibling");
+    expect(report).toContain("Peer support sessions: 5");
+    expect(report).toContain("+1.8");
+  });
+
+  it("renders caregiver-only supports (no peer data)", () => {
+    const report = buildClinicianReport({
+      ...baseInput,
+      supportsRecap: {
+        caregiverCount: 2,
+        relationships: ["friend"],
+        peerSessionCount: 0,
+        avgMoodImprovement: null,
+        hasPeerData: false,
+      },
+    });
+    expect(report).toContain("Supports Recap");
+    expect(report).toContain("Caregiver contacts: 2");
+    expect(report).not.toContain("Peer support sessions");
+  });
+
+  it("omits Supports Recap when absent or empty", () => {
+    const report = buildClinicianReport(baseInput);
+    expect(report).not.toContain("Supports Recap");
+  });
+});

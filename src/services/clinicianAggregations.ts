@@ -13,6 +13,8 @@ import { loadConnections, type ConnectionRecord } from "./humanConnection";
 import type { SafetyPlan } from "../types";
 import type { Medication, MedicationLog } from "./medicationAdherence";
 import type { CheckInEntry } from "../types";
+import type { CaregiverContact } from "./caregiverContacts";
+import type { PeerSession } from "./peerSupport";
 
 /** B8 — social connection log summary for the clinician PDF. Privacy: raw dates/people never leave. */
 
@@ -411,4 +413,50 @@ export function summarizeMedCorrelation(
     : 0;
 
   return { perMed, overallAdherence };
+}
+
+// ---- B10: supports recap -------------------------------------------
+
+export interface ClinicianSupportsRecapForReport {
+  caregiverCount: number;
+  relationships: string[];
+  peerSessionCount: number;
+  avgMoodImprovement: number | null;
+  hasPeerData: boolean;
+}
+
+/** PURE. Summarise the patient's structured support network for the clinician PDF.
+ *
+ *  Surfaces caregiver contacts (count + relationship types) and peer support
+ *  sessions (count + avg mood improvement). This complements B2 (safety plan
+ *  structure), B8 (social connection frequency), and B12 (pact/trusted person).
+ *
+ *  Privacy: no names, phone numbers, or session notes are exported — only counts,
+ *  relationship categories, and aggregate mood deltas.
+ *
+ *  @param caregivers  CaregiverContact[] from secureLocal.
+ *  @param peerSessions PeerSession[] from secureLocal.
+ */
+export function summarizeSupportsRecap(
+  caregivers: CaregiverContact[],
+  peerSessions: PeerSession[],
+): ClinicianSupportsRecapForReport {
+  const caregiverCount = caregivers.length;
+  const relationships = [...new Set(caregivers.map((c) => c.relationship).filter(Boolean))];
+
+  const peerSessionCount = peerSessions.length;
+  const improvements = peerSessions
+    .filter((s) => typeof s.moodAfter === "number")
+    .map((s) => (s.moodAfter as number) - s.moodBefore);
+  const avgMoodImprovement = improvements.length > 0
+    ? Math.round((improvements.reduce((a, b) => a + b, 0) / improvements.length) * 10) / 10
+    : null;
+
+  return {
+    caregiverCount,
+    relationships,
+    peerSessionCount,
+    avgMoodImprovement,
+    hasPeerData: peerSessionCount > 0,
+  };
 }
