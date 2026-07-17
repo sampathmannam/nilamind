@@ -1,5 +1,5 @@
 import React from "react";
-import { Phone, ExternalLink } from "lucide-react";
+import { Phone, MessageSquare, ExternalLink } from "lucide-react";
 import { getCrisisLines } from "../services/crisisResources";
 
 // One place that renders the user's region crisis lines correctly (tel links, directory links, or
@@ -17,9 +17,13 @@ export default function CrisisLines({ tone = "rose", compact = false }: { tone?:
     <div className="space-y-1.5" id="crisis-lines">
       {lines.map((l, i) => {
         if (l.tel) {
+          // kind:"text" lines are SMS shortcodes (741741 / 85258) — dialing them as a voice call fails,
+          // so they must open the SMS composer instead of the dialer.
+          const isText = l.kind === "text";
+          const Icon = isText ? MessageSquare : Phone;
           return (
-            <a key={i} href={`tel:${l.tel}`} className={base}>
-              <Phone className="w-4 h-4 shrink-0" />
+            <a key={i} href={`${isText ? "sms" : "tel"}:${l.tel}`} className={base}>
+              <Icon className="w-4 h-4 shrink-0" />
               <span>{l.name}: {l.display}{l.note ? <span className="font-normal opacity-70"> · {l.note}</span> : null}</span>
             </a>
           );

@@ -112,20 +112,21 @@ function checkinCountToday(): number {
   }
 }
 
-/** Read days since last check-in. */
+/** Read days since last check-in. Returns -1 when NO check-in exists yet — a brand-new user has
+ *  nothing to be "inactive" from, so the inactivity nudge (daysSince >= 3) must not fire on them. */
 function daysSinceLastCheckin(): number {
   try {
     const raw = secureLocal.getItem("nilamind_checkins");
-    if (!raw) return 999;
+    if (!raw) return -1;
     const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed) || parsed.length === 0) return 999;
+    if (!Array.isArray(parsed) || parsed.length === 0) return -1;
     const sorted = [...parsed].sort((a: any, b: any) => (b.date ?? "").localeCompare(a.date ?? ""));
     const last = sorted[0];
-    if (!last?.date) return 999;
+    if (!last?.date) return -1;
     const diff = Math.floor((Date.now() - new Date(last.date + "T00:00:00").getTime()) / DAY_MS);
     return diff;
   } catch {
-    return 999;
+    return -1; // unreadable storage ≠ known inactivity — don't nudge on ambiguity
   }
 }
 

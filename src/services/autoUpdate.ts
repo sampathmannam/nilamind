@@ -90,7 +90,15 @@ export async function checkForGitHubUpdate(): Promise<void> {
     const blob = await dlResp.blob();
     const arrayBuffer = await blob.arrayBuffer();
     const uint8 = new Uint8Array(arrayBuffer);
-    const base64 = btoa(String.fromCharCode(...uint8));
+    // Chunked conversion: spreading a ~32MB APK into String.fromCharCode(...) blows the argument
+    // limit (RangeError: Maximum call stack size exceeded), which made this whole opt-in feature
+    // silently fail on every real APK. 32KiB chunks keep the call-stack usage flat.
+    let binary = "";
+    const CHUNK = 32768;
+    for (let i = 0; i < uint8.length; i += CHUNK) {
+      binary += String.fromCharCode.apply(null, uint8.subarray(i, i + CHUNK) as unknown as number[]);
+    }
+    const base64 = btoa(binary);
     const fileName = `update_${latestTag}.apk`;
     await Filesystem.writeFile({
       path: fileName,

@@ -156,7 +156,10 @@ export function assessJitai(params: {
     }
   }
 
-  if (params.daysSinceLastCheckin >= 3) {
+  // "Inactivity" requires prior activity: both UI call sites pass a large sentinel (99/999) when NO
+  // check-in exists yet, which used to show a false "Haven't heard from you in a bit" to brand-new
+  // users within their first minute (2026-07-17 tester pass). No history → nothing to be inactive from.
+  if (params.daysSinceLastCheckin >= 3 && params.moodHistory.length > 0) {
     triggers.push("inactivity");
   }
 

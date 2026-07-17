@@ -21,10 +21,13 @@ interface DailyContent {
   tipLabel: string;
 }
 
-const POOL: DailyContent[] = [
+// Exported for the honesty guard test: this pool is documented non-personalized, so no entry may
+// claim personal observation ("your data", "I've watched you") — that's a fabricated over-claim on
+// a fresh install (2026-07-17 tester pass; TRANSPARENCY.md over-claim precedent).
+export const POOL: DailyContent[] = [
   { quote: "No feeling is final. I've seen that hold true — even on the days it doesn't feel like it.", attribution: "Nila", tip: "Try naming the emotion you're feeling right now — just one word. It helps to name it.", tipLabel: "Name it" },
   { quote: "You are not your thoughts. You're the one noticing them — and that matters.", attribution: "Nila", tip: "When a thought pulls you away, say 'thinking' quietly to yourself and come back to right now.", tipLabel: "Notice it" },
-  { quote: "Small steps are still steps. I've watched you take them.", attribution: "Nila", tip: "Choose one tiny thing that feels doable today and celebrate finishing it — no matter how small.", tipLabel: "One thing" },
+  { quote: "Small steps are still steps. They count, even when nobody sees them.", attribution: "Nila", tip: "Choose one tiny thing that feels doable today and celebrate finishing it — no matter how small.", tipLabel: "One thing" },
   { quote: "The hard moments are where the light gets in. Not because they're good — because you're still here through them.", attribution: "Nila", tip: "Notice a moment of kindness today — from someone else, or from yourself.", tipLabel: "Kindness watch" },
   { quote: "Rest is not a reward. It's part of the work. I mean that.", attribution: "Nila", tip: "Lie down for 5 minutes with no agenda. Just breathe. That's enough.", tipLabel: "Rest now" },
   { quote: "Be gentle with yourself. You're doing the best you can — and I can see that.", attribution: "Nila", tip: "Put your hand on your chest and take three slow breaths. Feel the warmth.", tipLabel: "Self-soothe" },
@@ -42,10 +45,10 @@ const POOL: DailyContent[] = [
   { quote: "Let everything happen to you: beauty and terror. Just keep going. I'm right here.", attribution: "Nila", tip: "Accept one difficult feeling without fighting it for 60 seconds. Just let it be.", tipLabel: "Ride the wave" },
   { quote: "Nature doesn't hurry, yet everything is accomplished. You can move at your own pace too.", attribution: "Nila", tip: "Drink a glass of water slowly. Feel the coolness. Notice the simplicity of it.", tipLabel: "Slow sip" },
   { quote: "There's a crack in everything. That's how the light gets in — and you have plenty of both.", attribution: "Nila", tip: "Find one imperfect thing and appreciate it exactly as it is. No fixing needed.", tipLabel: "Perfect imperfection" },
-  { quote: "You are stronger than you know. I've seen it in the way you keep showing up.", attribution: "Nila", tip: "Stand up, stretch your arms overhead, and take a deep breath. Feel the length of you.", tipLabel: "Stretch it out" },
+  { quote: "You are stronger than you know. Showing up at all is proof of that.", attribution: "Nila", tip: "Stand up, stretch your arms overhead, and take a deep breath. Feel the length of you.", tipLabel: "Stretch it out" },
   { quote: "The past doesn't define the future. Every day is a chance to begin again.", attribution: "Nila", tip: "Visualize one positive thing that could happen tomorrow. Let yourself want it.", tipLabel: "Look ahead" },
   { quote: "Every day is a fresh beginning. Yesterday's mistakes don't get to write today's story.", attribution: "Nila", tip: "Let go of one thing from yesterday. Today is unwritten — and that's a good thing.", tipLabel: "Fresh start" },
-  { quote: "In the middle of difficulty lies opportunity. Not a platitude — I've seen it in your data.", attribution: "Nila", tip: "What's one thing this tough moment is teaching you? Just one.", tipLabel: "Find the lesson" },
+  { quote: "In the middle of difficulty lies opportunity. Not a platitude — hard moments really can teach us things.", attribution: "Nila", tip: "What's one thing this tough moment is teaching you? Just one.", tipLabel: "Find the lesson" },
   { quote: "You've survived 100% of your bad days. That's a perfect record.", attribution: "Nila", tip: "Pat yourself on the back — literally. You're still here. That's everything.", tipLabel: "Own it" },
   { quote: "What you seek is seeking you. The calm you want is already in you — it just needs space.", attribution: "Nila", tip: "Close your eyes and picture the calmest place you've ever been. Stay there for a minute.", tipLabel: "Mental escape" },
   { quote: "The most important conversation is the one you have with yourself. Make it a kind one.", attribution: "Nila", tip: "Check your self-talk today. Would you say it to a friend? If not, try again.", tipLabel: "Filter check" },

@@ -84,14 +84,25 @@ describe("assessJitai", () => {
     expect(r.triggers).toContain("mood_deterioration");
   });
 
-  it("detects inactivity (>3 days since last checkin)", () => {
+  it("detects inactivity (>3 days since last checkin) when history exists", () => {
     const r = assessJitai({
       sleep: null,
-      moodHistory: [],
+      moodHistory: mockMoods([5]),
       daysSinceLastCheckin: 4,
       usageAnalytics: emptyUsage,
     });
     expect(r.triggers).toContain("inactivity");
+  });
+
+  it("does NOT flag inactivity for a brand-new user with no check-in history", () => {
+    // UI call sites pass a 99/999 sentinel when no check-in exists — that must not read as inactivity.
+    const r = assessJitai({
+      sleep: null,
+      moodHistory: [],
+      daysSinceLastCheckin: 999,
+      usageAnalytics: emptyUsage,
+    });
+    expect(r.triggers).not.toContain("inactivity");
   });
 
   it("detects elevation risk from user text", () => {

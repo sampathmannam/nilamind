@@ -25,7 +25,10 @@ export function loadNilaMemories(): SessionMemory[] {
   try {
     const raw = secureLocal.getItem(KEY);
     const arr = raw ? JSON.parse(raw) : [];
-    return Array.isArray(arr) ? arr : [];
+    if (!Array.isArray(arr)) return [];
+    // Element-shape filter: a phrase-backup restore (identity.ts) writes restored keys verbatim, so an
+    // older-schema or corrupt element would otherwise flow into every consumer of these memories.
+    return arr.filter((m): m is SessionMemory => typeof m?.note === "string" && typeof m?.date === "string");
   } catch {
     return [];
   }

@@ -116,7 +116,11 @@ if ((import.meta as any).env?.DEV) {
 // Optional: register a free API LLM backend when explicitly enabled via Vite env variables.
 // Useful for testing against a cloud model (e.g., OpenAI) without relying on on‑device
 // inference. The backend respects the same {@link LocalLlmBackend} contract.
-if ((import.meta as any).env?.VITE_USE_FREE_API_LLM) {
+// DEV-gated like the Ollama block above: a release build must NEVER be able to route the
+// conversation to a remote endpoint via a build-time env var — the only sanctioned cloud path is
+// the user-consented Settings tier at the localLlm seam. The DEV gate also lets Vite tree-shake
+// the adapter chunk out of production bundles entirely.
+if ((import.meta as any).env?.DEV && (import.meta as any).env?.VITE_USE_FREE_API_LLM) {
   Promise.all([
     import("./services/freeApiLlmAdapter"),
     import("./services/localLlm"),

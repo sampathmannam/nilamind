@@ -54,7 +54,7 @@ export function checkAssessmentPrompts(): AssessmentPrompt[] {
   // ── Contextual prompts (signal-based) ──────────────────────────────────
   // Elevation signal → suggest ASRM (mania screening)
   const elevation = emaElevationSignal();
-  if (elevation) {
+  if (elevation !== "none") {
     const asrmDays = daysSince(latestFor("ASRM"));
     if (asrmDays === null || asrmDays >= 7) {
       prompts.push({

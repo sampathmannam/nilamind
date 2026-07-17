@@ -80,12 +80,14 @@ describe("nav — winddown aux view", () => {
   });
 });
 
-describe("nav — understand aux view", () => {
-  it("resolves understand to an aux view", () => {
-    expect(resolveNavTarget("understand")).toEqual({ kind: "aux", view: "understand" });
+describe("nav — retired understand aux view", () => {
+  // "understand" had no App.tsx case (rendered a dead "Not available" box) and zero go() callers —
+  // retired 2026-07-17. An unknown target is a deliberate no-op, never a blank screen.
+  it("resolves understand to unknown (retired)", () => {
+    expect(resolveNavTarget("understand")).toEqual({ kind: "unknown", target: "understand" });
   });
-  it("lists understand in the allowlist", () => {
-    expect(KNOWN_AUX_VIEWS).toContain("understand");
+  it("does not list understand in the allowlist", () => {
+    expect(KNOWN_AUX_VIEWS).not.toContain("understand");
   });
 });
 

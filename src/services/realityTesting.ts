@@ -110,8 +110,12 @@ export function estimateDistress(text: string): number {
  * Used as a nilaContext block when memories are surfaced.
  */
 export function memoryBiasBlock(memories: { note: string; date: string }[]): string {
-  if (memories.length < 2) return "";
-  const entries: MemoryEntry[] = memories.map((m) => ({
+  // Persisted memories are not shape-validated on load (and can arrive via phrase-backup restore from an
+  // older schema), so a null/note-less element must degrade to "no signal" — this block is assembled on
+  // EVERY chat turn, and a throw here takes the whole system prompt down with it.
+  const usable = memories.filter((m): m is { note: string; date: string } => typeof m?.note === "string");
+  if (usable.length < 2) return "";
+  const entries: MemoryEntry[] = usable.map((m) => ({
     text: m.note,
     distress: estimateDistress(m.note),
     evidence: 5, // unknown — treat as neutral
