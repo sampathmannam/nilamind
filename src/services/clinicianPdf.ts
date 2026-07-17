@@ -255,6 +255,7 @@ export function generateClinicianPdfBlob(input: ClinicianReportInput, chartInput
 
     renderTitle(canvas, "NilaMind Clinician Summary");
     renderMetaLine(canvas, input.periodLabel);
+    if (input.coverId) renderMetaLine(canvas, `Cover ID: ${input.coverId}`);
     renderMetaLine(canvas, `${input.periodDays}-day report · Clinical Snapshot · generated from on-device data`);
     canvas.y += 2;
 

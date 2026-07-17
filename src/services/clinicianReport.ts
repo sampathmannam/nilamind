@@ -57,6 +57,8 @@ import type { ClinicianSupportsRecapForReport } from "./clinicianAggregations";
 
 export interface ClinicianReportInput {
   periodLabel: string; // e.g. "Week ending 2026-07-12" or "Month ending 2026-07-12"
+  /** BIP39-derived pseudonymous cover ID (e.g. "apple-rocket-ocean"). Never a real name. */
+  coverId?: string;
   periodDays: number; // 7, 30 or 90
   totalCheckins: number;
   daysActive: number;
@@ -151,6 +153,7 @@ export function buildClinicianReport(input: ClinicianReportInput): string {
 
   lines.push("NilaMind Clinician Summary");
   lines.push(input.periodLabel);
+  if (input.coverId) lines.push(`  Cover ID: ${input.coverId}`);
   lines.push(`  ${input.periodDays}-day report · generated from on-device data`);
   lines.push(SEPARATOR);
   lines.push("");

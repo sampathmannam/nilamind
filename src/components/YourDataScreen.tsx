@@ -21,6 +21,7 @@ import { loadPact } from "../services/pact";
 import { parseSafetyPlan } from "../services/safetyPlan";
 import { listCaregiverContacts } from "../services/caregiverContacts";
 import { loadSessions as loadPeerSessions } from "../services/peerSupport";
+import { getCoverId } from "../services/coverId";
 import { loadConnections } from "../services/humanConnection";
 import { gatherClinicianUsage, protocolsCompletedInPeriod, periodCutoffIso, type ReportPeriod } from "../services/clinicianPeriod";
 import { loadInsights } from "../services/nilaInsights";
@@ -739,8 +740,9 @@ valuesClarified: []
        const supportsRecap = summarizeSupportsRecap(caregivers, peerSessions);
 
        const input: ClinicianReportInput = {
-         periodLabel,
-         periodDays,
+          periodLabel,
+          coverId: getCoverId(),
+          periodDays,
          totalCheckins,
          daysActive,
          avgIntensity,
