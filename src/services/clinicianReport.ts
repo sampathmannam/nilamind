@@ -48,6 +48,7 @@ export interface ClinicianEpisodeSummary {
 
 import type { ClinicianUsage } from "./clinicianPeriod";
 import type { ClinicianPactForReport } from "./clinicianAggregations";
+import type { ClinicianConnectionsForReport } from "./clinicianAggregations";
 
 export interface ClinicianReportInput {
   periodLabel: string; // e.g. "Week ending 2026-07-12" or "Month ending 2026-07-12"
@@ -71,6 +72,11 @@ export interface ClinicianReportInput {
    * Optional so legacy input fixtures (and any non-NilaMind callers) keep working.
    */
   pactState?: ClinicianPactForReport;
+  /**
+   * Phase 20.1 (B8): social connection log — how often, by what means, isolated/chronically isolated.
+   * Privacy: raw dates/people never leave; only counts and type breakdown.
+   */
+  connections?: ClinicianConnectionsForReport;
   protocolsCompleted: number;
   nilaSessions: number;
   featuresUsed: string[];
@@ -293,6 +299,32 @@ export function buildClinicianReport(input: ClinicianReportInput): string {
       lines.push(`  Stale re-confirmation (>90d): ${p.isStale ? "yes — well-self should re-confirm" : "no"}`);
     }
     lines.push("  Note: self-authored support arrangement for context only — not a clinical directive.");
+    lines.push("");
+  }
+
+  // Phase 20.1 (B8) — Social connection summary. Research: Social isolation is a documented
+  // depression/bipolar relapse risk factor (Sylvies 2019; IPSRT). The clinician benefits from
+  // understanding HOW connected the patient is (not who they connected with). Privacy: the block
+  // never exposes specific people, dates, or locations — only weekly counts and connection types.
+  if (input.connections) {
+    const c = input.connections;
+    lines.push("Social Connection");
+    if (!c.hasData) {
+      lines.push("  No connection logs in this period.");
+    } else {
+      lines.push(`  Total logged connections: ${c.totalConnections}`);
+      const typeLines = Object.entries(c.byType)
+        .map(([type, n]) => `${type.replace(/_/g, " ")}: ${n}`)
+        .join(", ");
+      lines.push(`  By type: ${typeLines}`);
+      lines.push(`  Recent (last 7 days): ${c.lastWeekCount} connection${c.lastWeekCount !== 1 ? "s" : ""} — ${c.recentLevel}`);
+      if (c.persistentlyLow) {
+        lines.push("  Pattern: chronically low social contact across this period");
+      }
+      if (c.weeklyCounts.length > 0) {
+        lines.push(`  Weeks with activity: ${c.weeklyCounts.length}`);
+      }
+    }
     lines.push("");
   }
 

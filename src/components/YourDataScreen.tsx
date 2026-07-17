@@ -16,8 +16,9 @@ import { recordExportAudit, getExportAudit, type ExportAuditEntry, type ExportKi
 import type { ClinicianReportInput, ClinicianMedication, AssessmentTrajectory } from "../services/clinicianReport";
 import { generateClinicianPdfBlob } from "../services/clinicianPdf";
 import { readEpisodeMarkers } from "../services/episodeMarker";
-import { summarizePactForReport } from "../services/clinicianAggregations";
+import { summarizePactForReport, summarizeConnectionsForReport } from "../services/clinicianAggregations";
 import { loadPact } from "../services/pact";
+import { loadConnections } from "../services/humanConnection";
 import { gatherClinicianUsage, protocolsCompletedInPeriod, periodCutoffIso, type ReportPeriod } from "../services/clinicianPeriod";
 import { loadInsights } from "../services/nilaInsights";
 import { loadRhythm, computeRhythmRegularity, parseTime, type RhythmEntry, type AnchorKey, type RhythmAnchors } from "../services/socialRhythm";
@@ -626,6 +627,12 @@ valuesClarified: []
       // docs/superpowers/plans/2026-07-17-clinician-report-holistic-research-and-design.md.
       const pactState = summarizePactForReport(loadPact());
 
+      // Phase-20 (B8) — Social connection summary. Privacy: raw dates/people never leave;
+      // only weekly counts and connection types. see plan §4.B.8.
+      const allConnections = loadConnections();
+      const periodConnections = allConnections.filter((c) => c.date >= cutoff);
+      const connections = summarizeConnectionsForReport(periodConnections, now);
+
       const stats = nilaStats();
       const featuresUsed = featureAdoption();
 
@@ -676,6 +683,7 @@ valuesClarified: []
            episodes,
             phaseMarkers,
             pactState,
+            connections,
             diaryCardSummary,
            protocolsCompleted,
           nilaSessions: usage.nilaTurns,

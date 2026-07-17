@@ -191,6 +191,47 @@ describe("buildClinicianReport", () => {
     expect(report).not.toContain("Support Arrangement");
   });
 
+  // Phase 20.1 B8 — social connection summary
+  it("renders the Social Connection block when connections is supplied", () => {
+    const report = buildClinicianReport({
+      ...baseInput,
+      connections: {
+        hasData: true,
+        totalConnections: 8,
+        byType: { call: 3, text: 4, in_person: 1 },
+        recentLevel: "adequate",
+        lastWeekCount: 3,
+        persistentlyLow: false,
+        weeklyCounts: [{ week: "2026-07-06", count: 3 }, { week: "2026-07-13", count: 5 }],
+      },
+    });
+    expect(report).toContain("Social Connection");
+    expect(report).toContain("8");
+    expect(report).toContain("adequate");
+    expect(report).toContain("call: 3");
+    expect(report).toContain("text: 4");
+    expect(report).toContain("in person: 1");
+    expect(report).toContain("3 connections"); // last-week count
+    expect(report).not.toContain("chronically low");
+  });
+
+  it("shows chronically-low pattern when persistentlyLow=true", () => {
+    const report = buildClinicianReport({
+      ...baseInput,
+      connections: {
+        hasData: true, totalConnections: 2, byType: { call: 2 },
+        recentLevel: "low", lastWeekCount: 0, persistentlyLow: true,
+        weeklyCounts: [{ week: "2026-07-06", count: 1 }, { week: "2026-07-13", count: 1 }],
+      },
+    });
+    expect(report).toContain("chronically low");
+  });
+
+  it("omits the Social Connection block entirely when connections is absent", () => {
+    const report = buildClinicianReport(baseInput);
+    expect(report).not.toContain("Social Connection");
+  });
+
   it("never renders a Temporal Risk Assessment section — F11/F12/F13/F14: computed risk scores shown to a clinician risk automation bias and fail FDA's Non-Device CDS exemption without disclosed validation", () => {
     const report = buildClinicianReport(baseInput);
     expect(report).not.toContain("Temporal Risk Assessment");
