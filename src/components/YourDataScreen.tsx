@@ -22,6 +22,7 @@ import { parseSafetyPlan } from "../services/safetyPlan";
 import { listCaregiverContacts } from "../services/caregiverContacts";
 import { loadSessions as loadPeerSessions } from "../services/peerSupport";
 import { getCoverId } from "../services/coverId";
+import { voiceMoodSignal, computeVoiceMetrics, type VoiceSession } from "../services/voicePatterns";
 import { loadConnections } from "../services/humanConnection";
 import { gatherClinicianUsage, protocolsCompletedInPeriod, periodCutoffIso, type ReportPeriod } from "../services/clinicianPeriod";
 import { loadInsights } from "../services/nilaInsights";
@@ -739,6 +740,21 @@ valuesClarified: []
        const peerSessions = (() => { try { return loadPeerSessions(); } catch { return []; } })();
        const supportsRecap = summarizeSupportsRecap(caregivers, peerSessions);
 
+       // Phase 20.6 — voice signal. Opt-in by structure: only included when the patient
+       // has voice sessions. No transcripts or audio — only aggregate metrics.
+       const voiceSignal = (() => {
+         try {
+           const raw = secureLocal.getItem("nilamind_voice_sessions");
+           if (!raw) return undefined;
+           const sessions: VoiceSession[] = JSON.parse(raw);
+           const recent = sessions.filter((s) => s.endedAt > 0 && s.wordCount > 0);
+           if (recent.length === 0) return undefined;
+           const metrics = recent.map(computeVoiceMetrics);
+           const avgSpeakingRate = Math.round(metrics.reduce((a, m) => a + m.speakingRate, 0) / metrics.length);
+           return { sessionCount: recent.length, avgSpeakingRate, signal: voiceMoodSignal() };
+         } catch { return undefined; }
+       })();
+
        const input: ClinicianReportInput = {
           periodLabel,
           coverId: getCoverId(),
@@ -760,6 +776,7 @@ valuesClarified: []
           safetyPlan,
           medCorrelation,
           supportsRecap,
+          voiceSignal,
           diaryCardSummary,
           protocolsCompleted,
           nilaSessions: usage.nilaTurns,
