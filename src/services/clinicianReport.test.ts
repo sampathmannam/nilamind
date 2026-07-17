@@ -445,3 +445,29 @@ describe("buildClinicianReport", () => {
     expect(report).not.toContain("DBT Diary Card Summary");
   });
 });
+
+// Phase 20.1 B7 — medication-mood correlation render
+describe("medCorrelation render (Phase 20.1 B7)", () => {
+  it("renders Medication-Mood Correlation when medCorrelation has perMed entries", () => {
+    const report = buildClinicianReport({
+      ...baseInput,
+      medCorrelation: {
+        overallAdherence: 80,
+        perMed: [
+          { name: "Sertraline", adherenceRate: 100, avgMoodWhenTaken: 3.2, avgMoodWhenMissed: null, daysInPeriod: 30, daysTaken: 30, daysMissed: 0 },
+          { name: "Lithium", adherenceRate: 70, avgMoodWhenTaken: 4.1, avgMoodWhenMissed: 7.3, daysInPeriod: 30, daysTaken: 21, daysMissed: 9 },
+        ],
+      },
+    });
+    expect(report).toContain("Medication-Mood Correlation");
+    expect(report).toContain("Overall adherence: 80%");
+    expect(report).toContain("Sertraline: 100% adherence (30 taken / 0 missed)");
+    expect(report).toContain("Lithium: 70% adherence (21 taken / 9 missed)");
+    expect(report).toContain("taken=4.1 vs missed=7.3");
+  });
+
+  it("omits Medication-Mood Correlation when absent or empty", () => {
+    const report = buildClinicianReport(baseInput);
+    expect(report).not.toContain("Medication-Mood Correlation");
+  });
+});

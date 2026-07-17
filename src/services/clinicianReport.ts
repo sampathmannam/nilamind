@@ -52,6 +52,7 @@ import type { ClinicianConnectionsForReport } from "./clinicianAggregations";
 import type { ClinicianWhatDidntHelpForReport } from "./clinicianAggregations";
 import type { ClinicianThoughtRecordsForReport } from "./clinicianAggregations";
 import type { ClinicianSafetyPlanForReport } from "./clinicianAggregations";
+import type { ClinicianMedCorrelationForReport } from "./clinicianAggregations";
 
 export interface ClinicianReportInput {
   periodLabel: string; // e.g. "Week ending 2026-07-12" or "Month ending 2026-07-12"
@@ -86,6 +87,8 @@ export interface ClinicianReportInput {
   thoughtRecords?: ClinicianThoughtRecordsForReport;
   /** Phase 20.1 (B2): safety plan completion metadata (section counts, last updated). */
   safetyPlan?: ClinicianSafetyPlanForReport;
+  /** Phase 20.1 (B7): per-medication adherence + mood correlation (taken vs missed days). */
+  medCorrelation?: ClinicianMedCorrelationForReport;
   protocolsCompleted: number;
   nilaSessions: number;
   featuresUsed: string[];
@@ -387,6 +390,25 @@ export function buildClinicianReport(input: ClinicianReportInput): string {
       lines.push(`  ${section}: ${n} ${n === 1 ? "entry" : "entries"}`);
     }
     if (sp.lastUpdated) lines.push(`  Last updated: ${sp.lastUpdated}`);
+    lines.push("");
+  }
+
+  // Phase 20.1 (B7) — medication-mood correlation. Cross-references adherence logs with
+  // mood check-ins to surface whether missed doses correlate with mood dips. Clinicians
+  // use this to evaluate medication effectiveness and adherence barriers.
+  // Privacy: only numeric aggregates (counts, averages, percentages) — no log content.
+  if (input.medCorrelation && input.medCorrelation.perMed.length > 0) {
+    const mc = input.medCorrelation;
+    lines.push("Medication-Mood Correlation");
+    lines.push(`  Overall adherence: ${mc.overallAdherence}%`);
+    for (const m of mc.perMed) {
+      lines.push(`  ${m.name}: ${m.adherenceRate}% adherence (${m.daysTaken} taken / ${m.daysMissed} missed)`);
+      if (m.avgMoodWhenTaken != null && m.avgMoodWhenMissed != null) {
+        lines.push(`    Avg mood intensity: taken=${m.avgMoodWhenTaken} vs missed=${m.avgMoodWhenMissed}`);
+      } else if (m.avgMoodWhenTaken != null) {
+        lines.push(`    Avg mood intensity (taken days): ${m.avgMoodWhenTaken}`);
+      }
+    }
     lines.push("");
   }
 

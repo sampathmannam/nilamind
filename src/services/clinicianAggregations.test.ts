@@ -2,12 +2,15 @@ import { describe, it, expect } from "vitest";
 import type { Pact } from "./pact";
 import type { ConnectionRecord } from "./humanConnection";
 import type { SafetyPlan } from "../types";
+import type { Medication, MedicationLog } from "./medicationAdherence";
+import type { CheckInEntry } from "../types";
 import {
   summarizePactForReport,
   summarizeConnectionsForReport,
   summarizeWhatDidntHelp,
   summarizeThoughtRecordsForReport,
   summarizeSafetyPlanForReport,
+  summarizeMedCorrelation,
   type ClinicianPactForReport,
 } from "./clinicianAggregations";
 
@@ -401,5 +404,93 @@ describe("summarizeSafetyPlanForReport (Phase 20.1 B2)", () => {
     expect(s).not.toContain("RAW_PRIVATE_STRATEGY");
     expect(s).toContain("hasAnySection");
     expect(s).toContain("sectionCounts");
+  });
+});
+
+// Phase 20.1 B7 — medication-mood correlation for clinician PDF
+describe("summarizeMedCorrelation (Phase 20.1 B7)", () => {
+  const makeMed = (id: string, name: string): Medication => ({
+    id, name, dose: "10mg", time: "08:00", schedule: "daily", active: true,
+  });
+  const makeLog = (medId: string, date: string, taken: boolean): MedicationLog => ({
+    id: `log_${medId}_${date}`, medId, date, taken, takenAt: taken ? "08:15" : "", sideEffects: [],
+  });
+  const makeCheckin = (date: string, intensity: number): CheckInEntry => ({
+    id: `c_${date}`, date, timestamp: "12:00", emotion: "Okay", intensity, context: "test",
+  });
+
+  it("returns empty when no medications exist", () => {
+    const result = summarizeMedCorrelation([], [], []);
+    expect(result.perMed).toEqual([]);
+    expect(result.overallAdherence).toBe(0);
+  });
+
+  it("computes adherence rate per medication", () => {
+    const meds = [makeMed("m1", "Sertraline")];
+    const logs = [
+      makeLog("m1", "2026-07-10", true),
+      makeLog("m1", "2026-07-11", true),
+      makeLog("m1", "2026-07-12", false),
+      makeLog("m1", "2026-07-13", true),
+    ];
+    const result = summarizeMedCorrelation(logs, [], meds);
+    expect(result.perMed.length).toBe(1);
+    expect(result.perMed[0].name).toBe("Sertraline");
+    expect(result.perMed[0].adherenceRate).toBeCloseTo(75);
+    expect(result.perMed[0].daysTaken).toBe(3);
+    expect(result.perMed[0].daysMissed).toBe(1);
+  });
+
+  it("computes mood on taken vs missed days", () => {
+    const meds = [makeMed("m1", "Lithium")];
+    const logs = [
+      makeLog("m1", "2026-07-10", true),
+      makeLog("m1", "2026-07-11", true),
+      makeLog("m1", "2026-07-12", false),
+      makeLog("m1", "2026-07-13", false),
+    ];
+    const checkins = [
+      makeCheckin("2026-07-10", 3),
+      makeCheckin("2026-07-11", 4),
+      makeCheckin("2026-07-12", 7),
+      makeCheckin("2026-07-13", 8),
+    ];
+    const result = summarizeMedCorrelation(logs, checkins, meds);
+    expect(result.perMed[0].avgMoodWhenTaken).toBeCloseTo(3.5);
+    expect(result.perMed[0].avgMoodWhenMissed).toBeCloseTo(7.5);
+  });
+
+  it("computes overall adherence across all meds", () => {
+    const meds = [makeMed("m1", "A"), makeMed("m2", "B")];
+    const logs = [
+      makeLog("m1", "2026-07-10", true),
+      makeLog("m1", "2026-07-11", true),
+      makeLog("m2", "2026-07-10", false),
+      makeLog("m2", "2026-07-11", true),
+    ];
+    const result = summarizeMedCorrelation(logs, [], meds);
+    expect(result.overallAdherence).toBeCloseTo(75);
+  });
+
+  it("handles med with no checkins on taken/missed days (null averages)", () => {
+    const meds = [makeMed("m1", "Prozac")];
+    const logs = [makeLog("m1", "2026-07-10", true), makeLog("m1", "2026-07-11", false)];
+    const result = summarizeMedCorrelation(logs, [], meds);
+    expect(result.perMed[0].avgMoodWhenTaken).toBeNull();
+    expect(result.perMed[0].avgMoodWhenMissed).toBeNull();
+  });
+
+  it("only includes active medications in perMed", () => {
+    const active = makeMed("m1", "Active");
+    active.active = true;
+    const inactive = makeMed("m2", "Inactive");
+    inactive.active = false;
+    const logs = [
+      makeLog("m1", "2026-07-10", true),
+      makeLog("m2", "2026-07-10", true),
+    ];
+    const result = summarizeMedCorrelation(logs, [], [active, inactive]);
+    expect(result.perMed.length).toBe(1);
+    expect(result.perMed[0].name).toBe("Active");
   });
 });
