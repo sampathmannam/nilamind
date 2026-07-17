@@ -31,10 +31,11 @@ key.properties
 *.litertlm
 *.bin
 
-# On-device STT model + ONNX Runtime WASM — runtime-downloaded (onDeviceAssets.ts), not bundled; keeps
-# the source tree free of prebuilt binaries (required for F-Droid's from-source build scanner).
+# On-device STT model — runtime-downloaded (onDeviceAssets.ts), not bundled; keeps the source tree free
+# of prebuilt binaries (required for F-Droid's from-source build scanner). The ONNX Runtime WASM binary
+# was reverted to bundled 2026-07-16 (see crisisEmbedder.ts) — safety-critical, correctness over scanner
+# cleanliness until the download path is re-verified.
 public/models/vosk-model-small-en-us-0.15.tgz
-public/ort/ort-wasm-simd-threaded.asyncify.wasm
 
 # Capacitor-synced web assets (generated from dist/ by `cap sync`)
 android/app/src/main/assets/public/

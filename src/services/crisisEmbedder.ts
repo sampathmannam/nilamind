@@ -1,20 +1,20 @@
 // Track B crisis classifier — the on-device embedder (MiniLM via Transformers.js).
 //
-// Loads a BUNDLED MiniLM (public/models/Xenova/all-MiniLM-L6-v2 — small ONNX weights, not scanner-flagged)
-// and runs it fully OFFLINE in the WebView, no network for inference itself. Produces the normalized
-// 384-dim sentence embedding the logistic-regression head in crisisClassifier.ts expects. Lazy singleton:
-// Transformers.js + the model load only on the FIRST crisis-gate check, so there's zero app-startup cost.
-// Any load/inference error throws and detectCrisis() catches it → degrades to the keyword scanner
-// (fail-closed, never worse than before) — this includes the ONNX Runtime WASM binary below not being
-// downloaded yet, so a first-run offline gap here narrows recall, it does not disable crisis detection.
+// Loads a BUNDLED MiniLM (public/models/Xenova/all-MiniLM-L6-v2) and runs it fully OFFLINE in the WebView —
+// no network, matching NilaMind's privacy promise. Produces the normalized 384-dim sentence embedding the
+// logistic-regression head in crisisClassifier.ts expects. Lazy singleton: Transformers.js + the model load
+// only on the FIRST crisis-gate check, so there's zero app-startup cost. Any load/inference error throws and
+// detectCrisis() catches it → degrades to the keyword scanner (fail-closed, never worse than before).
 //
-// The ONNX Runtime WASM binary itself (ort-wasm-simd-threaded.asyncify.wasm, ~22 MB, genuine compiled
-// code) is runtime-downloaded via onDeviceAssets.ts rather than bundled — an F-Droid from-source build
-// scanner flags any prebuilt .wasm found in the source tree, and unlike the MiniLM weights this really is
-// executable code, not app-agnostic data. Only the .wasm binary moves; the small JS glue that loads it
-// stays bundled in public/ort/ (see the `mjs` key below) since plain JS is normal, inspectable source.
+// 2026-07-16 REVERTED runtime-download of the ONNX Runtime WASM binary (was: onDeviceAssets.ts +
+// wasmPaths object form) back to fully bundled. That change shipped in v1.18.6 and correlated with a false
+// crisis-classifier trigger on an innocuous message ("I'm going to exercise") — scoreCrisis() only validates
+// the embedding's LENGTH (384), not its correctness, so a subtly wrong WASM runtime load can produce a
+// wrong-but-correctly-shaped embedding that silently feeds garbage into the logistic-regression head instead
+// of throwing. Root cause not yet isolated; reverting to the known-good bundled path is the safe move for a
+// safety-critical classifier. This means the app once again ships a prebuilt .wasm in its source tree, which
+// will fail F-Droid's build scanner for this one file — accepted trade until the download path is re-verified.
 import type { Embedder } from "./crisisClassifier";
-import { ON_DEVICE_ASSETS, getAssetUrl } from "./onDeviceAssets";
 
 let _pipe: unknown = null;
 let _loading: Promise<unknown> | null = null;
@@ -23,21 +23,16 @@ async function getPipe(): Promise<unknown> {
   if (_pipe) return _pipe;
   if (!_loading) {
     _loading = (async () => {
-      const [{ pipeline, env }, wasmUrl] = await Promise.all([
-        import("@huggingface/transformers"),
-        getAssetUrl(ON_DEVICE_ASSETS.ortWasm),
-      ]);
-      // OFFLINE INFERENCE — bundled model weights, never the network, once the WASM runtime is present.
+      const { pipeline, env } = await import("@huggingface/transformers");
+      // OFFLINE ONLY — bundled model + wasm, never the network.
       env.allowRemoteModels = false;
       env.allowLocalModels = true;
       env.localModelPath = "/models/"; // public/models → served at the app root
-      // onnxruntime-web: JS glue from the bundle, the wasm binary from the runtime-downloaded copy above
-      // (object form: `mjs` and `wasm` are resolved independently — see onnxruntime-web's flags.wasmPaths).
-      // SINGLE-THREADED: the Capacitor WebView is not cross-origin-isolated (no SharedArrayBuffer), so
-      // multi-threaded wasm would fail to start.
+      // onnxruntime-web: serve the wasm from the bundle, SINGLE-THREADED. The Capacitor WebView is not
+      // cross-origin-isolated (no SharedArrayBuffer), so multi-threaded wasm would fail to start.
       const wasmBackend = env.backends.onnx.wasm;
       if (wasmBackend) {
-        wasmBackend.wasmPaths = { mjs: "/ort/ort-wasm-simd-threaded.asyncify.mjs", wasm: wasmUrl };
+        wasmBackend.wasmPaths = "/ort/";
         wasmBackend.numThreads = 1;
         wasmBackend.proxy = false;
       }

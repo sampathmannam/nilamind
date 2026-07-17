@@ -23,14 +23,6 @@ vi.mock("@huggingface/transformers", () => ({
   },
 }));
 
-// The ONNX Runtime WASM binary is runtime-downloaded (onDeviceAssets.ts), not bundled — see that file's
-// docstring. Tests aren't a native platform, so getAssetUrl would reject; stub it to a fake URL so these
-// tests exercise crisisEmbedder's own logic, not the download path (covered separately).
-vi.mock("./onDeviceAssets", () => ({
-  ON_DEVICE_ASSETS: { ortWasm: { id: "ortWasm" } },
-  getAssetUrl: vi.fn().mockResolvedValue("blob:mock-ort-wasm-url"),
-}));
-
 describe("crisisEmbedder", () => {
   beforeEach(() => {
     mockPipeline.mockClear();
