@@ -10,6 +10,15 @@ export interface Medication {
   time: string; // HH:MM
   schedule: "daily" | "twice_daily" | "weekly" | "as_needed";
   active: boolean;
+  /** Phase 20.1b G3: dated dose-change history. Oldest-first. */
+  doseChanges?: DoseChange[];
+}
+
+export interface DoseChange {
+  medId: string;
+  date: string; // YYYY-MM-DD
+  oldDose: string;
+  newDose: string;
 }
 
 export interface MedicationLog {
@@ -25,6 +34,10 @@ export interface SideEffectEntry {
   symptom: string;
   severity: number; // 1-10
   bother: number; // 1-10
+  /** Phase 20.1b G4: ISO timestamp when the side effect was first logged. */
+  loggedAt?: string;
+  /** Phase 20.1b G4: ISO timestamp when the side effect resolved (absent = still active). */
+  resolvedAt?: string;
 }
 
 export function createMedication(name: string, dose: string, time: string, schedule: Medication["schedule"]): Medication {
@@ -45,16 +58,52 @@ export function saveMedications(meds: Medication[]): void {
 }
 
 export function logMedication(medId: string, taken: boolean, sideEffects: SideEffectEntry[]): MedicationLog {
+  const now = new Date().toISOString();
   const log: MedicationLog = {
     id: "mlog_" + Date.now(),
     medId,
-    date: new Date().toISOString().split("T")[0],
+    date: now.split("T")[0],
     taken,
     takenAt: taken ? new Date().toLocaleTimeString() : "",
-    sideEffects,
+    sideEffects: sideEffects.map((se) => ({ ...se, loggedAt: se.loggedAt ?? now })),
   };
   appendToSecureArray(LOGS_KEY, log);
   return log;
+}
+
+/**
+ * Phase 20.1b G3: Record a dose change for a medication.
+ * Appends a DoseChange entry and updates the medication's current dose.
+ */
+export function recordDoseChange(medId: string, oldDose: string, newDose: string): void {
+  const meds = loadMedications();
+  const med = meds.find((m) => m.id === medId);
+  if (!med) return;
+  if (!med.doseChanges) med.doseChanges = [];
+  med.doseChanges.push({
+    medId,
+    date: new Date().toISOString().split("T")[0],
+    oldDose,
+    newDose,
+  });
+  med.dose = newDose;
+  saveMedications(meds);
+}
+
+/**
+ * Phase 20.1b G4: Mark a specific side effect as resolved on a medication log entry.
+ * Sets resolvedAt to now. Only resolves the matching symptom; other side effects on
+ * the same log are untouched.
+ */
+export function resolveSideEffect(logId: string, symptom: string): void {
+  const logs = loadMedicationLogs();
+  const log = logs.find((l) => l.id === logId);
+  if (!log) return;
+  const se = log.sideEffects.find((s) => s.symptom === symptom && !s.resolvedAt);
+  if (se) {
+    se.resolvedAt = new Date().toISOString();
+    secureLocal.setItem(LOGS_KEY, JSON.stringify(logs));
+  }
 }
 
 export function loadMedicationLogs(): MedicationLog[] {

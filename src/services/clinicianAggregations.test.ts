@@ -14,8 +14,16 @@ import {
   summarizeSafetyPlanForReport,
   summarizeMedCorrelation,
   summarizeSupportsRecap,
+  summarizeDoseChanges,
+  summarizeSideEffectDuration,
+  summarizeRelapsePlanForReport,
   type ClinicianPactForReport,
 } from "./clinicianAggregations";
+import {
+  isRelapsePlanStale,
+  markRelapsePlanReviewed,
+  type RelapsePlan,
+} from "./relapsePlan";
 
 // Phase 20.1 (B12): pact state goes into the clinician report as a privacy-preserving status summary,
 // NEVER as the patient's name or letter content. Tests guard that boundary explicitly.
@@ -549,5 +557,273 @@ describe("summarizeSupportsRecap (Phase 20.1 B10)", () => {
     expect(result.peerSessionCount).toBe(1);
     expect(result.hasPeerData).toBe(true);
     expect(result.avgMoodImprovement).toBeNull();
+  });
+});
+
+// Phase 20.1b G3 — medication dose-change tracking for clinician PDF
+describe("summarizeDoseChanges (Phase 20.1b G3)", () => {
+  const now = new Date("2026-07-15T12:00:00.000Z");
+
+  it("returns empty when no dose changes exist", () => {
+    const result = summarizeDoseChanges([], now);
+    expect(result.hasData).toBe(false);
+    expect(result.changes).toEqual([]);
+  });
+
+  it("returns empty when medications have no doseChanges array", () => {
+    const meds = [{ id: "m1", name: "Lithium", dose: "300mg", time: "08:00", schedule: "daily" as const, active: true }];
+    const result = summarizeDoseChanges(meds, now);
+    expect(result.hasData).toBe(false);
+  });
+
+  it("extracts dose changes from medications and sorts by date descending", () => {
+    const meds = [{
+      id: "m1", name: "Lithium", dose: "600mg", time: "08:00", schedule: "daily" as const, active: true,
+      doseChanges: [
+        { medId: "m1", date: "2026-06-01", oldDose: "300mg", newDose: "450mg" },
+        { medId: "m1", date: "2026-07-10", oldDose: "450mg", newDose: "600mg" },
+      ],
+    }];
+    const result = summarizeDoseChanges(meds, now);
+    expect(result.hasData).toBe(true);
+    expect(result.changes.length).toBe(2);
+    expect(result.changes[0].newDose).toBe("600mg"); // most recent first
+    expect(result.changes[1].newDose).toBe("450mg");
+  });
+
+  it("includes medication name in each change entry", () => {
+    const meds = [{
+      id: "m1", name: "Quetiapine", dose: "200mg", time: "21:00", schedule: "daily" as const, active: true,
+      doseChanges: [
+        { medId: "m1", date: "2026-07-01", oldDose: "100mg", newDose: "200mg" },
+      ],
+    }];
+    const result = summarizeDoseChanges(meds, now);
+    expect(result.changes[0].medName).toBe("Quetiapine");
+  });
+
+  it("handles multiple medications with dose changes", () => {
+    const meds = [
+      { id: "m1", name: "Lithium", dose: "600mg", time: "08:00", schedule: "daily" as const, active: true,
+        doseChanges: [{ medId: "m1", date: "2026-07-10", oldDose: "300mg", newDose: "600mg" }] },
+      { id: "m2", name: "Lamotrigine", dose: "200mg", time: "08:00", schedule: "daily" as const, active: true,
+        doseChanges: [{ medId: "m2", date: "2026-07-05", oldDose: "100mg", newDose: "200mg" }] },
+    ];
+    const result = summarizeDoseChanges(meds, now);
+    expect(result.changes.length).toBe(2);
+    // Most recent first: Lithium (July 10) before Lamotrigine (July 5)
+    expect(result.changes[0].medName).toBe("Lithium");
+    expect(result.changes[1].medName).toBe("Lamotrigine");
+  });
+
+  it("caps at 10 dose changes to keep report concise", () => {
+    const meds = [{
+      id: "m1", name: "Test", dose: "10mg", time: "08:00", schedule: "daily" as const, active: true,
+      doseChanges: Array.from({ length: 15 }, (_, i) => ({
+        medId: "m1", date: `2026-07-${String(i + 1).padStart(2, "0")}`, oldDose: `${i}mg`, newDose: `${i + 1}mg`,
+      })),
+    }];
+    const result = summarizeDoseChanges(meds, now);
+    expect(result.changes.length).toBeLessThanOrEqual(10);
+  });
+});
+
+// Phase 20.1b G4 — side-effect duration/resolution for clinician PDF
+describe("summarizeSideEffectDuration (Phase 20.1b G4)", () => {
+  it("returns empty when no medication logs exist", () => {
+    const result = summarizeSideEffectDuration([]);
+    expect(result.hasData).toBe(false);
+    expect(result.activeSideEffects).toEqual([]);
+    expect(result.resolvedSideEffects).toEqual([]);
+  });
+
+  it("returns empty when no logs have side effects", () => {
+    const logs = [{
+      id: "log1", medId: "m1", date: "2026-07-10", taken: true, takenAt: "08:15", sideEffects: [],
+    }];
+    const result = summarizeSideEffectDuration(logs);
+    expect(result.hasData).toBe(false);
+  });
+
+  it("identifies active side effects (no resolvedAt)", () => {
+    const logs = [{
+      id: "log1", medId: "m1", date: "2026-07-10", taken: true, takenAt: "08:15",
+      sideEffects: [
+        { symptom: "nausea", severity: 5, bother: 4, loggedAt: "2026-07-10T08:15:00Z" },
+        { symptom: "drowsiness", severity: 3, bother: 2, loggedAt: "2026-07-10T08:15:00Z" },
+      ],
+    }];
+    const result = summarizeSideEffectDuration(logs);
+    expect(result.hasData).toBe(true);
+    expect(result.activeSideEffects.length).toBe(2);
+    expect(result.activeSideEffects[0].symptom).toBe("nausea");
+  });
+
+  it("identifies resolved side effects and computes duration", () => {
+    const logs = [{
+      id: "log1", medId: "m1", date: "2026-07-10", taken: true, takenAt: "08:15",
+      sideEffects: [{
+        symptom: "headache", severity: 6, bother: 5,
+        loggedAt: "2026-07-10T08:15:00Z", resolvedAt: "2026-07-13T08:15:00Z",
+      }],
+    }];
+    const result = summarizeSideEffectDuration(logs);
+    expect(result.resolvedSideEffects.length).toBe(1);
+    expect(result.resolvedSideEffects[0].symptom).toBe("headache");
+    expect(result.resolvedSideEffects[0].avgDurationDays).toBe(3);
+  });
+
+  it("groups same symptom across multiple logs", () => {
+    const logs = [
+      { id: "log1", medId: "m1", date: "2026-07-10", taken: true, takenAt: "08:15",
+        sideEffects: [{ symptom: "nausea", severity: 5, bother: 4, loggedAt: "2026-07-10T08:15:00Z" }] },
+      { id: "log2", medId: "m1", date: "2026-07-11", taken: true, takenAt: "08:15",
+        sideEffects: [{ symptom: "nausea", severity: 4, bother: 3, loggedAt: "2026-07-11T08:15:00Z" }] },
+    ];
+    const result = summarizeSideEffectDuration(logs);
+    expect(result.activeSideEffects.length).toBe(1);
+    expect(result.activeSideEffects[0].symptom).toBe("nausea");
+    expect(result.activeSideEffects[0].occurrenceCount).toBe(2);
+  });
+
+  it("computes avgSeverity across occurrences of the same symptom", () => {
+    const logs = [
+      { id: "log1", medId: "m1", date: "2026-07-10", taken: true, takenAt: "08:15",
+        sideEffects: [{ symptom: "dizziness", severity: 6, bother: 5, loggedAt: "2026-07-10T08:15:00Z" }] },
+      { id: "log2", medId: "m1", date: "2026-07-11", taken: true, takenAt: "08:15",
+        sideEffects: [{ symptom: "dizziness", severity: 4, bother: 3, loggedAt: "2026-07-11T08:15:00Z" }] },
+    ];
+    const result = summarizeSideEffectDuration(logs);
+    expect(result.activeSideEffects[0].avgSeverity).toBe(5);
+  });
+});
+
+// Phase 20.1b G8 — relapse plan summary for clinician PDF
+describe("summarizeRelapsePlanForReport (Phase 20.1b G8)", () => {
+  it("returns empty when no relapse plan exists", () => {
+    const result = summarizeRelapsePlanForReport(null);
+    expect(result.hasData).toBe(false);
+  });
+
+  it("returns hasData=true when plan exists with some content", () => {
+    const plan = {
+      id: "rp_1", createdAt: "2026-06-01T10:00:00Z", updatedAt: "2026-07-10T10:00:00Z",
+      green: { signals: { thoughts: "steady", feelings: "calm", behaviors: "routine", physical: "ok" }, actions: { selfCare: ["sleep"], copingSkills: ["breathing"], reachOut: [], crisisHelp: [] } },
+      orange: { signals: { thoughts: "", feelings: "", behaviors: "", physical: "" }, actions: { selfCare: [], copingSkills: [], reachOut: [], crisisHelp: [] } },
+      red: { signals: { thoughts: "", feelings: "", behaviors: "", physical: "" }, actions: { selfCare: [], copingSkills: [], reachOut: [], crisisHelp: [] }, crisisLines: [], emergencyContacts: [] },
+    };
+    const result = summarizeRelapsePlanForReport(plan);
+    expect(result.hasData).toBe(true);
+  });
+
+  it("reports phase structure — which phases have signals or actions", () => {
+    const plan = {
+      id: "rp_1", createdAt: "2026-06-01T10:00:00Z", updatedAt: "2026-07-10T10:00:00Z",
+      green: { signals: { thoughts: "steady", feelings: "calm", behaviors: "", physical: "" }, actions: { selfCare: ["sleep"], copingSkills: [], reachOut: [], crisisHelp: [] } },
+      orange: { signals: { thoughts: "racing", feelings: "", behaviors: "", physical: "" }, actions: { selfCare: [], copingSkills: [], reachOut: ["friend"], crisisHelp: [] } },
+      red: { signals: { thoughts: "", feelings: "", behaviors: "", physical: "" }, actions: { selfCare: [], copingSkills: [], reachOut: [], crisisHelp: ["helpline"] }, crisisLines: ["988"], emergencyContacts: [] },
+    };
+    const result = summarizeRelapsePlanForReport(plan);
+    expect(result.greenSignalsCount).toBe(2);
+    expect(result.greenActionsCount).toBe(1);
+    expect(result.orangeSignalsCount).toBe(1);
+    expect(result.orangeActionsCount).toBe(1);
+    expect(result.redCrisisResources).toBe(1);
+  });
+
+  it("reports lastUpdated as YYYY-MM-DD", () => {
+    const plan = {
+      id: "rp_1", createdAt: "2026-06-01T10:00:00Z", updatedAt: "2026-07-10T14:30:00Z",
+      green: { signals: { thoughts: "", feelings: "", behaviors: "", physical: "" }, actions: { selfCare: [], copingSkills: [], reachOut: [], crisisHelp: [] } },
+      orange: { signals: { thoughts: "", feelings: "", behaviors: "", physical: "" }, actions: { selfCare: [], copingSkills: [], reachOut: [], crisisHelp: [] } },
+      red: { signals: { thoughts: "", feelings: "", behaviors: "", physical: "" }, actions: { selfCare: [], copingSkills: [], reachOut: [], crisisHelp: [] }, crisisLines: [], emergencyContacts: [] },
+    };
+    const result = summarizeRelapsePlanForReport(plan);
+    expect(result.lastUpdated).toBe("2026-07-10");
+  });
+
+  it("reports lastReviewed date if present", () => {
+    const plan = {
+      id: "rp_1", createdAt: "2026-06-01T10:00:00Z", updatedAt: "2026-07-10T10:00:00Z",
+      lastReviewedAt: "2026-07-05T10:00:00Z",
+      green: { signals: { thoughts: "", feelings: "", behaviors: "", physical: "" }, actions: { selfCare: [], copingSkills: [], reachOut: [], crisisHelp: [] } },
+      orange: { signals: { thoughts: "", feelings: "", behaviors: "", physical: "" }, actions: { selfCare: [], copingSkills: [], reachOut: [], crisisHelp: [] } },
+      red: { signals: { thoughts: "", feelings: "", behaviors: "", physical: "" }, actions: { selfCare: [], copingSkills: [], reachOut: [], crisisHelp: [] }, crisisLines: [], emergencyContacts: [] },
+    };
+    const result = summarizeRelapsePlanForReport(plan);
+    expect(result.lastReviewed).toBe("2026-07-05");
+  });
+
+  it("never leaks actual signal or action text content — only counts", () => {
+    const plan = {
+      id: "rp_1", createdAt: "2026-06-01T10:00:00Z", updatedAt: "2026-07-10T10:00:00Z",
+      green: { signals: { thoughts: "SECRET_THOUGHT", feelings: "SECRET_FEELING", behaviors: "", physical: "" }, actions: { selfCare: ["SECRET_ACTION"], copingSkills: [], reachOut: [], crisisHelp: [] } },
+      orange: { signals: { thoughts: "", feelings: "", behaviors: "", physical: "" }, actions: { selfCare: [], copingSkills: [], reachOut: [], crisisHelp: [] } },
+      red: { signals: { thoughts: "", feelings: "", behaviors: "", physical: "" }, actions: { selfCare: [], copingSkills: [], reachOut: [], crisisHelp: [] }, crisisLines: ["SECRET_LINE"], emergencyContacts: [] },
+    };
+    const s = JSON.stringify(summarizeRelapsePlanForReport(plan));
+    expect(s).not.toContain("SECRET_THOUGHT");
+    expect(s).not.toContain("SECRET_FEELING");
+    expect(s).not.toContain("SECRET_ACTION");
+    expect(s).not.toContain("SECRET_LINE");
+  });
+});
+
+// Phase 20.1b G9 — relapse plan review cycle (parity with safety plan's 14-day review)
+describe("isRelapsePlanStale / markRelapsePlanReviewed (Phase 20.1b G9)", () => {
+  const makePlan = (overrides: Partial<RelapsePlan> = {}): RelapsePlan => ({
+    id: "rp_1",
+    createdAt: "2026-06-01T10:00:00Z",
+    updatedAt: "2026-07-01T10:00:00Z",
+    green: { signals: { thoughts: "", feelings: "", behaviors: "", physical: "" }, actions: { selfCare: [], copingSkills: [], reachOut: [], crisisHelp: [] } },
+    orange: { signals: { thoughts: "", feelings: "", behaviors: "", physical: "" }, actions: { selfCare: [], copingSkills: [], reachOut: [], crisisHelp: [] } },
+    red: { signals: { thoughts: "", feelings: "", behaviors: "", physical: "" }, actions: { selfCare: [], copingSkills: [], reachOut: [], crisisHelp: [] }, crisisLines: [], emergencyContacts: [] },
+    ...overrides,
+  });
+
+  it("isRelapsePlanStale returns true when lastReviewedAt is > 30 days ago", () => {
+    const plan = makePlan({ lastReviewedAt: "2026-06-01T10:00:00Z" });
+    const now = new Date("2026-07-15T12:00:00Z");
+    expect(isRelapsePlanStale(plan, now)).toBe(true);
+  });
+
+  it("isRelapsePlanStale returns false when lastReviewedAt is < 30 days ago", () => {
+    const plan = makePlan({ lastReviewedAt: "2026-07-10T10:00:00Z" });
+    const now = new Date("2026-07-15T12:00:00Z");
+    expect(isRelapsePlanStale(plan, now)).toBe(false);
+  });
+
+  it("isRelapsePlanStale returns false at exactly 30 days", () => {
+    const plan = makePlan({ lastReviewedAt: "2026-06-15T12:00:00Z" });
+    const now = new Date("2026-07-15T12:00:00Z");
+    expect(isRelapsePlanStale(plan, now)).toBe(false);
+  });
+
+  it("isRelapsePlanStale returns true when never reviewed and updatedAt is > 30 days ago", () => {
+    const plan = makePlan({ updatedAt: "2026-06-01T10:00:00Z" }); // no lastReviewedAt
+    const now = new Date("2026-07-15T12:00:00Z");
+    expect(isRelapsePlanStale(plan, now)).toBe(true);
+  });
+
+  it("isRelapsePlanStale returns false when never reviewed but updatedAt is < 30 days ago", () => {
+    const plan = makePlan({ updatedAt: "2026-07-10T10:00:00Z" }); // no lastReviewedAt
+    const now = new Date("2026-07-15T12:00:00Z");
+    expect(isRelapsePlanStale(plan, now)).toBe(false);
+  });
+
+  it("markRelapsePlanReviewed sets lastReviewedAt to now", () => {
+    const plan = makePlan();
+    const now = new Date("2026-07-15T12:00:00Z");
+    const updated = markRelapsePlanReviewed(plan, now);
+    expect(updated.lastReviewedAt).toBe(now.toISOString());
+  });
+
+  it("markRelapsePlanReviewed preserves existing plan fields", () => {
+    const plan = makePlan({ lastReviewedAt: "2026-06-01T10:00:00Z" });
+    const now = new Date("2026-07-15T12:00:00Z");
+    const updated = markRelapsePlanReviewed(plan, now);
+    expect(updated.id).toBe("rp_1");
+    expect(updated.green.signals.thoughts).toBe("");
+    expect(updated.lastReviewedAt).toBe(now.toISOString());
   });
 });

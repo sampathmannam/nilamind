@@ -556,3 +556,230 @@ describe("voiceSignal render (Phase 20.6)", () => {
     expect(report).not.toContain("Voice Signal");
   });
 });
+
+// Phase 20.1b G3 — dose change timeline in clinician report
+describe("buildClinicianReport — dose changes (G3)", () => {
+  it("includes dose change timeline when doseChanges exist", () => {
+    const report = buildClinicianReport({
+      ...baseInput,
+      doseChanges: {
+        hasData: true,
+        changes: [
+          { medName: "Lithium", oldDose: "300mg", newDose: "600mg", date: "2026-07-10" },
+          { medName: "Lithium", oldDose: "150mg", newDose: "300mg", date: "2026-06-01" },
+        ],
+      },
+    });
+    expect(report).toContain("Medication Dose Changes");
+    expect(report).toContain("Lithium: 300mg → 600mg (2026-07-10)");
+    expect(report).toContain("Lithium: 150mg → 300mg (2026-06-01)");
+  });
+
+  it("omits dose change section when hasData is false", () => {
+    const report = buildClinicianReport({
+      ...baseInput,
+      doseChanges: { hasData: false, changes: [] },
+    });
+    expect(report).not.toContain("Medication Dose Changes");
+  });
+
+  it("omits dose change section when not provided", () => {
+    const report = buildClinicianReport(baseInput);
+    expect(report).not.toContain("Medication Dose Changes");
+  });
+});
+
+// Phase 20.1b G4 — side-effect duration in clinician report
+describe("buildClinicianReport — side-effect duration (G4)", () => {
+  it("includes side-effect summary when data exists", () => {
+    const report = buildClinicianReport({
+      ...baseInput,
+      sideEffectDuration: {
+        hasData: true,
+        activeSideEffects: [
+          { symptom: "nausea", occurrenceCount: 3, avgSeverity: 5 },
+        ],
+        resolvedSideEffects: [
+          { symptom: "headache", occurrenceCount: 1, avgSeverity: 6, avgDurationDays: 3 },
+        ],
+      },
+    });
+    expect(report).toContain("Side-Effect Duration");
+    expect(report).toContain("Active: nausea (3×, avg severity 5/10)");
+    expect(report).toContain("Resolved: headache (3 days avg)");
+  });
+
+  it("omits side-effect section when no data", () => {
+    const report = buildClinicianReport({
+      ...baseInput,
+      sideEffectDuration: { hasData: false, activeSideEffects: [], resolvedSideEffects: [] },
+    });
+    expect(report).not.toContain("Side-Effect Duration");
+  });
+
+  it("omits side-effect section when not provided", () => {
+    const report = buildClinicianReport(baseInput);
+    expect(report).not.toContain("Side-Effect Duration");
+  });
+});
+
+// Phase 20.1b G8 — relapse plan in clinician report
+describe("buildClinicianReport — relapse plan (G8)", () => {
+  it("includes relapse plan summary when data exists", () => {
+    const report = buildClinicianReport({
+      ...baseInput,
+      relapsePlan: {
+        hasData: true,
+        greenSignalsCount: 2,
+        greenActionsCount: 3,
+        orangeSignalsCount: 1,
+        orangeActionsCount: 2,
+        redCrisisResources: 1,
+        lastUpdated: "2026-07-10",
+        lastReviewed: "2026-07-05",
+      },
+    });
+    expect(report).toContain("Relapse Prevention Plan");
+    expect(report).toContain("Green phase: 2 signals, 3 actions");
+    expect(report).toContain("Orange phase: 1 signals, 2 actions");
+    expect(report).toContain("Red phase: 1 crisis resources");
+    expect(report).toContain("Last updated: 2026-07-10");
+    expect(report).toContain("Last reviewed: 2026-07-05");
+  });
+
+  it("omits relapse plan section when hasData is false", () => {
+    const report = buildClinicianReport({
+      ...baseInput,
+      relapsePlan: { hasData: false, greenSignalsCount: 0, greenActionsCount: 0, orangeSignalsCount: 0, orangeActionsCount: 0, redCrisisResources: 0, lastUpdated: null, lastReviewed: null },
+    });
+    expect(report).not.toContain("Relapse Prevention Plan");
+  });
+
+  it("omits relapse plan section when not provided", () => {
+    const report = buildClinicianReport(baseInput);
+    expect(report).not.toContain("Relapse Prevention Plan");
+  });
+
+  it("omits last-reviewed line when lastReviewed is null", () => {
+    const report = buildClinicianReport({
+      ...baseInput,
+      relapsePlan: { hasData: true, greenSignalsCount: 0, greenActionsCount: 0, orangeSignalsCount: 0, orangeActionsCount: 0, redCrisisResources: 0, lastUpdated: "2026-07-10", lastReviewed: null },
+    });
+    expect(report).toContain("Relapse Prevention Plan");
+    expect(report).not.toContain("Last reviewed:");
+  });
+});
+
+// Phase 20.7 — WHO-5 wellbeing trajectory
+describe("buildClinicianReport — WHO-5 trajectory (20.7)", () => {
+  it("includes WHO-5 trajectory when data exists", () => {
+    const report = buildClinicianReport({
+      ...baseInput,
+      who5Trajectory: {
+        hasData: true,
+        entries: [
+          { date: "2026-06-01", score: 12, severity: "Low wellbeing" },
+          { date: "2026-07-01", score: 36, severity: "Good wellbeing" },
+        ],
+        trend: "improving",
+        latestScore: 36,
+        belowThresholdCount: 1,
+      },
+    });
+    expect(report).toContain("Wellbeing Trajectory (WHO-5)");
+    expect(report).toContain("2026-06-01: 12/100 (Low wellbeing)");
+    expect(report).toContain("Trend: improving");
+    expect(report).toContain("Low wellbeing days (≤13): 1 of 2");
+  });
+
+  it("omits WHO-5 section when no data", () => {
+    const report = buildClinicianReport({
+      ...baseInput,
+      who5Trajectory: { hasData: false, entries: [], trend: null, latestScore: null, belowThresholdCount: 0 },
+    });
+    expect(report).not.toContain("Wellbeing Trajectory");
+  });
+
+  it("omits WHO-5 section when not provided", () => {
+    const report = buildClinicianReport(baseInput);
+    expect(report).not.toContain("Wellbeing Trajectory");
+  });
+});
+
+// Phase 20.4 — sleep→intensity correlation
+describe("buildClinicianReport — sleep-mood correlation (20.4)", () => {
+  it("includes correlation when provided", () => {
+    const report = buildClinicianReport({
+      ...baseInput,
+      sleepIntensityCorrelation: { correlation: -0.72, sampleSize: 14 },
+    });
+    expect(report).toContain("Sleep–Mood Correlation");
+    expect(report).toContain("r = -0.72 (n=14");
+  });
+
+  it("omits correlation section when null", () => {
+    const report = buildClinicianReport({ ...baseInput, sleepIntensityCorrelation: null });
+    expect(report).not.toContain("Sleep–Mood Correlation");
+  });
+
+  it("omits correlation section when not provided", () => {
+    const report = buildClinicianReport(baseInput);
+    expect(report).not.toContain("Sleep–Mood Correlation");
+  });
+});
+
+// Phase 20.4 — trigger→context distribution
+describe("buildClinicianReport — trigger-context distribution (20.4)", () => {
+  it("includes trigger-context when data exists", () => {
+    const report = buildClinicianReport({
+      ...baseInput,
+      triggerContextDistribution: {
+        topTriggers: [{ theme: "work meeting", count: 3 }],
+        topContexts: [{ context: "work", count: 5 }],
+      },
+    });
+    expect(report).toContain("Trigger & Context Patterns");
+    expect(report).toContain("Top triggers:");
+    expect(report).toContain("Top contexts:");
+  });
+
+  it("omits section when empty", () => {
+    const report = buildClinicianReport({
+      ...baseInput,
+      triggerContextDistribution: { topTriggers: [], topContexts: [] },
+    });
+    expect(report).not.toContain("Trigger & Context Patterns");
+  });
+});
+
+// Phase 20.5 — risk event log
+describe("buildClinicianReport — risk event log (20.5)", () => {
+  it("includes event timeline when data exists", () => {
+    const report = buildClinicianReport({
+      ...baseInput,
+      riskEventLog: {
+        hasData: true,
+        events: [
+          { date: "2026-07-12", type: "episode" },
+          { date: "2026-07-10", type: "prodrome", detail: "short_sleep" },
+        ],
+      },
+    });
+    expect(report).toContain("Event Timeline");
+    expect(report).toContain("2026-07-12: episode");
+    expect(report).toContain("2026-07-10: prodrome (short_sleep)");
+  });
+
+  it("omits event timeline when no data", () => {
+    const report = buildClinicianReport({
+      ...baseInput,
+      riskEventLog: { hasData: false, events: [] },
+    });
+    expect(report).not.toContain("Event Timeline");
+  });
+
+  it("omits event timeline when not provided", () => {
+    const report = buildClinicianReport(baseInput);
+    expect(report).not.toContain("Event Timeline");
+  });
+});

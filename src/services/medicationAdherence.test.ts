@@ -14,7 +14,7 @@ vi.mock("./secureLocal", () => ({
   }),
 }));
 
-import { createMedication, loadMedications, saveMedications, logMedication, loadMedicationLogs, adherenceRate, commonSideEffects, adherenceSummary } from "./medicationAdherence";
+import { createMedication, loadMedications, saveMedications, logMedication, loadMedicationLogs, adherenceRate, commonSideEffects, adherenceSummary, recordDoseChange, resolveSideEffect } from "./medicationAdherence";
 
 describe("medicationAdherence", () => {
   beforeEach(() => { store.clear(); });
@@ -82,5 +82,76 @@ describe("medicationAdherence", () => {
     const summary = adherenceSummary();
     expect(summary.activeMeds).toBe(2);
     expect(summary.avgAdherence).toBe(50);
+  });
+
+  // G3 — dose-change tracking
+  it("recordDoseChange adds a DoseChange entry to the medication", () => {
+    const m = createMedication("Lithium", "300mg", "08:00", "daily");
+    saveMedications([m]);
+    recordDoseChange(m.id, "300mg", "600mg");
+    const meds = loadMedications();
+    expect(meds[0].doseChanges).toHaveLength(1);
+    expect(meds[0].doseChanges![0].oldDose).toBe("300mg");
+    expect(meds[0].doseChanges![0].newDose).toBe("600mg");
+    expect(meds[0].dose).toBe("600mg"); // dose field is also updated
+  });
+
+  it("recordDoseChange handles non-existent medication gracefully", () => {
+    // Should not throw
+    recordDoseChange("nonexistent_med_id", "10mg", "20mg");
+    expect(loadMedications()).toHaveLength(0);
+  });
+
+  it("recordDoseChange preserves existing dose changes", () => {
+    const m = createMedication("Test", "10mg", "08:00", "daily");
+    m.doseChanges = [{ medId: m.id, date: "2026-06-01", oldDose: "5mg", newDose: "10mg" }];
+    saveMedications([m]);
+    recordDoseChange(m.id, "10mg", "20mg");
+    const meds = loadMedications();
+    expect(meds[0].doseChanges).toHaveLength(2);
+  });
+
+  // G4 — side-effect duration/resolution
+  it("resolveSideEffect sets resolvedAt on the matching side effect entry", () => {
+    const m = createMedication("Test", "10mg", "08:00", "daily");
+    const log = logMedication(m.id, true, [{ symptom: "headache", severity: 5, bother: 4 }]);
+    const se = log.sideEffects[0];
+    expect(se.loggedAt).toBeDefined(); // loggedAt should be set by logMedication
+    expect(se.resolvedAt).toBeUndefined();
+
+    resolveSideEffect(log.id, "headache");
+    const logs = loadMedicationLogs();
+    const resolved = logs[0].sideEffects.find((s) => s.symptom === "headache");
+    expect(resolved?.resolvedAt).toBeDefined();
+  });
+
+  it("resolveSideEffect handles non-existent log gracefully", () => {
+    // Should not throw
+    resolveSideEffect("nonexistent_log_id", "headache");
+  });
+
+  it("resolveSideEffect only resolves the matching symptom, not others", () => {
+    const m = createMedication("Test", "10mg", "08:00", "daily");
+    logMedication(m.id, true, [
+      { symptom: "nausea", severity: 3, bother: 2 },
+      { symptom: "dizziness", severity: 4, bother: 3 },
+    ]);
+    resolveSideEffect("1", "nausea"); // wrong ID, but tests isolation
+    const logs = loadMedicationLogs();
+    // The log won't be found by wrong ID, but let's test with the real ID
+    const log = logs[0];
+    resolveSideEffect(log.id, "nausea");
+    const updatedLogs = loadMedicationLogs();
+    const nausea = updatedLogs[0].sideEffects.find((s) => s.symptom === "nausea");
+    const dizziness = updatedLogs[0].sideEffects.find((s) => s.symptom === "dizziness");
+    expect(nausea?.resolvedAt).toBeDefined();
+    expect(dizziness?.resolvedAt).toBeUndefined();
+  });
+
+  it("logMedication sets loggedAt timestamp on side effects", () => {
+    const m = createMedication("Test", "10mg", "08:00", "daily");
+    const log = logMedication(m.id, true, [{ symptom: "fatigue", severity: 2, bother: 1 }]);
+    expect(log.sideEffects[0].loggedAt).toBeDefined();
+    expect(typeof log.sideEffects[0].loggedAt).toBe("string");
   });
 });

@@ -22,6 +22,8 @@ export interface RelapsePlan {
   id: string;
   createdAt: string;
   updatedAt: string;
+  /** Phase 20.1b G9: ISO timestamp of last review. Absent = never reviewed. */
+  lastReviewedAt?: string;
   green: {
     signals: PhaseSignals;
     actions: PhaseActions;
@@ -118,4 +120,26 @@ export function actionFields(): { key: keyof PhaseActions; label: string; placeh
     { key: "reachOut", label: "Reach out", placeholder: "Who could you contact? (e.g. a friend, family member, therapist)" },
     { key: "crisisHelp", label: "Crisis help", placeholder: "What crisis resources apply here? (e.g. helpline, ER, trusted contact)" },
   ];
+}
+
+/**
+ * Phase 20.1b G9: Check whether a relapse plan is stale (not reviewed in >30 days).
+ * Falls back to updatedAt when lastReviewedAt is absent (plan never reviewed).
+ * Parity with the safety plan's 14-day review cycle (extended to 30 days for RP
+ * since relapse prevention plans are reviewed less frequently in clinical practice).
+ */
+export function isRelapsePlanStale(plan: RelapsePlan, now: Date = new Date()): boolean {
+  const reference = plan.lastReviewedAt ?? plan.updatedAt;
+  if (!reference) return false;
+  const refDate = new Date(reference).getTime();
+  const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+  return now.getTime() - refDate > THIRTY_DAYS_MS;
+}
+
+/**
+ * Phase 20.1b G9: Mark a relapse plan as reviewed at the given timestamp.
+ * Returns a new plan object with lastReviewedAt set (does not mutate the input).
+ */
+export function markRelapsePlanReviewed(plan: RelapsePlan, now: Date = new Date()): RelapsePlan {
+  return { ...plan, lastReviewedAt: now.toISOString() };
 }
