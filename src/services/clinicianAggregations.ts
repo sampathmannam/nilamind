@@ -9,7 +9,7 @@
 // Wire to: clinicianReport.ts via ClinicianReportInput extensions, fed by YourDataScreen.tsx.
 
 import { isPactStale, type Pact } from "./pact";
-import { loadConnections, type ConnectionRecord } from "./humanConnection";
+import { type ConnectionRecord } from "./humanConnection";
 import type { SafetyPlan } from "../types";
 import type { Medication, MedicationLog } from "./medicationAdherence";
 import type { CheckInEntry } from "../types";
