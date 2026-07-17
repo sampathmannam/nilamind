@@ -37,14 +37,16 @@ export function toQwenMessages(
 
 /**
  * Window the conversation so the FULL prompt (system + transcript + reserved reply) can't overflow
- * n_ctx. Identical logic to gemmaPrompt's windowMessages but using Qwen's n_ctx=2048 constants.
+ * n_ctx. Uses Qwen's real context budget — 4096, matching FORMAT_CONFIGS.qwen/qwen3 n_ctx in
+ * llamaCppLlmAdapter.ts. (2026-07-17 QA: this was stale at 2048 after the adapter was expanded 2048→4096,
+ * so history was truncated to ~half the real budget for no reason — pure lost continuity.)
  */
 export function windowQwenMessages(
   messages: { role: "user" | "assistant"; content: string }[],
   maxChars = 5000,
   system?: string,
 ): { role: "user" | "assistant"; content: string }[] {
-  return windowMessagesForCtx(messages, 2048, maxChars, system);
+  return windowMessagesForCtx(messages, 4096, maxChars, system);
 }
 
 /** Render the folded turns into a raw Qwen2.5 prompt string using `<|im_start|>` / `<|im_end|>` tokens. */

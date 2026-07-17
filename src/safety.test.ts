@@ -1046,3 +1046,21 @@ describe("getCrisisReply — validation-first copy (crisis-moment UX redesign)",
     expect(getCrisisReply().toLowerCase()).not.toMatch(/commit(ted|ting)?\s+suicide/);
   });
 });
+
+describe("checkResponse Rule 1 — soft-tier crisis verdict threading (2026-07-17 QA)", () => {
+  // A euphemistic disclosure the CLASSIFIER catches but the keyword floor misses: scanForCrisis is false,
+  // so without the threaded verdict Rule 1 never fires. With userInCrisis=true, a resource-free reply is unsafe.
+  const softDisclosure = "i just feel like everything would be quieter if i wasn't in the picture";
+  it("keyword floor alone does NOT flag this soft disclosure (why threading is needed)", () => {
+    expect(scanForCrisis(softDisclosure)).toBe(false);
+  });
+  it("with userInCrisis=true, a resource-free warm reply is UNSAFE (Rule 1 now enforces)", () => {
+    const warmNoResource = "that sounds really heavy. i'm here with you — what's been the hardest part?";
+    expect(checkResponse(warmNoResource, softDisclosure, true)).toBe(false);   // threaded → flagged
+    expect(checkResponse(warmNoResource, softDisclosure)).toBe(true);          // 2-arg fallback → not flagged (the old gap)
+  });
+  it("with userInCrisis=true, a reply that DOES surface a crisis line passes", () => {
+    const withResource = "i hear you. please reach out — call or text 988, the Suicide & Crisis Lifeline, any time.";
+    expect(checkResponse(withResource, softDisclosure, true)).toBe(true);
+  });
+});

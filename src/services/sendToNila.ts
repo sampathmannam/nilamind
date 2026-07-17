@@ -129,7 +129,9 @@ export async function sendToNila(
         return { reply: getUnsafeFallbackReply(), reachedAI: true };
       }
       const cleaned = cleanResponse(r.reply);
-      const safe = applyOutputSafety(cleaned, userText, true); // INVARIANT 3
+      // Thread the crisis verdict: a full-tier hit already returned above (blocked), so `crisisSignal.hit`
+      // here is a SOFT classifier disclosure — Rule 1 must require the reply surface a crisis resource.
+      const safe = applyOutputSafety(cleaned, userText, true, crisisSignal.hit); // INVARIANT 3
       storeConversationMemory(userText, safe); // Lever 6: store for future retrieval
       return { reply: safe, reachedAI: true, softCrisis: isSoftCrisis, navigate: r.navigate, openSkillId: r.openSkillId };
     }
@@ -145,6 +147,6 @@ export async function sendToNila(
   const reply = (await generateOnDevice(systemInstruction, outgoing as NilaMessage[], guard.onDelta, undefined, { wait: true })) ?? "";
   if (!reply) return { reply: "", reachedAI: false };
   if (guard.tripped()) return { reply: getUnsafeFallbackReply(), reachedAI: true };
-  const safe = applyOutputSafety(reply, userText, true); // INVARIANT 3
+  const safe = applyOutputSafety(reply, userText, true, crisisSignal.hit); // INVARIANT 3 (soft-crisis verdict threaded)
   return { reply: safe, reachedAI: true };
 }

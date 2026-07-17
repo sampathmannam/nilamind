@@ -317,7 +317,13 @@ const distortions = (() => {
   const memoryCallback = query ? memoryCallbackBlock(query) : "";
   // RAG warmth guidance: teaches model HOW to use retrieved data naturally
   const ragGuidance = ragGuidanceBlock(personalRag, skills, memoryBlock);
-  return [steer, persona, personalRag, context, activeProtocol, distortions, memoryBlock, memoryCallback, skills, ragGuidance].filter(Boolean).join("\n\n");
+  // ORDER MATTERS FOR LATENCY (2026-07-17 QA): `persona` (the stable base + region crisis lines) MUST stay
+  // first. llama.cpp reuses the KV cache for the longest byte-identical PREFIX across turns; `persona` is
+  // constant turn-to-turn (same region/protocol), so leading with it lets every later reply skip re-prefilling
+  // it. Previously `steer` (query-dependent) led, changing token 0 every turn and forcing a full re-prefill of
+  // the whole persona on EVERY message. All per-turn dynamic blocks follow. Do not hoist a query-dependent
+  // block above `persona`.
+  return [persona, steer, personalRag, context, activeProtocol, distortions, memoryBlock, memoryCallback, skills, ragGuidance].filter(Boolean).join("\n\n");
 }
 
 /** A first message that sounds like a friend opening the door — not a clinical intake. */
