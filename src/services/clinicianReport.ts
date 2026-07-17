@@ -49,6 +49,9 @@ export interface ClinicianEpisodeSummary {
 import type { ClinicianUsage } from "./clinicianPeriod";
 import type { ClinicianPactForReport } from "./clinicianAggregations";
 import type { ClinicianConnectionsForReport } from "./clinicianAggregations";
+import type { ClinicianWhatDidntHelpForReport } from "./clinicianAggregations";
+import type { ClinicianThoughtRecordsForReport } from "./clinicianAggregations";
+import type { ClinicianSafetyPlanForReport } from "./clinicianAggregations";
 
 export interface ClinicianReportInput {
   periodLabel: string; // e.g. "Week ending 2026-07-12" or "Month ending 2026-07-12"
@@ -77,6 +80,12 @@ export interface ClinicianReportInput {
    * Privacy: raw dates/people never leave; only counts and type breakdown.
    */
   connections?: ClinicianConnectionsForReport;
+  /** Phase 20.1 (B11): what the patient says did NOT help (DBT skills + Nila insights). */
+  whatDidntHelp?: ClinicianWhatDidntHelpForReport;
+  /** Phase 20.1 (B1): thought record summary — CBT situations, emotions, recurring themes. */
+  thoughtRecords?: ClinicianThoughtRecordsForReport;
+  /** Phase 20.1 (B2): safety plan completion metadata (section counts, last updated). */
+  safetyPlan?: ClinicianSafetyPlanForReport;
   protocolsCompleted: number;
   nilaSessions: number;
   featuresUsed: string[];
@@ -325,6 +334,59 @@ export function buildClinicianReport(input: ClinicianReportInput): string {
         lines.push(`  Weeks with activity: ${c.weeklyCounts.length}`);
       }
     }
+    lines.push("");
+  }
+
+  // Phase 20.1 (B11) — what the patient says did NOT help (DBT skills marked unhelpful + Nila insights).
+  // Clinically relevant: the patient telling you "X didn't help" is gold for medication/strategy review.
+  // Privacy: the text of what didn't help is patient-authored and explicitly consented to sharing.
+  if (input.whatDidntHelp && input.whatDidntHelp.totalCount > 0) {
+    const w = input.whatDidntHelp;
+    lines.push("What Did Not Help (self-reported)");
+    lines.push(`  Total entries: ${w.totalCount}`);
+    const items = w.items.slice(0, 5);
+    for (const item of items) {
+      if (item.source === "diary") {
+        lines.push(`  Skill not helpful: ${item.skill}`);
+      } else {
+        lines.push(`  Insight: ${item.text} (${item.date})`);
+      }
+    }
+    lines.push("");
+  }
+
+  // Phase 20.1 (B1) — thought record summary. CBT intake material: what situations trigger
+  // automatic thoughts, what emotions, what themes recur. Note: automaticThought and evidence
+  // fields are private (between therapist and patient); only situation+emotion reach the PDF.
+  if (input.thoughtRecords && input.thoughtRecords.count > 0) {
+    const t = input.thoughtRecords;
+    lines.push("Thought Record Summary");
+    lines.push(`  Total records: ${t.count}`);
+    if (t.topEmotions.length > 0) {
+      const emoStr = t.topEmotions.map((e) => `${e.emotion} (${e.count})`).join(", ");
+      lines.push(`  Top emotions: ${emoStr}`);
+    }
+    if (t.topSituations.length > 0) {
+      const sitStr = t.topSituations.map((s) => `${s.theme} (${s.count})`).join(", ");
+      lines.push(`  Recurring situation themes: ${sitStr}`);
+    }
+    if (t.excerpt) {
+      lines.push(`  Recent situation: "${t.excerpt.situation}" — ${t.excerpt.emotion}`);
+    }
+    lines.push("");
+  }
+
+  // Phase 20.1 (B2) — Safety plan completeness. The Stanley-Brown sections tell the clinician
+  // how engaged the patient has been with crisis planning. Empty sections are a clinical signal
+  // (patient may not have completed, or has not revisited). Content never leaves.
+  if (input.safetyPlan && input.safetyPlan.hasAnySection) {
+    const sp = input.safetyPlan;
+    lines.push("Safety Plan (Stanley-Brown)");
+    lines.push(`  Sections with entries: ${Object.keys(sp.sectionCounts).length}`);
+    for (const [section, n] of Object.entries(sp.sectionCounts)) {
+      lines.push(`  ${section}: ${n} ${n === 1 ? "entry" : "entries"}`);
+    }
+    if (sp.lastUpdated) lines.push(`  Last updated: ${sp.lastUpdated}`);
     lines.push("");
   }
 

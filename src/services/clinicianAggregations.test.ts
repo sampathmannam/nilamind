@@ -1,7 +1,15 @@
 import { describe, it, expect } from "vitest";
 import type { Pact } from "./pact";
 import type { ConnectionRecord } from "./humanConnection";
-import { summarizePactForReport, summarizeConnectionsForReport, type ClinicianPactForReport } from "./clinicianAggregations";
+import type { SafetyPlan } from "../types";
+import {
+  summarizePactForReport,
+  summarizeConnectionsForReport,
+  summarizeWhatDidntHelp,
+  summarizeThoughtRecordsForReport,
+  summarizeSafetyPlanForReport,
+  type ClinicianPactForReport,
+} from "./clinicianAggregations";
 
 // Phase 20.1 (B12): pact state goes into the clinician report as a privacy-preserving status summary,
 // NEVER as the patient's name or letter content. Tests guard that boundary explicitly.
@@ -255,5 +263,143 @@ describe("summarizeConnectionsForReport (Phase 20.1 B8)", () => {
     expect(s).toContain("hasData");
     expect(s).toContain("totalConnections");
     expect(s).toContain("byType");
+  });
+});
+
+// Phase 20.1 B11 — what-didn't-help (DBT skills marked unhelpful + Nila insights kind=what_didnt_help)
+interface InsightEntry { kind: string; text: string; date: string }
+function makeInsight(kind: string, text: string, date = "2026-07-01"): InsightEntry {
+  return { kind, text, date };
+}
+function makeDiarySkill(skill: string, timesNoHelp: number) {
+  return { skill, timesUsed: timesNoHelp + 1, timesHelped: 0, timesNoHelp };
+}
+describe("summarizeWhatDidntHelp (Phase 20.1 B11)", () => {
+  it("returns empty when no unhelpful skills and no insights", () => {
+    
+    const result = summarizeWhatDidntHelp([], []);
+    expect(result).toEqual({ items: [], totalCount: 0 });
+  });
+  it("includes skills with timesNoHelp >= 1", () => {
+    
+    const skills = [makeDiarySkill("TIPP", 2), makeDiarySkill("grounding", 0), makeDiarySkill("calling a friend", 1)];
+    const result = summarizeWhatDidntHelp(skills, []);
+    expect(result.totalCount).toBe(2); // TIPP (2), calling a friend (1) — grounding (0) excluded
+    expect(result.items.map((i: any) => i.skill)).toContain("TIPP");
+    expect(result.items.map((i: any) => i.skill)).toContain("calling a friend");
+    expect(result.items.map((i: any) => i.skill)).not.toContain("grounding");
+  });
+  it("includes what_didnt_help Nila insights", () => {
+    
+    const insights: InsightEntry[] = [
+      makeInsight("what_helps", "Walking helps"),
+      makeInsight("what_didnt_help", "Caffeine made me more anxious"),
+      makeInsight("what_didnt_help", "Skipping meals worsened my mood"),
+    ];
+    const result = summarizeWhatDidntHelp([], insights);
+    expect(result.totalCount).toBe(2);
+    expect(result.items.some((i: any) => i.text.includes("Caffeine"))).toBe(true);
+    expect(result.items.some((i: any) => i.text.includes("Skipping meals"))).toBe(true);
+    expect(result.items.some((i: any) => i.text.includes("Walking"))).toBe(false);
+  });
+  it("merges both sources, sorted by recency (most recent first)", () => {
+    
+    const skills = [makeDiarySkill("breathing", 1)];
+    const insights: InsightEntry[] = [
+      makeInsight("what_didnt_help", "Old note", "2026-06-01"),
+      makeInsight("what_didnt_help", "Recent note", "2026-07-10"),
+    ];
+    const result = summarizeWhatDidntHelp(skills, insights);
+    expect(result.items[0].text).toBe("Recent note");
+    expect(result.items[1].text).toBe("Old note");
+    expect(result.items[2].skill).toBe("breathing");
+  });
+  it("caps at 10 items to keep the clinician report concise", () => {
+    
+    const skills = Array.from({ length: 8 }, (_, i) => makeDiarySkill(`skill${i}`, 1));
+    const insights = Array.from({ length: 5 }, (_, i) => makeInsight("what_didnt_help", `insight${i}`));
+    const result = summarizeWhatDidntHelp(skills, insights);
+    expect(result.items.length).toBeLessThanOrEqual(10);
+  });
+});
+
+// Phase 20.1 B1 — thought record summary for clinician PDF
+describe("summarizeThoughtRecordsForReport (Phase 20.1 B1)", () => {
+  const makeTR = (situation: string, emotion: string, daysAgo = 0) => {
+    const d = new Date("2026-07-15T12:00:00Z");
+    d.setDate(d.getDate() - daysAgo);
+    return { situation, automaticThought: "test thought", emotion, evidenceFor: "", evidenceAgainst: "", id: "tr_1", date: d.toISOString().slice(0, 10), timestamp: "10:00" };
+  };
+  it("returns empty defaults when no thought records", () => {
+    
+    const result = summarizeThoughtRecordsForReport([]);
+    expect(result.count).toBe(0);
+    expect(result.topEmotions).toEqual([]);
+  });
+  it("counts records and identifies top emotions", () => {
+    const records = [makeTR("work meeting", "Anxious", 1), makeTR("family dinner", "Anxious", 3), makeTR("morning commute", "Calm", 5)];
+    
+    const result = summarizeThoughtRecordsForReport(records);
+    expect(result.count).toBe(3);
+    expect(result.topEmotions[0].emotion).toBe("Anxious");
+    expect(result.topEmotions[0].count).toBe(2);
+  });
+  it("identifies recurring situation themes (keyword extraction)", () => {
+    const records = [makeTR("work meeting", "Anxious", 1), makeTR("work deadline", "Anxious", 2), makeTR("family dinner", "Calm", 5)];
+    
+    const result = summarizeThoughtRecordsForReport(records);
+    expect(result.topSituations.length).toBeGreaterThan(0);
+    expect(result.topSituations[0].theme).toContain("work");
+  });
+  it("provides an anonymised excerpt with the situation text", () => {
+    const records = [makeTR("Private project at work", "Angry", 1)];
+    
+    const result = summarizeThoughtRecordsForReport(records);
+    expect(result.excerpt).not.toBeNull();
+    expect(typeof result.excerpt!.situation).toBe("string");
+  });
+});
+
+// Phase 20.1 B2 — safety plan state for clinician PDF
+describe("summarizeSafetyPlanForReport (Phase 20.1 B2)", () => {
+  const makePlan = (sections: Partial<Record<keyof SafetyPlan, string | number>>): SafetyPlan => ({
+    warningSigns: (sections.warningSigns as string) ?? "",
+    internalCoping: (sections.internalCoping as string) ?? "",
+    socialDistractors: (sections.socialDistractors as string) ?? "",
+    trustedPeople: (sections.trustedPeople as string) ?? "",
+    professionals: (sections.professionals as string) ?? "",
+    safeEnvironment: (sections.safeEnvironment as string) ?? "",
+    lastUpdatedAt: (sections.lastUpdatedAt as number) ?? 1720000000000,
+  });
+  it("returns empty when plan has no filled sections", () => {
+    const result = summarizeSafetyPlanForReport(makePlan({}));
+    expect(result.hasAnySection).toBe(false);
+    expect(result.sectionCounts).toEqual({});
+  });
+  it("detects filled sections and counts entries per section", () => {
+    const result = summarizeSafetyPlanForReport(makePlan({
+      warningSigns: "feeling hopeless\ncan't sleep",
+      internalCoping: "breathing exercise",
+      trustedPeople: "my sister",
+    }));
+    expect(result.hasAnySection).toBe(true);
+    expect(result.sectionCounts.warningSigns).toBe(2);
+    expect(result.sectionCounts.internalCoping).toBe(1);
+    expect(result.sectionCounts.trustedPeople).toBe(1);
+    expect(result.sectionCounts.sourcesOfSupport).toBeUndefined();
+  });
+  it("reports last-updated as YYYY-MM-DD", () => {
+    const result = summarizeSafetyPlanForReport(makePlan({ warningSigns: "test" }));
+    expect(result.lastUpdated).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+  it("never leaks section content — only metadata (count, has, lastUpdated)", () => {
+    const s = JSON.stringify(summarizeSafetyPlanForReport(makePlan({
+      warningSigns: "RAW_PRIVATE_WARNING",
+      internalCoping: "RAW_PRIVATE_COPING",
+    })));
+    expect(s).not.toContain("RAW_PRIVATE_WARNING");
+    expect(s).not.toContain("RAW_PRIVATE_STRATEGY");
+    expect(s).toContain("hasAnySection");
+    expect(s).toContain("sectionCounts");
   });
 });
