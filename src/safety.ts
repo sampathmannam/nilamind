@@ -564,6 +564,38 @@ const SELF_HARM_CUTTING_RE =
  * Scans user input for active suicidal ideation or self-harm warnings.
  * Deterministic, offline, super fast.
  */
+// ── High-collision floor-token precision (2026-07-17 QA) ──────────────────────────────────────────────
+// A few bare floor tokens ("suicide"/"suicidal" in SUICIDAL_KEYWORDS, "cut myself" in SELF_HARM_KEYWORDS,
+// "cant go on"/"can't go on") are common substrings of benign speech. Because the floor loop returns on the
+// first `.includes()` hit — BEFORE any guard runs — these fired the UNSUPPRESSIBLE full crisis takeover on
+// idiom / topical / third-person uses (verified by execution: "cut myself some slack", "suicide prevention
+// thesis", "she isn't suicidal", "cant go on stage"). This guard suppresses ONLY those unambiguous benign
+// frames. It is deliberately CONSERVATIVE: any first-person suicidal self-reference (incl. denial like
+// "i don't want to kill myself") is NOT suppressed — safe direction, genuine recall unchanged.
+const HIGH_COLLISION_FLOOR_TOKENS = new Set(["suicide", "suicidal", "cut myself", "cant go on", "can't go on"]);
+const CUT_MYSELF_IDIOM_RE = /\bcut myself (some slack|a break|some grace|some kindness|a little slack)\b/;
+const CANT_GO_ON_BENIGN_RE = /\b(cant|can't) go on (stage|tour|the ride|this ride|the rollercoaster|without \w+|the trip|the holiday|holiday|vacation|the field|the court|the pitch|a diet|the diet|another diet|the show)\b/;
+// "suicide"/"suicidal" spoken ABOUT a topic (essay/prevention/hotline) or ABOUT someone else — not a
+// first-person disclosure. `firstPersonSuicidal` (checked at the call site) keeps "i feel suicidal" firing.
+const SUICIDE_TOPICAL_CONTEXT_RE = /\b(prevention|hotline|helpline|awareness|rates?|statistics|thesis|essay|research|paper|policy|campaign|documentary|article|movie|film|book|study|report|training|course|module|volunteer|work(?:ing)? (?:in|at|on))\b/;
+const SUICIDE_THIRDPERSON_RE = /\b(she|he|they|my (?:friend|sister|brother|mother|father|mom|dad|son|daughter|partner|aunt|uncle|cousin|colleague|coworker|classmate|neighbou?r|grandmother|grandfather|grandma|grandpa))\b[^.!?]{0,30}\b(?:is|was|isn't|isnt|wasn't|wasnt|not|feels|felt|seems|seemed|been|becoming|became)\b[^.!?]{0,15}suicid/;
+
+/** True only when a high-collision floor token appears EXCLUSIVELY in an unambiguous benign frame (fixed
+ *  idiom, topical mention, or third-person). Never suppresses a first-person suicidal self-reference. */
+function isBenignFloorCollision(normalized: string): boolean {
+  if (CUT_MYSELF_IDIOM_RE.test(normalized)) return true;
+  if (CANT_GO_ON_BENIGN_RE.test(normalized)) return true;
+  // First-person suicidal self-reference → NEVER suppress (fires below). Anchored on the self-state
+  // adjective "suicidal" (not the topical noun "suicide") so "i wrote my thesis on suicide prevention"
+  // stays suppressible while "i feel suicidal after reading about suicide prevention" still fires.
+  const firstPersonSuicidal = /\b(?:i|i'm|im|i am|i've|ive|me)\b[^.!?]{0,25}\bsuicidal\b/.test(normalized);
+  if (!firstPersonSuicidal) {
+    if (/\bsuicid/.test(normalized) && SUICIDE_TOPICAL_CONTEXT_RE.test(normalized)) return true;
+    if (SUICIDE_THIRDPERSON_RE.test(normalized)) return true;
+  }
+  return false;
+}
+
 export function scanForCrisis(message: string): boolean {
   if (!message) return false;
   // Collapse ALL internal whitespace (newlines/tabs/multi-space) to single spaces so a multi-word
@@ -587,12 +619,21 @@ export function scanForCrisis(message: string): boolean {
   // Soft-only text now elicits the warm companion + output gate only, NOT the takeover. Both still
   // escalate when a HARD signal co-occurs (the hard lists above already returned true). This narrows,
   // it does not weaken, the genuine floor: every suicide / self-harm / method / overdose token is untouched.
+  // Full scan (not early-return): a genuine token must still fire even if a benign high-collision token is
+  // ALSO present ("cut myself some slack but i want to end my life" → "end my life" fires). Only when EVERY
+  // match is a high-collision token AND the text is an unambiguous benign frame do we withhold the takeover.
+  let floorHit = false;
+  let onlyHighCollision = true;
   for (const list of [SUICIDAL_KEYWORDS, SLANG_IDEATION, ROMANIZED_IDEATION, NATIVE_SCRIPT_IDEATION, SELF_HARM_KEYWORDS, METHOD_INTENT_PHRASES, OVERDOSE_PHRASES, STOCKPILE_MEANS, INDIRECT_METAPHORS]) {
     for (const kw of list) {
       if (normalized.includes(kw)) {
-        return true;
+        floorHit = true;
+        if (!HIGH_COLLISION_FLOOR_TOKENS.has(kw)) onlyHighCollision = false;
       }
     }
+  }
+  if (floorHit && !(onlyHighCollision && isBenignFloorCollision(normalized))) {
+    return true;
   }
 
   if (SUICIDAL_SPLIT_RE.test(normalized)) return true; // #1 (re-audit): boundary-anchored "kill my self"
