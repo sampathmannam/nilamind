@@ -47,13 +47,15 @@ export interface ClinicianEpisodeSummary {
 }
 
 import type { ClinicianUsage } from "./clinicianPeriod";
-import type { ClinicianPactForReport } from "./clinicianAggregations";
-import type { ClinicianConnectionsForReport } from "./clinicianAggregations";
-import type { ClinicianWhatDidntHelpForReport } from "./clinicianAggregations";
-import type { ClinicianThoughtRecordsForReport } from "./clinicianAggregations";
-import type { ClinicianSafetyPlanForReport } from "./clinicianAggregations";
-import type { ClinicianMedCorrelationForReport } from "./clinicianAggregations";
-import type { ClinicianSupportsRecapForReport } from "./clinicianAggregations";
+import type {
+  ClinicianPactForReport,
+  ClinicianConnectionsForReport,
+  ClinicianWhatDidntHelpForReport,
+  ClinicianThoughtRecordsForReport,
+  ClinicianSafetyPlanForReport,
+  ClinicianMedCorrelationForReport,
+  ClinicianSupportsRecapForReport,
+} from "./clinicianAggregations";
 
 export interface ClinicianReportInput {
   periodLabel: string; // e.g. "Week ending 2026-07-12" or "Month ending 2026-07-12"
