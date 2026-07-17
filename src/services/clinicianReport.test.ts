@@ -69,6 +69,16 @@ describe("buildClinicianReport", () => {
     expect(report).toContain("Clinician Summary");
   });
 
+  it("includes the cover ID when provided", () => {
+    const report = buildClinicianReport({ ...baseInput, coverId: "apple-rocket-ocean" });
+    expect(report).toContain("Cover ID: apple-rocket-ocean");
+  });
+
+  it("omits the cover ID when not provided", () => {
+    const report = buildClinicianReport(baseInput);
+    expect(report).not.toContain("Cover ID");
+  });
+
   it("includes check-in summary stats", () => {
     const report = buildClinicianReport(baseInput);
     expect(report).toContain("45");
