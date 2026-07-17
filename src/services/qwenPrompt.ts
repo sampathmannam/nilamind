@@ -12,6 +12,8 @@
 //   {reply}<|im_end|>
 //   <|im_start|>assistant\n   <-- generation cue
 
+import { windowMessagesForCtx, coalesceSameRole } from "./promptWindow";
+
 export type QwenChatMsg = { role: "user" | "assistant" | "system"; content: string };
 
 /**
@@ -28,23 +30,10 @@ export function toQwenMessages(
   for (const m of messages) {
     out.push({ role: m.role, content: m.content });
   }
-  const merged: QwenChatMsg[] = [];
-  for (const m of out) {
-    const last = merged[merged.length - 1];
-    if (last && last.role === m.role) last.content += `\n\n${m.content}`;
-    else merged.push({ ...m });
-  }
-  return merged;
+  return coalesceSameRole(out);
 }
 
-// Hard context ceiling for Qwen (llama.cpp n_ctx). Budget math in CHARACTERS at ~3.5 chars/token,
-// UNDER-estimating the token count (safer to truncate early than overflow n_ctx).
-const N_CTX_TOKENS = 2048;
-const CHARS_PER_TOKEN = 3.5;
-const N_CTX_CHARS = Math.floor(N_CTX_TOKENS * CHARS_PER_TOKEN); // ~7168
-const REPLY_RESERVE_CHARS = 220 * Math.ceil(CHARS_PER_TOKEN); // reserve n_predict:220 decode budget
-const DEFAULT_SYSTEM_CHARS = 800 * Math.ceil(CHARS_PER_TOKEN); // ~3200 (short persona ~800 tokens)
-const MIN_TRANSCRIPT_CHARS = 400;
+// Hard context ceiling for Qwen (llama.cpp n_ctx).
 
 /**
  * Window the conversation so the FULL prompt (system + transcript + reserved reply) can't overflow
@@ -55,37 +44,7 @@ export function windowQwenMessages(
   maxChars = 5000,
   system?: string,
 ): { role: "user" | "assistant"; content: string }[] {
-  const sysChars = system != null ? system.length : DEFAULT_SYSTEM_CHARS;
-  const ctxBudget = N_CTX_CHARS - sysChars - REPLY_RESERVE_CHARS;
-  const budget = Math.max(MIN_TRANSCRIPT_CHARS, Math.min(maxChars, ctxBudget));
-
-  const clampTurn = (t: { role: "user" | "assistant"; content: string }) =>
-    t.content.length > budget ? { ...t, content: t.content.slice(t.content.length - budget) } : t;
-
-  if (messages.length <= 2) {
-    if (!messages.length) return messages;
-    const last = messages[messages.length - 1];
-    if (last.content.length <= budget) return messages;
-    const copy = messages.slice();
-    copy[copy.length - 1] = clampTurn(last);
-    return copy;
-  }
-
-  const head = messages.slice(0, 1);
-  const rest = messages.slice(1);
-  const kept: { role: "user" | "assistant"; content: string }[] = [];
-  let used = 0;
-  for (let i = rest.length - 1; i >= 0; i--) {
-    used += rest[i].content.length;
-    if (used > budget && kept.length) break;
-    kept.unshift(rest[i]);
-  }
-  if (kept.length && kept[kept.length - 1].content.length > budget) {
-    kept[kept.length - 1] = clampTurn(kept[kept.length - 1]);
-  }
-  return kept.length === rest.length && kept.every((k, i) => k === rest[i])
-    ? messages
-    : [...head, ...kept];
+  return windowMessagesForCtx(messages, 2048, maxChars, system);
 }
 
 /** Render the folded turns into a raw Qwen2.5 prompt string using `<|im_start|>` / `<|im_end|>` tokens. */

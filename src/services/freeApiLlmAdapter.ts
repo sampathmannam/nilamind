@@ -1,4 +1,5 @@
 import type { LocalLlmBackend, LocalGenParams } from "./localLlm";
+import { streamOpenAiChat } from "./openAiChatStream";
 
 /**
  * Simple free API LLM backend adapter.
@@ -25,67 +26,16 @@ export function createFreeApiBackend(apiUrl: string, apiKey: string): LocalLlmBa
      * returns an OpenAI‑style server‑sent events stream. Falls back to a full JSON response.
      */
     generate: async ({ system, messages, onToken, signal }: LocalGenParams): Promise<string> => {
-      const res = await fetch(apiUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: "gpt-3.5-turbo",
-          messages: [
-            { role: "system", content: system },
-            ...messages.map((m) => ({ role: m.role, content: m.content })),
-          ],
-          stream: true,
-        }),
+      return streamOpenAiChat({
+        apiUrl,
+        apiKey,
+        model: "gpt-3.5-turbo",
+        system,
+        messages,
+        onToken,
         signal,
+        errorLabel: "Free API LLM",
       });
-
-      if (!res.ok) {
-        const detail = await res.text().catch(() => "");
-        throw new Error(`Free API LLM ${res.status}${detail ? `: ${detail.slice(0, 200)}` : ""}`);
-      }
-
-      // If the response has a body, attempt to stream token‑by‑token.
-      if (res.body) {
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = "";
-        let full = "";
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split("\n");
-          buffer = lines.pop() ?? "";
-          for (const line of lines) {
-            const trimmed = line.trim();
-            if (!trimmed) continue;
-            // OpenAI streams lines prefixed with "data: "
-            if (!trimmed.startsWith("data:")) continue;
-            const json = trimmed.slice(5).trim();
-            if (json === "[DONE]") return full;
-            try {
-              const payload = JSON.parse(json);
-              const token = payload?.choices?.[0]?.delta?.content;
-              if (token) {
-                onToken(token);
-                full += token;
-              }
-            } catch {
-              // ignore malformed line
-            }
-          }
-        }
-        return full;
-      }
-
-      // Fallback: read full JSON response (non‑streaming)
-      const data = await res.json();
-      const content = data?.choices?.[0]?.message?.content ?? "";
-      if (content) onToken(content);
-      return content;
     },
   };
 }

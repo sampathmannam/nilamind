@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import { ChevronLeft, Play, Pause, RotateCcw, Wind, CheckCircle2 } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { ChevronLeft, Play, Pause, RotateCcw, CheckCircle2 } from "lucide-react";
 import {
   breathState,
   cycleProgress,
@@ -8,6 +8,8 @@ import {
   type BreathPattern,
   type BreathPhase,
 } from "../services/breathPacer";
+import { useBreathAnimation } from "../hooks/useBreathAnimation";
+import BreathPatternInfo from "./BreathPatternInfo";
 import { hapticLight, hapticCelebration } from "../hooks/useHaptics";
 import { useLanguage } from "../services/i18n";
 
@@ -55,16 +57,9 @@ export default function BreathingScreen({ onClose, defaultPattern = "box" }: Pro
   useLanguage();
   const [playing, setPlaying] = useState(false);
   const [pattern, setPattern] = useState<BreathPattern>(defaultPattern);
-  const [elapsed, setElapsed] = useState(0);
-  const [cycleIdx, setCycleIdx] = useState(0);
   const [lastPhase, setLastPhase] = useState<BreathPhase | null>(null);
   const [sessionDone, setSessionDone] = useState(false);
-
-  const rafRef = useRef<number>(0);
-  const startTimeRef = useRef(0);
-  const playingRef = useRef(false);
-
-  useEffect(() => { playingRef.current = playing; }, [playing]);
+  const { elapsed, cycleIdx, reset: resetAnim } = useBreathAnimation(pattern, playing);
 
   const state = breathState(pattern, elapsed, cycleIdx);
   const cfg = getBreathPattern(pattern);
@@ -88,37 +83,21 @@ export default function BreathingScreen({ onClose, defaultPattern = "box" }: Pro
     }
   }, [targetReached, sessionDone, playing]);
 
-  const animate = useCallback((now: number) => {
-    if (!startTimeRef.current) startTimeRef.current = now;
-    const t = now - startTimeRef.current;
-    const p = getBreathPattern(pattern);
-    const totalMs = (p.inhale + p.inhale2 + p.hold + p.exhale + p.hold2) * 1000;
-    const cyc = Math.floor(t / totalMs);
-    setElapsed(t);
-    setCycleIdx(cyc);
-    if (playingRef.current) rafRef.current = requestAnimationFrame(animate);
-  }, [pattern]);
-
+  // Starting a session clears the phase-transition + celebration state (the timing itself is reset inside
+  // useBreathAnimation). Mirrors the pre-extraction play effect, which reset these alongside the clock.
   useEffect(() => {
     if (playing) {
-      startTimeRef.current = 0;
-      setElapsed(0);
-      setCycleIdx(0);
       setLastPhase(null);
       setSessionDone(false);
-      rafRef.current = requestAnimationFrame(animate);
     }
-    return () => cancelAnimationFrame(rafRef.current);
-  }, [playing, animate]);
+  }, [playing]);
 
   const toggle = () => setPlaying((p) => !p);
   const reset = () => {
     setPlaying(false);
-    setElapsed(0);
-    setCycleIdx(0);
+    resetAnim();
     setLastPhase(null);
     setSessionDone(false);
-    startTimeRef.current = 0;
   };
 
   // Compute breathing circle scale
@@ -277,16 +256,7 @@ export default function BreathingScreen({ onClose, defaultPattern = "box" }: Pro
       </div>
 
       {/* Pattern info */}
-      <div className="mt-6 text-center text-[11px] text-slate-500 space-y-1">
-        <p className="flex items-center justify-center gap-1.5">
-          <Wind className="w-3 h-3" /> {cfg.name}
-        </p>
-        <p>
-          Inhale {cfg.inhale}s{cfg.inhale2 > 0 ? ` · Inhale again ${cfg.inhale2}s` : ""}
-          {cfg.hold > 0 ? ` · Hold ${cfg.hold}s` : ""} · Exhale {cfg.exhale}s
-          {cfg.hold2 > 0 ? ` · Hold ${cfg.hold2}s` : ""}
-        </p>
-      </div>
+      <BreathPatternInfo pattern={pattern} className="mt-6 text-center text-[11px] text-slate-500 space-y-1" />
     </div>
   );
 }

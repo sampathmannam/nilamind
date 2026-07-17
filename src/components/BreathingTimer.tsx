@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
-import { Play, Pause, RotateCcw, Wind, CheckCircle2 } from "lucide-react";
+import React, { useState } from "react";
+import { Play, Pause, RotateCcw, CheckCircle2 } from "lucide-react";
 import {
   breathState,
   cycleProgress,
@@ -8,6 +8,8 @@ import {
   allBreathPatterns,
   getBreathPattern,
 } from "../services/breathPacer";
+import { useBreathAnimation } from "../hooks/useBreathAnimation";
+import BreathPatternInfo from "./BreathPatternInfo";
 import CountdownRing from "./CountdownRing";
 
 /** A single 5-minute slow-paced-breathing session produces vagal-activity gains statistically
@@ -44,46 +46,16 @@ export interface BreathingTimerProps {
 export default function BreathingTimer({ defaultPattern = "box" }: BreathingTimerProps = {}) {
   const [playing, setPlaying] = useState(false);
   const [pattern, setPattern] = useState<BreathPattern>(defaultPattern);
-  const [elapsed, setElapsed] = useState(0);
-  const [cycleIdx, setCycleIdx] = useState(0);
-  const rafRef = useRef<number>(0);
-  const startTimeRef = useRef(0);
-  const playingRef = useRef(false);
-
-  // Keep ref in sync so the animation loop never reads stale state.
-  useEffect(() => { playingRef.current = playing; }, [playing]);
+  const { elapsed, cycleIdx, reset: resetAnim } = useBreathAnimation(pattern, playing);
 
   const state = breathState(pattern, elapsed, cycleIdx);
   const cycled = cycleProgress(elapsed, pattern);
-
-  const animate = useCallback((now: number) => {
-    if (!startTimeRef.current) startTimeRef.current = now;
-    const t = now - startTimeRef.current;
-    const p = getBreathPattern(pattern);
-    const totalMs = (p.inhale + p.inhale2 + p.hold + p.exhale + p.hold2) * 1000;
-    const cyc = Math.floor(t / totalMs);
-    setElapsed(t);
-    setCycleIdx(cyc);
-    if (playingRef.current) rafRef.current = requestAnimationFrame(animate);
-  }, [pattern]);
-
-  useEffect(() => {
-    if (playing) {
-      startTimeRef.current = 0;
-      setElapsed(0);
-      setCycleIdx(0);
-      rafRef.current = requestAnimationFrame(animate);
-    }
-    return () => cancelAnimationFrame(rafRef.current);
-  }, [playing, animate]);
 
   const toggle = () => setPlaying((p) => !p);
 
   const reset = () => {
     setPlaying(false);
-    setElapsed(0);
-    setCycleIdx(0);
-    startTimeRef.current = 0;
+    resetAnim();
   };
 
   const cfg = getBreathPattern(pattern);
@@ -152,16 +124,7 @@ export default function BreathingTimer({ defaultPattern = "box" }: BreathingTime
       </div>
 
       {/* Pattern info */}
-      <div className="text-[11px] text-slate-500 text-center space-y-0.5">
-        <p className="flex items-center justify-center gap-1.5">
-          <Wind className="w-3 h-3" /> {getBreathPattern(pattern).name}
-        </p>
-        <p>
-          Inhale {cfg.inhale}s{cfg.inhale2 > 0 ? ` · Inhale again ${cfg.inhale2}s` : ""}
-          {cfg.hold > 0 ? ` · Hold ${cfg.hold}s` : ""} · Exhale {cfg.exhale}s
-          {cfg.hold2 > 0 ? ` · Hold ${cfg.hold2}s` : ""}
-        </p>
-      </div>
+      <BreathPatternInfo pattern={pattern} />
     </div>
   );
 }

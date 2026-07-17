@@ -10,6 +10,8 @@
 // <start_of_turn>/<end_of_turn> markers tokenize as real special tokens). This is byte-for-byte the
 // format V2 was validated under with llama-completion.
 
+import { windowMessagesForCtx, coalesceSameRole } from "./promptWindow";
+
 export type GemmaChatMsg = { role: "user" | "assistant" | "system"; content: string };
 
 /**
@@ -38,26 +40,11 @@ export function toGemmaMessages(
   // alternation (an inflection opener + a tapped reply both seed assistant turns; stripping synthetic
   // episode turns can leave two user turns), but Gemma's chat template requires alternating user/model —
   // back-to-back same-role blocks are out-of-distribution and garble the reply.
-  const merged: GemmaChatMsg[] = [];
-  for (const m of out) {
-    const last = merged[merged.length - 1];
-    if (last && last.role === m.role) last.content += `\n\n${m.content}`;
-    else merged.push({ ...m });
-  }
-  return merged;
+  return coalesceSameRole(out);
 }
 
 // Hard context ceiling for the on-device model (llama.cpp n_ctx). Kept in sync with
-// llamaCppLlmAdapter.ts (initLlama n_ctx: 4096). Budget math below is in CHARACTERS using a conservative
-// ~3.5 chars/token so we UNDER-estimate the token count (safer to truncate a little early than to overflow
-// and have llama.cpp context-shift out the persona/§9 prefix).
-const N_CTX_TOKENS = 3072;
-const CHARS_PER_TOKEN = 3.5;
-const N_CTX_CHARS = Math.floor(N_CTX_TOKENS * CHARS_PER_TOKEN); // ~14336
-const REPLY_RESERVE_CHARS = 220 * Math.ceil(CHARS_PER_TOKEN); // reserve the n_predict:220 decode budget
-// Fallback system size when the caller doesn't pass the actual prompt (buildNilaSystem ≈ 2300 tokens).
-const DEFAULT_SYSTEM_CHARS = 800 * Math.ceil(CHARS_PER_TOKEN); // ~3200 (short persona ~800 tokens)
-const MIN_TRANSCRIPT_CHARS = 400; // never starve the transcript below the latest turn's essentials
+// llamaCppLlmAdapter.ts (initLlama n_ctx: 4096).
 
 /**
  * Window the conversation so the FULL prompt (system + transcript + reserved reply) can't overflow n_ctx.
@@ -76,42 +63,7 @@ export function windowMessages(
   maxChars = 5000,
   system?: string,
 ): { role: "user" | "assistant"; content: string }[] {
-  // Transcript char budget: the smaller of the explicit cap and (n_ctx − system − reply reserve).
-  const sysChars = system != null ? system.length : DEFAULT_SYSTEM_CHARS;
-  const ctxBudget = N_CTX_CHARS - sysChars - REPLY_RESERVE_CHARS;
-  const budget = Math.max(MIN_TRANSCRIPT_CHARS, Math.min(maxChars, ctxBudget));
-
-  /** Clamp a single turn to `budget`, keeping its TAIL (the most recent content the user just typed). */
-  const clampTurn = (t: { role: "user" | "assistant"; content: string }) =>
-    t.content.length > budget ? { ...t, content: t.content.slice(t.content.length - budget) } : t;
-
-  if (messages.length <= 2) {
-    // Even a 1–2 turn history can overflow if a single turn is enormous — clamp the latest turn only.
-    if (!messages.length) return messages;
-    const last = messages[messages.length - 1];
-    if (last.content.length <= budget) return messages;
-    const copy = messages.slice();
-    copy[copy.length - 1] = clampTurn(last);
-    return copy;
-  }
-
-  const head = messages.slice(0, 1); // the seeded greeting — keep as the primer
-  const rest = messages.slice(1);
-  const kept: { role: "user" | "assistant"; content: string }[] = [];
-  let used = 0;
-  for (let i = rest.length - 1; i >= 0; i--) {
-    used += rest[i].content.length;
-    if (used > budget && kept.length) break; // always keep at least the latest turn
-    kept.unshift(rest[i]);
-  }
-  // Hard-truncate the latest turn if it ALONE still exceeds the budget (a pasted wall of text): keep its
-  // tail so the §9/persona prefix survives rather than being context-shifted out.
-  if (kept.length && kept[kept.length - 1].content.length > budget) {
-    kept[kept.length - 1] = clampTurn(kept[kept.length - 1]);
-  }
-  return kept.length === rest.length && kept.every((k, i) => k === rest[i])
-    ? messages
-    : [...head, ...kept];
+  return windowMessagesForCtx(messages, 3072, maxChars, system);
 }
 
 /** Render the folded turns into a raw Gemma-3 prompt string (no <bos>; the native tokenizer adds it). */
