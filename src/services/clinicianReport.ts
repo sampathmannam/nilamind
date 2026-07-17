@@ -53,6 +53,7 @@ import type { ClinicianWhatDidntHelpForReport } from "./clinicianAggregations";
 import type { ClinicianThoughtRecordsForReport } from "./clinicianAggregations";
 import type { ClinicianSafetyPlanForReport } from "./clinicianAggregations";
 import type { ClinicianMedCorrelationForReport } from "./clinicianAggregations";
+import type { ClinicianSupportsRecapForReport } from "./clinicianAggregations";
 
 export interface ClinicianReportInput {
   periodLabel: string; // e.g. "Week ending 2026-07-12" or "Month ending 2026-07-12"
@@ -89,6 +90,8 @@ export interface ClinicianReportInput {
   safetyPlan?: ClinicianSafetyPlanForReport;
   /** Phase 20.1 (B7): per-medication adherence + mood correlation (taken vs missed days). */
   medCorrelation?: ClinicianMedCorrelationForReport;
+  /** Phase 20.1 (B10): supports recap — caregiver contacts + peer support sessions. */
+  supportsRecap?: ClinicianSupportsRecapForReport;
   protocolsCompleted: number;
   nilaSessions: number;
   featuresUsed: string[];
@@ -407,6 +410,28 @@ export function buildClinicianReport(input: ClinicianReportInput): string {
         lines.push(`    Avg mood intensity: taken=${m.avgMoodWhenTaken} vs missed=${m.avgMoodWhenMissed}`);
       } else if (m.avgMoodWhenTaken != null) {
         lines.push(`    Avg mood intensity (taken days): ${m.avgMoodWhenTaken}`);
+      }
+    }
+    lines.push("");
+  }
+
+  // Phase 20.1 (B10) — supports recap. Surfaces the patient's structured support
+  // network: caregiver contacts (count + relationship types) and peer support sessions
+  // (count + mood improvement). Complements B2/B8/B12 without duplicating content.
+  // Privacy: no names, phone numbers, or session notes — only counts and categories.
+  if (input.supportsRecap && (input.supportsRecap.caregiverCount > 0 || input.supportsRecap.hasPeerData)) {
+    const sr = input.supportsRecap;
+    lines.push("Supports Recap");
+    if (sr.caregiverCount > 0) {
+      lines.push(`  Caregiver contacts: ${sr.caregiverCount}`);
+      if (sr.relationships.length > 0) {
+        lines.push(`  Relationship types: ${sr.relationships.join(", ")}`);
+      }
+    }
+    if (sr.hasPeerData) {
+      lines.push(`  Peer support sessions: ${sr.peerSessionCount}`);
+      if (sr.avgMoodImprovement != null) {
+        lines.push(`  Avg mood improvement (peer sessions): ${sr.avgMoodImprovement > 0 ? "+" : ""}${sr.avgMoodImprovement}`);
       }
     }
     lines.push("");

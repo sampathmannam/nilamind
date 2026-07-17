@@ -16,9 +16,11 @@ import { recordExportAudit, getExportAudit, type ExportAuditEntry, type ExportKi
 import type { ClinicianReportInput, ClinicianMedication, AssessmentTrajectory } from "../services/clinicianReport";
 import { generateClinicianPdfBlob } from "../services/clinicianPdf";
 import { readEpisodeMarkers } from "../services/episodeMarker";
-import { summarizePactForReport, summarizeConnectionsForReport, summarizeWhatDidntHelp, summarizeThoughtRecordsForReport, summarizeSafetyPlanForReport, summarizeMedCorrelation } from "../services/clinicianAggregations";
+import { summarizePactForReport, summarizeConnectionsForReport, summarizeWhatDidntHelp, summarizeThoughtRecordsForReport, summarizeSafetyPlanForReport, summarizeMedCorrelation, summarizeSupportsRecap } from "../services/clinicianAggregations";
 import { loadPact } from "../services/pact";
 import { parseSafetyPlan } from "../services/safetyPlan";
+import { listCaregiverContacts } from "../services/caregiverContacts";
+import { loadSessions as loadPeerSessions } from "../services/peerSupport";
 import { loadConnections } from "../services/humanConnection";
 import { gatherClinicianUsage, protocolsCompletedInPeriod, periodCutoffIso, type ReportPeriod } from "../services/clinicianPeriod";
 import { loadInsights } from "../services/nilaInsights";
@@ -731,6 +733,12 @@ valuesClarified: []
        const periodMedLogs = allMedLogs.filter((l) => l.date >= cutoff);
        const medCorrelation = summarizeMedCorrelation(periodMedLogs, periodCheckins, activeMeds);
 
+       // Phase-20 (B10) — supports recap. Surfaces structured support network data
+       // (caregiver contacts + peer support sessions) for the clinician.
+       const caregivers = (() => { try { return listCaregiverContacts(); } catch { return []; } })();
+       const peerSessions = (() => { try { return loadPeerSessions(); } catch { return []; } })();
+       const supportsRecap = summarizeSupportsRecap(caregivers, peerSessions);
+
        const input: ClinicianReportInput = {
          periodLabel,
          periodDays,
@@ -750,6 +758,7 @@ valuesClarified: []
           thoughtRecords,
           safetyPlan,
           medCorrelation,
+          supportsRecap,
           diaryCardSummary,
           protocolsCompleted,
           nilaSessions: usage.nilaTurns,

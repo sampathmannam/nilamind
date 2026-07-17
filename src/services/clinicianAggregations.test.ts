@@ -4,6 +4,8 @@ import type { ConnectionRecord } from "./humanConnection";
 import type { SafetyPlan } from "../types";
 import type { Medication, MedicationLog } from "./medicationAdherence";
 import type { CheckInEntry } from "../types";
+import type { CaregiverContact } from "./caregiverContacts";
+import type { PeerSession } from "./peerSupport";
 import {
   summarizePactForReport,
   summarizeConnectionsForReport,
@@ -11,6 +13,7 @@ import {
   summarizeThoughtRecordsForReport,
   summarizeSafetyPlanForReport,
   summarizeMedCorrelation,
+  summarizeSupportsRecap,
   type ClinicianPactForReport,
 } from "./clinicianAggregations";
 
@@ -492,5 +495,59 @@ describe("summarizeMedCorrelation (Phase 20.1 B7)", () => {
     const result = summarizeMedCorrelation(logs, [], [active, inactive]);
     expect(result.perMed.length).toBe(1);
     expect(result.perMed[0].name).toBe("Active");
+  });
+});
+
+// Phase 20.1 B10 — supports recap for clinician PDF
+describe("summarizeSupportsRecap (Phase 20.1 B10)", () => {
+  const makeCaregiver = (name: string, relationship: string): CaregiverContact => ({
+    id: `cg_${name}`, name, phoneOrEmail: `${name}@test.com`, relationship, addedAt: "2026-06-01",
+  });
+  const makePeerSession = (daysAgo: number, moodBefore: number, moodAfter: number | null, connected: boolean): PeerSession => {
+    const d = new Date("2026-07-15T12:00:00Z");
+    d.setDate(d.getDate() - daysAgo);
+    return {
+      id: `ps_${daysAgo}`, date: d.toISOString().slice(0, 10), contactName: "Peer",
+      moodBefore, moodAfter, connected, notes: "",
+    };
+  };
+
+  it("returns empty when no supports exist", () => {
+    const result = summarizeSupportsRecap([], []);
+    expect(result.caregiverCount).toBe(0);
+    expect(result.peerSessionCount).toBe(0);
+    expect(result.hasPeerData).toBe(false);
+  });
+
+  it("counts caregiver contacts and extracts relationships", () => {
+    const caregivers = [
+      makeCaregiver("Mom", "parent"),
+      makeCaregiver("Sister", "sibling"),
+      makeCaregiver("Dad", "parent"),
+    ];
+    const result = summarizeSupportsRecap(caregivers, []);
+    expect(result.caregiverCount).toBe(3);
+    expect(result.relationships).toContain("parent");
+    expect(result.relationships).toContain("sibling");
+  });
+
+  it("counts peer sessions and computes avg mood improvement", () => {
+    const sessions = [
+      makePeerSession(1, 3, 5, true),   // improvement: +2
+      makePeerSession(2, 4, 6, true),   // improvement: +2
+      makePeerSession(3, 2, null, false), // no improvement (no moodAfter)
+    ];
+    const result = summarizeSupportsRecap([], sessions);
+    expect(result.peerSessionCount).toBe(3);
+    expect(result.hasPeerData).toBe(true);
+    expect(result.avgMoodImprovement).toBeCloseTo(2.0);
+  });
+
+  it("returns null avgMoodImprovement when no completed sessions", () => {
+    const sessions = [makePeerSession(1, 3, null, false)];
+    const result = summarizeSupportsRecap([], sessions);
+    expect(result.peerSessionCount).toBe(1);
+    expect(result.hasPeerData).toBe(true);
+    expect(result.avgMoodImprovement).toBeNull();
   });
 });
