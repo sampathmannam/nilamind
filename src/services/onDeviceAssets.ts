@@ -1,9 +1,9 @@
-// Runtime-downloaded on-device assets: currently just the Vosk speech-to-text model (voskStt.ts,
-// wakeWord.ts). It's NOT bundled in the app package — it's fetched on first use, the same way the LLM is
-// (modelDownload.ts), so the app's source tree never contains this prebuilt binary blob. (F-Droid's build
-// scanner walks the whole source tree looking for exactly that — a checked-in .tgz — and rejects builds
-// that fail from-source review; bundling it here would fail that review even though the model itself is
-// unrelated to app code.) Device-verified 2026-07-16: downloads, verifies, and loads correctly on hardware.
+// Runtime-downloaded on-device assets: the Vosk speech-to-text model and the ONNX Runtime WASM binary
+// used by the on-device crisis classifier (crisisEmbedder.ts). These are NOT bundled in the app package —
+// they're fetched on first use, the same way the LLM is (modelDownload.ts), so the app's source tree never
+// contains a prebuilt binary blob. (F-Droid's build scanner walks the whole source tree looking for exactly
+// that — a checked-in .wasm/.tgz/.so — and rejects builds that fail from-source review; bundling either
+// file here would fail that review even though the model itself is unrelated to app code.)
 //
 // This mirrors modelDownload.ts's integrity model (exact byte-length + SHA-256 verification, atomic
 // rename-into-place) but is intentionally NOT built on top of that file: these assets have no "which
@@ -11,9 +11,11 @@
 // just await a ready, fetchable URL. The two failure modes stay independent, so a bug in one path can't
 // take down the other (the LLM download is the single most safety-critical piece of code in this app).
 //
-// The ONNX Runtime WASM binary used by the crisis classifier was ALSO on this runtime-download path
-// (v1.18.6) but was reverted back to bundled after correlating with a false classifier trigger — see
-// crisisEmbedder.ts's docstring. Don't re-add it here without re-verifying that root cause first.
+// The crisis-detection safety gate never depends on this file: scanForCrisis (the deterministic keyword
+// floor, src/safety.ts) is always bundled and always available. The ONNX classifier this module serves is
+// a strictly additive upgrade layer — detectCrisisSignal degrades to keyword-only on any embedder failure,
+// including "not downloaded yet" (see crisisClassifier.ts). Losing network on first run narrows recall to
+// the keyword floor; it does not disable crisis detection.
 import { Filesystem, Directory } from "@capacitor/filesystem";
 import { Capacitor } from "@capacitor/core";
 import { Sha256, b64ToBytes } from "./sha256";
@@ -35,6 +37,13 @@ export const ON_DEVICE_ASSETS = {
     url: `${RELEASE_BASE}/vosk-model-small-en-us-0.15.tgz`,
     sizeBytes: 41184862,
     sha256: "f0b24bb92a48ca575b6a96500d6b543f0f079c573dfe85bbe16001fc0404e1d8",
+  },
+  ortWasm: {
+    id: "ortWasm",
+    filename: "ort-wasm-simd-threaded.asyncify.wasm",
+    url: `${RELEASE_BASE}/ort-wasm-simd-threaded.asyncify.wasm`,
+    sizeBytes: 23567050,
+    sha256: "e0c0c6d3e73d43b8a249972f8358f845b08cc16fec3c80efafdf8bed40366786",
   },
 } as const satisfies Record<string, OnDeviceAsset>;
 
