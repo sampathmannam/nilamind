@@ -16,7 +16,7 @@ import { recordExportAudit, getExportAudit, type ExportAuditEntry, type ExportKi
 import type { ClinicianReportInput, ClinicianMedication, AssessmentTrajectory } from "../services/clinicianReport";
 import { generateClinicianPdfBlob } from "../services/clinicianPdf";
 import { readEpisodeMarkers } from "../services/episodeMarker";
-import { summarizePactForReport, summarizeConnectionsForReport, summarizeWhatDidntHelp, summarizeThoughtRecordsForReport, summarizeSafetyPlanForReport } from "../services/clinicianAggregations";
+import { summarizePactForReport, summarizeConnectionsForReport, summarizeWhatDidntHelp, summarizeThoughtRecordsForReport, summarizeSafetyPlanForReport, summarizeMedCorrelation } from "../services/clinicianAggregations";
 import { loadPact } from "../services/pact";
 import { parseSafetyPlan } from "../services/safetyPlan";
 import { loadConnections } from "../services/humanConnection";
@@ -724,6 +724,12 @@ valuesClarified: []
                                        catch { return null; } })();
        const safetyPlan = summarizeSafetyPlanForReport(parseSafetyPlan(safetyPlanRaw));
 
+       // Phase-20 (B7) — medication-mood correlation. Cross-references med logs with
+       // mood check-ins to surface whether missed doses correlate with mood dips.
+       const allMedLogs = (() => { try { return loadMedicationLogs(); } catch { return []; } })();
+       const periodMedLogs = allMedLogs.filter((l) => l.date >= cutoff);
+       const medCorrelation = summarizeMedCorrelation(periodMedLogs, periodCheckins, activeMeds);
+
        const input: ClinicianReportInput = {
          periodLabel,
          periodDays,
@@ -742,6 +748,7 @@ valuesClarified: []
           whatDidntHelp,
           thoughtRecords,
           safetyPlan,
+          medCorrelation,
           diaryCardSummary,
           protocolsCompleted,
           nilaSessions: usage.nilaTurns,

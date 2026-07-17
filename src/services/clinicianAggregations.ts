@@ -11,6 +11,8 @@
 import { isPactStale, type Pact } from "./pact";
 import { loadConnections, type ConnectionRecord } from "./humanConnection";
 import type { SafetyPlan } from "../types";
+import type { Medication, MedicationLog } from "./medicationAdherence";
+import type { CheckInEntry } from "../types";
 
 /** B8 — social connection log summary for the clinician PDF. Privacy: raw dates/people never leave. */
 
@@ -326,4 +328,87 @@ export function summarizeSafetyPlanForReport(plan: SafetyPlan | null): Clinician
       : null;
 
   return { hasAnySection: hasAny, sectionCounts, lastUpdated };
+}
+
+// ---- B7: medication-mood correlation --------------------------------
+
+export interface ClinicianMedCorrelationForReport {
+  perMed: Array<{
+    name: string;
+    adherenceRate: number;
+    avgMoodWhenTaken: number | null;
+    avgMoodWhenMissed: number | null;
+    daysInPeriod: number;
+    daysTaken: number;
+    daysMissed: number;
+  }>;
+  overallAdherence: number;
+}
+
+/** PURE. Cross-reference medication logs with mood check-ins to surface adherence patterns
+ *  and mood differences on taken vs missed days.
+ *
+ *  Privacy: no log content, side-effect details, or check-in context leaves — only
+ *  numeric aggregates (counts, averages, percentages).
+ *
+ *  @param logs     MedicationLog[] for the report period.
+ *  @param checkins CheckInEntry[] for the report period.
+ *  @param meds     Active Medication[] to iterate.
+ */
+export function summarizeMedCorrelation(
+  logs: MedicationLog[],
+  checkins: CheckInEntry[],
+  meds: Medication[],
+): ClinicianMedCorrelationForReport {
+  if (meds.length === 0) return { perMed: [], overallAdherence: 0 };
+
+  // Build a date→intensity map from checkins (one intensity per day, last wins).
+  const moodByDate: Record<string, number> = {};
+  for (const c of checkins) {
+    if (typeof c.intensity === "number") moodByDate[c.date] = c.intensity;
+  }
+
+  let totalTaken = 0;
+  let totalMissed = 0;
+
+  const perMed = meds
+    .filter((m) => m.active)
+    .map((med) => {
+      const medLogs = logs.filter((l) => l.medId === med.id);
+      const taken = medLogs.filter((l) => l.taken);
+      const missed = medLogs.filter((l) => !l.taken);
+      const daysInPeriod = medLogs.length;
+      const daysTaken = taken.length;
+      const daysMissed = missed.length;
+      const adherenceRate = daysInPeriod > 0 ? Math.round((daysTaken / daysInPeriod) * 100) : 0;
+
+      totalTaken += daysTaken;
+      totalMissed += daysMissed;
+
+      const takenMoods = taken.map((l) => moodByDate[l.date]).filter((v) => typeof v === "number");
+      const missedMoods = missed.map((l) => moodByDate[l.date]).filter((v) => typeof v === "number");
+
+      const avgMoodWhenTaken = takenMoods.length > 0
+        ? takenMoods.reduce((a, b) => a + b, 0) / takenMoods.length
+        : null;
+      const avgMoodWhenMissed = missedMoods.length > 0
+        ? missedMoods.reduce((a, b) => a + b, 0) / missedMoods.length
+        : null;
+
+      return {
+        name: med.name,
+        adherenceRate,
+        avgMoodWhenTaken: avgMoodWhenTaken !== null ? Math.round(avgMoodWhenTaken * 10) / 10 : null,
+        avgMoodWhenMissed: avgMoodWhenMissed !== null ? Math.round(avgMoodWhenMissed * 10) / 10 : null,
+        daysInPeriod,
+        daysTaken,
+        daysMissed,
+      };
+    });
+
+  const overallAdherence = (totalTaken + totalMissed) > 0
+    ? Math.round((totalTaken / (totalTaken + totalMissed)) * 100)
+    : 0;
+
+  return { perMed, overallAdherence };
 }
