@@ -523,3 +523,36 @@ describe("supportsRecap render (Phase 20.1 B10)", () => {
     expect(report).not.toContain("Supports Recap");
   });
 });
+
+// Phase 20.6 — voice signal (opt-in by structure)
+describe("voiceSignal render (Phase 20.6)", () => {
+  it("renders Voice Signal section when voiceSignal is present", () => {
+    const report = buildClinicianReport({
+      ...baseInput,
+      voiceSignal: {
+        sessionCount: 12,
+        avgSpeakingRate: 125,
+        signal: "anxiety",
+      },
+    });
+    expect(report).toContain("Voice Signal");
+    expect(report).toContain("Sessions: 12");
+    expect(report).toContain("Avg speaking rate: 125 wpm");
+    expect(report).toContain("Signal: anxiety");
+  });
+
+  it("omits signal line when signal is null", () => {
+    const report = buildClinicianReport({
+      ...baseInput,
+      voiceSignal: { sessionCount: 5, avgSpeakingRate: 100, signal: null },
+    });
+    expect(report).toContain("Voice Signal");
+    expect(report).toContain("Sessions: 5");
+    expect(report).not.toContain("Signal:");
+  });
+
+  it("omits Voice Signal when absent (opt-in by structure)", () => {
+    const report = buildClinicianReport(baseInput);
+    expect(report).not.toContain("Voice Signal");
+  });
+});

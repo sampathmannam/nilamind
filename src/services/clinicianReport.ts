@@ -94,6 +94,8 @@ export interface ClinicianReportInput {
   medCorrelation?: ClinicianMedCorrelationForReport;
   /** Phase 20.1 (B10): supports recap — caregiver contacts + peer support sessions. */
   supportsRecap?: ClinicianSupportsRecapForReport;
+  /** Phase 20.6: voice signal — session count, avg speaking rate, mood signal (opt-in by structure). */
+  voiceSignal?: { sessionCount: number; avgSpeakingRate: number; signal: "mania" | "depression" | "anxiety" | null };
   protocolsCompleted: number;
   nilaSessions: number;
   featuresUsed: string[];
@@ -437,6 +439,18 @@ export function buildClinicianReport(input: ClinicianReportInput): string {
         lines.push(`  Avg mood improvement (peer sessions): ${sr.avgMoodImprovement > 0 ? "+" : ""}${sr.avgMoodImprovement}`);
       }
     }
+    lines.push("");
+  }
+
+  // Phase 20.6 — voice signal. Opt-in by structure: only appears when the patient has
+  // voice sessions. Surfaces session count, avg speaking rate, and derived mood signal.
+  // Privacy: no transcripts or audio — only aggregate metrics from on-device processing.
+  if (input.voiceSignal && input.voiceSignal.sessionCount > 0) {
+    const vs = input.voiceSignal;
+    lines.push("Voice Signal");
+    lines.push(`  Sessions: ${vs.sessionCount}`);
+    lines.push(`  Avg speaking rate: ${vs.avgSpeakingRate} wpm`);
+    if (vs.signal) lines.push(`  Signal: ${vs.signal}`);
     lines.push("");
   }
 
