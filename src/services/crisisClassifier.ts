@@ -23,7 +23,7 @@
  * device-verified — see crisisEmbedder.example.ts.
  */
 import weights from "./crisisClassifier.weights.json";
-import { scanForCrisis, isBenignMedicationAdherence, isBenignHyperbole, isBenignExhaustion, isBenignOkayReassurance, isBenignExistentialReferent, isBenignHeartbreakIdiom, isBenignHelpSeeking, isBenignSleepRequest } from "../safety";
+import { scanForCrisis, isBenignMedicationAdherence, isBenignHyperbole, isBenignExhaustion, isBenignOkayReassurance, isBenignExistentialReferent, isBenignHeartbreakIdiom, isBenignHelpSeeking, isBenignSleepRequest, isBenignEverydayActivity } from "../safety";
 
 /** Returns a NORMALIZED (L2) sentence embedding of `dim` floats. The head was trained on normalized MiniLM
  *  mean-pooled embeddings, so the embedder MUST mean-pool + L2-normalize (Transformers.js:
@@ -224,6 +224,14 @@ export async function detectCrisisSignal(text: string): Promise<CrisisSignal> {
   // MISS, and vetoed by any lethal co-signal, life-weariness/despair, minimization/farewell, or sleep-as-death
   // euphemism phrasing. See isBenignSleepRequest in safety.ts.
   if (isBenignSleepRequest(text)) return { hit: false, source: null, tier: null };
+  // 2026-07-17 device report (reproduced on-model): "i told im going to excersise" — a TYPED, misspelled
+  // everyday-activity message — scores 0.7316, above CRISIS_HIGH_CONFIDENCE_THRESHOLD, firing the full
+  // takeover. The typo is the trap: OOV misspellings shift the quantized-MiniLM embedding toward the crisis
+  // cluster (clean spelling scores 0.34), and two individually-safe oddities compound past the bar. Guard
+  // matches a first-person intent frame + everyday-activity lexicon with bounded edit distance (typo-robust),
+  // same posture as every guard above: keyword-floor MISS only, vetoed by lethal/despair/farewell/sleep-as-
+  // death co-signals. See isBenignEverydayActivity in safety.ts.
+  if (isBenignEverydayActivity(text)) return { hit: false, source: null, tier: null };
   const p = await scoreCrisis(text);
   if (p === null || p < CRISIS_THRESHOLD) return { hit: false, source: null, tier: null };
   // 2026-07-12 Bug 1 fix: tier is SCORE-based within classifier hits, not automatically "soft" just because

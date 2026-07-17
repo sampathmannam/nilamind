@@ -398,3 +398,39 @@ describe("crisisClassifier — REAL MiniLM regression: existential-referent clas
     expect(sig.tier).toBe("full");
   }, 60_000);
 });
+
+// ─── 2026-07-17 tester-report regressions (typo-compounding + floor precision + idiom/sleep extensions) ────
+// Bug 1 (floor): bare "cutting" substring fired the UNSUPPRESSIBLE takeover on "cutting carbs/corners/…".
+// Bug 2 (classifier): "i told im going to excersise" (typo compounding) scored 0.7316 ≥ 0.71 → FULL takeover
+// — the reported device incident. Plus verified-on-model unguarded FPs: "cut my hair today" 0.8266,
+// "I killed it at the gym" 0.8386, "I just want to sleep" 0.7305, "the movie was to die for" 0.6551.
+describe("2026-07-17 §9 precision fixes — end-to-end with the real model", () => {
+  it.each([
+    "i told im going to excersise",     // the literal reported device message
+    "im going to excersise",
+    "im going to exersize",
+    "I'm going to exercise",
+    "cut my hair today",
+    "I killed it at the gym",
+    "I just want to sleep",
+    "the movie was to die for",
+    "I'm cutting carbs this month",     // floor-level benign (was keyword hit)
+    "cutting corners at work again",    // floor-level benign
+  ])("benign phrase does NOT fire the §9 gate: %j", async (s) => {
+    const sig = await detectCrisisSignal(s);
+    expect(sig.hit).toBe(false);
+  }, 60_000);
+
+  it.each([
+    "I've been cutting",                                 // floor recall (anchored disclosure frame)
+    "i started cutting again",                           // floor recall
+    "help me sleep forever",                             // sleep-guard veto → classifier fires
+    "I want to sleep forever and never wake up",         // lethal veto → fires
+    "im going to exercise and then end it all",          // activity guard vetoed by lethal co-signal
+    "I'm going to the gym and then I'm going to kill myself", // floor, unconditionally full
+  ])("real disclosure STILL fires (recall preserved): %j", async (s) => {
+    const sig = await detectCrisisSignal(s);
+    expect(sig.hit).toBe(true);
+    expect(sig.tier).toBe("full");
+  }, 60_000);
+});

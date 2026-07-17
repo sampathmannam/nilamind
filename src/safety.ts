@@ -275,7 +275,13 @@ export const NATIVE_SCRIPT_IDEATION = [
 ];
 
 export const SELF_HARM_KEYWORDS = [
-  "hurt myself", "cut myself", "harm myself", "cutting", "self harm", "self-harm",
+  // 2026-07-17 precision fix (tester report Bug 1): the bare token "cutting" is GONE from this list. As a
+  // plain substring it fired the UNSUPPRESSIBLE full takeover on every benign use of the word — "cutting
+  // carbs/corners/costs", "cutting board", "cutting-edge", "cost-cutting", "paper cutting" (13/13 benign
+  // phrasings verified firing on-model) — and because the floor returns before the guard chain, no guard
+  // could save them. Gerund-disclosure recall ("I've been cutting", "i started cutting again") is preserved
+  // by SELF_HARM_CUTTING_RE below (first-person, object-less frame) plus the anchored token "cutting myself".
+  "hurt myself", "cut myself", "harm myself", "cutting myself", "self harm", "self-harm",
   "burn myself", "hit myself", "punish myself", "deserve pain", "want to bleed",
   // present-continuous forms: a live disclosure ("I've been HURTING myself") must trip the floor too,
   // mirroring the gerund/past coverage in SUICIDAL_KEYWORDS. The "…myself" suffix keeps the precision
@@ -544,6 +550,16 @@ function scanForDivestmentReadiness(normalized: string): boolean {
 // hyphen or word char, so "kill my self" / "kill my self." / "kill my self tonight" still trip.
 const SUICIDAL_SPLIT_RE = /\bkill my self(?![-\w])/;
 
+// 2026-07-17 precision fix (tester report Bug 1): anchored replacement for the bare "cutting" token.
+// Fires ONLY on a first-person, object-less gerund disclosure — subject ("i / i'm / i've / im"), optionally a
+// relapse/continuation verb ("been / keep / started / can't stop / relapsed and started"), then "cutting"
+// followed by NOTHING but a disclosure continuation ("again", "myself", "a lot", "lately"…) and a clause
+// end/connector. An object after "cutting" ("carbs", "corners", "my hair", "the video", "it close") kills the
+// match, which is what makes the benign surface safe while keeping every real disclosure on the floor.
+// Precision posture matches SUICIDAL_SPLIT_RE above: this is still the deterministic, unsuppressible floor.
+const SELF_HARM_CUTTING_RE =
+  /\b(?:i'?m|i am|i'?ve|i have|im|i)\s+(?:(?:relapsed|slipped)\s+(?:and|into)\s+)?(?:(?:been|keeps?|kept|starts?|started|restarted|resumed|can'?t stop|cannot stop|couldn'?t stop|caught myself)\s+)*cutting(?:\s+(?:myself|my ?self|again|more|deeper|worse|a lot|at night|lately|recently|every ?day|everyday|tonight|today|yesterday|this week))*\s*(?=$|[.!?,;:)"'…]|\s(?:and|but|because|since|when|so)\s)/;
+
 /**
  * Scans user input for active suicidal ideation or self-harm warnings.
  * Deterministic, offline, super fast.
@@ -580,6 +596,10 @@ export function scanForCrisis(message: string): boolean {
   }
 
   if (SUICIDAL_SPLIT_RE.test(normalized)) return true; // #1 (re-audit): boundary-anchored "kill my self"
+
+  // 2026-07-17: first-person object-less "cutting" disclosure (replaces the bare "cutting" substring token —
+  // see SELF_HARM_CUTTING_RE's docstring for the precision story; recall pinned in safety.cuttingFloor.test.ts).
+  if (SELF_HARM_CUTTING_RE.test(normalized)) return true;
 
   // FIX SET 1 (2026-07-12 adversarial-review hardening): negation-first "jeena" prefixes and reason-noun
   // phrases, checked with a reside-sense/devotion-sense escape instead of a bare substring — see
@@ -645,8 +665,11 @@ export function isBenignMedicationAdherence(message: string): boolean {
 // ONLY the SOFT classifier upgrade AFTER the deterministic keyword floor has already missed. It can never
 // suppress a keyword hit, and the same LETHAL_COSIGNAL veto keeps it from ever masking a real disclosure that
 // merely happens to contain an idiom (e.g. "sleep for a week and never wake up" → vetoed).
+// 2026-07-17 extensions (tester report): achievement idiom "killed/crushed/nailed it" (real-model: "I killed
+// it at the gym" → 0.8386 → FULL takeover) and bare appraisal "to die for" (0.6551 → soft; the old pattern
+// only covered "could die for"). Both stay behind the LETHAL_COSIGNAL veto in isBenignHyperbole.
 const HYPERBOLE_PATTERNS =
-  /\bsleep (for )?(a|an|the|another|a whole|an entire) (week|month|year|century|decade|weekend|day)\b|\bcould (murder|kill for|kill|die for) (a|an|some|the|this|that)\b|\bdying (to|for)\b|\bdying of (laughter|boredom|embarrassment|thirst|hunger)\b|\b(dead tired|dead serious|scared to death|bored to death|worked to death)\b/;
+  /\bsleep (for )?(a|an|the|another|a whole|an entire) (week|month|year|century|decade|weekend|day)\b|\bcould (murder|kill for|kill|die for) (a|an|some|the|this|that)\b|\bdying (to|for)\b|\bdying of (laughter|boredom|embarrassment|thirst|hunger)\b|\b(dead tired|dead serious|scared to death|bored to death|worked to death)\b|\b(killed|crushed|nailed|smashed|aced) it\b|\bto die for\b/;
 export function isBenignHyperbole(message: string): boolean {
   if (!message) return false;
   const t = message.toLowerCase().replace(/['’]/g, "'").replace(/\s+/g, " ").trim();
@@ -812,8 +835,12 @@ export function isBenignOkayReassurance(message: string): boolean {
 // requests for sleep help near the self-harm-by-euphemism cluster ("help me sleep forever", "put me to sleep").
 // A false FULL crisis takeover (grounding + hotlines) on someone asking for help falling asleep is itself
 // harmful (patronizing; erodes trust), the same posture as the other guards above.
+// 2026-07-17 extension (tester report): first-person desire-to-sleep WITHOUT a help-verb — "I just want to
+// sleep" scores 0.7305 on the real model (≥ 0.71 → FULL takeover) and the v1.18.15 guard only covered
+// help-me-sleep phrasings. The sleep-as-death / lethal / despair vetoes below are unchanged, so
+// "sleep forever", "never wake up", and "I've had enough" phrasings still defer to the classifier.
 const SLEEP_HELP_PATTERNS =
-  /\bhelp (me|us)? ?(to |get to |fall )?a?sleep\b|\bcan'?t (get to )?(fall a)?sleep\b|\b(trouble|difficulty|a hard time) (sleeping|falling asleep)\b|\bhow (do|can) i (fall asleep|get to sleep|sleep better)\b|\binsomnia\b/;
+  /\bhelp (me|us)? ?(to |get to |fall )?a?sleep\b|\bcan'?t (get to )?(fall a)?sleep\b|\b(trouble|difficulty|a hard time) (sleeping|falling asleep)\b|\bhow (do|can) i (fall asleep|get to sleep|sleep better)\b|\binsomnia\b|\bi (just )?(want|need|wanna) (to )?(go to )?sleep\b|\bi (just )?need (some )?sleep\b/;
 // Sleep-as-death euphemism — "sleep forever", "put me to sleep permanently", "sleep for good" — must DEFER to
 // the classifier, never be suppressed. Generous on purpose (erring toward vetoing is the safe direction, same
 // posture as WEARY_DESPAIR_PATTERNS): a false veto only means "let the classifier decide."
@@ -831,6 +858,105 @@ export function isBenignSleepRequest(message: string): boolean {
   if (!message) return false;
   const t = message.toLowerCase().replace(/['’]/g, "'").replace(/\s+/g, " ").trim();
   if (!SLEEP_HELP_PATTERNS.test(t)) return false;
+  return !LETHAL_COSIGNAL.test(t) && !WEARY_DESPAIR_PATTERNS.test(t) && !MINIMIZATION_PATTERNS.test(t) && !SLEEP_DEATH_VETO.test(t);
+}
+
+// ── isBenignEverydayActivity (2026-07-17, tester report Bug 2) ────────────────────────────────────────────
+// Everyday-activity words the intent frame below may announce. Deliberately EXCLUDES "sleep" (owned by
+// isBenignSleepRequest with its sleep-as-death veto) and anything with a crisis-adjacent neighbor. Fixed,
+// deterministic lexicon — no model, no network — matching the codebase's guard posture.
+const EVERYDAY_ACTIVITY_WORDS = [
+  "exercise", "exercising", "exercised", "workout", "workouts", "work", "walk", "walking", "walked",
+  "run", "running", "jog", "jogging", "gym", "yoga", "stretch", "stretching", "stretches",
+  "meditate", "meditating", "meditation", "shower", "showering", "bathe", "bath",
+  "cook", "cooking", "bake", "baking", "eat", "eating", "breakfast", "lunch", "dinner", "brunch",
+  "study", "studying", "class", "classes", "college", "school", "office",
+  "shopping", "groceries", "market", "laundry", "cleaning", "clean", "dishes",
+  "movie", "movies", "temple", "church", "mosque", "gurdwara", "library",
+  "practice", "practising", "practicing", "cricket", "football", "badminton", "tennis",
+  "swimming", "swim", "cycling", "cycle", "dance", "dancing", "garden", "gardening",
+];
+const EVERYDAY_ACTIVITY_SET = new Set(EVERYDAY_ACTIVITY_WORDS);
+
+// Bounded Damerau-Levenshtein (optimal string alignment) — the typo-robustness core. The reported device
+// incident hinged on a misspelling: "excersise" scores 0.7316 on the real model while "exercise" scores
+// 0.34, because OOV subword tokenization shifts the quantized-MiniLM embedding toward the crisis cluster.
+// Words are ≤ ~15 chars so the DP cost is trivial; pure and deterministic.
+function osaDistance(a: string, b: string): number {
+  const m = a.length, n = b.length;
+  const d: number[][] = Array.from({ length: m + 1 }, (_, i) => {
+    const row = new Array<number>(n + 1).fill(0);
+    row[0] = i;
+    return row;
+  });
+  for (let j = 0; j <= n; j++) d[0][j] = j;
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + cost);
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+        d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1); // adjacent transposition
+      }
+    }
+  }
+  return d[m][n];
+}
+
+/** Fuzzy activity-word match with length-gated edit distance: exact for short words (≤4 chars — "gym" can
+ *  never bridge to "gun"), distance ≤1 when both words are ≥5 chars, ≤2 only when both are ≥7 chars
+ *  ("excersise"/"exersize" → "exercise"). The asymmetry keeps every bridge INSIDE the everyday lexicon. */
+function matchesActivityWord(word: string): boolean {
+  if (EVERYDAY_ACTIVITY_SET.has(word)) return true;
+  if (word.length < 5) return false;
+  for (const lex of EVERYDAY_ACTIVITY_WORDS) {
+    if (lex.length < 5) continue;
+    const maxD = word.length >= 7 && lex.length >= 7 ? 2 : 1;
+    if (Math.abs(word.length - lex.length) > maxD) continue;
+    if (osaDistance(word, lex) <= maxD) return true;
+  }
+  return false;
+}
+
+// First-person near-term intent frame ("I'm going to / gonna / about to / off to / planning to / will …"),
+// tolerant of the apostrophe-less "im". "want to" is deliberately NOT an intent verb here — "I want to
+// disappear" must stay with the classifier (WEARY_DESPAIR also vetoes it). The capture is the announced
+// activity chunk, checked word-by-word against the lexicon above.
+const ACTIVITY_INTENT_FRAME =
+  /\b(?:i'?m|i am|im|i)\s+(?:just\s+|really\s+)?(?:going to|gonna|about to|planning to|heading (?:to|out to)|off to|getting ready to|will)\s+(?:go\s+(?:and\s+|to\s+|for\s+(?:a|an|some)\s+)?)?(?:do\s+(?:some\s+|a\s+)?|take\s+(?:a\s+)?|hit\s+the\s+)?([a-z][a-z' -]{1,30})/;
+
+// Everyday grooming statements ("cut my hair today" scores 0.8266 on the real model → FULL takeover without
+// this). Body-part list is strictly cosmetic — "wrists"/"arms"/"skin" are NOT here, and any real self-harm
+// phrasing ("cut my wrists") is a METHOD_INTENT floor token that returns before guards ever run.
+const BENIGN_GROOMING_RE =
+  /\b(?:cut|trimm?ed|trim|shaved?|shaving|dyed|colou?r(?:ed)?)\s+(?:my|his|her|their|your)\s+(?:hair|nails?|beard|mo?ustache|eyebrows?)\b/;
+
+/**
+ * NEGATIVE GUARD for first-person everyday-activity intent ("I'm going to exercise", typos included) and
+ * everyday grooming ("cut my hair today").
+ *
+ * Root cause (2026-07-17 device incident, reproduced on-model): "i told im going to excersise" → 0.7316,
+ * above CRISIS_HIGH_CONFIDENCE_THRESHOLD (0.71) → full-screen crisis takeover on a message about going to
+ * exercise. The compounding is the trap: the typo alone (0.5365) and the "i told im" fragment alone (0.5188)
+ * are each under threshold — together they cross the FULL bar. Misspelled everyday words are exactly where
+ * the quantized MiniLM is least trustworthy, so the guard matches the activity lexicon with bounded edit
+ * distance instead of exact tokens.
+ *
+ * SAFETY POSTURE: identical to the other eight guards — runs ONLY after a keyword-floor MISS, suppresses
+ * ONLY the classifier's soft upgrade, and DEFERS to the classifier on any lethal co-signal, life-weariness/
+ * despair cue, minimization/farewell cue, or sleep-as-death phrasing ("going to the gym one last time"
+ * still fires). Recall pinned in safety.everydayActivity.test.ts + crisisClassifier.realmodel.test.ts.
+ */
+export function isBenignEverydayActivity(message: string): boolean {
+  if (!message) return false;
+  const t = message.toLowerCase().replace(/['’]/g, "'").replace(/\s+/g, " ").trim();
+  let matched = false;
+  const frame = ACTIVITY_INTENT_FRAME.exec(t);
+  if (frame) {
+    const words = frame[1].split(/[\s'-]+/).filter(Boolean);
+    matched = words.some((w) => matchesActivityWord(w));
+  }
+  if (!matched && BENIGN_GROOMING_RE.test(t)) matched = true;
+  if (!matched) return false;
   return !LETHAL_COSIGNAL.test(t) && !WEARY_DESPAIR_PATTERNS.test(t) && !MINIMIZATION_PATTERNS.test(t) && !SLEEP_DEATH_VETO.test(t);
 }
 
