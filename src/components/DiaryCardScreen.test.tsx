@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { localDateKey } from "../services/storageUtils";
 import { describe, it, expect, afterEach, beforeEach, vi } from "vitest";
 import { render, screen, cleanup, fireEvent } from "@testing-library/react";
 
@@ -39,7 +40,7 @@ describe("DiaryCardScreen — Part 3 now defers to the unified daily-intention s
   it("reflects an intention already set elsewhere (e.g. from the Today hub) via the shared store", () => {
     store.set(
       "nilamind_daily_intention",
-      JSON.stringify({ if: "it's 8am", then: "go for a short walk", date: new Date().toISOString().split("T")[0] }),
+      JSON.stringify({ if: "it's 8am", then: "go for a short walk", date: localDateKey() }),
     );
     render(<DiaryCardScreen />);
     expect(screen.getByText(/it's 8am/)).toBeTruthy();
@@ -68,7 +69,7 @@ describe("DiaryCardScreen — urges & target behaviors (research-grounded redesi
     expect(toggle.getAttribute("aria-checked")).toBe("true");
 
     fireEvent.click(document.getElementById("save-diary-btn")!);
-    const today = new Date().toISOString().split("T")[0];
+    const today = localDateKey();
     const saved = JSON.parse(store.get("nilamind_diary") || "{}");
     const selfHarm = saved[today]?.urges?.find((u: { key: string }) => u.key === "selfHarm");
     expect(selfHarm).toMatchObject({ intensity: 3, actedOn: true });
@@ -82,7 +83,7 @@ describe("DiaryCardScreen — urges & target behaviors (research-grounded redesi
     expect(screen.queryByLabelText(/Did you act on: Urge to self-harm/)).toBeNull();
 
     fireEvent.click(document.getElementById("save-diary-btn")!);
-    const today = new Date().toISOString().split("T")[0];
+    const today = localDateKey();
     const saved = JSON.parse(store.get("nilamind_diary") || "{}");
     const selfHarm = saved[today]?.urges?.find((u: { key: string }) => u.key === "selfHarm");
     expect(selfHarm).toMatchObject({ intensity: 0, actedOn: false });
@@ -102,7 +103,7 @@ describe("DiaryCardScreen — skill effectiveness (research-grounded redesign)",
     expect(screen.getByText(/Tried — helped/)).toBeTruthy();
 
     fireEvent.click(document.getElementById("save-diary-btn")!);
-    const today = new Date().toISOString().split("T")[0];
+    const today = localDateKey();
     let saved = JSON.parse(store.get("nilamind_diary") || "{}");
     expect(saved[today]?.skillsUsed).toContain("TIPP");
     expect(saved[today]?.skillEffectiveness?.TIPP).toBe("tried_helped");

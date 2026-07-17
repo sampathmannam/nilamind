@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { localDateKey } from "../services/storageUtils";
 import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
 import { render, screen, cleanup, fireEvent } from "@testing-library/react";
 
@@ -54,7 +55,7 @@ describe("SocialRhythmScreen", () => {
     for (let i = 5; i >= 1; i--) {
       const d = new Date(now.getTime() - i * dayMs);
       recordRhythm({ wake: wakeTimes[5 - i] }, d);
-      checkins.push({ date: d.toISOString().slice(0, 10), sleepHours: 6 + (i % 2) });
+      checkins.push({ date: localDateKey(d), sleepHours: 6 + (i % 2) });
     }
     store.set("nilamind_checkins", JSON.stringify(checkins));
 

@@ -4,6 +4,7 @@
 // non-alarming, non-blocking nudge ONLY on a reliable (>=MCID) worsening, must stay silent on a
 // first-ever assessment or a within-band change, and must hedge WHO-5's copy (no cited MCID) vs.
 // PHQ-9/GAD-7's cited copy — never presenting WHO-5 with the same confidence.
+import { localDateKey } from "../services/storageUtils";
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, cleanup, fireEvent } from "@testing-library/react";
 import type { AssessmentEntry, InstrumentId } from "../services/assessments";
@@ -35,7 +36,7 @@ const entry = (instrument: InstrumentId, total: number, daysAgo: number): Assess
   d.setDate(d.getDate() - daysAgo);
   return {
     id: `a${seq++}`,
-    date: d.toISOString().split("T")[0],
+    date: localDateKey(d),
     timestamp: "10:00:00",
     instrument,
     responses: [],

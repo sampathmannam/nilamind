@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { localDateKey } from "../services/storageUtils";
 import { describe, it, expect, afterEach, beforeEach, vi } from "vitest";
 import { render, screen, cleanup, fireEvent } from "@testing-library/react";
 
@@ -69,7 +70,7 @@ describe("DailyIntentionCard", () => {
   it("renders the saved summary view (not the form) when an intention already exists for today", () => {
     store.set(
       "nilamind_daily_intention",
-      JSON.stringify({ if: "it's 8am", then: "go for a short walk", date: new Date().toISOString().split("T")[0] }),
+      JSON.stringify({ if: "it's 8am", then: "go for a short walk", date: localDateKey() }),
     );
     render(<DailyIntentionCard />);
     expect(screen.queryByLabelText("If")).toBeNull();
@@ -80,7 +81,7 @@ describe("DailyIntentionCard", () => {
   it("returns to the editable form when Edit is tapped on an already-set intention", () => {
     store.set(
       "nilamind_daily_intention",
-      JSON.stringify({ if: "it's 8am", then: "go for a short walk", date: new Date().toISOString().split("T")[0] }),
+      JSON.stringify({ if: "it's 8am", then: "go for a short walk", date: localDateKey() }),
     );
     render(<DailyIntentionCard />);
     fireEvent.click(screen.getByRole("button", { name: /edit/i }));

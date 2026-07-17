@@ -1,3 +1,4 @@
+import { localDateKey } from "./storageUtils";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const store = new Map<string, string>();
@@ -43,7 +44,7 @@ beforeEach(() => {
 // key "nilamind_diary", keyed internally by date. The reminder therefore always saw `null` and
 // fired every evening regardless of whether a diary entry actually existed for today.
 describe("hasDiaryEntryToday", () => {
-  const today = new Date().toISOString().split("T")[0];
+  const today = localDateKey();
 
   it("returns false when nothing has been saved", () => {
     expect(hasDiaryEntryToday()).toBe(false);

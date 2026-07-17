@@ -1,3 +1,4 @@
+import { localDateKey } from "./storageUtils";
 import { describe, it, expect } from "vitest";
 import { isSameRecallWindowRetake, RECALL_WINDOW_GUARD_DAYS, classifyChange } from "./assessments";
 import type { AssessmentEntry } from "./assessments";
@@ -11,7 +12,7 @@ const entryDaysAgo = (days: number): AssessmentEntry => {
   d.setDate(d.getDate() - days);
   return {
     id: "as_x",
-    date: d.toISOString().split("T")[0],
+    date: localDateKey(d),
     timestamp: "10:00:00",
     instrument: "PHQ-9",
     responses: [0, 0, 0, 0, 0, 0, 0, 0, 0],

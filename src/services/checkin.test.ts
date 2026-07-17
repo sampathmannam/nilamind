@@ -1,3 +1,4 @@
+import { localDateKey } from "./storageUtils";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
 // In-memory secureLocal mock (vi.mock is hoisted; the store map is referenced inside the factory).
@@ -43,7 +44,7 @@ describe("buildCheckinEntry", () => {
   it("builds the exact CheckInEntry shape with the (Nila) suffix", () => {
     const e = buildCheckinEntry("Anxious", 7, "Work");
     expect(e.id).toMatch(/^ch_\d+$/);
-    expect(e.date).toBe(new Date().toISOString().split("T")[0]);
+    expect(e.date).toBe(localDateKey());
     expect(typeof e.timestamp).toBe("string");
     expect(e.timestamp.length).toBeGreaterThan(0);
     expect(e.emotion).toBe("Anxious (Nila)");

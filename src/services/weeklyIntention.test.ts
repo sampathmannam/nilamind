@@ -1,3 +1,4 @@
+import { localDateKey } from "./storageUtils";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
 const store = new Map<string, string>();
@@ -36,7 +37,7 @@ describe("weeklyIntention — daily if-then intention", () => {
     expect(result).not.toBeNull();
     expect(result!.if).toBe("I feel anxious after lunch");
     expect(result!.then).toBe("do a 2-minute breathing exercise");
-    expect(result!.date).toBe(new Date().toISOString().split("T")[0]);
+    expect(result!.date).toBe(localDateKey());
 
     const loaded = getDailyIntention();
     expect(loaded).toEqual(result);
