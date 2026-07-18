@@ -27,6 +27,7 @@ import { computeRhythmRegularity } from "../services/socialRhythm";
 import { computeNof1Ranking } from "../services/nOf1";
 import { PROTOCOLS } from "../services/protocols";
 import { secureLocal } from "../services/secureLocal";
+import { loadDiaryEntries } from "../services/diary";
 import { runDeepAssessment as runDeepAssessmentRequest } from "../services/coachAssist";
 import { generateCsvReport, buildTextReport, generatePdfBlob, saveReport } from "../services/exportReport";
 import { computeRetention } from "../services/retentionMetrics";
@@ -103,11 +104,7 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
     const nila = nilaStats();
 
     const checkins = readArr<CheckInEntry>("nilamind_checkins");
-    let diaryEntries: DiaryCardEntry[] = [];
-    try {
-      const raw = secureLocal.getItem("nilamind_diary");
-      if (raw) diaryEntries = Object.values(JSON.parse(raw) as Record<string, DiaryCardEntry>);
-    } catch { /* ignore */ }
+    const diaryEntries: DiaryCardEntry[] = loadDiaryEntries();
     const episodes = readArr<EpisodeRecord>("nilamind_episodes");
 
     // This-week vs last-week distress (unchanged)

@@ -4,7 +4,7 @@
 //
 // Pure + local; reads the encrypted-at-rest data via secureLocal.
 
-import { secureLocal } from "./secureLocal";
+import { loadDiaryMap } from "./diary";
 import { loadCheckins } from "./checkin";
 import { DAY_MS, localDateKey } from "./storageUtils";
 // LOCAL calendar frame — MUST match how check-ins/diary are stored (localDateKey(), see checkin.ts /
@@ -21,10 +21,7 @@ export function activeDates(): Set<string> {
   try {
     for (const c of loadCheckins()) if (c?.date) s.add(c.date);
   } catch { /* ignore */ }
-  try {
-    const raw = secureLocal.getItem("nilamind_diary");
-    if (raw) for (const d of Object.keys(JSON.parse(raw))) s.add(d);
-  } catch { /* ignore */ }
+  for (const d of Object.keys(loadDiaryMap())) s.add(d);
   return s;
 }
 

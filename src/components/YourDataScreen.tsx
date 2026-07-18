@@ -4,6 +4,7 @@ import { Capacitor } from "@capacitor/core";
 import { Filesystem, Directory } from "@capacitor/filesystem";
 import { Share } from "@capacitor/share";
 import { secureLocal } from "../services/secureLocal";
+import { loadDiaryEntries } from "../services/diary";
 import { loadCheckins } from "../services/checkin";
 import { loadIdentity, exportBackup } from "../services/identity";
 import { requireAuth } from "../services/biometricGate";
@@ -640,14 +641,7 @@ valuesClarified: []
       // DBT diary card entries within the window — urges/target behaviors, emotions, skills
       // effectiveness (research-grounded redesign, 2026-07-16). Previously never reached the
       // clinician report at all.
-      const diaryEntries = (() => {
-        try {
-          const raw = secureLocal.getItem("nilamind_diary");
-          if (!raw) return [];
-          const parsed = JSON.parse(raw) as Record<string, DiaryCardEntry>;
-          return Object.values(parsed);
-        } catch { return []; }
-      })();
+      const diaryEntries = loadDiaryEntries();
       const diaryCardSummary = summarizeDiaryForClinician(diaryEntries, cutoff, periodDays);
 
       // Phase-20 (B11) — what didn't help. Derive from DBT diary skill ratings

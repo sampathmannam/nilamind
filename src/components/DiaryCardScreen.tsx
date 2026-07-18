@@ -1,5 +1,6 @@
 import { localDateKey } from "../services/storageUtils";
 import { secureLocal } from "../services/secureLocal";
+import { loadDiaryMap } from "../services/diary";
 import React, { useState, useEffect } from "react";
 import { DiaryCardEntry, DiaryUrge, SkillEffectiveness } from "../types";
 import { ALL_DIARY_DBT_SKILLS, DEFAULT_DIARY_URGE_DEFS } from "../data";
@@ -57,27 +58,18 @@ export default function DiaryCardScreen() {
     setIsSaved(false);
     setAiAnalysis(null);
     setCrisis(false);
-    const saved = secureLocal.getItem("nilamind_diary");
-    if (saved) {
-      try {
-        const entries: Record<string, DiaryCardEntry> = JSON.parse(saved);
-        const existing = entries[selectedDate];
-        if (existing) {
-          setEmotions(existing.emotions);
-          setUrges(mergeUrges(existing.urges));
-          // Backward-compat: older entries have skillsUsed but no effectiveness map. Show them as
-          // "tried, no help" rather than fabricating a "helped" rating we never captured.
-          setSkillEffectiveness(
-            existing.skillEffectiveness ?? Object.fromEntries((existing.skillsUsed || []).map((s) => [s, "tried_no_help" as SkillEffectiveness])),
-          );
-          setQuickNotes(existing.quickNotes || "");
-          setQuickNoteTags(existing.quickNoteTags || []);
-          return;
-        }
-      } catch {
-        // Static message only — never log the error object: it can echo a snippet of decrypted diary content to logcat.
-        console.error("Failed to parse stored diary entries");
-      }
+    const existing = loadDiaryMap()[selectedDate];
+    if (existing) {
+      setEmotions(existing.emotions);
+      setUrges(mergeUrges(existing.urges));
+      // Backward-compat: older entries have skillsUsed but no effectiveness map. Show them as
+      // "tried, no help" rather than fabricating a "helped" rating we never captured.
+      setSkillEffectiveness(
+        existing.skillEffectiveness ?? Object.fromEntries((existing.skillsUsed || []).map((s) => [s, "tried_no_help" as SkillEffectiveness])),
+      );
+      setQuickNotes(existing.quickNotes || "");
+      setQuickNoteTags(existing.quickNoteTags || []);
+      return;
     }
     // Default reset
     setEmotions({
@@ -128,16 +120,7 @@ export default function DiaryCardScreen() {
   };
 
   const handleSave = () => {
-    const saved = secureLocal.getItem("nilamind_diary");
-    let entries: Record<string, DiaryCardEntry> = {};
-    if (saved) {
-      try {
-        entries = JSON.parse(saved);
-      } catch {
-        // Static message only — never log the error object: it can echo a snippet of decrypted diary content to logcat.
-        console.error("Failed to parse stored diary entries");
-      }
-    }
+    const entries = loadDiaryMap();
 
     // morningIntention is no longer written here — Part 3 now defers to the unified daily-intention
     // store (weeklyIntention.ts's DailyIntention, via DailyIntentionCard) instead of its own

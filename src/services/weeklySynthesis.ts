@@ -1,4 +1,5 @@
 import { secureLocal } from "./secureLocal";
+import { loadDiaryEntries } from "./diary";
 import { loadCheckins } from "./checkin";
 import { computeCompassionateStreak } from "./streaks";
 import { getActiveProgress } from "./protocolProgress";
@@ -65,16 +66,9 @@ export function extractWeeklyFacts(): WeeklyFacts {
     ? Math.round((intensities.reduce((a, n) => a + n, 0) / intensities.length) * 10) / 10
     : null;
 
-  const diarySkills: string[] = (() => {
-    try {
-      const raw = secureLocal.getItem("nilamind_diary");
-      const obj = raw ? JSON.parse(raw) : {};
-      const entries: any[] = obj && typeof obj === "object" ? Object.values(obj) : [];
-      return entries
-        .filter((e: any) => { const d = new Date(e?.date); return !isNaN(d.getTime()) && d >= since; })
-        .flatMap((e: any) => Array.isArray(e?.skillsUsed) ? e.skillsUsed : []);
-    } catch { return []; }
-  })();
+  const diarySkills: string[] = loadDiaryEntries()
+    .filter((e: any) => { const d = new Date(e?.date); return !isNaN(d.getTime()) && d >= since; })
+    .flatMap((e: any) => Array.isArray(e?.skillsUsed) ? e.skillsUsed : []);
 
   const epSkills: string[] = (() => {
     try {

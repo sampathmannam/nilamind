@@ -3,7 +3,8 @@
 // existing writer), and manages the non-sensitive per-day skip flag in plain localStorage.
 
 import { localDateKey } from "./storageUtils";
-import { secureLocal, appendToSecureArray } from "./secureLocal";
+import { appendToSecureArray } from "./secureLocal";
+import { loadSecureArray } from "./secureData";
 import type { CheckInEntry } from "../types";
 
 const CHECKINS_KEY = "nilamind_checkins";       // SENSITIVE_KEY — encrypted via secureLocal
@@ -38,14 +39,7 @@ export function appendCheckin(entry: CheckInEntry): void {
  *  re-architecture Phase 1 — replaces ~25 hand-rolled JSON.parse(secureLocal.getItem("nilamind_checkins"))
  *  reads scattered across components and services. */
 export function loadCheckins(): CheckInEntry[] {
-  try {
-    const raw = secureLocal.getItem(CHECKINS_KEY);
-    if (!raw) return [];
-    const list = JSON.parse(raw);
-    return Array.isArray(list) ? (list as CheckInEntry[]) : [];
-  } catch {
-    return [];
-  }
+  return loadSecureArray<CheckInEntry>(CHECKINS_KEY);
 }
 
 /** True when any stored CheckInEntry has date === today (local YYYY-MM-DD). Any same-day check-in

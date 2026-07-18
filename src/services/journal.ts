@@ -1,22 +1,14 @@
 import { secureLocal } from "./secureLocal";
+import { loadSecureArray } from "./secureData";
 import type { JournalEntry } from "../types";
 
 const KEY = "nilamind_journal";
 
-/** All entries, newest-first by timestamp. Never throws — corrupted storage degrades to []. */
+/** All entries, newest-first by timestamp. Never throws — corrupt storage degrades to [] via the shared
+ *  loadSecureArray primitive, which parses/guards centrally and stays silent (never logs, so it can't echo
+ *  a snippet of decrypted journal content to logcat — the same rule DiaryCardScreen's load follows). */
 export function loadJournalEntries(): JournalEntry[] {
-  try {
-    const raw = secureLocal.getItem(KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return (parsed as JournalEntry[]).sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1));
-  } catch {
-    // Static message only — never log the raw error: it can echo a snippet of decrypted
-    // journal content to logcat (same rule DiaryCardScreen's load handler follows).
-    console.error("Failed to parse stored journal entries");
-    return [];
-  }
+  return loadSecureArray<JournalEntry>(KEY).sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1));
 }
 
 /** Save (or replace, matching by id) a single entry. */

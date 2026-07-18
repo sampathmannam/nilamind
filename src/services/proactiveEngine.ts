@@ -4,6 +4,7 @@
 
 import { selfReportSleepSignal } from "./sleepInsight";
 import { hasCheckinToday, getSkipFlag, loadCheckins } from "./checkin";
+import { loadDiaryMap } from "./diary";
 import { secureLocal } from "./secureLocal";
 import { DAY_MS, localDateKey } from "./storageUtils";
 import { currentCircadianFeedback } from "./circadianFeedback";
@@ -130,15 +131,7 @@ function daysSinceLastCheckin(): number {
  *  DiaryCardScreen uses — one JSON object under "nilamind_diary", keyed by date — rather than a
  *  per-date key that's never written. */
 export function hasDiaryEntryToday(): boolean {
-  const today = localDateKey();
-  try {
-    const raw = secureLocal.getItem("nilamind_diary");
-    if (!raw) return false;
-    const entries = JSON.parse(raw);
-    return !!entries?.[today];
-  } catch {
-    return false;
-  }
+  return !!loadDiaryMap()[localDateKey()];
 }
 
 function medicationLoggedToday(): boolean {

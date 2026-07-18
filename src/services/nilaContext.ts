@@ -11,6 +11,7 @@
 // Continuity ("you mentioned evenings are hard") is how a companion earns that alliance over time.
 
 import { secureLocal } from "./secureLocal";
+import { loadDiaryEntries } from "./diary";
 import { computeCompassionateStreak } from "./streaks";
 import { recentMemoryLines } from "./nilaMemory";
 import { loadNilaMemories } from "./nilaMemory";
@@ -709,15 +710,7 @@ export function buildReflectionDigest(): string {
 
   // Diary is an OBJECT keyed by date (not an array), so read its values; take ONLY skillsUsed (a
   // selected-name list) — never quickNotes/morningIntention free-text.
-  const diaryEntries: any[] = (() => {
-    try {
-      const raw = secureLocal.getItem("nilamind_diary");
-      const obj = raw ? JSON.parse(raw) : null;
-      return obj && typeof obj === "object" ? Object.values(obj) : [];
-    } catch {
-      return [];
-    }
-  })();
+  const diaryEntries: any[] = loadDiaryEntries();
   const helped = topCounts(
     [
       ...readArray("nilamind_episodes").flatMap((e) =>
