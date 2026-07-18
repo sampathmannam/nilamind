@@ -41,11 +41,7 @@ import { safeDraftThoughtRecord, type ThoughtRecordDraft } from "../services/tho
 import { safeDraftProblem } from "../services/problemSolvingDraft";
 import { safeDraftValueDomains } from "../services/valuesDraft";
 import { safeDraftSafetyPlan, type SafetyPlanDraftFields } from "../services/safetyPlanDraft";
-import ThoughtRecordScreen from "./ThoughtRecordScreen";
-import ProblemSolvingScreen from "./ProblemSolvingScreen";
-import ValuesToActionScreen from "./ValuesToActionScreen";
-import SafetyPlanScreen from "./SafetyPlanScreen";
-import Sheet from "./Sheet";
+import CaptureSheets from "./CaptureSheets";
 import { useFocusTrap } from "../hooks/useFocusTrap";
 import { looksLikeArmRequest, requestArmedCheckin } from "../services/armedCheckin";
 import { protocolOfferCard, startProtocolChat, continueProtocolChat, type ProtocolCard } from "../services/protocolChat";
@@ -54,7 +50,6 @@ import { logNilaTurn } from "../services/nilaSessions";
 import { speakIfEnabled, speak, listenOnce, stopSpeaking } from "../services/voice";
 import { startVoiceSession, endVoiceSession } from "../services/voicePatterns";
 import { checkSttCoherence } from "../services/sttCoherenceGate";
-import LearnScreen from "./LearnScreen";
 import { parseSafetyPlan } from "../services/safetyPlan";
 import { shouldPromptReview, isFirstFollowUpDue, markFirstFollowUpDone, markSafetyPlanReviewed } from "../services/safetyPlanFollowUp";
 import { selfReportSleepSignal } from "../services/sleepInsight";
@@ -1285,40 +1280,21 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           opened via onOpenCrisis() / openCrisis() above — no duplicate local overlay that the hardware back
           button couldn't see (which previously exited the app during a crisis). */}
 
-      {/* Aux view sheets */}
-      {/* Capture sheets — now the shared <Sheet> (2026-07-18 design review): brings the focus-trap +
-          scoped Escape + <h2> heading + role=dialog + focus-restore these hand-rolled overlays lacked.
-          Android back still closes them via closeSheetSignal; onClose mirrors each old close button
-          (clearing the relevant draft). */}
-      {auxView === "learn" && (
-        <Sheet open title="Learn" id="learn-sheet" bodyClassName="p-4" faultIsolated onClose={() => setAuxView(null)}>
-          <LearnScreen />
-        </Sheet>
-      )}
-
-      {auxView === "thought_record" && (
-        <Sheet open title="Thought Record" id="thought-record-sheet" bodyClassName="p-4" faultIsolated onClose={() => { setAuxView(null); setThoughtRecordDraft(undefined); }}>
-          <ThoughtRecordScreen draft={thoughtRecordDraft} />
-        </Sheet>
-      )}
-
-      {auxView === "problem_solving" && (
-        <Sheet open title="Problem-Solving" id="problem-solving-sheet" bodyClassName="p-4" faultIsolated onClose={() => { setAuxView(null); setProblemDraft(undefined); }}>
-          <ProblemSolvingScreen draft={problemDraft} />
-        </Sheet>
-      )}
-
-      {auxView === "values_to_action" && (
-        <Sheet open title="Do one thing" id="values-to-action-sheet" bodyClassName="p-4" faultIsolated onClose={() => { setAuxView(null); setValuesHighlight([]); }}>
-          <ValuesToActionScreen highlightDomains={valuesHighlight} />
-        </Sheet>
-      )}
-
-      {auxView === "safety_plan" && (
-        <Sheet open title="My Safety Plan" id="safety-plan-sheet" bodyClassName="p-4" faultIsolated onClose={() => { setAuxView(null); setSafetyPlanDraft(undefined); }}>
-          <SafetyPlanScreen draft={safetyPlanDraft} />
-        </Sheet>
-      )}
+      {/* Aux view sheets — the capture-sheet registry (Phase 4 slice 1). auxView + drafts + the
+          onInternalSheetChange / closeSheetSignal wiring stay here; CaptureSheets only renders the active
+          sheet and clears ITS draft on close (each screen paired with its draft-clear so they can't desync). */}
+      <CaptureSheets
+        auxView={auxView}
+        thoughtRecordDraft={thoughtRecordDraft}
+        problemDraft={problemDraft}
+        valuesHighlight={valuesHighlight}
+        safetyPlanDraft={safetyPlanDraft}
+        onClose={() => setAuxView(null)}
+        clearThoughtRecordDraft={() => setThoughtRecordDraft(undefined)}
+        clearProblemDraft={() => setProblemDraft(undefined)}
+        clearValuesHighlight={() => setValuesHighlight([])}
+        clearSafetyPlanDraft={() => setSafetyPlanDraft(undefined)}
+      />
     </div>
   );
 }
