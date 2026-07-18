@@ -2,14 +2,15 @@ import { describe, it, expect, vi, beforeAll, beforeEach } from "vitest";
 import { draftProblemStatement, safeDraftProblem } from "./problemSolvingDraft";
 import { registerLocalLlmBackend, type LocalLlmBackend } from "./localLlm";
 
-let scriptedReply = "You need to decide whether to keep commuting 2 hours a day or move closer to work.";
+const SOLVABLE = JSON.stringify({ solvable: true, problem: "You need to decide whether to keep commuting 2 hours a day or move closer to work." });
+let scriptedReply = SOLVABLE;
 
 beforeAll(() => {
   vi.stubGlobal("localStorage", { getItem: () => null, setItem: () => {}, removeItem: () => {} });
 });
 
 beforeEach(() => {
-  scriptedReply = "You need to decide whether to keep commuting 2 hours a day or move closer to work.";
+  scriptedReply = SOLVABLE;
   const backend: LocalLlmBackend = {
     id: "fake",
     isReady: () => true,
@@ -27,13 +28,18 @@ describe("draftProblemStatement", () => {
     expect(p).toContain("commuting");
   });
 
-  it("returns null when the model says there's nothing solvable (NONE)", async () => {
-    scriptedReply = "NONE";
+  it("returns null when the model marks it not solvable (a grief / feeling, not a problem)", async () => {
+    scriptedReply = JSON.stringify({ solvable: false, problem: "" });
     expect(await draftProblemStatement("i just miss my grandmother so much")).toBeNull();
   });
 
+  it("returns null when solvable but the problem string is empty", async () => {
+    scriptedReply = JSON.stringify({ solvable: true, problem: "" });
+    expect(await draftProblemStatement("hmm")).toBeNull();
+  });
+
   it("strips surrounding quotes and clamps length", async () => {
-    scriptedReply = `"${"x".repeat(300)}"`;
+    scriptedReply = JSON.stringify({ solvable: true, problem: `"${"x".repeat(300)}"` });
     const p = await draftProblemStatement("some long worry");
     expect(p!.startsWith('"')).toBe(false);
     expect(p!.length).toBeLessThanOrEqual(200);
@@ -62,7 +68,7 @@ describe("safeDraftProblem (§9-gated)", () => {
   });
 
   it("returns empty when there's no solvable problem", async () => {
-    scriptedReply = "NONE";
+    scriptedReply = JSON.stringify({ solvable: false, problem: "" });
     expect(await safeDraftProblem("everything just feels grey lately")).toEqual({ ok: false, reason: "empty" });
   });
 });

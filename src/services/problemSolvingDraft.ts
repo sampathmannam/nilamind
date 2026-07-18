@@ -12,20 +12,52 @@ import { generateOnDevice } from "./localLlm";
 import { applyOutputSafety } from "./nilaSafetyGate";
 import { scanForCrisis } from "../safety";
 
-const PS_SYSTEM_PROMPT = `You are Nila, helping someone turn a worry into something they can actually work on. The person just described a worry or problem. Rewrite it as ONE clear, specific, solvable problem statement — the kind you can brainstorm concrete solutions for. Keep it in their own words and their situation.
+const PS_SYSTEM_PROMPT = `You are Nila. The person described a worry. FIRST decide: is there a concrete, SOLVABLE problem here —
+something they could actually take a step on — or is it a feeling to sit with, a grief, or something outside
+their control?
 
-Do NOT add solutions, advice, reassurance, or diagnosis. Do NOT invent details they didn't say.
+Set "solvable" to true or false. If true, write ONE clear, specific problem statement in "problem" (their
+situation, in their words — no advice, no solutions, no reassurance, no diagnosis, no invented details). If
+false, leave "problem" as an empty string.
 
-Reply with ONLY the problem statement: one sentence, concrete. If there is no solvable problem in what they said — it's a feeling to sit with, a grief, or something outside their control, not a problem to solve — reply with exactly: NONE`;
+Examples:
+- "i can't decide whether to move closer to work" -> solvable true
+- "i keep missing deadlines and don't know how to keep up" -> solvable true
+- "i miss my grandmother so much since she passed" -> solvable false
+- "i'm just so tired of everything" -> solvable false
 
-/** Draft a one-sentence problem statement from a worry, or null if there's nothing solvable / the model
- *  is unavailable. Output-safety-gated. */
+Output JSON only: {"solvable": true or false, "problem": "..."}`;
+
+const PS_DRAFT_SCHEMA = {
+  type: "object",
+  properties: { solvable: { type: "boolean" }, problem: { type: "string" } },
+  required: ["solvable", "problem"],
+} as const;
+
+/** Draft a one-sentence problem statement from a worry, or null if there's nothing SOLVABLE (a feeling /
+ *  grief / uncontrollable thing — the model sets solvable=false, far more reliable in a small model than a
+ *  "reply NONE" instruction) or the model is unavailable. Output-safety-gated. */
 export async function draftProblemStatement(worryText: string): Promise<string | null> {
-  const reply = await generateOnDevice(PS_SYSTEM_PROMPT, [{ role: "user", content: worryText }]);
-  if (!reply) return null;
-  const safe = applyOutputSafety(reply, worryText, true).trim();
-  if (!safe || /^none\b/i.test(safe)) return null;
-  return safe.replace(/^["']+|["']+$/g, "").trim().slice(0, 200);
+  let raw: string | null;
+  try {
+    raw = await generateOnDevice(PS_SYSTEM_PROMPT, [{ role: "user", content: worryText }], () => {}, undefined, {
+      jsonSchema: PS_DRAFT_SCHEMA as unknown as object,
+    });
+  } catch {
+    return null;
+  }
+  if (!raw) return null;
+  let parsed: { solvable?: unknown; problem?: unknown };
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return null;
+  }
+  if (parsed.solvable !== true || typeof parsed.problem !== "string") return null;
+  const problem = parsed.problem.trim();
+  if (!problem) return null; // solvable but empty — guard before applyOutputSafety (which returns a fallback on "")
+  const safe = applyOutputSafety(problem, worryText, true).trim().replace(/^["']+|["']+$/g, "").trim();
+  return safe ? safe.slice(0, 200) : null;
 }
 
 export type SafeProblemDraftResult =

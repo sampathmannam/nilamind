@@ -28,9 +28,11 @@ function draftSystemPrompt(): string {
   return `You are Nila. Read the person's recent messages and identify which life areas they actually talked
 about or that clearly mattered in what they said — so the values tool can start there instead of a blank list.
 
-Choose ONLY from the allowed area IDs, and ONLY ones genuinely present in their words. Do NOT guess, do NOT
-add areas they didn't touch, and do NOT rate how important anything is — that is theirs to decide. If no life
-area clearly came up, return an empty list. Output JSON only: { "domains": ["id", ...] }.`;
+Choose ONLY from the allowed area IDs, and ONLY ones genuinely present in their words — INCLUDING areas
+they said they've drifted from, stopped, or wish they had more of (e.g. "I never see friends anymore" is
+the friends area; "I stopped exercising" is the health area). Do NOT guess, do NOT add areas they didn't
+touch, and do NOT rate how important anything is — that is theirs to decide. If no life area clearly came
+up, return an empty list. Output JSON only: { "domains": ["id", ...] }.`;
 }
 
 /** Validate + dedupe raw model output into a capped list of known domain IDs. */
