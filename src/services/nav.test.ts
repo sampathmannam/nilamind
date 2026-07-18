@@ -5,9 +5,11 @@ describe("resolveNavTarget", () => {
   it("maps crisis to the crisis overlay", () => {
     expect(resolveNavTarget("crisis")).toEqual({ kind: "crisis" });
   });
-  it("maps grounding and breathing to the plan tab (crisis overlay depends on this)", () => {
+  it("maps grounding to the plan tab (crisis overlay depends on this); breathing falls through to its sheet", () => {
     expect(resolveNavTarget("grounding")).toEqual({ kind: "plan" });
-    expect(resolveNavTarget("breathing")).toEqual({ kind: "plan" });
+    // 2026-07-18 design review: breathing no longer maps to the grounding list — it falls through to
+    // navStore's unknown-branch which opens the dedicated BreathingScreen sheet.
+    expect(resolveNavTarget("breathing")).toEqual({ kind: "unknown", target: "breathing" });
   });
   it("maps each footer/sub tab to a tab resolution", () => {
     expect(resolveNavTarget("nila")).toEqual({ kind: "tab", tab: "nila" });

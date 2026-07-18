@@ -252,7 +252,7 @@ html.sensory-comfort body::after {
 
 /* ── Touch-friendly tap targets + focus rings ── */
 .tap-target { min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center; }
-.focus-ring:focus-visible { outline: none; ring: 2px solid var(--color-blue-500); }
+.focus-ring:focus-visible { outline: 2px solid var(--color-blue-500); outline-offset: 2px; }
 
 /* ── Calm soft depth (redesign) ──────────────────────────────────────────────────────────────
    A gentle, low-contrast lift on cards + raised surfaces — the "soft UI" the design system

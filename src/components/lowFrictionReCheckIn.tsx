@@ -10,11 +10,20 @@
  * cause 60%+ dropout after Day 3.
  */
 
-import { localDateKey } from "../services/storageUtils";
 import React from "react";
 import { Sparkle } from "lucide-react";
-import { secureLocal } from "../services/secureLocal";
-import { appendToSecureArray } from "../services/secureLocal";
+import { buildCheckinEntry, appendCheckin } from "../services/checkin";
+
+// Design review 2026-07-18: this "one-tap" card was a false affordance three ways — it wrote a malformed
+// entry ({date,mood,source}, no `emotion`/`intensity`) so the mood card then showed "Feeling " blank; the
+// tap then STILL opened the full form (one tap → four); and "Skip" also opened the form. Now a tap writes a
+// real check-in and finishes; skip dismisses.
+const MOOD_TO_CHECKIN: Record<string, [string, number]> = {
+  good: ["good", 3],
+  okay: ["okay", 3],
+  low: ["low", 5],
+  struggling: ["overwhelmed", 7],
+};
 
 const MOOD_OPTIONS = [
   { label: "Good", emoji: "😊", value: "good", color: "bg-green-500/20 text-green-300 border-green-500/30 hover:bg-green-500/30" },
@@ -42,11 +51,10 @@ interface LowFrictionReCheckInProps {
 export default function LowFrictionReCheckIn({ onMoodSelect, onSkip, daysSinceLast = 2 }: LowFrictionReCheckInProps) {
   const handleMood = (mood: string) => {
     try {
-      const today = localDateKey(); // YYYY-MM-DD
-      const entry = { date: today, mood, source: "re-checkin" };
-      appendToSecureArray("nilamind_checkins", entry, 365);
+      const [label, intensity] = MOOD_TO_CHECKIN[mood] ?? ["okay", 3];
+      appendCheckin(buildCheckinEntry(label, intensity, null)); // well-formed — Today reads emotion/intensity
     } catch { /* best-effort */ }
-    onMoodSelect(mood);
+    onMoodSelect(mood); // parent just refreshes now — it must NOT re-open the full form
   };
 
   return (

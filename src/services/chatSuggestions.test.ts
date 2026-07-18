@@ -66,8 +66,8 @@ describe("getUserGoals (previously write-only nilamind_user_goal)", () => {
   });
 
   it("reads back the goals persisted at the onboarding key", () => {
-    store.set("nilamind_user_goal", JSON.stringify(["Managing anxiety", "Tracking moods"]));
-    expect(getUserGoals()).toEqual(["Managing anxiety", "Tracking moods"]);
+    store.set("nilamind_user_goal", JSON.stringify(["grounding", "mood"]));
+    expect(getUserGoals()).toEqual(["grounding", "mood"]);
   });
 
   it("is tolerant of corrupt storage", () => {
@@ -77,16 +77,16 @@ describe("getUserGoals (previously write-only nilamind_user_goal)", () => {
 });
 
 describe("getSuggestions goal-aware ordering", () => {
-  it("promotes the anxiety-relevant chip to the front when the goal is Managing anxiety", () => {
-    store.set("nilamind_user_goal", JSON.stringify(["Managing anxiety"]));
+  it("promotes a grounding-relevant chip to the front when the goal is 'grounding'", () => {
+    store.set("nilamind_user_goal", JSON.stringify(["grounding"]));
     const chips = getSuggestions("day");
-    expect(chips[0].id).toBe("day_anxiety");
+    expect(["day_breathing", "day_anxiety"]).toContain(chips[0].id);
   });
 
-  it("promotes the mood-tracking chip to the front when the goal is Tracking moods", () => {
-    store.set("nilamind_user_goal", JSON.stringify(["Tracking moods"]));
+  it("promotes a mood chip to the front when the goal is 'mood'", () => {
+    store.set("nilamind_user_goal", JSON.stringify(["mood"]));
     const chips = getSuggestions("morning");
-    expect(chips[0].id).toBe("am_checkin");
+    expect(["am_mood", "am_checkin"]).toContain(chips[0].id);
   });
 
   it("leaves ordering unchanged when goals is an explicit empty array", () => {
@@ -95,7 +95,7 @@ describe("getSuggestions goal-aware ordering", () => {
   });
 
   it("real-time intense mood still wins the lead slot over a static goal", () => {
-    store.set("nilamind_user_goal", JSON.stringify(["Tracking moods"]));
+    store.set("nilamind_user_goal", JSON.stringify(["mood"]));
     const chips = getSuggestions("day", { intensity: 9, emotion: "Anxious" });
     expect(chips[0].id).toBe("elevated");
   });

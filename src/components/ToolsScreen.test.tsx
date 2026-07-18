@@ -22,7 +22,7 @@ beforeEach(() => { store.clear(); });
 // tool rows, and that search narrows to matching rows — including ones behind the "Skills & practice"
 // expander, which an active query must reveal.
 describe("ToolsScreen", () => {
-  const props = { go: vi.fn(), onEpisode: vi.fn(), phoneEnabled: false };
+  const props = { go: vi.fn(), onEpisode: vi.fn(), phoneEnabled: false, onOpenCrisis: vi.fn() };
 
   it("renders the hub header and the core always-visible tools", () => {
     render(<ToolsScreen {...props} />);

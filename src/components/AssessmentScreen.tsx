@@ -1,5 +1,6 @@
 import { localDateKey } from "../services/storageUtils";
 import React, { useState, useEffect, useMemo, useRef } from "react";
+import CrisisHeaderButton from "./CrisisHeaderButton";
 import {
   INSTRUMENTS,
   InstrumentId,
@@ -279,17 +280,23 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
         </button>
 
         <header className="space-y-2">
-          <div className="flex items-center gap-2">
-            <h2 className="text-lg font-bold text-slate-100">{inst.name}</h2>
-            <span className="text-xs uppercase tracking-wider text-slate-500 font-mono">{inst.measures}</span>
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <h2 className="text-lg font-bold text-slate-100">{inst.name}</h2>
+              <span className="text-xs uppercase tracking-wider text-slate-500 font-mono">{inst.measures}</span>
+            </div>
+            {/* Design review (2026-07-18): the copy below promised a crisis button that was never rendered
+                during the questionnaire — a hard safety failure on a screen that asks about suicidality.
+                onActivateCrisis was already wired; this surfaces it. */}
+            <CrisisHeaderButton onClick={onActivateCrisis} className="shrink-0" />
           </div>
           <p className="text-xs text-slate-300 leading-relaxed glass rounded-xl p-3">
             {inst.prompt}
           </p>
           {inst.safetyItemIndex !== undefined && (
             <p className="text-[11px] text-slate-500 leading-relaxed">
-              Answer as honestly as you can. If anything hard comes up while you answer, the red anchor
-              button is always one tap away.
+              Answer as honestly as you can. If anything hard comes up while you answer, the
+              <span className="text-rose-300 font-semibold"> Help</span> button at the top is always one tap away.
             </p>
           )}
         </header>

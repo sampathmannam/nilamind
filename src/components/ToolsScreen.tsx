@@ -2,18 +2,20 @@ import React, { useMemo, useState } from "react";
 import { Search, X, ChevronRight, Lightbulb } from "lucide-react";
 import { buildToolGroups, personalizeToolOrder } from "./toolsRows";
 import { getUserGoals } from "../services/chatSuggestions";
+import CrisisHeaderButton from "./CrisisHeaderButton";
 
 interface Props {
   go: (target: string) => void;
   onEpisode: () => void;
   phoneEnabled: boolean;
+  onOpenCrisis: () => void;
 }
 
 // Dedicated Tools tab (2026-07-18 QA, per docs/UX_RESEARCH.md's 4-tab IA: Today · Nila · Tools · You). The
 // tool library used to be a collapsible "All tools" section at the bottom of Today; giving it its own tab
 // lets Today lead with the daily loop while every skill / screening / tracker has one stable home here.
 // Search + goal-personalized ordering carry over unchanged.
-export default function ToolsScreen({ go, onEpisode, phoneEnabled }: Props) {
+export default function ToolsScreen({ go, onEpisode, phoneEnabled, onOpenCrisis }: Props) {
   const [toolSearch, setToolSearch] = useState("");
   const [showMoreSkills, setShowMoreSkills] = useState(false);
   const groups = personalizeToolOrder(buildToolGroups({ go, onEpisode, phoneEnabled }), getUserGoals());
@@ -35,9 +37,12 @@ export default function ToolsScreen({ go, onEpisode, phoneEnabled }: Props) {
 
   return (
     <div className="space-y-5 max-w-md mx-auto" id="tools-hub">
-      <header className="space-y-0.5">
-        <h1 className="editorial text-2xl text-slate-100">Tools</h1>
-        <p className="text-xs text-slate-400">Skills, trackers, and practices — here whenever you need them.</p>
+      <header className="flex items-start justify-between gap-3">
+        <div className="space-y-0.5">
+          <h1 className="editorial text-2xl text-slate-100">Tools</h1>
+          <p className="text-xs text-slate-400">Skills, trackers, and practices — here whenever you need them.</p>
+        </div>
+        <CrisisHeaderButton onClick={onOpenCrisis} className="shrink-0 mt-0.5" />
       </header>
 
       {/* Search input */}

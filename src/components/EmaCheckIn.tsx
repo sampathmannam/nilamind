@@ -5,6 +5,17 @@ import React, { useState } from "react";
 import { Smile, Frown, Meh, Sparkle, Flame } from "lucide-react";
 import { t } from "../services/i18n";
 import { saveEmaEntry, emaDateKey } from "../services/ema";
+import { buildCheckinEntry, appendCheckin } from "../services/checkin";
+
+/** Map the 5-point EMA valence onto the check-in store's mood vocabulary (labels that MOOD_EMOJI/getTodayMood
+ *  understand), so an EMA entry registers as today's check-in on the Today tab. */
+function emaValenceToMood(valence: number): [string, number] {
+  if (valence <= -3) return ["overwhelmed", 7];
+  if (valence <= -1) return ["low", 5];
+  if (valence === 0) return ["okay", 3];
+  if (valence === 1) return ["good", 3];
+  return ["calm", 2]; // +3 = very good
+}
 import { generateTinyId } from "../services/idGen";
 import { scanForCrisis } from "../safety";
 
@@ -136,6 +147,14 @@ export default function EmaCheckIn({ onLogged, onCrisis }: { onLogged?: () => vo
       note: trimmed || undefined,
       trigger: "user_initiated",
     });
+    // Bridge to the canonical mood log (design review 2026-07-18): EMA wrote only `nilamind_ema`, but Today's
+    // `hasCheckinToday` / `getTodayMood` / week-insight / streak all read `nilamind_checkins` — so a user who
+    // answered "How are you feeling?" returned to a card that still asked the same question. Mirror the entry,
+    // best-effort — the primary EMA save already succeeded; a mirror failure must never block onLogged.
+    try {
+      const [moodLabel, moodIntensity] = emaValenceToMood(valence);
+      appendCheckin(buildCheckinEntry(moodLabel, moodIntensity, null, undefined, energy ?? null));
+    } catch { /* mirror is best-effort */ }
     onLogged?.();
   }
 }

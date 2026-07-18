@@ -43,23 +43,23 @@ describe("personalizeToolOrder", () => {
     expect(rowIds(result)).toEqual(rowIds(groups));
   });
 
-  it("promotes anxiety-relevant tools to the front of their group for Managing anxiety", () => {
+  it("promotes grounding tools to the front of their group for the 'grounding' goal", () => {
     const groups = buildToolGroups(STUB);
-    const result = personalizeToolOrder(groups, ["Managing anxiety"]);
+    const result = personalizeToolOrder(groups, ["grounding"]);
     const inTheMoment = result.find((g) => g.title === "In the moment")!;
     expect(inTheMoment.rows[0].id).toBe("plan");
   });
 
-  it("promotes mood-tracking tools to the front for Tracking moods", () => {
+  it("promotes mood-tracking tools to the front for the 'mood' goal", () => {
     const groups = buildToolGroups(STUB);
-    const result = personalizeToolOrder(groups, ["Tracking moods"]);
+    const result = personalizeToolOrder(groups, ["mood"]);
     const logTrack = result.find((g) => g.title === "Log & track")!;
     expect(logTrack.rows[0].id).toBe("ema_checkin");
   });
 
   it("does not drop or duplicate any row when reordering", () => {
     const groups = buildToolGroups(STUB);
-    const result = personalizeToolOrder(groups, ["Managing anxiety", "Tracking moods"]);
+    const result = personalizeToolOrder(groups, ["grounding", "mood"]);
     expect(rowIds(result).sort()).toEqual(rowIds(groups).sort());
   });
 });

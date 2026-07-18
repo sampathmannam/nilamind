@@ -4,6 +4,7 @@
 import { localDateKey } from "../services/storageUtils";
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import NilaFace from "./NilaFace";
+import CrisisHeaderButton from "./CrisisHeaderButton";
 import QuickActions from "./QuickActions";
 import {
   getCurrentMode,
@@ -77,6 +78,7 @@ interface ModeScreenProps {
   onOpenReachOut?: () => void;
   onOpenWindDown?: () => void;
   onInternalSheetChange?: (open: boolean) => void;
+  closeSheetSignal?: number;
 }
 
 // #22 (audit): App wraps <main> in key={activeTab}, so switching tabs fully remounts ModeScreen and its
@@ -84,7 +86,7 @@ interface ModeScreenProps {
 // in-progress draft across remounts (keeps the tab crossfade animation, unlike dropping the key).
 let modeDraftCache = "";
 
-export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboard, onOpenMedication, onOpenGrounding, onOpenDiary, onOpenReachOut, onOpenWindDown, onInternalSheetChange }: ModeScreenProps) {
+export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboard, onOpenMedication, onOpenGrounding, onOpenDiary, onOpenReachOut, onOpenWindDown, onInternalSheetChange, closeSheetSignal }: ModeScreenProps) {
   const [mode, setMode] = useState(getCurrentMode());
   const [showCheckin, setShowCheckin] = useState(() => {
     return !mode.hasCheckedIn;
@@ -201,6 +203,17 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   useEffect(() => {
     onInternalSheetChange?.(auxView !== null);
   }, [auxView, onInternalSheetChange]);
+
+  // Hardware-back (via App's closeSheetSignal) closes whichever auxView overlay is open + drops its draft,
+  // instead of leaving it stranded (design review 2026-07-18).
+  useEffect(() => {
+    if (!closeSheetSignal) return;
+    setAuxView(null);
+    setThoughtRecordDraft(undefined);
+    setProblemDraft(undefined);
+    setValuesHighlight([]);
+    setSafetyPlanDraft(undefined);
+  }, [closeSheetSignal]);
 
   // B3: surface a gentle safety-plan follow-up card when the plan is stale.
   // Re-check when an aux sheet closes so editing the plan immediately clears the card.
@@ -725,8 +738,10 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           >
             <Settings className="w-4 h-4" />
           </button>
-          {/* Crisis auto-detection routes through openCrisis() below. No persistent crisis button in the
-              header — the app no longer shows a constant crisis affordance on every screen. */}
+          {/* Persistent CALM crisis access (2026-07-18 design review + UX_RESEARCH #6). Previously the Nila
+              tab — the app's most-used surface — had NO discoverable crisis control (only an undiscoverable
+              orb long-press). §9 auto-detection still routes through openCrisis() on top of this. */}
+          <CrisisHeaderButton onClick={() => openCrisis()} />
         </div>
       </div>
 

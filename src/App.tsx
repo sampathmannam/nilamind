@@ -176,6 +176,10 @@ function AppShell() {
   const [wakeListening, setWakeListening] = useState(false);
   const [phoneEnabled] = useState(true);
   const [modeScreenHasSheet, setModeScreenHasSheet] = useState(false);
+  // Bumped by the hardware-back handler to tell ModeScreen to close its own auxView overlays (design review
+  // 2026-07-18: back could not close them — it flipped a boolean only, so the sheet stayed and a 2nd back
+  // press exited the app with e.g. the Safety Plan still open and unsaved edits lost).
+  const [closeModeSheetSignal, setCloseModeSheetSignal] = useState(0);
   const [, setLangTick] = useState(0);
 
   // Helper: does the overlay stack contain a specific sheet?
@@ -298,7 +302,7 @@ function AppShell() {
       if (top?.kind === "crisis") { closeTop(); return; }
       if (top?.kind === "sheet") { closeTop(); return; }
       if (top?.kind === "aux") { closeAuxStart(); return; }
-      if (modeScreenHasSheet) { setModeScreenHasSheet(false); return; }
+      if (modeScreenHasSheet) { setCloseModeSheetSignal((n) => n + 1); return; } // ModeScreen closes its auxView + reports back
       if (state.tab !== "nila") { setTab("nila"); return; }
       void CapApp.exitApp();
     }).then((h) => { handle = h; if (removed) h.remove(); });
@@ -431,6 +435,7 @@ function AppShell() {
               onOpenReachOut={() => openAux("reach_out")}
               onOpenWindDown={() => openAux("winddown")}
               onInternalSheetChange={(open) => setModeScreenHasSheet(open)}
+              closeSheetSignal={closeModeSheetSignal}
             />
           </ErrorBoundary>
         )}
@@ -455,7 +460,7 @@ function AppShell() {
               {/* Opaque status-bar mask — same fix as the Today/You tabs. */}
               <div className="shrink-0 bg-page" style={{ height: 'var(--safe-top)' }} />
               <div className="flex-1 min-h-0 overflow-y-auto px-4 pt-2 pb-12">
-                <ToolsScreen go={go} phoneEnabled={phoneEnabled} onEpisode={onEpisode} />
+                <ToolsScreen go={go} phoneEnabled={phoneEnabled} onEpisode={onEpisode} onOpenCrisis={activateCrisis} />
               </div>
             </div>
           </ErrorBoundary>

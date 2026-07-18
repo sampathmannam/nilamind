@@ -1,6 +1,6 @@
 import { localDateKey } from "../services/storageUtils";
 import { useRef, useState, useEffect, useReducer } from "react";
-import { Wind, MessageCircle, Moon, Sparkles, ChevronRight, HeartHandshake, Sparkle, Clock3, Target, LineChart, Activity, LifeBuoy } from "lucide-react";
+import { Wind, MessageCircle, Moon, Sparkles, ChevronRight, HeartHandshake, Sparkle, Clock3, Target, LineChart, Activity } from "lucide-react";
 import { getTimeMode, getUserState } from "../services/modeEngine";
 import { hasCheckinToday } from "../services/checkin";
 import { secureLocal } from "../services/secureLocal";
@@ -12,6 +12,7 @@ import { hasRhythmToday, loadTodayAnchors, RHYTHM_ANCHORS } from "../services/so
 import { getDailyIntention } from "../services/weeklyIntention";
 import DailyIntentionCard, { type DailyIntentionCardHandle } from "./DailyIntentionCard";
 import ConversationalCheckinCard from "./ConversationalCheckinCard";
+import CrisisHeaderButton from "./CrisisHeaderButton";
 import { getPendingCheckinDraft } from "../services/checkinDraft";
 import DailyContentCard from "./DailyContentCard";
 import RatingPromptCard from "./RatingPromptCard";
@@ -170,6 +171,7 @@ export default function TodayScreen({
   };
   const greeting = greetingMap[timeMode];
   const [, refreshAfterCheckinResolve] = useReducer((n: number) => n + 1, 0);
+  const [reCheckinSkipped, setReCheckinSkipped] = useState(false);
   const checkedIn = hasCheckinToday(localDateKey());
   // A model-drafted check-in waiting to be confirmed (conversational capture). When present and not yet
   // checked in, it replaces the cold "How are you feeling?" prompt with a warm, pre-filled confirm.
@@ -227,14 +229,7 @@ export default function TodayScreen({
     <div className="space-y-5 max-w-md mx-auto" id="today-hub">
       {/* Greeting — time-aware, serif voice, with subtle gradient backdrop */}
       <header className={`relative rounded-2xl p-4 -mx-1 bg-gradient-to-br ${heroGradient(timeOfDay)}`}>
-        <button
-          onClick={onOpenCrisis}
-          className="absolute top-3 right-3 p-2 rounded-lg text-slate-500 hover:text-rose-300 hover:bg-rose-500/10 transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center"
-          aria-label="Get help now"
-          title="Get help now"
-        >
-          <LifeBuoy className="w-4 h-4" />
-        </button>
+        <CrisisHeaderButton onClick={onOpenCrisis} className="absolute top-3 right-3" />
         <div className="space-y-0.5">
           <h1 className="editorial text-3xl text-slate-100">{greeting}</h1>
           <p className="text-sm text-slate-400">{formatDate()}</p>
@@ -282,7 +277,7 @@ export default function TodayScreen({
       <SafetyPlanNudgeCard go={go} />
 
       {/* Low-friction re-check-in — one-tap mood log for returning users after a gap */}
-      {hasAnyCheckins && !checkedIn && (() => {
+      {hasAnyCheckins && !checkedIn && !reCheckinSkipped && (() => {
         try {
           const raw = secureLocal.getItem("nilamind_checkins");
           if (!raw) return false;
@@ -296,12 +291,8 @@ export default function TodayScreen({
         } catch { return false; }
       })() && (
         <LowFrictionReCheckIn
-          onMoodSelect={() => {
-            go("ema_checkin");
-          }}
-          onSkip={() => {
-            go("ema_checkin");
-          }}
+          onMoodSelect={() => refreshAfterCheckinResolve() /* entry already written — just re-render so the mood card updates */}
+          onSkip={() => setReCheckinSkipped(true) /* dismiss for the session; don't open the form the user just skipped */}
         />
       )}
 

@@ -77,13 +77,14 @@ export function getUserGoals(): string[] {
 // Customizable/relevant content is a named engagement facilitator — this closes the onboarding goal
 // picker's previously write-only loop by using the stated goal to lead with the most relevant chip,
 // per Borghouts, Eikey, Mark et al. (2021), J Med Internet Res.
+// Keyed by the onboarding goal IDs stored in nilamind_user_goal (see GOAL_TOOL_PRIORITY note in
+// toolsRows.ts) — was keyed on retired labels, so chip personalization never fired.
 const GOAL_CHIP_PRIORITY: Record<string, string[]> = {
-  "Feeling low": ["am_mood", "day_flat", "eve_reflect", "nt_lonely"],
-  "Managing stress": ["day_breathing", "eve_wind", "nt_calm", "am_intention"],
-  "Managing anxiety": ["day_anxiety", "eve_racing", "nt_racing", "day_breathing"],
-  "Tracking moods": ["am_checkin", "day_checkin", "eve_checkin"],
-  "Building skills": ["am_intention", "day_breathing", "eve_reflect"],
-  "Just curious": [],
+  sleep: ["eve_wind", "nt_calm", "am_intention"],
+  mood: ["am_mood", "am_checkin", "day_checkin", "eve_checkin"],
+  grounding: ["day_breathing", "day_anxiety", "nt_racing", "eve_racing"],
+  medication: ["am_checkin", "am_intention"],
+  talking: ["day_flat", "eve_reflect", "nt_lonely"],
 };
 
 /** Reorders chips within a slot's list so goal-relevant ones lead, without changing membership. */

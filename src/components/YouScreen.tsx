@@ -1,6 +1,7 @@
 import { localDateKey } from "../services/storageUtils";
 import React, { useState } from "react";
-import { ChevronRight, Sparkles, TrendingUp, Target, CheckCircle, X, Circle, Lightbulb, LifeBuoy } from "lucide-react";
+import { ChevronRight, Sparkles, TrendingUp, Target, CheckCircle, X, Circle, Lightbulb } from "lucide-react";
+import CrisisHeaderButton from "./CrisisHeaderButton";
 import { buildYouGroups } from "./youRows";
 import { useLanguage } from "../services/i18n";
 import { computeCompassionateStreak } from "../services/streaks";
@@ -147,14 +148,7 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
             <h1 className="editorial text-xl text-slate-100">You</h1>
             <p className="text-xs text-slate-400 mt-0.5">{streak.message}</p>
           </div>
-          <button
-            onClick={onOpenCrisis}
-            className="p-2 rounded-lg text-slate-500 hover:text-rose-300 hover:bg-rose-500/10 transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center"
-            aria-label="Get help now"
-            title="Get help now"
-          >
-            <LifeBuoy className="w-4 h-4" />
-          </button>
+          <CrisisHeaderButton onClick={onOpenCrisis} />
         </div>
         {streak.totalActiveDays > 0 && (
           <>

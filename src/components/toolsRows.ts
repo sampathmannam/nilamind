@@ -92,13 +92,15 @@ export function buildToolGroups({ go, onEpisode, phoneEnabled }: ToolRowDeps): T
 // Same personalization rationale/citation as chatSuggestions.ts's GOAL_CHIP_PRIORITY: customizable/relevant
 // content is a named engagement facilitator, closing the onboarding goal picker's previously write-only
 // loop (nilamind_user_goal), per Borghouts, Eikey, Mark et al. (2021), J Med Internet Res.
+// Keyed by the onboarding goal IDs actually stored in nilamind_user_goal (OnboardingGate USER_GOALS).
+// Design review 2026-07-18: these were keyed on retired labels ("Feeling low", …) that no key ever
+// matched, so goal personalization was a permanent no-op — the app asked what mattered and threw it away.
 const GOAL_TOOL_PRIORITY: Record<string, string[]> = {
-  "Feeling low": ["problem_solving", "values_to_action", "diary"],
-  "Managing stress": ["plan", "winddown", "diary"],
-  "Managing anxiety": ["plan", "exposure", "diary"],
-  "Tracking moods": ["ema_checkin", "diary", "assessment", "social_rhythm"],
-  "Building skills": ["problem_solving", "exposure"],
-  "Just curious": [],
+  sleep: ["winddown", "social_rhythm", "diary"],
+  mood: ["ema_checkin", "diary", "assessment", "social_rhythm"],
+  grounding: ["plan", "exposure"],
+  medication: ["medication", "diary"],
+  talking: ["problem_solving", "values_to_action"],
 };
 
 /** Reorders each group's rows so goal-relevant tools lead, without changing group titles, membership,
