@@ -10,6 +10,7 @@ import {
   resetExemplarIndex,
 } from "./exemplarRetrieval";
 import type { Embedder } from "./crisisClassifier";
+import { NILA_EXEMPLARS } from "./nilaExemplars";
 
 /** Clustered mock: keyword → one-hot cluster, so semantically-grouped strings land near each other.
  *  Strings with no keyword get a per-string hashed one-hot dim → roughly orthogonal (no false matches). */
@@ -146,6 +147,68 @@ describe("new tags retrievable (2026-07-13 Ash-calibrated expansion)", () => {
   it("bare greeting retrieves a short_check_in exemplar", async () => {
     const hits = await retrieveExemplarsForQuery("hey you there", 2);
     expect(hits.some((h) => h.tag === "short_check_in")).toBe(true);
+  });
+});
+
+describe("diversified selection (MMR + adaptive second-shot)", () => {
+  const byId = (id: string) => NILA_EXEMPLARS.find((e) => e.id === id)!;
+  const E1 = byId("seed_024"); // tag: anger
+  const E2 = byId("seed_025"); // tag: anger  (near-duplicate direction of E1)
+  const E3 = byId("seed_006"); // tag: venting_dump
+  const vec = (dims: Record<number, number>) => {
+    const v = new Array(384).fill(0);
+    for (const k of Object.keys(dims)) v[+k] = dims[+k];
+    return v;
+  };
+  const ortho = (s: string) => {
+    let h = 0;
+    for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+    return vec({ [50 + (h % 300)]: 1 });
+  };
+
+  it("prefers a different-tag second shot over a higher-scoring near-duplicate", async () => {
+    // Q sits nearest E1 (anger); E2 is a near-identical anger exemplar scoring just below E1, E3 is a
+    // less-similar but genuinely different (venting) exemplar. Raw top-2 would be E1+E2 (both anger);
+    // MMR should trade the redundant E2 for the diverse E3.
+    const emb: Embedder = async (t) => {
+      if (t === E1.user) return vec({ 0: 1 });
+      if (t === E2.user) return vec({ 0: 0.98, 1: 0.199 });
+      if (t === E3.user) return vec({ 0: 0.4, 2: 0.9165 });
+      if (t === "DIVQ") return vec({ 0: 0.8, 1: -0.0201, 2: 0.371 });
+      return ortho(t);
+    };
+    setExemplarEmbedder(emb);
+    resetExemplarIndex();
+
+    const raw = await searchExemplars("DIVQ", { limit: 2, minScore: 0.3 });
+    expect(raw.map((r) => r.exemplar.id)).toEqual([E1.id, E2.id]); // both anger — redundant
+
+    const diverse = await searchExemplars("DIVQ", { limit: 2, minScore: 0.3, diversify: true });
+    expect(diverse[0].exemplar.id).toBe(E1.id); // top relevance always kept
+    expect(diverse.map((r) => r.exemplar.id)).toContain(E3.id); // diverse second, not the near-dup
+    expect(new Set(diverse.map((r) => r.exemplar.tag)).size).toBe(2); // two distinct tags
+  });
+
+  it("drops a weak second shot below the stricter secondary floor (adaptive-k)", async () => {
+    // Only one candidate is genuinely on-target; the next-best clears the primary floor (0.3) but not
+    // the secondary one (0.42). One strong demo beats one strong + one noisy filler.
+    const T = byId("seed_006");
+    const U = byId("seed_024");
+    const emb: Embedder = async (t) => {
+      if (t === T.user) return vec({ 5: 1 });
+      if (t === U.user) return vec({ 6: 1 });
+      if (t === "FLOORQ") return vec({ 5: 0.8, 6: 0.33 });
+      return ortho(t);
+    };
+    setExemplarEmbedder(emb);
+    resetExemplarIndex();
+
+    const raw = await searchExemplars("FLOORQ", { limit: 2, minScore: 0.3 });
+    expect(raw.length).toBe(2); // plain cosine keeps the weak second
+
+    const adaptive = await searchExemplars("FLOORQ", { limit: 2, minScore: 0.3, diversify: true });
+    expect(adaptive.length).toBe(1);
+    expect(adaptive[0].exemplar.id).toBe(T.id);
   });
 });
 
