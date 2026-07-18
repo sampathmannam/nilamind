@@ -1,6 +1,22 @@
 /**
- * Deterministic Safety Layer for NilaMind
+ * Deterministic Safety Layer for NilaMind — the §9 crisis-safety boundary.
+ *
  * Performs offline-first keyword scans to detect crisis inputs and unsafe AI outputs.
+ *
+ * SEALED BOUNDARY — the ONLY symbols application code may import from this module:
+ *   - scanForCrisis        (crisis-input gate)
+ *   - getCrisisReply       (unconditional crisis copy)
+ *   - getUnsafeFallbackReply(safe fallback when an unsafe output is caught)
+ *   - checkResponse        (AI-output backstop)
+ *   - isStreamingHarm      (streaming-output guard)
+ *
+ * Everything else exported here (keyword/cue/phrase corpora, the isBenign* guards)
+ * is §9-INTERNAL: it exists so the detection pipeline and the crisisClassifier can
+ * compose the gate. Importing those into feature code invites a second, drifting
+ * copy of the detection logic — the bug class §9 exists to prevent. That seal is
+ * enforced in src/safety.boundary.test.ts (a subsystem allowlist gates the internals).
+ * The §9 behaviour is model-independent and change-frozen by the golden/adversarial
+ * suites (safety.test, nilaSafetyInvariants, cuttingFloor, floorPrecision, …).
  */
 
 import { getCrisisLines, crisisDigits } from "./services/crisisResources";
