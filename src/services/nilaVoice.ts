@@ -120,7 +120,7 @@ const VOICE_TEMPLATES: Record<VoiceScenario, VoiceTemplate> = {
   },
   checkin_prompt: {
     templates: [
-      "A quick check-in takes 30 seconds. Want to log how you're doing?",
+      "A quick check-in is just a tap or two. Want to log how you're doing?",
       "How are you right now? One tap to record it.",
       "Even a one-tap mood helps your patterns grow.",
     ],

@@ -444,7 +444,7 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
             <button
               onClick={() => setShowExportMenu((v) => !v)}
               disabled={exportBusy || checkins.length === 0}
-              className="p-1.5 rounded-lg hover:bg-slate-700/50 text-slate-400 hover:text-slate-200 disabled:opacity-30"
+              className="p-1.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-slate-700/50 text-slate-400 hover:text-slate-200 disabled:opacity-30"
               aria-label={t("exportTitle")}
               id="dashboard-export-btn"
             >

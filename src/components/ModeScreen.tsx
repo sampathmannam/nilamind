@@ -86,6 +86,15 @@ interface ModeScreenProps {
 // in-progress draft across remounts (keeps the tab crossfade animation, unlike dropping the key).
 let modeDraftCache = "";
 
+// Human labels for the JITAI nudge's suggestedTool id — the card must never render the raw id
+// ("Try problem_solving"). 2026-07-18 design review.
+const JITAI_TOOL_LABELS: Record<string, string> = {
+  winddown: "wind down",
+  grounding: "grounding",
+  breathing: "breathing",
+  problem_solving: "problem-solving",
+};
+
 export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboard, onOpenMedication, onOpenGrounding, onOpenDiary, onOpenReachOut, onOpenWindDown, onInternalSheetChange, closeSheetSignal }: ModeScreenProps) {
   const [mode, setMode] = useState(getCurrentMode());
   const [showCheckin, setShowCheckin] = useState(() => {
@@ -1019,8 +1028,8 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
               <div className="flex items-start gap-2">
                 <ShieldCheck className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" />
                 <div className="flex-1">
-                  <p className="font-medium">Safety plan — first follow-up (~48h)</p>
-                  <p className="text-blue-200/70 mt-0.5">The first follow-up within ~48h is the most impactful part of the Stanley-Brown protocol. No pressure — just a gentle nudge if now feels like a good time.</p>
+                  <p className="font-medium">Safety plan — a first look back</p>
+                  <p className="text-blue-200/70 mt-0.5">Coming back to your plan within a day or two is the part research shows helps most. No pressure — just a gentle nudge if now feels like a good time.</p>
 <div className="flex gap-2 mt-2">
                     <button
                       onClick={handleOpenSafetyPlan}
@@ -1132,7 +1141,8 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                       }}
                       className="px-3 py-2 rounded-lg bg-violet-500/20 hover:bg-violet-500/30 text-violet-200 font-medium transition-colors cursor-pointer mt-2 min-h-[44px] focus-ring"
                     >
-                      Try {jitaiNudge.suggestedTool}
+                      {/* Friendly label, never the raw tool id (2026-07-18 design review: "Try problem_solving"). */}
+                      Try {JITAI_TOOL_LABELS[jitaiNudge.suggestedTool] ?? jitaiNudge.suggestedTool}
                     </button>
                   )}
                 </div>

@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect } from "react";
+import React, { Suspense, useEffect, useRef } from "react";
 import { X } from "lucide-react";
 import ErrorBoundary from "./ErrorBoundary";
 
@@ -43,6 +43,9 @@ export default function Sheet({
   bodyClassName,
   children,
 }: SheetProps) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const prevFocusRef = useRef<HTMLElement | null>(null);
+
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -51,6 +54,16 @@ export default function Sheet({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
+
+  // Move keyboard/screen-reader focus INTO the sheet on open, and restore it to the previously-focused
+  // element on close (2026-07-18 design review: sheets never took focus, so keyboard users stayed on the
+  // element behind the overlay). Not a full Tab-trap, but it lands focus in the dialog and returns it.
+  useEffect(() => {
+    if (!open) return;
+    prevFocusRef.current = (document.activeElement as HTMLElement | null) ?? null;
+    dialogRef.current?.focus();
+    return () => { try { prevFocusRef.current?.focus?.(); } catch { /* previously-focused node gone */ } };
+  }, [open]);
 
   if (!open) return null;
 
@@ -69,7 +82,9 @@ export default function Sheet({
 
   return (
     <div
-      className={`fixed inset-0 z-50 bg-page flex flex-col ${closing ? "animate-slide-out" : "animate-slide-in"}`}
+      ref={dialogRef}
+      tabIndex={-1}
+      className={`fixed inset-0 z-50 bg-page flex flex-col outline-none ${closing ? "animate-slide-out" : "animate-slide-in"}`}
       id={id}
       role="dialog"
       aria-modal="true"
@@ -79,7 +94,9 @@ export default function Sheet({
         className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0"
         style={{ paddingTop: SAFE_TOP }}
       >
-        <span className="text-sm font-semibold text-slate-100">{title}</span>
+        {/* Heading element (not a bare span) so screen-reader users can navigate by heading and the sheet
+            announces a title landmark. aria-label on the dialog still carries the accessible name. */}
+        <h2 className="text-sm font-semibold text-slate-100">{title}</h2>
         <button onClick={onClose} className={CLOSE_BTN} aria-label="Close">
           <X className="w-4 h-4" aria-hidden="true" />
         </button>

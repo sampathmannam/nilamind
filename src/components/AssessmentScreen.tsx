@@ -88,6 +88,7 @@ interface Props {
 export default function AssessmentScreen({ onActivateCrisis, initialInstrument }: Props) {
   const [phase, setPhase] = useState<"menu" | "running" | "result">("menu");
   const [active, setActive] = useState<InstrumentId | null>(null);
+  const [confirmCancel, setConfirmCancel] = useState(false); // guard against discarding in-progress answers
   const [responses, setResponses] = useState<(number | null)[]>([]);
   const [result, setResult] = useState<ScoredResult | null>(null);
   const [history, setHistory] = useState<AssessmentEntry[]>([]);
@@ -273,11 +274,33 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
     return (
       <div className="space-y-4 max-w-md mx-auto" id="assessment-running">
         <button
-          onClick={() => { setPhase("menu"); setActive(null); }}
-          className="text-xs font-semibold text-slate-400 hover:text-slate-100 flex items-center gap-1 cursor-pointer"
+          onClick={() => { if (answeredCount === 0) { setPhase("menu"); setActive(null); } else { setConfirmCancel(true); } }}
+          className="text-xs font-semibold text-slate-400 hover:text-slate-100 flex items-center gap-1 cursor-pointer min-h-[44px]"
         >
           <ChevronLeft className="w-3.5 h-3.5" /> Cancel
         </button>
+
+        {/* Confirm before discarding partly-answered check-ins (2026-07-18 design review: Cancel dropped
+            in-progress answers with no warning). Only shown once at least one item is answered. */}
+        {confirmCancel && (
+          <div role="alertdialog" aria-label="Cancel check-in?" className="glass rounded-xl p-3 space-y-2 border border-amber-500/30">
+            <p className="text-xs text-slate-200">Cancel this check-in? Your {answeredCount} answer{answeredCount !== 1 ? "s" : ""} won't be saved.</p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setConfirmCancel(false)}
+                className="flex-1 min-h-[44px] rounded-lg bg-slate-700/50 hover:bg-slate-700 text-slate-200 text-sm font-semibold cursor-pointer"
+              >
+                Keep going
+              </button>
+              <button
+                onClick={() => { setConfirmCancel(false); setPhase("menu"); setActive(null); }}
+                className="flex-1 min-h-[44px] rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 text-sm font-semibold cursor-pointer"
+              >
+                Discard
+              </button>
+            </div>
+          </div>
+        )}
 
         <header className="space-y-2">
           <div className="flex items-start justify-between gap-2">

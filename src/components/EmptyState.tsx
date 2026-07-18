@@ -67,7 +67,7 @@ export const EMPTY_STATES = {
   noCheckins: {
     nilaState: "greeting" as NilaState,
     title: "Your story starts here",
-    body: "A quick check-in takes 30 seconds. Even one tap helps your patterns grow.",
+    body: "A quick check-in is just a tap or two. Even one tap helps your patterns grow.",
   },
   noEpisodes: {
     nilaState: "calm" as NilaState,

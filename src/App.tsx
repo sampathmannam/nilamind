@@ -303,7 +303,10 @@ function AppShell() {
       if (top?.kind === "sheet") { closeTop(); return; }
       if (top?.kind === "aux") { closeAuxStart(); return; }
       if (modeScreenHasSheet) { setCloseModeSheetSignal((n) => n + 1); return; } // ModeScreen closes its auxView + reports back
-      if (state.tab !== "nila") { setTab("nila"); return; }
+      // Back roots to the LAUNCH tab (Today), not Nila (2026-07-18 design review: launch tab ≠ back-root
+      // was disorienting — back from the home screen jumped to chat instead of exiting). Back now heads
+      // home to Today from any other tab; back from Today exits, matching Android's home-then-exit norm.
+      if (state.tab !== "today") { setTab("today"); return; }
       void CapApp.exitApp();
     }).then((h) => { handle = h; if (removed) h.remove(); });
     return () => { removed = true; handle?.remove(); };

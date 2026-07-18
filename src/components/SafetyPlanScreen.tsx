@@ -139,7 +139,7 @@ export default function SafetyPlanScreen({ draft }: { draft?: Partial<Pick<Safet
           <h1 className="text-xl font-semibold text-slate-100">My Safety Plan</h1>
           <p className="text-xs text-slate-500">Your secure emergency dashboard</p>
         </div>
-        <div className="flex items-center gap-1.5 text-xs font-medium text-emerald-400">
+        <div className="flex items-center gap-1.5 text-xs font-medium text-emerald-400" role="status" aria-live="polite">
           {savedStatus ? (
             <>
               <CheckCircle2 className="w-4 h-4 text-emerald-400" />

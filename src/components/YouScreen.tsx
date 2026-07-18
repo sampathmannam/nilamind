@@ -236,10 +236,16 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
       {/* Intention picker modal */}
       {showPicker && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-end" onClick={() => setShowPicker(false)}>
-          <div className="w-full bg-page rounded-t-2xl p-4 max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="w-full bg-page rounded-t-2xl p-4 max-h-[80vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="intention-picker-title"
+          >
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-slate-100">Set an intention</h2>
-              <button onClick={() => setShowPicker(false)} className="p-2 text-slate-400 hover:text-slate-200">
+              <h2 id="intention-picker-title" className="text-lg font-semibold text-slate-100">Set an intention</h2>
+              <button onClick={() => setShowPicker(false)} aria-label="Close" className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-400 hover:text-slate-200">
                 <X className="w-5 h-5" />
               </button>
             </div>
