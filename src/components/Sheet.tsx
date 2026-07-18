@@ -7,9 +7,13 @@ import { useFocusTrap } from "../hooks/useFocusTrap";
 // inline at each call site (was repeated 7× across App.tsx).
 const SAFE_TOP = "var(--safe-top)";
 
+// Re-architecture Phase 0: this shared overlay is the reference migration from remapped Tailwind ramps
+// to semantic role tokens (text-ink, border-line, ring-accent, bg-fill). Values are the same; the classes
+// now say what they mean. (hover:text-ink is a single imperceptible shade brighter than the old
+// slate-200 — the hover-to-primary-ink role — an intentional simplification.)
 const CLOSE_BTN =
-  "p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer " +
-  "focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center " +
+  "p-2 rounded-full hover:bg-fill text-ink-muted hover:text-ink cursor-pointer " +
+  "focus-visible:ring-2 focus-visible:ring-accent min-w-[44px] min-h-[44px] flex items-center " +
   "justify-center";
 
 export interface SheetProps {
@@ -74,12 +78,12 @@ export default function Sheet({
       aria-label={title}
     >
       <div
-        className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0"
+        className="flex items-center justify-between px-4 py-3 border-b border-line shrink-0"
         style={{ paddingTop: SAFE_TOP }}
       >
         {/* Heading element (not a bare span) so screen-reader users can navigate by heading and the sheet
             announces a title landmark. aria-label on the dialog still carries the accessible name. */}
-        <h2 className="text-sm font-semibold text-slate-100">{title}</h2>
+        <h2 className="text-sm font-semibold text-ink">{title}</h2>
         <button onClick={onClose} className={CLOSE_BTN} aria-label="Close">
           <X className="w-4 h-4" aria-hidden="true" />
         </button>

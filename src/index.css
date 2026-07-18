@@ -118,6 +118,28 @@
   --color-card: #211C17;    /* cards */
   --color-raised: #2A241D;  /* raised surfaces */
 
+  /* ── Semantic ROLE tokens (re-architecture Phase 0, 2026-07-18) ──────────────────────────────────
+     The app themes itself by remapping Tailwind's named ramps (slate→taupe, blue→lavender…). That works
+     but couples every utility to a hidden meaning and leaks cold defaults for any un-remapped stop
+     (this session shipped sky-400/teal-400/… leak fixes). These role tokens name colour by JOB, generate
+     matching utilities in Tailwind v4 (text-ink, border-line, text-accent, text-danger…), and theme-switch
+     automatically because they reference the (already theme-switched) ramps via var() — so they need
+     defining only ONCE. Migrate components ramp→role incrementally; when the last ramp class is gone the
+     remap can be deleted. Values are byte-identical to today's roles, so adopting a token is a no-op visually. */
+  --color-ink: var(--color-slate-100);        /* primary text */
+  --color-ink-2: var(--color-slate-300);      /* secondary text */
+  --color-ink-muted: var(--color-slate-400);  /* muted text */
+  --color-ink-faint: var(--color-slate-500);  /* hint text */
+  --color-line: var(--color-slate-800);       /* borders / subtle surfaces */
+  --color-line-strong: var(--color-slate-700);/* strong borders */
+  --color-fill: var(--color-slate-800);       /* subtlest hover/press fill */
+  --color-accent: var(--color-blue-500);      /* primary accent (lavender) */
+  --color-accent-hi: var(--color-blue-400);   /* brighter accent */
+  --color-danger: var(--color-rose-500);      /* crisis / destructive (terracotta, never bright red) */
+  --color-success: var(--color-emerald-500);  /* success */
+  --color-warn: var(--color-amber-500);       /* warning (honey) */
+  --color-hero: var(--color-peach-400);       /* special hero highlight (dark text pairing) */
+
   /* Status-bar-safe top inset. The app is edge-to-edge (viewport-fit=cover), so the WebView draws under
      the status bar. On non-notch Android devices env(safe-area-inset-top) reports 0 even though the status
      bar occupies ~24dp — so a bare 12px floor left headers (incl. the §9 crisis overlay) colliding with the
