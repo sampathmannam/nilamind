@@ -23,9 +23,10 @@ function allSourceFiles(dir: string, acc: string[] = []): string[] {
   return acc;
 }
 
-// The 38 protected sensitive keys, in declaration order (src/services/secureLocal.ts).
+// The 39 protected sensitive keys, in declaration order (src/services/secureLocal.ts).
 const SENSITIVE_KEYS = [
   "nilamind_checkins",
+  "nilamind_checkin_draft",
   "nilamind_diary",
   "nilamind_journal",
   "nilamind_episodes",
@@ -72,14 +73,14 @@ describe("protected literals (privacy/encryption invariants — never change)", 
   });
 
 
-  it("secureLocal.ts SENSITIVE_KEYS contains exactly the 38 expected entries", () => {
+  it("secureLocal.ts SENSITIVE_KEYS contains exactly the 39 expected entries", () => {
     const src = read("services/secureLocal.ts");
     // Pull the array body out of `export const SENSITIVE_KEYS = [ ... ];`
     const m = src.match(/export const SENSITIVE_KEYS\s*=\s*\[([\s\S]*?)\]/);
     expect(m, "SENSITIVE_KEYS array literal not found").toBeTruthy();
     const found = [...m![1].matchAll(/"([^"]+)"/g)].map((x) => x[1]);
     expect(found).toEqual(SENSITIVE_KEYS);
-    expect(found).toHaveLength(38);
+    expect(found).toHaveLength(39);
     // The reflection throttle flag is a non-sensitive date-only value in plain localStorage.
     expect(found).not.toContain("nilamind_last_reflected");
     // Phase 2 inflection: the toggle + throttle + daily-cap are non-sensitive flag/date values.

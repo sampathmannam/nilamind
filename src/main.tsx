@@ -190,10 +190,27 @@ if (Capacitor.isNativePlatform()) {
       }, 30_000); // 30s after boot, enough for the model to warm
     }
   };
-  // Defer off the critical path so first paint is never delayed by this import
+  // Conversational check-in capture: shortly after boot (any time of day), if there's a conversation and no
+  // check-in yet today, let the on-device model draft one from what the person already told Nila — so they
+  // can confirm with one tap instead of filling the mood form. Guarded + §9-gated inside maybeDraftCheckin;
+  // uses the shared model thread (defers if busy) so it never competes with interactive chat.
+  const scheduleCheckinDraft = () => {
+    setTimeout(() => {
+      Promise.all([
+        import("./services/checkinDraft"),
+        import("./services/sessionChat"),
+      ]).then(([{ maybeDraftCheckin }, { getSessionChat }]) => {
+        const turns = getSessionChat().filter((m) => m.role === "user").map((m) => m.content);
+        void maybeDraftCheckin(turns).catch(() => {});
+      }).catch(() => {});
+    }, 45_000); // after the reflection warm-up; model likely ready and the user likely idle
+  };
+
+  // Defer off the critical path so first paint is never delayed by these imports
   const ric = (globalThis as any).requestIdleCallback as undefined | ((cb: () => void, o?: any) => number);
-  if (ric) ric(scheduleReflection, { timeout: 30_000 });
-  else setTimeout(scheduleReflection, 15_000);
+  const schedule = () => { scheduleReflection(); scheduleCheckinDraft(); };
+  if (ric) ric(schedule, { timeout: 30_000 });
+  else setTimeout(schedule, 15_000);
 // Fire-and-forget GitHub auto‑update check (Android only)
 if (Capacitor.isNativePlatform()) {
   import("./services/autoUpdate").then(({ checkForGitHubUpdate }) => {

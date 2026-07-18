@@ -1,5 +1,5 @@
 import { localDateKey } from "../services/storageUtils";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useReducer } from "react";
 import { Wind, MessageCircle, Moon, Sparkles, ChevronRight, HeartHandshake, Sparkle, Clock3, Target, LineChart, Activity, LifeBuoy } from "lucide-react";
 import { getTimeMode, getUserState } from "../services/modeEngine";
 import { hasCheckinToday } from "../services/checkin";
@@ -11,6 +11,8 @@ import { isWellbeingDue, wellbeingCadence } from "../services/wellbeingTrack";
 import { hasRhythmToday, loadTodayAnchors, RHYTHM_ANCHORS } from "../services/socialRhythm";
 import { getDailyIntention } from "../services/weeklyIntention";
 import DailyIntentionCard, { type DailyIntentionCardHandle } from "./DailyIntentionCard";
+import ConversationalCheckinCard from "./ConversationalCheckinCard";
+import { getPendingCheckinDraft } from "../services/checkinDraft";
 import DailyContentCard from "./DailyContentCard";
 import RatingPromptCard from "./RatingPromptCard";
 import SafetyPlanNudgeCard from "./SafetyPlanNudgeCard";
@@ -167,7 +169,11 @@ export default function TodayScreen({
     night: t("greeting_night"),
   };
   const greeting = greetingMap[timeMode];
+  const [, refreshAfterCheckinResolve] = useReducer((n: number) => n + 1, 0);
   const checkedIn = hasCheckinToday(localDateKey());
+  // A model-drafted check-in waiting to be confirmed (conversational capture). When present and not yet
+  // checked in, it replaces the cold "How are you feeling?" prompt with a warm, pre-filled confirm.
+  const pendingCheckinDraft = !checkedIn ? getPendingCheckinDraft() : null;
   const todayMood = getTodayMood();
   const dailyIntentionSet = !!getDailyIntention();
   const hero = getHeroAction(timeMode, userState, dailyIntentionSet);
@@ -368,7 +374,15 @@ export default function TodayScreen({
       </button>
       )}
 
-      {/* Mood card — prompt to log if not checked in, show reflection if done */}
+      {/* Conversational check-in capture — a one-tap confirm of the check-in Nila drafted from the chat,
+          instead of the cold form. Self-renders only when a draft is pending (and not yet checked in). */}
+      {pendingCheckinDraft && (
+        <ConversationalCheckinCard go={go} onResolved={refreshAfterCheckinResolve} />
+      )}
+
+      {/* Mood card — prompt to log if not checked in, show reflection if done. The cold "how are you
+          feeling?" prompt is suppressed while a drafted check-in is offered above (they'd be redundant). */}
+      {!(pendingCheckinDraft && !checkedIn) && (
       <button
         onClick={() => checkedIn ? go("diary") : go("ema_checkin")}
         className="w-full glass hover:brightness-125 p-5 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left"
@@ -394,6 +408,7 @@ export default function TodayScreen({
         )}
         <ChevronRight className="w-5 h-5 text-slate-500 shrink-0 ml-auto" aria-hidden="true" />
       </button>
+      )}
 
       {/* Hero action — time-aware: wind-down at night, grounding when elevated, else the structured
           daily-intention prompt (until set) or the check-in prompt. (2026-07-18 QA: hoisted ABOVE the

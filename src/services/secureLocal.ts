@@ -29,6 +29,7 @@ import { ls } from "./storageUtils";
 // and stays in plain localStorage (read at boot, before the gate, with no privacy cost).
 export const SENSITIVE_KEYS = [
   "nilamind_checkins",
+  "nilamind_checkin_draft",
   "nilamind_diary",
   "nilamind_journal",
   "nilamind_episodes",
