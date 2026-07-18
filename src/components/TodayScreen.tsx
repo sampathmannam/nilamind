@@ -424,6 +424,49 @@ export default function TodayScreen({
         <ChevronRight className="w-5 h-5 text-slate-500 shrink-0 ml-auto" aria-hidden="true" />
       </button>
 
+      {/* Hero action — time-aware: wind-down at night, grounding when elevated, else the structured
+          daily-intention prompt (until set) or the check-in prompt. (2026-07-18 QA: hoisted ABOVE the
+          "Your patterns" fold — per docs/UX_RESEARCH.md the time-aware hero is a LEAD element, not
+          something buried below a show-more toggle. The daily-intention branch opens the card inline.) */}
+      <button
+        onClick={() => {
+          if (hero.id === "daily_intention") {
+            intentionCardRef.current?.open();
+            document.getElementById("today-daily-intention")?.scrollIntoView({ behavior: "smooth", block: "center" });
+            return;
+          }
+          go(hero.route);
+        }}
+        className="w-full glass hover:brightness-125 p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left flex items-center gap-3"
+      >
+        <span className={`shrink-0 ${hero.color}`}>{hero.icon}</span>
+        <span className="flex-1 min-w-0">
+          <span className="block text-sm font-bold text-slate-100">{hero.label}</span>
+          <span className="block text-[11px] text-slate-400">{hero.sub}</span>
+        </span>
+        <ChevronRight className="w-5 h-5 text-slate-500 shrink-0" aria-hidden="true" />
+      </button>
+
+      {/* Daily intention — the structured if-then picker (Wave 3 Group I). Rendered unconditionally so
+          it's also where you review/edit today's plan; the SAME canonical store DiaryCardScreen Part 3
+          uses. Collapsed by default; the hero above reveals it (promptWhenClosed=false while promoting). */}
+      <DailyIntentionCard ref={intentionCardRef} promptWhenClosed={hero.id !== "daily_intention"} />
+
+      {/* Talk to Nila card — always present, exactly one tap away, one of the 4 lead elements. */}
+      <button
+        onClick={() => go("nila")}
+        className="w-full glass hover:brightness-125 p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left flex items-center gap-3"
+      >
+        <span className="w-10 h-10 rounded-full sun-cta flex items-center justify-center shrink-0">
+          <MessageCircle className="w-5 h-5" aria-hidden="true" />
+        </span>
+        <span className="flex-1 min-w-0">
+          <span className="block text-sm font-bold text-slate-100">Talk to Nila</span>
+          <span className="block text-[11px] text-slate-400">Your companion — always here, always private</span>
+        </span>
+        <ChevronRight className="w-5 h-5 text-slate-500 shrink-0" aria-hidden="true" />
+      </button>
+
       {/* Show more toggle — hides informational cards by default */}
       <button
         onClick={() => setShowExtraCards(!showExtraCards)}
@@ -495,53 +538,6 @@ export default function TodayScreen({
       )}
       </div>
       )}
-
-      {/* Hero action — time-aware: wind-down at night, grounding when elevated, else the structured
-          daily-intention prompt (until set) or the check-in prompt. Wave 3 Group I: the daily-
-          intention branch isn't a nav route — it OPENS the collapsed DailyIntentionCard's if-then
-          form inline (and scrolls to it) instead of navigating away from the Today hub. The card
-          stays silent while this hero promotes it (promptWhenClosed=false), so there's exactly one
-          "Set today's intention" affordance, and pressing it reveals the form. */}
-      <button
-        onClick={() => {
-          if (hero.id === "daily_intention") {
-            intentionCardRef.current?.open();
-            document.getElementById("today-daily-intention")?.scrollIntoView({ behavior: "smooth", block: "center" });
-            return;
-          }
-          go(hero.route);
-        }}
-        className="w-full glass hover:brightness-125 p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left flex items-center gap-3"
-      >
-        <span className={`shrink-0 ${hero.color}`}>{hero.icon}</span>
-        <span className="flex-1 min-w-0">
-          <span className="block text-sm font-bold text-slate-100">{hero.label}</span>
-          <span className="block text-[11px] text-slate-400">{hero.sub}</span>
-        </span>
-        <ChevronRight className="w-5 h-5 text-slate-500 shrink-0" aria-hidden="true" />
-      </button>
-
-      {/* Daily intention — the structured if-then picker (Wave 3 Group I). Rendered unconditionally
-          (not just while unset) so it's also where you review/edit today's plan once it's saved —
-          the SAME canonical store DiaryCardScreen's Part 3 reads/writes, so the two stay in sync.
-          The form is collapsed by default; while the hero above is promoting it we suppress the
-          card's own prompt (promptWhenClosed=false) and let the hero's open() reveal the form. */}
-      <DailyIntentionCard ref={intentionCardRef} promptWhenClosed={hero.id !== "daily_intention"} />
-
-      {/* Talk to Nila card — always present, exactly one tap away, never the default lead */}
-      <button
-        onClick={() => go("nila")}
-        className="w-full glass hover:brightness-125 p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left flex items-center gap-3"
-      >
-        <span className="w-10 h-10 rounded-full sun-cta flex items-center justify-center shrink-0">
-          <MessageCircle className="w-5 h-5" aria-hidden="true" />
-        </span>
-        <span className="flex-1 min-w-0">
-          <span className="block text-sm font-bold text-slate-100">Talk to Nila</span>
-          <span className="block text-[11px] text-slate-400">Your companion — always here, always private</span>
-        </span>
-        <ChevronRight className="w-5 h-5 text-slate-500 shrink-0" aria-hidden="true" />
-      </button>
 
       {/* Capacity-adaptive tools section (Phase 8: forgiving engagement) */}
       {capacity === "low" && (
