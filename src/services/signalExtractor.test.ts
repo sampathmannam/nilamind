@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
+import { localDateKey } from "./storageUtils";
 import {
   extractAllFeatures,
   extractTodayFeatures,
@@ -192,7 +193,9 @@ describe("signalExtractor (Phase 21)", () => {
   describe("extractTodayFeatures", () => {
     it("returns features for today's date", () => {
       const features = extractTodayFeatures();
-      const today = new Date().toISOString().split("T")[0];
+      // Must match the code's basis: extractTodayFeatures keys on localDateKey() (local calendar day),
+      // NOT UTC toISOString — they diverge in the evening in +offset zones (e.g. IST), which used to flake.
+      const today = localDateKey();
       expect(features.date).toBe(today);
     });
   });

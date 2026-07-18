@@ -46,7 +46,7 @@ export interface DisengagementParams {
 
 export function assessDisengagementRisk(
   params: DisengagementParams,
-  _nowIso?: string,
+  nowIso?: string,
 ): DisengagementRisk {
   const signals: DisengagementSignal[] = [];
   let totalScore = 0;
@@ -198,7 +198,7 @@ export function assessDisengagementRisk(
   else if (score >= 45) riskLevel = "elevated";
   else if (score >= 25) riskLevel = "moderate";
 
-  const frequencyTrend = computeFrequencyTrend(params.checkinDates);
+  const frequencyTrend = computeFrequencyTrend(params.checkinDates, nowIso);
 
   return {
     riskLevel,
@@ -213,11 +213,14 @@ export function assessDisengagementRisk(
 
 function computeFrequencyTrend(
   checkinDates: string[],
+  nowIso?: string,
 ): "declining" | "stable" | "improving" | "insufficient_data" {
   if (checkinDates.length < 4) return "insufficient_data";
 
   const sorted = [...new Set(checkinDates)].sort();
-  const now = Date.now();
+  // Anchor the recent/older windows on the injected analysis time when provided (deterministic + testable);
+  // fall back to the wall clock. Previously this always used Date.now(), silently ignoring the nowIso param.
+  const now = nowIso ? new Date(nowIso).getTime() : Date.now();
   const DAY_MS = 86400000;
   const recentCutoff = now - 14 * DAY_MS;
   const olderCutoff = now - 28 * DAY_MS;

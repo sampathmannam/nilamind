@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { onAppForeground, getSensingStatus, onAppBackground } from "./passiveSensingManager";
 import { clearPassiveSensingData, getDailyFeature } from "./signalStore";
 import { secureLocal } from "./secureLocal";
+import { localDateKey } from "./storageUtils";
 
 describe("passiveSensingManager (Phase 21)", () => {
   beforeEach(() => {
@@ -17,7 +18,7 @@ describe("passiveSensingManager (Phase 21)", () => {
   describe("onAppForeground", () => {
     it("extracts and stores today's features", () => {
       const result = onAppForeground();
-      const today = new Date().toISOString().split("T")[0];
+      const today = localDateKey(); // code keys on local calendar day, not UTC toISOString
       expect(result.todayFeatures.date).toBe(today);
       // Verify stored
       const stored = getDailyFeature(today);
@@ -28,7 +29,7 @@ describe("passiveSensingManager (Phase 21)", () => {
     it("updates passive sensing status", () => {
       onAppForeground();
       const status = getSensingStatus();
-      expect(status.lastExtraction).toBe(new Date().toISOString().split("T")[0]);
+      expect(status.lastExtraction).toBe(localDateKey());
       expect(status.featureCount).toBe(1);
     });
 

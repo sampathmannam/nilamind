@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import {
   upsertDailyFeature,
   getDailyFeature,
@@ -50,13 +50,21 @@ describe("signalStore (Phase 21)", () => {
     });
 
     it("maintains oldest-first ordering", () => {
-      upsertDailyFeature(makeFeature("2026-07-18"));
-      upsertDailyFeature(makeFeature("2026-07-16"));
-      upsertDailyFeature(makeFeature("2026-07-17"));
-      const window = getFeatureWindow(3);
-      expect(window[0].date).toBe("2026-07-16");
-      expect(window[1].date).toBe("2026-07-17");
-      expect(window[2].date).toBe("2026-07-18");
+      // getFeatureWindow filters to the last N CALENDAR days ending today (task #23), so freeze "today" to
+      // 2026-07-18 — otherwise the real clock advancing past 07-18 drops 07-16 out of the 3-day window.
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date("2026-07-18T12:00:00"));
+      try {
+        upsertDailyFeature(makeFeature("2026-07-18"));
+        upsertDailyFeature(makeFeature("2026-07-16"));
+        upsertDailyFeature(makeFeature("2026-07-17"));
+        const window = getFeatureWindow(3);
+        expect(window[0].date).toBe("2026-07-16");
+        expect(window[1].date).toBe("2026-07-17");
+        expect(window[2].date).toBe("2026-07-18");
+      } finally {
+        vi.useRealTimers();
+      }
     });
   });
 
