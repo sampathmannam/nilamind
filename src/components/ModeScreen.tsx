@@ -42,6 +42,7 @@ import { safeDraftProblem } from "../services/problemSolvingDraft";
 import { safeDraftValueDomains } from "../services/valuesDraft";
 import { safeDraftSafetyPlan, type SafetyPlanDraftFields } from "../services/safetyPlanDraft";
 import CaptureSheets from "./CaptureSheets";
+import { selectVisibleNudges } from "./nudgeSelection";
 import { useFocusTrap } from "../hooks/useFocusTrap";
 import { looksLikeArmRequest, requestArmedCheckin } from "../services/armedCheckin";
 import { protocolOfferCard, startProtocolChat, continueProtocolChat, type ProtocolCard } from "../services/protocolChat";
@@ -122,30 +123,23 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   const [calmSafetyNudge, setCalmSafetyNudge] = useState<{ show: boolean; label: string } | null>(null); // Task 1.5
   const [softCrisisCard, setSoftCrisisCard] = useState(false); // 2026-07-12 Wave 3: soft tier, classifier-only hits
   const [pactNotice, setPactNotice] = useState<PactNotice | null>(null); // #30: surfaced pact (the human bridge)
-  // Phase: UX clutter fix — cap non-crisis nudges at 2 (crisis cards always shown)
-  const MAX_NUDGES = 2;
   const [confirmNewChat, setConfirmNewChat] = useState(false); // "new conversation" confirm dialog
   const newChatConfirmRef = useFocusTrap<HTMLDivElement>(confirmNewChat, () => setConfirmNewChat(false));
   const [welcomeBack, setWelcomeBack] = useState<string | null>(null); // lastVisitDate ISO or null
 
-  // Safety-plan prompts are mutually exclusive (2026-07-18 design review: the amber "review" + blue
-  // "follow-up" cards + the calm-moment nudge are three near-duplicate safety-plan asks that could all
-  // stack at once). Pick exactly ONE by clinical priority: the ~48h first follow-up (most impactful part
-  // of Stanley-Brown) > a periodic review > the calm-moment fill-a-blank nudge. This single card then
-  // takes ONE footer slot (below), instead of the review/follow-up cards bypassing the cap entirely.
-  const safetyPlanCard: "followup" | "review" | "calm" | null =
-    showSafetyPlanFollowUp ? "followup" : showSafetyPlanReview ? "review" : calmSafetyNudge?.show ? "calm" : null;
-
-  // Compute which non-crisis nudges are visible (cap at MAX_NUDGES)
-  const nonCrisisNudges = [
-    { id: "safetyPlan", show: !!safetyPlanCard },
-    { id: "sleep", show: !!sleepProdromeNudge },
-    { id: "jitai", show: !!jitaiNudge?.shouldNudge },
-    { id: "pact", show: !!pactNotice },
-    { id: "welcome", show: !!welcomeBack },
-  ].filter((n) => n.show);
-
-  const visibleNudgeIds = new Set(nonCrisisNudges.slice(0, MAX_NUDGES).map((n) => n.id));
+  // Ambient nudges: collapse the three mutually-exclusive safety-plan asks (follow-up > review > calm, by
+  // clinical priority — the ~48h Stanley-Brown follow-up matters most) to ONE card, then cap the footer at
+  // MAX_NUDGES (crisis cards render separately and always show). Pure selection lives in nudgeSelection.ts,
+  // unit-tested for the priority order + cap.
+  const { safetyPlanCard, visibleNudgeIds } = selectVisibleNudges({
+    safetyPlanFollowUp: showSafetyPlanFollowUp,
+    safetyPlanReview: showSafetyPlanReview,
+    calmSafetyNudgeShow: !!calmSafetyNudge?.show,
+    sleepProdrome: !!sleepProdromeNudge,
+    jitaiShouldNudge: !!jitaiNudge?.shouldNudge,
+    pact: !!pactNotice,
+    welcome: !!welcomeBack,
+  });
 
   const [ratedMessages, setRatedMessages] = useState<Set<number>>(new Set());
   const [dismissedSkillMessages, setDismissedSkillMessages] = useState<Set<number>>(new Set());
