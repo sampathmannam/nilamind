@@ -1,12 +1,13 @@
 import { localDateKey } from "../services/storageUtils";
-import { secureLocal } from "../services/secureLocal";
+import { appendToSecureArray } from "../services/secureLocal";
+import { SECURE_KEYS } from "../services/secureData";
 import React, { useState, useEffect } from "react";
 import { ThoughtRecord } from "../types";
 import { ChevronLeft, ChevronRight, BrainCircuit, RefreshCw, Check, Brain } from "lucide-react";
 import { fetchBalancedThought } from "../services/coachAssist";
 import { hapticSuccess } from "../hooks/useHaptics";
 import CrisisCard from "./CrisisCard";
-import { type ThoughtRecordDraft, mapDraftToWizard, loadThoughtRecords } from "../services/thoughtRecordDraft";
+import { type ThoughtRecordDraft, mapDraftToWizard } from "../services/thoughtRecordDraft";
 import { safeSpotDistortions, distortionSteer } from "../services/distortionSpotter";
 
 const THINKING_TRAPS = [
@@ -122,9 +123,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
       reRatedIntensity
     };
 
-    const records: ThoughtRecord[] = loadThoughtRecords();
-    records.push(newRecord);
-    secureLocal.setItem("nilamind_thought_records", JSON.stringify(records));
+    appendToSecureArray<ThoughtRecord>(SECURE_KEYS.thoughtRecords, newRecord);
 
     hapticSuccess();
     setSavedStatus(true);

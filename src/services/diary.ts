@@ -2,14 +2,14 @@
 //
 // Unlike the check-in / journal LOGS (arrays), the DBT diary is a MAP keyed by local date
 // (YYYY-MM-DD → the day's card), read by 8 surfaces that each re-implemented the getItem+parse+guard.
-// This module is the one place that knows the "nilamind_diary" key and its object-map shape, via the
-// shared loadSecureRecord primitive. Writes still go through secureLocal.setItem at the owning screen
-// (DiaryCardScreen) — read-side consolidation only, matching secureData's contract.
+// The key lives in secureData.SECURE_KEYS (single source for reader + writer). Reads go through the shared
+// loadSecureRecord primitive; the write path (DiaryCardScreen) goes through updateSecureRecord on the same
+// key — both directions bound to one const, so the key can never drift between them.
 
-import { loadSecureRecord } from "./secureData";
+import { loadSecureRecord, SECURE_KEYS } from "./secureData";
 import type { DiaryCardEntry } from "../types";
 
-const DIARY_KEY = "nilamind_diary";
+const DIARY_KEY = SECURE_KEYS.diary;
 
 /** The DBT diary map keyed by local date. Never throws; {} on missing/corrupt. */
 export function loadDiaryMap(): Record<string, DiaryCardEntry> {

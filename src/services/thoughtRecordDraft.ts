@@ -2,11 +2,11 @@ import { localDateKey } from "./storageUtils";
 import { generateOnDevice } from "./localLlm";
 import { applyOutputSafety } from "./nilaSafetyGate";
 import { appendToSecureArray } from "./secureLocal";
-import { loadSecureArray } from "./secureData";
+import { loadSecureArray, SECURE_KEYS } from "./secureData";
 import { scanForCrisis } from "../safety";
 import type { ThoughtRecord } from "../types";
 
-const THOUGHT_RECORDS_KEY = "nilamind_thought_records";
+const THOUGHT_RECORDS_KEY = SECURE_KEYS.thoughtRecords;
 
 /** All saved thought records. Never throws; returns [] on a missing/unparseable/non-array store. */
 export function loadThoughtRecords(): ThoughtRecord[] {

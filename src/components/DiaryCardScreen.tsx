@@ -1,6 +1,6 @@
 import { localDateKey } from "../services/storageUtils";
-import { secureLocal } from "../services/secureLocal";
 import { loadDiaryMap } from "../services/diary";
+import { updateSecureRecord, SECURE_KEYS } from "../services/secureData";
 import React, { useState, useEffect } from "react";
 import { DiaryCardEntry, DiaryUrge, SkillEffectiveness } from "../types";
 import { ALL_DIARY_DBT_SKILLS, DEFAULT_DIARY_URGE_DEFS } from "../data";
@@ -120,24 +120,25 @@ export default function DiaryCardScreen() {
   };
 
   const handleSave = () => {
-    const entries = loadDiaryMap();
-
     // morningIntention is no longer written here — Part 3 now defers to the unified daily-intention
     // store (weeklyIntention.ts's DailyIntention, via DailyIntentionCard) instead of its own
     // free-text field. The DiaryCardEntry type keeps the field (optional) for backward-compat
     // reads of older entries (see nilaContext.ts/coachAssist.ts's privacy scan, which still checks it).
     const skillsUsed = Object.keys(skillEffectiveness);
-    entries[selectedDate] = {
-      date: selectedDate,
-      emotions,
-      skillsUsed,
-      skillEffectiveness,
-      urges,
-      quickNotes,
-      quickNoteTags,
-    };
-
-    secureLocal.setItem("nilamind_diary", JSON.stringify(entries));
+    // updateSecureRecord bails (no write) if the diary blob is corrupt, so saving one day can never wipe
+    // the whole date-keyed map — the read-modify-write hazard the old loadDiaryMap()+setItem carried.
+    updateSecureRecord<DiaryCardEntry>(SECURE_KEYS.diary, (entries) => {
+      entries[selectedDate] = {
+        date: selectedDate,
+        emotions,
+        skillsUsed,
+        skillEffectiveness,
+        urges,
+        quickNotes,
+        quickNoteTags,
+      };
+      return entries;
+    });
     hapticMedium();
     setIsSaved(true);
     setTimeout(() => setIsSaved(false), 2000);
