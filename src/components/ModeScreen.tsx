@@ -1,7 +1,6 @@
 // ModeScreen — the living interface that adapts to time + user state.
 // Replaces the static stream with a mode-based UI.
 
-import { localDateKey } from "../services/storageUtils";
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import NilaFace from "./NilaFace";
 import CrisisHeaderButton from "./CrisisHeaderButton";
@@ -27,9 +26,7 @@ import ChatLoading from "./ChatLoading";
 import InMomentInsightCard from "./InMomentInsightCard";
 import PactNoticeCard from "./PactNoticeCard";
 import WelcomeBackCard from "./welcomeBack";
-import { activePactNotice, dismissPactNoticeToday, type PactNotice } from "../services/pactNotice";
 import type { CheckInEntry } from "../types";
-import { secureLocal } from "../services/secureLocal";
 import { sendToNila } from "../services/sendToNila";
 import { NilaMode, NilaUiMessage, shouldBlockForCrisisAsync } from "../services/nilaSend";
 import { suppressNudgesForCrisis, notifyReplyReady } from "../services/notifications";
@@ -43,6 +40,7 @@ import { safeDraftValueDomains } from "../services/valuesDraft";
 import { safeDraftSafetyPlan, type SafetyPlanDraftFields } from "../services/safetyPlanDraft";
 import CaptureSheets from "./CaptureSheets";
 import { selectVisibleNudges } from "./nudgeSelection";
+import { useNudges } from "../hooks/useNudges";
 import { useFocusTrap } from "../hooks/useFocusTrap";
 import { looksLikeArmRequest, requestArmedCheckin } from "../services/armedCheckin";
 import { protocolOfferCard, startProtocolChat, continueProtocolChat, type ProtocolCard } from "../services/protocolChat";
@@ -51,16 +49,7 @@ import { logNilaTurn } from "../services/nilaSessions";
 import { speakIfEnabled, speak, listenOnce, stopSpeaking } from "../services/voice";
 import { startVoiceSession, endVoiceSession } from "../services/voicePatterns";
 import { checkSttCoherence } from "../services/sttCoherenceGate";
-import { parseSafetyPlan } from "../services/safetyPlan";
-import { shouldPromptReview, isFirstFollowUpDue, markFirstFollowUpDone, markSafetyPlanReviewed } from "../services/safetyPlanFollowUp";
-import { selfReportSleepSignal } from "../services/sleepInsight";
-import { assessJitai, type JitaiDecision } from "../services/jitaiEngine";
-import { logAndGateJitaiDecision } from "../services/jitaiDecisionLog";
-import { calmSafetyPlanNudge, dismissCalmSafetyPlanNudge } from "../services/proactiveEngine";
 import { checkProactiveCheckIn, recordProactiveCheckIn } from "../services/proactiveCheckIn";
-import { computeUsageSummary } from "../services/usageAnalytics";
-import { loadMoodHistory } from "../services/moodHistory";
-import { computeCompassionateStreak } from "../services/streaks";
 import { Settings, Mic, Send, MicOff, Keyboard, X, ShieldCheck, ThumbsUp, ThumbsDown, Brain, Moon, SquarePen } from "lucide-react";
 import { hapticLight, hapticMedium } from "../hooks/useHaptics";
 import { recordFeedback, attachSuggestion } from "../services/nilaFeedback";
@@ -116,16 +105,25 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   const [valuesHighlight, setValuesHighlight] = useState<string[]>([]);
   const [safetyPlanDraft, setSafetyPlanDraft] = useState<SafetyPlanDraftFields | undefined>();
   const [protocolCard, setProtocolCard] = useState<ProtocolCard | null>(() => protocolOfferCard(""));
-  const [showSafetyPlanReview, setShowSafetyPlanReview] = useState(false);
-  const [showSafetyPlanFollowUp, setShowSafetyPlanFollowUp] = useState(false);
-  const [sleepProdromeNudge, setSleepProdromeNudge] = useState<{ firing: boolean; detail: string } | null>(null);
-  const [jitaiNudge, setJitaiNudge] = useState<JitaiDecision | null>(null);
-  const [calmSafetyNudge, setCalmSafetyNudge] = useState<{ show: boolean; label: string } | null>(null); // Task 1.5
   const [softCrisisCard, setSoftCrisisCard] = useState(false); // 2026-07-12 Wave 3: soft tier, classifier-only hits
-  const [pactNotice, setPactNotice] = useState<PactNotice | null>(null); // #30: surfaced pact (the human bridge)
   const [confirmNewChat, setConfirmNewChat] = useState(false); // "new conversation" confirm dialog
   const newChatConfirmRef = useFocusTrap<HTMLDivElement>(confirmNewChat, () => setConfirmNewChat(false));
-  const [welcomeBack, setWelcomeBack] = useState<string | null>(null); // lastVisitDate ISO or null
+
+  // hadCrisisRef is OWNED here (a session that ever tripped §9 latches it — see openCrisis / persist effect /
+  // startNewConversation). Declared before useNudges so the hook can READ it to keep calm/pact/welcome nudges
+  // away from a crisis. The ambient nudge state + its polling/one-shot effects live in useNudges (slice 2b);
+  // softCrisisCard stays here because it is §9/crisis flow, not an ambient nudge.
+  const hadCrisisRef = useRef(false);
+  const nudges = useNudges({ messages, auxView, hadCrisisRef });
+  const {
+    showSafetyPlanReview,
+    showSafetyPlanFollowUp,
+    sleepProdromeNudge,
+    jitaiNudge,
+    calmSafetyNudge,
+    pactNotice,
+    welcomeBack,
+  } = nudges;
 
   // Ambient nudges: collapse the three mutually-exclusive safety-plan asks (follow-up > review > calm, by
   // clinical priority — the ~48h Stanley-Brown follow-up matters most) to ONE card, then cap the footer at
@@ -151,7 +149,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   // #4 + #9 (audit): §9 crisis now routes through the App-level overlay (onOpenCrisis) so the Android hardware
   // back button closes it instead of exiting the app; a session that ever tripped §9 latches hadCrisisRef so
   // the transcript is never persisted/restored (keying the clear on a transient boolean re-persisted it on dismiss).
-  const hadCrisisRef = useRef(false);
+  // hadCrisisRef itself is declared above (before useNudges, which reads it).
   const crisisPendingRef = useRef(false); // #5-out (re-audit): a sent turn whose async §9 verdict is still pending
   // openCrisis(detected, tier): `detected` = the model/gate FLAGGED a §9 crisis in the user's turn. Only then
   // do we latch "never persist" + wipe the transcript + clear self-help cards (§9 precedence) — UNCONDITIONAL
@@ -175,9 +173,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
       setProtocolCard(null);
       void suppressNudgesForCrisis(); // P6.4: latch no-nudge + yank queued pings, same as App.tsx's activateCrisis
     }
-    setPactNotice(null); // §9 takes precedence over the gentle pact surface either way
-    setWelcomeBack(null); // §9 also clears the welcome-back card
-    setCalmSafetyNudge(null); // §9 also clears the calm-moment safety-plan nudge (Task 1.5) — never crisis-adjacent
+    nudges.clearForCrisis(); // §9 takes precedence: clears pact + welcome-back + calm-moment safety-plan nudge (Task 1.5)
     if (detected && tier === "soft") {
       setSoftCrisisCard(true); // soft tier — inline card, no full takeover
       return;
@@ -224,61 +220,8 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
     setSafetyPlanDraft(undefined);
   }, [closeSheetSignal]);
 
-  // B3: surface a gentle safety-plan follow-up card when the plan is stale.
-  // Re-check when an aux sheet closes so editing the plan immediately clears the card.
-  useEffect(() => {
-    try {
-      const raw = secureLocal.getItem("nilamind_safetyplan");
-      const plan = parseSafetyPlan(raw);
-      setShowSafetyPlanReview(shouldPromptReview(plan));
-      setShowSafetyPlanFollowUp(isFirstFollowUpDue(plan));
-    } catch {
-      setShowSafetyPlanReview(false);
-      setShowSafetyPlanFollowUp(false);
-    }
-  }, [auxView]);
-
-  // C1: sleep prodrome nudge (soft signal, never alarmist) + JITAI nudge
-  useEffect(() => {
-    let cancelled = false;
-    const checkSignals = async () => {
-      try {
-        // Sleep prodrome from self-report (available today) or wearable when connected
-        const sleepSignal = selfReportSleepSignal();
-        if (!cancelled) setSleepProdromeNudge(sleepSignal);
-      } catch { /* best-effort */ }
-
-      try {
-        // JITAI nudge based on current signals
-        const moodHist = loadMoodHistory();
-        const lastCheckin = moodHist[moodHist.length - 1];
-        const daysSinceLastCheckin = lastCheckin
-          ? Math.max(0, Math.floor((Date.now() - new Date(lastCheckin.date).getTime()) / 86400000))
-          : 99;
-        const jitai = assessJitai({
-          sleep: selfReportSleepSignal(),
-          moodHistory: moodHist,
-          lastUserText: messages.filter(m => m.role === "user").pop()?.content,
-          daysSinceLastCheckin,
-          usageAnalytics: computeUsageSummary(),
-        });
-        if (!cancelled) setJitaiNudge(jitai);
-        // 2026-07-12 Wave 3 §6: log the decision point + apply the receptivity gate. De-dupes the 5-min
-        // polling loop — a repeated identical trigger within its cooldown writes fired:false instead of a
-        // fresh identical entry. Does NOT change what's rendered (jitaiNudge above stays the live signal,
-        // same as before) — only wiring the decision LOG per spec doc §6's task scope.
-        if (!cancelled) logAndGateJitaiDecision(jitai, "in_app_card");
-      } catch { /* best-effort */ }
-
-      // Task 1.5 (2026-07-12 Wave 3): calm-moment-only safety-plan nudge — never during/adjacent to a crisis.
-      try {
-        if (!cancelled) setCalmSafetyNudge(hadCrisisRef.current ? null : calmSafetyPlanNudge());
-      } catch { /* best-effort */ }
-    };
-    checkSignals();
-    const interval = setInterval(checkSignals, 5 * 60 * 1000); // re-check every 5 min
-    return () => { cancelled = true; clearInterval(interval); };
-  }, [messages, auxView]);
+  // (B3 safety-plan review/follow-up + C1 sleep-prodrome/JITAI/calm-moment nudge effects moved to
+  //  useNudges — Phase 4 slice 2b. Behaviour, deps, and the 5-min poll are unchanged.)
 
   // audit 2.1 — CHAT PERSISTENCE (regressed in the rewrite: sessionChat was imported but never used).
   // Restore an in-progress conversation on mount so it survives leaving/killing the app; a crisis session
@@ -290,29 +233,8 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
     if (saved.length) setMessages(saved);
   }, []);
 
-  // #30 (audit): surface the user's pact when there's an active, undismissed reason (a short-sleep run or a
-  // mood-trajectory deterioration) and they wrote one. Was fully implemented but never rendered anywhere.
-  // §9 always takes precedence — openCrisis() clears it, and we skip it if this session already tripped crisis.
-  useEffect(() => {
-    if (hadCrisisRef.current) return;
-    try { setPactNotice(activePactNotice()); } catch { /* best-effort — pact surfacing is never a hard dependency */ }
-  }, []);
-
-  // Welcome-back card: if the user hasn't checked in for >= 2 days and hasn't dismissed it today,
-  // show a gentle in-app nudge. Dismissed via plain localStorage (non-sensitive UI flag).
-  useEffect(() => {
-    if (hadCrisisRef.current) return;
-    try {
-      const streak = computeCompassionateStreak();
-      if (streak.daysSinceLast >= 2) {
-        const dismissed = (globalThis as any).localStorage?.getItem("nilamind_welcome_back_dismissed");
-        if (dismissed !== localDateKey()) {
-          const d = new Date(); d.setDate(d.getDate() - streak.daysSinceLast);
-          setWelcomeBack(d.toISOString());
-        }
-      }
-    } catch { /* best-effort */ }
-  }, []);
+  // (#30 pact-surface + welcome-back one-shot effects moved to useNudges — Phase 4 slice 2b. Both still
+  //  skip when hadCrisisRef.current, and §9 clears them via nudges.clearForCrisis().)
 
   // Persist the chat as it grows. INVARIANT: a §9 crisis turn is NEVER persisted — clear the store so a
   // crisis transcript can't be restored later (mirrors the old AiCoachScreen rule). asyncReflection and
@@ -583,15 +505,9 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
     setAuxView("safety_plan");
   };
 
-  const handleMarkSafetyPlanReviewed = () => {
-    markSafetyPlanReviewed();
-    setShowSafetyPlanReview(false);
-  };
+  const handleMarkSafetyPlanReviewed = () => nudges.completeSafetyPlanReview();
 
-  const handleMarkSafetyPlanFollowUpDone = () => {
-    markFirstFollowUpDone();
-    setShowSafetyPlanFollowUp(false);
-  };
+  const handleMarkSafetyPlanFollowUpDone = () => nudges.completeSafetyPlanFollowUp();
 
   const handleProtocolTap = () => {
     if (!protocolCard) return;
@@ -714,8 +630,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   const startNewConversation = () => {
     clearSessionChat();
     setMessages([]);
-    setPactNotice(null);
-    setWelcomeBack(null);
+    nudges.clearPactAndWelcome();
     setRatedMessages(new Set());
     setDismissedSkillMessages(new Set());
     setProtocolCard(protocolOfferCard(""));
@@ -1064,7 +979,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                       Fill it in
                     </button>
                     <button
-                      onClick={() => { dismissCalmSafetyPlanNudge(); setCalmSafetyNudge(null); }}
+                      onClick={() => nudges.dismissCalm()}
                       className="px-3 py-2 rounded-lg hover:bg-blue-500/15 text-blue-200/80 transition-colors cursor-pointer min-h-[44px] focus-ring"
                     >
                       Not now
@@ -1096,7 +1011,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                       Wind down
                     </button>
                     <button
-                      onClick={() => setSleepProdromeNudge(null)}
+                      onClick={() => nudges.dismissSleep()}
                       className="px-3 py-2 rounded-lg hover:bg-amber-500/15 text-amber-200/80 transition-colors cursor-pointer min-h-[44px] focus-ring"
                     >
                       Not now
@@ -1159,10 +1074,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           {visibleNudgeIds.has("welcome") && welcomeBack && (
             <WelcomeBackCard
               lastVisitDate={welcomeBack}
-              onDismiss={() => {
-                try { (globalThis as any).localStorage?.setItem("nilamind_welcome_back_dismissed", localDateKey()); } catch { /* best-effort */ }
-                setWelcomeBack(null);
-              }}
+              onDismiss={() => nudges.dismissWelcome()}
             />
           )}
 
@@ -1172,7 +1084,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           {visibleNudgeIds.has("pact") && pactNotice && (
             <PactNoticeCard
               notice={pactNotice}
-              onDismiss={() => { dismissPactNoticeToday(); setPactNotice(null); }}
+              onDismiss={() => nudges.dismissPact()}
             />
           )}
 
