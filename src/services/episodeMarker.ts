@@ -23,7 +23,8 @@
 // leaves the device.
 
 import { localDateKey } from "./storageUtils";
-import { appendToSecureArray, secureLocal } from "./secureLocal";
+import { appendToSecureArray } from "./secureLocal";
+import { loadSecureArray } from "./secureData";
 
 export type EpisodePhase = "elevated" | "depressed" | "mixed" | "stable";
 
@@ -58,14 +59,7 @@ export function validateMarker(m: EpisodeMarker): boolean {
 }
 
 export function readEpisodeMarkers(): EpisodeMarker[] {
-  try {
-    const raw = secureLocal.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? (parsed as EpisodeMarker[]) : [];
-  } catch {
-    return [];
-  }
+  return loadSecureArray<EpisodeMarker>(STORAGE_KEY);
 }
 
 /** Append a marker. Throws (and persists nothing) on an invalid range/phase so callers can't write

@@ -14,6 +14,8 @@
  * Intended for an optional Nila context block and/or a You-tab dashboard card.
  */
 import { secureLocal } from "./secureLocal";
+import { loadActivities } from "./behaviouralActivation";
+import { loadThoughtRecords } from "./thoughtRecordDraft";
 import { loadCheckins } from "./checkin";
 
 /* ── Types ────────────────────────────────────────────────── */
@@ -300,21 +302,11 @@ function parseProtocolCompletions(): number {
 }
 
 function parseBA(): any[] {
-  try {
-    const raw = secureLocal.getItem("nilamind_ba_activities");
-    if (!raw) return [];
-    const arr = JSON.parse(raw);
-    return Array.isArray(arr) ? arr : [];
-  } catch { return []; }
+  return loadActivities();
 }
 
 function parseThoughtRecords(): any[] {
-  try {
-    const raw = secureLocal.getItem("nilamind_thought_records");
-    if (!raw) return [];
-    const arr = JSON.parse(raw);
-    return Array.isArray(arr) ? arr : [];
-  } catch { return []; }
+  return loadThoughtRecords();
 }
 
 function countLast28(datedItems: string[]): number {

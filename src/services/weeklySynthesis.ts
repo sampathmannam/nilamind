@@ -1,4 +1,5 @@
 import { secureLocal } from "./secureLocal";
+import { loadEpisodes } from "./episodes";
 import { loadDiaryEntries } from "./diary";
 import { loadCheckins } from "./checkin";
 import { computeCompassionateStreak } from "./streaks";
@@ -72,8 +73,7 @@ export function extractWeeklyFacts(): WeeklyFacts {
 
   const epSkills: string[] = (() => {
     try {
-      const raw = secureLocal.getItem("nilamind_episodes");
-      const eps: any[] = raw ? JSON.parse(raw) : [];
+      const eps = loadEpisodes();
       return eps
         .filter((e: any) => { const d = new Date(e?.date); return !isNaN(d.getTime()) && d >= since; })
         .flatMap((e: any) => Array.isArray(e?.skillsHelpful) ? e.skillsHelpful : []);

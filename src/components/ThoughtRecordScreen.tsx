@@ -6,7 +6,7 @@ import { ChevronLeft, ChevronRight, BrainCircuit, RefreshCw, Check, Brain } from
 import { fetchBalancedThought } from "../services/coachAssist";
 import { hapticSuccess } from "../hooks/useHaptics";
 import CrisisCard from "./CrisisCard";
-import { type ThoughtRecordDraft, mapDraftToWizard } from "../services/thoughtRecordDraft";
+import { type ThoughtRecordDraft, mapDraftToWizard, loadThoughtRecords } from "../services/thoughtRecordDraft";
 import { safeSpotDistortions, distortionSteer } from "../services/distortionSpotter";
 
 const THINKING_TRAPS = [
@@ -122,12 +122,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
       reRatedIntensity
     };
 
-    const saved = secureLocal.getItem("nilamind_thought_records");
-    let records: ThoughtRecord[] = [];
-    if (saved) {
-      // Static message only — never log the error object: it can echo a snippet of a decrypted thought record to logcat.
-      try { records = JSON.parse(saved); } catch { console.error("Failed to parse stored thought records"); }
-    }
+    const records: ThoughtRecord[] = loadThoughtRecords();
     records.push(newRecord);
     secureLocal.setItem("nilamind_thought_records", JSON.stringify(records));
 

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Sparkles, Shield, TrendingUp, TrendingDown, Minus, HelpCircle, Activity, Moon, Smartphone, Heart, Footprints, Users, ShieldCheck } from "lucide-react";
-import { secureLocal } from "../services/secureLocal";
 import { generateInsights, assessmentInsights, daysOfData, type Insight } from "../services/patternInsights";
 import { getRecentSnapshots } from "../db/behaviourDb";
 import EmptyStateShared, { EMPTY_STATES } from "./EmptyState";
@@ -121,11 +120,7 @@ export default function InsightsScreen({ onClose }: InsightsScreenProps) {
         const mood = await loadMoodHistory();
 
         // Load assessments for PHQ-9/GAD-7 trajectory
-        let assessments: AssessmentEntry[] = [];
-        try {
-          const raw = secureLocal.getItem("nilamind_assessments");
-          if (raw) assessments = JSON.parse(raw);
-        } catch { /* ignore */ }
+        const assessments: AssessmentEntry[] = loadAssessments();
 
         if (!mounted) return;
 

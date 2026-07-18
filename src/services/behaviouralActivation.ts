@@ -1,4 +1,5 @@
 import { secureLocal } from "./secureLocal";
+import { loadSecureArray } from "./secureData";
 // Behavioural Activation (BA) — the most strongly-evidenced behavioural treatment for depression.
 //
 // The mechanism (Lewinsohn's behavioural model): depression lowers activity → less contact with
@@ -128,15 +129,7 @@ export interface BAActivityLog {
 const STORAGE_KEY = "nilamind_ba_activities";
 
 export function loadActivities(): BAActivityLog[] {
-  try {
-    const raw = secureLocal.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? (parsed as BAActivityLog[]) : [];
-  } catch (e) {
-    console.error("[behaviouralActivation] failed to load activities:", e);
-    return [];
-  }
+  return loadSecureArray<BAActivityLog>(STORAGE_KEY);
 }
 
 export function saveActivities(all: BAActivityLog[]): void {

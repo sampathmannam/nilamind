@@ -16,7 +16,7 @@
 
 import type { AgentView } from "./agent";
 import type { NilaMessage } from "./nila";
-import { secureLocal } from "./secureLocal";
+import { loadEpisodes } from "./episodes";
 import { EpisodeRecord } from "../types";
 import { getCrisisReply, getUnsafeFallbackReply } from "../safety";
 import { buildEpisodeSystem } from "./episodePrompt";
@@ -60,14 +60,7 @@ export const NAME_QUESTION_RE = /\b(what('s| is) my name|do you know my name|tel
 
 /** Last 5 saved episodes, read from the encrypted store exactly as the old episode screen did. */
 function loadRecentEpisodes(): EpisodeRecord[] {
-  try {
-    const raw = secureLocal.getItem("nilamind_episodes");
-    if (!raw) return [];
-    const list = JSON.parse(raw);
-    return Array.isArray(list) ? (list as EpisodeRecord[]) : [];
-  } catch {
-    return [];
-  }
+  return loadEpisodes();
 }
 
 export async function sendToNila(

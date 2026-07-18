@@ -3,7 +3,8 @@
 // relevant check-ins, and past skills used. This gives the 1.5B model specific, personal knowledge
 // that makes responses feel like a friend who actually remembers, not an app reading data.
 
-import { secureLocal } from "./secureLocal";
+import { loadEpisodes } from "./episodes";
+import { readEpisodeMarkers } from "./episodeMarker";
 import { loadCheckins } from "./checkin";
 import { loadMoodHistory } from "./moodHistory";
 import { loadAssessments } from "./assessments";
@@ -49,17 +50,12 @@ function retrieveWhatHelped(emotion: string): string[] {
 
   // From episodes: what skills were helpful
   try {
-    const raw = secureLocal.getItem("nilamind_episodes");
-    if (raw) {
-      const episodes = JSON.parse(raw);
-      if (Array.isArray(episodes)) {
-        const recent = episodes.slice(-10);
-        for (const ep of recent) {
-          if (ep?.skillsHelpful && Array.isArray(ep.skillsHelpful)) {
-            for (const skill of ep.skillsHelpful) {
-              helped.add(String(skill));
-            }
-          }
+    const episodes = loadEpisodes();
+    const recent = episodes.slice(-10);
+    for (const ep of recent) {
+      if (ep?.skillsHelpful && Array.isArray(ep.skillsHelpful)) {
+        for (const skill of ep.skillsHelpful) {
+          helped.add(String(skill));
         }
       }
     }
@@ -156,13 +152,11 @@ function getRelevantAssessments(): string | null {
  */
 function getRelevantEpisodes(): string | null {
   try {
-    const raw = secureLocal.getItem("nilamind_episode_markers");
-    if (!raw) return null;
-    const markers = JSON.parse(raw);
-    if (!Array.isArray(markers) || markers.length === 0) return null;
+    const markers = readEpisodeMarkers();
+    if (markers.length === 0) return null;
 
     const recent = markers.slice(-3);
-    const phases = recent.map((m: any) => m.phase).join(", ");
+    const phases = recent.map((m) => m.phase).join(", ");
     return `Recent episode phases: ${phases}.`;
   } catch { return null; }
 }

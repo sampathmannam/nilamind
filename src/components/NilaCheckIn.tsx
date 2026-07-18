@@ -40,6 +40,8 @@ import {
   resolveCheckin,
 } from "../services/nilaCheckinReducer";
 import { buildCheckinEntry, appendCheckin, loadCheckins } from "../services/checkin";
+import { readEpisodeMarkers } from "../services/episodeMarker";
+import { loadAssessments } from "../services/assessments";
 import { hapticSuccess } from "../hooks/useHaptics";
 import { checkAchievementConditions } from "../services/achievements";
 import { secureLocal } from "../services/secureLocal";
@@ -97,7 +99,7 @@ export default function NilaCheckIn({ onLogged, onSkip }: NilaCheckInProps) {
         } catch { return 0; }
       })();
       const hasEpisodeMarkers = (() => {
-        try { return !!secureLocal.getItem("nilamind_episode_markers"); } catch { return false; }
+        try { return readEpisodeMarkers().length > 0; } catch { return false; }
       })();
       const hasSafetyPlan = (() => {
         try { return !!secureLocal.getItem("nilamind_safetyplan"); } catch { return false; }
@@ -106,7 +108,7 @@ export default function NilaCheckIn({ onLogged, onSkip }: NilaCheckInProps) {
         try { return !!secureLocal.getItem("nilamind_caregiver_contacts"); } catch { return false; }
       })();
       const hasWellbeingCheck = (() => {
-        try { return !!secureLocal.getItem("nilamind_assessments"); } catch { return false; }
+        try { return loadAssessments().length > 0; } catch { return false; }
       })();
       checkAchievementConditions({
         checkinCount,

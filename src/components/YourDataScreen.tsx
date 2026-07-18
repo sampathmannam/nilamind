@@ -18,6 +18,8 @@ import { recordExportAudit, getExportAudit, type ExportAuditEntry, type ExportKi
 import type { ClinicianReportInput, ClinicianMedication, AssessmentTrajectory } from "../services/clinicianReport";
 import { generateClinicianPdfBlob } from "../services/clinicianPdf";
 import { readEpisodeMarkers } from "../services/episodeMarker";
+import { loadEpisodes } from "../services/episodes";
+import { loadThoughtRecords } from "../services/thoughtRecordDraft";
 import { summarizePactForReport, summarizeConnectionsForReport, summarizeWhatDidntHelp, summarizeThoughtRecordsForReport, summarizeSafetyPlanForReport, summarizeMedCorrelation, summarizeSupportsRecap } from "../services/clinicianAggregations";
 import { loadPact } from "../services/pact";
 import { parseSafetyPlan } from "../services/safetyPlan";
@@ -582,14 +584,7 @@ valuesClarified: []
         commonSideEffects: commonSideEffects(m.id, periodDays).map((s) => s.symptom),
       }));
 
-      const allEpisodes = (() => {
-        try {
-          const raw = secureLocal.getItem("nilamind_episodes");
-          if (!raw) return [];
-          const parsed = JSON.parse(raw);
-          return Array.isArray(parsed) ? parsed : [];
-        } catch { return []; }
-      })();
+      const allEpisodes = loadEpisodes();
       const periodEpisodes = allEpisodes.filter((e: any) => e.date >= cutoff);
       const ep = episodePatterns(periodEpisodes);
       const byTimeOfDay = periodEpisodes.reduce((acc: Record<string, number>, e: any) => {
@@ -699,10 +694,9 @@ valuesClarified: []
        // situation-theme recurrences. Never logs the full text.
        const allThoughtRecords: Array<{ situation: string; emotion: string; date?: string }> = (() => {
          try {
-           const raw = secureLocal.getItem("nilamind_thought_records");
-           if (!raw) return [];
-           const arr = JSON.parse(raw);
-           if (!Array.isArray(arr)) return [];
+           // Heterogeneous store: draft-shaped records carry `emotion`, screen-shaped ones `feeling`.
+           // Read via the canonical reader but keep the loose `any` access the field-picking relied on.
+           const arr = loadThoughtRecords() as any[];
            return arr
              .filter((r: { situation?: unknown; emotion?: unknown; date?: unknown }) =>
                typeof r?.situation === "string" && typeof r?.emotion === "string",

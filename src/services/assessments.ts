@@ -1,4 +1,5 @@
 import { secureLocal } from "./secureLocal";
+import { loadSecureArray } from "./secureData";
 import { DAY_MS, localDateKey} from "./storageUtils";
 // Validated symptom-screening instruments (PHQ-9, GAD-7).
 //
@@ -312,14 +313,7 @@ export interface AssessmentEntry {
 const STORAGE_KEY = "nilamind_assessments";
 
 export function loadAssessments(): AssessmentEntry[] {
-  try {
-    const raw = secureLocal.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? (parsed as AssessmentEntry[]) : [];
-  } catch {
-    return [];
-  }
+  return loadSecureArray<AssessmentEntry>(STORAGE_KEY);
 }
 
 export function saveAssessment(entry: AssessmentEntry): AssessmentEntry[] {
