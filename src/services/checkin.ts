@@ -32,18 +32,26 @@ export function appendCheckin(entry: CheckInEntry): void {
   appendToSecureArray<CheckInEntry>(CHECKINS_KEY, entry);
 }
 
+/** Canonical safe reader for the shared check-in log. THE single place that knows the storage key + how
+ *  to parse and guard it, so no surface can drift on the shape or (as happened before) read a different
+ *  key than the writer used. Never throws; returns [] on missing or corrupt data. 2026-07-18
+ *  re-architecture Phase 1 — replaces ~25 hand-rolled JSON.parse(secureLocal.getItem("nilamind_checkins"))
+ *  reads scattered across components and services. */
+export function loadCheckins(): CheckInEntry[] {
+  try {
+    const raw = secureLocal.getItem(CHECKINS_KEY);
+    if (!raw) return [];
+    const list = JSON.parse(raw);
+    return Array.isArray(list) ? (list as CheckInEntry[]) : [];
+  } catch {
+    return [];
+  }
+}
+
 /** True when any stored CheckInEntry has date === today (local YYYY-MM-DD). Any same-day check-in
  *  from any surface suppresses Nila's opening check-in — intentionally once-a-day app-wide. */
 export function hasCheckinToday(today: string): boolean {
-  try {
-    const raw = secureLocal.getItem(CHECKINS_KEY);
-    if (!raw) return false;
-    const list = JSON.parse(raw);
-    if (!Array.isArray(list)) return false;
-    return list.some((e: CheckInEntry) => e && e.date === today);
-  } catch {
-    return false;
-  }
+  return loadCheckins().some((e) => e && e.date === today);
 }
 
 /** Per-day skip flag (plain localStorage; non-sensitive; cleared by the nilamind_ wipe sweep). */

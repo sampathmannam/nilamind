@@ -1,4 +1,5 @@
 import { secureLocal } from "./secureLocal";
+import { loadCheckins } from "./checkin";
 // Adapter: reads the app's EXISTING mood + lifestyle data (localStorage) and shapes it into
 // MoodPoint[] for the PatternInsightEngine — so correlations run on real logs, not synthetic.
 // Read-only; touches nothing the rest of the app writes.
@@ -37,20 +38,17 @@ export function loadMoodHistory(): MoodPoint[] {
 
   // Check-ins: nilamind_checkins = CheckInEntry[]  ({ date, intensity, sleepHours?, socialInteraction?, emotion? })
   try {
-    const raw = secureLocal.getItem('nilamind_checkins');
-    if (raw) {
-      const list = JSON.parse(raw) as Array<{ date?: string; intensity?: number; sleepHours?: number; socialInteraction?: number; emotion?: string }>;
-      for (const c of list) {
-        if (!c?.date) continue;
-        const d = get(c.date);
-        if (typeof c.intensity === 'number') { d.intensitySum += c.intensity; d.intensityN += 1; }
-        if (typeof c.sleepHours === 'number') { d.sleepSum += c.sleepHours; d.sleepN += 1; }
-        if (typeof c.socialInteraction === 'number') { d.socialSum += c.socialInteraction; d.socialN += 1; }
-        // Infer shame from emotion label (Phase: data collection fix — shame from check-ins, not just diary)
-        if (c.emotion) {
-          const inferred = inferShame(c.emotion);
-          if (inferred > d.inferredShame) d.inferredShame = inferred;
-        }
+    const list = loadCheckins() as Array<{ date?: string; intensity?: number; sleepHours?: number; socialInteraction?: number; emotion?: string }>;
+    for (const c of list) {
+      if (!c?.date) continue;
+      const d = get(c.date);
+      if (typeof c.intensity === 'number') { d.intensitySum += c.intensity; d.intensityN += 1; }
+      if (typeof c.sleepHours === 'number') { d.sleepSum += c.sleepHours; d.sleepN += 1; }
+      if (typeof c.socialInteraction === 'number') { d.socialSum += c.socialInteraction; d.socialN += 1; }
+      // Infer shame from emotion label (Phase: data collection fix — shame from check-ins, not just diary)
+      if (c.emotion) {
+        const inferred = inferShame(c.emotion);
+        if (inferred > d.inferredShame) d.inferredShame = inferred;
       }
     }
   } catch {

@@ -1,4 +1,5 @@
 import { secureLocal } from "./secureLocal";
+import { loadCheckins } from "./checkin";
 import { computeCompassionateStreak } from "./streaks";
 import { getActiveProgress } from "./protocolProgress";
 import { selfReportSleepSignal } from "./sleepInsight";
@@ -43,12 +44,7 @@ export function extractWeeklyFacts(): WeeklyFacts {
   since.setDate(since.getDate() - 7);
   since.setHours(0, 0, 0, 0);
 
-  const checkins: any[] = (() => {
-    try {
-      const raw = secureLocal.getItem("nilamind_checkins");
-      return raw ? JSON.parse(raw) : [];
-    } catch { return []; }
-  })();
+  const checkins: any[] = loadCheckins();
 
   const recent = checkins.filter((e: any) => {
     const d = new Date(e?.date);

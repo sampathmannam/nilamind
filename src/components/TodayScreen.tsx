@@ -2,8 +2,7 @@ import { localDateKey } from "../services/storageUtils";
 import { useRef, useState, useEffect, useReducer } from "react";
 import { Wind, MessageCircle, Moon, Sparkles, ChevronRight, HeartHandshake, Sparkle, Clock3, Target, LineChart, Activity } from "lucide-react";
 import { getTimeMode, getUserState } from "../services/modeEngine";
-import { hasCheckinToday } from "../services/checkin";
-import { secureLocal } from "../services/secureLocal";
+import { hasCheckinToday, loadCheckins } from "../services/checkin";
 import { useLanguage, t } from "../services/i18n";
 import { loadInsights } from "../services/nilaInsights";
 import { loadAssessments, INSTRUMENTS } from "../services/assessments";
@@ -34,10 +33,8 @@ const MOOD_EMOJI: Record<string, string> = {
 
 function getTodayMood(): { label: string; emoji: string } | null {
   try {
-    const raw = secureLocal.getItem("nilamind_checkins");
-    if (!raw) return null;
-    const list = JSON.parse(raw);
-    if (!Array.isArray(list) || list.length === 0) return null;
+    const list = loadCheckins();
+    if (list.length === 0) return null;
     const today = localDateKey();
     const todays = list.filter((e: any) => e?.date === today);
     if (todays.length === 0) return null;
@@ -97,10 +94,8 @@ function getWeekStart(): string {
 
 function getWeekInsight(): { checkinCount: number; topEmotion: string | null } | null {
   try {
-    const raw = secureLocal.getItem("nilamind_checkins");
-    if (!raw) return null;
-    const list = JSON.parse(raw);
-    if (!Array.isArray(list) || list.length === 0) return null;
+    const list = loadCheckins();
+    if (list.length === 0) return null;
     const weekStart = getWeekStart();
     const weekEntries = list.filter((e: any) => e?.date && e.date >= weekStart);
     if (weekEntries.length === 0) return null;
@@ -183,10 +178,8 @@ export default function TodayScreen({
   const nilaReflection = getNilaReflection();
   const hasAnyCheckins = (() => {
     try {
-      const raw = secureLocal.getItem("nilamind_checkins");
-      if (!raw) return false;
-      const list = JSON.parse(raw);
-      return Array.isArray(list) && list.length > 0;
+      const list = loadCheckins();
+      return list.length > 0;
     } catch { return false; }
   })();
   // Don't push clinical baseline questionnaires (wellbeing/PHQ/GAD) onto a brand-new user's first minutes —
@@ -194,9 +187,8 @@ export default function TodayScreen({
   // asks). Earned once the person has shown up on 3+ distinct days.
   const activeDayCount = (() => {
     try {
-      const raw = secureLocal.getItem("nilamind_checkins");
-      const list = raw ? JSON.parse(raw) : [];
-      return Array.isArray(list) ? new Set(list.map((e: any) => e?.date).filter(Boolean)).size : 0;
+      const list = loadCheckins();
+      return new Set(list.map((e: any) => e?.date).filter(Boolean)).size;
     } catch { return 0; }
   })();
   const earnedBaselinePrompts = activeDayCount >= 3;
@@ -209,10 +201,7 @@ export default function TodayScreen({
   // Contextual summary — a warm one-liner based on recent check-ins and time of day
   const recentAvg = (() => {
     try {
-      const raw = secureLocal.getItem("nilamind_checkins");
-      if (!raw) return null;
-      const list = JSON.parse(raw);
-      if (!Array.isArray(list)) return null;
+      const list = loadCheckins();
       const recent = list.slice(-3).filter((e: any) => e?.intensity != null);
       if (recent.length === 0) return null;
       return recent.reduce((s: number, e: any) => s + e.intensity, 0) / recent.length;
@@ -289,10 +278,8 @@ export default function TodayScreen({
       {/* Low-friction re-check-in — one-tap mood log for returning users after a gap */}
       {hasAnyCheckins && !checkedIn && !reCheckinSkipped && (() => {
         try {
-          const raw = secureLocal.getItem("nilamind_checkins");
-          if (!raw) return false;
-          const list = JSON.parse(raw);
-          if (!Array.isArray(list) || list.length === 0) return false;
+          const list = loadCheckins();
+          if (list.length === 0) return false;
           const last = list[list.length - 1];
           if (!last?.date) return false;
           const lastDate = new Date(last.date + "T00:00:00");

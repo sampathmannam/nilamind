@@ -6,6 +6,7 @@ import { ASSESSMENT_MCID } from "./patternInsights";
 import { stripProvenance } from "./emotionParse";
 import type { CheckInEntry } from "../types";
 import { secureLocal } from "./secureLocal";
+import { loadCheckins } from "./checkin";
 import { ymd } from "./streaks";
 import { DAY_MS } from "./storageUtils";
 
@@ -174,8 +175,7 @@ function saveStore(s: InflectionStore): void {
   catch (e) { console.error("Failed to save inflection store"); }
 }
 function readCheckins(): CheckInEntry[] {
-  try { const raw = secureLocal.getItem("nilamind_checkins"); const p = raw ? JSON.parse(raw) : []; return Array.isArray(p) ? p : []; }
-  catch { return []; }
+  return loadCheckins();
 }
 function plainGet(k: string): string | null { try { return localStorage.getItem(k); } catch { return null; } }
 function plainSet(k: string, v: string): void { try { localStorage.setItem(k, v); } catch { /* ignore */ } }

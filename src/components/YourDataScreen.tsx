@@ -4,6 +4,7 @@ import { Capacitor } from "@capacitor/core";
 import { Filesystem, Directory } from "@capacitor/filesystem";
 import { Share } from "@capacitor/share";
 import { secureLocal } from "../services/secureLocal";
+import { loadCheckins } from "../services/checkin";
 import { loadIdentity, exportBackup } from "../services/identity";
 import { requireAuth } from "../services/biometricGate";
 import { generateCsvReport, buildTextReport, generatePdfBlob, saveReport, buildClinicalJson } from "../services/exportReport";
@@ -133,15 +134,6 @@ export default function YourDataScreen() {
     a.click();
     URL.revokeObjectURL(a.href);
   };
-  const loadCheckins = () => {
-    try {
-      const raw = secureLocal.getItem("nilamind_checkins");
-      if (!raw) return [];
-      const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch { return []; }
-  };
-
   const handleExportCsv = async () => {
     setReportBusy(true);
     setLastExport(null);

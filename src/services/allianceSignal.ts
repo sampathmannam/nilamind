@@ -14,6 +14,7 @@
  * Intended for an optional Nila context block and/or a You-tab dashboard card.
  */
 import { secureLocal } from "./secureLocal";
+import { loadCheckins } from "./checkin";
 
 /* ── Types ────────────────────────────────────────────────── */
 
@@ -275,10 +276,8 @@ function parseAppOpens(): string[] {
 
 function parseCheckins(): string[] {
   try {
-    const raw = secureLocal.getItem("nilamind_checkins");
-    if (!raw) return [];
-    const arr = JSON.parse(raw);
-    return Array.isArray(arr) ? arr.map((c: any) => c.date ?? c.timestamp?.split("T")[0] ?? "").filter(Boolean) : [];
+    const arr = loadCheckins();
+    return arr.map((c: any) => c.date ?? c.timestamp?.split("T")[0] ?? "").filter(Boolean);
   } catch { return []; }
 }
 

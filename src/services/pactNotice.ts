@@ -11,6 +11,7 @@ import { detectInflections } from "./nilaInflection";
 import { getInflectionEnabled } from "./inflectionPrefs";
 import { loadAssessments } from "./assessments";
 import { secureLocal } from "./secureLocal";
+import { loadCheckins } from "./checkin";
 import { ymd } from "./streaks";
 import type { CheckInEntry } from "../types";
 
@@ -25,14 +26,7 @@ function dismissedToday(today: string): boolean {
   try { return secureLocal.getItem(DISMISS_KEY) === today; } catch (e) { console.error("[pactNotice] dismissedToday failed:", e); return false; }
 }
 function readCheckins(): CheckInEntry[] {
-  try {
-    const raw = secureLocal.getItem("nilamind_checkins");
-    const p = raw ? JSON.parse(raw) : [];
-    return Array.isArray(p) ? (p as CheckInEntry[]) : [];
-  } catch (e) {
-    console.error("[pactNotice] failed to read checkins:", e);
-    return [];
-  }
+  return loadCheckins();
 }
 
 /** Is there an active, undismissed reason to surface the user's pact today? null if no pact / no signal /

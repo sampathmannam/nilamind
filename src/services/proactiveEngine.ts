@@ -3,7 +3,7 @@
 // Anti-fatigue: max 1 proactive moment per app open, 24h cooldown per type, respects dismissals.
 
 import { selfReportSleepSignal } from "./sleepInsight";
-import { hasCheckinToday, getSkipFlag } from "./checkin";
+import { hasCheckinToday, getSkipFlag, loadCheckins } from "./checkin";
 import { secureLocal } from "./secureLocal";
 import { DAY_MS, localDateKey } from "./storageUtils";
 import { currentCircadianFeedback } from "./circadianFeedback";
@@ -102,10 +102,7 @@ export function recordProactiveShown(): void {
 function checkinCountToday(): number {
   const today = localDateKey();
   try {
-    const raw = secureLocal.getItem("nilamind_checkins");
-    if (!raw) return 0;
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return 0;
+    const parsed = loadCheckins();
     return parsed.filter((e: any) => e?.date === today).length;
   } catch {
     return 0;
@@ -116,10 +113,8 @@ function checkinCountToday(): number {
  *  nothing to be "inactive" from, so the inactivity nudge (daysSince >= 3) must not fire on them. */
 function daysSinceLastCheckin(): number {
   try {
-    const raw = secureLocal.getItem("nilamind_checkins");
-    if (!raw) return -1;
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed) || parsed.length === 0) return -1;
+    const parsed = loadCheckins();
+    if (parsed.length === 0) return -1;
     const sorted = [...parsed].sort((a: any, b: any) => (b.date ?? "").localeCompare(a.date ?? ""));
     const last = sorted[0];
     if (!last?.date) return -1;

@@ -26,18 +26,9 @@ import { currentPhase } from "./episodeMarker";
 import { wellbeingLongitudinal } from "./wellbeingTrack";
 import { sleepTrend } from "./usageAnalytics";
 import { nilaStats } from "./nilaSessions";
-import { secureLocal } from "./secureLocal";
+import { loadCheckins } from "./checkin";
 import { DEFAULT_PREFERENCES, type CaregiverPreferences } from "./caregiverPreferences";
 import type { CheckInEntry } from "../types";
-
-function loadCheckins(): CheckInEntry[] {
-  try {
-    const raw = secureLocal.getItem("nilamind_checkins");
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch { return []; }
-}
 
 export interface CaregiverSnapshot {
   headline: string;

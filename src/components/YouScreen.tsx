@@ -7,17 +7,15 @@ import { useFocusTrap } from "../hooks/useFocusTrap";
 import { buildYouGroups } from "./youRows";
 import { useLanguage } from "../services/i18n";
 import { computeCompassionateStreak } from "../services/streaks";
-import { secureLocal } from "../services/secureLocal";
+import { loadCheckins } from "../services/checkin";
 import { getIntention, setIntention, completeIntention, clearIntention, INTENTION_OPTIONS, isIntentionCompleted, getCompletionAck, markAckShown } from "../services/weeklyIntention";
 import { getCapacityLevel } from "../services/capacitySignal";
 import { getUserState } from "../services/modeEngine";
 
 function getWeekSnapshot(): { checkinDays: number; topEmotion: string | null } | null {
   try {
-    const raw = secureLocal.getItem("nilamind_checkins");
-    if (!raw) return null;
-    const list = JSON.parse(raw);
-    if (!Array.isArray(list) || list.length === 0) return null;
+    const list = loadCheckins();
+    if (list.length === 0) return null;
     const d = new Date();
     const day = d.getDay();
     const diff = d.getDate() - day + (day === 0 ? -6 : 1);
@@ -84,10 +82,7 @@ function getLast7Days(): string[] {
 
 function getActiveDaysInRange(): string[] {
   try {
-    const raw = secureLocal.getItem("nilamind_checkins");
-    if (!raw) return [];
-    const list = JSON.parse(raw);
-    if (!Array.isArray(list)) return [];
+    const list = loadCheckins();
     const weekDays = getLast7Days();
     const active = new Set<string>();
     for (const e of list) {

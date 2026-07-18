@@ -6,7 +6,7 @@ import { getCrisisReply } from "../safety";
 import { getSkill, SKILL_GROUPS, groupMeta, skillForEmotion, type Skill } from "../services/skillsLibrary";
 import { PSYCHOED_TOPICS } from "../services/psychoed";
 import { WHY_WE_BUILT_THIS } from "../data/whyWeBuiltThis";
-import { secureLocal } from "../services/secureLocal";
+import { loadCheckins } from "../services/checkin";
 import CrisisLines from "./CrisisLines";
 import TIPPTool from "./TIPPTool";
 
@@ -57,9 +57,8 @@ export default function LearnScreen() {
   const [dismissedRec, setDismissedRec] = useState(false);
   useEffect(() => {
     try {
-      const raw = secureLocal.getItem("nilamind_checkins");
-      const arr = raw ? JSON.parse(raw) : [];
-      const last = Array.isArray(arr) && arr.length ? arr[arr.length - 1] : null;
+      const arr = loadCheckins();
+      const last = arr.length ? arr[arr.length - 1] : null;
       if (last?.emotion) {
         const emo = String(last.emotion).replace(/\s*\([^)]*\)\s*$/, "").trim();
         setRecommended(skillForEmotion(emo));

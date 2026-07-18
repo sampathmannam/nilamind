@@ -1,4 +1,4 @@
-import { secureLocal } from "./secureLocal";
+import { loadCheckins } from "./checkin";
 import type { CheckInEntry } from "../types";
 import { getNaps, isLateLongNap } from "./napTracking";
 
@@ -132,10 +132,8 @@ export function elevationOutputNote(level: ElevationLevel): string {
  *  emaElevationSignal but for day-granular check-in self-reports. */
 export function energyElevationSignal(): ElevationLevel {
   try {
-    const raw = secureLocal.getItem("nilamind_checkins");
-    if (!raw) return "none";
-    const all: CheckInEntry[] = JSON.parse(raw);
-    if (!Array.isArray(all) || all.length === 0) return "none";
+    const all: CheckInEntry[] = loadCheckins();
+    if (all.length === 0) return "none";
 
     const cutoff = Date.now() - 86400000 * 7;
     const withEnergy = all

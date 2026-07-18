@@ -39,7 +39,7 @@ import {
   checkinReducer,
   resolveCheckin,
 } from "../services/nilaCheckinReducer";
-import { buildCheckinEntry, appendCheckin } from "../services/checkin";
+import { buildCheckinEntry, appendCheckin, loadCheckins } from "../services/checkin";
 import { hapticSuccess } from "../hooks/useHaptics";
 import { checkAchievementConditions } from "../services/achievements";
 import { secureLocal } from "../services/secureLocal";
@@ -93,8 +93,7 @@ export default function NilaCheckIn({ onLogged, onSkip }: NilaCheckInProps) {
     try {
       const checkinCount = (() => {
         try {
-          const raw = secureLocal.getItem("nilamind_checkins");
-          return raw ? JSON.parse(raw).length : 0;
+          return loadCheckins().length;
         } catch { return 0; }
       })();
       const hasEpisodeMarkers = (() => {

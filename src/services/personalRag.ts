@@ -4,6 +4,7 @@
 // that makes responses feel like a friend who actually remembers, not an app reading data.
 
 import { secureLocal } from "./secureLocal";
+import { loadCheckins } from "./checkin";
 import { loadMoodHistory } from "./moodHistory";
 import { loadAssessments } from "./assessments";
 import { detectEmotionUnified } from "./personaConfig";
@@ -104,10 +105,8 @@ function getRecentMood(): string | null {
  */
 function getRecentCheckins(): string | null {
   try {
-    const raw = secureLocal.getItem("nilamind_checkins");
-    if (!raw) return null;
-    const list = JSON.parse(raw);
-    if (!Array.isArray(list) || list.length === 0) return null;
+    const list = loadCheckins();
+    if (list.length === 0) return null;
 
     const recent = list.slice(-5);
     const emotions = recent

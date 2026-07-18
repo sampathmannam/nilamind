@@ -2,9 +2,8 @@
 // Pure, deterministic, no network. The app's "brain" for UI adaptation.
 
 import { localDateKey } from "./storageUtils";
-import { hasCheckinToday, getSkipFlag } from "./checkin";
+import { hasCheckinToday, getSkipFlag, loadCheckins } from "./checkin";
 import { selfReportSleepSignal } from "./sleepInsight";
-import { secureLocal } from "./secureLocal";
 import { detectElevationRisk } from "./elevationGuard";
 import type { ElevationLevel } from "./elevationGuard";
 import { emaElevationSignal } from "./ema";
@@ -39,26 +38,23 @@ export function getTimeMode(): TimeMode {
 export function getUserState(): UserState | null {
   let base: UserState | null = null;
   try {
-    const raw = secureLocal.getItem("nilamind_checkins");
-    if (raw) {
-      const checkins = JSON.parse(raw);
-      if (Array.isArray(checkins) && checkins.length > 0) {
-        // Most recent check-in
-        const latest = [...checkins].sort(
-          (a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime(),
-        )[0];
-        if (latest) {
-          const emotion = (latest.emotion || "").toLowerCase();
-          const intensity = latest.intensity || 5;
-          // Map emotion → state (order matters; explicit self-report wins over intensity)
-          if (/anx|worr|panic|nervous/.test(emotion)) base = "anxious";
-          else if (/low|sad|down|empty|hopeless/.test(emotion)) base = "low";
-          else if (/calm|okay|good|fine/.test(emotion)) base = "calm";
-          else if (/angry|frustrated|irritab/.test(emotion)) base = "elevated";
-          else if (/overwhelm|stressed/.test(emotion)) base = "anxious";
-          else if (intensity >= 7) base = "elevated";
-          else base = "calm";
-        }
+    const checkins = loadCheckins();
+    if (checkins.length > 0) {
+      // Most recent check-in
+      const latest = [...checkins].sort(
+        (a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+      )[0];
+      if (latest) {
+        const emotion = (latest.emotion || "").toLowerCase();
+        const intensity = latest.intensity || 5;
+        // Map emotion → state (order matters; explicit self-report wins over intensity)
+        if (/anx|worr|panic|nervous/.test(emotion)) base = "anxious";
+        else if (/low|sad|down|empty|hopeless/.test(emotion)) base = "low";
+        else if (/calm|okay|good|fine/.test(emotion)) base = "calm";
+        else if (/angry|frustrated|irritab/.test(emotion)) base = "elevated";
+        else if (/overwhelm|stressed/.test(emotion)) base = "anxious";
+        else if (intensity >= 7) base = "elevated";
+        else base = "calm";
       }
     }
   } catch {

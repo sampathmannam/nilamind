@@ -9,7 +9,8 @@
 // async executor that performs the side effect (save / schedule) and returns a spoken confirmation.
 
 import { localDateKey } from "./storageUtils";
-import { secureLocal, appendToSecureArray } from "./secureLocal";
+import { appendToSecureArray } from "./secureLocal";
+import { loadCheckins } from "./checkin";
 import { computeCompassionateStreak } from "./streaks";
 import { scheduleReminderAt, formatTime } from "./notifications";
 import { mapEmotion, parseIntensity } from "./emotionParse";
@@ -196,8 +197,7 @@ function saveMood(emotion: string, intensity: number | null): void {
 
 function dashboardSummary(): string {
   const s = computeCompassionateStreak();
-  let entries: CheckInEntry[] = [];
-  try { const raw = secureLocal.getItem("nilamind_checkins"); if (raw) entries = JSON.parse(raw); } catch { /* */ }
+  const entries: CheckInEntry[] = loadCheckins();
   const weekAgo = new Date();
   weekAgo.setDate(weekAgo.getDate() - 6);
   weekAgo.setHours(0, 0, 0, 0);
