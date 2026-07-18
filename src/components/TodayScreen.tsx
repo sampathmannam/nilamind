@@ -15,7 +15,6 @@ import ConversationalCheckinCard from "./ConversationalCheckinCard";
 import CrisisHeaderButton from "./CrisisHeaderButton";
 import { getPendingCheckinDraft } from "../services/checkinDraft";
 import DailyContentCard from "./DailyContentCard";
-import RatingPromptCard from "./RatingPromptCard";
 import SafetyPlanNudgeCard from "./SafetyPlanNudgeCard";
 import LowFrictionReCheckIn from "./lowFrictionReCheckIn";
 import { useTimeOfDay, heroGradient, contextualSummary } from "../hooks/useTimeOfDay";
@@ -190,6 +189,17 @@ export default function TodayScreen({
       return Array.isArray(list) && list.length > 0;
     } catch { return false; }
   })();
+  // Don't push clinical baseline questionnaires (wellbeing/PHQ/GAD) onto a brand-new user's first minutes —
+  // let the daily loop take root first (2026-07-18 design review: day-1 Today stacked ~3 "do a screening"
+  // asks). Earned once the person has shown up on 3+ distinct days.
+  const activeDayCount = (() => {
+    try {
+      const raw = secureLocal.getItem("nilamind_checkins");
+      const list = raw ? JSON.parse(raw) : [];
+      return Array.isArray(list) ? new Set(list.map((e: any) => e?.date).filter(Boolean)).size : 0;
+    } catch { return 0; }
+  })();
+  const earnedBaselinePrompts = activeDayCount >= 3;
   const wellbeingAssessments = loadAssessments();
   const wellbeingDue = isWellbeingDue(wellbeingAssessments);
   // U2 (2026-07-17 QA): nothing is "due" on a fresh install — there's no prior check to be overdue against.
@@ -270,8 +280,8 @@ export default function TodayScreen({
         />
       )}
 
-      {/* Gentle Play Store rating prompt — only after 5+ positive sessions */}
-      <RatingPromptCard />
+      {/* (Play-Store rating prompt moved off the mental-health home to the You tab — 2026-07-18 design
+          review: a store-rating ask does not belong on the daily support surface.) */}
 
       {/* Nudge to set up a coping plan — the create-nudge that didn't exist before this redesign */}
       <SafetyPlanNudgeCard go={go} />
@@ -308,7 +318,7 @@ export default function TodayScreen({
       )}
 
       {/* Longitudinal wellbeing — gentle fortnightly cadence prompt (Phase 17) */}
-      {wellbeingDue && (
+      {wellbeingDue && earnedBaselinePrompts && (
         <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-2xl p-4 space-y-2">
           <div className="flex items-center gap-2">
             <LineChart className="w-4 h-4 text-emerald-400" />
@@ -330,7 +340,7 @@ export default function TodayScreen({
           small secondary label so it still matches what the user sees once they open the screening.
           Styled like every other suggestion card here (no amber "warning" tint) — this is a supportive
           nudge, not an alert, and shouldn't read as one. */}
-      {assessmentPrompt && (
+      {assessmentPrompt && earnedBaselinePrompts && !wellbeingDue && (
         <button
           onClick={() => go("assessment")}
           className="w-full glass hover:brightness-125 p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left flex items-center gap-3"

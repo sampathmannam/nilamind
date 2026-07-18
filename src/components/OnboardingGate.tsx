@@ -110,18 +110,21 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
         /* best effort — never block onboarding completion on this */
       }
     }
-    // Apply the user's notification cadence preference (Fix 2: don't default to 3/day without asking)
-    if (nudgeCadence === "daily") {
+    // Apply the user's notification cadence preference (Fix 2: don't default to 3/day without asking).
+    // Design review 2026-07-18: a user who SKIPS setup (nudgeCadence === null) must NOT be silently opted
+    // into the noisiest cadence — first-run notification spam is a top churn driver. Only an EXPLICIT
+    // "regular" choice turns on the multi-touch EMA nudges; skipping falls to a single gentle daily nudge.
+    if (nudgeCadence === "regular") {
       setReminderPrefs({ enabled: true });
-      setEmaEnabled(false);
+      setEmaEnabled(true);
+      setEmaFrequency(2);
     } else if (nudgeCadence === "minimal") {
       setReminderPrefs({ enabled: false });
       setEmaEnabled(false);
     } else {
-      // "regular" or unset (skip case) — keep defaults
+      // "daily" OR unset (skipped) — one gentle daily nudge, no EMA pings.
       setReminderPrefs({ enabled: true });
-      setEmaEnabled(true);
-      setEmaFrequency(2);
+      setEmaEnabled(false);
     }
     try { LocalNotifications.requestPermissions(); } catch { /* */ }
     completeOnboarding();
@@ -310,29 +313,6 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
           </div>
         )}
 
-        {/* Goals (original) */}
-        {slide.id === "goals" && (
-          <div className="w-full flex flex-wrap justify-center gap-2">
-            {(["Feeling low", "Managing stress", "Managing anxiety", "Tracking moods", "Building skills", "Just curious"] as const).map((goal) => {
-              const selected = selectedGoals.includes(goal);
-              return (
-                <button
-                  key={goal}
-                  onClick={() => toggleGoal(goal)}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm transition-all cursor-pointer ${
-                    selected
-                      ? "bg-blue-500/20 border-blue-500/50 text-blue-300 font-semibold"
-                      : "bg-slate-800/50 border-slate-700/50 text-slate-400 hover:text-slate-300 hover:border-slate-600"
-                  }`}
-                >
-                  {selected && <Check className="w-4 h-4 stroke-[2.5]" />}
-                  {goal}
-                </button>
-              );
-            })}
-          </div>
-        )}
-
         {/* Completion animation */}
         {slide.id === "ready" && (
           <div className="space-y-3 animate-fade-in">
@@ -388,6 +368,18 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
             </button>
           )}
         </div>
+
+        {/* Persistent escape hatch (design review 2026-07-18): setup must never feel forced. On step 0 the
+            left button is already "Skip"; on every later step, offer a always-visible tertiary skip so a
+            user can reach the app in one tap at any point. */}
+        {step > 0 && !isLast && (
+          <button
+            onClick={finish}
+            className="w-full text-center text-xs text-slate-500 hover:text-slate-300 py-1.5 transition-colors cursor-pointer"
+          >
+            {t("skip")}
+          </button>
+        )}
       </div>
     </div>
   );
@@ -469,7 +461,7 @@ function getSlides(baselineMood: number | null) {
     {
       id: "ready",
       title: "You're all set",
-      body: "Let's begin. Your first check-in takes 30 seconds.",
+      body: "Let's begin, at your pace. A check-in can be as quick as a single tap — or as long as you like.",
       icon: <HeartHandshake className="w-10 h-10 text-emerald-400" />,
     },
   ];

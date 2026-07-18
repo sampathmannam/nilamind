@@ -59,7 +59,7 @@ export interface NilaCheckInProps {
 
 // ─── Step labels for display ─────────────────────────────────────────────────
 
-const STEP_LABELS = { mood: "How are you feeling?", intensity: "How strong is that?", sleep: "How did you sleep?", energy: "How's your energy level?", context: "What's on your mind?", granularity: "Name it more precisely", done: "" } as const;
+const STEP_LABELS = { mood: "How are you feeling?", intensity: "How strong is that?", sleep: "How did you sleep? (optional)", energy: "How's your energy? (optional)", context: "What's on your mind? (optional)", granularity: "Name it more precisely (optional)", done: "" } as const;
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -136,6 +136,27 @@ export default function NilaCheckIn({ onLogged, onSkip }: NilaCheckInProps) {
     dispatch(action);
   };
 
+  // Design review 2026-07-18: the check-in advertised "2 taps" but forced six steps (mood → intensity →
+  // sleep → energy → context → granularity). Only mood + intensity are mandatory; the rest are optional
+  // enrichment. finishNow() persists a complete entry from whatever the user has entered so far (label +
+  // intensity are guaranteed non-null past the intensity step), letting them finish in two taps at any
+  // optional step. Sleep/energy/context stay available for anyone who wants them — the clinical signals
+  // aren't removed, just no longer compulsory.
+  const finishNow = () => {
+    if (draft.label === null || draft.intensity === null) return;
+    resolveAndPersist({
+      label: draft.label,
+      intensity: draft.intensity,
+      sleepHours: draft.sleepHours,
+      energy: draft.energy,
+      contextTag: draft.contextTag,
+      granularEmotion: draft.granularEmotion,
+    });
+  };
+
+  const OPTIONAL_STEPS: ReadonlyArray<string> = ["sleep", "energy", "context", "granularity"];
+  const isOptionalStep = OPTIONAL_STEPS.includes(draft.step);
+
   const handleVoiceGranular = async () => {
     if (voiceListening) {
       setVoiceListening(false);
@@ -195,20 +216,23 @@ export default function NilaCheckIn({ onLogged, onSkip }: NilaCheckInProps) {
         )}
       </header>
 
-      {/* Progress dots */}
-      <div className="flex items-center justify-center gap-1.5" aria-label="Check-in progress">
-        {steps.map((s, i) => (
-          <span
-            key={s}
-            className={`rounded-full transition-all ${
-              i === stepIdx
-                ? "w-6 h-1.5 bg-violet-500"
-                : i < stepIdx
-                ? "w-4 h-1.5 bg-emerald-500"
-                : "w-4 h-1.5 bg-slate-700"
-            }`}
-          />
-        ))}
+      {/* Progress — honest about what's required (design review 2026-07-18): two mandatory taps (mood,
+          intensity), then everything else is optional. Two solid dots for the required steps, then a soft
+          "optional" segment, rather than six equal dots that read as a six-step gauntlet. */}
+      <div className="flex items-center justify-center gap-1.5" aria-label={isOptionalStep ? "Core check-in complete — optional detail" : `Step ${stepIdx + 1} of 2`}>
+        {["mood", "intensity"].map((s) => {
+          const i = steps.indexOf(s as (typeof steps)[number]);
+          const cls =
+            i === stepIdx
+              ? "w-6 h-1.5 bg-violet-500" // current mandatory step
+              : i < stepIdx
+              ? "w-4 h-1.5 bg-emerald-500" // completed
+              : "w-4 h-1.5 bg-slate-700"; // upcoming
+          return <span key={s} className={`rounded-full transition-all ${cls}`} />;
+        })}
+        {isOptionalStep && (
+          <span className="ml-1 text-[11px] text-slate-500 font-medium">optional detail</span>
+        )}
       </div>
 
       {/* Step content */}
@@ -291,7 +315,7 @@ export default function NilaCheckIn({ onLogged, onSkip }: NilaCheckInProps) {
           </div>
         )}
 
-        {/* ── Step 4: Context chips + skip ── */}
+        {/* ── Step 4: Context chips (optional) ── */}
         {draft.step === "context" && (
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-2" id="nila-context-grid">
@@ -305,15 +329,20 @@ export default function NilaCheckIn({ onLogged, onSkip }: NilaCheckInProps) {
                 </button>
               ))}
             </div>
-            {/* Step-3 context skip — resolves check-in with contextTag=null, writes entry */}
-            <button
-              onClick={() => handleContext(null)}
-              id="nila-checkin-skip-context"
-              className="w-full py-2.5 rounded-xl text-sm font-medium border border-slate-800 bg-card text-slate-400 hover:text-slate-200 cursor-pointer transition-all"
-            >
-              Skip context
-            </button>
           </div>
+        )}
+
+        {/* Optional-step finish control (design review 2026-07-18): a single primary "Done" on every
+            optional step so the whole check-in can end in two taps. Persists whatever's been entered.
+            Rendered for sleep/energy/context; granularity keeps its own Say-it/Skip row below. */}
+        {(draft.step === "sleep" || draft.step === "energy" || draft.step === "context") && (
+          <button
+            onClick={finishNow}
+            id="nila-checkin-done"
+            className="w-full mt-1 py-3 rounded-xl text-sm font-bold bg-violet-600 hover:bg-violet-500 text-white cursor-pointer transition-colors active:scale-95"
+          >
+            Done — that's enough
+          </button>
         )}
 
         {/* ── Step 5: Granularity — precise emotion naming ── */}
@@ -351,7 +380,7 @@ export default function NilaCheckIn({ onLogged, onSkip }: NilaCheckInProps) {
                 id="nila-checkin-skip-granular"
                 className="py-2.5 px-4 rounded-xl text-sm font-medium border border-slate-800 bg-card text-slate-400 hover:text-slate-200 cursor-pointer transition-all"
               >
-                Skip
+                Done
               </button>
             </div>
           </div>

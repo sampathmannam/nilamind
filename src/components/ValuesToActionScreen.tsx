@@ -252,7 +252,17 @@ export default function ValuesToActionScreen({ highlightDomains = [] }: { highli
               </div>
             )}
             <div className="space-y-3">
-              {VALUE_DOMAINS.map((dom) => {
+              {/* Design review 2026-07-18: when the on-device model has already noticed value areas in chat
+                  (highlightDomains), float them to the top so the person starts with what's most alive for
+                  them rather than scrolling a flat list of every domain. Pure presentation order — the saved
+                  snapshot still covers all domains, so VLQ scoring and gap computation are unchanged. When
+                  nothing is highlighted, order is the canonical VALUE_DOMAINS order. */}
+              {(highlightDomains.length > 0
+                ? [...VALUE_DOMAINS].sort(
+                    (a, b) => (highlightDomains.includes(b.id) ? 1 : 0) - (highlightDomains.includes(a.id) ? 1 : 0),
+                  )
+                : VALUE_DOMAINS
+              ).map((dom) => {
                 const r = draft[dom.id];
                 return (
                   <div key={dom.id} className={`glass rounded-2xl p-4 space-y-3 ${highlightDomains.includes(dom.id) ? "ring-1 ring-blue-400/40" : ""}`} id={`vta-domain-${dom.id}`}>

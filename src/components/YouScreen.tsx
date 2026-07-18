@@ -2,6 +2,7 @@ import { localDateKey } from "../services/storageUtils";
 import React, { useState } from "react";
 import { ChevronRight, Sparkles, TrendingUp, Target, CheckCircle, X, Circle, Lightbulb } from "lucide-react";
 import CrisisHeaderButton from "./CrisisHeaderButton";
+import RatingPromptCard from "./RatingPromptCard";
 import { buildYouGroups } from "./youRows";
 import { useLanguage } from "../services/i18n";
 import { computeCompassionateStreak } from "../services/streaks";
@@ -307,6 +308,10 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
           More resources
         </button>
       )}
+
+      {/* Play-Store rating prompt lives here (moved off the Today home 2026-07-18 design review — the
+          MH home should not solicit ratings). Self-gates via shouldPromptRating(). */}
+      <RatingPromptCard />
 
       <p className="text-[11px] text-slate-500 text-center leading-relaxed px-4">
         NilaMind is a support alongside — not a substitute for — professional care.
