@@ -6,7 +6,10 @@ import type { DailyFeatureSet } from "./signalExtractor";
 
 export interface TrendSummary {
   domain: "sleep" | "activity" | "circadian" | "typing" | "composite";
-  direction: "improving" | "stable" | "declining" | "insufficient_data";
+  // NEUTRAL direction — a raw metric moving up or down carries no inherent good/bad valence here (more
+  // screen time is not "improving"; less sleep is not "declining"). The old improving/declining labels
+  // told the LLM the user was "looking steadier" during exactly the pattern the detectors flag.
+  direction: "increasing" | "stable" | "decreasing" | "insufficient_data";
   changePercent: number;
   confidence: number;
   oneLine: string;
@@ -24,7 +27,7 @@ function computeDirection(firstHalf: number | null, secondHalf: number | null): 
   const change = secondHalf - firstHalf;
   const pct = Math.abs(change) / Math.max(Math.abs(firstHalf), 1);
   if (pct < 0.1) return "stable";
-  return change > 0 ? "improving" : "declining";
+  return change > 0 ? "increasing" : "decreasing";
 }
 
 function confidenceFromDataCount(total: number, validCount: number): number {
@@ -96,30 +99,32 @@ export function computeTrends(window: DailyFeatureSet[]): TrendSummary[] {
   const typeSecond = avg(secondHalf.map((f) => f.typing.avgTypingSpeed));
   const typeValid = window.filter((f) => f.typing.avgTypingSpeed != null).length;
   const typeDir = computeDirection(typeFirst, typeSecond);
+  const typeChangePct = typeFirst != null && typeSecond != null && typeFirst !== 0
+    ? Math.round(((typeSecond - typeFirst) / Math.abs(typeFirst)) * 100)
+    : 0;
   trends.push({
     domain: "typing",
     direction: typeDir,
-    changePercent: 0,
+    changePercent: typeChangePct,
     confidence: confidenceFromDataCount(window.length, typeValid),
     oneLine: typeDir === "insufficient_data"
       ? ""
-      : `Typing patterns have been ${typeDir}.`,
+      : `Typing speed has been ${typeDir}${typeChangePct !== 0 ? ` (${typeChangePct > 0 ? "+" : ""}${typeChangePct}%)` : ""}.`,
   });
 
-  // Composite trend — based on elevation signals
+  // Composite trend — the RATE of elevation markers (short-sleep spikes, activity spikes, typing elevation).
+  // Neutral wording: a higher rate means more markers are present, not that the person is "declining".
   const elevations = window.filter((f) => f.composite.typingElevationSignal || f.composite.activitySpike).length;
   const elevRate = window.length > 0 ? elevations / window.length : 0;
-  const compositeDir = elevRate > 0.3 ? "declining" : elevRate < 0.1 ? "improving" : "stable";
+  const compositeDir = elevRate > 0.3 ? "increasing" : elevRate < 0.1 ? "decreasing" : "stable";
   trends.push({
     domain: "composite",
     direction: compositeDir,
     changePercent: Math.round(elevRate * 100),
     confidence: confidenceFromDataCount(window.length, Math.max(sleepValid, actValid)),
-    oneLine: compositeDir === "stable"
-      ? ""
-      : compositeDir === "declining"
-        ? "Some combined patterns are shifting."
-        : "Overall patterns look steady.",
+    oneLine: compositeDir === "increasing"
+      ? "Several activity/typing markers have been elevated recently."
+      : "",
   });
 
   return trends;
@@ -129,20 +134,16 @@ export function computeTrends(window: DailyFeatureSet[]): TrendSummary[] {
 export function passiveSignalContextLine(trends: TrendSummary[]): string {
   if (trends.length === 0) return "";
 
-  const declining = trends.filter((t) => t.direction === "declining" && t.confidence > 0.3);
-  const improving = trends.filter((t) => t.direction === "improving" && t.confidence > 0.3);
+  // Report what has been MOVING, neutrally — no good/bad valence (the app can't assign one to raw phone
+  // metrics, and asserting "looking steadier" during an activity spike actively misleads the model). The
+  // synthesized composite domain is excluded; only concrete metric domains are named.
+  const changing = trends.filter(
+    (t) => (t.direction === "increasing" || t.direction === "decreasing")
+      && t.confidence > 0.3
+      && t.domain !== "composite",
+  );
+  if (changing.length === 0) return "";
 
-  if (declining.length === 0 && improving.length === 0) return "";
-
-  const lines: string[] = [];
-  if (declining.length > 0) {
-    const domains = declining.map((t) => t.domain).join(", ");
-    lines.push(`Passive signals suggest some shifts in: ${domains}.`);
-  }
-  if (improving.length > 0) {
-    const domains = improving.map((t) => t.domain).join(", ");
-    lines.push(`Some things are looking steadier: ${domains}.`);
-  }
-
-  return lines.join(" ") + " (From phone patterns, not a diagnosis.)";
+  const domains = [...new Set(changing.map((t) => t.domain))].join(", ");
+  return `Phone patterns show some recent movement in: ${domains}. (From phone signals only — not a diagnosis, and no clear good-or-bad meaning.)`;
 }

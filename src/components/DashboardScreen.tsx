@@ -38,9 +38,9 @@ import { checkUsageCeiling, getTodayTurns } from "../services/usageCeilings";
 import { assessConnection, loadConnections } from "../services/humanConnection";
 import { buildWeeklyReport } from "../services/weeklyReport";
 import { isPilotEnrolled, computePilotSummary } from "../services/pilotStudy";
-import { selectProactiveCards, markCardDismissed } from "../services/proactiveSurfaceRouter";
-import { dismissProactive } from "../services/proactiveEngine";
+import { selectProactiveCards, markCardShown, markCardClicked, markCardDismissed } from "../services/proactiveSurfaceRouter";
 import { detectCompoundSignals } from "../services/compoundDetector";
+import { getUserState } from "../services/modeEngine";
 import { detectPhaseShift } from "../services/episodeSuggester";
 import { getFeatureWindow } from "../services/signalStore";
 import { getPassiveSensingEnabled } from "../services/passiveSensingPrefs";
@@ -224,8 +224,13 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
         const window = getFeatureWindow(30);
         const signals = detectCompoundSignals(window);
         const phaseShift = detectPhaseShift(window);
-        const cards = selectProactiveCards(signals, phaseShift);
-        if (!cancelled) setProactiveCards(cards);
+        const cards = selectProactiveCards(signals, phaseShift, getUserState());
+        if (!cancelled) {
+          setProactiveCards(cards);
+          // Record what we're showing so the anti-fatigue cooldown actually starts — previously nothing
+          // called markCardShown, so identical cards reappeared on every dashboard open.
+          for (const c of cards) markCardShown(c);
+        }
       } catch { /* best-effort */ }
     })();
     return () => { cancelled = true; };
@@ -607,8 +612,11 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
                   icon={card.icon}
                   color={card.color}
                   actionLabel={action?.label}
-                  onAction={action ? () => onOpenView?.(action.route) : undefined}
-                  onDismiss={() => markCardDismissed(card)}
+                  onAction={action ? () => { markCardClicked(card); onOpenView?.(action.route); } : undefined}
+                  onDismiss={() => {
+                    markCardDismissed(card);
+                    setProactiveCards((cs) => cs.filter((c) => c.id !== card.id)); // hide immediately, not on remount
+                  }}
                 />
               );
             })}

@@ -265,6 +265,7 @@ export default function TodayScreen({
           text={proactiveNudge.text}
           icon={proactiveNudge.icon}
           onTap={() => go(proactiveNudge.route)}
+          onDismiss={() => setProactiveNudge(null)}
         />
       )}
 

@@ -3,6 +3,7 @@ import { t } from "../../services/i18n";
 import { Activity, Database, Eye, Trash2 } from "lucide-react";
 import { getPassiveSensingEnabled, setPassiveSensingEnabled } from "../../services/passiveSensingPrefs";
 import { getSensingStatus } from "../../services/passiveSensingManager";
+import { clearPassiveSensingData } from "../../services/signalStore";
 
 export default function PassiveSensingSection() {
   const [on, setOn] = useState(getPassiveSensingEnabled());
@@ -25,9 +26,10 @@ export default function PassiveSensingSection() {
 
   const handleDelete = () => {
     if (confirm(t("pi_delete_confirm") ?? "Delete all passive sensing data? This cannot be undone.")) {
-      // The actual deletion will be handled by YourDataScreen
-      // This is just a navigation trigger
-      window.dispatchEvent(new CustomEvent("open-your-data", { detail: { section: "passive" } }));
+      // Actually delete — the previous CustomEvent("open-your-data") had no listener anywhere, so the
+      // "This cannot be undone" confirm deleted nothing. Clear the store and reflect it immediately.
+      clearPassiveSensingData();
+      refreshStatus();
     }
   };
 

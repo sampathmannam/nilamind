@@ -36,11 +36,11 @@ describe("trendAggregator (Phase 21)", () => {
       const trends = computeTrends(window);
       const sleepTrend = trends.find((t) => t.domain === "sleep");
       expect(sleepTrend).toBeDefined();
-      expect(sleepTrend!.direction).toBe("declining");
+      expect(sleepTrend!.direction).toBe("decreasing");
       expect(sleepTrend!.changePercent).toBeLessThan(0);
     });
 
-    it("detects improving sleep trend", () => {
+    it("detects increasing sleep trend (neutral direction — no good/bad valence)", () => {
       const window = [
         makeFeature("2026-07-11", { sleep: { hoursLastNight: 5, sleepRegularityIndex: null, sleepCv: null, shortSleepRun: 0, bedTimeVariabilityMin: null } }),
         makeFeature("2026-07-12", { sleep: { hoursLastNight: 5.5, sleepRegularityIndex: null, sleepCv: null, shortSleepRun: 0, bedTimeVariabilityMin: null } }),
@@ -54,7 +54,7 @@ describe("trendAggregator (Phase 21)", () => {
       const trends = computeTrends(window);
       const sleepTrend = trends.find((t) => t.domain === "sleep");
       expect(sleepTrend).toBeDefined();
-      expect(sleepTrend!.direction).toBe("improving");
+      expect(sleepTrend!.direction).toBe("increasing");
     });
 
     it("detects stable trend when values are consistent", () => {
@@ -96,7 +96,7 @@ describe("trendAggregator (Phase 21)", () => {
 
     it("generates context line for declining trends", () => {
       const trends: TrendSummary[] = [
-        { domain: "sleep", direction: "declining", changePercent: -20, confidence: 0.8, oneLine: "Sleep declining." },
+        { domain: "sleep", direction: "decreasing", changePercent: -20, confidence: 0.8, oneLine: "Sleep declining." },
         { domain: "activity", direction: "stable", changePercent: 0, confidence: 0.7, oneLine: "Activity stable." },
       ];
       const line = passiveSignalContextLine(trends);
@@ -104,18 +104,19 @@ describe("trendAggregator (Phase 21)", () => {
       expect(line).toContain("not a diagnosis");
     });
 
-    it("generates context line for improving trends", () => {
+    it("names a changing domain neutrally, without good/bad valence", () => {
       const trends: TrendSummary[] = [
-        { domain: "sleep", direction: "improving", changePercent: 15, confidence: 0.9, oneLine: "Sleep improving." },
+        { domain: "sleep", direction: "increasing", changePercent: 15, confidence: 0.9, oneLine: "Sleep increasing." },
       ];
       const line = passiveSignalContextLine(trends);
-      expect(line).toContain("steadier");
+      expect(line).toContain("sleep");
+      expect(line).not.toMatch(/steadier|improving|declining|shift/i); // no valence words
     });
 
     it("generates context line for mixed trends", () => {
       const trends: TrendSummary[] = [
-        { domain: "sleep", direction: "declining", changePercent: -15, confidence: 0.8, oneLine: "Sleep declining." },
-        { domain: "activity", direction: "improving", changePercent: 10, confidence: 0.7, oneLine: "Activity improving." },
+        { domain: "sleep", direction: "decreasing", changePercent: -15, confidence: 0.8, oneLine: "Sleep declining." },
+        { domain: "activity", direction: "increasing", changePercent: 10, confidence: 0.7, oneLine: "Activity improving." },
       ];
       const line = passiveSignalContextLine(trends);
       expect(line).toContain("sleep");
@@ -124,7 +125,7 @@ describe("trendAggregator (Phase 21)", () => {
 
     it("skips low-confidence trends", () => {
       const trends: TrendSummary[] = [
-        { domain: "sleep", direction: "declining", changePercent: -20, confidence: 0.1, oneLine: "Sleep declining." },
+        { domain: "sleep", direction: "decreasing", changePercent: -20, confidence: 0.1, oneLine: "Sleep declining." },
       ];
       expect(passiveSignalContextLine(trends)).toBe("");
     });

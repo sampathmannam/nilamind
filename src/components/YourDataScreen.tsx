@@ -680,7 +680,10 @@ valuesClarified: []
       }
       const allInsights = (() => { try { return loadInsights(); } catch { return []; }})();
       const insightsNoHelp = allInsights
-        .filter((i) => (i.kind as string) === "what_doesnt_help" && i.date >= cutoff)
+        // Aligned with clinicianAggregations' filter (was the divergent "what_doesnt_help"). This kind is
+        // not in INSIGHT_KINDS yet, so no writer produces it — the section fills from diary skills only
+        // until the user adds a "what didn't help" insight type; both filters now agree on the string.
+        .filter((i) => (i.kind as string) === "what_didnt_help" && i.date >= cutoff)
         .map((i) => ({ kind: i.kind, text: i.text, date: i.date }));
       const whatDidntHelp = summarizeWhatDidntHelp(diarySkillsNoHelp, insightsNoHelp);
 

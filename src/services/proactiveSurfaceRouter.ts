@@ -5,6 +5,16 @@
 import type { CompoundSignal } from "./compoundDetector";
 import type { PhaseShiftSuggestion } from "./episodeSuggester";
 import { isCardTypeInCooldown, recordProactiveCardEvent } from "./signalStore";
+import { isSafetySuppressed } from "./notificationSuppress";
+import type { UserState } from "../types/modes";
+
+// Positive/celebratory surfaces are invalidating when the user is already in a hard state — a
+// "steady week, that stability quietly helps" card during an elevated/anxious moment reads as the app
+// not listening. These are suppressed in those states; risk cards still surface.
+const POSITIVE_CARD_TYPES: ReadonlySet<ProactiveCardType> = new Set([
+  "resilience_celebration",
+  "protective_signal",
+]);
 
 export type ProactiveCardType =
   | "sleep_pattern_alert"
@@ -36,7 +46,6 @@ export interface ProactiveSurfaceCard {
 const MAX_CARDS_PER_DAY = 3;
 const DEFAULT_COOLDOWN_HOURS = 48;
 const RESILIENCE_COOLDOWN_HOURS = 24;
-const SAFETY_SUPPRESSION_HOURS = 24;
 
 /** Map compound signal IDs to proactive card types. */
 function signalToCardType(signal: CompoundSignal): ProactiveCardType {
@@ -84,7 +93,7 @@ function signalToCard(signal: CompoundSignal): ProactiveSurfaceCard {
     icon: icons[type] ?? "info",
     color: colors[type] ?? "gray",
     action: signal.kind === "risk"
-      ? { label: "Check in", route: "checkin" }
+      ? { label: "Check in", route: "ema_checkin" }
       : undefined,
     nudgeText: `${signal.label} — ${signal.detail.slice(0, 60)}...`,
   };
@@ -100,7 +109,7 @@ function phaseShiftToCard(suggestion: PhaseShiftSuggestion): ProactiveSurfaceCar
     body: suggestion.suggestedCard.body,
     icon: suggestion.suggestedCard.icon,
     color: suggestion.suggestedCard.color,
-    action: { label: "How are you feeling?", route: "checkin" },
+    action: { label: "How are you feeling?", route: "ema_checkin" },
     nudgeText: suggestion.suggestedCard.body.slice(0, 60) + "...",
   };
 }
@@ -111,38 +120,42 @@ function isInCooldown(type: ProactiveCardType): boolean {
   return isCardTypeInCooldown(type, cooldownHours);
 }
 
-/** Check if safety suppression is active (24h post-crisis). */
-function isSafetySuppressed(): boolean {
-  return isCardTypeInCooldown("crisis", SAFETY_SUPPRESSION_HOURS);
+/** True when a proactive positive/celebratory card should be held back for the current mood state. */
+function positiveSuppressed(userState?: UserState | null): boolean {
+  return userState === "elevated" || userState === "anxious";
 }
 
 /**
  * Select the best proactive surface cards from detected signals.
  * Rules:
  * - Max 3 cards per day
- * - Anti-fatigue: same type cooldown 48h (resilience: 24h)
- * - Safety suppression: no cards within 24h of crisis
+ * - Anti-fatigue: same type cooldown 48h (resilience: 24h) — applied to the phase-shift card too
+ * - Safety suppression: no cards within the post-§9-crisis window (the SAME latch every other nudge
+ *   path honors — notificationSuppress, set by suppressNudgesForCrisis at each crisis entry point).
+ *   The previous local check read a "crisis" proactive-card type that is never recorded → dead guard.
+ * - Positive cards (resilience/protective) are also held back in an elevated/anxious state.
  * - Priority: phase_shift_gentle > risk > protective
  */
 export function selectProactiveCards(
   signals: CompoundSignal[],
   phaseShift?: PhaseShiftSuggestion | null,
+  userState?: UserState | null,
 ): ProactiveSurfaceCard[] {
   if (isSafetySuppressed()) return [];
 
   const candidates: ProactiveSurfaceCard[] = [];
 
-  // Phase shift has highest priority
-  if (phaseShift) {
+  // Phase shift has highest priority — but still honors its own anti-fatigue cooldown.
+  if (phaseShift && !isInCooldown("phase_shift_gentle")) {
     candidates.push(phaseShiftToCard(phaseShift));
   }
 
   // Add signal cards
   for (const signal of signals) {
     const card = signalToCard(signal);
-    if (!isInCooldown(card.type)) {
-      candidates.push(card);
-    }
+    if (isInCooldown(card.type)) continue;
+    if (positiveSuppressed(userState) && POSITIVE_CARD_TYPES.has(card.type)) continue;
+    candidates.push(card);
   }
 
   // Sort by priority (lower = higher priority)
@@ -161,8 +174,10 @@ export function selectProactiveNudge(
 ): { text: string; route: string; icon: string } | null {
   if (isSafetySuppressed()) return null;
 
-  // Find the highest-priority risk signal
-  const riskSignals = signals.filter((s) => s.kind === "risk");
+  // Surface the strongest risk signal (by confidence when present, else detector order).
+  const riskSignals = signals
+    .filter((s) => s.kind === "risk")
+    .sort((a, b) => (b.confidence ?? 0) - (a.confidence ?? 0));
   if (riskSignals.length === 0) return null;
 
   const top = riskSignals[0];

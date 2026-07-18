@@ -70,17 +70,35 @@ describe("episodeSuggester (Phase 22)", () => {
       expect(result!.kind).toBe("possible_depression");
     });
 
-    it("detects possible improvement when sleep improving + stable typing", () => {
+    it("detects possible improvement when an earlier rough stretch settles into steady, healthy sleep", () => {
+      const rough = (date: string) => makeFeature(date, {
+        sleep: { hoursLastNight: 5, sleepRegularityIndex: null, sleepCv: null, shortSleepRun: 3, bedTimeVariabilityMin: null },
+      });
+      const steady = (date: string, h: number) => makeFeature(date, {
+        sleep: { hoursLastNight: h, sleepRegularityIndex: null, sleepCv: null, shortSleepRun: 0, bedTimeVariabilityMin: null },
+      });
       const window = [
-        makeFeature("2026-07-12", { sleep: { hoursLastNight: 9, sleepRegularityIndex: null, sleepCv: null, shortSleepRun: 0, bedTimeVariabilityMin: null } }),
-        makeFeature("2026-07-13", { sleep: { hoursLastNight: 8.5, sleepRegularityIndex: null, sleepCv: null, shortSleepRun: 0, bedTimeVariabilityMin: null } }),
-        makeFeature("2026-07-14", { sleep: { hoursLastNight: 8, sleepRegularityIndex: null, sleepCv: null, shortSleepRun: 0, bedTimeVariabilityMin: null } }),
-        makeFeature("2026-07-15", { sleep: { hoursLastNight: 7.5, sleepRegularityIndex: null, sleepCv: null, shortSleepRun: 0, bedTimeVariabilityMin: null } }),
-        makeFeature("2026-07-16", { sleep: { hoursLastNight: 7, sleepRegularityIndex: null, sleepCv: null, shortSleepRun: 0, bedTimeVariabilityMin: null } }),
+        // Earlier: short, fragmented sleep.
+        rough("2026-07-09"), rough("2026-07-10"), rough("2026-07-11"), rough("2026-07-12"), rough("2026-07-13"),
+        // Recent: settled into a steady, healthy 7-ish hours (activity stable → not a depression pattern).
+        steady("2026-07-14", 7), steady("2026-07-15", 7.5), steady("2026-07-16", 7), steady("2026-07-17", 6.8), steady("2026-07-18", 7.2),
       ];
       const result = detectPhaseShift(window);
       expect(result).not.toBeNull();
       expect(result!.kind).toBe("possible_improvement");
+    });
+
+    it("does NOT call merely-decreasing sleep 'improvement' (that is elevation-adjacent)", () => {
+      // The exact shape the old rule rewarded: sleep trending DOWN. Must not be labelled improvement.
+      const window = [
+        makeFeature("2026-07-14", { sleep: { hoursLastNight: 9, sleepRegularityIndex: null, sleepCv: null, shortSleepRun: 0, bedTimeVariabilityMin: null } }),
+        makeFeature("2026-07-15", { sleep: { hoursLastNight: 8, sleepRegularityIndex: null, sleepCv: null, shortSleepRun: 0, bedTimeVariabilityMin: null } }),
+        makeFeature("2026-07-16", { sleep: { hoursLastNight: 7, sleepRegularityIndex: null, sleepCv: null, shortSleepRun: 0, bedTimeVariabilityMin: null } }),
+        makeFeature("2026-07-17", { sleep: { hoursLastNight: 6, sleepRegularityIndex: null, sleepCv: null, shortSleepRun: 0, bedTimeVariabilityMin: null } }),
+        makeFeature("2026-07-18", { sleep: { hoursLastNight: 5.5, sleepRegularityIndex: null, sleepCv: null, shortSleepRun: 0, bedTimeVariabilityMin: null } }),
+      ];
+      const result = detectPhaseShift(window);
+      expect(result?.kind).not.toBe("possible_improvement");
     });
 
     it("returns null when signals are insufficient for any pattern", () => {

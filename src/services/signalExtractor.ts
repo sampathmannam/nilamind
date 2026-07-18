@@ -4,7 +4,7 @@
 // No side effects — reads only. The bridge between raw sensing and compound analysis.
 
 import { secureLocal } from "./secureLocal";
-import { DAY_MS } from "./storageUtils";
+import { DAY_MS, localDateKey } from "./storageUtils";
 
 export interface DailyFeatureSet {
   date: string;
@@ -54,15 +54,6 @@ function readArray(key: string): unknown[] {
   }
 }
 
-function readNumber(key: string): number | null {
-  try {
-    const raw = secureLocal.getItem(key);
-    return raw != null ? Number(raw) : null;
-  } catch {
-    return null;
-  }
-}
-
 function readObject(key: string): Record<string, unknown> | null {
   try {
     const raw = secureLocal.getItem(key);
@@ -72,15 +63,10 @@ function readObject(key: string): Record<string, unknown> | null {
   }
 }
 
+// Local-day key, matching the rest of the app (streaks, check-ins, med logs). Was toISOString().split
+// (UTC), which in IST shifted every extracted feature's date back a day between 00:00–05:30 local.
 function dateKey(d: Date): string {
-  return d.toISOString().split("T")[0];
-}
-
-function daysAgo(n: number): Date {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  d.setDate(d.getDate() - n);
-  return d;
+  return localDateKey(d);
 }
 
 /** Extract sleep hours from moodHistory for a given date. */
@@ -137,7 +123,7 @@ function extractActivity(targetDate: string): DailyFeatureSet["activity"] {
     const d = new Date(s.date);
     const target = new Date(targetDate);
     const diff = (target.getTime() - d.getTime()) / DAY_MS;
-    return diff >= 0 && diff < 7;
+    return diff >= 1 && diff <= 7; // the 7 days BEFORE the target — exclude the target day itself
   });
   const avg7d = recentSnaps.length > 0
     ? recentSnaps.reduce((a: number, s: any) => a + (s.screenTimeMinutes ?? 0), 0) / recentSnaps.length
@@ -195,22 +181,25 @@ function extractHeartRate(): DailyFeatureSet["heartRate"] {
 
 /** Compute composite boolean flags from raw features. */
 export function computeComposites(features: Omit<DailyFeatureSet, "composite" | "date">): DailyFeatureSet["composite"] {
-  // Activity spike: screen time > 150% of 7-day average
-  const activitySpike = features.activity.screenTimeDelta7d != null && features.activity.screenTimeDelta7d > 0
-    && features.activity.screenTimeMinutes != null;
+  // Activity spike: screen time > 150% of the 7-day baseline (the comment always said 150%, but the code
+  // was `delta > 0` — i.e. any above-average day, ~half of all days by chance). avg = today − delta.
+  const screenToday = features.activity.screenTimeMinutes;
+  const screenDelta = features.activity.screenTimeDelta7d;
+  const avg7d = screenToday != null && screenDelta != null ? screenToday - screenDelta : null;
+  const activitySpike = screenToday != null && avg7d != null && avg7d > 0 && screenToday > 1.5 * avg7d;
 
-  // Circadian disruption: first open or last close deviated > 2h from personal median
-  // Simplified: any null anchor or extreme values
-  const circadianDisruption = features.circadian.firstOpenTime === null
-    || features.circadian.lastCloseTime === null;
+  // Circadian disruption: only meaningful once real anchor data exists. Missing anchors are INSUFFICIENT
+  // DATA, not disruption — the old `any null anchor` flagged every anchor-less user as disrupted daily,
+  // firing "Routine disruption" and forcing an `elevated` mood state for everyone. Deviation-from-median
+  // detection is not implemented yet, so with data present we do not (yet) assert disruption.
+  const circadianDisruption = false;
 
   // Typing elevation signal
   const typingElevationSignal = features.typing.moodSignal === "mania";
 
-  // Sleep-activity concordance: both sleep and activity moving in same direction
-  const sleepActivityConcordance = features.sleep.shortSleepRun > 0
-    && features.activity.screenTimeDelta7d != null
-    && features.activity.screenTimeDelta7d > 0;
+  // Sleep-activity concordance: short sleep AND a real activity spike (same 150% bar as activitySpike,
+  // not merely any above-average day) moving together.
+  const sleepActivityConcordance = features.sleep.shortSleepRun > 0 && activitySpike;
 
   return { activitySpike, circadianDisruption, typingElevationSignal, sleepActivityConcordance };
 }

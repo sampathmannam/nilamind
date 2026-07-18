@@ -9,6 +9,8 @@ import {
 import type { CompoundSignal } from "./compoundDetector";
 import type { PhaseShiftSuggestion } from "./episodeSuggester";
 import { clearPassiveSensingData } from "./signalStore";
+import { markSafetySuppression } from "./notificationSuppress";
+import { secureLocal } from "./secureLocal";
 
 const MOCK_RISK_SIGNAL: CompoundSignal = {
   id: "activity-prodrome",
@@ -50,6 +52,7 @@ const MOCK_PHASE_SHIFT: PhaseShiftSuggestion = {
 describe("proactiveSurfaceRouter (Phase 22)", () => {
   beforeEach(() => {
     clearPassiveSensingData();
+    secureLocal.removeItem("nilamind_notif_suppress_until"); // reset the §9 safety latch between tests
   });
 
   describe("selectProactiveCards", () => {
@@ -112,6 +115,32 @@ describe("proactiveSurfaceRouter (Phase 22)", () => {
       expect(nudge).not.toBeNull();
       expect(nudge!.text).toContain("Activity pattern shift");
       expect(nudge!.route).toBe("dashboard");
+    });
+
+    it("surfaces the highest-confidence risk signal, not detector order", () => {
+      const weaker: CompoundSignal = { ...MOCK_RISK_SIGNAL, id: "withdrawal-cascade", label: "Reduced engagement", confidence: 0.4 };
+      const stronger: CompoundSignal = { ...MOCK_RISK_SIGNAL, label: "Activity pattern shift", confidence: 0.9 };
+      const nudge = selectProactiveNudge([weaker, stronger]); // stronger is LAST in order
+      expect(nudge!.text).toContain("Activity pattern shift");
+    });
+  });
+
+  // P0 (2026-07-18 QA): the router's own "crisis" cooldown check read a card type that is never recorded,
+  // so post-§9 suppression was a dead guard. It now shares the real notificationSuppress latch.
+  describe("§9 crisis suppression + mood-aware positive cards", () => {
+    it("suppresses ALL proactive cards + the nudge inside the post-crisis window", () => {
+      markSafetySuppression(); // what suppressNudgesForCrisis() calls at every §9 entry point
+      expect(selectProactiveCards([MOCK_RISK_SIGNAL], MOCK_PHASE_SHIFT)).toEqual([]);
+      expect(selectProactiveNudge([MOCK_RISK_SIGNAL])).toBeNull();
+    });
+
+    it("holds back positive/celebratory cards in an elevated or anxious state, but not risk cards", () => {
+      expect(selectProactiveCards([MOCK_PROTECTIVE_SIGNAL], null, "elevated")).toEqual([]);
+      expect(selectProactiveCards([MOCK_PROTECTIVE_SIGNAL], null, "anxious")).toEqual([]);
+      const risk = selectProactiveCards([MOCK_RISK_SIGNAL], null, "elevated");
+      expect(risk.length).toBe(1);
+      // A calm state still shows the resilience card.
+      expect(selectProactiveCards([MOCK_PROTECTIVE_SIGNAL], null, "calm").length).toBe(1);
     });
   });
 

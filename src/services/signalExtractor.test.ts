@@ -100,16 +100,26 @@ describe("signalExtractor (Phase 21)", () => {
   });
 
   describe("computeComposites", () => {
-    it("detects activity spike when screen time delta is positive", () => {
-      const features = {
+    it("detects activity spike only when screen time exceeds 150% of the 7-day baseline", () => {
+      // baseline avg = 200 − 80 = 120; 200 > 1.5 × 120 (180) → spike.
+      const spike = computeComposites({
+        sleep: { hoursLastNight: 7, sleepRegularityIndex: null, sleepCv: null, shortSleepRun: 0, bedTimeVariabilityMin: null },
+        activity: { screenTimeMinutes: 200, screenTimeDelta7d: 80, socialAppMinutes: null, unlockCount: null },
+        circadian: { firstOpenTime: "07:30", lastCloseTime: "23:00", rhythmRegularityScore: null },
+        typing: { avgTypingSpeed: null, avgPauseDuration: null, burstCount: null, moodSignal: null },
+        heartRate: { restingHr: null, hrVariability: null },
+      });
+      expect(spike.activitySpike).toBe(true);
+
+      // baseline avg = 180 − 60 = 120; 180 is NOT > 180 → a merely-above-average day is not a spike.
+      const mild = computeComposites({
         sleep: { hoursLastNight: 7, sleepRegularityIndex: null, sleepCv: null, shortSleepRun: 0, bedTimeVariabilityMin: null },
         activity: { screenTimeMinutes: 180, screenTimeDelta7d: 60, socialAppMinutes: null, unlockCount: null },
         circadian: { firstOpenTime: "07:30", lastCloseTime: "23:00", rhythmRegularityScore: null },
         typing: { avgTypingSpeed: null, avgPauseDuration: null, burstCount: null, moodSignal: null },
         heartRate: { restingHr: null, hrVariability: null },
-      };
-      const composites = computeComposites(features);
-      expect(composites.activitySpike).toBe(true);
+      });
+      expect(mild.activitySpike).toBe(false);
     });
 
     it("does not flag activity spike when no delta", () => {
@@ -148,7 +158,9 @@ describe("signalExtractor (Phase 21)", () => {
       expect(composites.sleepActivityConcordance).toBe(true);
     });
 
-    it("flags circadian disruption when anchors missing", () => {
+    it("does NOT flag circadian disruption when anchors are missing (insufficient data, not disruption)", () => {
+      // The old rule flagged any missing anchor as disruption, so a user with no anchor data read as
+      // disrupted every day → spurious "Routine disruption" + forced `elevated` state for everyone.
       const features = {
         sleep: { hoursLastNight: 7, sleepRegularityIndex: null, sleepCv: null, shortSleepRun: 0, bedTimeVariabilityMin: null },
         activity: { screenTimeMinutes: 120, screenTimeDelta7d: null, socialAppMinutes: null, unlockCount: null },
@@ -157,7 +169,7 @@ describe("signalExtractor (Phase 21)", () => {
         heartRate: { restingHr: null, hrVariability: null },
       };
       const composites = computeComposites(features);
-      expect(composites.circadianDisruption).toBe(true);
+      expect(composites.circadianDisruption).toBe(false);
     });
   });
 

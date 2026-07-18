@@ -4,6 +4,7 @@
 
 import { secureLocal } from "./secureLocal";
 import type { DailyFeatureSet } from "./signalExtractor";
+import { DAY_MS, localDateKey } from "./storageUtils";
 
 export const SIGNAL_FEATURES_KEY = "nilamind_signal_features";
 export const PROACTIVE_CARDS_KEY = "nilamind_proactive_cards";
@@ -76,10 +77,18 @@ export function getDailyFeature(date: string): DailyFeatureSet | null {
   return readFeatures().find((f) => f.date === date) ?? null;
 }
 
-/** Get the last N days of features (oldest-first). */
+/** Get features from the last N CALENDAR days (oldest-first). Previously `slice(-days)` returned the last
+ *  N records regardless of when they were captured — extraction only runs on app-foreground, so gaps
+ *  compressed weeks-apart entries into a fake "last N days" and detectors fired on stale data. Now it
+ *  filters by an actual date cutoff, and returns nothing at all if the most recent record is itself
+ *  stale (>2 days old), so no surface acts on data that no longer reflects the present. */
 export function getFeatureWindow(days: number): DailyFeatureSet[] {
-  const all = readFeatures();
-  return all.slice(-days);
+  const all = readFeatures(); // oldest-first, keyed by localDateKey
+  if (all.length === 0) return [];
+  const newest = all[all.length - 1];
+  if (newest.date < localDateKey(new Date(Date.now() - 2 * DAY_MS))) return [];
+  const cutoff = localDateKey(new Date(Date.now() - (days - 1) * DAY_MS));
+  return all.filter((f) => f.date >= cutoff);
 }
 
 /** Record a proactive card event. */
@@ -104,7 +113,7 @@ export function pruneOldFeatures(): void {
   const all = readFeatures();
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - MAX_FEATURE_DAYS);
-  const cutoffStr = cutoff.toISOString().split("T")[0];
+  const cutoffStr = localDateKey(cutoff);
   const pruned = all.filter((f) => f.date >= cutoffStr);
   if (pruned.length < all.length) writeFeatures(pruned);
 }

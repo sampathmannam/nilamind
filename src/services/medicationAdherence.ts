@@ -83,7 +83,7 @@ export function recordDoseChange(medId: string, oldDose: string, newDose: string
   if (!med.doseChanges) med.doseChanges = [];
   med.doseChanges.push({
     medId,
-    date: new Date().toISOString().split("T")[0],
+    date: localDateKey(),
     oldDose,
     newDose,
   });

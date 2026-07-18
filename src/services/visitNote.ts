@@ -4,6 +4,7 @@
 // PDF generates. Stored keyed by date. Last 4 notes kept (rolling window).
 
 import { secureLocal } from "./secureLocal";
+import { localDateKey } from "./storageUtils";
 
 const STORAGE_KEY = "nilamind_visit_notes";
 const MAX_NOTES = 4;
@@ -31,7 +32,7 @@ export function saveVisitNote(
   const now = new Date();
   const note: VisitNote = {
     id: "vn_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6),
-    date: now.toISOString().split("T")[0],
+    date: localDateKey(now),
     timestamp: now.toISOString(),
     text,
     ...(voiceTranscript ? { voiceTranscript } : {}),

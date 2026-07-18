@@ -535,7 +535,7 @@ function AppShell() {
 
       {/* Dashboard sheet */}
       <Sheet open={hasOverlay(state, (o) => o.kind === "sheet" && o.id === "dashboard")} title={t("dashboard")} onClose={closeTop} id="dashboard-sheet">
-        <Suspense fallback={<ScreenFallback />}><DashboardScreen /></Suspense>
+        <Suspense fallback={<ScreenFallback />}><DashboardScreen onOpenView={(target) => { closeTop(); go(target); }} /></Suspense>
       </Sheet>
 
       {/* Medication sheet */}

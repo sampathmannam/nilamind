@@ -79,7 +79,18 @@ function detectWithdrawalCascade(window: DailyFeatureSet[]): CompoundSignal | nu
   if (window.length < 5) return null;
 
   const recent = window.slice(-5);
-  const socialDecline = recent.filter((f) => f.activity.socialAppMinutes != null && f.activity.socialAppMinutes < 15).length;
+  const baseline = window.slice(0, -5); // the user's own prior norm
+
+  // Social decline is measured against the user's OWN baseline, not an absolute floor — otherwise a
+  // person who simply never uses social apps reads as "withdrawing" every single day. Requires an
+  // established baseline (avg >= 15 min) and recent days dropping below half of it.
+  const baseSocial = baseline
+    .map((f) => f.activity.socialAppMinutes)
+    .filter((v): v is number => v != null);
+  const baseSocialAvg = baseSocial.length ? baseSocial.reduce((a, b) => a + b, 0) / baseSocial.length : null;
+  const socialDecline = baseSocialAvg != null && baseSocialAvg >= 15
+    ? recent.filter((f) => f.activity.socialAppMinutes != null && f.activity.socialAppMinutes < baseSocialAvg * 0.5).length
+    : 0;
   const screenDecline = recent.filter((f) => f.activity.screenTimeDelta7d != null && f.activity.screenTimeDelta7d < -30).length;
 
   if (socialDecline >= 3 && screenDecline >= 2) {
