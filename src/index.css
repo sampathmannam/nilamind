@@ -99,6 +99,18 @@
   --color-purple-200: #E2D6EC; --color-purple-550: #997BB3;
   --color-sky-200: #E2D6EC;
 
+  /* categorical accents — folded into the warm palette so they never fall back to cold Tailwind defaults
+     (2026-07-18 design review: violet/indigo/teal/cyan/green/orange were rendering as raw Tailwind hues,
+     the one cold leak in an otherwise warm-remapped app). violet+indigo → lavender (accent family);
+     teal+cyan+green → the emerald success family; orange → the peach/amber warm-highlight family. Light
+     values live under :root.theme-light. */
+  --color-violet-200: #E2D6EC; --color-violet-300: #D1BFDF; --color-violet-400: #BEA4D0; --color-violet-500: #AC8FC2; --color-violet-600: #997BB3;
+  --color-indigo-200: #E2D6EC; --color-indigo-400: #BEA4D0; --color-indigo-500: #AC8FC2; --color-indigo-600: #997BB3; --color-indigo-700: #836497; --color-indigo-950: #241B33;
+  --color-teal-200: #C3E6D2; --color-teal-400: #7FBFA0; --color-teal-700: #3B6B54; --color-teal-950: #16241D;
+  --color-cyan-400: #7FBFA0;
+  --color-green-200: #C3E6D2; --color-green-300: #A7D2BC; --color-green-400: #7FBFA0; --color-green-500: #5AA483; --color-green-700: #3B6B54; --color-green-950: #16241D;
+  --color-orange-200: #F0D3A8; --color-orange-300: #EBB48F; --color-orange-400: #E3A57D; --color-orange-500: #D6916A; --color-orange-700: #A65E3E; --color-orange-950: #2A1B12;
+
   /* semantic surfaces (theme-switchable; light values live under :root.theme-light) */
   --color-page: #171311;    /* app background */
   --color-card: #211C17;    /* cards */
@@ -167,6 +179,17 @@
   --color-orange-300: #C2521E; --color-orange-400: #D2591E; --color-orange-500: #E8743A;
   --color-teal-300: #1E7A6C; --color-teal-500: #1E8E7E;
   --color-indigo-300: #5258B8; --color-indigo-500: #6757C4;
+  /* 2026-07-18 design review: light-theme stops for the categorical families that only had partial
+     coverage. Roles matched to actual usage — TEXT stops dark for AA on cream, FILL stops mid-tone,
+     BORDER/-950 tint stops light. */
+  --color-violet-600: #894C9C; /* fill (bg-violet-600) */
+  --color-indigo-200: #5F4683; --color-indigo-400: #7A5DA0; /* text on cream */
+  --color-indigo-600: #7E6499; /* fill */ --color-indigo-700: #D8C8E4; /* light border */ --color-indigo-950: #EDE4F3; /* light tint */
+  --color-teal-200: #2F7A57; --color-teal-400: #2E6B4E; /* text */ --color-teal-700: #CDE5D8; /* border */ --color-teal-950: #E4F1EA; /* tint */
+  --color-cyan-400: #2E6B4E; /* text */
+  --color-green-200: #2F7A57; --color-green-300: #2F7A57; --color-green-400: #2E6B4E; /* text */
+  --color-green-500: #3A7659; /* fill/border */ --color-green-700: #CDE5D8; /* border */ --color-green-950: #E4F1EA; /* tint */
+  --color-orange-200: #C2521E; /* text */ --color-orange-700: #F3D0BC; /* border */ --color-orange-950: #FBE6D8; /* tint */
 }
 
 /* ── Sunrise motion + gradient embellishments (active in the Sunrise/light theme) ── */

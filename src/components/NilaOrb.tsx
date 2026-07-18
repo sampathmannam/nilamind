@@ -23,13 +23,14 @@ export default function NilaOrb({
   return (
     <svg width={size} height={size} viewBox="0 0 100 100" className={className} aria-hidden="true">
       <defs>
-        {/* core: bright specular top-left falling to a deep magenta */}
+        {/* core: bright specular top-left falling to a deep mauve (2026-07-18 design review: softened from
+            hot magenta to the mauve-lavender identity so the mark matches NilaFace + the app palette) */}
         <radialGradient id={core} cx="40%" cy="34%" r="70%">
           <stop offset="0%" stopColor="#ffffff" />
-          <stop offset="24%" stopColor="#ffe0f1" />
-          <stop offset="56%" stopColor={active ? "#f93cab" : "#f56cb0"} />
-          <stop offset="86%" stopColor={active ? "#c81e73" : "#c23f83"} />
-          <stop offset="100%" stopColor="#8b3a72" />
+          <stop offset="24%" stopColor="#f5e3ee" />
+          <stop offset="56%" stopColor={active ? "#c072aa" : "#d19bc4"} />
+          <stop offset="86%" stopColor={active ? "#a85f97" : "#b06aa0"} />
+          <stop offset="100%" stopColor="#7d4f74" />
         </radialGradient>
         {/* rim: a lavender edge light (ties the orb to the aurora atmosphere) */}
         <radialGradient id={rim} cx="50%" cy="50%" r="50%">
@@ -39,7 +40,7 @@ export default function NilaOrb({
         </radialGradient>
         {/* halo: soft outward bloom */}
         <radialGradient id={halo} cx="50%" cy="50%" r="50%">
-          <stop offset="40%" stopColor={active ? "rgba(236,72,153,0.42)" : "rgba(236,72,153,0.26)"} />
+          <stop offset="40%" stopColor={active ? "rgba(199,132,176,0.42)" : "rgba(199,132,176,0.26)"} />
           <stop offset="72%" stopColor="rgba(172,143,194,0.16)" />
           <stop offset="100%" stopColor="rgba(172,143,194,0)" />
         </radialGradient>

@@ -32,33 +32,37 @@ interface OrbPalette {
 // safety signal and must not blend into the identity hue. The light/cream-theme render (below) is
 // kept vivid/luminous (not the old washed-out low-alpha tint).
 const PALETTES: Record<string, OrbPalette> = {
+  // 2026-07-18 design review: softened from hot pink-magenta to mauve-lavender so Nila's presence sits
+  // inside the app's warm-lavender/peach palette (the calm redesign's stated "soft lavender, no more bright
+  // coral→magenta" direction) instead of clashing. Still pink-leaning — she stays recognizably "her" — just
+  // lower-saturation and calmer. The 5 affective states are preserved via lightness/depth, not saturation.
   calm: {
-    primary: "#EC5B9E",   // icon pink-magenta (resting identity; matches NilaOrb.tsx)
-    secondary: "#F58CC0", // lighter pink (specular / upper glow)
-    glow: "rgba(236,91,158,0.28)",
-    ring: "rgba(236,91,158,0.18)",
-    core: "#FBD9EC",      // near-white pink highlight (bright core)
+    primary: "#C784B0",   // soft mauve-pink (resting identity; matches NilaOrb.tsx)
+    secondary: "#D9A6C8", // lighter mauve (specular / upper glow)
+    glow: "rgba(199,132,176,0.24)",
+    ring: "rgba(199,132,176,0.15)",
+    core: "#F0DCEA",      // near-white mauve highlight (bright core)
   },
   anxious: {
-    primary: "#D63C87",   // grounded deeper magenta ("I'm here with you")
-    secondary: "#E982B3",
-    glow: "rgba(214,60,135,0.25)",
-    ring: "rgba(214,60,135,0.15)",
-    core: "#F5C2DC",
+    primary: "#B06AA0",   // grounded deeper mauve ("I'm here with you")
+    secondary: "#CB95BE",
+    glow: "rgba(176,106,160,0.24)",
+    ring: "rgba(176,106,160,0.15)",
+    core: "#E6CDDF",
   },
   low: {
-    primary: "#F0A0C6",   // soft, light pink (gentle)
-    secondary: "#F6C4DC",
-    glow: "rgba(240,160,198,0.20)",
-    ring: "rgba(240,160,198,0.12)",
-    core: "#FCE3EF",
+    primary: "#D6AECB",   // soft, light lavender-pink (gentle)
+    secondary: "#E6CCDD",
+    glow: "rgba(214,174,203,0.18)",
+    ring: "rgba(214,174,203,0.11)",
+    core: "#F3E5EE",
   },
   elevated: {
-    primary: "#F5479F",   // brighter, energetic magenta (settles an activated state)
-    secondary: "#FA80BF",
-    glow: "rgba(245,71,159,0.28)",
-    ring: "rgba(245,71,159,0.18)",
-    core: "#FDCBE6",
+    primary: "#C77FB4",   // a touch brighter mauve — settles an activated state, no longer hot magenta
+    secondary: "#DBA3CC",
+    glow: "rgba(199,127,180,0.24)",
+    ring: "rgba(199,127,180,0.16)",
+    core: "#F1D8EA",
   },
   crisis: {
     primary: "#B5614E",   // --color-rose-500 (deeper crisis red — distinct from anxious rose-400)

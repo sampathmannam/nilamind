@@ -32,6 +32,7 @@ import {
   Check,
   X,
   Pencil,
+  ChevronLeft,
   ArrowRight,
   CalendarClock,
   TrendingUp,
@@ -71,6 +72,14 @@ export default function ValuesToActionScreen({ highlightDomains = [] }: { highli
   const [actions, setActions] = useState<CommittedAction[]>([]);
   const [addingFor, setAddingFor] = useState<string | null>(null);
   const [actionText, setActionText] = useState("");
+  // Progressive values (2026-07-18 design review): rather than 20 sliders (10 domains × 2) presented at
+  // once, first pick the areas that matter, then rate only those. Unpicked domains keep the neutral 5/5
+  // default in the saved snapshot, so VLQ scoring + computeGaps are unchanged — a neutral domain simply
+  // shows no gap. Highlighted-from-chat domains start pre-selected.
+  const [rateStep, setRateStep] = useState<"select" | "rate">("select");
+  const [selectedDomains, setSelectedDomains] = useState<string[]>(
+    () => highlightDomains.filter((id) => VALUE_DOMAINS.some((d) => d.id === id)),
+  );
 
   // ── Activities (DO) state ──
   const [activities, setActivities] = useState<BAActivityLog[]>([]);
@@ -100,6 +109,21 @@ export default function ValuesToActionScreen({ highlightDomains = [] }: { highli
   // ── Values handlers ──
   const setRatingFor = (domainId: string, key: keyof DomainRating, value: number) => {
     setDraft((prev) => ({ ...prev, [domainId]: { ...prev[domainId], [key]: value } }));
+  };
+  const toggleDomain = (id: string) => {
+    setSelectedDomains((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+    hapticLight();
+  };
+  // Re-entering rate mode from review (Edit): jump straight to rating the domains the person previously
+  // cared about (rated off-neutral); if none, fall back to the picker.
+  const startEditRatings = () => {
+    const rated = VALUE_DOMAINS.filter((d) => {
+      const r = draft[d.id];
+      return r && (r.importance !== 5 || r.consistency !== 5);
+    }).map((d) => d.id);
+    setSelectedDomains(rated.length > 0 ? rated : VALUE_DOMAINS.map((d) => d.id));
+    setRateStep(rated.length > 0 ? "rate" : "select");
+    setValuesMode("rate");
   };
   const saveCompass = () => {
     const snap: ValuesSnapshot = { date: todayStr(), timestamp: new Date().toLocaleTimeString(), ratings: draft };
@@ -232,14 +256,16 @@ export default function ValuesToActionScreen({ highlightDomains = [] }: { highli
       <section className="space-y-3" id="vta-why">
         {valuesMode === "rate" ? (
           <>
-            <div className="bg-rose-500/5 border border-rose-500/20 rounded-xl p-3">
-              <p className="text-xs text-slate-500 leading-relaxed">
-                For each area, rate how <span className="text-slate-300 font-semibold">important</span> it is
-                to you and how <span className="text-slate-300 font-semibold">consistently</span> you've lived
-                it recently. There are no right answers and no judgement. (Structure: Valued Living
-                Questionnaire, Wilson et al., 2010; ACT, Hayes et al., 2011)
-              </p>
-            </div>
+            {rateStep === "rate" && (
+              <div className="bg-rose-500/5 border border-rose-500/20 rounded-xl p-3">
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  For each area, rate how <span className="text-slate-300 font-semibold">important</span> it is
+                  to you and how <span className="text-slate-300 font-semibold">consistently</span> you've lived
+                  it recently. There are no right answers and no judgement. (Structure: Valued Living
+                  Questionnaire, Wilson et al., 2010; ACT, Hayes et al., 2011)
+                </p>
+              </div>
+            )}
             {highlightDomains.length > 0 && (
               <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl p-3" id="vta-highlight-note">
                 <p className="text-xs text-slate-400 leading-relaxed">
@@ -251,37 +277,79 @@ export default function ValuesToActionScreen({ highlightDomains = [] }: { highli
                 </p>
               </div>
             )}
-            <div className="space-y-3">
-              {/* Design review 2026-07-18: when the on-device model has already noticed value areas in chat
-                  (highlightDomains), float them to the top so the person starts with what's most alive for
-                  them rather than scrolling a flat list of every domain. Pure presentation order — the saved
-                  snapshot still covers all domains, so VLQ scoring and gap computation are unchanged. When
-                  nothing is highlighted, order is the canonical VALUE_DOMAINS order. */}
-              {(highlightDomains.length > 0
-                ? [...VALUE_DOMAINS].sort(
-                    (a, b) => (highlightDomains.includes(b.id) ? 1 : 0) - (highlightDomains.includes(a.id) ? 1 : 0),
-                  )
-                : VALUE_DOMAINS
-              ).map((dom) => {
-                const r = draft[dom.id];
-                return (
-                  <div key={dom.id} className={`glass rounded-2xl p-4 space-y-3 ${highlightDomains.includes(dom.id) ? "ring-1 ring-blue-400/40" : ""}`} id={`vta-domain-${dom.id}`}>
-                    <div>
-                      <h3 className="text-sm font-bold text-slate-100">{dom.label}</h3>
-                      <p className="text-xs text-slate-500 italic">{dom.examples}</p>
-                    </div>
-                    <CompactSlider label="Importance" tone="rose" value={r.importance} onChange={(v) => setRatingFor(dom.id, "importance", v)} />
-                    <CompactSlider label="Lived recently" tone="sky" value={r.consistency} onChange={(v) => setRatingFor(dom.id, "consistency", v)} />
-                  </div>
-                );
-              })}
-            </div>
-            <div className="flex gap-2">
-              {snapshot && (
-                <button onClick={() => setValuesMode("review")} className="flex-1 glass hover:bg-raised text-slate-300 font-semibold py-3 rounded-xl text-sm cursor-pointer">Cancel</button>
-              )}
-              <button onClick={saveCompass} id="vta-values-save" className="flex-[2] bg-rose-600 hover:bg-rose-500 text-white font-bold py-3 rounded-xl text-sm cursor-pointer flex items-center justify-center gap-2"><Check className="w-4 h-4" /> See where to focus</button>
-            </div>
+            {rateStep === "select" ? (
+              /* Step 1 — pick the areas that matter most right now (design review 2026-07-18: don't open on
+                 20 sliders). Highlighted-from-chat domains start selected. */
+              <>
+                <p className="text-sm font-semibold text-slate-200 px-0.5">Which areas matter most right now?</p>
+                <div className="flex flex-wrap gap-2" id="vta-domain-picker">
+                  {VALUE_DOMAINS.map((dom) => {
+                    const on = selectedDomains.includes(dom.id);
+                    return (
+                      <button
+                        key={dom.id}
+                        onClick={() => toggleDomain(dom.id)}
+                        aria-pressed={on}
+                        id={`vta-pick-${dom.id}`}
+                        className={`px-3.5 py-2.5 rounded-xl border text-sm transition-all cursor-pointer ${
+                          on ? "bg-rose-500/20 border-rose-500/50 text-rose-200 font-semibold" : "bg-page border-slate-800 text-slate-300 hover:border-slate-700 hover:text-slate-100"
+                        }`}
+                      >
+                        {dom.label}
+                        {on && <Check className="w-3.5 h-3.5 inline ml-1.5 -mt-0.5" aria-hidden="true" />}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setSelectedDomains(VALUE_DOMAINS.map((d) => d.id))}
+                    className="flex-1 glass hover:bg-raised text-slate-300 font-semibold py-3 rounded-xl text-sm cursor-pointer"
+                  >
+                    Rate all
+                  </button>
+                  <button
+                    onClick={() => { if (selectedDomains.length > 0) setRateStep("rate"); }}
+                    disabled={selectedDomains.length === 0}
+                    id="vta-pick-continue"
+                    className="flex-[2] bg-rose-600 hover:bg-rose-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl text-sm cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    Rate {selectedDomains.length > 0 ? `these ${selectedDomains.length}` : "these"} <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </>
+            ) : (
+              /* Step 2 — rate only the chosen areas. Unpicked domains keep 5/5 in the snapshot (no gap). */
+              <>
+                <button
+                  onClick={() => setRateStep("select")}
+                  className="text-[11px] font-semibold text-slate-400 hover:text-slate-100 flex items-center gap-1 cursor-pointer"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" /> Choose areas ({selectedDomains.length})
+                </button>
+                <div className="space-y-3">
+                  {VALUE_DOMAINS.filter((d) => selectedDomains.includes(d.id)).map((dom) => {
+                    const r = draft[dom.id];
+                    return (
+                      <div key={dom.id} className={`glass rounded-2xl p-4 space-y-3 ${highlightDomains.includes(dom.id) ? "ring-1 ring-blue-400/40" : ""}`} id={`vta-domain-${dom.id}`}>
+                        <div>
+                          <h3 className="text-sm font-bold text-slate-100">{dom.label}</h3>
+                          <p className="text-xs text-slate-500 italic">{dom.examples}</p>
+                        </div>
+                        <CompactSlider label="Importance" tone="rose" value={r.importance} onChange={(v) => setRatingFor(dom.id, "importance", v)} />
+                        <CompactSlider label="Lived recently" tone="sky" value={r.consistency} onChange={(v) => setRatingFor(dom.id, "consistency", v)} />
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="flex gap-2">
+                  {snapshot && (
+                    <button onClick={() => setValuesMode("review")} className="flex-1 glass hover:bg-raised text-slate-300 font-semibold py-3 rounded-xl text-sm cursor-pointer">Cancel</button>
+                  )}
+                  <button onClick={saveCompass} id="vta-values-save" className="flex-[2] bg-rose-600 hover:bg-rose-500 text-white font-bold py-3 rounded-xl text-sm cursor-pointer flex items-center justify-center gap-2"><Check className="w-4 h-4" /> See where to focus</button>
+                </div>
+              </>
+            )}
           </>
         ) : (
           <>
@@ -289,7 +357,7 @@ export default function ValuesToActionScreen({ highlightDomains = [] }: { highli
               <h3 className="text-xs uppercase font-mono tracking-widest text-slate-400 flex items-center gap-1.5 pt-1">
                 <Target className="w-3.5 h-3.5" /> Why — highest-leverage areas
               </h3>
-              <button onClick={() => setValuesMode("rate")} className="shrink-0 text-[11px] font-semibold text-slate-400 hover:text-slate-100 flex items-center gap-1 cursor-pointer glass rounded-lg px-2.5 py-1.5">
+              <button onClick={startEditRatings} className="shrink-0 text-[11px] font-semibold text-slate-400 hover:text-slate-100 flex items-center gap-1 cursor-pointer glass rounded-lg px-2.5 py-1.5">
                 <Pencil className="w-3 h-3" /> Edit
               </button>
             </div>

@@ -578,6 +578,8 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
          />
        )}
 
+{(behaviourInsights.length > 0 || proactiveCards.length > 0) && <SectionHeader label="What Nila noticed" />}
+
 {/* Behaviour Insights — patterns Nila noticed */}
         {behaviourInsights.length > 0 && (
           <div className="space-y-2">
@@ -922,6 +924,8 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
         </div>
       )}
 
+      {trendLength >= 2 && <SectionHeader label="Trends & measures" />}
+
       {/* ONE trend chart (7D/30D + Emotion/Context), fed by loadMoodHistory() */}
       {trendLength >= 2 ? (
         <div className="glass rounded-2xl p-4 space-y-4">
@@ -1188,6 +1192,18 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
           <Database className="w-3.5 h-3.5" /> Manage, export or delete your data
         </button>
       )}
+    </div>
+  );
+}
+
+/** A full-width section divider that breaks the long dashboard scroll into labeled bands (2026-07-18
+ *  design review: ~25 cards scrolled as one undifferentiated list). Rendered by the caller only when the
+ *  band below it has content, so a heading never sits above an empty section. */
+function SectionHeader({ label }: { label: string }) {
+  return (
+    <div className="flex items-center gap-2 pt-3" role="separator" aria-label={label}>
+      <h2 className="text-[11px] font-mono uppercase tracking-widest text-slate-500 whitespace-nowrap">{label}</h2>
+      <div className="flex-1 h-px bg-slate-800" />
     </div>
   );
 }

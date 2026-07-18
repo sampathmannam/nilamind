@@ -415,6 +415,9 @@ export default function TodayScreen({
           daily-intention prompt (until set) or the check-in prompt. (2026-07-18 QA: hoisted ABOVE the
           "Your patterns" fold — per docs/UX_RESEARCH.md the time-aware hero is a LEAD element, not
           something buried below a show-more toggle. The daily-intention branch opens the card inline.) */}
+      {/* Distinct HERO treatment (2026-07-18 design review): the lead action was byte-identical to every
+          other glass card, so nothing read as primary. Give it an elevated, accented surface (gradient +
+          accent border + a filled icon chip + larger label) so the eye lands here first. */}
       <button
         onClick={() => {
           if (hero.id === "daily_intention") {
@@ -424,12 +427,12 @@ export default function TodayScreen({
           }
           go(hero.route);
         }}
-        className="w-full glass hover:brightness-125 p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left flex items-center gap-3"
+        className="w-full bg-gradient-to-br from-blue-500/12 to-blue-500/[0.02] border border-blue-500/30 shadow-sm hover:brightness-110 p-5 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left flex items-center gap-3.5"
       >
-        <span className={`shrink-0 ${hero.color}`}>{hero.icon}</span>
+        <span className={`shrink-0 w-11 h-11 rounded-full bg-blue-500/15 flex items-center justify-center ${hero.color}`}>{hero.icon}</span>
         <span className="flex-1 min-w-0">
-          <span className="block text-sm font-bold text-slate-100">{hero.label}</span>
-          <span className="block text-[11px] text-slate-400">{hero.sub}</span>
+          <span className="block text-base font-bold text-slate-100">{hero.label}</span>
+          <span className="block text-xs text-slate-400 mt-0.5">{hero.sub}</span>
         </span>
         <ChevronRight className="w-5 h-5 text-slate-500 shrink-0" aria-hidden="true" />
       </button>
@@ -439,7 +442,10 @@ export default function TodayScreen({
           uses. Collapsed by default; the hero above reveals it (promptWhenClosed=false while promoting). */}
       <DailyIntentionCard ref={intentionCardRef} promptWhenClosed={hero.id !== "daily_intention"} />
 
-      {/* Talk to Nila card — always present, exactly one tap away, one of the 4 lead elements. */}
+      {/* Talk to Nila card — one tap away. Rendered only when the time-aware hero above ISN'T already
+          "Talk to Nila" (getHeroAction's default branch), so the two identical CTAs never both show
+          (2026-07-18 design review: duplicate "Talk to Nila" cards on a normal day). */}
+      {hero.id !== "nila" && (
       <button
         onClick={() => go("nila")}
         className="w-full glass hover:brightness-125 p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left flex items-center gap-3"
@@ -453,6 +459,7 @@ export default function TodayScreen({
         </span>
         <ChevronRight className="w-5 h-5 text-slate-500 shrink-0" aria-hidden="true" />
       </button>
+      )}
 
       {/* Show more toggle — hides informational cards by default */}
       <button

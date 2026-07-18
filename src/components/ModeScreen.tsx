@@ -121,11 +121,19 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   const [confirmNewChat, setConfirmNewChat] = useState(false); // "new conversation" confirm dialog
   const [welcomeBack, setWelcomeBack] = useState<string | null>(null); // lastVisitDate ISO or null
 
+  // Safety-plan prompts are mutually exclusive (2026-07-18 design review: the amber "review" + blue
+  // "follow-up" cards + the calm-moment nudge are three near-duplicate safety-plan asks that could all
+  // stack at once). Pick exactly ONE by clinical priority: the ~48h first follow-up (most impactful part
+  // of Stanley-Brown) > a periodic review > the calm-moment fill-a-blank nudge. This single card then
+  // takes ONE footer slot (below), instead of the review/follow-up cards bypassing the cap entirely.
+  const safetyPlanCard: "followup" | "review" | "calm" | null =
+    showSafetyPlanFollowUp ? "followup" : showSafetyPlanReview ? "review" : calmSafetyNudge?.show ? "calm" : null;
+
   // Compute which non-crisis nudges are visible (cap at MAX_NUDGES)
   const nonCrisisNudges = [
+    { id: "safetyPlan", show: !!safetyPlanCard },
     { id: "sleep", show: !!sleepProdromeNudge },
     { id: "jitai", show: !!jitaiNudge?.shouldNudge },
-    { id: "calmSafety", show: !!calmSafetyNudge?.show },
     { id: "pact", show: !!pactNotice },
     { id: "welcome", show: !!welcomeBack },
   ].filter((n) => n.show);
@@ -973,7 +981,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
             />
           )}
 
-{showSafetyPlanReview && (
+{visibleNudgeIds.has("safetyPlan") && safetyPlanCard === "review" && (
             <div
               className="w-full px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs"
               id="safety-plan-review-card"
@@ -1003,7 +1011,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           )}
 
           {/* 48h Safety Plan First Follow-Up (Stanley-Brown) */}
-          {showSafetyPlanFollowUp && (
+          {visibleNudgeIds.has("safetyPlan") && safetyPlanCard === "followup" && (
             <div
               className="w-full px-3 py-2 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-200 text-xs"
               id="safety-plan-followup-card"
@@ -1034,8 +1042,8 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
 
           {/* Calm-moment safety-plan nudge (Task 1.5, 2026-07-12 Wave 3) — only when mood is calm, no recent
               crisis, and a section is still blank. Never shown crisis-adjacent (cleared in openCrisis). */}
-          {/* Calm safety nudge — capped by priority system */}
-          {visibleNudgeIds.has("calmSafety") && calmSafetyNudge?.show && (
+          {/* Calm safety nudge — capped by priority system; only when no higher-priority safety-plan card */}
+          {visibleNudgeIds.has("safetyPlan") && safetyPlanCard === "calm" && calmSafetyNudge?.show && (
             <div
               key="calm-safety-plan-nudge"
               className="w-full px-3 py-2 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-200 text-xs"

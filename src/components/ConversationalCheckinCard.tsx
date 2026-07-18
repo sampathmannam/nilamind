@@ -63,7 +63,7 @@ export default function ConversationalCheckinCard({
         <button
           onClick={confirm}
           id="conv-checkin-confirm"
-          className="flex-1 flex items-center justify-center gap-2 sun-cta text-white font-bold py-2.5 rounded-xl text-sm cursor-pointer transition-all active:scale-[0.99]"
+          className="flex-1 flex items-center justify-center gap-2 sun-cta font-bold py-2.5 rounded-xl text-sm cursor-pointer transition-all active:scale-[0.99]"
         >
           <Check className="w-4 h-4" aria-hidden="true" />
           Yes, log it
