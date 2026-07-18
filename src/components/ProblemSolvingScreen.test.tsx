@@ -26,6 +26,12 @@ beforeEach(() => {
 });
 
 describe("ProblemSolvingScreen — PST fidelity (Task C)", () => {
+  it("pre-fills the 'define' input from a draft (worry → problem, structured from chat)", () => {
+    render(<ProblemSolvingScreen draft={{ problem: "Decide whether to keep the 2-hour commute or move" }} />);
+    const input = screen.getByPlaceholderText(/what's the problem/i) as HTMLInputElement;
+    expect(input.value).toBe("Decide whether to keep the 2-hour commute or move");
+  });
+
   it("shows positive-problem-orientation psychoeducation on the landing screen", () => {
     render(<ProblemSolvingScreen />);
     // Bell & D'Zurilla (2009): positive problem orientation is a named, efficacy-moderating PST component.

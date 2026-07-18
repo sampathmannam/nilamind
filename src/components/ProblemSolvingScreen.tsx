@@ -2,10 +2,12 @@ import React, { useState } from "react";
 import { Lightbulb, ChevronLeft, Plus } from "lucide-react";
 import { createSession, addSolution, setProsCons, chooseSolution, setActionPlan, completeSession, loadSessions, saveSession, type ProblemSession } from "../services/problemSolving";
 
-export default function ProblemSolvingScreen() {
+// `draft` pre-fills the "define a problem" input from a worry the on-device model structured out of the
+// chat (problemSolvingDraft.safeDraftProblem). The user edits it and brainstorms solutions themselves.
+export default function ProblemSolvingScreen({ draft }: { draft?: { problem: string } } = {}) {
   const [sessions, setSessions] = useState<ProblemSession[]>(loadSessions);
   const [active, setActive] = useState<string | null>(null);
-  const [problem, setProblem] = useState("");
+  const [problem, setProblem] = useState(draft?.problem ?? "");
   const [solutionText, setSolutionText] = useState("");
   const [editingSolution, setEditingSolution] = useState<string | null>(null);
   const [prosText, setProsText] = useState("");

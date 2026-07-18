@@ -37,7 +37,9 @@ import { getSessionChat, setSessionChat, clearSessionChat } from "../services/se
 import { localLlmLoadState } from "../services/localLlm";
 import { offlineBrainMessage } from "../services/nilaReflect";
 import { safeDraftThoughtRecord, type ThoughtRecordDraft } from "../services/thoughtRecordDraft";
+import { safeDraftProblem } from "../services/problemSolvingDraft";
 import ThoughtRecordScreen from "./ThoughtRecordScreen";
+import ProblemSolvingScreen from "./ProblemSolvingScreen";
 import ValuesToActionScreen from "./ValuesToActionScreen";
 import SafetyPlanScreen from "./SafetyPlanScreen";
 import { looksLikeArmRequest, requestArmedCheckin } from "../services/armedCheckin";
@@ -97,8 +99,9 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   const [loading, setLoading] = useState(false);
   const [listening, setListening] = useState(false);
   const [showTextInput, setShowTextInput] = useState(false);
-  const [auxView, setAuxView] = useState<"learn" | "thought_record" | "values_to_action" | "safety_plan" | null>(null);
+  const [auxView, setAuxView] = useState<"learn" | "thought_record" | "problem_solving" | "values_to_action" | "safety_plan" | null>(null);
   const [thoughtRecordDraft, setThoughtRecordDraft] = useState<ThoughtRecordDraft | undefined>();
+  const [problemDraft, setProblemDraft] = useState<{ problem: string } | undefined>();
   const [protocolCard, setProtocolCard] = useState<ProtocolCard | null>(() => protocolOfferCard(""));
   const [showSafetyPlanReview, setShowSafetyPlanReview] = useState(false);
   const [showSafetyPlanFollowUp, setShowSafetyPlanFollowUp] = useState(false);
@@ -499,6 +502,23 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
     setAuxView("thought_record");
   };
 
+  const openProblemSolving = async () => {
+    const lastUserMsg = messages.filter((m) => m.role === "user").pop()?.content || "";
+    setLoading(true);
+    const result = await safeDraftProblem(lastUserMsg);
+    setLoading(false);
+    if (!result.ok) {
+      if (result.reason === "crisis") {
+        openCrisis(true); // detected §9 in the user's last message
+        return;
+      }
+      // empty / nothing solvable → open a blank problem-solving screen
+    } else {
+      setProblemDraft({ problem: result.problem });
+    }
+    setAuxView("problem_solving");
+  };
+
   const handleOpenSafetyPlan = () => {
     setAuxView("safety_plan");
   };
@@ -584,6 +604,9 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
         break;
       case "thought_record":
         void openThoughtRecord();
+        break;
+      case "problem_solving":
+        void openProblemSolving();
         break;
       case "self_compassion": {
         const result = startProtocolChat("self-compassion");
@@ -1037,6 +1060,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                           winddown: "wind_down",
                           grounding: "grounding",
                           breathing: "breathing",
+                          problem_solving: "problem_solving",
                         };
                         if (actionMap[jitaiNudge.suggestedTool!]) {
                           handleQuickAction(actionMap[jitaiNudge.suggestedTool!]);
@@ -1215,6 +1239,24 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto p-4">
             <ThoughtRecordScreen draft={thoughtRecordDraft} />
+          </div>
+        </div>
+      )}
+
+      {auxView === "problem_solving" && (
+        <div className="fixed inset-0 z-50 bg-page flex flex-col animate-slide-in" id="problem-solving-sheet">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'var(--safe-top)' }}>
+            <span className="text-sm font-semibold text-slate-100">Problem-Solving</span>
+            <button
+              onClick={() => { setAuxView(null); setProblemDraft(undefined); }}
+              className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center"
+              aria-label="Close"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="flex-1 min-h-0 overflow-y-auto p-4">
+            <ProblemSolvingScreen draft={problemDraft} />
           </div>
         </div>
       )}
