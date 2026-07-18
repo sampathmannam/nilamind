@@ -66,7 +66,7 @@ export default function InMomentInsightCard({
                 <button
                   id="in-moment-try-skill"
                   onClick={onTrySkill}
-                  className="flex-1 py-1.5 px-3 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-[12px] font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5 min-h-[36px]"
+                  className="flex-1 py-1.5 px-3 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-[12px] font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px]"
                 >
                   <Sparkles className="w-3 h-3" /> Try this skill
                 </button>
@@ -75,7 +75,7 @@ export default function InMomentInsightCard({
                 <button
                   id="in-moment-dismiss-skill"
                   onClick={onDismissSkill}
-                  className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 text-[12px] transition-colors cursor-pointer min-h-[36px]"
+                  className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 text-[12px] transition-colors cursor-pointer min-h-[44px]"
                 >
                   Not now
                 </button>

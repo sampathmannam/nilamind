@@ -77,7 +77,7 @@ export default function PassiveInsightCard({
         {actionLabel && onAction && (
           <button
             onClick={onAction}
-            className="text-[11px] font-medium px-3 py-1 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+            className="text-[11px] font-medium px-3 min-h-[44px] inline-flex items-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
           >
             {actionLabel}
           </button>
@@ -85,7 +85,7 @@ export default function PassiveInsightCard({
         {onDismiss && (
           <button
             onClick={onDismiss}
-            className="text-[11px] opacity-60 hover:opacity-100 transition-opacity ml-auto"
+            className="text-[11px] px-3 min-h-[44px] inline-flex items-center opacity-60 hover:opacity-100 transition-opacity ml-auto"
           >
             Not now
           </button>

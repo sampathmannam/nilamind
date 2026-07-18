@@ -59,7 +59,7 @@ export default function ToolsScreen({ go, onEpisode, phoneEnabled, onOpenCrisis 
         {toolSearch && (
           <button
             onClick={() => setToolSearch("")}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 cursor-pointer"
+            className="absolute right-1 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-500 hover:text-slate-300 cursor-pointer"
             aria-label="Clear search"
           >
             <X className="w-4 h-4" />

@@ -44,7 +44,7 @@ export default function ConversationalCheckinCard({
       <button
         onClick={dismiss}
         aria-label="Not now"
-        className="absolute top-3 right-3 p-1.5 rounded-lg text-slate-500 hover:text-slate-300 cursor-pointer"
+        className="absolute top-3 right-3 p-1.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-300 cursor-pointer"
       >
         <X className="w-4 h-4" />
       </button>

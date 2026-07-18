@@ -126,7 +126,7 @@ export default function JournalScreen() {
             <button
               key={m}
               onClick={() => setMode(m)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium border cursor-pointer transition-all ${
+              className={`px-4 min-h-[44px] inline-flex items-center rounded-full text-xs font-medium border cursor-pointer transition-all ${
                 mode === m ? "bg-blue-900/40 border-blue-700/50 text-blue-300" : "border-slate-800 text-slate-500 hover:text-slate-300 hover:border-slate-700"
               }`}
               aria-pressed={mode === m}
@@ -140,7 +140,7 @@ export default function JournalScreen() {
           <div className="flex items-start gap-2 bg-page border border-slate-800 rounded-xl p-3 text-xs text-slate-400">
             <Sparkles className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />
             <span className="flex-1">Try writing about: {dailyPrompt}</span>
-            <button onClick={() => setPromptDismissed(true)} aria-label="Dismiss prompt" className="text-slate-600 hover:text-slate-400 cursor-pointer shrink-0">
+            <button onClick={() => setPromptDismissed(true)} aria-label="Dismiss prompt" className="text-slate-600 hover:text-slate-400 cursor-pointer shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center -m-2">
               <X className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -161,7 +161,7 @@ export default function JournalScreen() {
               onClick={() => setValence(o.valence)}
               aria-label={`Mood: ${o.label}`}
               aria-pressed={valence === o.valence}
-              className={`flex-1 py-1.5 rounded-lg text-lg cursor-pointer border transition-all ${
+              className={`flex-1 min-h-[44px] inline-flex items-center justify-center rounded-lg text-lg cursor-pointer border transition-all ${
                 valence === o.valence ? "bg-blue-900/40 border-blue-700/50" : "border-slate-800 hover:border-slate-700"
               }`}
             >
@@ -228,7 +228,7 @@ export default function JournalScreen() {
                   <button
                     onClick={() => handleDelete(e.id)}
                     aria-label="Delete entry"
-                    className="flex items-center gap-1.5 text-xs text-rose-400 hover:text-rose-300 cursor-pointer"
+                    className="flex items-center gap-1.5 min-h-[44px] text-xs text-rose-400 hover:text-rose-300 cursor-pointer"
                   >
                     <Trash2 className="w-3.5 h-3.5" /> Delete entry
                   </button>

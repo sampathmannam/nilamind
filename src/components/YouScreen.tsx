@@ -204,13 +204,13 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
               <div className="flex gap-2 mt-3">
                 <button
                   onClick={handleComplete}
-                  className="px-3 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-xs font-medium transition-colors cursor-pointer"
+                  className="px-4 min-h-[44px] inline-flex items-center rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-xs font-medium transition-colors cursor-pointer"
                 >
                   Mark done
                 </button>
                 <button
                   onClick={handleClear}
-                  className="px-3 py-1.5 rounded-lg hover:bg-slate-800/50 text-slate-500 text-xs font-medium transition-colors cursor-pointer"
+                  className="px-4 min-h-[44px] inline-flex items-center rounded-lg hover:bg-slate-800/50 text-slate-500 text-xs font-medium transition-colors cursor-pointer"
                 >
                   Clear
                 </button>

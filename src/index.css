@@ -82,8 +82,10 @@
   --color-purple-600: #997BB3;
   --color-purple-650: #8A6BAC;
 
-  /* sky → folded into the lavender family */
+  /* sky → folded into the lavender family (sky-400 was missing → the chat "Reach out" phone icon
+     leaked Tailwind's cold cyan-blue; caught on-device 2026-07-18) */
   --color-sky-300: #D1BFDF;
+  --color-sky-400: #BEA4D0;
   --color-sky-500: #AC8FC2;
 
   /* peach — special warm highlight (hero actions); use with dark text */
@@ -173,7 +175,7 @@
   --color-emerald-200: #2F7A57; --color-emerald-405: #3C8A63;
   --color-amber-100: #82550E; --color-amber-200: #82550E; --color-amber-450: #9A6A18;
   --color-purple-200: #5F4683; --color-purple-550: #6B5090;
-  --color-sky-200: #6B5090;
+  --color-sky-200: #6B5090; --color-sky-400: #7A5DA0;
   /* categorical accents (charts, skill-group tones) — themed so they don't go cold/over-bright on cream */
   --color-violet-200: #6E3D80; --color-violet-300: #7A4690; --color-violet-400: #8A4D9E; --color-violet-500: #9B5BA8;
   --color-orange-300: #C2521E; --color-orange-400: #D2591E; --color-orange-500: #E8743A;

@@ -208,7 +208,7 @@ export default function NilaCheckIn({ onLogged, onSkip }: NilaCheckInProps) {
         {draft.step === "mood" && (
           <button
             onClick={onSkip}
-            className="text-xs text-slate-400 hover:text-slate-200 underline underline-offset-2 cursor-pointer transition-colors"
+            className="text-xs text-slate-400 hover:text-slate-200 underline underline-offset-2 cursor-pointer transition-colors inline-flex items-center justify-center min-h-[44px] px-2"
             id="nila-checkin-skip-to-talk"
           >
             I just want to talk

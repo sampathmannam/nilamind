@@ -357,7 +357,7 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
                       <button
                         key={val}
                         onClick={() => answer(idx, val)}
-                        className={`py-2 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
+                        className={`min-h-[44px] px-1 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
                           selected
                             ? "bg-blue-600 border-blue-500 text-white"
                             : "bg-page border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200"

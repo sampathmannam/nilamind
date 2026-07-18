@@ -45,6 +45,8 @@ import ThoughtRecordScreen from "./ThoughtRecordScreen";
 import ProblemSolvingScreen from "./ProblemSolvingScreen";
 import ValuesToActionScreen from "./ValuesToActionScreen";
 import SafetyPlanScreen from "./SafetyPlanScreen";
+import Sheet from "./Sheet";
+import { useFocusTrap } from "../hooks/useFocusTrap";
 import { looksLikeArmRequest, requestArmedCheckin } from "../services/armedCheckin";
 import { protocolOfferCard, startProtocolChat, continueProtocolChat, type ProtocolCard } from "../services/protocolChat";
 import { abandonProtocol } from "../services/protocolProgress";
@@ -128,6 +130,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   // Phase: UX clutter fix — cap non-crisis nudges at 2 (crisis cards always shown)
   const MAX_NUDGES = 2;
   const [confirmNewChat, setConfirmNewChat] = useState(false); // "new conversation" confirm dialog
+  const newChatConfirmRef = useFocusTrap<HTMLDivElement>(confirmNewChat, () => setConfirmNewChat(false));
   const [welcomeBack, setWelcomeBack] = useState<string | null>(null); // lastVisitDate ISO or null
 
   // Safety-plan prompts are mutually exclusive (2026-07-18 design review: the amber "review" + blue
@@ -772,7 +775,9 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           onClick={() => setConfirmNewChat(false)}
         >
           <div
-            className="w-full max-w-xs rounded-2xl bg-slate-900 border border-slate-700 p-5 space-y-3"
+            ref={newChatConfirmRef}
+            tabIndex={-1}
+            className="w-full max-w-xs rounded-2xl bg-slate-900 border border-slate-700 p-5 space-y-3 outline-none"
             onClick={(e) => e.stopPropagation()}
           >
             <p className="text-sm font-semibold text-slate-100">Start a new conversation?</p>
@@ -944,7 +949,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                         <div className="flex gap-2 justify-end">
                           <button
                             onClick={() => { setSuggestionPrompt(null); setSuggestionText(""); }}
-                            className="px-3 py-2 rounded-md text-slate-400 hover:text-slate-200 hover:bg-slate-700/50 transition-colors cursor-pointer min-h-[36px] focus-ring"
+                            className="px-3 py-2 rounded-md text-slate-400 hover:text-slate-200 hover:bg-slate-700/50 transition-colors cursor-pointer min-h-[44px] focus-ring"
                             aria-label="Not now"
                           >
                             Not now
@@ -955,7 +960,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                               setSuggestionPrompt(null);
                               setSuggestionText("");
                             }}
-                            className="px-3 py-2 rounded-md bg-violet-500/20 hover:bg-violet-500/30 text-violet-200 font-medium transition-colors cursor-pointer min-h-[36px] focus-ring"
+                            className="px-3 py-2 rounded-md bg-violet-500/20 hover:bg-violet-500/30 text-violet-200 font-medium transition-colors cursor-pointer min-h-[44px] focus-ring"
                             aria-label="Share what would help"
                           >
                             Share
@@ -1281,94 +1286,38 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           button couldn't see (which previously exited the app during a crisis). */}
 
       {/* Aux view sheets */}
+      {/* Capture sheets — now the shared <Sheet> (2026-07-18 design review): brings the focus-trap +
+          scoped Escape + <h2> heading + role=dialog + focus-restore these hand-rolled overlays lacked.
+          Android back still closes them via closeSheetSignal; onClose mirrors each old close button
+          (clearing the relevant draft). */}
       {auxView === "learn" && (
-        <div className="fixed inset-0 z-50 bg-page flex flex-col animate-slide-in" id="learn-sheet">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'var(--safe-top)' }}>
-            <span className="text-sm font-semibold text-slate-100">Learn</span>
-            <button
-              onClick={() => setAuxView(null)}
-              className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center"
-              aria-label="Close"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-          <div className="flex-1 min-h-0 overflow-y-auto p-4">
-            <LearnScreen />
-          </div>
-        </div>
+        <Sheet open title="Learn" id="learn-sheet" bodyClassName="p-4" faultIsolated onClose={() => setAuxView(null)}>
+          <LearnScreen />
+        </Sheet>
       )}
 
       {auxView === "thought_record" && (
-        <div className="fixed inset-0 z-50 bg-page flex flex-col animate-slide-in" id="thought-record-sheet">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'var(--safe-top)' }}>
-            <span className="text-sm font-semibold text-slate-100">Thought Record</span>
-            <button
-              onClick={() => { setAuxView(null); setThoughtRecordDraft(undefined); }}
-              className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center"
-              aria-label="Close"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-          <div className="flex-1 min-h-0 overflow-y-auto p-4">
-            <ThoughtRecordScreen draft={thoughtRecordDraft} />
-          </div>
-        </div>
+        <Sheet open title="Thought Record" id="thought-record-sheet" bodyClassName="p-4" faultIsolated onClose={() => { setAuxView(null); setThoughtRecordDraft(undefined); }}>
+          <ThoughtRecordScreen draft={thoughtRecordDraft} />
+        </Sheet>
       )}
 
       {auxView === "problem_solving" && (
-        <div className="fixed inset-0 z-50 bg-page flex flex-col animate-slide-in" id="problem-solving-sheet">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'var(--safe-top)' }}>
-            <span className="text-sm font-semibold text-slate-100">Problem-Solving</span>
-            <button
-              onClick={() => { setAuxView(null); setProblemDraft(undefined); }}
-              className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center"
-              aria-label="Close"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-          <div className="flex-1 min-h-0 overflow-y-auto p-4">
-            <ProblemSolvingScreen draft={problemDraft} />
-          </div>
-        </div>
+        <Sheet open title="Problem-Solving" id="problem-solving-sheet" bodyClassName="p-4" faultIsolated onClose={() => { setAuxView(null); setProblemDraft(undefined); }}>
+          <ProblemSolvingScreen draft={problemDraft} />
+        </Sheet>
       )}
 
       {auxView === "values_to_action" && (
-        <div className="fixed inset-0 z-50 bg-page flex flex-col animate-slide-in" id="values-to-action-sheet">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'var(--safe-top)' }}>
-            <span className="text-sm font-semibold text-slate-100">Do one thing</span>
-            <button
-              onClick={() => { setAuxView(null); setValuesHighlight([]); }}
-              className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center"
-              aria-label="Close"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-          <div className="flex-1 min-h-0 overflow-y-auto p-4">
-            <ValuesToActionScreen highlightDomains={valuesHighlight} />
-          </div>
-        </div>
+        <Sheet open title="Do one thing" id="values-to-action-sheet" bodyClassName="p-4" faultIsolated onClose={() => { setAuxView(null); setValuesHighlight([]); }}>
+          <ValuesToActionScreen highlightDomains={valuesHighlight} />
+        </Sheet>
       )}
 
       {auxView === "safety_plan" && (
-        <div className="fixed inset-0 z-50 bg-page flex flex-col animate-slide-in" id="safety-plan-sheet">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'var(--safe-top)' }}>
-            <span className="text-sm font-semibold text-slate-100">My Safety Plan</span>
-            <button
-              onClick={() => { setAuxView(null); setSafetyPlanDraft(undefined); }}
-              className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center"
-              aria-label="Close"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-          <div className="flex-1 min-h-0 overflow-y-auto p-4">
-            <SafetyPlanScreen draft={safetyPlanDraft} />
-          </div>
-        </div>
+        <Sheet open title="My Safety Plan" id="safety-plan-sheet" bodyClassName="p-4" faultIsolated onClose={() => { setAuxView(null); setSafetyPlanDraft(undefined); }}>
+          <SafetyPlanScreen draft={safetyPlanDraft} />
+        </Sheet>
       )}
     </div>
   );
