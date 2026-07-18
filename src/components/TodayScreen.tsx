@@ -1,17 +1,14 @@
 import { localDateKey } from "../services/storageUtils";
-import { useRef, useState, useMemo, useEffect } from "react";
-import { Wind, MessageCircle, Moon, LayoutGrid, Sparkles, ChevronRight, HeartHandshake, Sparkle, Clock3, Target, LineChart, Activity, Lightbulb, LifeBuoy, Search, X } from "lucide-react";
+import { useRef, useState, useEffect } from "react";
+import { Wind, MessageCircle, Moon, Sparkles, ChevronRight, HeartHandshake, Sparkle, Clock3, Target, LineChart, Activity, LifeBuoy } from "lucide-react";
 import { getTimeMode, getUserState } from "../services/modeEngine";
 import { hasCheckinToday } from "../services/checkin";
 import { secureLocal } from "../services/secureLocal";
-import { buildToolGroups, type ToolGroup } from "./toolsRows";
 import { useLanguage, t } from "../services/i18n";
 import { loadInsights } from "../services/nilaInsights";
 import { loadAssessments, INSTRUMENTS } from "../services/assessments";
 import { isWellbeingDue, wellbeingCadence } from "../services/wellbeingTrack";
-import { getCapacityLevel } from "../services/capacitySignal";
 import { hasRhythmToday, loadTodayAnchors, RHYTHM_ANCHORS } from "../services/socialRhythm";
-import { getUserGoals } from "../services/chatSuggestions";
 import { getDailyIntention } from "../services/weeklyIntention";
 import DailyIntentionCard, { type DailyIntentionCardHandle } from "./DailyIntentionCard";
 import DailyContentCard from "./DailyContentCard";
@@ -27,38 +24,6 @@ import { getFeatureWindow } from "../services/signalStore";
 import { getPassiveSensingEnabled } from "../services/passiveSensingPrefs";
 import ProactiveNudgeRail from "./ProactiveNudgeRail";
 import type { TimeMode, UserState } from "../types/modes";
-
-// Goal -> the tool row ids it should promote to the front of their group, when present in that group.
-// Same personalization rationale/citation as chatSuggestions.ts's GOAL_CHIP_PRIORITY: customizable/relevant
-// content is a named engagement facilitator, closing the onboarding goal picker's previously write-only
-// loop (nilamind_user_goal), per Borghouts, Eikey, Mark et al. (2021), J Med Internet Res.
-const GOAL_TOOL_PRIORITY: Record<string, string[]> = {
-  "Feeling low": ["problem_solving", "values_to_action", "diary"],
-  "Managing stress": ["plan", "winddown", "diary"],
-  "Managing anxiety": ["plan", "exposure", "diary"],
-  "Tracking moods": ["ema_checkin", "diary", "assessment", "social_rhythm"],
-  "Building skills": ["problem_solving", "exposure"],
-  "Just curious": [],
-};
-
-/** Reorders each group's rows so goal-relevant tools lead, without changing group titles, membership,
- *  or row count. A no-op (returns groups unchanged, same array reference) when goals is empty or maps
- *  to no known tools — safe default for "Just curious" / no onboarding selection made. */
-export function personalizeToolOrder(groups: ToolGroup[], goals: string[]): ToolGroup[] {
-  const priorityIds = new Set<string>();
-  for (const goal of goals) {
-    for (const id of GOAL_TOOL_PRIORITY[goal] ?? []) priorityIds.add(id);
-  }
-  if (priorityIds.size === 0) return groups;
-  return groups.map((g) => ({
-    ...g,
-    rows: [...g.rows].sort((a, b) => {
-      const aRank = priorityIds.has(a.id) ? 0 : 1;
-      const bRank = priorityIds.has(b.id) ? 0 : 1;
-      return aRank - bRank;
-    }),
-  }));
-}
 
 const MOOD_EMOJI: Record<string, string> = {
   calm: "😌", good: "😊", okay: "😐", fine: "😊", anxious: "😰",
@@ -171,16 +136,12 @@ export default function TodayScreen({
   onEpisode: () => void;
   onOpenCrisis: () => void;
 }) {
-  const [showAllTools, setShowAllTools] = useState(false);
-  const [showMoreSkills, setShowMoreSkills] = useState(false);
   const [showExtraCards, setShowExtraCards] = useState(false);
-  const [toolSearch, setToolSearch] = useState("");
   const [proactiveNudge, setProactiveNudge] = useState<{ text: string; route: string; icon: string } | null>(null);
   useLanguage();
   const { timeOfDay } = useTimeOfDay();
   const timeMode = getTimeMode();
   const userState = getUserState();
-  const capacity = getCapacityLevel(userState);
 
   // Load proactive nudge from compound signals
   useEffect(() => {
@@ -211,27 +172,6 @@ export default function TodayScreen({
   const dailyIntentionSet = !!getDailyIntention();
   const hero = getHeroAction(timeMode, userState, dailyIntentionSet);
   const intentionCardRef = useRef<DailyIntentionCardHandle>(null);
-  const groups = personalizeToolOrder(buildToolGroups({ go, onEpisode, phoneEnabled }), getUserGoals());
-
-  // Tool search filter. The hero card above already promotes one tool (Grounding & breathing when
-  // anxious/elevated, Wind down at night, etc.), so drop that same tool from the "All tools" list to
-  // avoid showing it twice (device screenshot 2026-07-15 — "Grounding & breathing" appeared as both
-  // the hero and an In-the-moment row). hero.id "daily_intention"/"nila" match no tool row → no-op.
-  const filteredGroups = useMemo(() => {
-    const base = groups
-      .map((g) => ({ ...g, rows: g.rows.filter((r) => r.id !== hero.id) }))
-      .filter((g) => g.rows.length > 0);
-    if (!toolSearch.trim()) return base;
-    const q = toolSearch.toLowerCase();
-    return base
-      .map((g) => ({
-        ...g,
-        rows: g.rows.filter(
-          (r) => r.label.toLowerCase().includes(q) || r.sub.toLowerCase().includes(q),
-        ),
-      }))
-      .filter((g) => g.rows.length > 0);
-  }, [groups, toolSearch, hero.id]);
   const weekInsight = getWeekInsight();
   const nilaReflection = getNilaReflection();
   const hasAnyCheckins = (() => {
@@ -567,83 +507,6 @@ export default function TodayScreen({
         </div>
       )}
       </div>
-      )}
-
-      {/* Capacity-adaptive tools section (Phase 8: forgiving engagement) */}
-      {capacity === "low" && (
-        <p className="text-[11px] text-slate-500 text-center leading-relaxed italic">
-          A quiet day? That's okay. The essentials are above — everything else can wait.
-        </p>
-      )}
-      <button
-        onClick={() => setShowAllTools(!showAllTools)}
-        aria-expanded={showAllTools}
-        className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-slate-700/50 hover:border-slate-600/50 text-slate-400 hover:text-slate-300 text-sm font-medium transition-all cursor-pointer active:scale-[0.99]"
-      >
-        <LayoutGrid className="w-4 h-4" aria-hidden="true" />
-        {showAllTools ? "Hide tools" : "All tools"}
-      </button>
-
-      {/* Expandable tools list */}
-      {showAllTools && (
-        <div className="space-y-5 animate-tab-fade">
-          {/* Search input */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" aria-hidden="true" />
-            <input
-              type="text"
-              value={toolSearch}
-              onChange={(e) => setToolSearch(e.target.value)}
-              placeholder="Search tools..."
-              className="w-full pl-9 pr-8 py-2.5 rounded-xl bg-slate-800/50 border border-slate-700/50 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500/50 transition-colors"
-              aria-label="Search tools"
-            />
-            {toolSearch && (
-              <button
-                onClick={() => setToolSearch("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 cursor-pointer"
-                aria-label="Clear search"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-
-          {filteredGroups.filter((g) => showMoreSkills || !g.more).map((g) => (
-            <section key={g.title} className="space-y-2">
-              <h2 className="text-[11px] font-mono uppercase tracking-widest text-slate-500 px-1">{g.title}</h2>
-              <div className="space-y-2">
-                {g.rows.map((r) => (
-                  <button
-                    key={r.id}
-                    onClick={r.onTap}
-                    id={`tools-${r.id}`}
-                    className="w-full flex items-center gap-3 glass hover:brightness-125 p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left"
-                  >
-                    <span className="shrink-0"><r.Icon className={r.iconClass} aria-hidden="true" /></span>
-                    <span className="flex-1 min-w-0">
-                      <span className="block text-sm font-bold text-slate-100">{r.label}</span>
-                      <span className="block text-[11px] text-slate-400">{r.sub}</span>
-                    </span>
-                    <ChevronRight className="w-5 h-5 text-slate-500 shrink-0" aria-hidden="true" />
-                  </button>
-                ))}
-              </div>
-            </section>
-          ))}
-          {filteredGroups.filter((g) => showMoreSkills || !g.more).length === 0 && toolSearch && (
-            <p className="text-sm text-slate-500 text-center py-4">No tools match "{toolSearch}"</p>
-          )}
-          {!showMoreSkills && filteredGroups.some((g) => g.more) && !toolSearch && (
-            <button
-              onClick={() => setShowMoreSkills(true)}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-dashed border-slate-700/50 hover:border-slate-600/50 text-slate-400 hover:text-slate-300 text-sm font-medium transition-all cursor-pointer active:scale-[0.99]"
-            >
-              <Lightbulb className="w-4 h-4 text-amber-400" aria-hidden="true" />
-              Skills & practice
-            </button>
-          )}
-        </div>
       )}
     </div>
   );

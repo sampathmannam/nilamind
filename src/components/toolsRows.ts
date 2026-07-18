@@ -87,3 +87,35 @@ export function buildToolGroups({ go, onEpisode, phoneEnabled }: ToolRowDeps): T
       : []),
   ];
 }
+
+// Goal -> the tool row ids it should promote to the front of their group, when present in that group.
+// Same personalization rationale/citation as chatSuggestions.ts's GOAL_CHIP_PRIORITY: customizable/relevant
+// content is a named engagement facilitator, closing the onboarding goal picker's previously write-only
+// loop (nilamind_user_goal), per Borghouts, Eikey, Mark et al. (2021), J Med Internet Res.
+const GOAL_TOOL_PRIORITY: Record<string, string[]> = {
+  "Feeling low": ["problem_solving", "values_to_action", "diary"],
+  "Managing stress": ["plan", "winddown", "diary"],
+  "Managing anxiety": ["plan", "exposure", "diary"],
+  "Tracking moods": ["ema_checkin", "diary", "assessment", "social_rhythm"],
+  "Building skills": ["problem_solving", "exposure"],
+  "Just curious": [],
+};
+
+/** Reorders each group's rows so goal-relevant tools lead, without changing group titles, membership,
+ *  or row count. A no-op (returns groups unchanged, same array reference) when goals is empty or maps
+ *  to no known tools — safe default for "Just curious" / no onboarding selection made. */
+export function personalizeToolOrder(groups: ToolGroup[], goals: string[]): ToolGroup[] {
+  const priorityIds = new Set<string>();
+  for (const goal of goals) {
+    for (const id of GOAL_TOOL_PRIORITY[goal] ?? []) priorityIds.add(id);
+  }
+  if (priorityIds.size === 0) return groups;
+  return groups.map((g) => ({
+    ...g,
+    rows: [...g.rows].sort((a, b) => {
+      const aRank = priorityIds.has(a.id) ? 0 : 1;
+      const bRank = priorityIds.has(b.id) ? 0 : 1;
+      return aRank - bRank;
+    }),
+  }));
+}

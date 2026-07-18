@@ -16,7 +16,8 @@ vi.mock("../services/secureLocal", async (importOriginal) => {
 });
 vi.mock("../hooks/useHaptics", () => ({ hapticMedium: vi.fn() }));
 
-import TodayScreen, { personalizeToolOrder, getHeroAction } from "./TodayScreen";
+import TodayScreen, { getHeroAction } from "./TodayScreen";
+import { personalizeToolOrder } from "./toolsRows";
 import { buildToolGroups, type ToolGroup } from "./toolsRows";
 
 afterEach(() => { cleanup(); store.clear(); });

@@ -11,6 +11,7 @@ import CrisisOverlay from "./components/CrisisOverlay";
 import GroundingLibraryScreen from "./components/GroundingLibraryScreen";
 import ModeScreen from "./components/ModeScreen";
 import TodayScreen from "./components/TodayScreen";
+import ToolsScreen from "./components/ToolsScreen";
 import YouScreen from "./components/YouScreen";
 import ErrorBoundary from "./components/ErrorBoundary";
 import Sheet from "./components/Sheet";
@@ -86,14 +87,14 @@ import { getPilotState, markEndpointReminderScheduled, PILOT_ENDPOINT_REMINDER_B
 import { getUserState } from "./services/modeEngine";
 import { computeAdaptiveMode, getAdaptiveCssClass } from "./services/adaptiveTheme";
 import { warmVoskStt } from "./services/voskStt";
-import { MessageSquare, LayoutGrid, User } from "lucide-react";
+import { MessageSquare, LayoutGrid, Wrench, User } from "lucide-react";
 
 import { hapticLight } from "./hooks/useHaptics";
 
 // Navigation store
 import { NavProvider, useNav, hasOverlay, topOverlay, type NavApi, type SheetId } from "./services/navStore";
 
-type AppTab = "nila" | "today" | "you";
+type AppTab = "nila" | "today" | "tools" | "you";
 
 // ── Aux view label map for sheet headers ──
 const AUX_LABELS: Partial<Record<AuxView, string>> = {
@@ -448,6 +449,17 @@ function AppShell() {
             </div>
           </ErrorBoundary>
         )}
+        {state.tab === "tools" && (
+          <ErrorBoundary name="tools" onError={(err: Error, info: React.ErrorInfo) => console.error("[ErrorBoundary:tools] caught:", err, info)}>
+            <div className="flex-1 min-h-0 flex flex-col">
+              {/* Opaque status-bar mask — same fix as the Today/You tabs. */}
+              <div className="shrink-0 bg-page" style={{ height: 'var(--safe-top)' }} />
+              <div className="flex-1 min-h-0 overflow-y-auto px-4 pt-2 pb-12">
+                <ToolsScreen go={go} phoneEnabled={phoneEnabled} onEpisode={onEpisode} />
+              </div>
+            </div>
+          </ErrorBoundary>
+        )}
         {state.tab === "you" && (
           <ErrorBoundary name="you" onError={(err: Error, info: React.ErrorInfo) => console.error("[ErrorBoundary:you] caught:", err, info)}>
             <div className="flex-1 min-h-0 flex flex-col">
@@ -467,6 +479,7 @@ function AppShell() {
         {([
           { id: "nila" as AppTab, label: "Nila", Icon: MessageSquare },
           { id: "today" as AppTab, label: "Today", Icon: LayoutGrid },
+          { id: "tools" as AppTab, label: "Tools", Icon: Wrench },
           { id: "you" as AppTab, label: t("you"), Icon: User },
         ]).map(({ id, label, Icon }) => (
           <button

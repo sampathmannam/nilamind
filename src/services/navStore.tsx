@@ -2,7 +2,7 @@ import React, { createContext, useContext, useReducer, useCallback, useMemo } fr
 import { type AuxView, resolveNavTarget } from "./nav";
 import { suppressNudgesForCrisis } from "./notifications";
 
-export type AppTab = "nila" | "today" | "you";
+export type AppTab = "nila" | "today" | "tools" | "you";
 
 export type SheetId =
   | "settings"
