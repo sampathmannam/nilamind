@@ -19,8 +19,13 @@ const INITIAL_MEANS_PROGRESS: MeansCoachingProgress = {
   completed: false,
 };
 
-export default function SafetyPlanScreen() {
+// `draft` holds the four coping fields the on-device model structured out of the chat (safetyPlanDraft).
+// It only pre-fills fields that are currently EMPTY — it never overwrites a saved plan — and it is NOT
+// persisted here: the person reviews every field and the existing save/edit path is what commits it.
+// The model never drafts trustedPeople or professionals (contacts + crisis hotlines stay theirs / hardcoded).
+export default function SafetyPlanScreen({ draft }: { draft?: Partial<Pick<SafetyPlan, "warningSigns" | "internalCoping" | "socialDistractors" | "safeEnvironment">> } = {}) {
   const [safetyPlan, setSafetyPlan] = useState<SafetyPlan>(INITIAL_SAFETY_PLAN);
+  const [draftApplied, setDraftApplied] = useState<boolean>(false);
   const [savedStatus, setSavedStatus] = useState<boolean>(false);
   const savedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [showCoaching, setShowCoaching] = useState(false);
@@ -30,13 +35,19 @@ export default function SafetyPlanScreen() {
 
   useEffect(() => {
     const saved = secureLocal.getItem("nilamind_safetyplan");
-    if (saved) {
-      setSafetyPlan(parseSafetyPlan(saved)); // defensive: recovers valid fields, never throws on a corrupt blob
-    } else {
+    const base: SafetyPlan = saved
+      ? parseSafetyPlan(saved) // defensive: recovers valid fields, never throws on a corrupt blob
       // Pre-fill the crisis-lines section with the user's region (editable, not yet persisted).
-      const lines = getCrisisLines().map((l) => `${l.name}: ${l.display}`).join("\n");
-      setSafetyPlan((p) => ({ ...p, professionals: lines }));
+      : { ...INITIAL_SAFETY_PLAN, professionals: getCrisisLines().map((l) => `${l.name}: ${l.display}`).join("\n") };
+
+    // Draft merge — fill ONLY empty coping fields from the chat draft; never overwrite saved content, and
+    // never persist here (the person edits/saves themselves). Contacts + hotlines are untouched by design.
+    let applied = false;
+    for (const k of ["warningSigns", "internalCoping", "socialDistractors", "safeEnvironment"] as const) {
+      if (draft?.[k] && !base[k]) { base[k] = draft[k] as string; applied = true; }
     }
+    if (applied) setDraftApplied(true);
+    setSafetyPlan(base);
 
     const savedCoaching = secureLocal.getItem("nilamind_means_coaching");
     if (savedCoaching) {
@@ -145,6 +156,16 @@ export default function SafetyPlanScreen() {
       <div className="text-sm text-slate-300 leading-relaxed bg-card border-l-4 border-blue-500 p-4 rounded-r-xl border-y border-r border-slate-800/80">
         This plan stores everything strictly 100% locally on your phone. Fill this out during a calm moment so you have instant strategies when distress surges.
       </div>
+
+      {draftApplied && (
+        <div className="bg-amber-500/5 border border-amber-500/25 rounded-xl p-3" id="safety-plan-draft-note">
+          <p className="text-xs text-slate-300 leading-relaxed">
+            <span className="font-semibold text-amber-300">Started from our chat.</span> I filled in a few
+            fields from what you told me — please read each one, change anything that isn't right, and add the
+            people you'd reach out to yourself. Nothing is saved until you edit or save it.
+          </p>
+        </div>
+      )}
 
       {/* Form sections */}
       <div className="space-y-6">

@@ -39,6 +39,7 @@ import { offlineBrainMessage } from "../services/nilaReflect";
 import { safeDraftThoughtRecord, type ThoughtRecordDraft } from "../services/thoughtRecordDraft";
 import { safeDraftProblem } from "../services/problemSolvingDraft";
 import { safeDraftValueDomains } from "../services/valuesDraft";
+import { safeDraftSafetyPlan, type SafetyPlanDraftFields } from "../services/safetyPlanDraft";
 import ThoughtRecordScreen from "./ThoughtRecordScreen";
 import ProblemSolvingScreen from "./ProblemSolvingScreen";
 import ValuesToActionScreen from "./ValuesToActionScreen";
@@ -104,6 +105,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   const [thoughtRecordDraft, setThoughtRecordDraft] = useState<ThoughtRecordDraft | undefined>();
   const [problemDraft, setProblemDraft] = useState<{ problem: string } | undefined>();
   const [valuesHighlight, setValuesHighlight] = useState<string[]>([]);
+  const [safetyPlanDraft, setSafetyPlanDraft] = useState<SafetyPlanDraftFields | undefined>();
   const [protocolCard, setProtocolCard] = useState<ProtocolCard | null>(() => protocolOfferCard(""));
   const [showSafetyPlanReview, setShowSafetyPlanReview] = useState(false);
   const [showSafetyPlanFollowUp, setShowSafetyPlanFollowUp] = useState(false);
@@ -538,6 +540,23 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
     setAuxView("values_to_action");
   };
 
+  const openSafetyPlan = async () => {
+    const lastUserMsg = messages.filter((m) => m.role === "user").pop()?.content || "";
+    setLoading(true);
+    const result = await safeDraftSafetyPlan(lastUserMsg);
+    setLoading(false);
+    if (!result.ok) {
+      if (result.reason === "crisis") {
+        openCrisis(true); // an active-crisis message goes to §9 help, never into a drafting flow
+        return;
+      }
+      setSafetyPlanDraft(undefined); // nothing to draft → open a blank safety plan
+    } else {
+      setSafetyPlanDraft(result.draft); // pre-fills empty coping fields only; never saved until they save
+    }
+    setAuxView("safety_plan");
+  };
+
   const handleOpenSafetyPlan = () => {
     setAuxView("safety_plan");
   };
@@ -637,6 +656,9 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
       }
       case "values_to_action":
         void openValues();
+        break;
+      case "safety_plan":
+        void openSafetyPlan();
         break;
       case "reach_out":
         onOpenReachOut?.();
@@ -1303,7 +1325,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'var(--safe-top)' }}>
             <span className="text-sm font-semibold text-slate-100">My Safety Plan</span>
             <button
-              onClick={() => setAuxView(null)}
+              onClick={() => { setAuxView(null); setSafetyPlanDraft(undefined); }}
               className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center"
               aria-label="Close"
             >
@@ -1311,7 +1333,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
             </button>
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto p-4">
-            <SafetyPlanScreen />
+            <SafetyPlanScreen draft={safetyPlanDraft} />
           </div>
         </div>
       )}
