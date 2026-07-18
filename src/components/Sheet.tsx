@@ -1,6 +1,7 @@
-import React, { Suspense, useEffect, useRef } from "react";
+import React, { Suspense } from "react";
 import { X } from "lucide-react";
 import ErrorBoundary from "./ErrorBoundary";
+import { useFocusTrap } from "../hooks/useFocusTrap";
 
 // Safe-area top inset shared by every sheet header so it isn't hard-coded
 // inline at each call site (was repeated 7× across App.tsx).
@@ -43,27 +44,9 @@ export default function Sheet({
   bodyClassName,
   children,
 }: SheetProps) {
-  const dialogRef = useRef<HTMLDivElement>(null);
-  const prevFocusRef = useRef<HTMLElement | null>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
-
-  // Move keyboard/screen-reader focus INTO the sheet on open, and restore it to the previously-focused
-  // element on close (2026-07-18 design review: sheets never took focus, so keyboard users stayed on the
-  // element behind the overlay). Not a full Tab-trap, but it lands focus in the dialog and returns it.
-  useEffect(() => {
-    if (!open) return;
-    prevFocusRef.current = (document.activeElement as HTMLElement | null) ?? null;
-    dialogRef.current?.focus();
-    return () => { try { prevFocusRef.current?.focus?.(); } catch { /* previously-focused node gone */ } };
-  }, [open]);
+  // Focus-trap + scoped Escape + focus restore, shared with every other modal (crisis overlay, pickers).
+  // Only the topmost open trap responds to Escape/Tab, so stacked sheets don't all close at once.
+  const dialogRef = useFocusTrap<HTMLDivElement>(open, onClose);
 
   if (!open) return null;
 

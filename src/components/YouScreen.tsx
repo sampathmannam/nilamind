@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { ChevronRight, Sparkles, TrendingUp, Target, CheckCircle, X, Circle, Lightbulb } from "lucide-react";
 import CrisisHeaderButton from "./CrisisHeaderButton";
 import RatingPromptCard from "./RatingPromptCard";
+import { useFocusTrap } from "../hooks/useFocusTrap";
 import { buildYouGroups } from "./youRows";
 import { useLanguage } from "../services/i18n";
 import { computeCompassionateStreak } from "../services/streaks";
@@ -103,6 +104,7 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
   const weekSnapshot = getWeekSnapshot();
   const [intention, setIntentionState] = React.useState(getIntention());
   const [showPicker, setShowPicker] = React.useState(false);
+  const pickerRef = useFocusTrap<HTMLDivElement>(showPicker, () => setShowPicker(false));
   let streak = { current: 0, totalActiveDays: 0, message: "Welcome" };
   let capacity = "high" as "low" | "medium" | "high";
   try {
@@ -237,7 +239,9 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
       {showPicker && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-end" onClick={() => setShowPicker(false)}>
           <div
-            className="w-full bg-page rounded-t-2xl p-4 max-h-[80vh] overflow-y-auto"
+            ref={pickerRef}
+            tabIndex={-1}
+            className="w-full bg-page rounded-t-2xl p-4 max-h-[80vh] overflow-y-auto outline-none"
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-modal="true"
