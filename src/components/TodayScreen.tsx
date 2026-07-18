@@ -1,5 +1,5 @@
 import { localDateKey } from "../services/storageUtils";
-import { useRef, useState, useMemo } from "react";
+import { useRef, useState, useMemo, useEffect } from "react";
 import { Wind, MessageCircle, Moon, LayoutGrid, Sparkles, ChevronRight, HeartHandshake, Sparkle, Clock3, Target, LineChart, Activity, Lightbulb, LifeBuoy, Search, X } from "lucide-react";
 import { getTimeMode, getUserState } from "../services/modeEngine";
 import { hasCheckinToday } from "../services/checkin";
@@ -21,6 +21,11 @@ import LowFrictionReCheckIn from "./lowFrictionReCheckIn";
 import { useTimeOfDay, heroGradient, contextualSummary } from "../hooks/useTimeOfDay";
 import { buildNilaMessage } from "../services/nilaVoice";
 import { getTopAssessmentPrompt } from "../services/assessmentPrompts";
+import { selectProactiveNudge } from "../services/proactiveSurfaceRouter";
+import { detectCompoundSignals } from "../services/compoundDetector";
+import { getFeatureWindow } from "../services/signalStore";
+import { getPassiveSensingEnabled } from "../services/passiveSensingPrefs";
+import ProactiveNudgeRail from "./ProactiveNudgeRail";
 import type { TimeMode, UserState } from "../types/modes";
 
 // Goal -> the tool row ids it should promote to the front of their group, when present in that group.
@@ -170,11 +175,27 @@ export default function TodayScreen({
   const [showMoreSkills, setShowMoreSkills] = useState(false);
   const [showExtraCards, setShowExtraCards] = useState(false);
   const [toolSearch, setToolSearch] = useState("");
+  const [proactiveNudge, setProactiveNudge] = useState<{ text: string; route: string; icon: string } | null>(null);
   useLanguage();
   const { timeOfDay } = useTimeOfDay();
   const timeMode = getTimeMode();
   const userState = getUserState();
   const capacity = getCapacityLevel(userState);
+
+  // Load proactive nudge from compound signals
+  useEffect(() => {
+    if (!getPassiveSensingEnabled()) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const window = getFeatureWindow(30);
+        const signals = detectCompoundSignals(window);
+        const nudge = selectProactiveNudge(signals);
+        if (!cancelled) setProactiveNudge(nudge);
+      } catch { /* best-effort */ }
+    })();
+    return () => { cancelled = true; };
+  }, []);
   // Same greeting source as the Nila tab's header (t("greeting_*")) so the two tabs agree on wording
   // and both stay localized — this previously called modeEngine's English-only getGreeting() directly,
   // so a non-English user saw a translated greeting on Nila but untranslated English here.
@@ -297,6 +318,15 @@ export default function TodayScreen({
       {/* Daily inspiration — quote + tip. Informational, not a primary action → behind the "Your patterns"
           fold so the home leads with one clear thing (2026-07-18 QA, per docs/UX_RESEARCH.md "~4 elements"). */}
       {showExtraCards && <DailyContentCard />}
+
+      {/* Proactive nudge rail — surfaced from compound signal analysis */}
+      {proactiveNudge && (
+        <ProactiveNudgeRail
+          text={proactiveNudge.text}
+          icon={proactiveNudge.icon}
+          onTap={() => go(proactiveNudge.route)}
+        />
+      )}
 
       {/* Gentle Play Store rating prompt — only after 5+ positive sessions */}
       <RatingPromptCard />

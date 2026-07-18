@@ -23,6 +23,8 @@ import { extractWeeklyFacts } from "./weeklySynthesis";
 import { loadMoodHistory } from "./moodHistory";
 import { secureLocal } from "./secureLocal";
 import { getDiaryReminderPrefs } from "./diaryReminderPrefs";
+import { detectCompoundSignals } from "./compoundDetector";
+import { getFeatureWindow } from "./signalStore";
 
 // ── Proactive insight notification (Retention mechanic) ───────────────────────
 // Surfaces one pattern insight per week as a notification.
@@ -828,5 +830,63 @@ export async function syncWindDownReminder(): Promise<void> {
     });
   } catch (e) {
     console.error("[notifications] syncWindDownReminder failed:", e);
+  }
+}
+
+// ── Weekly passive insight notification (Phase 23) ───────────────────────────────
+// Surfaces one compound-signal insight per week. Fires on Tuesdays (avoids Wednesday
+// insight + Sunday digest). Respects all safety gates and category toggles.
+const PASSIVE_INSIGHT_NOTIF_ID = 1006;
+
+function contextualPassiveBody(): string | null {
+  try {
+    const signals = detectCompoundSignals(getFeatureWindow(30));
+    if (signals.length === 0) return null;
+
+    const signal = signals[0];
+    // Map signal IDs to human-readable passive insight text
+    const signalText: Record<string, string> = {
+      "activity-prodrome": "Your activity pattern has shifted — worth a gentle check-in.",
+      "circadian-disintegration": "Your sleep-wake rhythm has been more variable lately.",
+      "withdrawal-cascade": "You've been connecting less with others — no pressure, just noticing.",
+      "typing-motor-concordance": "Your typing and movement patterns have changed together.",
+      "resilience-cluster": "You're showing protective patterns — that's worth noting.",
+    };
+    return signalText[signal.id] ?? "Nila noticed a pattern in your rhythms this week.";
+  } catch {
+    return null;
+  }
+}
+
+export async function syncPassiveInsightNotification(): Promise<void> {
+  try {
+    await LocalNotifications.cancel({ notifications: [{ id: PASSIVE_INSIGHT_NOTIF_ID }] });
+  } catch { /* ok */ }
+
+  const body = contextualPassiveBody();
+  if (!body) return;
+
+  try {
+    const perms = await LocalNotifications.checkPermissions();
+    if (perms.display !== "granted") return;
+  } catch { return; }
+
+  if (isSafetySuppressed() || isDndActive()) return;
+  if (!isCategoryEnabled("insight")) return;
+
+  try {
+    await LocalNotifications.schedule({
+      notifications: [{
+        id: PASSIVE_INSIGHT_NOTIF_ID,
+        title: "NilaMind",
+        body,
+        schedule: { on: { weekday: 2, hour: 10, minute: 0 }, allowWhileIdle: true }, // Tuesday 10am
+        smallIcon: "ic_stat_icon_config_sample",
+        channelId: CHANNEL.gentle,
+        actionTypeId: ACTION_TYPE.snooze,
+      }],
+    });
+  } catch (e) {
+    console.error("[notifications] syncPassiveInsightNotification failed:", e);
   }
 }

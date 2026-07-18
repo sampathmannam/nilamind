@@ -53,6 +53,8 @@ import { memoryBiasBlock } from "./realityTesting";
 import { checkUsageCeiling, getTodayTurns } from "./usageCeilings";
 import { connectionContextBlock } from "./humanConnection";
 import { getContextBlock as getPopulationPriorBlock } from "./populationPriors";
+import { getFeatureWindow as getSignalFeatureWindow } from "./signalStore";
+import { computeTrends as computeSignalTrends, passiveSignalContextLine } from "./trendAggregator";
 
 function readArray(key: string): any[] {
   try {
@@ -429,6 +431,17 @@ export function buildPersonalContext(): string {
     }
   } catch { /* best-effort */ }
 
+  // Passive signal context — trend summaries from phone-derived features (Phase 21).
+  // Surfaces only when there's enough data (3+ days) and meaningful trends.
+  let passiveSignalBlock = "";
+  try {
+    const signalWindow = getSignalFeatureWindow(14);
+    if (signalWindow.length >= 3) {
+      const signalTrends = computeSignalTrends(signalWindow);
+      passiveSignalBlock = passiveSignalContextLine(signalTrends);
+    }
+  } catch { /* best-effort — passive sensing is optional */ }
+
   // Consolidated state-engine signal summary — surfaces the synthesized mood state and any
   // risk/protective signals the deterministic engines detect (sleep prodrome, circadian,
   // JITAI, BA, streak, social). Complements the per-block context above. Best-effort.
@@ -551,6 +564,12 @@ export function buildPersonalContext(): string {
   if (stateEngineBlock) {
     out.push("STATE SIGNALS (from all data):");
     out.push(stateEngineBlock);
+  }
+
+  // Passive signal context — trend summaries from phone-derived features (Phase 21).
+  // Surfaces only when there's enough data (3+ days) and meaningful trends.
+  if (passiveSignalBlock) {
+    out.push(passiveSignalBlock);
   }
 
   // Therapeutic alliance proxy — passive behavioral estimate of how the user is engaging.

@@ -53,6 +53,10 @@ const CATEGORIES: { key: string; label: string }[] = [
   { key: "nilamind_compassionate_letters", label: "Compassionate letters" },
   { key: "nilamind_shame_protect_logs", label: "Shame reflections" },
   { key: "nilamind_nila_sessions", label: "Nila session log" },
+  // Phase 24 — passive sensing (encrypted at rest)
+  { key: "nilamind_signal_features", label: "Passive sensing — features" },
+  { key: "nilamind_proactive_cards", label: "Passive sensing — proactive cards" },
+  { key: "nilamind_passive_sensing_status", label: "Passive sensing — status" },
 ];
 
 function countFor(key: string): number {

@@ -177,6 +177,17 @@ export type I18nKey =
   | "sec_ema"
   | "sec_notif_types"
   | "sec_inflection"
+  | "sec_passive_sensing"
+  | "sec_passive_sensing_sub"
+  | "pi_enable_label"
+  | "pi_enable_sub"
+  | "pi_extractions"
+  | "pi_no_sources"
+  | "pi_last_extraction"
+  | "pi_never"
+  | "pi_delete_data"
+  | "pi_delete_sub"
+  | "pi_delete_confirm"
   | "sec_health_connect"
   | "sec_on_device"
   | "sec_identity"
@@ -304,7 +315,31 @@ export type I18nKey =
   | "cr_visitNotePrompt2"
   | "cr_visitNotePrompt3"
   | "cr_consentTitle"
-  | "cr_consentBody";
+  | "cr_consentBody"
+  // Proactive Agent (Phase 23)
+  | "pi_card_sleep_pattern"
+  | "pi_card_activity_shift"
+  | "pi_card_circadian_insight"
+  | "pi_card_typing_pattern"
+  | "pi_card_resilience"
+  | "pi_card_phase_shift"
+  | "pi_card_routine_disruption"
+  | "pi_card_connection_dip"
+  | "pi_card_protective"
+  | "pi_card_body"
+  | "pi_nudge_sleep"
+  | "pi_nudge_activity"
+  | "pi_nudge_circadian"
+  | "pi_nudge_typing"
+  | "pi_nudge_phase"
+  | "pi_nudge_routine"
+  | "pi_nudge_connection"
+  | "pi_action_checkin"
+  | "pi_action_winddown"
+  | "pi_action_diary"
+  | "pi_action_assessment"
+  | "pi_action_protocol"
+  | "pi_dismiss";
 
 export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
   en: {
@@ -454,6 +489,17 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     sec_ema: "⚡ Quick Check-ins",
     sec_notif_types: "🔔 Notification types",
     sec_inflection: "💬 Gentle Nudges from Nila",
+    sec_passive_sensing: "📊 Passive Sensing",
+    sec_passive_sensing_sub: "Opt in to let Nila notice patterns in your phone usage, sleep, and typing — and surface gentle insights. Runs locally, never leaves your device. Off by default.",
+    pi_enable_label: "Enable proactive insights",
+    pi_enable_sub: "When on, Nila may show cards on your Dashboard and a nudge on Today when she notices a pattern worth your attention. Always optional, always dismissible.",
+    pi_extractions: "extractions",
+    pi_no_sources: "no active sources",
+    pi_last_extraction: "Last extraction",
+    pi_never: "never",
+    pi_delete_data: "Delete passive sensing data",
+    pi_delete_sub: "Removes all extracted features and status. Cannot be undone.",
+    pi_delete_confirm: "Delete all passive sensing data? This cannot be undone.",
     sec_health_connect: "🌙 Sleep from Health Connect",
     sec_on_device: "Nila Runs On Your Device",
     sec_identity: "🔑 Account & Recovery",
@@ -584,6 +630,30 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     cr_visitNotePrompt3: "What's changed since last visit",
     cr_consentTitle: "Confirm export",
     cr_consentBody: "I confirm this is my own self-report for my own visit. The data on this device belongs to me. NilaMind generated this file on-device and cannot see it.",
+    // Proactive Agent (Phase 23)
+    pi_card_sleep_pattern: "Sleep pattern shift",
+    pi_card_activity_shift: "Activity pattern shift",
+    pi_card_circadian_insight: "Circadian rhythm insight",
+    pi_card_typing_pattern: "Typing pattern change",
+    pi_card_resilience: "Protective patterns noticed",
+    pi_card_phase_shift: "Possible phase shift",
+    pi_card_routine_disruption: "Routine disruption",
+    pi_card_connection_dip: "Social connection dip",
+    pi_card_protective: "Resilience signals",
+    pi_card_body: "Nila noticed a pattern in your rhythms this week.",
+    pi_nudge_sleep: "Your sleep pattern has shifted — worth a gentle check-in.",
+    pi_nudge_activity: "Activity levels have changed — how are you feeling?",
+    pi_nudge_circadian: "Your daily rhythm has been more variable lately.",
+    pi_nudge_typing: "Your typing patterns have changed — want to check in?",
+    pi_nudge_phase: "Possible mood shift detected — a quick check-in might help.",
+    pi_nudge_routine: "Your routine has been disrupted — want to steady it?",
+    pi_nudge_connection: "You've been connecting less — no pressure, just noticing.",
+    pi_action_checkin: "Check in",
+    pi_action_winddown: "Wind down",
+    pi_action_diary: "Log your day",
+    pi_action_assessment: "Take a screen",
+    pi_action_protocol: "Try a protocol",
+    pi_dismiss: "Not now",
   },
   hi: {
     appName: "NilaMind",
@@ -732,6 +802,17 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     sec_ema: "त्वरित चेक-इन",
     sec_notif_types: "सूचना प्रकार",
     sec_inflection: "नीला से सौम्य संकेत",
+    sec_passive_sensing: "निष्क्रिय संवेदन",
+    sec_passive_sensing_sub: "नीला को आपके फ़ोन उपयोग, नींद और टाइपिंग में पैटर्न देखने दें और सौम्य अंतर्दृष्टि दिखाएं। स्थानीय रूप से चलता है, कभी भी डिवाइस से बाहर नहीं जाता। डिफ़ॉल्ट रूप से बंद।",
+    pi_enable_label: "सक्रिय अंतर्दृष्टि सक्षम करें",
+    pi_enable_sub: "चालू होने पर, नीला आपके डैशबोर्ड पर कार्ड और टुडे पर एक नज दिखा सकती है जब वह ध्यान देने योग्य पैटर्न देखती है। हमेशा वैकल्पिक, हमेशा खारिज करने योग्य।",
+    pi_extractions: "निष्कर्षण",
+    pi_no_sources: "कोई सक्रिय स्रोत नहीं",
+    pi_last_extraction: "अंतिम निष्कर्षण",
+    pi_never: "कभी नहीं",
+    pi_delete_data: "निष्क्रिय संवेदन डेटा हटाएं",
+    pi_delete_sub: "सभी निकाले गए फ़ीचर और स्थिति हटाता है। पूर्ववत नहीं किया जा सकता।",
+    pi_delete_confirm: "सभी निष्क्रिय संवेदन डेटा हटाएं? यह पूर्ववत नहीं किया जा सकता।",
     sec_health_connect: "हेल्थ कनेक्ट से नींद",
     sec_on_device: "नीला आपके डिवाइस पर चलती है",
     sec_identity: "खाता और रिकवरी",
@@ -856,6 +937,30 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     cr_visitNotePrompt3: "पिछली यात्रा के बाद क्या बदला",
     cr_consentTitle: "निर्यात की पुष्टि करें",
     cr_consentBody: "मैं पुष्टि करता/करती हूं कि यह मेरी अपनी यात्रा के लिए मेरा स्व-रिपोर्ट है। इस डिवाइस पर डेटा मेरा है। NilaMind ने इस फ़ाइल को ऑन-डिवाइस बनाया और इसे देख नहीं सकता।",
+    // Proactive Agent (Phase 23)
+    pi_card_sleep_pattern: "नींद का पैटर्न बदला",
+    pi_card_activity_shift: "गतिविधि का पैटर्न बदला",
+    pi_card_circadian_insight: "सर्कैडियन रिदम अंतर्दृष्टि",
+    pi_card_typing_pattern: "टाइपिंग पैटर्न में बदलाव",
+    pi_card_resilience: "सुरक्षात्मक पैटर्न देखे गए",
+    pi_card_phase_shift: "संभावित चरण परिवर्तन",
+    pi_card_routine_disruption: "दिनचर्या में व्यवधान",
+    pi_card_connection_dip: "सामाजिक जुड़ाव में कमी",
+    pi_card_protective: "लचीलापन के संकेत",
+    pi_card_body: "निला ने इस सप्ताह आपकी लय में एक पैटर्न देखा।",
+    pi_nudge_sleep: "आपका नींद का पैटर्न बदल गया है — एक सौम्य चेक-इन सही रहेगा।",
+    pi_nudge_activity: "गतिविधि का स्तर बदल गया है — आप कैसा महसूस कर रहे हैं?",
+    pi_nudge_circadian: "आपकी दैनिक लय हाल ही में अधिक परिवर्तनशील रही है।",
+    pi_nudge_typing: "आपके टाइपिंग पैटर्न बदल गए हैं — चेक-इन करना चाहेंगे?",
+    pi_nudge_phase: "संभावित मूड परिवर्तन का पता चला — एक त्वरित चेक-इन मदद कर सकता है।",
+    pi_nudge_routine: "आपकी दिनचर्या बाधित हुई है — इसे स्थिर करना चाहेंगे?",
+    pi_nudge_connection: "आप हाल ही में कम जुड़ रहे हैं — कोई दबाव नहीं, बस ध्यान दे रहे हैं।",
+    pi_action_checkin: "चेक-इन करें",
+    pi_action_winddown: "विंड डाउन",
+    pi_action_diary: "दिन लॉग करें",
+    pi_action_assessment: "स्क्रीन लें",
+    pi_action_protocol: "प्रोटोकॉल आज़माएं",
+    pi_dismiss: "अभी नहीं",
   },
   ta: {
     appName: "NilaMind",
@@ -1004,6 +1109,17 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     sec_ema: "விரைவான செக்-இன்கள்",
     sec_notif_types: "அறிவிப்பு வகைகள்",
     sec_inflection: "நீலாவிடமிருந்து மென்மையான நடவடிக்கைகள்",
+    sec_passive_sensing: "இறப்பி உணர்வு (பாசிவ் சென்சிங்)",
+    sec_passive_sensing_sub: "உங்கள் சாதன இயக்கத்தை ஒரே நேரத்தில் செலுத்துவதால் உங்கள் தினசரி நெறிமுறைகளில் மாற்றங்களை நீளவோர் பறக்கும் வகையில் கண்டறியவும். தரவு உங்கள் சாதனத்தை விட்டு வெளியேறாது. இயல்பாக முடக்கப்பட்டது.",
+    pi_enable_label: "நீலா மாற்றங்களை குறிப்பிட அனுமதியளிக்கவும்",
+    pi_enable_sub: "செயலாகும்போது, நீலா தございますвую தினசரி நெறிமுறையில் வாட்டமான மாற்றங்களை கவனித்து உங்களை மென்மையாகச் செக்-இன் செய்வதற்கு ஊக்குவிக்கும். எந்த எச்சரிக்கையும் இல்லை.",
+    pi_extractions: "செலுத்தல்கள்",
+    pi_no_sources: "மூலங்கள் இல்லை",
+    pi_last_extraction: "கடைசி செலுத்தல்",
+    pi_never: "எப்போதும் இல்லை",
+    pi_delete_data: "பாசிவ் சென்சிங் தரவு நீக்கு",
+    pi_delete_sub: "உங்கள் சாதனம் முதல் அனைத்து இயக்கத் தரவையும் நீக்கவும்",
+    pi_delete_confirm: "அனைத்து பாசிவ் சென்சிங் தரவையும் நீக்கவும்? இது மாற்ற முடியாது.",
     sec_health_connect: "ஹெல்த் கனெக்ட் வழியே தூக்கம்",
     sec_on_device: "நீலா உங்கள் சாதனத்தில் இயங்குகிறது",
     sec_identity: "கணக்கு மற்றும் மீட்பு",
@@ -1128,6 +1244,30 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     cr_visitNotePrompt3: "கடந்த வருகையிலிருந்து என்ன மாறியது",
     cr_consentTitle: "ஏற்றுமதியை உறுதிப்படுத்தவும்",
     cr_consentBody: "இது எனது சொந்த வருகைக்கான எனது சுய-புகார் என நான் உறுதிப்படுத்துகிறேன். இந்தச் சாதனத்தில் உள்ள தரவு எனக்கு சொந்தமானது. NilaMind இந்தக் கோப்பை சாதனத்திலேயே உருவாக்கியது மற்றும் அதைப் பார்க்க இயலாது.",
+    // Proactive Agent (Phase 23)
+    pi_card_sleep_pattern: "தூக்க வழக்கு மாற்றம்",
+    pi_card_activity_shift: "செயல்பாட்டு வழக்கு மாற்றம்",
+    pi_card_circadian_insight: "சர்க்காடியன் ரிதம் நுண்ணறிவு",
+    pi_card_typing_pattern: "தட்டச்சு வடிவம் மாற்றம்",
+    pi_card_resilience: "பாதுகாப்பு வழக்குகள் கவனிக்கப்பட்டது",
+    pi_card_phase_shift: "சாத்தியமான கட்ட மாற்றம்",
+    pi_card_routine_disruption: "வழக்கம் தடை",
+    pi_card_connection_dip: "சமூக தொடர்வு குறைவு",
+    pi_card_protective: "புணர்வு குறிகள்",
+    pi_card_body: "நிலா இந்த வாரம் உங்கள் ரிதங்களில் ஒரு வழக்கைக் கண்டறிந்தது.",
+    pi_nudge_sleep: "உங்கள் தூக்க வழக்கு மாறியுள்ளது — ஒரு மிருது சரிபார்ப்பு மதிப்புள்ளது.",
+    pi_nudge_activity: "செயல்பாட்டு நிலைகள் மாறியுள்ளன — நீங்கள் எப்படி உணர்கிறீர்கள்?",
+    pi_nudge_circadian: "உங்கள் நாள் ரிதம் சமீபத்தில் அதிக மாறுபட்டுள்ளது.",
+    pi_nudge_typing: "உங்கள் தட்டச்சு வடிவங்கள் மாறியுள்ளன — சரிபார்க்க விரும்புகிறீர்கள்?",
+    pi_nudge_phase: "சாத்தியமான மனநிலை மாற்றம் கண்டறியப்பட்டது — ஒரு வேகமான சரிபார்ப்பு உதவும்.",
+    pi_nudge_routine: "உங்கள் வழக்கம் ப semaine இடைநிலைப்படுத்தப்பட்டுள்ளது — அதை நிலைநிறுத்த விரும்புகிறீர்களா?",
+    pi_nudge_connection: "நீங்கள் சமீபத்தில் குறைவாக இணைக்கிறீர்கள் — அழுத்தம் இல்லை, எப்போதும் கவனித்து கொண்டேன்.",
+    pi_action_checkin: "சரிபார்க்க",
+    pi_action_winddown: "விடிப்பு",
+    pi_action_diary: "நாளை பதிவு செய்",
+    pi_action_assessment: "திரையிடு",
+    pi_action_protocol: "நெறிமுறையைப் பробை செய்",
+    pi_dismiss: "இப்போது இல்லை",
   },
   te: {
     appName: "NilaMind",
@@ -1276,6 +1416,17 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     sec_ema: "త్వరిత చెక్-ఇన్‌లు",
     sec_notif_types: "నోటిఫికేషన్ రకాలు",
     sec_inflection: "నీలా నుండి మృదువైన నడుపులు",
+    sec_passive_sensing: "పాసివ్ సెన్సింగ్",
+    sec_passive_sensing_sub: "మీ పరికరం చలనాన్ని عامًا పాలcardia ద్వారా మీ రోజുമర్ర నియమాల్లో మార్పులను సూక్ష్మంగా గుర్తించండి. డేటా మీ పరికరం నుండి வெளியelligenceOutside. డిఫాల్ట్‌గా Dense.",
+    pi_enable_label: "నీలా మార్పులను గమనించడానికి అనుమతించండి",
+    pi_enable_sub: "సక్రియమైతే, నీలా మీ దినచర్య నియమంలో సూక్ష్మ మార్పులను గమనించి మీకు వేచ్-ఇన్ చేయడానికి లేదా ప్రాటోకాల్ ప్రయత్నించడానికి మ 交通 COAX.",
+    pi_extractions: "నిర్వహణలు",
+    pi_no_sources: "మూలాలు లేవు",
+    pi_last_extraction: "చివరి నిష్క krozేషన్",
+    pi_never: "ఎప్పటికీ లేదు",
+    pi_delete_data: "పాసివ్ సెన్సింగ్ డేటా తొలగించండి",
+    pi_delete_sub: "మీ పరికరం నుండి సమస్త చలన డేటాను తొలగించండి",
+    pi_delete_confirm: "అన్ని پاسివ్ సెన్సింగ్ డేటాను తొలగించాలా? ఇది మricane.",
     sec_health_connect: "హెల్త్ కనెక్ట్ నుండి నిద్ర",
     sec_on_device: "నీలా మీ పరికరంపై నడుస్తుంది",
     sec_identity: "ఖాతా & రికవరీ",
@@ -1400,6 +1551,30 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     cr_visitNotePrompt3: "గత సందర్శన నుండి ఏమి మారింది",
     cr_consentTitle: "ఎగుమతిని ధృవీకరించండి",
     cr_consentBody: "ఇది నా సొంత సందర్శన కోసం నా స్వ-నివేదిక అని నేను ధృవీకరిస్తున్నాను. ఈ పరికరంలో ఉన్న డేటా నాది. NilaMind ఈ ఫైల్‌ను పరికరంలోనే సృష్టించింది మరియు దాన్ని చూడలేదు.",
+    // Proactive Agent (Phase 23)
+    pi_card_sleep_pattern: "నిద్రా môdల మార్పు",
+    pi_card_activity_shift: "ప్రారంభిక వ్యవస్థ మార్పు",
+    pi_card_circadian_insight: "సర్కాడియన్ రిథమ్ అంతర్దృష్టి",
+    pi_card_typing_pattern: "టైపింగ్ నమూనా మార్పు",
+    pi_card_resilience: "రాక్షణా నమూనలు కనిపించాయి",
+    pi_card_phase_shift: "సంభావ్యఫేజ్ మార్పు",
+    pi_card_routine_disruption: "రోజింటి మూడత",
+    pi_card_connection_dip: "సామాజిక సంప్రదింపు తగ్గింపు",
+    pi_card_protective: "లచితતા సంకేతాలు",
+    pi_card_body: "నిల ఈ వారం మీ రిథమ్స్‌లో ఒక నమూన.cancelled近年来发现了一个模式。",
+    pi_nudge_sleep: "మీ నిద్రా నమూనా మారిపోయింది — ایک सौम్య చెక్-ఇన్ విలువpañía.",
+    pi_nudge_activity: "ప్రారంభిక స్థరాలు మార్డాయి — మీరు ఎలా అనుభవిస్తున్నారు?",
+    pi_nudge_circadian: "మీ రోజువారి రిథమ్ ఇటీవలి ਸਮయంలో ఎక్కువ ద్వయరూపంగా ఉంది.",
+    pi_nudge_typing: "మీ టైపింగ్ నమూనాలు మార్డాయి — చెక్-ఇన్ చేయాలనుకుంటున్నారా?",
+    pi_nudge_phase: "సంభావ్య మూడ్ మార్పు గుర్తించబడింది — ਇੱਕ వేగమైన చెక్-ఇన్ సహాయపడుతుంది.",
+    pi_nudge_routine: "మీ రోజుపfernandoception着断层 — 你想稳定它吗？",
+    pi_nudge_connection: "మీరు последнее में कम जुड़ रहे हैं — कोई दबाव नहीं, बस ध्यान दे रहे हैं।",
+    pi_action_checkin: "చెక్-ఇన్",
+    pi_action_winddown: "వינ్డ్-డౌన్",
+    pi_action_diary: "రోజును లాగ్ చేయండి",
+    pi_action_assessment: "స్క్రీన్ తీసుకోండి",
+    pi_action_protocol: "ప్రొటోకాల్ ప్రయత్నించండి",
+    pi_dismiss: "ఇప్పుడు కాదు",
   },
 };
 

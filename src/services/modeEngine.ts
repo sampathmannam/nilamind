@@ -9,6 +9,9 @@ import { detectElevationRisk } from "./elevationGuard";
 import type { ElevationLevel } from "./elevationGuard";
 import { emaElevationSignal } from "./ema";
 import { chatElevationSignal } from "./chatElevation";
+import { detectCompoundSignals } from "./compoundDetector";
+import { getFeatureWindow } from "./signalStore";
+import { getPassiveSensingEnabled } from "./passiveSensingPrefs";
 import type { UserState, TimeMode } from "../types/modes";
 
 // Pick the higher of two elevation levels (none < elevated < high).
@@ -67,7 +70,9 @@ export function getUserState(): UserState | null {
   // Take the higher of the two. Wrapped separately so a storage error here can never discard a valid
   // check-in state.
   try {
-    return foldElevation(base, higherElevation(emaElevationSignal(), chatElevationSignal()));
+    const withElevation = foldElevation(base, higherElevation(emaElevationSignal(), chatElevationSignal()));
+    // Then fold compound signals (multi-modal, higher confidence)
+    return foldCompoundSignals(withElevation);
   } catch {
     return base;
   }
@@ -85,6 +90,49 @@ export function getUserState(): UserState | null {
 export function foldElevation(base: UserState | null, emaLevel: ElevationLevel): UserState | null {
   if (emaLevel === "none") return base;
   if (base === null || base === "calm") return "elevated";
+  return base;
+}
+
+/**
+ * Fold compound detector signals into the user state.
+ * Compound signals (activity-prodrome, circadian-disintegration, etc.) provide
+ * higher-confidence, multi-modal evidence than single EMA/chat signals alone.
+ * 
+ * Priority order (highest to lowest):
+ * - activity-prodrome → elevated (strongest mania prodrome signal)
+ * - circadian-disintegration → elevated (rhythm fragmentation = mania risk)
+ * - withdrawal-cascade → low (social withdrawal + low mood)
+ * - typing-motor-concordance → anxious (motor + typing concordance)
+ * - resilience-cluster → calm (protective patterns)
+ * 
+ * NEVER overrides explicit distress self-report (anxious/low).
+ */
+export function foldCompoundSignals(base: UserState | null): UserState | null {
+  if (!getPassiveSensingEnabled()) return base;
+  try {
+    const window = getFeatureWindow(30);
+    const signals = detectCompoundSignals(window);
+    if (signals.length === 0) return base;
+
+    // Never override explicit distress
+    if (base === "anxious" || base === "low") return base;
+
+    // Map signals to state upgrades (highest priority wins)
+    const signalPriority: Record<string, UserState> = {
+      "activity-prodrome": "elevated",
+      "circadian-disintegration": "elevated",
+      "withdrawal-cascade": "low",
+      "typing-motor-concordance": "anxious",
+      "resilience-cluster": "calm",
+    };
+
+    for (const signal of signals) {
+      const upgrade = signalPriority[signal.id];
+      if (upgrade && (base === null || base === "calm")) {
+        return upgrade;
+      }
+    }
+  } catch { /* best-effort */ }
   return base;
 }
 

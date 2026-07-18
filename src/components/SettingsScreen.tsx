@@ -1,7 +1,9 @@
 import React, { useState } from "react";
-import { Settings as SettingsIcon, Users, Shield, Gauge, ChevronDown, ChevronUp, Bell, Volume2, Sun, MessageSquare, Cpu } from "lucide-react";
+import { Settings as SettingsIcon, Users, Shield, Gauge, ChevronDown, ChevronUp, Bell, Volume2, Sun, MessageSquare, Cpu, Database, Eye, Trash2 } from "lucide-react";
 import { t, useLanguage } from "../services/i18n";
 import { isAutoUpdateEnabled, setAutoUpdateEnabled } from "../services/autoUpdate";
+import { getPassiveSensingEnabled, setPassiveSensingEnabled } from "../services/passiveSensingPrefs";
+import { getSensingStatus } from "../services/passiveSensingManager";
 import AppearanceSection from "./settings/AppearanceSection";
 import LanguageSection from "./settings/LanguageSection";
 import RegionSection from "./settings/RegionSection";
@@ -18,6 +20,7 @@ import FeedbackSection from "./settings/FeedbackSection";
 import PilotSection from "./settings/PilotSection";
 import CloudApiSection from "./settings/CloudApiSection";
 import PerformanceDashboard from "./PerformanceDashboard";
+import PassiveSensingSection from "./settings/PassiveSensingSection";
 
 interface SettingsScreenProps {
   onOpenCaregiver?: () => void;
@@ -71,6 +74,7 @@ export default function SettingsScreen({ onOpenCaregiver, onOpenLegal }: Setting
       <SettingsGroup icon={<Shield className="w-3 h-3 text-emerald-400" />} title="Privacy & Security">
         <IdentitySection />
         <PrivacyLockSection />
+        <PassiveSensingSection />
         {onOpenCaregiver && (
           <button
             onClick={onOpenCaregiver}

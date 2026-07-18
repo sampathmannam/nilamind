@@ -295,6 +295,87 @@ BIP39-derived · med-correlation default-in · no telemetry.
 
 ---
 
+## Phase 21–24 — Proactive AI Agent (Passive Sensing + Compound Analysis) 🟢 (planned 2026-07-18)
+
+**Why:** NilaMind is currently reactive — it waits for users to manually log. Research shows passive
+digital biomarkers (sleep timing AUC=0.98, activity AUC=0.84, phone usage circadian, keystroke dynamics
+R²=0.34) can detect mood shifts days before self-report. The shift: phone sensors capture behavioral
+signals → compound analysis detects patterns → proactive cards suggest (never diagnose) → user decides.
+
+**Research basis:** Lim et al. 2024 (N=168, AUC=0.98 for manic prediction), Ortiz et al. 2025 (N=127,
+7-day activity advance), BiAffect 2018 (keystroke R²=0.34-0.40), Kutcher et al. 2025 (45-study
+systematic review), Fang & Chen 2026 (52-study systematic review).
+
+**Design principles:**
+1. Process-and-discard — raw sensor data → features → discard. Only encrypted feature summaries persist.
+2. 100ms budget — all sensing on app foreground, no background tasks.
+3. Suggest-only — phase shifts surface as gentle cards; user decides; never diagnostic.
+4. Anti-fatigue — max 3 cards/day, 48h cooldown per type, 7-day cooldown for phase suggestions.
+5. Graceful degradation — all signals degrade to null; app works without any sensors.
+6. Privacy — zero network calls; raw data never stored; LLM sees only trend summaries.
+
+### Phase 21 — Sensing Foundation 🟢
+| # | Item | Tag |
+|---|------|-----|
+| 21.1 | `signalExtractor.ts` — pure feature extraction from existing stores: `DailyFeatureSet { sleep(5), activity(4), circadian(3), typing(4), heartRate(2), composite(5) }`; `extractAllFeatures(date)`, `extractTodayFeatures()`, `extractFeatureWindow(date, days)`, `computeComposites()` | 🟢 |
+| 21.2 | `signalExtractor.test.ts` — TDD: extraction from mock stores, composite flag logic, empty-store edge cases, 7-day window | 🟢 |
+| 21.3 | `signalStore.ts` — encrypted persistence via secureLocal: `upsertDailyFeature()`, `getFeatureWindow()`, `recordProactiveCardEvent()`, `isCardTypeInCooldown()`, `pruneOldFeatures()`; 90-day rolling cap | 🟢 |
+| 21.4 | `signalStore.test.ts` — TDD: upsert/read round-trip, 90-day cap, pruning, anti-fatigue cooldown | 🟢 |
+| 21.5 | `trendAggregator.ts` — rolling trend analysis: `computeTrends(window)`, `passiveSignalContextLine(trends)` for nilaContext (~120 chars) | 🟢 |
+| 21.6 | `trendAggregator.test.ts` — TDD: direction computation, context line generation, insufficient-data handling | 🟢 |
+| 21.7 | `passiveSensingManager.ts` — lifecycle orchestrator: `onAppForeground()`, `onAppBackground()`, `getSensingStatus()` | 🟢 |
+| 21.8 | `passiveSensingManager.test.ts` — TDD: orchestration flow, sensing status reporting | 🟢 |
+| 21.9 | `secureLocal.ts` — add `nilamind_signal_features`, `nilamind_proactive_cards`, `nilamind_passive_sensing_status` to SENSITIVE_KEYS | 🟢 |
+| 21.10 | `nilaContext.ts` — add `passiveSignalContextBlock()` at priority position in `buildPersonalContext()`, ~150 chars (🟡 flagged) | 🟡 |
+| 21.11 | i18n — `ps_*` keys for passive sensing status screen (en/hi/ta/te) | 🟢 |
+
+**Wire to:** nilaContext (🟡), secureLocal.
+**Invariants:** all pure functions, no UI, no new storage keys used until Phase 23. `npm run guard` green.
+
+### Phase 22 — Compound Analysis + Episode Suggestion 🟢
+| # | Item | Tag |
+|---|------|-----|
+| 22.1 | `compoundDetector.ts` — 5 research-grounded detection rules: (1) activity prodrome, (2) circadian disintegration, (3) withdrawal cascade, (4) typing-motor concordance, (5) resilience cluster. `detectCompoundSignals(window, currentMood?) → CompoundSignal[]` | 🟢 |
+| 22.2 | `compoundDetector.test.ts` — TDD: all 5 rules with positive + paired benign-control tests | 🟢 |
+| 22.3 | `episodeSuggester.ts` — gentle phase-shift detection: `detectPhaseShift(window, lastSuggestion?) → PhaseShiftSuggestion \| null`. Confidence threshold 0.6+, 7-day cooldown, suggest-only. Wellness framing | 🟢 |
+| 22.4 | `episodeSuggester.test.ts` — TDD: threshold behavior, cooldown, insufficient data, wellness language compliance | 🟢 |
+| 22.5 | `proactiveSurfaceRouter.ts` — card + nudge selection: `selectProactiveCards(signals, phaseShift?) → ProactiveSurfaceCard[]`, `selectProactiveNudge(signals)`. Max 3/day, 48h cooldown, safety suppression | 🟢 |
+| 22.6 | `proactiveSurfaceRouter.test.ts` — TDD: priority, anti-fatigue, safety suppression, max-per-day | 🟢 |
+| 22.7 | `stateEngine.ts` — add `signalFeatures: DailyFeatureSet[]` parameter, compound signals feed into risk/protective signals (🟡 flagged) | 🟡 |
+
+**Wire to:** stateEngine (🟡).
+**Invariants:** all pure functions, wellness framing, paired benign-control tests. `npm run guard` green.
+
+### Phase 23 — Proactive Surfaces 🟢
+| # | Item | Tag |
+|---|------|-----|
+| 23.1 | `PassiveInsightCard.tsx` — Dashboard card component: renders `ProactiveSurfaceCard` objects with icon + title + body + action button + dismiss | 🟢 |
+| 23.2 | `PassiveInsightCard.test.tsx` — TDD: render with card data, dismiss, action tap | 🟢 |
+| 23.3 | `ProactiveNudgeRail.tsx` — TodayScreen nudge rail: single line, icon + text, tappable | 🟢 |
+| 23.4 | `ProactiveNudgeRail.test.tsx` — TDD: render with nudge, dismiss, empty state | 🟢 |
+| 23.5 | `DashboardScreen.tsx` — import + render `PassiveInsightCard` when card available | 🟢 |
+| 23.6 | `TodayScreen.tsx` — import + render `ProactiveNudgeRail` below hero | 🟢 |
+| 23.7 | `notifications.ts` — add weekly passive signal notification (max 1/week) | 🟢 |
+| 23.8 | `proactiveEngine.ts` — add passive signal moments | 🟢 |
+| 23.9 | i18n — `pi_*` keys for proactive insight cards + nudges (en/hi/ta/te) | 🟢 |
+
+**Wire to:** DashboardScreen, TodayScreen, notifications, proactiveEngine.
+**Invariants:** wellness framing, max 3/day, anti-fatigue tested, safety suppression respected.
+
+### Phase 24 — Integration + Polish 🟡
+| # | Item | Tag |
+|---|------|-----|
+| 24.1 | Settings screen — passive sensing toggle (opt-in), data source status display | 🟢 |
+| 24.2 | YourDataScreen — passive sensing data deletion | 🟢 |
+| 24.3 | `modeEngine.ts` — incorporate compound signals (🟡 flagged) | 🟡 |
+| 24.4 | Battery verification — 24h device QA | 🟢 |
+| 24.5 | Device QA — adb probe: feature extraction, card rendering | 🟡 |
+| 24.6 | Final integration test suite | 🟢 |
+
+**Wire to:** SettingsScreen, YourDataScreen, modeEngine (🟡).
+
+---
+
 ## All Phases Complete (2026-07-14)
 - Phases 1–20: All shipped
 - P4 Localization: Paused by user (~45 screens remain)

@@ -38,6 +38,12 @@ import { checkUsageCeiling, getTodayTurns } from "../services/usageCeilings";
 import { assessConnection, loadConnections } from "../services/humanConnection";
 import { buildWeeklyReport } from "../services/weeklyReport";
 import { isPilotEnrolled, computePilotSummary } from "../services/pilotStudy";
+import { selectProactiveCards, markCardDismissed } from "../services/proactiveSurfaceRouter";
+import { dismissProactive } from "../services/proactiveEngine";
+import { detectCompoundSignals } from "../services/compoundDetector";
+import { detectPhaseShift } from "../services/episodeSuggester";
+import { getFeatureWindow } from "../services/signalStore";
+import { getPassiveSensingEnabled } from "../services/passiveSensingPrefs";
 import CrisisCard from "./CrisisCard";
 import WellbeingTrendCard from "./WellbeingTrendCard";
 import CalibrationPeriodCard from "./calibrationPeriod";
@@ -48,6 +54,7 @@ import TrendChart, { PHQ9_BANDS, GAD7_BANDS } from "./TrendChart";
 import InsightCard from "./InsightCard";
 import StreakCounter from "./StreakCounter";
 import AchievementBadge from "./AchievementBadge";
+import PassiveInsightCard from "./PassiveInsightCard";
 import { getAllAchievements, getAchievementCount } from "../services/achievements";
 import { stripProvenance } from "../services/emotionParse";
 import {
@@ -82,6 +89,7 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
   const [assessmentCrisis, setAssessmentCrisis] = useState(false);
   const [behaviourInsights, setBehaviourInsights] = useState<Insight[]>([]);
   const [behaviourDays, setBehaviourDays] = useState(0);
+  const [proactiveCards, setProactiveCards] = useState<ReturnType<typeof selectProactiveCards>>([]);
   useLanguage();
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [exportBusy, setExportBusy] = useState(false);
@@ -206,6 +214,22 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
     })();
     return () => { cancelled = true; };
   }, [mood]);
+
+  // Load proactive surface cards from compound detection
+  useEffect(() => {
+    if (!getPassiveSensingEnabled()) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const window = getFeatureWindow(30);
+        const signals = detectCompoundSignals(window);
+        const phaseShift = detectPhaseShift(window);
+        const cards = selectProactiveCards(signals, phaseShift);
+        if (!cancelled) setProactiveCards(cards);
+      } catch { /* best-effort */ }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const energyScatter = useMemo(() => {
     const range = timeRange === "7d" ? 7 : 30;
@@ -549,25 +573,49 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
          />
        )}
 
-       {/* Behaviour Insights — patterns Nila noticed */}
-       {behaviourInsights.length > 0 && (
-         <div className="space-y-2">
-           <p className="text-xs uppercase font-mono tracking-widest text-slate-500">Nila noticed</p>
-           {behaviourInsights.slice(0, 3).map((insight, i) => (
-             <InsightCard
-               key={i}
-               insight={{
-                 title: insight.title,
-                 body: insight.finding,
-                 trend: insight.direction === "protective" ? "improving" : insight.direction === "risk" ? "declining" : "stable",
-                 citation: insight.basis,
-               }}
-             />
-           ))}
-         </div>
-       )}
+{/* Behaviour Insights — patterns Nila noticed */}
+        {behaviourInsights.length > 0 && (
+          <div className="space-y-2">
+            <p className="text-xs uppercase font-mono tracking-widest text-slate-500">Nila noticed</p>
+            {behaviourInsights.slice(0, 3).map((insight, i) => (
+              <InsightCard
+                key={i}
+                insight={{
+                  title: insight.title,
+                  body: insight.finding,
+                  trend: insight.direction === "protective" ? "improving" : insight.direction === "risk" ? "declining" : "stable",
+                  citation: insight.basis,
+                }}
+              />
+            ))}
+          </div>
+        )}
 
-       {/* Top stats */}
+        {/* Proactive surface cards — compound signal patterns */}
+        {proactiveCards.length > 0 && (
+          <div className="space-y-2">
+            <p className="text-xs uppercase font-mono tracking-widest text-slate-500">Patterns noticed</p>
+            {proactiveCards.map((card) => {
+              const action = card.action;
+              return (
+                <PassiveInsightCard
+                  key={card.id}
+                  id={card.id}
+                  type={card.type}
+                  title={card.title}
+                  body={card.body}
+                  icon={card.icon}
+                  color={card.color}
+                  actionLabel={action?.label}
+                  onAction={action ? () => onOpenView?.(action.route) : undefined}
+                  onDismiss={() => markCardDismissed(card)}
+                />
+              );
+            })}
+          </div>
+        )}
+
+        {/* Top stats */}
       <div className="grid grid-cols-2 gap-2">
         <Stat icon={<CalendarCheck className="w-4 h-4 text-emerald-400" />} value={`${freq14}/14`} label={t("days_logged")} />
         <Stat icon={<MessageSquare className="w-4 h-4 text-purple-400" />} value={String(nila.last7)} label={t("nila_chats_7d")} />
