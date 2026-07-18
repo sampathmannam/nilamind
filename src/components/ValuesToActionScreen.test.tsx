@@ -31,6 +31,22 @@ beforeEach(() => {
   for (const k of Object.keys(store)) delete store[k];
 });
 
+describe("ValuesToActionScreen — values captured from chat", () => {
+  it("surfaces the domains that came up in chat as a starting point, without pre-rating anything", () => {
+    render(<ValuesToActionScreen highlightDomains={["family", "work"]} />);
+    const note = screen.getByText(/these came up when we talked/i);
+    expect(note.textContent).toContain("Family");
+    expect(note.textContent).toContain("Work & purpose");
+    // The person still rates — importance sliders exist and are untouched (default), nothing pre-filled.
+    expect(store["nilamind_values"]).toBeUndefined();
+  });
+
+  it("shows no such banner when nothing came up", () => {
+    render(<ValuesToActionScreen />);
+    expect(screen.queryByText(/these came up when we talked/i)).toBeNull();
+  });
+});
+
 describe("ValuesToActionScreen — BA mood-loop closure (Task C)", () => {
   it("captures moodBefore when planning an activity for later", () => {
     render(<ValuesToActionScreen />);

@@ -60,7 +60,10 @@ const emptyDraft = (): Record<string, DomainRating> => {
   return d;
 };
 
-export default function ValuesToActionScreen() {
+// `highlightDomains` are value areas the on-device model noticed the person talking about (valuesDraft).
+// They're surfaced as a gentle starting point — NEVER pre-rated. The person still rates every domain; ACT
+// values are self-chosen, so the model only points at what came up, it doesn't decide what matters.
+export default function ValuesToActionScreen({ highlightDomains = [] }: { highlightDomains?: string[] } = {}) {
   // ── Values (WHY) state ──
   const [snapshot, setSnapshot] = useState<ValuesSnapshot | null>(null);
   const [valuesMode, setValuesMode] = useState<"rate" | "review">("rate");
@@ -237,11 +240,22 @@ export default function ValuesToActionScreen() {
                 Questionnaire, Wilson et al., 2010; ACT, Hayes et al., 2011)
               </p>
             </div>
+            {highlightDomains.length > 0 && (
+              <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl p-3" id="vta-highlight-note">
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  These came up when we talked:{" "}
+                  <span className="text-slate-200 font-semibold">
+                    {VALUE_DOMAINS.filter((d) => highlightDomains.includes(d.id)).map((d) => d.label).join(", ")}
+                  </span>
+                  . A natural place to start — but rate whatever feels right to you.
+                </p>
+              </div>
+            )}
             <div className="space-y-3">
               {VALUE_DOMAINS.map((dom) => {
                 const r = draft[dom.id];
                 return (
-                  <div key={dom.id} className="glass rounded-2xl p-4 space-y-3" id={`vta-domain-${dom.id}`}>
+                  <div key={dom.id} className={`glass rounded-2xl p-4 space-y-3 ${highlightDomains.includes(dom.id) ? "ring-1 ring-blue-400/40" : ""}`} id={`vta-domain-${dom.id}`}>
                     <div>
                       <h3 className="text-sm font-bold text-slate-100">{dom.label}</h3>
                       <p className="text-xs text-slate-500 italic">{dom.examples}</p>

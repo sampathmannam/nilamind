@@ -38,6 +38,7 @@ import { localLlmLoadState } from "../services/localLlm";
 import { offlineBrainMessage } from "../services/nilaReflect";
 import { safeDraftThoughtRecord, type ThoughtRecordDraft } from "../services/thoughtRecordDraft";
 import { safeDraftProblem } from "../services/problemSolvingDraft";
+import { safeDraftValueDomains } from "../services/valuesDraft";
 import ThoughtRecordScreen from "./ThoughtRecordScreen";
 import ProblemSolvingScreen from "./ProblemSolvingScreen";
 import ValuesToActionScreen from "./ValuesToActionScreen";
@@ -102,6 +103,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   const [auxView, setAuxView] = useState<"learn" | "thought_record" | "problem_solving" | "values_to_action" | "safety_plan" | null>(null);
   const [thoughtRecordDraft, setThoughtRecordDraft] = useState<ThoughtRecordDraft | undefined>();
   const [problemDraft, setProblemDraft] = useState<{ problem: string } | undefined>();
+  const [valuesHighlight, setValuesHighlight] = useState<string[]>([]);
   const [protocolCard, setProtocolCard] = useState<ProtocolCard | null>(() => protocolOfferCard(""));
   const [showSafetyPlanReview, setShowSafetyPlanReview] = useState(false);
   const [showSafetyPlanFollowUp, setShowSafetyPlanFollowUp] = useState(false);
@@ -519,6 +521,23 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
     setAuxView("problem_solving");
   };
 
+  const openValues = async () => {
+    const lastUserMsg = messages.filter((m) => m.role === "user").pop()?.content || "";
+    setLoading(true);
+    const result = await safeDraftValueDomains(lastUserMsg);
+    setLoading(false);
+    if (!result.ok) {
+      if (result.reason === "crisis") {
+        openCrisis(true); // detected §9 in the user's last message
+        return;
+      }
+      setValuesHighlight([]); // nothing clearly came up → open the tool as usual
+    } else {
+      setValuesHighlight(result.domains); // presence-only; the person still rates everything
+    }
+    setAuxView("values_to_action");
+  };
+
   const handleOpenSafetyPlan = () => {
     setAuxView("safety_plan");
   };
@@ -617,7 +636,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
         break;
       }
       case "values_to_action":
-        setAuxView("values_to_action");
+        void openValues();
         break;
       case "reach_out":
         onOpenReachOut?.();
@@ -1266,7 +1285,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0" style={{ paddingTop: 'var(--safe-top)' }}>
             <span className="text-sm font-semibold text-slate-100">Do one thing</span>
             <button
-              onClick={() => setAuxView(null)}
+              onClick={() => { setAuxView(null); setValuesHighlight([]); }}
               className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center"
               aria-label="Close"
             >
@@ -1274,7 +1293,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
             </button>
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto p-4">
-            <ValuesToActionScreen />
+            <ValuesToActionScreen highlightDomains={valuesHighlight} />
           </div>
         </div>
       )}
