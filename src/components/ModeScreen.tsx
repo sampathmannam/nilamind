@@ -29,9 +29,9 @@ import WelcomeBackCard from "./welcomeBack";
 import type { CheckInEntry } from "../types";
 import { sendToNila } from "../services/sendToNila";
 import { NilaMode, NilaUiMessage, shouldBlockForCrisisAsync } from "../services/nilaSend";
-import { suppressNudgesForCrisis, notifyReplyReady } from "../services/notifications";
+import { notifyReplyReady } from "../services/notifications";
 import SoftCrisisCard from "./SoftCrisisCard";
-import { getSessionChat, setSessionChat, clearSessionChat } from "../services/sessionChat";
+import { getSessionChat, clearSessionChat } from "../services/sessionChat";
 import { localLlmLoadState } from "../services/localLlm";
 import { offlineBrainMessage } from "../services/nilaReflect";
 import { safeDraftThoughtRecord, type ThoughtRecordDraft } from "../services/thoughtRecordDraft";
@@ -43,6 +43,7 @@ import { selectVisibleNudges } from "./nudgeSelection";
 import NudgeRail from "./NudgeRail";
 import { useNudges } from "../hooks/useNudges";
 import { useCheckinGate } from "../hooks/useCheckinGate";
+import { useCrisisGate } from "../hooks/useCrisisGate";
 import { useFocusTrap } from "../hooks/useFocusTrap";
 import { looksLikeArmRequest, requestArmedCheckin } from "../services/armedCheckin";
 import { protocolOfferCard, startProtocolChat, continueProtocolChat, type ProtocolCard } from "../services/protocolChat";
@@ -97,7 +98,6 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   const [valuesHighlight, setValuesHighlight] = useState<string[]>([]);
   const [safetyPlanDraft, setSafetyPlanDraft] = useState<SafetyPlanDraftFields | undefined>();
   const [protocolCard, setProtocolCard] = useState<ProtocolCard | null>(() => protocolOfferCard(""));
-  const [softCrisisCard, setSoftCrisisCard] = useState(false); // 2026-07-12 Wave 3: soft tier, classifier-only hits
   const [confirmNewChat, setConfirmNewChat] = useState(false); // "new conversation" confirm dialog
   const newChatConfirmRef = useFocusTrap<HTMLDivElement>(confirmNewChat, () => setConfirmNewChat(false));
 
@@ -143,41 +143,19 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   // the transcript is never persisted/restored (keying the clear on a transient boolean re-persisted it on dismiss).
   // hadCrisisRef itself is declared above (before useNudges, which reads it).
   const crisisPendingRef = useRef(false); // #5-out (re-audit): a sent turn whose async §9 verdict is still pending
-  // openCrisis(detected, tier): `detected` = the model/gate FLAGGED a §9 crisis in the user's turn. Only then
-  // do we latch "never persist" + wipe the transcript + clear self-help cards (§9 precedence) — UNCONDITIONAL
-  // on `detected`, NOT gated by tier, so a soft-tier hit gets the identical protection as a full-tier hit.
-  // A PROACTIVE open (the user tapping crisis resources) must NOT wipe their in-progress conversation
-  // (#6 re-audit) nor offer nothing.
-  //
-  // `tier` (2026-07-12 Wave 3, two-tier crisis surface; RETIERED 2026-07-12 Bug 1 fix — adversarial review
-  // found the original branch used `source === "classifier"`, which wrongly treated EVERY classifier-only
-  // hit as low-confidence, including genuine high-confidence disclosures the keyword floor structurally
-  // cannot see — e.g. "everyone would be better off without me" scores 0.8837. `tier` is the field that
-  // actually reflects confidence — see crisisClassifier.ts's CrisisTier docs): tier === "soft" renders the
-  // SOFT inline SoftCrisisCard instead of the full-screen CrisisOverlay. A null/unspecified tier (proactive
-  // taps, the arm-request branch, ambiguous/fail-closed cases), tier === "full", and every other existing call
-  // site all fall through unchanged to onOpenCrisis?.() — bit-for-bit the same full takeover as today. Only
-  // the RENDERING SURFACE differs by tier; every other invariant above stays unconditional.
-  const openCrisis = (detected = false, tier: "full" | "soft" | null = null) => {
-    if (detected) {
-      hadCrisisRef.current = true;
-      clearSessionChat();      // the flagged crisis turn must never persist/restore
-      setProtocolCard(null);
-      void suppressNudgesForCrisis(); // P6.4: latch no-nudge + yank queued pings, same as App.tsx's activateCrisis
-    }
-    nudges.clearForCrisis(); // §9 takes precedence: clears pact + welcome-back + calm-moment safety-plan nudge (Task 1.5)
-    if (detected && tier === "soft") {
-      setSoftCrisisCard(true); // soft tier — inline card, no full takeover
-      return;
-    }
-    // Bug 2 fix (2026-07-12, adversarial review): the full-takeover branch must unconditionally clear any
-    // STALE soft card from an earlier turn. Repro without this: soft card shows for message A → message B is
-    // a full-tier hit before the card is dismissed → CrisisOverlay opens on top of it → user dismisses the
-    // overlay → the stale card reappears underneath, re-asking "Can I pause here?" right after the user just
-    // went through the full safety-plan flow.
-    setSoftCrisisCard(false);
-    onOpenCrisis?.();
-  };
+  // The §9 crisis + chat-persistence seam — openCrisis(), softCrisisCard, and the persist/restore effects —
+  // lives in useCrisisGate (Phase 4 slice 4a). hadCrisisRef + crisisPendingRef are OWNED here and passed in
+  // (single objects; handleSendMessage / startNewConversation still mutate them directly). `messages` also
+  // stays owned here (it is read by useNudges, the selector, protocol handlers, and the render).
+  const { softCrisisCard, setSoftCrisisCard, openCrisis } = useCrisisGate({
+    hadCrisisRef,
+    crisisPendingRef,
+    messages,
+    setMessages,
+    onOpenCrisis,
+    clearNudges: nudges.clearForCrisis,
+    clearProtocol: () => setProtocolCard(null),
+  });
   const bottomRef = useRef<HTMLDivElement>(null); // #23: scroll-to-newest anchor
 
   // #23 (audit): keep the newest reply in view (ModeScreen had no scroll-to-bottom, unlike EpisodeSupportScreen).
@@ -215,32 +193,9 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   // (B3 safety-plan review/follow-up + C1 sleep-prodrome/JITAI/calm-moment nudge effects moved to
   //  useNudges — Phase 4 slice 2b. Behaviour, deps, and the 5-min poll are unchanged.)
 
-  // audit 2.1 — CHAT PERSISTENCE (regressed in the rewrite: sessionChat was imported but never used).
-  // Restore an in-progress conversation on mount so it survives leaving/killing the app; a crisis session
-  // is intentionally never restored (it is cleared by the persist effect below).
-  // Note: the greeting is seeded in the initial state of `messages` — if getSessionChat() returns
-  // empty, the greeting stays and this effect does nothing.
-  useEffect(() => {
-    const saved = getSessionChat();
-    if (saved.length) setMessages(saved);
-  }, []);
-
-  // (#30 pact-surface + welcome-back one-shot effects moved to useNudges — Phase 4 slice 2b. Both still
-  //  skip when hadCrisisRef.current, and §9 clears them via nudges.clearForCrisis().)
-
-  // Persist the chat as it grows. INVARIANT: a §9 crisis turn is NEVER persisted — clear the store so a
-  // crisis transcript can't be restored later (mirrors the old AiCoachScreen rule). asyncReflection and
-  // armedCheckin read getSessionChat(), so this is also what makes those features see real conversations.
-  useEffect(() => {
-    // #4 (audit): once a session has EVER tripped §9, never persist it. The old code keyed the clear on the
-    // transient showCrisis boolean, so the crisis transcript was re-written the instant the overlay closed.
-    if (hadCrisisRef.current) { clearSessionChat(); return; }
-    // #5-out (2026-07-10 re-audit): a just-sent turn whose §9 verdict is still pending (the classifier runs an
-    // async MiniLM pass) must NOT be written yet — otherwise a euphemistic crisis the keyword floor misses is
-    // persisted during the embedder window, and a kill there leaves it durable + restored next launch.
-    if (crisisPendingRef.current) return;
-    if (messages.length) setSessionChat(messages);
-  }, [messages]);
+  // (#30 pact-surface + welcome-back one-shot effects moved to useNudges — Phase 4 slice 2b.
+  //  CHAT PERSISTENCE restore + persist effects + the "never persist a §9 crisis turn" invariant moved to
+  //  useCrisisGate — Phase 4 slice 4a. handleSendMessage still toggles crisisPendingRef around the model call.)
 
   const handleCheckinLogged = (entry: CheckInEntry) => {
     hideCheckin();
