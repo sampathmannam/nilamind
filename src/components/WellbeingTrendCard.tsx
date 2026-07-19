@@ -24,13 +24,20 @@ export default function WellbeingTrendCard({ onTakeCheck }: { onTakeCheck?: () =
   const trendKey =
     wb.trajectory === "reliably_improved" ? "improving" : wb.trajectory === "reliably_deteriorated" ? "deteriorating" : "steady";
   const TrendIcon = trendKey === "improving" ? TrendingUp : trendKey === "deteriorating" ? TrendingDown : TrendingUpDown;
+  {/* Design review (2026-07-19): "steady" previously used text-sky-300/bg-sky-500 and a raw #38bdf8
+      stroke — a cold-blue leak of the same class the Reach-out icon had (index.css comment, 2026-07-18).
+      `sky` is folded into the warm lavender/accent family app-wide; `blue` role tokens give the same
+      warm treatment and re-theme correctly across dark/Sunrise/elevated/low. Chart strokes now reference
+      CSS custom properties directly (SVG/recharts resolves var() at render) instead of hardcoded hex, so
+      they track theme changes like TrendChart/MoodHeatmap already do — the old hex values (#10b981,
+      #38bdf8) also didn't match this app's actual emerald/accent ramps, so this fixes a color drift too. */}
   const tone =
-    trendKey === "improving" ? "text-emerald-300" : trendKey === "deteriorating" ? "text-rose-300" : "text-sky-300";
+    trendKey === "improving" ? "text-emerald-300" : trendKey === "deteriorating" ? "text-rose-300" : "text-blue-300";
   const bgTone =
     trendKey === "improving" ? "bg-emerald-500/10 border-emerald-500/40"
     : trendKey === "deteriorating" ? "bg-rose-500/10 border-rose-500/40"
-    : "bg-sky-500/10 border-sky-500/40";
-  const stroke = trendKey === "improving" ? "#10b981" : trendKey === "deteriorating" ? "#B5614E" : "#38bdf8";
+    : "bg-blue-500/10 border-blue-500/40";
+  const stroke = trendKey === "improving" ? "var(--color-success)" : trendKey === "deteriorating" ? "var(--color-danger)" : "var(--color-accent)";
   const trendLabel = t(trendKey === "improving" ? "wellbeing_improving" : trendKey === "deteriorating" ? "wellbeing_deteriorating" : "wellbeing_steady");
   const cadence = wb.isDue ? t("wellbeing_due_now") : `${t("wellbeing_next_due_prefix")} ${wb.dueInDays} ${t("wellbeing_days")}`;
   const chartData = wb.series.map((s) => ({ date: s.date.slice(5), total: s.total }));
@@ -71,13 +78,13 @@ export default function WellbeingTrendCard({ onTakeCheck }: { onTakeCheck?: () =
           <div className="h-36 -ml-2" role="img" aria-label="Wellbeing trend over time">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-                <XAxis dataKey="date" tick={{ fontSize: 9, fill: "#948A7E" }} stroke="#2E2922" />
-                <YAxis domain={[0, 100]} tick={{ fontSize: 9, fill: "#948A7E" }} stroke="#2E2922" width={24} />
+                <XAxis dataKey="date" tick={{ fontSize: 9, fill: "var(--color-ink-faint)" }} stroke="var(--color-line)" />
+                <YAxis domain={[0, 100]} tick={{ fontSize: 9, fill: "var(--color-ink-faint)" }} stroke="var(--color-line)" width={24} />
                 <Tooltip
-                  contentStyle={{ background: "#171311", border: "1px solid #2E2922", borderRadius: 8, fontSize: 11 }}
-                  labelStyle={{ color: "#A89D90" }}
+                  contentStyle={{ background: "var(--color-page)", border: "1px solid var(--color-line)", borderRadius: 8, fontSize: 11 }}
+                  labelStyle={{ color: "var(--color-ink-muted)" }}
                 />
-                <ReferenceLine y={50} stroke="#CE9A3A" strokeDasharray="4 4" label={{ value: "threshold", fontSize: 8, fill: "#CE9A3A", position: "insideTopRight" }} />
+                <ReferenceLine y={50} stroke="var(--color-warn)" strokeDasharray="4 4" label={{ value: "threshold", fontSize: 8, fill: "var(--color-warn)", position: "insideTopRight" }} />
                 <Line type="monotone" dataKey="total" stroke={stroke} strokeWidth={2} dot={{ r: 3, fill: stroke }} />
               </LineChart>
             </ResponsiveContainer>

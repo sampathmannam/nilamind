@@ -41,20 +41,26 @@ export default function StreakCounter({ current, longest, totalActiveDays, celeb
     <div className="relative">
       <ConfettiBurst active={showCelebration} count={15} duration={1500} onComplete={() => setShowCelebration(false)} />
       <div className={`glass rounded-2xl p-4 space-y-2 transition-all ${showCelebration ? "ring-2 ring-amber-400/50" : ""}`}>
-        <div className="flex items-center gap-3">
-          {current > 0 ? (
-            /* Soft Wellness register: the streak count is the one number this card is about, so it
-               gets the hero-numeral treatment instead of being plain inline text. Unit/label stays
-               solid-ink text beside it (never inside the numeral), per the hero-numeral contract. */
-            <span className="hero-numeral text-4xl leading-none" aria-hidden="true">{current}</span>
-          ) : (
-            <div className="relative">
-              <Flame className="w-5 h-5 text-slate-600" />
-            </div>
-          )}
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <Flame className={`w-5 h-5 transition-all ${current > 0 ? "text-amber-400" : "text-slate-600"} ${showCelebration ? "scale-125" : ""}`} />
+            {showCelebration && (
+              <div className="absolute inset-0 animate-ping">
+                <Flame className="w-5 h-5 text-amber-400/50" />
+              </div>
+            )}
+          </div>
           <div className="flex-1">
+            {/* Soft Wellness register review (2026-07-19): this card sits directly below the
+                "compassionate streak" message in DashboardScreen, whose own comment documents a
+                cited, deliberate decision that the raw count must stay "demoted to small muted
+                caption text... rather than a big... stat tile" (Six et al. 2021; Kahneman & Tversky
+                1979 — loss-aversion). An earlier pass gave this number a large .hero-numeral
+                treatment without that context; reverted on discovering it directly undercuts the
+                app's own anti-gamification research. The register's "one hero number" pattern does
+                NOT apply here — plain small text is the correct, considered choice. */}
             <p className="text-sm font-semibold text-slate-200">
-              {current > 0 ? "day streak" : "Start your streak"}
+              {current > 0 ? `${current}-day streak` : "Start your streak"}
             </p>
             {current > 0 && (
               <p className="text-xs text-slate-500">
@@ -62,16 +68,6 @@ export default function StreakCounter({ current, longest, totalActiveDays, celeb
               </p>
             )}
           </div>
-          {current > 0 && (
-            <div className="relative shrink-0">
-              <Flame className={`w-5 h-5 transition-all ${showCelebration ? "text-amber-400 scale-125" : "text-amber-400/70"}`} />
-              {showCelebration && (
-                <div className="absolute inset-0 animate-ping">
-                  <Flame className="w-5 h-5 text-amber-400/50" />
-                </div>
-              )}
-            </div>
-          )}
           {milestone && (
             <span className="text-lg" title={`Milestone: ${current} days!`}>
               {current >= 100 ? "💯" : current >= 30 ? "⭐" : current >= 14 ? "🌟" : current >= 7 ? "🔥" : "✨"}
