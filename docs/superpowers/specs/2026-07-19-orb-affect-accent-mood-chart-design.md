@@ -223,10 +223,14 @@ entry needed.
   asserting no output at 0.01 intervals across `[-1,1]` has a red channel dominating both green and blue
   by the margin that would read as "warm red" rather than "warm mauve/cream" (a concrete, automatable
   guard against a future edit accidentally widening the ramp into rose territory).
-- `AffectToneStrip.tsx`: no dedicated component test — mirrors `MoodHeatmap.tsx`/`TrendChart.tsx`'s
-  existing convention (neither has one; the pure data/color functions above carry the real logic and
-  are what's tested), consistent with this codebase's established pattern of testing extracted pure
-  functions rather than mounting chart components.
+- `AffectToneStrip.test.tsx`: **correction from an earlier draft of this spec, which incorrectly
+  claimed `MoodHeatmap.tsx`/`TrendChart.tsx` have no component tests — they do**
+  (`MoodHeatmap.test.tsx`, `TrendChart.test.tsx`, both lightweight RTL renders with a `jsdom`
+  environment). This component gets the same treatment: renders the empty state ("No data yet") when
+  `sufficient` is false; renders 30 `role="img"`-parent dots when sufficient; the "automatic... not
+  something you told the app" caption is present whenever data renders. Matches those files' existing
+  mocking convention (`secureLocal` via `vi.importActual`, plus `setAffectAccentPersistenceEnabled` to
+  control the gate directly, mirroring how the pure-function tests above already do this).
 
 ## Rollout
 
