@@ -240,13 +240,13 @@ export default function TodayScreen({
       <header className={`relative rounded-2xl p-4 -mx-1 bg-gradient-to-br ${heroGradient(timeOfDay)}`}>
         <CrisisHeaderButton onClick={onOpenCrisis} className="absolute top-3 right-3" />
         <div className="space-y-0.5">
-          <h1 className="editorial text-3xl text-slate-100">{greeting}</h1>
-          <p className="text-sm text-slate-400">{formatDate()}</p>
+          <h1 className="editorial text-3xl text-ink">{greeting}</h1>
+          <p className="text-sm text-ink-muted">{formatDate()}</p>
           {contextLine && (
-            <p className="text-[11px] text-slate-500 leading-relaxed mt-1">{contextLine}</p>
+            <p className="text-[11px] text-ink-faint leading-relaxed mt-1">{contextLine}</p>
           )}
           {!contextLine && nilaMsg.message && (
-            <p className="text-[11px] text-slate-500 leading-relaxed mt-1 italic">"{nilaMsg.message}"</p>
+            <p className="text-[11px] text-ink-faint leading-relaxed mt-1 italic">"{nilaMsg.message}"</p>
           )}
         </div>
       </header>
@@ -309,7 +309,7 @@ export default function TodayScreen({
       {/* Morning focus — a this-week mini-stat. Informational → behind the "Your patterns" fold. */}
       {showExtraCards && timeOfDay === "morning" && checkedIn && weekInsight && (
         <div className="glass p-3 rounded-2xl space-y-1">
-          <p className="text-xs uppercase font-mono tracking-widest text-slate-500">This week</p>
+          <p className="text-xs uppercase font-mono tracking-widest text-ink-faint">This week</p>
           <p className="text-[11px] text-slate-300">
             {weekInsight.checkinCount} check-in{weekInsight.checkinCount !== 1 ? "s" : ""}
             {weekInsight.topEmotion ? ` · mostly feeling ${weekInsight.topEmotion}` : ""}
@@ -456,8 +456,8 @@ export default function TodayScreen({
           <MessageCircle className="w-5 h-5" aria-hidden="true" />
         </span>
         <span className="flex-1 min-w-0">
-          <span className="block text-sm font-bold text-slate-100">Talk to Nila</span>
-          <span className="block text-[11px] text-slate-400">Your companion — always here, always private</span>
+          <span className="block text-sm font-bold text-ink">Talk to Nila</span>
+          <span className="block text-[11px] text-ink-muted">Your companion — always here, always private</span>
         </span>
         <ChevronRight className="w-5 h-5 text-slate-500 shrink-0" aria-hidden="true" />
       </button>
@@ -469,8 +469,8 @@ export default function TodayScreen({
       >
         <span className="shrink-0 text-violet-400"><Sparkle className="w-5 h-5" aria-hidden="true" /></span>
         <span className="flex-1 min-w-0">
-          <span className="block text-sm font-bold text-slate-100">Guided Programs</span>
-          <span className="block text-[11px] text-slate-400">Real, evidence-based programs you can start any time</span>
+          <span className="block text-sm font-bold text-ink">Guided Programs</span>
+          <span className="block text-[11px] text-ink-muted">Real, evidence-based programs you can start any time</span>
         </span>
         <ChevronRight className="w-5 h-5 text-slate-500 shrink-0" aria-hidden="true" />
       </button>

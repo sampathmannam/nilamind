@@ -39,8 +39,8 @@ export default function ToolsScreen({ go, onEpisode, phoneEnabled, onOpenCrisis 
     <div className="space-y-5 max-w-md mx-auto" id="tools-hub">
       <header className="flex items-start justify-between gap-3">
         <div className="space-y-0.5">
-          <h1 className="editorial text-2xl text-slate-100">Tools</h1>
-          <p className="text-xs text-slate-400">Skills, trackers, and practices — here whenever you need them.</p>
+          <h1 className="editorial text-2xl text-ink">Tools</h1>
+          <p className="text-xs text-ink-muted">Skills, trackers, and practices — here whenever you need them.</p>
         </div>
         <CrisisHeaderButton onClick={onOpenCrisis} className="shrink-0 mt-0.5" />
       </header>
@@ -69,7 +69,7 @@ export default function ToolsScreen({ go, onEpisode, phoneEnabled, onOpenCrisis 
 
       {visibleGroups.map((g) => (
         <section key={g.title} className="space-y-2">
-          <h2 className="text-[11px] font-mono uppercase tracking-widest text-slate-500 px-1">{g.title}</h2>
+          <h2 className="text-[11px] font-mono uppercase tracking-widest text-ink-faint px-1">{g.title}</h2>
           <div className="space-y-2">
             {g.rows.map((r) => (
               <button
@@ -80,7 +80,7 @@ export default function ToolsScreen({ go, onEpisode, phoneEnabled, onOpenCrisis 
               >
                 <span className="shrink-0"><r.Icon className={r.iconClass} aria-hidden="true" /></span>
                 <span className="flex-1 min-w-0">
-                  <span className="block text-sm font-bold text-slate-100">{r.label}</span>
+                  <span className="block text-sm font-bold text-ink">{r.label}</span>
                   <span className="block text-[11px] text-slate-400">{r.sub}</span>
                 </span>
                 <ChevronRight className="w-5 h-5 text-slate-500 shrink-0" aria-hidden="true" />

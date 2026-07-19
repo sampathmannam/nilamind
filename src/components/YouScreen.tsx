@@ -143,8 +143,8 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
             <Sparkles className="w-5 h-5" aria-hidden="true" />
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="editorial text-xl text-slate-100">You</h1>
-            <p className="text-xs text-slate-400 mt-0.5">{streak.message}</p>
+            <h1 className="editorial text-xl text-ink">You</h1>
+            <p className="text-xs text-ink-muted mt-0.5">{streak.message}</p>
           </div>
           <CrisisHeaderButton onClick={onOpenCrisis} />
         </div>
@@ -153,7 +153,7 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
             <div className="mt-3 pt-3 border-t border-slate-800">
               <StreakConstellation activeDays={activeDays} />
             </div>
-            <p className="text-xs text-slate-500 text-center mt-1.5">
+              <p className="text-xs text-ink-faint text-center mt-1.5">
               {/* Bug fix: this previously read streak.totalActiveDays, which computeCompassionateStreak
                   (services/streaks.ts) defines as an ALL-TIME count of distinct active dates - so a
                   long-time user saw e.g. "30 days this week" under a 7-dot week. activeDays is already
@@ -164,7 +164,7 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
           </>
         )}
         {capacity === "low" && (
-          <p className="text-xs text-slate-500 mt-2 text-center italic">
+          <p className="text-xs text-ink-faint mt-2 text-center italic">
             Today might feel heavy — that's okay. Just being here is enough.
           </p>
         )}
@@ -228,7 +228,7 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
             <Target className="w-5 h-5" aria-hidden="true" />
           </span>
           <span className="flex-1 min-w-0">
-            <span className="block text-sm font-bold text-slate-100">Set a gentle intention</span>
+              <span className="block text-sm font-bold text-ink">Set a gentle intention</span>
             <span className="block text-[11px] text-slate-400">One small thing you'd like to try this week</span>
           </span>
           <ChevronRight className="w-5 h-5 text-slate-500 shrink-0" />
@@ -248,7 +248,7 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
             aria-labelledby="intention-picker-title"
           >
             <div className="flex items-center justify-between mb-4">
-              <h2 id="intention-picker-title" className="text-lg font-semibold text-slate-100">Set an intention</h2>
+              <h2 id="intention-picker-title" className="text-lg font-semibold text-ink">Set an intention</h2>
               <button onClick={() => setShowPicker(false)} aria-label="Close" className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-400 hover:text-slate-200">
                 <X className="w-5 h-5" />
               </button>
@@ -287,7 +287,7 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
         if (visible.length === 0) return null;
         return (
         <section key={g.title} className="space-y-2">
-          <h2 className="text-[11px] font-mono uppercase tracking-widest text-slate-500 px-1">{g.title}</h2>
+          <h2 className="text-[11px] font-mono uppercase tracking-widest text-ink-faint px-1">{g.title}</h2>
           <div className="space-y-2">
             {visible.map((r) => (
               <button
