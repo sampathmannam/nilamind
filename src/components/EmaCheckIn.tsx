@@ -109,7 +109,10 @@ export default function EmaCheckIn({ onLogged, onCrisis }: { onLogged?: () => vo
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder="Two-word note..."
-              className="bg-card border border-purple-500/20 text-sm text-slate-200 rounded-2xl px-4 py-2.5 focus:outline-none focus:ring-1 focus:ring-purple-400 placeholder-slate-500"
+              // Matches the canonical `glass` input pattern (see DailyIntentionCard). Its existing
+              // ring-based focus (focus:ring-1 focus:ring-purple-400) is unaffected - a box-shadow ring
+              // doesn't compete with .glass's unlayered border the way a border-color utility would.
+              className="glass text-sm text-slate-200 rounded-2xl px-4 py-2.5 focus:outline-none focus:ring-1 focus:ring-purple-400 placeholder-slate-500"
               maxLength={30}
             />
             <button
