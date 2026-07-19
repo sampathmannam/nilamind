@@ -15,6 +15,11 @@
 //
 // Adapted from: Edinger & Carney 2008, Espie 2006 (attention-intention model),
 // Ong et al. 2012 (mindfulness-based CBT-I).
+//
+// STEPPED CARE: sleep-wind-down (protocols.ts) is the deliberate brief on-ramp for this same
+// presenting complaint and wins routing ties on shared cues by design — see the pinning comment
+// there and src/services/protocolRouting.test.ts. This protocol is the step-up, offered when
+// sleep-wind-down is completed (protocolChat.ts's stepUpOffer), not the default first contact.
 
 import { type Protocol } from "./protocols";
 
