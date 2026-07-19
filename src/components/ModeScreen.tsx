@@ -172,9 +172,14 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
     return () => clearInterval(interval);
   }, []);
 
-  // Notify App when internal sheets open/close (for back-button handling)
+  // Notify App when internal sheets open/close (for back-button handling). The cleanup RESETS presence to
+  // false on unmount: App renders ModeScreen only on the Nila tab, so leaving Nila (e.g. a notification-tap
+  // route) unmounts it — and without this reset, a capture sheet open at that moment left App's
+  // modeScreenHasSheet stale-true, dead-ending the hardware BACK button on Today/Tools/You until the user
+  // revisited Nila (Phase 3, 2026-07-19).
   useEffect(() => {
     onInternalSheetChange?.(auxView !== null);
+    return () => onInternalSheetChange?.(false);
   }, [auxView, onInternalSheetChange]);
 
   // Hardware-back (via App's closeSheetSignal) closes whichever auxView overlay is open + drops its draft,
