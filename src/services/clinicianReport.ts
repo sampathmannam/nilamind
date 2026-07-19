@@ -160,6 +160,14 @@ export interface ClinicianReportInput {
     contextInsights: Array<{ text: string; date: string }>;
     valuesClarified: Array<{ text: string; date: string }>;
   };
+  /**
+   * Orb affect accent v2 — a machine-inferred conversation-tone estimate. Populated ONLY from a
+   * user-previewed, per-generation opt-in captured at toggle-time on YourDataScreen.tsx (see
+   * docs/superpowers/specs/2026-07-19-orb-affect-accent-clinician-report-design.md §3) — NEVER from a
+   * stored preference, and NEVER recomputed after the user has seen the previewed text. The caller is
+   * responsible for passing the frozen ConversationToneSummary object verbatim.
+   */
+  conversationTone?: { text: string; daysUsed: number; windowDays: number };
 }
 
 function trendLabel(entries: AssessmentTrajectoryEntry[]): string | null {
@@ -742,9 +750,19 @@ if (input.enhancedSocialRhythmDetails) {
          lines.push("");
        }
     }
-    
+
+    // Orb affect accent v2 — machine-inferred conversation tone. Always rendered LAST, deliberately
+    // positioned as the least-emphasized section in a report that's otherwise entirely self-report or
+    // validated instruments. Vocabulary is deliberately coarse (see computeConversationToneSummary's
+    // own doc comment in chatAffect.ts) because the underlying signal is unvalidated.
+    if (input.conversationTone) {
+      lines.push("Conversation Tone (automatic estimate — see note)");
+      lines.push(`  ${input.conversationTone.text}`);
+      lines.push("");
+    }
+
     lines.push(SEPARATOR);
     lines.push(DISCLAIMER);
-    
+
     return lines.join("\n");
 }
