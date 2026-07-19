@@ -118,23 +118,51 @@ for gaps AND collisions. This is a verification task against existing code, not 
 infrastructure, but is a larger pass than "8 protocols" implied — budget accordingly in
 the implementation plan.
 
-**A specific, verified collision to resolve, not just a hypothetical to check for**:
-`routeToProtocol()` (`protocols.ts`) scores every protocol by cue-match count and keeps
-the first-seen protocol on a tie (`if (score > bestScore)` — strict greater-than, so equal
-or lower-scoring later entries never win). `sleep-wind-down` (an inline micro-protocol, 28
-cues) and `cbti-sleep` (the evidence-heavier CBT-I module, 35 cues) share **24 cues**
-verbatim — the two protocols' `forConcerns` arrays are near-duplicates. Because
-`sleep-wind-down` sits earlier in `PROTOCOLS` (inline, near the top) and `cbti-sleep` is
-appended later (one of the 8 imported modules), a tie or a `sleep-wind-down`-favoring
-score routes sleep complaints to the shorter micro-protocol instead of the cited CBT-I
-module on a meaningful share of real messages — undermining exactly the
-evidence-credibility goal this whole feature exists for. `assertion-training` and
-`dbt-skills-training` share a smaller 4-cue overlap, lower priority.
+**The sleep-wind-down / cbti-sleep overlap is not a bug — it's an undocumented stepped-care
+design, verified by reading both protocols' full source, not just their titles.** A first
+pass here (mine, then a Fable review pass) both wrongly framed the 24-cue overlap between
+`sleep-wind-down` (28 cues) and `cbti-sleep` (35 cues) as "the shorter protocol
+accidentally shadows the more evidence-heavy one on a routing tie, fix it so cbti-sleep
+wins." That's wrong: **both protocols independently, deliberately omit sleep-restriction
+therapy for the identical reason** — `sleep-wind-down`'s own `basis` field calls itself
+CBT-I's "POPULATION-SAFE subset" because "acute sleep loss is a documented mania trigger
+and this app's population includes bipolar"; `cbti-sleep`'s file header has the identical
+"SAFETY NOTE" for the identical reason. Neither is the unsafe or lesser-evidence one —
+`cbti-sleep` is a fuller 4-session module (adds cognitive restructuring + sleep
+consolidation), `sleep-wind-down` is an explicitly shorter on-ramp. This is textbook
+stepped care (brief behavioral treatment first, full CBT-I on non-response — the
+established BBTI→CBT-I delivery model), and the current routing already implements it by
+*accident*: `sleep-wind-down` sits earlier in `PROTOCOLS`, so `routeToProtocol()`'s
+`score > bestScore` tie-break already sends generic sleep-complaint ties to it first. That
+behavior is correct; it's just undocumented and unprotected. Confirmed live evidence this
+is already the intended design, not a gap: `proactiveEngine.ts` already nudges to
+`sleep-wind-down` by name (`rhythm_drop` moment) as the first-touch sleep surface —
+nothing in the codebase proactively nudges `cbti-sleep`.
 
-Output: a pass/fail + collision table per protocol. Fix the sleep pair specifically
-(disambiguate cues, reorder, or make `routeToProtocol` prefer higher-evidence/longer
-protocols on a tie — pick one, don't leave it to insertion-order accident) as part of this
-change, not a follow-up.
+**What the audit must actually do here** (replacing the earlier "make cbti-sleep win"
+prescription):
+1. **Make the stepped-care precedence explicit, not positional.** Today it's an artifact
+   of array order. Add a code comment on both protocols (and a pinning test) stating
+   plainly that a sleep-cue tie resolving to `sleep-wind-down` is deliberate stepped-care
+   behavior, not an accident — so a future reorder of `PROTOCOLS` can't silently invert
+   clinical routing with zero test failures.
+2. **Preserve, don't dedupe, `cbti-sleep`'s exclusive cues** ("sleep anxiety", "afraid to
+   sleep", "dread bedtime", "brain won't shut off", "wake up too early") — these
+   cognitive-arousal presentations correctly route straight to `cbti-sleep` today because
+   they don't overlap with `sleep-wind-down`'s cue list. Keep that routing intact.
+3. **Build the missing step-up edge** (a real gap, not a false alarm): there is currently
+   no path from completing `sleep-wind-down` to being offered the fuller `cbti-sleep`
+   program — "gentle on-ramp" is a dead end today, reachable onward only by chance
+   phrasing. Add: on `sleep-wind-down` completion (via `protocolProgress`'s existing
+   completion tracking), offer `cbti-sleep` as the next step.
+4. Audit the *rest* of the library's ~451 cues for other real gaps using the same
+   standard applied here: read each pair's full `basis`/safety-note text before calling
+   an overlap a defect, not just their cue-count and title. `assertion-training` /
+   `dbt-skills-training`'s smaller 4-cue overlap should get the same full read before any
+   change, not an assumed fix.
+
+Output: a short table per protocol — gap, false-positive overlap (like this one), or real
+fix needed — plus the step-up edge as a working, tested piece of this change.
 
 ## 6. Visual language: Quiet Room as shell, not a fork
 
@@ -183,10 +211,11 @@ assumptions baked into the screen).
 
 1. `ProtocolCard.basis` field + citation chip rendering in the existing chat offer card
    (smallest, lowest-risk slice, ships the credibility win immediately).
-2. Routing coverage audit (§5), **including the sleep-pair collision fix** — done before
-   the hub, not after: the collision fix may change how `sleep-wind-down` and `cbti-sleep`
-   are distinguished/labeled, which the hub's card list and grouping (§3) need to reflect
-   correctly from the start rather than being built against a since-changed routing layer.
+2. Routing coverage audit (§5), **including the sleep-pair stepped-care pinning + the
+   sleep-wind-down → cbti-sleep step-up edge** — done before the hub, not after: this
+   changes how the two sleep protocols are labeled/related, which the hub's card list and
+   grouping (§3) need to reflect correctly (e.g. showing cbti-sleep as a "next step" after
+   sleep-wind-down) from the start rather than being built against a since-changed layer.
 3. `GuidedProgramsScreen.tsx` (Quick programs / Deeper modules grouping, §3) +
    `"guided_programs"` nav entry + tests.
 4. Today entry card (`DashboardScreen.tsx`).
