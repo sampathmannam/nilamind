@@ -93,3 +93,74 @@ export function recentAffectDays(days: number, now: number = Date.now()): Array<
     .sort(([a], [b]) => (a < b ? 1 : -1))
     .map(([date, bucket]) => ({ date, ...bucket }));
 }
+
+export interface ConversationToneSummary {
+  text: string;
+  daysUsed: number;
+  windowDays: number;
+}
+
+// Below this many distinct days, only LEVEL language is honest ("was mostly difficult") — a
+// trajectory claim ("trended difficult") implies more points than 3-4 scattered days can support,
+// and "trend" is precisely the word a clinician will weight most heavily.
+const TRAJECTORY_MIN_DAYS = 5;
+// A minimum total-reading floor alongside the day-count floor: three days of count:1 (one turn each)
+// would otherwise clear a day-count-only floor on three total model readings from a head that's wrong
+// roughly 1 time in 3-4.
+const MIN_TOTAL_READINGS = 10;
+// Minimum gap between the older and newer half's mean valence before "trended X" is justified — day
+// count alone is a NECESSARY condition for trajectory language, never a SUFFICIENT one: a flat run of
+// uniformly negative days at 5+ distinct days is a level, not a trend, and must render as "was mostly
+// difficult", not "trended difficult".
+const DIRECTION_THRESHOLD = 0.15;
+
+/** A closed-vocabulary, per-report clinician-facing summary of recent conversation tone — see
+ *  docs/superpowers/specs/2026-07-19-orb-affect-accent-clinician-report-design.md. Pure and
+ *  side-effect-free; callers are responsible for freezing the result at consent-time (see
+ *  clinicianToneOptIn.ts) rather than recomputing it later. */
+export function computeConversationToneSummary(
+  periodDays: number,
+  now: number = Date.now()
+): ConversationToneSummary | null {
+  const windowDays = Math.min(periodDays, 30); // chatAffect.ts's own 30-day retention cap
+  const days = recentAffectDays(windowDays, now); // most-recent-first, per recentAffectDays's own contract
+  const floorDays = Math.max(3, Math.ceil(windowDays * 0.3));
+  const totalReadings = days.reduce((s, d) => s + d.count, 0);
+  if (days.length < floorDays || totalReadings < MIN_TOTAL_READINGS) return null;
+
+  // Deliberately unweighted by `count` — a 1-turn day and a 20-turn day count equally toward the
+  // level. Day-level equal weighting (not reading-level) is the intended aggregation; do not "fix"
+  // this into a count-weighted average.
+  const avgValence = days.reduce((s, d) => s + d.valence, 0) / days.length;
+  const level = avgValence <= -0.2 ? "difficult" : avgValence >= 0.2 ? "positive" : "mixed";
+
+  // Real direction check: split chronologically (oldest half vs newest half) and compare means.
+  // recentAffectDays returns most-recent-first, so reverse before halving.
+  const chronological = [...days].reverse();
+  const mid = Math.floor(chronological.length / 2);
+  const olderHalf = chronological.slice(0, mid);
+  const newerHalf = chronological.slice(mid);
+  const olderAvg = olderHalf.reduce((s, d) => s + d.valence, 0) / olderHalf.length;
+  const newerAvg = newerHalf.reduce((s, d) => s + d.valence, 0) / newerHalf.length;
+  const hasDirection = days.length >= TRAJECTORY_MIN_DAYS && Math.abs(newerAvg - olderAvg) >= DIRECTION_THRESHOLD;
+
+  // "mixed" never takes trajectory language — a near-zero average produced by real volatility (e.g.
+  // swinging from very positive to very negative) would misreport as "stayed mixed" if trajectory
+  // wording applied here; "was mixed" is the only phrase this level ever emits.
+  const verb =
+    level === "mixed"
+      ? "was mixed"
+      : (hasDirection ? `trended ${level}` : `was mostly ${level}`);
+
+  const capNote = periodDays > 30
+    ? " (Conversation-tone history is kept for 30 days, so this covers the most recent 30 only.)"
+    : "";
+
+  const text =
+    `Model estimate — ${days.length} days of conversation across the last ${windowDays} days: ${verb}. ` +
+    `This is an automatic tone estimate from the app's on-device model, not something the patient ` +
+    `explicitly told the app, and it is not a clinically validated measure. If this conflicts with ` +
+    `other self-reported data in this summary, trust the self-reported data.${capNote}`;
+
+  return { text, daysUsed: days.length, windowDays };
+}
