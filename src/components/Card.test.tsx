@@ -36,4 +36,16 @@ describe("Card", () => {
     render(<Card role="region" aria-label="test card">content</Card>);
     expect(screen.getByRole("region")).toBeTruthy();
   });
+
+  it("applies gap classes", () => {
+    const { container } = render(<Card gap="md">content</Card>);
+    expect((container.firstChild as HTMLElement).className).toContain("space-y-3");
+  });
+
+  it("omits spacing for gap=none", () => {
+    const { container } = render(<Card gap="none">content</Card>);
+    const cls = (container.firstChild as HTMLElement).className;
+    expect(cls).not.toContain("space-y-2");
+    expect(cls).not.toContain("space-y-3");
+  });
 });

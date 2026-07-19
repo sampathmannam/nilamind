@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import Markdown from "react-markdown";
 import { loadMoodHistory } from "../services/moodHistory";
-import { readEpisodeMarkers } from "../services/episodeMarker";
+import { readEpisodeMarkers, type EpisodeMarker } from "../services/episodeMarker";
 import { t, useLanguage } from "../services/i18n";
 import { loadAssessments, latestFor, INSTRUMENTS, type InstrumentId } from "../services/assessments";
 import { assessmentInsights, generateInsights, daysOfData, medicationMoodInsight, type Insight } from "../services/patternInsights";
@@ -46,18 +46,13 @@ import { detectPhaseShift } from "../services/episodeSuggester";
 import { getFeatureWindow } from "../services/signalStore";
 import { getPassiveSensingEnabled } from "../services/passiveSensingPrefs";
 import CrisisCard from "./CrisisCard";
-import WellbeingTrendCard from "./WellbeingTrendCard";
-import CalibrationPeriodCard from "./calibrationPeriod";
-import EpisodeMarkerCard from "./EpisodeMarkerCard";
-import MoodHeatmap from "./MoodHeatmap";
-import PhaseTimeline from "./PhaseTimeline";
+import ClinicalTrackingSection from "./ClinicalTrackingSection";
+import ActivitySection from "./ActivitySection";
 import TrendChart, { PHQ9_BANDS, GAD7_BANDS } from "./TrendChart";
-import AffectToneStrip from "./AffectToneStrip";
 import InsightCard from "./InsightCard";
-import StreakCounter from "./StreakCounter";
-import AchievementBadge from "./AchievementBadge";
 import Section from "./Section";
 import StatCard from "./StatCard";
+import Card from "./Card";
 import PassiveInsightCard from "./PassiveInsightCard";
 import { getAllAchievements, getAchievementCount } from "../services/achievements";
 import { stripProvenance } from "../services/emotionParse";
@@ -101,7 +96,7 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
   const data = useMemo(() => {
     const mood = loadMoodHistory().sort((a, b) => a.date.localeCompare(b.date));
     const assessments = loadAssessments();
-    const episodeMarkers = readEpisodeMarkers();
+    const episodeMarkers: EpisodeMarker[] = readEpisodeMarkers();
     const streak = computeStreak();
     const compassionateStreak = computeCompassionateStreak();
     const nila = nilaStats();
@@ -513,73 +508,22 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
            Byrne, Tibbett & Pericot-Valverde (2021), JMIR Mental Health; Kahneman & Tversky (1979),
            Econometrica. The raw count is still shown, just demoted to small muted caption text
            below rather than a big Flame+number stat tile. */}
-      <div className="glass rounded-2xl py-3 px-4 text-center flex items-center justify-center gap-2">
-         <span aria-hidden="true">{compassionateStreak.emoji}</span>
-         <p className="text-sm text-slate-200">{compassionateStreak.message}</p>
-        </div>
-
-        {/* Streak counter with milestone progress */}
-        <StreakCounter
-          current={streak.current}
-          longest={streak.longest}
-          totalActiveDays={streak.totalActiveDays}
+        <ActivitySection
+          streak={streak}
+          compassionateStreak={compassionateStreak}
+          freq14={freq14}
+          nilaChats7d={nila.last7}
+          usageSummary={usageSummary}
+          protocolAdherence={protocolAdherence}
         />
 
-        {/* Achievements — recent unlocks */}
-        {getAchievementCount() > 0 && (
-          <div className="glass rounded-2xl p-4 space-y-2">
-            <div className="flex items-center justify-between">
-              <p className="text-xs uppercase font-mono tracking-widest text-slate-500">Achievements</p>
-              <span className="text-xs text-slate-500">{getAchievementCount()}/{getAllAchievements().length}</span>
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {getAllAchievements()
-                .filter((a) => a.unlockedAt != null)
-                .slice(0, 6)
-                .map((a) => (
-                  <AchievementBadge key={a.id} achievement={a} compact />
-                ))}
-            </div>
-          </div>
-        )}
-
-       {/* Longitudinal wellbeing — fortnightly WHO-5 trend + cadence */}
-       <WellbeingTrendCard onTakeCheck={() => onOpenView?.("assessment")} />
-
-       {/* Calibration period — "learning your patterns" for first 30 days */}
-       {checkins.length > 0 && (
-         <CalibrationPeriodCard startDate={checkins[0]?.date ?? new Date().toISOString()} />
-       )}
-
-       {/* Episode-phase marker — current phase if active */}
-       <EpisodeMarkerCard onOpen={() => onOpenView?.("episode_marker")} />
-
-        {/* Mood Heatmap — Year in Pixels */}
-        {mood.length >= 7 && (
-          <MoodHeatmap moods={mood} days={182} />
-        )}
-
-        {/* Conversation tone — orb affect accent, automatic estimate, own empty-state handling */}
-        <AffectToneStrip />
-
-        {/* Phase Timeline — episode phases over time */}
-       {episodeMarkers.length > 0 && (
-         <PhaseTimeline markers={episodeMarkers} days={365} />
-       )}
-
-       {/* Assessment Trend — PHQ-9 score trajectory with severity bands */}
-       {assessments.filter((a) => a.instrument === "PHQ-9").length >= 2 && (
-         <TrendChart
-           data={assessments
-             .filter((a) => a.instrument === "PHQ-9")
-             .sort((a, b) => a.date.localeCompare(b.date))
-             .map((a) => ({ date: a.date, score: a.total, severity: a.severity }))}
-           title="PHQ-9 Depression"
-           bands={PHQ9_BANDS}
-           maxScore={27}
-           threshold={10}
-         />
-       )}
+        <ClinicalTrackingSection
+          checkins={checkins}
+          mood={mood}
+          assessments={assessments}
+          episodeMarkers={episodeMarkers}
+          onOpenView={onOpenView}
+        />
 
 {(behaviourInsights.length > 0 || proactiveCards.length > 0) && (
   <div className="flex items-center gap-2 pt-3" role="separator" aria-label="What Nila noticed">
@@ -633,102 +577,9 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
           </div>
         )}
 
-        {/* Top stats */}
-      <div className="grid grid-cols-2 gap-2">
-        <StatCard icon={<CalendarCheck className="w-4 h-4 text-emerald-400" />} value={`${freq14}/14`} label={t("days_logged")} />
-        <StatCard icon={<MessageSquare className="w-4 h-4 text-purple-400" />} value={String(nila.last7)} label={t("nila_chats_7d")} />
-      </div>
-      {streak.longest > 0 && (
-        <p className="text-[11px] text-slate-500 -mt-2 text-center flex items-center justify-center gap-1">
-          <Flame className="w-3 h-3 text-amber-400/70" aria-hidden="true" />
-          {streak.current}-day streak · Longest: {streak.longest} days · {streak.totalActiveDays} active days all-time
-        </p>
-      )}
-
-      {/* Usage Analytics — on-device summary of all engagement */}
-      {usageSummary.totalCheckins > 0 && (
-        <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 space-y-3">
-            <p className="text-xs uppercase font-mono tracking-widest text-slate-400 flex items-center gap-1.5">
-              <Activity className="w-3.5 h-3.5" /> {t("your_usage")}
-            </p>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-page p-2.5 rounded-xl text-center border border-slate-850">
-              <p className="text-lg font-bold text-slate-100 font-mono">{usageSummary.totalCheckins}</p>
-              <p className="text-xs text-slate-500 uppercase tracking-wide">{t("usage_checkins")}</p>
-            </div>
-            <div className="bg-page p-2.5 rounded-xl text-center border border-slate-850">
-              <p className="text-lg font-bold text-slate-100 font-mono">{usageSummary.protocols.completed}</p>
-              <p className="text-xs text-slate-500 uppercase tracking-wide">{t("usage_programs")}</p>
-            </div>
-            <div className="bg-page p-2.5 rounded-xl text-center border border-slate-850">
-              <p className="text-lg font-bold text-slate-100 font-mono">{Object.keys(usageSummary.assessments).length}</p>
-              <p className="text-xs text-slate-500 uppercase tracking-wide">{t("usage_assessments")}</p>
-            </div>
-            <div className="bg-page p-2.5 rounded-xl text-center border border-slate-850">
-              <p className="text-lg font-bold text-slate-100 font-mono">{usageSummary.features.length}</p>
-              <p className="text-xs text-slate-500 uppercase tracking-wide">{t("usage_features")}</p>
-            </div>
-          </div>
-          {usageSummary.avgMood != null && (
-            <p className="text-xs text-slate-400 text-center">
-              Avg mood: <span className="font-mono text-slate-300">{usageSummary.avgMood.toFixed(1)}/10</span>
-              {usageSummary.topEmotion && <> · Top: <span className="text-slate-300 capitalize">{usageSummary.topEmotion}</span></>}
-              {usageSummary.features.includes("values_snapshot") && <> · <span className="text-emerald-400">Values set ✓</span></>}
-            </p>
-          )}
-          {usageSummary.moodSleepCorrelation && (
-            <p className="text-xs text-slate-500 text-center">
-              Sleep: {usageSummary.moodSleepCorrelation.highSleepMood.toFixed(1)}/10 with ≥7h sleep · {usageSummary.moodSleepCorrelation.lowSleepMood.toFixed(1)}/10 with &lt;7h
-              {usageSummary.sleepTrend && (
-                <> · Last 3-check-in avg: <span className={usageSummary.sleepTrend.recentAvg >= usageSummary.sleepTrend.olderAvg ? "text-emerald-400" : "text-amber-400"}>{usageSummary.sleepTrend.recentAvg.toFixed(1)}h</span></>
-              )}
-            </p>
-          )}
-        </div>
-      )}
-
-      {/* Protocol adherence — programs completed vs abandoned */}
-      {protocolAdherence.totalStarted > 0 && (
-        <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 space-y-2">
-          <p className="text-xs uppercase font-mono tracking-widest text-slate-400 flex items-center gap-1.5">
-            <ClipboardCheck className="w-3.5 h-3.5" /> Your programs
-          </p>
-          <div className="flex items-center justify-between">
-            <div className="flex gap-4">
-              <div>
-                <p className="text-lg font-bold text-slate-100 font-mono">{protocolAdherence.totalCompleted}</p>
-                <p className="text-xs text-slate-500 uppercase tracking-wide">completed</p>
-              </div>
-              <div>
-                <p className="text-lg font-bold text-slate-100 font-mono">{protocolAdherence.totalAbandoned}</p>
-                <p className="text-xs text-slate-500 uppercase tracking-wide">incomplete</p>
-              </div>
-            </div>
-            <div className="text-right">
-              <p className="text-xl font-bold text-slate-100">{Math.round(protocolAdherence.adherenceRate * 100)}%</p>
-              <p className="text-xs text-slate-500 uppercase tracking-wide">completion rate</p>
-            </div>
-          </div>
-          {protocolAdherence.perProtocol.filter((p) => p.started > 0).length > 0 && (
-            <div className="border-t border-slate-700/50 pt-2 mt-1 space-y-1">
-              {protocolAdherence.perProtocol.filter((p) => p.started > 0).slice(0, 4).map((p) => (
-                <div key={p.protocolId} className="flex items-center justify-between text-[11px]">
-                  <span className="text-slate-300 truncate max-w-[60%]">{p.title}</span>
-                  <span className="text-slate-400 tabular-nums">
-                    {p.completed}/{p.started}
-                    {p.avgStepsCompleted > 0 && <span className="text-slate-500"> · ~{p.avgStepsCompleted} steps</span>}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-          <p className="text-xs text-slate-500">Programs you've started and completed. Not a measure of you.</p>
-        </div>
-      )}
-
       {/* Engagement disengagement risk — early warning when usage declines */}
       {disengagementRisk && disengagementRisk.riskLevel !== "low" && disengagementRisk.frequencyTrend !== "insufficient_data" && (
-        <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 flex items-start gap-3">
+        <Card variant="raised" gap="none" className="flex items-start gap-3">
           <div className={`p-2 rounded-xl ${disengagementRisk.riskLevel === "high" ? "bg-rose-500/10 text-rose-400" : disengagementRisk.riskLevel === "elevated" ? "bg-amber-500/10 text-amber-400" : "bg-blue-500/10 text-blue-400"}`}>
             <Activity className="w-5 h-5" />
           </div>
@@ -749,12 +600,12 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
             </p>
             <p className="text-xs text-slate-500 mt-1">A gentle observation, not a measure of you.</p>
           </div>
-        </div>
+        </Card>
       )}
 
       {/* Dependency signal — when usage suggests over-reliance */}
       {depLevel && depLevel !== "none" && (
-        <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 flex items-start gap-3">
+        <Card variant="raised" gap="none" className="flex items-start gap-3">
           <div className={`p-2 rounded-xl ${depLevel === "severe" ? "bg-rose-500/10 text-rose-400" : depLevel === "moderate" ? "bg-amber-500/10 text-amber-400" : "bg-blue-500/10 text-blue-400"}`}>
             <Activity className="w-5 h-5" />
           </div>
@@ -763,12 +614,12 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
             <p className="text-[11px] text-slate-400 leading-relaxed mt-1">{depReason}</p>
             <p className="text-xs text-slate-500 mt-1">Nila is here when you need her — real connections matter too.</p>
           </div>
-        </div>
+        </Card>
       )}
 
       {/* Usage ceiling — daily turn limit reached */}
       {ceilingStatus && (
-        <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 flex items-start gap-3">
+        <Card variant="raised" gap="none" className="flex items-start gap-3">
           <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400">
             <Clock className="w-5 h-5" />
           </div>
@@ -777,12 +628,12 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
             <p className="text-[11px] text-slate-400 leading-relaxed mt-1">{ceilingMessage}</p>
             <p className="text-xs text-slate-500 mt-1">This resets tomorrow. No pressure.</p>
           </div>
-        </div>
+        </Card>
       )}
 
       {/* Human connection — social interaction metric */}
       {connLevel && connLevel === "low" && (
-        <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 flex items-start gap-3">
+        <Card variant="raised" gap="none" className="flex items-start gap-3">
           <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400">
             <MessageSquare className="w-5 h-5" />
           </div>
@@ -791,12 +642,12 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
             <p className="text-[11px] text-slate-400 leading-relaxed mt-1">{connReason}</p>
             <p className="text-xs text-slate-500 mt-1">Even a quick message counts.</p>
           </div>
-        </div>
+        </Card>
       )}
 
       {/* Medication adherence summary */}
       {medSummary.activeMeds > 0 && (
-        <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 flex items-center justify-between">
+        <Card variant="raised" gap="none" className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-blue-500/10 text-blue-400">
               <Pill className="w-5 h-5" />
@@ -810,12 +661,12 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
             <p className="text-xl font-bold text-slate-100">{medSummary.avgAdherence}%</p>
             <p className="text-xs text-slate-500">last 7 days</p>
           </div>
-        </div>
+        </Card>
       )}
 
       {/* Typing pattern signal */}
       {typingSignal && (
-        <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 flex items-start gap-3">
+        <Card variant="raised" gap="none" className="flex items-start gap-3">
           <div className="p-2 rounded-xl bg-violet-500/10 text-violet-400">
             <BrainCircuit className="w-5 h-5" />
           </div>
@@ -828,12 +679,12 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
             </p>
             <p className="text-xs text-slate-500 mt-1">Private: only timing is stored, never what you typed.</p>
           </div>
-        </div>
+        </Card>
       )}
 
       {/* Voice pattern signal */}
       {voiceSignal && (
-        <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 flex items-start gap-3">
+        <Card variant="raised" gap="none" className="flex items-start gap-3">
           <div className="p-2 rounded-xl bg-rose-500/10 text-rose-400">
             <Mic className="w-5 h-5" />
           </div>
@@ -846,12 +697,12 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
             </p>
             <p className="text-xs text-slate-500 mt-1">Opt-in: only speaking rate is stored locally, never what you said.</p>
           </div>
-        </div>
+        </Card>
       )}
 
       {/* Circadian rhythm regularity */}
       {circadian && (
-        <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 flex items-start gap-3">
+        <Card variant="raised" gap="none" className="flex items-start gap-3">
           <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-400">
             <Moon className="w-5 h-5" />
           </div>
@@ -865,12 +716,12 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
             <p className="text-[11px] text-slate-400 leading-relaxed mt-1">{circadian.note}</p>
             <p className="text-xs text-slate-500 mt-1">From {circadian.nights} nights of self-reported sleep. Avg {circadian.avgSleep}h.</p>
           </div>
-        </div>
+        </Card>
       )}
 
       {/* Fused circadian + social rhythm feedback loop */}
       {circadianFeedback && (
-        <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 flex items-start gap-3">
+        <Card variant="raised" gap="none" className="flex items-start gap-3">
           <div className={`p-2 rounded-xl ${circadianFeedback.needsAttention ? "bg-amber-500/10 text-amber-400" : "bg-emerald-500/10 text-emerald-400"}`}>
             <Moon className="w-5 h-5" />
           </div>
@@ -883,12 +734,12 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
             </div>
             <p className="text-[11px] text-slate-400 leading-relaxed mt-1">{circadianFeedback.guidance}</p>
           </div>
-        </div>
+        </Card>
       )}
 
       {/* Social rhythm per-anchor breakdown (Phase 10) */}
       {rhythmReg && rhythmReg.daysLogged >= 3 && rhythmReg.anchors.some((a) => a.meanTime) && (
-        <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 space-y-2">
+        <Card variant="raised">
           <p className="text-sm font-semibold text-slate-100 flex items-center gap-2">
             <Clock3 className="w-4 h-4 text-blue-400" /> Anchor timing
           </p>
@@ -908,12 +759,12 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
           <p className="text-xs text-slate-500">
             Over {rhythmReg.daysLogged} days · <span className="italic">Smaller ± is steadier</span>
           </p>
-        </div>
+        </Card>
       )}
 
       {/* N-of-1: what helps THIS person */}
       {nOf1.length > 0 && (
-        <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 space-y-2">
+        <Card variant="raised">
           <p className="text-sm font-semibold text-slate-100 flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-amber-400" /> What's been helping you
           </p>
@@ -929,7 +780,7 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
             );
           })}
           <p className="text-xs text-slate-500">Your own pattern, from completed programs. Not a diagnosis.</p>
-        </div>
+        </Card>
       )}
 
       {trendLength >= 2 && (

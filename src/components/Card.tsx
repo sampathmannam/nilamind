@@ -2,11 +2,13 @@ import React from "react";
 
 export type CardVariant = "glass" | "raised" | "fill";
 export type CardPadding = "sm" | "md" | "lg";
+export type CardGap = "none" | "sm" | "md";
 
 interface CardProps {
   children: React.ReactNode;
   variant?: CardVariant;
   padding?: CardPadding;
+  gap?: CardGap;
   accent?: "none" | "crisis" | "warning" | "success";
   className?: string;
   role?: string;
@@ -18,6 +20,12 @@ const PADDING: Record<CardPadding, string> = {
   sm: "p-3",
   md: "p-4",
   lg: "p-5",
+};
+
+const GAP: Record<CardGap, string> = {
+  none: "",
+  sm: "space-y-2",
+  md: "space-y-3",
 };
 
 const ACCENT: Record<string, string> = {
@@ -36,6 +44,7 @@ export default function Card({
   children,
   variant = "glass",
   padding = "md",
+  gap = "sm",
   accent = "none",
   className = "",
   role,
@@ -47,7 +56,7 @@ export default function Card({
       id={id}
       role={role}
       aria-label={ariaLabel}
-      className={`rounded-2xl space-y-2 ${VARIANT[variant]} ${PADDING[padding]} ${accent !== "none" ? ACCENT[accent] : ""} ${className}`.trim()}
+      className={`rounded-2xl ${GAP[gap]} ${VARIANT[variant]} ${PADDING[padding]} ${accent !== "none" ? ACCENT[accent] : ""} ${className}`.trim()}
     >
       {children}
     </div>
