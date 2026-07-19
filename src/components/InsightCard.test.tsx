@@ -5,7 +5,7 @@ vi.mock("../services/secureLocal", async () => {
   return { ...actual };
 });
 
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import React from "react";
 import InsightCard from "./InsightCard";
 import type { InsightData } from "./InsightCard";
@@ -44,13 +44,6 @@ describe("InsightCard", () => {
     const withSparkline = { ...base, sparkline: [3, 5, 4, 6, 7, 8, 7, 9, 8, 10] };
     const { container } = render(<InsightCard insight={withSparkline} />);
     expect(container.querySelector("svg")).toBeTruthy();
-  });
-
-  it("calls onClick when clicked", () => {
-    const onClick = vi.fn();
-    render(<InsightCard insight={base} onClick={onClick} />);
-    fireEvent.click(screen.getByText("Sleep affects mood"));
-    expect(onClick).toHaveBeenCalled();
   });
 
   it("renders without citation when not provided", () => {

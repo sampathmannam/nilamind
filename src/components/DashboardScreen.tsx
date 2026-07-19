@@ -56,6 +56,8 @@ import AffectToneStrip from "./AffectToneStrip";
 import InsightCard from "./InsightCard";
 import StreakCounter from "./StreakCounter";
 import AchievementBadge from "./AchievementBadge";
+import Section from "./Section";
+import StatCard from "./StatCard";
 import PassiveInsightCard from "./PassiveInsightCard";
 import { getAllAchievements, getAchievementCount } from "../services/achievements";
 import { stripProvenance } from "../services/emotionParse";
@@ -579,7 +581,12 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
          />
        )}
 
-{(behaviourInsights.length > 0 || proactiveCards.length > 0) && <SectionHeader label="What Nila noticed" />}
+{(behaviourInsights.length > 0 || proactiveCards.length > 0) && (
+  <div className="flex items-center gap-2 pt-3" role="separator" aria-label="What Nila noticed">
+    <h2 className="text-xs font-bold text-ink-muted uppercase tracking-wider whitespace-nowrap">What Nila noticed</h2>
+    <div className="flex-1 h-px bg-slate-800" />
+  </div>
+)}
 
 {/* Behaviour Insights — patterns Nila noticed */}
         {behaviourInsights.length > 0 && (
@@ -628,8 +635,8 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
 
         {/* Top stats */}
       <div className="grid grid-cols-2 gap-2">
-        <Stat icon={<CalendarCheck className="w-4 h-4 text-emerald-400" />} value={`${freq14}/14`} label={t("days_logged")} />
-        <Stat icon={<MessageSquare className="w-4 h-4 text-purple-400" />} value={String(nila.last7)} label={t("nila_chats_7d")} />
+        <StatCard icon={<CalendarCheck className="w-4 h-4 text-emerald-400" />} value={`${freq14}/14`} label={t("days_logged")} />
+        <StatCard icon={<MessageSquare className="w-4 h-4 text-purple-400" />} value={String(nila.last7)} label={t("nila_chats_7d")} />
       </div>
       {streak.longest > 0 && (
         <p className="text-[11px] text-slate-500 -mt-2 text-center flex items-center justify-center gap-1">
@@ -925,7 +932,12 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
         </div>
       )}
 
-      {trendLength >= 2 && <SectionHeader label="Trends & measures" />}
+      {trendLength >= 2 && (
+        <div className="flex items-center gap-2 pt-3" role="separator" aria-label="Trends & measures">
+          <h2 className="text-xs font-bold text-ink-muted uppercase tracking-wider whitespace-nowrap">Trends & measures</h2>
+          <div className="flex-1 h-px bg-slate-800" />
+        </div>
+      )}
 
       {/* ONE trend chart (7D/30D + Emotion/Context), fed by loadMoodHistory() */}
       {trendLength >= 2 ? (
@@ -1123,7 +1135,12 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
         </div>
       )}
 
-      {(epPatterns || nila.recent.length > 0) && <SectionHeader label="Episodes & sessions" />}
+      {(epPatterns || nila.recent.length > 0) && (
+        <div className="flex items-center gap-2 pt-3" role="separator" aria-label="Episodes & sessions">
+          <h2 className="text-xs font-bold text-ink-muted uppercase tracking-wider whitespace-nowrap">Episodes & sessions</h2>
+          <div className="flex-1 h-px bg-slate-800" />
+        </div>
+      )}
 
       {/* Episode analytics (real stats only — NO fabricated correlations) */}
       {epPatterns && (
@@ -1199,28 +1216,7 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
   );
 }
 
-/** A full-width section divider that breaks the long dashboard scroll into labeled bands (2026-07-18
- *  design review: ~25 cards scrolled as one undifferentiated list). Rendered by the caller only when the
- *  band below it has content, so a heading never sits above an empty section. */
-function SectionHeader({ label }: { label: string }) {
-  return (
-    <div className="flex items-center gap-2 pt-3" role="separator" aria-label={label}>
-      <h2 className="text-[11px] font-mono uppercase tracking-widest text-slate-500 whitespace-nowrap">{label}</h2>
-      <div className="flex-1 h-px bg-slate-800" />
-    </div>
-  );
-}
-
-function Stat({ icon, value, label }: { icon: React.ReactNode; value: string; label: string }) {
-  return (
-    <div className="glass rounded-2xl py-3 px-2 text-center">
-      <div className="flex justify-center mb-1">{icon}</div>
-      <div className="text-lg font-black text-slate-100 font-mono leading-none">{value}</div>
-      <div className="text-xs text-slate-500 uppercase tracking-wide mt-1">{label}</div>
-    </div>
-  );
-}
-
+/** A full-width section divider that breaks the long dashboard scroll into labeled bands. */
 function EmptyCard({ text }: { text: string; illustration?: string }) {
   return (
     <EmptyStateShared
