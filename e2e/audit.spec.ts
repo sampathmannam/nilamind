@@ -41,7 +41,7 @@ test("AUDIT: accessibility per tab", async ({ page }) => {
 
 const TILES = [
   "Grounding & breathing", "Wind down for sleep", "Ambient sounds", "Reach out to someone",
-  "I'm in an episode", "Quick check-in", "Diary", "DBT diary card", "Medications",
+  "I'm in an episode", "Quick check-in", "Journal", "DBT diary card", "Medications",
   "Problem-solving", "Values work", "Screenings", "Social rhythm", "Exposure hierarchy",
   "Relapse prevention plan", "Phone patterns",
 ];

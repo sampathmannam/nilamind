@@ -20,11 +20,15 @@ test("a11y: app shell has no serious/critical WCAG 2 A/AA violations", async ({ 
   expect(serious.map((v) => v.id), serious.map((v) => v.id).join(", ")).toEqual([]);
 });
 
-test("Tools: 'Diary' tile must not open a screen titled 'Journal' (label↔destination)", async ({ page }) => {
+test("Tools: 'Journal' tile opens the Journal screen (label↔destination match)", async ({ page }) => {
+  // Regression guard for the fixed Diary→Journal mismatch: the tile is now labelled "Journal"
+  // (i18n tool_diary_label) and must open the screen whose aux title is "Journal" (App.tsx AUX_LABELS).
   await boot(page);
   await page.getByText("Tools", { exact: true }).first().click();
-  await page.getByText("Diary", { exact: true }).first().click();
+  await page.getByText("Journal", { exact: true }).first().click();
   await page.waitForTimeout(800);
-  // The opened sheet's <h2> header reads "Journal" today — the mismatch. This asserts it should NOT.
-  await expect(page.getByRole("heading", { name: "Journal" })).toHaveCount(0);
+  const dialog = page.getByRole("dialog").last();
+  await expect(dialog).toHaveAttribute("aria-label", /journal/i);
+  // And the old "Diary" tile label must be gone (English locale).
+  await expect(page.getByText("Diary", { exact: true })).toHaveCount(0);
 });
