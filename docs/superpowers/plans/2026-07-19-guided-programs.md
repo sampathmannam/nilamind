@@ -248,9 +248,13 @@ describe("sleep-pair routing precedence (stepped care, pinned deliberately)", ()
   });
 
   it("cognitive-arousal sleep language routes directly to the fuller CBT-I program", () => {
-    // "sleep anxiety" is an exclusive cbti-sleep cue (not shared with sleep-wind-down) — this
-    // routing must be preserved, not collapsed into the wind-down protocol.
-    const result = routeToProtocol("I have sleep anxiety every night");
+    // "afraid to sleep" is an exclusive cbti-sleep cue (not shared with sleep-wind-down) — this
+    // routing must be preserved, not collapsed into the wind-down protocol. (Note: "sleep anxiety"
+    // is NOT a safe example here — "anxiety" alone is also a worry-postponement cue, and
+    // worry-postponement precedes cbti-sleep in array order, so that phrase actually routes to
+    // worry-postponement. Verified by direct execution before writing this test — don't swap the
+    // input back to "sleep anxiety" without re-checking.)
+    const result = routeToProtocol("I'm afraid to sleep");
     expect(result?.id).toBe("cbti-sleep");
   });
 });
@@ -565,13 +569,21 @@ git commit -m "feat(nav): add guided_programs route (sealed-contract deliberate 
 
 - [ ] **Step 6: Write the failing test for GuidedProgramsScreen**
 
-Create `src/components/GuidedProgramsScreen.test.tsx`:
+Create `src/components/GuidedProgramsScreen.test.tsx`. This project's component tests run in `node`
+by default (see `vitest.config.ts`) and opt into DOM rendering per-file via a
+`// @vitest-environment jsdom` docblock; there's no `@testing-library/jest-dom` installed (no
+`toBeInTheDocument()` — use `toBeTruthy()`); and RTL auto-cleanup isn't globally enabled, so every
+existing component test calls `afterEach(cleanup)` explicitly (see `SafetyPlanScreen.test.tsx` for
+the reference pattern) — follow all three exactly, this is not optional style:
 
 ```typescript
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+// @vitest-environment jsdom
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import GuidedProgramsScreen from "./GuidedProgramsScreen";
 import { abandonProtocol, startProtocol } from "../services/protocolProgress";
+
+afterEach(cleanup);
 
 describe("GuidedProgramsScreen", () => {
   beforeEach(() => abandonProtocol());
@@ -583,13 +595,15 @@ describe("GuidedProgramsScreen", () => {
 
   it("groups protocols into Quick programs and Deeper modules sections", () => {
     render(<GuidedProgramsScreen onStart={vi.fn()} />);
-    expect(screen.getByText("Quick programs")).toBeInTheDocument();
-    expect(screen.getByText("Deeper modules")).toBeInTheDocument();
+    expect(screen.getByText("Quick programs")).toBeTruthy();
+    expect(screen.getByText("Deeper modules")).toBeTruthy();
   });
 
   it("shows the citation for each protocol", () => {
     render(<GuidedProgramsScreen onStart={vi.fn()} />);
-    expect(screen.getByText(/Linehan/)).toBeInTheDocument();
+    // 4 protocols' basis text mentions Linehan (DBT, plus others) — getByText would throw on multiple
+    // matches, so assert on the count instead.
+    expect(screen.getAllByText(/Linehan/).length).toBeGreaterThan(0);
   });
 
   it("tapping a protocol with no active session starts it directly", () => {
@@ -605,7 +619,7 @@ describe("GuidedProgramsScreen", () => {
     render(<GuidedProgramsScreen onStart={onStart} />);
     fireEvent.click(screen.getByText("Self-Compassion"));
     expect(onStart).not.toHaveBeenCalled();
-    expect(screen.getByText(/Switch from Behavioral Activation/)).toBeInTheDocument();
+    expect(screen.getByText(/Switch from Behavioral Activation/)).toBeTruthy();
     fireEvent.click(screen.getByText("Switch"));
     expect(onStart).toHaveBeenCalledWith("self-compassion");
   });
@@ -777,45 +791,53 @@ git commit -m "feat(guided-programs): add hub screen, wired to nav and chat star
 
 ## Task 6: Today entry card
 
+**Corrected target**: `DashboardScreen.tsx` is NOT the Today tab — it's the separate `"dashboard"`/`"behaviour"` aux view. The actual Today tab is `TodayScreen.tsx`, rendered at `App.tsx:455` (`<TodayScreen go={go} phoneEnabled={phoneEnabled} onEpisode={onEpisode} onOpenCrisis={activateCrisis} />`). Verified directly against `App.tsx` before writing this task — an earlier draft targeted the wrong file, which would have made Step 3's manual verification fail.
+
 **Files:**
-- Modify: `src/components/DashboardScreen.tsx`
+- Modify: `src/components/TodayScreen.tsx`
 
 **Interfaces:**
-- Consumes: `onOpenView?: (target: string) => void` — the existing prop `DashboardScreen` already receives (see `App.tsx:546`: `<DashboardScreen onOpenView={(target) => { closeTop(); go(target); }} />`).
+- Consumes: `go: (target: string) => void` — the prop `TodayScreen` already receives and already uses directly for every other card (e.g. `onClick={() => go("nila")}`, `onClick={() => go("social_rhythm")}`).
 
-No new test file — `DashboardScreen.tsx` has no existing component-level test file in this codebase (only its data/logic layer, `dashboardInsights.ts`, is unit tested); adding one now for a single static card is disproportionate scope for this task and inconsistent with the file's established testing pattern. Verify this step visually per Step 3.
+No new test file — `TodayScreen.tsx` has no existing component-level test file in this codebase; adding one now for a single static card is disproportionate scope for this task. Verify this step visually per Step 3.
 
 - [ ] **Step 1: Add the featured card**
 
-In `src/components/DashboardScreen.tsx`, find the `{(behaviourInsights.length > 0 || proactiveCards.length > 0) && <SectionHeader label="What Nila noticed" />}` line (around line 578) and add the new card immediately before it:
+In `src/components/TodayScreen.tsx`, find the closing of the "Talk to Nila" card block (around line 449 — the `)}` that closes the `{hero.id !== "nila" && (...)}` block) and add the new card immediately after it, before the "Show more toggle" comment:
 
 ```tsx
-        <button
-          onClick={() => onOpenView?.("guided_programs")}
-          className="w-full text-left p-4 rounded-xl bg-violet-500/10 border border-violet-500/30 hover:bg-violet-500/15 transition-colors min-h-[44px] focus-ring"
-        >
-          <p className="text-sm font-medium text-violet-200">Guided Programs</p>
-          <p className="mt-1 text-xs text-violet-300/70">
-            Real, evidence-based programs — DBT, CBT, and more — you can start any time.
-          </p>
-        </button>
+      )}
 
-{(behaviourInsights.length > 0 || proactiveCards.length > 0) && <SectionHeader label="What Nila noticed" />}
+      <button
+        onClick={() => go("guided_programs")}
+        className="w-full glass hover:brightness-125 p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left flex items-center gap-3"
+      >
+        <span className="shrink-0 text-violet-400"><Sparkle className="w-5 h-5" aria-hidden="true" /></span>
+        <span className="flex-1 min-w-0">
+          <span className="block text-sm font-bold text-slate-100">Guided Programs</span>
+          <span className="block text-[11px] text-slate-400">Real, evidence-based programs you can start any time</span>
+        </span>
+        <ChevronRight className="w-5 h-5 text-slate-500 shrink-0" aria-hidden="true" />
+      </button>
+
+      {/* Show more toggle — hides informational cards by default */}
 ```
+
+`Sparkle` and `ChevronRight` are already imported in this file (see the top-of-file `lucide-react` import line) — no new import needed.
 
 - [ ] **Step 2: Type-check and lint**
 
-Run: `npx tsc --noEmit` and `npx eslint src/components/DashboardScreen.tsx`
+Run: `npx tsc --noEmit` and `npx eslint src/components/TodayScreen.tsx`
 Expected: no new errors introduced by this change.
 
 - [ ] **Step 3: Manual verification**
 
-Run: `npm run dev`, open the app, go to Today, confirm the "Guided Programs" card renders near the top, tap it, confirm it opens the hub (Task 5), tap a protocol, confirm it starts in the Nila tab.
+Run: `npm run dev`, open the app, go to Today, confirm the "Guided Programs" card renders below "Talk to Nila", tap it, confirm it opens the hub (Task 5), tap a protocol, confirm it starts in the Nila tab.
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add src/components/DashboardScreen.tsx
+git add src/components/TodayScreen.tsx
 git commit -m "feat(guided-programs): add Today entry card"
 ```
 
