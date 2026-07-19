@@ -5,9 +5,11 @@ Status: proposed (decision delegated to and made by Fable 5, per user instructio
 
 ## 1. Goal
 
-Nilamind's structured-protocol library (CBT-I, DBT, ACT, MBCT mindfulness, social rhythm,
-relapse prevention, behavioral experiments, assertion — all evidence-cited in
-`src/services/protocol*.ts`) is real, wired, and shipped, but under-surfaced. This design
+Nilamind's structured-protocol library — 21 protocols total, from short micro-protocols
+(grounding, gratitude, self-compassion) to full named modules (DBT, ACT, CBT-I,
+mindfulness, social rhythm, relapse prevention, behavioral experiments, assertion), all
+evidence-cited in `src/services/protocols.ts` and `protocol*.ts` — is real, wired, and
+shipped, but under-surfaced. This design
 makes it (a) more **discoverable**, (b) more visibly **credible** (evidence citations on
 screen, not just in source comments), and (c) confirms the existing **routing** already
 meets this project's consent bar — without reopening the sealed nav contract or claiming
@@ -17,27 +19,45 @@ Out of scope, explicitly: Nila presenting as credentialed/trained; any live conn
 matching, or booking with a real human counsellor; removing or restructuring existing
 Tools-tab entries (that's Approach B, deferred — see §7).
 
-## 2. What already exists (corrected from initial assumption)
+## 2. What already exists (corrected — twice — from initial assumptions)
 
-A codebase read during design turned up more than expected — this changes the shape of
-the work from "build routing" to "surface what's already routed":
+A codebase read during design turned up more than expected. A first draft of this spec
+undercounted the registry (said "8 protocols"); a Fable review pass then read the code
+directly and flagged the error — but its own replacement number was itself a partial
+count. Verified directly against source, the actual shape is:
 
-- **Data model already carries evidence**: `Protocol.basis` (`src/services/protocols.ts`)
-  is a mandatory field — every protocol traces to a citation (e.g. Linehan 2015, Hayes et
-  al. 2011). It is not currently rendered anywhere in the UI.
+- **The live registry (`PROTOCOLS` in `src/services/protocols.ts`) holds 21 protocols,
+  not 8.** Two layers exist and both feed the same array: 13 short micro-protocols
+  defined inline (`behavioral-activation`, `worry-postponement`, `self-compassion`,
+  `sleep-wind-down`, `social-confidence`, `panic-skills`, `cooling-anger`,
+  `grounding-anchor`, `sleep-rhythm`, `social-connection`, `gratitude`, `values-action`,
+  `intolerance-of-uncertainty`) plus 8 larger named modules imported from their own files
+  (`dbt-skills-training`, `act-training`, `assertion-training`, `cbti-sleep`,
+  `social-rhythm`, `relapse-prevention`, `mindfulness-practice`, `behavioral-experiments`
+  — these are the ones with dedicated `protocolDBT.ts`/`protocolACT.ts`/etc. service
+  files, which is what the initial spec draft mistook for the whole registry). All 21 are
+  reachable through the same `routeToProtocol`/`startProtocolChat`/`getProtocol` API —
+  there is no code-level distinction between "micro" and "named" once routed.
+- **Data model already carries evidence**: `Protocol.basis` is a mandatory field on all
+  21 — every protocol traces to a citation (e.g. Linehan 2015, Hayes et al. 2011). It is
+  not currently rendered anywhere in the UI.
 - **Routing already exists and is live**: `protocolOfferCard()` in
-  `src/services/protocolChat.ts` matches user chat text against each protocol's
-  `forConcerns` lexical cues (22 cue entries across the library) and surfaces a
-  `ProtocolCard` in `ModeScreen.tsx`. It already fails closed on a crisis disclosure
-  (`scanForCrisis` gate) and never auto-starts — the card requires an explicit tap
-  (`startProtocolChat`), matching the SENSE→ASK→CONFIRM→ACT pattern this project already
-  uses elsewhere. **This is a real, working consent-gated suggestion system today.**
+  `src/services/protocolChat.ts` matches user chat text against `forConcerns` lexical
+  cues — **~451 cue strings total across all 21 protocols** (268 in the 13 inline
+  micro-protocols, ~183 more across the 8 named-module files) — and surfaces a
+  `ProtocolCard` in `ModeScreen.tsx`. Per `protocolOffer()`'s own doc comment, it offers
+  "ONLY when nothing is already active (never interrupt an in-progress program)," fails
+  closed on a crisis disclosure (`scanForCrisis` gate), and never auto-starts — the card
+  requires an explicit tap (`startProtocolChat`), matching the SENSE→ASK→CONFIRM→ACT
+  pattern this project already uses elsewhere. **This is a real, working consent-gated
+  suggestion system today.**
 - **No dedicated browse/discovery surface exists.** The only ways to reach a protocol are
   (1) get lexically matched in chat, or (2) already know it's under Tools.
 
 So the actual gaps are narrower than "add routing": (1) no hub to browse/start a protocol
-deliberately, (2) `basis` never reaches the screen, (3) routing coverage across all 8
-protocols hasn't been audited for gaps.
+deliberately, (2) `basis` never reaches the screen, (3) `forConcerns` coverage across all
+21 protocols hasn't been audited for gaps — a meaningfully bigger verification task than
+first scoped, given ~451 cues rather than ~22.
 
 ## 3. Guided Programs hub (Approach A — additive)
 
@@ -46,19 +66,27 @@ A new screen, `GuidedProgramsScreen.tsx`, added as one new `AuxView` entry
 `KNOWN_AUX_VIEWS`, consistent with what the sealed nav-contract test permits (it freezes
 the set against silent additions, not against reviewed ones).
 
-- Lists all 8 protocols as cards: title, one-line plain-language description, step count,
-  and a citation line rendered from `Protocol.basis` (e.g. "Based on Linehan, 2015 — DBT
-  Skills Training").
+- Lists all 21 protocols as cards: title, one-line plain-language description, step
+  count, and a citation line rendered from `Protocol.basis` (e.g. "Based on Linehan, 2015
+  — DBT Skills Training"). **21 flat cards is too many for one undifferentiated list** —
+  group them (e.g. by concern-domain: sleep, mood, distress-tolerance, anxiety, values,
+  relationships), mirroring the existing Tools tab's own grouped-sections pattern
+  (`buildToolGroups()` in `toolsRows.ts`) rather than inventing a new grouping scheme.
 - Tapping a card calls the same `startProtocolChat(protocolId)` used by the existing chat
   offer flow, then routes to the Nila tab — one start path, not a second parallel one.
-- **Already-active protocol**: `protocolProgress.ts` holds exactly one active slot
-  (`{protocolId, stepIndex}`) — calling `startProtocol` on a new id overwrites it, and the
-  old protocol has no saved position to resume from (restarting it later begins at step 0
-  again, same as the existing completed-protocol-restart behavior). So the hub must not
-  silently overwrite an in-progress protocol: tapping a different card while one is active
-  shows a confirm ("Switch from {active title}? You'll restart it from the beginning next
-  time.") before calling `startProtocolChat`. This is an honest warning, not a
-  save-and-resume promise — building real multi-protocol resume is out of scope here.
+- **Already-active protocol — a named, deliberate exception to an existing invariant**:
+  `protocolOffer()`'s doc comment states it offers "ONLY when nothing is already active
+  (never interrupt an in-progress program)" — but that invariant governs the *passive
+  chat-offer* path (Nila unprompted mid-conversation). The hub is a *user-initiated browse*
+  path, a different context, so it is allowed to deliberately break that rule for an
+  explicit user tap — but must do so visibly, not silently. `protocolProgress.ts` holds
+  exactly one active slot (`{protocolId, stepIndex}`); calling `startProtocol` on a new id
+  overwrites it, and the old protocol has no saved position to resume from (restarting it
+  later begins at step 0 again, same as the existing completed-protocol-restart behavior).
+  So tapping a different card while one is active shows a confirm ("Switch from {active
+  title}? You'll restart it from the beginning next time.") before calling
+  `startProtocolChat`. This is an honest warning, not a save-and-resume promise — building
+  real multi-protocol resume is out of scope here.
 - Reachable via a new featured card on `DashboardScreen.tsx` (Today), following the
   existing `InsightCard`/`PassiveInsightCard` component pattern already used there for
   other Today-surface cards.
@@ -82,10 +110,15 @@ sees is a rare, real differentiator — not decoration.
 
 ## 5. Routing coverage audit
 
-Before shipping, audit `forConcerns` across all 8 protocol files for gaps (e.g. does CBT-I
-actually get offered on sleep-complaint language today, in practice, not just in theory).
-This is a verification task against existing code, not new infrastructure — output is a
-short pass/fail table per protocol, with cue additions only where a real gap is found.
+Before shipping, audit `forConcerns` across all 21 protocols (~451 cue strings, see §2)
+for gaps — e.g. does `cbti-sleep` actually get offered on sleep-complaint language today,
+in practice, not just in theory, and does it collide with the separate `sleep-wind-down`
+and `sleep-rhythm` micro-protocols' own cues (three sleep-adjacent protocols exist; check
+for ambiguous/overlapping matches, not just missing ones). This is a verification task
+against existing code, not new infrastructure, but is a larger pass than "8 protocols"
+implied — budget accordingly in the implementation plan. Output is a short pass/fail table
+per protocol, with cue additions/disambiguation only where a real gap or collision is
+found.
 
 ## 6. Visual language: Quiet Room as shell, not a fork
 
@@ -117,11 +150,16 @@ assumptions baked into the screen).
 
 ## 8. Testing
 
-- `nav.test.ts` / `navStore.test.ts`: extend the golden-set assertions to include
-  `"guided_programs"` (the sealed-contract pattern already requires this for any new
-  route).
-- New `GuidedProgramsScreen.test.tsx`: renders all 8 protocols, citation text present per
-  card, tap invokes `startProtocolChat` with the correct id.
+- `nav.contract.test.ts` (**not** `nav.test.ts`/`navStore.test.ts` — that's where the
+  actual frozen golden set of `TAB_TARGETS`/`KNOWN_AUX_VIEWS` lives, per its own header
+  comment: "seal, don't migrate... any add/remove is then a deliberate, reviewed edit").
+  Add `"guided_programs"` to the golden set and confirm it round-trips through
+  `resolveNavTarget`. `nav.test.ts` may also want a route-level spot-check alongside its
+  existing per-route cases, but the contract file is the one that will actually fail
+  without this change.
+- New `GuidedProgramsScreen.test.tsx`: renders all 21 protocols across their groups (§3),
+  citation text present per card, tap invokes `startProtocolChat` with the correct id,
+  switch-confirmation shown when a different protocol is already active.
 - `protocolChat.test.ts`: extend for the new `basis` field on `ProtocolCard`.
 - Routing audit (§5) output reviewed as part of this change, not shipped silently.
 
