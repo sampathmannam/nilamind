@@ -1,0 +1,86 @@
+# CodeRabbit configuration for nilamind
+# https://docs.coderabbit.ai/reference/configuration
+
+language: "en-US"
+early_access: false
+
+reviews:
+  profile: "assertive"
+  request_changes_workflow: true
+  high_level_summary: true
+  poem: false
+  collapse_walkthrough: false
+  auto_review:
+    enabled: true
+    drafts: false
+
+  path_instructions:
+    - path: "src/services/nilaSafetyGate.ts"
+      instructions: >
+        This is the §9 crisis-detection safety gate. It must remain fail-closed:
+        any change that narrows detection coverage, adds a way to bypass or
+        suppress a crisis classification, or makes the gate depend on a specific
+        model/backend should be flagged as a high-severity concern. Prefer
+        additive changes (new guards, new patterns) over removing existing
+        checks. Call out anything that could silently reduce recall on
+        self-harm/crisis language.
+
+    - path: "src/hooks/useCrisisGate.ts"
+      instructions: >
+        Crisis-gate React hook. Flag any change that could cause the gate to
+        not fire (missed effect deps, races, early returns) or that weakens
+        fail-closed behavior.
+
+    - path: "src/services/crisisEmbedder.ts"
+      instructions: >
+        On-device crisis-classification embedder (Transformers.js/MiniLM,
+        additive/fail-closed design). Flag threshold changes, model swaps, or
+        anything that would make classification fail open instead of closed.
+
+    - path: "src/services/tippSafetyGate.ts"
+      instructions: >
+        Safety-sandwich streaming output guard. Flag anything that lets
+        unguarded model output reach the user, or that weakens the
+        live-crisis-signal strictness.
+
+    - path: "src/services/safety.ts"
+      instructions: >
+        Core safety utilities. Treat any relaxation of existing safety checks
+        as a high-severity finding requiring explicit justification.
+
+    - path: "src/components/CrisisOverlay.tsx"
+      instructions: >
+        Crisis overlay UI. Flag changes that could make crisis resources
+        (helplines, Tele-MANAS, etc.) harder to reach, less visible, or
+        conditionally hidden.
+
+    - path: "src/services/localLlm.ts"
+      instructions: >
+        This is the on-device/cloud LLM seam. nilamind's core invariant is
+        privacy-first: on-device by default, no data leaves the device unless
+        the user explicitly opts into the cloud tier, and cloud calls must
+        never happen from a background/passive path. Flag any new network
+        call, telemetry, or analytics call introduced here or in adapters
+        that isn't clearly gated behind explicit user opt-in.
+
+    - path: "src/services/cloudLlmAdapter.ts"
+      instructions: >
+        Opt-in cloud tier adapter. Flag anything that could cause this to be
+        invoked without explicit prior user consent, or from a background/
+        passive-sensing code path.
+
+    - path: "src/services/freeApiLlmAdapter.ts"
+      instructions: >
+        Flag if this adapter (or its endpoints/keys) could leak into a
+        production default path rather than being a dev-only/opt-in path.
+
+  tools:
+    github-checks:
+      enabled: true
+
+chat:
+  auto_reply: true
+
+knowledge_base:
+  learnings:
+    scope: "auto"
