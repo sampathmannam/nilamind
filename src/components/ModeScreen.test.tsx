@@ -48,6 +48,18 @@ vi.mock("../services/notifications", () => ({
   suppressNudgesForCrisis: (...args: unknown[]) => suppressNudgesMock(...args),
 }));
 
+const scoreAffectMock = vi.fn();
+const { affectAccentActiveRef } = vi.hoisted(() => ({ affectAccentActiveRef: { current: false } }));
+vi.mock("../services/affectHead", () => ({
+  scoreAffect: (...args: unknown[]) => scoreAffectMock(...(args as [string])),
+  affectAccentActive: () => affectAccentActiveRef.current,
+}));
+
+const noteChatAffectMock = vi.fn();
+vi.mock("../services/chatAffect", () => ({
+  noteChatAffect: (...args: unknown[]) => noteChatAffectMock(...args),
+}));
+
 // Bug 3 fix test support (2026-07-12): the arm-request branch's §9 gate (shouldBlockForCrisisAsync) needs to
 // be held pending on demand to exercise the race window. `armGateRef.current` overrides it when set; every
 // other test leaves it null, which falls through to the REAL implementation (unchanged behavior for the
@@ -98,6 +110,9 @@ afterEach(() => {
   attachSuggestionMock.mockReset();
   feedbackSeq = 0;
   armGateRef.current = null; // never leak a held-open §9 gate into another test
+  scoreAffectMock.mockReset();
+  noteChatAffectMock.mockReset();
+  affectAccentActiveRef.current = false;
 });
 
 function openTextInput() {
@@ -335,5 +350,38 @@ describe("in-moment skill suggestion (2026-07-16 dedupe)", () => {
     fireEvent.click(screen.getByText("Not now"));
     await waitFor(() => expect(screen.queryByText("Try this skill")).toBeNull());
     expect(screen.getByText("That sounds hard.")).toBeTruthy();
+  });
+});
+
+describe("ModeScreen — orb affect-accent wiring (Phase 1)", () => {
+  it("does nothing when the affect accent is disabled (default)", async () => {
+    sendToNilaMock.mockResolvedValue({ reply: "Nila's reply", reachedAI: true, blocked: false });
+    render(<ModeScreen onOpenCrisis={vi.fn()} />);
+    await sendMessage("I had a rough day");
+    await waitFor(() => expect(sendToNilaMock).toHaveBeenCalled());
+    expect(scoreAffectMock).not.toHaveBeenCalled();
+    expect(noteChatAffectMock).not.toHaveBeenCalled();
+  });
+
+  it("scores both turns and persists the blended reading when enabled", async () => {
+    affectAccentActiveRef.current = true;
+    scoreAffectMock.mockImplementation(async (text: string) =>
+      text === "I had a rough day" ? { valence: -0.5, arousal: 0.3 } : { valence: 0.2, arousal: -0.1 }
+    );
+    sendToNilaMock.mockResolvedValue({ reply: "Nila's reply", reachedAI: true, blocked: false });
+    render(<ModeScreen onOpenCrisis={vi.fn()} />);
+    await sendMessage("I had a rough day");
+    await waitFor(() => expect(noteChatAffectMock).toHaveBeenCalledTimes(1));
+    expect(scoreAffectMock).toHaveBeenCalledWith("I had a rough day");
+    expect(scoreAffectMock).toHaveBeenCalledWith("Nila's reply");
+  });
+
+  it("skips the accent entirely on a blocked (§9 crisis) turn", async () => {
+    affectAccentActiveRef.current = true;
+    sendToNilaMock.mockResolvedValue({ reply: "crisis reply", reachedAI: false, blocked: true, crisisSource: "keyword", crisisTier: "full" });
+    render(<ModeScreen onOpenCrisis={vi.fn()} />);
+    await sendMessage("I want to kill myself");
+    await waitFor(() => expect(sendToNilaMock).toHaveBeenCalled());
+    expect(scoreAffectMock).not.toHaveBeenCalled();
   });
 });

@@ -12,6 +12,9 @@ import {
 } from "../services/modeEngine";
 import { clearChatElevation, noteChatElevation } from "../services/chatElevation";
 import { detectElevationRisk } from "../services/elevationGuard";
+import { scoreAffect, affectAccentActive } from "../services/affectHead";
+import { blendAffect } from "../services/affectBlend";
+import { noteChatAffect } from "../services/chatAffect";
 import { hasCheckinToday, getSkipFlag } from "../services/checkin";
 import { stripProvenance } from "../services/emotionParse";
 import { t } from "../services/i18n";
@@ -84,6 +87,7 @@ let modeDraftCache = "";
 
 export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboard, onOpenMedication, onOpenGrounding, onOpenDiary, onOpenReachOut, onOpenWindDown, activeCapture = null, onOpenCapture, onCloseCapture }: ModeScreenProps) {
   const [mode, setMode] = useState(getCurrentMode());
+  const [affectAccent, setAffectAccent] = useState<{ valence: number; arousal: number } | null>(null);
   const { showCheckin, hideCheckin } = useCheckinGate(mode.hasCheckedIn);
   const [messages, setMessages] = useState<NilaUiMessage[]>(() => {
     // Restore saved session if one exists (survives app restart)
@@ -306,6 +310,18 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
       // the interface settles — the pixel-level half of the elevation guard (which also steers Nila's words).
       // Not written on a §9 turn (that path returned above). Picked up by the setMode(getCurrentMode()) below.
       noteChatElevation(detectElevationRisk(msg).level);
+      // Per-turn affect accent (Phase 1, additive) — off by default (affectAccentActive() requires both
+      // setAffectAccentEnabled(true) AND an injected embedder; see main.tsx). scoreAffect() already
+      // fails closed (returns null on any error), so no extra try/catch is needed here.
+      let turnAffectAccent: { valence: number; arousal: number } | null = null;
+      if (affectAccentActive() && result.reply) {
+        const [userScore, nilaScore] = await Promise.all([scoreAffect(msg), scoreAffect(result.reply)]);
+        if (userScore && nilaScore) {
+          turnAffectAccent = blendAffect(userScore, nilaScore);
+          noteChatAffect(turnAffectAccent);
+        }
+      }
+      setAffectAccent(turnAffectAccent);
       const previousExplainerId =
         [...messages].reverse().find((m) => m.role === "assistant")?.insight?.explainer?.id ?? null;
       const insight = await deriveInMomentInsight(msg, mode.userState, previousExplainerId);
@@ -679,6 +695,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           onLongPress={() => openCrisis()}
           size={160}
           isListening={listening}
+          affectAccent={affectAccent}
         />
 
         <div className="text-center space-y-2">
