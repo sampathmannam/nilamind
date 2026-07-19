@@ -80,6 +80,7 @@ import OnboardingGate from "./components/OnboardingGate";
 import SafetyPlanScreen from "./components/SafetyPlanScreen";
 import GuidedProgramsScreen from "./components/GuidedProgramsScreen";
 import { startProtocolChat } from "./services/protocolChat";
+import { getSessionChat, setSessionChat } from "./services/sessionChat";
 import { hasCompletedOnboarding } from "./services/onboarding";
 import { type AuxView } from "./services/nav";
 
@@ -165,7 +166,16 @@ function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () 
       return (
         <GuidedProgramsScreen
           onStart={(protocolId) => {
-            startProtocolChat(protocolId);
+            // startProtocolChat's returned first-step prompt has nowhere to land once we navigate away:
+            // ModeScreen is unmounted while the hub is open and re-seeds `messages` purely from
+            // getSessionChat() on remount (see ModeScreen.tsx's messages useState initializer) — it does
+            // NOT re-run this callback's return value. Without this, the started protocol's step-1 content
+            // is silently skipped: the offer card would show "step 1 of N" but tapping it would advance
+            // straight to step 2. Seed the persisted transcript directly so remount picks it up.
+            const result = startProtocolChat(protocolId);
+            if (result.kind === "started") {
+              setSessionChat([...getSessionChat(), { role: "assistant", content: result.prompt }]);
+            }
             onClose();
             onOpenView("nila");
           }}
