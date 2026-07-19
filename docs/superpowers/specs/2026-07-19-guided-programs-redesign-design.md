@@ -69,9 +69,12 @@ the set against silent additions, not against reviewed ones).
 - Lists all 21 protocols as cards: title, one-line plain-language description, step
   count, and a citation line rendered from `Protocol.basis` (e.g. "Based on Linehan, 2015
   — DBT Skills Training"). **21 flat cards is too many for one undifferentiated list** —
-  group them (e.g. by concern-domain: sleep, mood, distress-tolerance, anxiety, values,
-  relationships), mirroring the existing Tools tab's own grouped-sections pattern
-  (`buildToolGroups()` in `toolsRows.ts`) rather than inventing a new grouping scheme.
+  group them. The data gives a natural, non-arbitrary axis for free: the 13 inline
+  protocols all run exactly 5 steps ("Quick programs"), the 8 named modules run 5–10 steps
+  ("Deeper modules" — DBT, ACT, CBT-I, etc.). Use that two-tier split rather than
+  inventing a new concern-domain taxonomy; it's grounded in the actual data shape, not a
+  design guess, and keeps `buildToolGroups()`'s existing grouped-sections pattern
+  (`toolsRows.ts`) as the visual precedent without duplicating its specific categories.
 - Tapping a card calls the same `startProtocolChat(protocolId)` used by the existing chat
   offer flow, then routes to the Nila tab — one start path, not a second parallel one.
 - **Already-active protocol — a named, deliberate exception to an existing invariant**:
@@ -111,14 +114,27 @@ sees is a rare, real differentiator — not decoration.
 ## 5. Routing coverage audit
 
 Before shipping, audit `forConcerns` across all 21 protocols (~451 cue strings, see §2)
-for gaps — e.g. does `cbti-sleep` actually get offered on sleep-complaint language today,
-in practice, not just in theory, and does it collide with the separate `sleep-wind-down`
-and `sleep-rhythm` micro-protocols' own cues (three sleep-adjacent protocols exist; check
-for ambiguous/overlapping matches, not just missing ones). This is a verification task
-against existing code, not new infrastructure, but is a larger pass than "8 protocols"
-implied — budget accordingly in the implementation plan. Output is a short pass/fail table
-per protocol, with cue additions/disambiguation only where a real gap or collision is
-found.
+for gaps AND collisions. This is a verification task against existing code, not new
+infrastructure, but is a larger pass than "8 protocols" implied — budget accordingly in
+the implementation plan.
+
+**A specific, verified collision to resolve, not just a hypothetical to check for**:
+`routeToProtocol()` (`protocols.ts`) scores every protocol by cue-match count and keeps
+the first-seen protocol on a tie (`if (score > bestScore)` — strict greater-than, so equal
+or lower-scoring later entries never win). `sleep-wind-down` (an inline micro-protocol, 28
+cues) and `cbti-sleep` (the evidence-heavier CBT-I module, 35 cues) share **24 cues**
+verbatim — the two protocols' `forConcerns` arrays are near-duplicates. Because
+`sleep-wind-down` sits earlier in `PROTOCOLS` (inline, near the top) and `cbti-sleep` is
+appended later (one of the 8 imported modules), a tie or a `sleep-wind-down`-favoring
+score routes sleep complaints to the shorter micro-protocol instead of the cited CBT-I
+module on a meaningful share of real messages — undermining exactly the
+evidence-credibility goal this whole feature exists for. `assertion-training` and
+`dbt-skills-training` share a smaller 4-cue overlap, lower priority.
+
+Output: a pass/fail + collision table per protocol. Fix the sleep pair specifically
+(disambiguate cues, reorder, or make `routeToProtocol` prefer higher-evidence/longer
+protocols on a tie — pick one, don't leave it to insertion-order accident) as part of this
+change, not a follow-up.
 
 ## 6. Visual language: Quiet Room as shell, not a fork
 
@@ -167,6 +183,10 @@ assumptions baked into the screen).
 
 1. `ProtocolCard.basis` field + citation chip rendering in the existing chat offer card
    (smallest, lowest-risk slice, ships the credibility win immediately).
-2. Routing coverage audit (§5) — fix any real gaps found.
-3. `GuidedProgramsScreen.tsx` + `"guided_programs"` nav entry + tests.
+2. Routing coverage audit (§5), **including the sleep-pair collision fix** — done before
+   the hub, not after: the collision fix may change how `sleep-wind-down` and `cbti-sleep`
+   are distinguished/labeled, which the hub's card list and grouping (§3) need to reflect
+   correctly from the start rather than being built against a since-changed routing layer.
+3. `GuidedProgramsScreen.tsx` (Quick programs / Deeper modules grouping, §3) +
+   `"guided_programs"` nav entry + tests.
 4. Today entry card (`DashboardScreen.tsx`).
