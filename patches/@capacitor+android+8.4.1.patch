@@ -1,0 +1,22 @@
+diff --git a/node_modules/@capacitor/android/capacitor/src/main/java/com/getcapacitor/plugin/SystemBars.java b/node_modules/@capacitor/android/capacitor/src/main/java/com/getcapacitor/plugin/SystemBars.java
+index fd71370..aa3dc51 100644
+--- a/node_modules/@capacitor/android/capacitor/src/main/java/com/getcapacitor/plugin/SystemBars.java
++++ b/node_modules/@capacitor/android/capacitor/src/main/java/com/getcapacitor/plugin/SystemBars.java
+@@ -262,10 +262,13 @@ public class SystemBars extends Plugin {
+                     Locale.US,
+                     """
+                     try {
+-                      document.documentElement.style.setProperty("--safe-area-inset-top", "%dpx");
+-                      document.documentElement.style.setProperty("--safe-area-inset-right", "%dpx");
+-                      document.documentElement.style.setProperty("--safe-area-inset-bottom", "%dpx");
+-                      document.documentElement.style.setProperty("--safe-area-inset-left", "%dpx");
++                      var __el = document.documentElement;
++                      if (__el) {
++                        __el.style.setProperty("--safe-area-inset-top", "%dpx");
++                        __el.style.setProperty("--safe-area-inset-right", "%dpx");
++                        __el.style.setProperty("--safe-area-inset-bottom", "%dpx");
++                        __el.style.setProperty("--safe-area-inset-left", "%dpx");
++                      }
+                     } catch(e) { console.error('Error injecting safe area CSS:', e); }
+                     """,
+                     (int) topPx,
