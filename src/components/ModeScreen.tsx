@@ -42,6 +42,7 @@ import CaptureSheets from "./CaptureSheets";
 import { selectVisibleNudges } from "./nudgeSelection";
 import NudgeRail from "./NudgeRail";
 import { useNudges } from "../hooks/useNudges";
+import { useCheckinGate } from "../hooks/useCheckinGate";
 import { useFocusTrap } from "../hooks/useFocusTrap";
 import { looksLikeArmRequest, requestArmedCheckin } from "../services/armedCheckin";
 import { protocolOfferCard, startProtocolChat, continueProtocolChat, type ProtocolCard } from "../services/protocolChat";
@@ -77,9 +78,7 @@ let modeDraftCache = "";
 
 export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboard, onOpenMedication, onOpenGrounding, onOpenDiary, onOpenReachOut, onOpenWindDown, onInternalSheetChange, closeSheetSignal }: ModeScreenProps) {
   const [mode, setMode] = useState(getCurrentMode());
-  const [showCheckin, setShowCheckin] = useState(() => {
-    return !mode.hasCheckedIn;
-  });
+  const { showCheckin, hideCheckin } = useCheckinGate(mode.hasCheckedIn);
   const [messages, setMessages] = useState<NilaUiMessage[]>(() => {
     // Restore saved session if one exists (survives app restart)
     const saved = getSessionChat();
@@ -244,7 +243,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   }, [messages]);
 
   const handleCheckinLogged = (entry: CheckInEntry) => {
-    setShowCheckin(false);
+    hideCheckin();
     clearChatElevation(); // a fresh check-in supersedes any chat-detected elevation → relax the UI
     setMode(getCurrentMode());
     hapticMedium();
@@ -261,7 +260,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   };
 
   const handleCheckinSkip = () => {
-    setShowCheckin(false);
+    hideCheckin();
   };
 
   const handleSendMessage = async (text?: string) => {
