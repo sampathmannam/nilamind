@@ -28,10 +28,10 @@ export default function AchievementBadge({ achievement, locked = false, compact 
     return (
       <Wrapper {...wrapperProps}>
         <div
-          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium transition-all ${
-            locked
-              ? "bg-slate-800/50 text-slate-500 border border-slate-700/50"
-              : "bg-slate-800/80 text-slate-200 border border-slate-600/50"
+          /* Matching the non-compact variant's own glass + locked/unlocked pattern below,
+             instead of the two ad-hoc flat opacities this used before. */
+          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium transition-all glass ${
+            locked ? "text-slate-500 opacity-60" : "text-slate-200"
           }`}
           title={locked ? `Locked: ${achievement.description}` : achievement.description}
         >

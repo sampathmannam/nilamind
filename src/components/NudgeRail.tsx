@@ -191,7 +191,7 @@ export default function NudgeRail({
       {visibleNudgeIds.has("jitai") && jitaiNudge?.shouldNudge && (
         <div
           key="jitai-nudge"
-          className="w-full px-3 py-2 rounded-xl bg-slate-800/50 border border-slate-700 text-slate-200 text-xs"
+          className="w-full px-3 py-2 rounded-xl glass text-slate-200 text-xs"
           id="jitai-nudge-card"
         >
           <div className="flex items-start gap-2">
