@@ -12,11 +12,16 @@ vi.mock("./chatElevation", () => ({
   noteChatElevation: vi.fn(),
   clearChatElevation: vi.fn(),
 }));
+vi.mock("./chatAffect", () => ({
+  todayAffectBucket: vi.fn(() => null),
+}));
 
-import { foldElevation, getUserState, getNilaQuestion } from "./modeEngine";
+import { foldElevation, foldAffectAccent, getUserState, getNilaQuestion } from "./modeEngine";
 import { secureLocal } from "./secureLocal";
 import { emaElevationSignal } from "./ema";
 import { chatElevationSignal } from "./chatElevation";
+import { todayAffectBucket } from "./chatAffect";
+import { localDateKey } from "./storageUtils";
 
 describe("foldElevation — EMA elevation folded into the derived state (manic-first)", () => {
   it("no EMA signal → base passes through unchanged", () => {
@@ -42,6 +47,40 @@ describe("foldElevation — EMA elevation folded into the derived state (manic-f
   });
 });
 
+describe("foldAffectAccent — today's affect bucket folded into the derived state (never overrides self-report)", () => {
+  it("passthrough when base is an explicit distress self-report", () => {
+    expect(foldAffectAccent("anxious", { valence: -0.9, arousal: 0.9, count: 10 }, false)).toBe("anxious");
+    expect(foldAffectAccent("low", { valence: -0.9, arousal: 0.9, count: 10 }, false)).toBe("low");
+  });
+
+  it("passthrough when base is already elevated", () => {
+    expect(foldAffectAccent("elevated", { valence: -0.9, arousal: 0.9, count: 10 }, false)).toBe("elevated");
+  });
+
+  it("passthrough when there's no bucket, or fewer than 3 readings today", () => {
+    expect(foldAffectAccent(null, null, false)).toBe(null);
+    expect(foldAffectAccent(null, { valence: -0.9, arousal: 0.9, count: 2 }, false)).toBe(null);
+  });
+
+  it("passthrough when the average valence isn't clearly negative", () => {
+    expect(foldAffectAccent(null, { valence: -0.3, arousal: 0.9, count: 5 }, false)).toBe(null);
+  });
+
+  it("promotes null to low/anxious on the arousal split, unconditional on check-in status", () => {
+    expect(foldAffectAccent(null, { valence: -0.7, arousal: 0.1, count: 5 }, false)).toBe("low");
+    expect(foldAffectAccent(null, { valence: -0.7, arousal: 0.5, count: 5 }, true)).toBe("anxious");
+  });
+
+  it("promotes calm to low/anxious ONLY when there's no check-in today", () => {
+    expect(foldAffectAccent("calm", { valence: -0.7, arousal: 0.1, count: 5 }, false)).toBe("low");
+    expect(foldAffectAccent("calm", { valence: -0.7, arousal: 0.5, count: 5 }, false)).toBe("anxious");
+  });
+
+  it("NEVER overrides a SAME-DAY explicit 'calm' self-report — the invalidation scenario the Fable review caught", () => {
+    expect(foldAffectAccent("calm", { valence: -0.9, arousal: 0.9, count: 10 }, true)).toBe("calm");
+  });
+});
+
 describe("getUserState — folds the EMA elevation signal into the check-in state", () => {
   beforeEach(() => {
     vi.mocked(secureLocal.getItem).mockReset();
@@ -49,6 +88,8 @@ describe("getUserState — folds the EMA elevation signal into the check-in stat
     vi.mocked(emaElevationSignal).mockReturnValue("none");
     vi.mocked(chatElevationSignal).mockReset();
     vi.mocked(chatElevationSignal).mockReturnValue("none");
+    vi.mocked(todayAffectBucket).mockReset();
+    vi.mocked(todayAffectBucket).mockReturnValue(null);
   });
 
   it("calm check-in + rising EMA → elevated (the signal now reaches the pixels)", () => {
@@ -93,6 +134,21 @@ describe("getUserState — folds the EMA elevation signal into the check-in stat
       JSON.stringify([{ date: "2026-07-11", emotion: "Low (Nila)", intensity: 4 }]),
     );
     vi.mocked(chatElevationSignal).mockReturnValue("high");
+    expect(getUserState()).toBe("low");
+  });
+
+  it("calm check-in TODAY + strongly negative affect bucket → stays calm (same-day self-report protected)", () => {
+    const today = localDateKey();
+    vi.mocked(secureLocal.getItem).mockReturnValue(
+      JSON.stringify([{ date: today, emotion: "Calm (Nila)", intensity: 4 }]),
+    );
+    vi.mocked(todayAffectBucket).mockReturnValue({ valence: -0.9, arousal: 0.9, count: 10 });
+    expect(getUserState()).toBe("calm");
+  });
+
+  it("no check-in at all + strongly negative affect bucket → promotes to low", () => {
+    vi.mocked(secureLocal.getItem).mockReturnValue(null);
+    vi.mocked(todayAffectBucket).mockReturnValue({ valence: -0.7, arousal: 0.1, count: 5 });
     expect(getUserState()).toBe("low");
   });
 });

@@ -8,6 +8,7 @@ import { detectElevationRisk } from "./elevationGuard";
 import type { ElevationLevel } from "./elevationGuard";
 import { emaElevationSignal } from "./ema";
 import { chatElevationSignal } from "./chatElevation";
+import { todayAffectBucket, type AffectBucket } from "./chatAffect";
 import { detectCompoundSignals } from "./compoundDetector";
 import { getFeatureWindow } from "./signalStore";
 import { getPassiveSensingEnabled } from "./passiveSensingPrefs";
@@ -68,7 +69,11 @@ export function getUserState(): UserState | null {
   try {
     const withElevation = foldElevation(base, higherElevation(emaElevationSignal(), chatElevationSignal()));
     // Then fold compound signals (multi-modal, higher confidence)
-    return foldCompoundSignals(withElevation);
+    const withCompoundSignals = foldCompoundSignals(withElevation);
+    // Then fold today's affect-accent bucket (Phase 2, orb affect accent) — last in the chain since it
+    // only ever promotes from null/calm, so it can never undo an elevated/low/anxious promotion any
+    // earlier fold already made.
+    return foldAffectAccent(withCompoundSignals, todayAffectBucket(), hasCheckinToday(localDateKey()));
   } catch {
     return base;
   }
@@ -130,6 +135,28 @@ export function foldCompoundSignals(base: UserState | null): UserState | null {
     }
   } catch { /* best-effort */ }
   return base;
+}
+
+/**
+ * Fold today's affect-accent bucket (Phase 2 of the orb affect accent — see
+ * docs/superpowers/specs/2026-07-19-orb-affect-accent-phase2-design.md §2) into the derived state.
+ * NEVER overrides explicit distress self-report (anxious/low) or an already-elevated state — same gate
+ * as foldElevation/foldCompoundSignals. May promote from null unconditionally, but may promote from
+ * "calm" ONLY when there is no check-in today: a same-day "I'm okay" is self-report and must never be
+ * re-colored by a soft valence estimate off a couple of chat messages (unlike foldElevation's override
+ * of calm, which is justified by hypomanic self-report being characteristically unreliable — that
+ * justification does not transfer to this signal).
+ */
+export function foldAffectAccent(
+  base: UserState | null,
+  today: AffectBucket | null,
+  checkedInToday: boolean
+): UserState | null {
+  if (base !== null && base !== "calm") return base;
+  if (base === "calm" && checkedInToday) return base;
+  if (!today || today.count < 3) return base; // need a real exchange, not one noisy message
+  if (today.valence > -0.4) return base; // not clearly negative
+  return today.arousal >= 0.2 ? "anxious" : "low";
 }
 
 /**
