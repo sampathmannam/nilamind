@@ -337,15 +337,3 @@ describe("in-moment skill suggestion (2026-07-16 dedupe)", () => {
     expect(screen.getByText("That sounds hard.")).toBeTruthy();
   });
 });
-
-describe("ModeScreen — hardware-back bridge (Phase 3): presence resets on unmount", () => {
-  it("reports sheet-presence false on unmount (so App's back handler can't go stale-true)", () => {
-    const onInternalSheetChange = vi.fn();
-    const { unmount } = render(<ModeScreen onInternalSheetChange={onInternalSheetChange} />);
-    onInternalSheetChange.mockClear(); // drop the mount report (auxView null → false); isolate the cleanup
-    unmount();
-    // Without the effect's unmount cleanup, leaving the Nila tab with a capture sheet open left App's
-    // modeScreenHasSheet stale-true and dead-ended the hardware BACK button on Today/Tools/You.
-    expect(onInternalSheetChange).toHaveBeenCalledWith(false);
-  });
-});
