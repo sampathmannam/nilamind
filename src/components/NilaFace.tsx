@@ -1,13 +1,14 @@
 // NilaFace — adaptive breathing orb. Nila's visual identity.
 // State-driven: calm glow, anxious pulse, low shimmer, elevated energy, crisis alert.
 
-import React, { useMemo, useEffect, useRef } from "react";
+import React, { useMemo, useEffect, useRef, useState } from "react";
 import type { UserState } from "../types/modes";
 import { useReducedMotion } from "../hooks/useReducedMotion";
 import { useSensoryComfort } from "../hooks/useSensoryComfort";
 import { useIsLightTheme } from "../hooks/useIsLightTheme";
 import { hapticLight, hapticMedium } from "../hooks/useHaptics";
 import { faceMotion } from "./nilaFaceMotion";
+import { resolveAccentRender, type AffectAccentInput } from "./nilaFaceAccent";
 
 interface NilaFaceProps {
   state: UserState | null;
@@ -15,6 +16,7 @@ interface NilaFaceProps {
   onLongPress?: () => void;
   size?: number;
   isListening?: boolean;
+  affectAccent?: AffectAccentInput | null;
 }
 
 interface OrbPalette {
@@ -84,7 +86,7 @@ function getPalette(state: UserState | null): OrbPalette {
   }
 }
 
-export default function NilaFace({ state, onClick, onLongPress, size = 160, isListening = false }: NilaFaceProps) {
+export default function NilaFace({ state, onClick, onLongPress, size = 160, isListening = false, affectAccent = null }: NilaFaceProps) {
   const palette = useMemo(() => getPalette(state), [state]);
   // Motion is state- and reduced-motion-aware: 'elevated' SLOWS the orb (settles it), and
   // prefers-reduced-motion stops all ambient motion (see nilaFaceMotion — manic-first + a11y).
@@ -100,6 +102,22 @@ export default function NilaFace({ state, onClick, onLongPress, size = 160, isLi
     }
     return baseMotion;
   }, [isListening, baseMotion]);
+  // Per-turn affect accent — see nilaFaceAccent.ts for the dead-zone/cooldown/elevated-crisis-dormancy/
+  // anxious-damping logic. `reduced` (prefers-reduced-motion OR sensory-comfort) suppresses this the
+  // same way it suppresses ambient motion above.
+  const lastAccentAtRef = useRef<number | null>(null);
+  const accentKeyRef = useRef(0);
+  const [activeAccent, setActiveAccent] = useState<{ tint: "warm" | "deep"; magnitude: number; key: number } | null>(null);
+
+  useEffect(() => {
+    if (reduced) return;
+    const decision = resolveAccentRender(affectAccent, state, lastAccentAtRef.current, Date.now());
+    if (!decision.render || !decision.tint) return;
+    lastAccentAtRef.current = Date.now();
+    accentKeyRef.current += 1;
+    setActiveAccent({ tint: decision.tint, magnitude: decision.magnitude, key: accentKeyRef.current });
+  }, [affectAccent, state, reduced]);
+
   const holdTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const isLight = useIsLightTheme();
   // Listening state also gets a brighter glow so the user sees the orb "light up" when mic is on.
@@ -233,6 +251,29 @@ export default function NilaFace({ state, onClick, onLongPress, size = 160, isLi
             boxShadow: `0 0 ${coreR}px ${palette.glow}`,
           }}
         />
+
+        {/* Per-turn affect accent — brief core-dot flicker, independent of the crisis ellipse above. */}
+        {activeAccent && (
+          <div
+            key={activeAccent.key}
+            className="absolute rounded-full pointer-events-none"
+            onAnimationEnd={() => setActiveAccent(null)}
+            style={{
+              width: coreR * 2,
+              height: coreR * 2,
+              top: "50%",
+              left: "50%",
+              background: activeAccent.tint === "warm"
+                ? "radial-gradient(circle, #FDEFDC, transparent 70%)"
+                : "radial-gradient(circle, #B06AA0, transparent 70%)",
+              boxShadow: activeAccent.tint === "warm"
+                ? `0 0 ${coreR}px rgba(247,201,138,0.9)`
+                : `0 0 ${coreR}px rgba(176,106,160,0.85)`,
+              ["--nila-accent-scale" as string]: 1 + 0.6 * activeAccent.magnitude,
+              animation: "nila-accent-flicker 1.4s ease-out 1",
+            }}
+          />
+        )}
       </div>
     </button>
   );
