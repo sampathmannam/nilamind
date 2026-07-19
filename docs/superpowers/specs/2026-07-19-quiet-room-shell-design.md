@@ -35,7 +35,7 @@ Five scenes in a swipeable ring, dot-indicator navigation, orb always present as
 
 The ~21 screens that don't fit the ring (journal, thought record, problem solving, values-to-action, safety plan, assessments, episode tools, settings, legal, caregiver, model setup, about, your data, etc.) are reached via **You**, which opens a searchable/categorized list — the same access pattern as today's Tools tab, just re-homed. Exact grouping/IA of this list is deferred to sub-project 3; this spec only establishes that the gateway exists and where it lives.
 
-**Reachability contract:** `ToolkitScene`'s list is checked against `KNOWN_AUX_VIEWS` (`nav.contract.test.ts`) so every allowlisted screen is provably reachable from the new shell — the same class of protection the legacy nav already has, extended to the new gateway rather than assumed.
+**Reachability contract:** a new shell test imports `KNOWN_AUX_VIEWS` from `nav.contract.test.ts` (that file itself stays unmodified) and asserts every allowlisted screen is reachable from `ToolkitScene`'s list — the same class of protection the legacy nav already has, extended to the new gateway rather than assumed.
 
 ### Component tree (new, additive — nothing existing is modified)
 
@@ -112,9 +112,11 @@ Two-part test, not one — a static check alone has blind spots (a conditionally
 - Any change to the legacy tab-based app — it is not touched, only wrapped in a conditional.
 - Default-on decision for the new shell.
 
-## Design review (Fable, 2026-07-19)
+## Design review (Fable, 2026-07-19 — two passes)
 
-This spec was reviewed by Fable (the project's design authority) before implementation planning. Its citations (`App.tsx` line ranges, `useCrisisGate.ts`'s messages-cycle comment, `nav.contract.test.ts`'s `KNOWN_AUX_VIEWS`) were independently verified against the actual source, including one additional confirmed finding not in the original ask: `CheckInScene` has the same chat-state entanglement risk `TalkScene` had, since `useCheckinGate`'s handlers write directly into `ModeScreen`'s message state and `NilaCheckIn` is currently only ever rendered from inside `ModeScreen`. Five corrections came out of this pass and are folded into the sections above: the `AppShell` lifecycle-effects hoist (flag mechanism), `TalkScene` = hosted `ModeScreen` not recomposed hooks, the two-part crisis-invariant test (static + runtime + back-handler), the mount-not-unmount policy for scenes, and the `ToolkitScene` reachability contract. It also surfaced a pre-existing, unrelated bug worth fixing opportunistically while `App.tsx` is being touched: the adaptive-theme and `warmVoskStt` effects are each registered twice.
+**Pass 1** raised 5 issues, all verified against source and folded into the sections above: the `AppShell` lifecycle-effects hoist (flag mechanism), `TalkScene` = hosted `ModeScreen` not recomposed hooks, the two-part crisis-invariant test (static + runtime + back-handler), the mount-not-unmount policy for scenes, and the `ToolkitScene` reachability contract. It also surfaced a pre-existing, unrelated bug worth fixing opportunistically while `App.tsx` is being touched: the adaptive-theme and `warmVoskStt` effects are each registered twice.
+
+**Pass 2** confirmed all 5 corrections are real fixes rather than paper-overs (re-verified against source, including that `TalkScene`-hosts-`ModeScreen` preserves the one-ref-object invariant for free, since there's only ever one `ModeScreen` instance). It also confirmed `CheckInScene`'s deferred entanglement resolution is the right call at this altitude: `SceneRing`'s contract (five mounted children + per-scene `HelpPill`) is indifferent to how Check-in eventually gets built — genuine extraction, hosted-wholesale like Talk, or a thin launcher into the existing `ModeScreen` instance all fit without changing `SceneRing`. One wording nit (the reachability contract's file reference) was fixed inline. **Verdict: ready for the implementation plan.**
 
 ## Risks called out explicitly
 
