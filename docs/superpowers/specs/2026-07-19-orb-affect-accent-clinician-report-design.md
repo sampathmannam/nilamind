@@ -1,6 +1,6 @@
 # Orb affect accent — clinician report v2 (per-report opt-in)
 
-Status: approved by user (revised post Fable design review), ready for implementation planning
+Status: approved by user (revised post two rounds of Fable design review), ready for implementation planning
 Date: 2026-07-19
 Relationship to prior specs: [2026-07-19-orb-affect-accent-design.md](2026-07-19-orb-affect-accent-design.md)
 (Phase 1) rejected any clinician-report exposure outright — provenance, not formatting. This spec is
@@ -39,17 +39,29 @@ specifically because of that, and only relax if a real held-out evaluation lands
   card is viewed — a persisted "always include this" setting is exactly the failure mode the original
   rejection was written against (a forgotten flag silently injecting unvalidated inferences into
   clinical documents months after the decision).
-- **Freeze-at-consent, not recompute-at-export (the one blocking requirement from Fable's review).**
-  The previewed sentence and the exported sentence must be the *same object*, captured the instant the
-  toggle turns on. The naive version of this design — computing the sentence live at preview time and
-  again at export time — lets the two drift (the user keeps chatting, midnight rolls a day out of the
-  window, or they change the report period after toggling on) and silently breaks the "preview the
-  exact sentence" guarantee. This is the **inverse** of `nilaContributions.ts`'s own safeguard (that
-  flow re-derives at confirm-time specifically to prevent tampering) — the UI shape is borrowed from
-  that flow, the semantics are not; see Design §3.
-- **Closed, coarse vocabulary — no free text, no raw numbers, no trajectory claims below 5 distinct
-  days.** The generating function is a pure, spec-enumerated set of phrases, never model-generated
-  prose, precisely because the underlying signal is unvalidated (see Key finding above).
+- **Freeze-at-consent, not recompute-at-export, and frozen from a fresh call — not a stale render
+  value (revised per a second Fable review round; the first draft only half-closed this).** The
+  previewed sentence and the exported sentence must be the *same object*, captured the instant the
+  toggle turns on. Two distinct failure modes had to be closed here, not one: (a) computing the
+  sentence live at preview time and again at export time lets the two drift (the user keeps chatting,
+  midnight rolls a day out of the window, or they change the report period after toggling on); (b)
+  freezing from a value that was merely computed at the component's *last render* (rather than at the
+  moment of the click itself) leaves an unbounded staleness window on an idle screen — long enough for
+  a day to age out of the window between render and click, meaning the frozen object could describe
+  data the floor would no longer accept. The fix for both: the toggle handler itself calls
+  `computeConversationToneSummary` fresh, at click time, and freezes *that* result (handling the case
+  where it comes back `null`) — never the value sitting in a render-scoped variable. This is the
+  **inverse** of `nilaContributions.ts`'s own safeguard (that flow re-derives at confirm-time
+  specifically to prevent tampering) — the UI shape is borrowed from that flow, the semantics are not;
+  see Design §3.
+- **Coarse vocabulary, closed at the verb slot — no free text, no raw numbers, no direction claims
+  that the math doesn't back.** The generating function fills a fixed template from a small,
+  spec-enumerated set of verb phrases, never model-generated prose, precisely because the underlying
+  signal is unvalidated (see Key finding above). Critically, "trended X" is not just gated by having
+  enough days — it must be backed by an actual computed direction (a first-half-vs-second-half
+  comparison clearing a threshold), or the day-count gate alone would let a flat, unchanging run of
+  negative days get labeled a "trend" — precisely the word a clinician will weight most heavily. See
+  Design §1.
 - **The section always renders last** in the plain-text report — after every other section, including
   the "Enhanced Phenomenological Summary" block — as a deliberate, testable de-emphasis signal in a
   document where every section otherwise looks identical.
@@ -78,24 +90,45 @@ const TRAJECTORY_MIN_DAYS = 5;
 // would otherwise clear a day-count-only floor on three total model readings from a head that's wrong
 // roughly 1 time in 3-4.
 const MIN_TOTAL_READINGS = 10;
+// Minimum gap between the older and newer half's mean valence before "trended X" is justified — day
+// count alone is a NECESSARY condition for trajectory language, never a SUFFICIENT one: a flat run of
+// uniformly negative days at 5+ distinct days is a level, not a trend, and must render as "was mostly
+// difficult", not "trended difficult".
+const DIRECTION_THRESHOLD = 0.15;
 
 export function computeConversationToneSummary(
   periodDays: number,
   now: number = Date.now()
 ): ConversationToneSummary | null {
   const windowDays = Math.min(periodDays, 30); // chatAffect.ts's own 30-day retention cap
-  const days = recentAffectDays(windowDays, now);
+  const days = recentAffectDays(windowDays, now); // most-recent-first, per recentAffectDays's own contract
   const floorDays = Math.max(3, Math.ceil(windowDays * 0.3));
   const totalReadings = days.reduce((s, d) => s + d.count, 0);
   if (days.length < floorDays || totalReadings < MIN_TOTAL_READINGS) return null;
 
+  // Deliberately unweighted by `count` — a 1-turn day and a 20-turn day count equally toward the
+  // level. Day-level equal weighting (not reading-level) is the intended aggregation; do not "fix"
+  // this into a count-weighted average.
   const avgValence = days.reduce((s, d) => s + d.valence, 0) / days.length;
   const level = avgValence <= -0.2 ? "difficult" : avgValence >= 0.2 ? "positive" : "mixed";
-  const trajectoryOk = days.length >= TRAJECTORY_MIN_DAYS;
+
+  // Real direction check: split chronologically (oldest half vs newest half) and compare means.
+  // recentAffectDays returns most-recent-first, so reverse before halving.
+  const chronological = [...days].reverse();
+  const mid = Math.floor(chronological.length / 2);
+  const olderHalf = chronological.slice(0, mid);
+  const newerHalf = chronological.slice(mid);
+  const olderAvg = olderHalf.reduce((s, d) => s + d.valence, 0) / olderHalf.length;
+  const newerAvg = newerHalf.reduce((s, d) => s + d.valence, 0) / newerHalf.length;
+  const hasDirection = days.length >= TRAJECTORY_MIN_DAYS && Math.abs(newerAvg - olderAvg) >= DIRECTION_THRESHOLD;
+
+  // "mixed" never takes trajectory language — a near-zero average produced by real volatility (e.g.
+  // swinging from very positive to very negative) would misreport as "stayed mixed" if trajectory
+  // wording applied here; "was mixed" is the only phrase this level ever emits.
   const verb =
     level === "mixed"
-      ? (trajectoryOk ? "stayed mixed" : "was mixed")
-      : (trajectoryOk ? `trended ${level}` : `was mostly ${level}`);
+      ? "was mixed"
+      : (hasDirection ? `trended ${level}` : `was mostly ${level}`);
 
   const capNote = periodDays > 30
     ? " (Conversation-tone history is kept for 30 days, so this covers the most recent 30 only.)"
@@ -118,10 +151,13 @@ Notes on the specific choices:
   `recentAffectDays` is sparse (days without chat produce no entry), so 9 scattered days out of 30
   rendered as "last 9 days" would misstate recency as a different, more alarming clinical claim
   (recent deterioration vs. a diffuse pattern over a month).
-- **Closed phrase set only**: `"trended difficult"`, `"trended positive"`, `"stayed mixed"`, `"was
-  mostly difficult"`, `"was mostly positive"`, `"was mixed"` — six possible outputs, nothing else. The
-  function never touches an LLM and never returns anything outside this set; tests lock the exact set
-  (Testing, below).
+- **Closed verb slot inside a fixed template — five possible verbs, not free text.** `"trended
+  difficult"`, `"trended positive"`, `"was mostly difficult"`, `"was mostly positive"`, `"was mixed"`.
+  The *verb* is drawn from this closed set; the surrounding template also interpolates `{daysUsed}`,
+  `{windowDays}`, and the conditional cap note, so the full returned string is not itself a five-value
+  enumeration — it's a fixed template with a closed verb slot plus those three known variables. Tests
+  assert the full text against that template shape with the verb constrained to the closed set, not
+  against a flat list of five/six literal complete strings (Testing, below).
 - **No accuracy number anywhere in the text** — "not a clinically validated measure" states the
   limitation; quoting the actual 66-74% figure would read as false precision (a number from a
   20-example gold set dressed up as validation) in a document meant to inform clinical judgment.
@@ -161,21 +197,39 @@ the consent signal, and the doc comment above states that contract so it can't s
 
 ```ts
 const [toneOptIn, setToneOptIn] = useState<ConversationToneSummary | null>(null); // null = not included
-const toneAvailable = computeConversationToneSummary(reportPeriod); // live, recomputed each render — harmless while nothing is frozen/exported from it
+// Live read, used ONLY to decide whether the toggle renders at all — never frozen directly from this
+// variable (see the toggle handler below; freezing from a render-scoped value, rather than a fresh
+// call at the moment of the click, was a real gap caught in review — see Constraints).
+const toneAvailable = computeConversationToneSummary(reportPeriod);
 
-useEffect(() => {
-  setToneOptIn(null); // changing the report period invalidates any frozen preview — re-freeze required
-}, [reportPeriod]);
+function handlePeriodChange(days: 7 | 30 | 90) {
+  setReportPeriod(days);
+  setToneOptIn(null); // SYNCHRONOUS reset in the same handler — not a useEffect, which would leave one
+                       // paint frame where the old period's frozen preview is still on screen and
+                       // exportable under the newly-selected period.
+}
+
+function handleToneToggle(checked: boolean) {
+  if (!checked) {
+    setToneOptIn(null);
+    return;
+  }
+  // Fresh call AT CLICK TIME — not toneAvailable, which may be stale if the screen has sat idle since
+  // its last render (a day can age out of the window in that gap). May legitimately come back null if
+  // the data aged below the floor between render and click; in that case nothing freezes and the
+  // toggle/preview simply don't turn on.
+  const frozen = computeConversationToneSummary(reportPeriod);
+  setToneOptIn(frozen);
+}
 ```
 
 - If `toneAvailable` is `null` (below the floor, or either upstream flag is off): no toggle renders at
   all — nothing to opt into.
 - If `toneAvailable` is non-null and `toneOptIn` is `null`: an unchecked toggle appears below the
-  existing period selector: **"Include an automatic conversation-tone estimate"**. Checking it sets
-  `toneOptIn = toneAvailable` — freezing the current live value at that instant — and opens a
-  **non-collapsible** preview card, positioned between the toggle and the export button, showing
-  `toneOptIn.text` verbatim (the identical string that will be exported — same object, not a
-  re-rendering of it).
+  existing period selector: **"Include an automatic conversation-tone estimate"**. Checking it calls
+  `handleToneToggle(true)` above and opens a **non-collapsible** preview card, positioned between the
+  toggle and the export button, showing `toneOptIn.text` verbatim (the identical string that will be
+  exported — same object, not a re-rendering of it).
 - Unchecking sets `toneOptIn = null` again (collapses the preview; nothing frozen, nothing exported).
   Re-checking re-freezes a fresh live read at that new instant.
 - At export time, `conversationTone: toneOptIn ?? undefined` is passed into `ClinicianReportInput` —
@@ -192,21 +246,40 @@ useEffect(() => {
 
 - `chatAffect.test.ts`: `computeConversationToneSummary` — floor scaling (`floorDays` for a 7-day vs.
   30-day window); the `MIN_TOTAL_READINGS` floor rejecting several `count: 1` days even when the
-  day-count floor is cleared; `TRAJECTORY_MIN_DAYS` boundary (4 days → level language, 5 days →
-  trajectory language allowed); the 30-day cap note appearing only when `periodDays > 30`; returns
-  `null` when either upstream flag is disabled (already covered structurally by `recentAffectDays`
-  itself, re-asserted here at this function's own boundary); **a test enumerating every possible output
-  string against the closed six-phrase set** — any output outside that set fails the test.
+  day-count floor is cleared; the direction-check boundary — a genuinely worsening run of days (older
+  half clearly less negative than newer half, gap ≥ `DIRECTION_THRESHOLD`, at ≥5 days) produces
+  `"trended difficult"`, while a *flat* run of uniformly negative days at the same day count produces
+  `"was mostly difficult"` (this is the case the first draft got wrong — assert it explicitly, not just
+  the day-count boundary); `"mixed"` never emits `"stayed mixed"` or any trajectory-flavored phrase,
+  only `"was mixed"`, even when a direction is detected (the swinging-not-flat case); the 30-day cap
+  note appearing only when `periodDays > 30`; returns `null` when either upstream flag is disabled
+  (already covered structurally by `recentAffectDays` itself, re-asserted here at this function's own
+  boundary); **a template-shape test** asserting the full returned string matches the fixed template
+  with the verb constrained to the five-item closed set — not a flat enumeration of complete literal
+  strings, since the template also interpolates `daysUsed`/`windowDays`/the cap note (see Design §1).
 - `clinicianReport.test.ts`: the section appears only when `input.conversationTone` is passed; a
   dedicated **ordering test** asserting the section's line index is strictly after every other
   section's (not just presence); the rendered text contains the attribution + self-report-wins +
   not-clinically-validated sentences verbatim; never contains a raw numeric valence/arousal value or
   the model's accuracy figure.
-- A new test for the UI logic (co-located with or adjacent to `YourDataScreen`'s existing tests, if
-  any exist — otherwise a focused new test file): toggling on freezes the current `toneAvailable` value
-  into `toneOptIn`; changing `reportPeriod` after toggling on resets `toneOptIn` to `null` (the
-  frozen-preview invalidation); the value passed to `ClinicianReportInput` at export time is
-  reference-equal to what was previewed, not a fresh computation.
+- New tests for the UI logic (co-located with or adjacent to `YourDataScreen`'s existing tests, if any
+  exist — otherwise a focused new test file):
+  - Toggling on calls `computeConversationToneSummary` fresh and freezes *that* result into `toneOptIn`
+    — not a stale `toneAvailable` render value.
+  - **The null-at-click race**: if a fresh call at click-time returns `null` (data aged below the floor
+    since the component's last render), the toggle does not turn on and nothing is frozen. This test
+    only makes sense given the click-time-fresh-call fix above, and locks it in as a regression guard.
+  - Changing `reportPeriod` after toggling on resets `toneOptIn` to `null` synchronously, in the same
+    handler that changes the period — not via an effect that could leave a stale frozen preview
+    on-screen for one frame under the new period.
+  - Unchecking the toggle, then exporting, omits `conversationTone` from the resulting
+    `ClinicianReportInput` entirely (the presence test in `clinicianReport.test.ts` covers the
+    builder's own on-path; this covers the UI's off-path).
+  - The value passed to `ClinicianReportInput` at export time is reference-equal to what was previewed,
+    not a fresh computation.
+  - **Never persisted**: a test asserting the opt-in state is never written to `secureLocal` or
+    `localStorage` under any key — the `useState`-only implementation makes this true today; the test
+    keeps a future refactor from quietly making it a standing preference.
 
 ## Rollout
 
@@ -218,16 +291,20 @@ on a real device — decisions this spec does not make.
 
 ## Explicitly out of scope
 
-- **`clinicianPdf.ts`'s de-emphasized rendering.** The PDF's "full detail pages" dump
-  `buildClinicianReport`'s complete text via the generic `renderBody`/`splitReportText` path
-  (`clinicianPdf.ts:283-284`) — meaning the Conversation Tone section will render there with the same
-  default styling as every other prose section, not the dashed-border/muted-italic treatment
-  `drawMutedNote` already provides for the hand-drawn chart-dashboard sections earlier in that same
-  file. This is a real, acknowledged gap (the PDF is what a psychiatrist actually reads) — deliberately
-  deferred rather than expanding this spec further, per Fable's review explicitly naming "exclude the
-  PDF surface until it does" as an acceptable choice. A follow-up spec should extract the section from
-  the generic body text and render it via `drawMutedNote`, positioned after everything else in the PDF
-  too, before this feature is considered fully de-emphasized end-to-end.
+- **`clinicianPdf.ts`'s de-emphasized (dashed-border/muted-italic) visual treatment specifically.**
+  `buildClinicianReport` has exactly one production caller — `clinicianPdf.ts:283`, via
+  `splitReportText`/`renderBody` — so this section reaches the PDF, and therefore the clinician, from
+  day one; it is not confined to some unused plain-text path. What's deferred is narrower than "PDF
+  support": the section's *position* (always last) and its *in-prose attribution* (the "Model
+  estimate —" qualifier, the not-validated sentence, self-report-wins) both survive into the PDF
+  correctly, because `splitReportText` preserves line order and the text is carried verbatim — the
+  ordering test in `clinicianReport.test.ts` verifies this for the PDF too, transitively. Only the
+  `drawMutedNote` dashed-box/muted-italic *styling* `clinicianPdf.ts` already uses for its hand-drawn
+  chart-dashboard sections is missing; without it, this section gets the same header styling as every
+  validated section in that document. Honest-but-unstylized, not absent, not misattributed — but a real
+  gap worth closing. A follow-up spec should extract the section from the generic body text and render
+  it via `drawMutedNote`, positioned after everything else in the PDF too, before this feature is
+  considered fully de-emphasized end-to-end.
 - Flipping `setAffectAccentEnabled` or `setAffectAccentPersistenceEnabled` — both remain out of this
   spec's scope, gated on their own device-verification passes.
 - A confirmation modal or any second consent step beyond the non-collapsible preview.
