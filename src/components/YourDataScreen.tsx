@@ -17,6 +17,8 @@ import { buildFhirBundle } from "../services/fhirExport";
 import { recordExportAudit, getExportAudit, type ExportAuditEntry, type ExportKind } from "../services/exportAudit";
 import type { ClinicianReportInput, ClinicianMedication, AssessmentTrajectory } from "../services/clinicianReport";
 import { generateClinicianPdfBlob } from "../services/clinicianPdf";
+import { computeConversationToneSummary, type ConversationToneSummary } from "../services/chatAffect";
+import { resolveToneToggle } from "../services/clinicianToneOptIn";
 import { readEpisodeMarkers } from "../services/episodeMarker";
 import { loadEpisodes } from "../services/episodes";
 import { loadThoughtRecords } from "../services/thoughtRecordDraft";
@@ -82,6 +84,8 @@ export default function YourDataScreen() {
   const [confirmWipe, setConfirmWipe] = useState(false);
   const [reportBusy, setReportBusy] = useState(false);
   const [reportPeriod, setReportPeriod] = useState<ReportPeriod>(30);
+  const [toneOptIn, setToneOptIn] = useState<ConversationToneSummary | null>(null);
+  const toneAvailable = computeConversationToneSummary(reportPeriod);
   const [audit, setAudit] = useState<ExportAuditEntry[]>(() => getExportAudit());
   const [lastExport, setLastExport] = useState<{ kind: ExportKind; scope: string; filename: string } | null>(null);
   const [shareErr, setShareErr] = useState<string | null>(null);
@@ -776,7 +780,8 @@ valuesClarified: []
           enhancedSleepDetails,
           enhancedSocialRhythmDetails,
           behavioralInsights,
-          userInsightsSummary
+          userInsightsSummary,
+          conversationTone: toneOptIn ?? undefined
        };
 
       const blob = generateClinicianPdfBlob(input, {
@@ -883,7 +888,7 @@ valuesClarified: []
           {([7, 30, 90] as ReportPeriod[]).map((d) => (
             <button
               key={d}
-              onClick={() => setReportPeriod(d)}
+              onClick={() => { setReportPeriod(d); setToneOptIn(null); }}
               aria-pressed={reportPeriod === d}
               className={`flex-1 text-xs font-semibold py-1.5 rounded-lg cursor-pointer transition-colors ${
                 reportPeriod === d
@@ -895,6 +900,24 @@ valuesClarified: []
             </button>
           ))}
         </div>
+        {toneAvailable && (
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 text-[11px] text-slate-400 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={toneOptIn !== null}
+                onChange={(e) => setToneOptIn(resolveToneToggle(e.target.checked, reportPeriod))}
+                className="cursor-pointer"
+              />
+              Include an automatic conversation-tone estimate
+            </label>
+            {toneOptIn && (
+              <div className="text-[11px] text-slate-400 bg-page border border-slate-800 rounded-lg px-3 py-2 leading-relaxed">
+                {toneOptIn.text}
+              </div>
+            )}
+          </div>
+        )}
         <div className="flex flex-wrap gap-2">
           <button onClick={handleExportClinicianPdf} disabled={reportBusy} id="export-clinician-pdf" className="flex-1 min-w-[64px] bg-blue-600/10 border border-blue-500/30 hover:bg-blue-600/20 text-blue-300 text-xs font-semibold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50">
             {reportBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />} Generate report PDF
