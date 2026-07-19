@@ -479,9 +479,9 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
 
        {/* Monthly narrative */}
        {monthlyNarrative && (
-         <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4">
-            <div className="text-xs uppercase font-mono tracking-widest text-emerald-400 mb-1">{t("your_month")}</div>
-           <p className="text-sm text-slate-200 leading-relaxed">
+          <Card variant="raised">
+            <div className="text-xs uppercase tracking-wider text-ink-muted mb-1">{t("your_month")}</div>
+            <p className="text-sm text-ink leading-relaxed">
              This month has been <span className="font-semibold text-slate-100">{monthlyNarrative.word}</span>{" "}
              with mood averaging <span className="font-semibold text-slate-100">{monthlyNarrative.avgIntensity}/10</span> (
              {monthlyNarrative.minIntensity}-{monthlyNarrative.maxIntensity}).{" "}
@@ -502,9 +502,9 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
                : monthlyNarrative.daysLogged >= 8
                ? "good momentum building."
                : "every check-in adds clarity — keep going."}
-           </p>
-         </div>
-       )}
+            </p>
+          </Card>
+        )}
 
        {/* Compassionate streak — leads with the warm message, not the raw number. Gamification
            elements show no measurable depression-outcome/adherence benefit, and a prominent
