@@ -127,7 +127,12 @@ const DailyIntentionCard = forwardRef<DailyIntentionCardHandle, DailyIntentionCa
             onChange={(e) => setIfText(e.target.value)}
             placeholder="If… (e.g. I feel anxious after lunch)"
             aria-label="If"
-            className="w-full bg-page border border-slate-800 rounded-lg p-2.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-blue-500/50"
+            // Matches the canonical `glass` input pattern used codebase-wide (10+ occurrences) instead
+            // of this file's own one-off bg-page/border-slate-800 styling. Switched the focus indicator
+            // from focus:border-blue-500/50 to a ring, since .glass sets its own unlayered border which
+            // would otherwise silently defeat a border-color focus utility (same hazard fixed in
+            // NilaMemoryScreen/CaregiverSettingsScreen).
+            className="w-full glass rounded-lg p-2.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           />
           <input
             type="text"
@@ -135,7 +140,12 @@ const DailyIntentionCard = forwardRef<DailyIntentionCardHandle, DailyIntentionCa
             onChange={(e) => setThenText(e.target.value)}
             placeholder="…then I will (e.g. do a 2-minute breathing exercise)"
             aria-label="Then"
-            className="w-full bg-page border border-slate-800 rounded-lg p-2.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-blue-500/50"
+            // Matches the canonical `glass` input pattern used codebase-wide (10+ occurrences) instead
+            // of this file's own one-off bg-page/border-slate-800 styling. Switched the focus indicator
+            // from focus:border-blue-500/50 to a ring, since .glass sets its own unlayered border which
+            // would otherwise silently defeat a border-color focus utility (same hazard fixed in
+            // NilaMemoryScreen/CaregiverSettingsScreen).
+            className="w-full glass rounded-lg p-2.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           />
         </div>
         <button

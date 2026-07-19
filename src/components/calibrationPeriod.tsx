@@ -45,7 +45,7 @@ export default function CalibrationPeriodCard({ startDate }: CalibrationPeriodCa
   const daysLeft = CALIBRATION_DAYS - days;
 
   return (
-    <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 flex items-start gap-3">
+    <div className="glass rounded-2xl p-4 flex items-start gap-3">
       <div className="p-2 rounded-xl bg-violet-500/10 text-violet-400">
         <Sparkles className="w-5 h-5" />
       </div>

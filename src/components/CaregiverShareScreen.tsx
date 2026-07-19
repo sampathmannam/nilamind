@@ -48,7 +48,7 @@ export default function CaregiverShareScreen({ selectedContactId }: Props) {
         </p>
       </header>
 
-      <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 space-y-3">
+      <div className="glass rounded-2xl p-4 space-y-3">
         <div className="flex items-center gap-2 text-sm font-semibold text-slate-100">
           <HeartHandshake className="w-4 h-4 text-rose-400" /> {snapshot.headline}
         </div>

@@ -46,6 +46,16 @@ function getTodayMood(): { label: string; emoji: string } | null {
   }
 }
 
+// Soft Wellness register: a gentle valence mapping for .blob-badge behind today's mood emoji — purely
+// decorative ambience, never a risk signal (the emoji + label text still carry all the actual meaning
+// and contrast, per the blob-badge contract in index.css). Deliberately coarse (3 buckets) so it never
+// reads as a clinical scale.
+function moodBlobVariant(label: string): "steady" | "settling" | "tender" {
+  if (["calm", "good", "okay", "fine"].includes(label)) return "steady";
+  if (["anxious", "stressed"].includes(label)) return "settling";
+  return "tender"; // low, sad, angry, overwhelmed — a quiet tint, not an alert
+}
+
 interface HeroAction {
   id: string;
   label: string;
@@ -246,7 +256,10 @@ export default function TodayScreen({
         <div className="glass p-5 rounded-2xl space-y-2">
           <div className="flex items-center gap-3">
             <HeartHandshake className="w-6 h-6 text-blue-400 shrink-0" aria-hidden="true" />
-            <p className="text-sm font-semibold text-slate-100">Welcome to NilaMind</p>
+            {/* Poster-line: a once-only first-launch moment (this card renders exactly once, before the
+                first check-in), so it's a legitimate single use of the register's emoji-swap headline —
+                it can't accidentally repeat since hasAnyCheckins flips permanently once the user checks in. */}
+            <p className="poster-line text-lg">Welcome to NilaMind<span className="poster-line__emoji" aria-hidden="true"> 🌿</span></p>
           </div>
           <p className="text-xs text-slate-400 leading-relaxed">
             Everything here stays on your device. Nila will suggest tools based on how you're feeling —
@@ -377,7 +390,9 @@ export default function TodayScreen({
       >
         {checkedIn && todayMood ? (
           <div className="flex items-center gap-4">
-            <span className="text-3xl" aria-hidden="true">{todayMood.emoji}</span>
+            <span className={`blob-badge blob-badge--${moodBlobVariant(todayMood.label)} w-12 h-12 shrink-0`}>
+              <span className="blob-badge__value text-2xl" aria-hidden="true">{todayMood.emoji}</span>
+            </span>
             <div>
               <p className="text-sm font-semibold text-slate-100">Feeling {todayMood.label}</p>
               <p className="text-[11px] text-slate-400 mt-0.5">Tap to see your diary</p>

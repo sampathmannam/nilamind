@@ -51,6 +51,14 @@ export default function StreakCounter({ current, longest, totalActiveDays, celeb
             )}
           </div>
           <div className="flex-1">
+            {/* Soft Wellness register review (2026-07-19): this card sits directly below the
+                "compassionate streak" message in DashboardScreen, whose own comment documents a
+                cited, deliberate decision that the raw count must stay "demoted to small muted
+                caption text... rather than a big... stat tile" (Six et al. 2021; Kahneman & Tversky
+                1979 — loss-aversion). An earlier pass gave this number a large .hero-numeral
+                treatment without that context; reverted on discovering it directly undercuts the
+                app's own anti-gamification research. The register's "one hero number" pattern does
+                NOT apply here — plain small text is the correct, considered choice. */}
             <p className="text-sm font-semibold text-slate-200">
               {current > 0 ? `${current}-day streak` : "Start your streak"}
             </p>

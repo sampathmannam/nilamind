@@ -31,7 +31,7 @@ export default function ProactiveNudgeRail({
   return (
     <div
       data-testid="proactive-nudge-rail"
-      className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-800/50 border border-slate-700/40 cursor-pointer hover:bg-slate-800/70 transition-colors"
+      className="flex items-center gap-2 px-3 py-2 rounded-xl glass cursor-pointer hover:brightness-125 transition-all"
       onClick={onTap}
       role="button"
       tabIndex={0}

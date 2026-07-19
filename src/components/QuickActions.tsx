@@ -76,7 +76,7 @@ export default function QuickActions({ onAction, timeMode, userState }: QuickAct
           <button
             key={action.id}
             onClick={() => onAction(action.id)}
-            className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-slate-800/50 border border-slate-700/50 hover:border-slate-600/50 transition-all cursor-pointer active:scale-95"
+            className="flex flex-col items-center gap-1.5 p-3 rounded-xl glass hover:brightness-125 transition-all cursor-pointer active:scale-95"
             aria-label={action.label}
           >
             <span className={action.color}>{action.icon}</span>

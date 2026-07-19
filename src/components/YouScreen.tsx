@@ -154,7 +154,12 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
               <StreakConstellation activeDays={activeDays} />
             </div>
             <p className="text-xs text-slate-500 text-center mt-1.5">
-              {streak.totalActiveDays} day{streak.totalActiveDays !== 1 ? "s" : ""} this week
+              {/* Bug fix: this previously read streak.totalActiveDays, which computeCompassionateStreak
+                  (services/streaks.ts) defines as an ALL-TIME count of distinct active dates - so a
+                  long-time user saw e.g. "30 days this week" under a 7-dot week. activeDays is already
+                  computed above (via getActiveDaysInRange, last 7 days) for the StreakConstellation -
+                  reusing it here makes the label match what's actually being counted. */}
+              {activeDays.length} day{activeDays.length !== 1 ? "s" : ""} this week
             </p>
           </>
         )}

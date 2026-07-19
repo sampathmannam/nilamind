@@ -112,6 +112,19 @@
   --color-cyan-400: #7FBFA0;
   --color-green-200: #C3E6D2; --color-green-300: #A7D2BC; --color-green-400: #7FBFA0; --color-green-500: #5AA483; --color-green-700: #3B6B54; --color-green-950: #16241D;
   --color-orange-200: #F0D3A8; --color-orange-300: #EBB48F; --color-orange-400: #E3A57D; --color-orange-500: #D6916A; --color-orange-700: #A65E3E; --color-orange-950: #2A1B12;
+  /* yellow → folded into the amber/warm-honey family (design review, 2026-07-19): unlike every other
+     categorical ramp above, yellow had no override at all, so bg-yellow-500/text-yellow-300/etc. rendered
+     Tailwind's raw bright default instead of this app's warm palette — the same class of leak as the
+     sky-400 Reach-out icon fix. Used by PassiveInsightCard's color map and lowFrictionReCheckIn's "Okay"
+     mood chip. */
+  --color-yellow-200: #ECCF94; --color-yellow-300: #E8C98C; --color-yellow-500: #CE9A3A; --color-yellow-700: #8A6B28; --color-yellow-950: #2A2110;
+  /* lime → folded into emerald/success (Fable review, 2026-07-19, following the yellow-gap fix above):
+     another categorical ramp with no override, found via text-lime-400 on InsightsScreen's "steps" icon. */
+  --color-lime-400: #7FBFA0; --color-lime-500: #5AA483;
+  /* fuchsia → folded into the purple/lavender accent family: raw hot fuchsia is the exact hue this app's
+     orb was previously moved away from (mauve-lavender redesign) — a leak here is the same regression in
+     a different component (NilaMemoryScreen's header icon, focus ring, and "Preview & donate" link). */
+  --color-fuchsia-300: #D1BFDF; --color-fuchsia-400: #BEA4D0; --color-fuchsia-500: #AC8FC2;
 
   /* semantic surfaces (theme-switchable; light values live under :root.theme-light) */
   --color-page: #171311;    /* app background */
@@ -214,6 +227,11 @@
   --color-green-200: #2F7A57; --color-green-300: #2F7A57; --color-green-400: #2E6B4E; /* text */
   --color-green-500: #3A7659; /* fill/border */ --color-green-700: #CDE5D8; /* border */ --color-green-950: #E4F1EA; /* tint */
   --color-orange-200: #C2521E; /* text */ --color-orange-700: #F3D0BC; /* border */ --color-orange-950: #FBE6D8; /* tint */
+  /* yellow → folded into amber/warm-honey (see dark-theme comment above for why this exists at all) */
+  --color-yellow-200: #82550E; /* text */ --color-yellow-300: #9A6A18; /* text */ --color-yellow-500: #82550E; /* fill/text */
+  --color-yellow-700: #F3E3C2; /* border */ --color-yellow-950: #FBF1DE; /* tint */
+  --color-lime-400: #2E6B4E; /* text */ --color-lime-500: #3A7659; /* fill */
+  --color-fuchsia-300: #6B5090; /* text */ --color-fuchsia-400: #7A5DA0; /* text */ --color-fuchsia-500: #8E72B4; /* fill/border */
 }
 
 /* ── Sunrise motion + gradient embellishments (active in the Sunrise/light theme) ── */
@@ -343,6 +361,112 @@ html.sensory-comfort body::after {
   .glass { backdrop-filter: blur(7px) saturate(1.1); -webkit-backdrop-filter: blur(7px) saturate(1.1); }
 }
 :root.theme-light .glass { background: color-mix(in srgb, var(--color-card) 74%, transparent); border-color: rgba(122,93,72,0.12); box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), 0 10px 30px -20px rgba(122,93,72,0.25); }
+
+/* ── Hero numeral (Soft Wellness register, 2026-07-19) ────────────────────────────────────────
+   ONE big outlined stat per screen — drawn/provisional, not dashboard-loud. True dashed text-stroke
+   doesn't exist in CSS, so the register is built as: a translucent accent fill (raised to 55% after
+   review — 30% measured ~1.4:1 under theme-elevated, reading as a bare hairline) + a solid accent-hi
+   stroke (the outline) + a dashed baseline rule (the "sketched" cue). The numeral is real text —
+   screen readers announce it as-is; keep the unit/label as adjacent solid-ink text, never inside it.
+   Themes across warm-dark/Sunrise AND theme-elevated/theme-low for free — everything routes through
+   role tokens, which chain to the (already themed) ramps. NEVER on §9 crisis/safety-plan surfaces or
+   assessment scores (PHQ-9/ASRM) — those stay plain, exact, high-contrast; a stylized numeral on a
+   clinical score reads as decoration where none belongs. */
+.hero-numeral {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-variant-numeric: lining-nums tabular-nums;
+  font-size: clamp(3.5rem, 18vw, 6.5rem);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  display: inline-block;
+  color: color-mix(in srgb, var(--color-accent) 55%, transparent);
+  -webkit-text-stroke: 2px var(--color-accent-hi);
+  border-bottom: 2px dashed color-mix(in srgb, var(--color-accent) 55%, transparent);
+  padding-bottom: 0.06em;
+}
+@supports not (-webkit-text-stroke: 1px black) {
+  .hero-numeral { color: var(--color-accent-hi); }
+}
+/* CONTRACT GUARD: the sun-cta contract is dark-text-only; a lavender outline on peach fails both
+   contrast and the contract, so inside .sun-cta the numeral collapses to sun-cta's own inherited
+   dark text instead. */
+.sun-cta .hero-numeral {
+  -webkit-text-stroke: 0;
+  color: inherit;
+  border-bottom-color: color-mix(in srgb, currentColor 45%, transparent);
+}
+
+/* ── Blob badge (Soft Wellness register) ──────────────────────────────────────────────────────
+   A soft gradient orb showing a range/state WITHOUT axes, gauges, or charts — for everyday
+   self-report data ONLY (mood/intensity, wellbeing trend). Layered radial-gradients with transparent
+   falloff, not filter:blur (same perf rule as .aurora-field). The blob is ambience only — the number/
+   word sits on top in solid ink (.blob-badge__value) and carries ALL the contrast; never encode
+   meaning in the blob alone.
+   State variants are built ONLY from --color-accent / --color-success / --color-hero (+ ink-faint as
+   a mixer) — deliberately NOT --color-danger or --color-warn. Two reasons, found in review: (1)
+   --color-danger is the app's crisis-exclusive role token — in light/Sunrise theme it resolves to a
+   vivid coral-red (`--color-rose-500: #BE3F26`, the file's own "warm, vivid" crisis color), so an
+   everyday "low mood" badge painted from it would look like a crisis signal exactly when the app
+   should look calmest; (2) theme-elevated/theme-low only override the blue/emerald/purple/peach
+   ramps, not rose/amber, so anything built from danger/warn would stay full-saturation under the
+   mood-adaptive overlays — the opposite of the intended calm-down effect. Building from
+   accent/success/hero/ink-faint means every variant re-themes correctly across all four palette
+   states for free, with no dedicated per-state overrides needed.
+   Default has no animation — .nila-orb + .aurora-field are often already in motion on the same
+   screen; opt into a subtle breathe via .blob-badge--breathe only where nothing else is moving.
+   NEVER on §9 crisis/safety-plan surfaces; NEVER for PHQ-9/ASRM assessment scores (clinical numbers
+   need plain, exact, high-contrast presentation — hue-coding a depression score drifts toward the
+   alarm-not-companion pattern the SENSE→ASK→CONFIRM spine forbids). --tender is a quiet, low-key
+   mood tint, never a risk indicator. */
+.blob-badge {
+  --blob-a: var(--color-accent);
+  --blob-b: var(--color-hero);
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 9999px;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(62% 62% at 34% 30%, color-mix(in srgb, var(--blob-a) 52%, transparent), transparent 70%),
+    radial-gradient(56% 56% at 68% 72%, color-mix(in srgb, var(--blob-b) 38%, transparent), transparent 72%),
+    radial-gradient(80% 80% at 50% 50%, color-mix(in srgb, var(--blob-a) 14%, transparent), transparent 78%);
+}
+.blob-badge--breathe { animation: blob-breathe 12s ease-in-out infinite; }
+@keyframes blob-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.035); } }
+:root.theme-light .blob-badge {
+  background:
+    radial-gradient(62% 62% at 34% 30%, color-mix(in srgb, var(--blob-a) 34%, transparent), transparent 70%),
+    radial-gradient(56% 56% at 68% 72%, color-mix(in srgb, var(--blob-b) 26%, transparent), transparent 72%),
+    radial-gradient(80% 80% at 50% 50%, color-mix(in srgb, var(--blob-a) 10%, transparent), transparent 78%);
+}
+.blob-badge--steady   { --blob-a: var(--color-success); --blob-b: var(--color-accent); }  /* doing well */
+.blob-badge--settling { --blob-a: var(--color-hero);    --blob-b: var(--color-accent); }  /* wobbly / mixed */
+.blob-badge--tender   { --blob-a: color-mix(in srgb, var(--color-accent) 45%, var(--color-ink-faint) 55%); --blob-b: var(--color-hero); } /* low, quiet — not a risk indicator */
+.blob-badge__value { position: relative; color: var(--color-ink); }
+
+/* ── Poster line (Soft Wellness register) ─────────────────────────────────────────────────────
+   Bold poster headline with ONE word swapped for an inline emoji. Inter 700 (heavy sans), not Lora —
+   this is the app's own voice, not Nila's (Nila's chat stays Lora/.editorial always).
+   ⚠ USE ONCE PER SCREEN, MAXIMUM — like .sun-cta's dark-text rule, this is a contract, not a style:
+   a second poster line demotes both to noise. If you want a second heading, make it a plain
+   .editorial heading instead. NEVER inside Nila's chat voice, and never on crisis/safety-plan
+   surfaces. */
+.poster-line {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: clamp(1.75rem, 7vw, 2.5rem);
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+  color: var(--color-ink);
+  text-wrap: balance;
+}
+.poster-line__emoji {
+  font-size: 0.92em;
+  line-height: 1;
+  vertical-align: -0.06em;
+  font-family: system-ui;
+}
 
 /* Warm peach gradient CTA — used on hero action buttons and circular action tiles.
    Contract: dark text only (never white) — peach + dark text clears WCAG AA (5.9–7.7:1); white on

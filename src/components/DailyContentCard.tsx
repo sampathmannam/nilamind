@@ -20,9 +20,12 @@ export default function DailyContentCard() {
 
   return (
     <div className="glass rounded-2xl p-4 space-y-3 relative animate-fade-in" id="daily-content-card">
+      {/* Matching the established ghost-dismiss convention (ConversationalCheckinCard's "Not now"
+          button): text-color-only hover, no raw-slate hover:bg - this button sits on a .glass card,
+          and a flat hover-bg reads as an ad-hoc addition next to that sibling pattern. */}
       <button
         onClick={handleDismiss}
-        className="absolute top-3 right-3 p-1.5 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-slate-800/50 transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center"
+        className="absolute top-3 right-3 p-1.5 rounded-lg text-slate-500 hover:text-slate-300 transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center"
         aria-label="Dismiss"
       >
         <X className="w-4 h-4" />
