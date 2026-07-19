@@ -44,6 +44,7 @@ import NudgeRail from "./NudgeRail";
 import { useNudges } from "../hooks/useNudges";
 import { useCheckinGate } from "../hooks/useCheckinGate";
 import { useCrisisGate } from "../hooks/useCrisisGate";
+import { useMessageFeedback } from "../hooks/useMessageFeedback";
 import { useFocusTrap } from "../hooks/useFocusTrap";
 import { looksLikeArmRequest, requestArmedCheckin } from "../services/armedCheckin";
 import { protocolOfferCard, startProtocolChat, continueProtocolChat, type ProtocolCard } from "../services/protocolChat";
@@ -55,7 +56,6 @@ import { checkSttCoherence } from "../services/sttCoherenceGate";
 import { checkProactiveCheckIn, recordProactiveCheckIn } from "../services/proactiveCheckIn";
 import { Settings, Mic, Send, MicOff, Keyboard, X, ThumbsUp, ThumbsDown, SquarePen } from "lucide-react";
 import { hapticLight, hapticMedium } from "../hooks/useHaptics";
-import { recordFeedback, attachSuggestion } from "../services/nilaFeedback";
 import { isCloudApiEnabled, getCloudApiKey } from "../services/cloudApi";
 
 interface ModeScreenProps {
@@ -131,12 +131,10 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
     welcome: !!welcomeBack,
   });
 
-  const [ratedMessages, setRatedMessages] = useState<Set<number>>(new Set());
-  const [dismissedSkillMessages, setDismissedSkillMessages] = useState<Set<number>>(new Set());
-  // 2026-07-12 Wave 3, Group F: completes the already-built-but-unwired attachSuggestion() flow — a one-tap,
-  // optional, dismissable "what would've helped?" follow-up after a thumbs-down. Never forced.
-  const [suggestionPrompt, setSuggestionPrompt] = useState<{ index: number; feedbackId: string } | null>(null);
-  const [suggestionText, setSuggestionText] = useState("");
+  // Per-message thumbs up/down + the "what would've helped?" suggestion flow + skill dismissal — a
+  // self-contained, §9-free concern extracted to useMessageFeedback (Phase 4 slice 4b).
+  const feedback = useMessageFeedback();
+  const { ratedMessages, dismissedSkillMessages, suggestionPrompt, suggestionText } = feedback;
   const [showQuickActions, setShowQuickActions] = useState(false);
   // #4 + #9 (audit): §9 crisis now routes through the App-level overlay (onOpenCrisis) so the Android hardware
   // back button closes it instead of exiting the app; a session that ever tripped §9 latches hadCrisisRef so
@@ -578,8 +576,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
     clearSessionChat();
     setMessages([]);
     nudges.clearPactAndWelcome();
-    setRatedMessages(new Set());
-    setDismissedSkillMessages(new Set());
+    feedback.reset();
     setProtocolCard(protocolOfferCard(""));
     hadCrisisRef.current = false;
     setConfirmNewChat(false);
@@ -737,24 +734,14 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                   {m.role === "assistant" && !ratedMessages.has(i) && (
                     <div className="flex gap-2 mt-1">
                       <button
-                        onClick={() => {
-                          recordFeedback(m.content, "up");
-                          setRatedMessages((prev) => new Set(prev).add(i));
-                          hapticLight();
-                        }}
+                        onClick={() => feedback.rateUp(m.content, i)}
                         className="p-2.5 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-slate-800/50 transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center focus-ring"
                         aria-label="Mark as helpful"
                       >
                         <ThumbsUp className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => {
-                          const entry = recordFeedback(m.content, "down");
-                          setRatedMessages((prev) => new Set(prev).add(i));
-                          hapticLight();
-                          setSuggestionText("");
-                          setSuggestionPrompt({ index: i, feedbackId: entry.id });
-                        }}
+                        onClick={() => feedback.rateDown(m.content, i)}
                         className="p-2.5 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-slate-800/50 transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center focus-ring"
                         aria-label="Mark as not helpful"
                       >
@@ -771,9 +758,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                         skillName={m.insight.skill?.skill.name ?? ""}
                         skillReason={m.insight.skill?.reason ?? ""}
                         skillDismissed={dismissedSkillMessages.has(i)}
-                        onDismissSkill={() =>
-                          setDismissedSkillMessages((prev) => new Set(prev).add(i))
-                        }
+                        onDismissSkill={() => feedback.dismissSkill(i)}
                         onTrySkill={
                           m.insight.skill
                             ? () => handleTrySkill(m.insight!.skill!.skill)
@@ -793,24 +778,20 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                         <input
                           type="text"
                           value={suggestionText}
-                          onChange={(e) => setSuggestionText(e.target.value)}
+                          onChange={(e) => feedback.setSuggestionText(e.target.value)}
                           placeholder="What would've helped? (optional)"
                           className="w-full px-2.5 py-2 rounded-md bg-slate-900/70 border border-slate-700 text-slate-200 placeholder:text-slate-500 focus-ring"
                         />
                         <div className="flex gap-2 justify-end">
                           <button
-                            onClick={() => { setSuggestionPrompt(null); setSuggestionText(""); }}
+                            onClick={() => feedback.cancelSuggestion()}
                             className="px-3 py-2 rounded-md text-slate-400 hover:text-slate-200 hover:bg-slate-700/50 transition-colors cursor-pointer min-h-[44px] focus-ring"
                             aria-label="Not now"
                           >
                             Not now
                           </button>
                           <button
-                            onClick={() => {
-                              if (suggestionText.trim()) attachSuggestion(suggestionPrompt.feedbackId, suggestionText);
-                              setSuggestionPrompt(null);
-                              setSuggestionText("");
-                            }}
+                            onClick={() => feedback.submitSuggestion()}
                             className="px-3 py-2 rounded-md bg-violet-500/20 hover:bg-violet-500/30 text-violet-200 font-medium transition-colors cursor-pointer min-h-[44px] focus-ring"
                             aria-label="Share what would help"
                           >
