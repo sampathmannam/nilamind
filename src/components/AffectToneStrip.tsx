@@ -1,4 +1,5 @@
 import React from "react";
+import Card from "./Card";
 import { buildAffectToneStrip } from "../services/affectToneChart";
 import { valenceToColor, NO_DATA_COLOR } from "../services/affectToneColor";
 import { localDateKey } from "../services/storageUtils";
@@ -8,12 +9,12 @@ export default function AffectToneStrip() {
   const byDate = new Map(cells.map((c) => [c.date, c]));
 
   return (
-    <div className="glass rounded-2xl p-4 space-y-2">
-      <h3 className="text-xs font-bold text-slate-100 uppercase tracking-wider">
+    <Card>
+      <h3 className="text-xs font-bold text-ink uppercase tracking-wider">
         Conversation tone (automatic)
       </h3>
       {!sufficient ? (
-        <p className="text-[11px] text-slate-500">No data yet.</p>
+        <p className="text-[11px] text-ink-muted">No data yet.</p>
       ) : (
         <>
           <div
@@ -40,11 +41,11 @@ export default function AffectToneStrip() {
               );
             })}
           </div>
-          <p className="text-[11px] text-slate-500 leading-relaxed">
+          <p className="text-[11px] text-ink-muted leading-relaxed">
             An automatic tone estimate from the app's on-device model — not something you told the app.
           </p>
         </>
       )}
-    </div>
+    </Card>
   );
 }

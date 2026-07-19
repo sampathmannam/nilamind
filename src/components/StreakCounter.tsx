@@ -2,23 +2,18 @@ import React, { useState, useEffect } from "react";
 import { Flame } from "lucide-react";
 import { useLanguage } from "../services/i18n";
 import ConfettiBurst from "./ConfettiBurst";
+import Card from "./Card";
 import { hapticCelebration } from "../hooks/useHaptics";
 
 interface Props {
   current: number;
   longest: number;
   totalActiveDays: number;
-  /** Show celebration animation on milestone. */
   celebrate?: boolean;
 }
 
 const MILESTONES = [3, 7, 14, 30, 100];
 
-/**
- * StreakCounter — an animated streak display with milestone celebrations.
- * Shows the current streak with a flame icon, and triggers a celebration
- * animation when a milestone is reached.
- */
 export default function StreakCounter({ current, longest, totalActiveDays, celebrate = false }: Props) {
   useLanguage();
   const [showCelebration, setShowCelebration] = useState(false);
@@ -26,7 +21,7 @@ export default function StreakCounter({ current, longest, totalActiveDays, celeb
   useEffect(() => {
     if (celebrate && MILESTONES.includes(current)) {
       setShowCelebration(true);
-      hapticCelebration(); // UX-5: tactile celebration on milestone
+      hapticCelebration();
       const timer = setTimeout(() => setShowCelebration(false), 2000);
       return () => clearTimeout(timer);
     }
@@ -40,7 +35,7 @@ export default function StreakCounter({ current, longest, totalActiveDays, celeb
   return (
     <div className="relative">
       <ConfettiBurst active={showCelebration} count={15} duration={1500} onComplete={() => setShowCelebration(false)} />
-      <div className={`glass rounded-2xl p-4 space-y-2 transition-all ${showCelebration ? "ring-2 ring-amber-400/50" : ""}`}>
+      <Card className={`transition-all ${showCelebration ? "ring-2 ring-amber-400/50" : ""}`}>
         <div className="flex items-center gap-2">
           <div className="relative">
             <Flame className={`w-5 h-5 transition-all ${current > 0 ? "text-amber-400" : "text-slate-600"} ${showCelebration ? "scale-125" : ""}`} />
@@ -51,19 +46,11 @@ export default function StreakCounter({ current, longest, totalActiveDays, celeb
             )}
           </div>
           <div className="flex-1">
-            {/* Soft Wellness register review (2026-07-19): this card sits directly below the
-                "compassionate streak" message in DashboardScreen, whose own comment documents a
-                cited, deliberate decision that the raw count must stay "demoted to small muted
-                caption text... rather than a big... stat tile" (Six et al. 2021; Kahneman & Tversky
-                1979 — loss-aversion). An earlier pass gave this number a large .hero-numeral
-                treatment without that context; reverted on discovering it directly undercuts the
-                app's own anti-gamification research. The register's "one hero number" pattern does
-                NOT apply here — plain small text is the correct, considered choice. */}
-            <p className="text-sm font-semibold text-slate-200">
+            <p className="text-sm font-semibold text-ink">
               {current > 0 ? `${current}-day streak` : "Start your streak"}
             </p>
             {current > 0 && (
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-ink-muted">
                 Longest: {longest} · {totalActiveDays} active days all-time
               </p>
             )}
@@ -75,7 +62,6 @@ export default function StreakCounter({ current, longest, totalActiveDays, celeb
           )}
         </div>
 
-        {/* Progress bar toward next milestone */}
         {current > 0 && current < 100 && (
           <div className="space-y-1">
             <div className="h-1.5 rounded-full bg-slate-800 overflow-hidden">
@@ -84,14 +70,13 @@ export default function StreakCounter({ current, longest, totalActiveDays, celeb
                 style={{ width: `${Math.min(progress * 100, 100)}%` }}
               />
             </div>
-            <p className="text-xs text-slate-500 text-right">
+            <p className="text-xs text-ink-muted text-right">
               Next: {MILESTONES.find((m) => m > current) ?? "∞"} days
             </p>
           </div>
         )}
-      </div>
+      </Card>
 
-      {/* Celebration overlay */}
       {showCelebration && (
         <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
           <div className="text-4xl animate-bounce">🎉</div>
