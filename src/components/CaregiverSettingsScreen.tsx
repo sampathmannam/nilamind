@@ -135,7 +135,7 @@ export default function CaregiverSettingsScreen({ onClose, onOpenCaregiverShare 
               key={c.id}
               onClick={() => { setSelectedId(c.id); setEditId(null); setAdding(false); }}
               className={`w-full text-left p-3 rounded-xl border transition-all cursor-pointer ${
-                selectedId === c.id ? "bg-emerald-600/10 border-emerald-500/40" : "bg-slate-800/50 border-slate-700 hover:border-slate-600"
+                selectedId === c.id ? "bg-emerald-600/10 border-emerald-500/40" : "glass hover:brightness-125"
               }`}
             >
               <div className="flex items-center justify-between">
@@ -161,25 +161,25 @@ export default function CaregiverSettingsScreen({ onClose, onOpenCaregiverShare 
 
       {/* Add contact form */}
       {(adding || editId) ? (
-        <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 space-y-3">
+        <div className="glass rounded-2xl p-4 space-y-3">
           <div className="grid gap-2">
             <input
               value={form.name}
               onChange={(e) => { setForm({ ...form, name: e.target.value }); setFormError(null); }}
               placeholder={t("cg_name")}
-              className="bg-page border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200"
+              className="glass rounded-lg px-3 py-2 text-sm text-slate-200"
             />
             <input
               value={form.phoneOrEmail}
               onChange={(e) => { setForm({ ...form, phoneOrEmail: e.target.value }); setFormError(null); }}
               placeholder={t("cg_phone_or_email")}
-              className="bg-page border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200"
+              className="glass rounded-lg px-3 py-2 text-sm text-slate-200"
             />
             <input
               value={form.relationship}
               onChange={(e) => { setForm({ ...form, relationship: e.target.value }); setFormError(null); }}
               placeholder={t("cg_relationship")}
-              className="bg-page border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200"
+              className="glass rounded-lg px-3 py-2 text-sm text-slate-200"
             />
           </div>
           {formError && <p className="text-[11px] text-rose-300">{formError}</p>}
@@ -196,7 +196,7 @@ export default function CaregiverSettingsScreen({ onClose, onOpenCaregiverShare 
 
       {/* Per-contact preferences */}
       {selectedId && selectedPrefs ? (
-        <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 space-y-4" id="caregiver-prefs-panel">
+        <div className="glass rounded-2xl p-4 space-y-4" id="caregiver-prefs-panel">
           <p className="text-xs uppercase font-mono tracking-widest text-slate-400">{t("cg_share_categories")}</p>
 
           {CATEGORY_LABELS.map(({ key, label }) => (
@@ -239,7 +239,7 @@ export default function CaregiverSettingsScreen({ onClose, onOpenCaregiverShare 
                     type="number" min={1} max={14}
                     value={selectedPrefs.autoAlert.thresholdDays}
                     onChange={(e) => updateThreshold(Number(e.target.value))}
-                    className="w-full bg-page border border-slate-700 rounded px-2 py-1 text-xs text-slate-200"
+                    className="w-full glass rounded px-2 py-1 text-xs text-slate-200"
                   />
                 </label>
                 <label className="space-y-0.5">
@@ -248,7 +248,7 @@ export default function CaregiverSettingsScreen({ onClose, onOpenCaregiverShare 
                     type="number" min={1} max={10}
                     value={selectedPrefs.autoAlert.minIntensity}
                     onChange={(e) => updateMinIntensity(Number(e.target.value))}
-                    className="w-full bg-page border border-slate-700 rounded px-2 py-1 text-xs text-slate-200"
+                    className="w-full glass rounded px-2 py-1 text-xs text-slate-200"
                   />
                 </label>
               </div>

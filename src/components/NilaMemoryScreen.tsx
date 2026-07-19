@@ -141,7 +141,12 @@ export default function NilaMemoryScreen() {
                         value={draft}
                         onChange={(e) => setDraft(e.target.value)}
                         rows={2}
-                        className="w-full text-sm bg-slate-900/60 border border-slate-700 rounded-xl p-2 text-slate-100 focus:outline-none focus:border-fuchsia-500"
+                        /* .glass sets its own unlayered border, which would silently defeat a
+                           focus:border-* utility (same class of dead-class bug caught in the
+                           OnboardingGate/CaregiverSettings passes) - using the ring-based focus
+                           pattern from Sheet.tsx's close button instead, which doesn't compete
+                           with .glass's border on the same property. */
+                        className="w-full text-sm glass rounded-xl p-2 text-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                       />
                       <div className="flex items-center gap-2 justify-end">
                         <button onClick={cancelEdit} aria-label="Cancel" className="p-1.5 text-slate-400 hover:text-slate-200 cursor-pointer">
