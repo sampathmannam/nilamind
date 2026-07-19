@@ -220,7 +220,7 @@ export default function NilaCheckIn({ onLogged, onSkip }: NilaCheckInProps) {
       {/* Progress — honest about what's required (design review 2026-07-18): two mandatory taps (mood,
           intensity), then everything else is optional. Two solid dots for the required steps, then a soft
           "optional" segment, rather than six equal dots that read as a six-step gauntlet. */}
-      <div className="flex items-center justify-center gap-1.5" aria-label={isOptionalStep ? "Core check-in complete — optional detail" : `Step ${stepIdx + 1} of 2`}>
+      <div role="group" className="flex items-center justify-center gap-1.5" aria-label={isOptionalStep ? "Core check-in complete — optional detail" : `Step ${stepIdx + 1} of 2`}>
         {["mood", "intensity"].map((s) => {
           const i = steps.indexOf(s as (typeof steps)[number]);
           const cls =

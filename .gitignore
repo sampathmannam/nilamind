@@ -65,3 +65,7 @@ AUDIT_*.md
 phone_log.txt
 phone_screenshot.png
 /launch-kit/
+
+# e2e (Playwright) artifacts
+test-results/
+playwright-report/

@@ -177,7 +177,7 @@
   --color-emerald-500: #3A7659; /* darkened from #3F8060: cream/white text on emerald-500 fills now clears AA (4.85–5.36:1 vs 4.25–4.7:1), incl. the Reach-out send button's hover */
   --color-emerald-300: #2F7A57; --color-emerald-400: #2E6B4E; --color-emerald-600: #357053;
   /* rose → coral-red for crisis (warm, vivid, still readable as text) */
-  --color-rose-200: #B23A22; --color-rose-300: #D2492E; --color-rose-400: #D2492E;
+  --color-rose-200: #B23A22; --color-rose-300: #A83420; --color-rose-400: #A83420;
   --color-rose-450: #C8442B; --color-rose-500: #BE3F26; --color-rose-600: #AD3620;
   /* amber → honey */
   --color-amber-300: #9A6A18; --color-amber-400: #8E5F12; --color-amber-500: #82550E;
