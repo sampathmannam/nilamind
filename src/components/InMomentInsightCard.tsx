@@ -33,7 +33,7 @@ export default function InMomentInsightCard({
   return (
     <div
       id="in-moment-insight"
-      className="mt-2 rounded-xl border border-slate-700/60 bg-slate-900/40 p-3 space-y-2.5"
+      className="mt-2 glass rounded-xl p-3 space-y-2.5"
     >
       {explainerTitle && (
         <div className="flex items-start gap-2">

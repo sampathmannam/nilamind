@@ -29,7 +29,12 @@ const MOOD_OPTIONS = [
   { label: "Good", emoji: "😊", value: "good", color: "bg-green-500/20 text-green-300 border-green-500/30 hover:bg-green-500/30" },
   { label: "Okay", emoji: "😐", value: "okay", color: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30 hover:bg-yellow-500/30" },
   { label: "Low", emoji: "😔", value: "low", color: "bg-blue-500/20 text-blue-300 border-blue-500/30 hover:bg-blue-500/30" },
-  { label: "Struggling", emoji: "😰", value: "struggling", color: "bg-red-500/20 text-red-300 border-red-500/30 hover:bg-red-500/30" },
+  // Fable review (2026-07-19): this was raw Tailwind bg-red-500/text-red-300 — unmapped, the one color
+  // in this exact 4-chip array that hadn't been folded into the warm palette (green/blue/yellow all
+  // were). Rose is this app's actual "warm red" family (muted terracotta, never bright red) — using its
+  // ramp values (not the --color-danger role token itself) matches how "Low" uses blue ramp values
+  // without claiming to be --color-accent.
+  { label: "Struggling", emoji: "😰", value: "struggling", color: "bg-rose-500/20 text-rose-300 border-rose-500/30 hover:bg-rose-500/30" },
 ] as const;
 
 export function getReCheckInMessage(daysSinceLast: number): string {

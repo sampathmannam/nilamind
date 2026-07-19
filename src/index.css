@@ -112,6 +112,19 @@
   --color-cyan-400: #7FBFA0;
   --color-green-200: #C3E6D2; --color-green-300: #A7D2BC; --color-green-400: #7FBFA0; --color-green-500: #5AA483; --color-green-700: #3B6B54; --color-green-950: #16241D;
   --color-orange-200: #F0D3A8; --color-orange-300: #EBB48F; --color-orange-400: #E3A57D; --color-orange-500: #D6916A; --color-orange-700: #A65E3E; --color-orange-950: #2A1B12;
+  /* yellow → folded into the amber/warm-honey family (design review, 2026-07-19): unlike every other
+     categorical ramp above, yellow had no override at all, so bg-yellow-500/text-yellow-300/etc. rendered
+     Tailwind's raw bright default instead of this app's warm palette — the same class of leak as the
+     sky-400 Reach-out icon fix. Used by PassiveInsightCard's color map and lowFrictionReCheckIn's "Okay"
+     mood chip. */
+  --color-yellow-200: #ECCF94; --color-yellow-300: #E8C98C; --color-yellow-500: #CE9A3A; --color-yellow-700: #8A6B28; --color-yellow-950: #2A2110;
+  /* lime → folded into emerald/success (Fable review, 2026-07-19, following the yellow-gap fix above):
+     another categorical ramp with no override, found via text-lime-400 on InsightsScreen's "steps" icon. */
+  --color-lime-400: #7FBFA0; --color-lime-500: #5AA483;
+  /* fuchsia → folded into the purple/lavender accent family: raw hot fuchsia is the exact hue this app's
+     orb was previously moved away from (mauve-lavender redesign) — a leak here is the same regression in
+     a different component (NilaMemoryScreen's header icon, focus ring, and "Preview & donate" link). */
+  --color-fuchsia-300: #D1BFDF; --color-fuchsia-400: #BEA4D0; --color-fuchsia-500: #AC8FC2;
 
   /* semantic surfaces (theme-switchable; light values live under :root.theme-light) */
   --color-page: #171311;    /* app background */
@@ -214,6 +227,11 @@
   --color-green-200: #2F7A57; --color-green-300: #2F7A57; --color-green-400: #2E6B4E; /* text */
   --color-green-500: #3A7659; /* fill/border */ --color-green-700: #CDE5D8; /* border */ --color-green-950: #E4F1EA; /* tint */
   --color-orange-200: #C2521E; /* text */ --color-orange-700: #F3D0BC; /* border */ --color-orange-950: #FBE6D8; /* tint */
+  /* yellow → folded into amber/warm-honey (see dark-theme comment above for why this exists at all) */
+  --color-yellow-200: #82550E; /* text */ --color-yellow-300: #9A6A18; /* text */ --color-yellow-500: #82550E; /* fill/text */
+  --color-yellow-700: #F3E3C2; /* border */ --color-yellow-950: #FBF1DE; /* tint */
+  --color-lime-400: #2E6B4E; /* text */ --color-lime-500: #3A7659; /* fill */
+  --color-fuchsia-300: #6B5090; /* text */ --color-fuchsia-400: #7A5DA0; /* text */ --color-fuchsia-500: #8E72B4; /* fill/border */
 }
 
 /* ── Sunrise motion + gradient embellishments (active in the Sunrise/light theme) ── */
