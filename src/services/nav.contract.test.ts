@@ -27,6 +27,7 @@ const GOLDEN_AUX: readonly AuxView[] = [
   "learn", "medication", "problem_solving", "values_work", "exposure", "relapse_plan", "caregiver", "episode",
   "diary", "dbt_diary_card", "social_rhythm", "ema_checkin", "episode_marker",
   "caregiver_settings", "legal", "sounds", "safety_plan", "values_to_action",
+  "guided_programs",
 ];
 
 describe("nav contract — allowlists are frozen (any change is deliberate)", () => {

@@ -138,6 +138,12 @@ export const PROTOCOLS: Protocol[] = [
         prompt: "How did that land — even slightly? Speaking to yourself the way you'd speak to someone you love takes practice; noticing the difference is the start." },
     ],
   },
+  // STEPPED CARE (deliberate, pinned by src/services/protocolRouting.test.ts): this protocol's
+  // forConcerns cues overlap heavily with cbti-sleep's, and routeToProtocol()'s tie-break (first
+  // match in array order wins) means a generic sleep complaint lands here, not on cbti-sleep. That
+  // is correct — this is the brief, low-friction on-ramp; cbti-sleep is the fuller step-up, offered
+  // on completion of this one (see protocolChat.ts's stepUpOffer). Do NOT reorder PROTOCOLS or add
+  // sleep-wind-down cues to close this "gap" without re-reading both protocols' basis text first.
   {
     id: "sleep-wind-down",
     title: "Sleep Wind-Down",

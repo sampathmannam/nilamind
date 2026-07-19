@@ -78,6 +78,9 @@ import BiometricGateHost from "./components/BiometricGateHost";
 import ModelSetupGate from "./components/ModelSetupGate";
 import OnboardingGate from "./components/OnboardingGate";
 import SafetyPlanScreen from "./components/SafetyPlanScreen";
+import GuidedProgramsScreen from "./components/GuidedProgramsScreen";
+import { startProtocolChat } from "./services/protocolChat";
+import { getSessionChat, setSessionChat } from "./services/sessionChat";
 import { hasCompletedOnboarding } from "./services/onboarding";
 import { type AuxView } from "./services/nav";
 
@@ -121,6 +124,7 @@ const AUX_LABELS: Partial<Record<AuxView, string>> = {
   legal: "Legal",
   sounds: "Ambient sounds",
   safety_plan: "My Safety Plan",
+  guided_programs: "Guided Programs",
 };
 
 function auxViewLabel(view: AuxView): string {
@@ -156,6 +160,25 @@ function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () 
     case "sounds": return <SoundPlayer />;
     case "legal": return <LegalScreen />;
     case "safety_plan": return <SafetyPlanScreen />;
+    case "guided_programs":
+      return (
+        <GuidedProgramsScreen
+          onStart={(protocolId) => {
+            // startProtocolChat's returned first-step prompt has nowhere to land once we navigate away:
+            // ModeScreen is unmounted while the hub is open and re-seeds `messages` purely from
+            // getSessionChat() on remount (see ModeScreen.tsx's messages useState initializer) — it does
+            // NOT re-run this callback's return value. Without this, the started protocol's step-1 content
+            // is silently skipped: the offer card would show "step 1 of N" but tapping it would advance
+            // straight to step 2. Seed the persisted transcript directly so remount picks it up.
+            const result = startProtocolChat(protocolId);
+            if (result.kind === "started") {
+              setSessionChat([...getSessionChat(), { role: "assistant", content: result.prompt }]);
+            }
+            onClose();
+            onOpenView("nila");
+          }}
+        />
+      );
     default: return <div className="p-6 text-slate-400 text-sm text-center">Not available</div>;
   }
 }

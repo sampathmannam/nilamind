@@ -2,12 +2,13 @@
 // assistant-message shaped results. Pure, deterministic, §9-aware.
 
 import { startProtocol, advanceProtocol, getActiveProgress, protocolOffer, completionCountFor } from "./protocolProgress";
+import { getProtocol } from "./protocols";
 import { scanForCrisis } from "../safety";
 
 export type ProtocolChatResult =
   | { kind: "started"; title: string; prompt: string }
   | { kind: "advanced"; title: string; prompt: string }
-  | { kind: "done"; title: string }
+  | { kind: "done"; title: string; id: string }
   | { kind: "none" };
 
 export interface ProtocolCard {
@@ -15,6 +16,8 @@ export interface ProtocolCard {
   title: string;
   label: string;
   active: boolean;
+  /** The evidence citation for this protocol (Protocol.basis), shown as a small citation chip. */
+  basis: string;
 }
 
 /** Start a protocol and return the first step as an assistant prompt. */
@@ -30,7 +33,7 @@ export function continueProtocolChat(): ProtocolChatResult {
   if (!active) return { kind: "none" };
   const next = advanceProtocol();
   if (!next) return { kind: "none" };
-  if ("done" in next) return { kind: "done", title: next.protocol.title };
+  if ("done" in next) return { kind: "done", title: next.protocol.title, id: next.protocol.id };
   return { kind: "advanced", title: next.protocol.title, prompt: next.step.prompt };
 }
 
@@ -49,6 +52,7 @@ export function protocolOfferCard(userText: string): ProtocolCard | null {
       title: active.protocol.title,
       label: `Continue ${active.protocol.title} — step ${active.stepIndex + 1} of ${active.total}`,
       active: true,
+      basis: active.protocol.basis,
     };
   }
   const offer = protocolOffer(userText);
@@ -61,5 +65,24 @@ export function protocolOfferCard(userText: string): ProtocolCard | null {
     priorCompletions > 0
       ? `Try ${offer.title} again — you've completed it ${priorCompletions} time${priorCompletions === 1 ? "" : "s"} before`
       : `Try ${offer.title} with me`;
-  return { protocolId: offer.id, title: offer.title, label, active: false };
+  return { protocolId: offer.id, title: offer.title, label, active: false, basis: offer.basis };
+}
+
+/**
+ * Offer a step-up program after completing one, when a deliberate stepped-care next step exists.
+ * Today this is a single hardcoded edge (sleep-wind-down -> cbti-sleep, see the pinning comments in
+ * protocols.ts and protocolCBTI.ts) rather than a generic graph — add edges here explicitly as more
+ * are identified, don't build a generic "next protocol" inference system for one known case.
+ */
+export function stepUpOffer(completedProtocolId: string): ProtocolCard | null {
+  if (completedProtocolId !== "sleep-wind-down") return null;
+  const next = getProtocol("cbti-sleep");
+  if (!next) return null;
+  return {
+    protocolId: next.id,
+    title: next.title,
+    label: `Ready for more? ${next.title} builds on what you just practiced, with a fuller program.`,
+    active: false,
+    basis: next.basis,
+  };
 }
