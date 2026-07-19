@@ -78,6 +78,8 @@ import BiometricGateHost from "./components/BiometricGateHost";
 import ModelSetupGate from "./components/ModelSetupGate";
 import OnboardingGate from "./components/OnboardingGate";
 import SafetyPlanScreen from "./components/SafetyPlanScreen";
+import GuidedProgramsScreen from "./components/GuidedProgramsScreen";
+import { startProtocolChat } from "./services/protocolChat";
 import { hasCompletedOnboarding } from "./services/onboarding";
 import { type AuxView } from "./services/nav";
 
@@ -123,6 +125,7 @@ const AUX_LABELS: Partial<Record<AuxView, string>> = {
   legal: "Legal",
   sounds: "Ambient sounds",
   safety_plan: "My Safety Plan",
+  guided_programs: "Guided Programs",
 };
 
 function auxViewLabel(view: AuxView): string {
@@ -158,6 +161,16 @@ function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () 
     case "sounds": return <SoundPlayer />;
     case "legal": return <LegalScreen />;
     case "safety_plan": return <SafetyPlanScreen />;
+    case "guided_programs":
+      return (
+        <GuidedProgramsScreen
+          onStart={(protocolId) => {
+            startProtocolChat(protocolId);
+            onClose();
+            onOpenView("nila");
+          }}
+        />
+      );
     default: return <div className="p-6 text-slate-400 text-sm text-center">Not available</div>;
   }
 }
