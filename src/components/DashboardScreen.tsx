@@ -52,6 +52,7 @@ import EpisodeMarkerCard from "./EpisodeMarkerCard";
 import MoodHeatmap from "./MoodHeatmap";
 import PhaseTimeline from "./PhaseTimeline";
 import TrendChart, { PHQ9_BANDS, GAD7_BANDS } from "./TrendChart";
+import AffectToneStrip from "./AffectToneStrip";
 import InsightCard from "./InsightCard";
 import StreakCounter from "./StreakCounter";
 import AchievementBadge from "./AchievementBadge";
@@ -551,12 +552,15 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
        {/* Episode-phase marker — current phase if active */}
        <EpisodeMarkerCard onOpen={() => onOpenView?.("episode_marker")} />
 
-       {/* Mood Heatmap — Year in Pixels */}
-       {mood.length >= 7 && (
-         <MoodHeatmap moods={mood} days={182} />
-       )}
+        {/* Mood Heatmap — Year in Pixels */}
+        {mood.length >= 7 && (
+          <MoodHeatmap moods={mood} days={182} />
+        )}
 
-       {/* Phase Timeline — episode phases over time */}
+        {/* Conversation tone — orb affect accent, automatic estimate, own empty-state handling */}
+        <AffectToneStrip />
+
+        {/* Phase Timeline — episode phases over time */}
        {episodeMarkers.length > 0 && (
          <PhaseTimeline markers={episodeMarkers} days={365} />
        )}
