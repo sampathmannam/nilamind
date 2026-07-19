@@ -29,6 +29,7 @@ import { episodeMarkerSummary } from "./episodeMarker";
 import { listCaregiverContacts } from "./caregiverContacts";
 import { topicContextBlock } from "./topicTracker";
 import { DAY_MS, localDateKey} from "./storageUtils";
+import { recentAffectDays } from "./chatAffect";
 import { parseSafetyPlan } from "./safetyPlan";
 import { ANTI_SYCHOPHANCY_BLOCK } from "./personaConfig";
 import { safetyPlanFollowUpContextBlock } from "./safetyPlanFollowUp";
@@ -742,6 +743,20 @@ export function buildReflectionDigest(): string {
 
   const band = latestScreeningBand();
   if (band) lines.push(`${band} (context only, never a label).`);
+
+  try {
+    const affectDays = recentAffectDays(7);
+    if (affectDays.length >= 3) { // minimum-data floor — a single bad day never asserts a "trend"
+      const avgValence = affectDays.reduce((s, d) => s + d.valence, 0) / affectDays.length;
+      const trend = avgValence <= -0.2 ? "trended difficult" : avgValence >= 0.2 ? "trended positive" : "stayed mixed";
+      lines.push(
+        `Conversation tone (${affectDays.length}d, an automatic tone estimate — not something they said): ` +
+        `${trend}. If this conflicts with what they've told you directly (e.g. a check-in), trust what they said.`
+      );
+    }
+  } catch {
+    /* best-effort — matches every other block in this function */
+  }
 
   return lines.join("\n");
 }
