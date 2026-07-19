@@ -78,7 +78,7 @@ function ProtocolSection({ title, protocols, onTap }: { title: string; protocols
         <button
           key={p.id}
           onClick={() => onTap(p)}
-          className="w-full text-left px-4 py-3 rounded-xl bg-slate-800/50 border border-slate-700/50 hover:bg-slate-800 transition-colors min-h-[44px] focus-ring"
+          className="w-full text-left px-4 py-3 rounded-xl glass hover:brightness-125 transition-all min-h-[44px] focus-ring"
         >
           <span className="block text-sm font-medium text-slate-200">{p.title}</span>
           <span className="block mt-0.5 text-xs text-slate-500">{p.steps.length} steps</span>
