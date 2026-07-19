@@ -1,8 +1,10 @@
 import React, { createContext, useContext, useReducer, useCallback, useMemo } from "react";
-import { type AuxView, resolveNavTarget } from "./nav";
+import { type AuxView, type TabView, resolveNavTarget } from "./nav";
 import { suppressNudgesForCrisis } from "./notifications";
 
-export type AppTab = "nila" | "today" | "tools" | "you";
+// The bottom-nav tabs. Single source is nav.ts's TabView (the resolver + this store agree by construction —
+// the old divergence, where nav.ts still listed the legacy diary/plan "tabs", is gone).
+export type AppTab = TabView;
 
 export type SheetId =
   | "settings"
@@ -127,10 +129,9 @@ export function NavProvider({ children }: { children: React.ReactNode }) {
         dispatch({ type: "OPEN_SHEET", id: "grounding" });
         break;
       case "tab":
-        if (res.tab === "plan") dispatch({ type: "OPEN_SHEET", id: "grounding" });
-        else if (res.tab === "nila" || res.tab === "today" || res.tab === "you")
-          dispatch({ type: "SET_TAB", tab: res.tab });
-        else if (res.tab === "diary") dispatch({ type: "OPEN_AUX", view: "diary" });
+        // res.tab is now always a real tab (nila/today/tools/you) — the legacy diary→aux / plan→grounding
+        // re-interpretation is gone: "diary" resolves to {kind:"aux"} and "plan" to {kind:"plan"} upstream.
+        dispatch({ type: "SET_TAB", tab: res.tab });
         break;
       case "aux":
         if (res.view === "settings") dispatch({ type: "OPEN_SHEET", id: "settings" });

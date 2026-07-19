@@ -92,9 +92,7 @@ import { MessageSquare, LayoutGrid, Wrench, User } from "lucide-react";
 import { hapticLight } from "./hooks/useHaptics";
 
 // Navigation store
-import { NavProvider, useNav, hasOverlay, topOverlay, type NavApi, type SheetId } from "./services/navStore";
-
-type AppTab = "nila" | "today" | "tools" | "you";
+import { NavProvider, useNav, hasOverlay, topOverlay, type NavApi, type SheetId, type AppTab } from "./services/navStore";
 
 // ── Aux view label map for sheet headers ──
 const AUX_LABELS: Partial<Record<AuxView, string>> = {

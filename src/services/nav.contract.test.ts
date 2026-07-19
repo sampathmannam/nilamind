@@ -16,8 +16,9 @@ import { resolveNavTarget, KNOWN_AUX_VIEWS, TAB_TARGETS, type AuxView, type TabV
  * This test asserts CURRENT behaviour verbatim — it must stay green through any Phase 3 nav change.
  */
 
-// Frozen golden of the tab allowlist. resolveNavTarget's own TabView union.
-const GOLDEN_TABS: readonly TabView[] = ["diary", "plan", "nila", "today", "you"];
+// Frozen golden of the tab allowlist = the real 4-tab IA (nav.ts TabView === navStore AppTab). The legacy
+// "diary"/"plan" phantom tabs were retired (Phase 3 increment 2): "diary" is an aux, "plan" a grounding alias.
+const GOLDEN_TABS: readonly TabView[] = ["nila", "today", "tools", "you"];
 
 // Frozen golden of the aux allowlist, in declaration order.
 const GOLDEN_AUX: readonly AuxView[] = [
@@ -59,8 +60,8 @@ describe("nav contract — every allowlisted route round-trips (no typed-but-unr
     }
   });
 
-  it("'diary' resolves as a TAB (tab allowlist wins over the same-named aux entry)", () => {
-    expect(resolveNavTarget("diary")).toEqual({ kind: "tab", tab: "diary" });
+  it("'diary' resolves as an AUX view (retired as a phantom tab; the divergence is gone)", () => {
+    expect(resolveNavTarget("diary")).toEqual({ kind: "aux", view: "diary" });
   });
 });
 
@@ -68,13 +69,12 @@ describe("nav contract — §9 + special cases + navStore divergence", () => {
   it("crisis is its own resolution (the crisis overlay, never a tab/aux)", () => {
     expect(resolveNavTarget("crisis")).toEqual({ kind: "crisis" });
   });
-  it("grounding maps to the plan tab (the crisis overlay depends on this mapping)", () => {
+  it("grounding + the legacy 'plan' alias both map to {kind:'plan'} (the grounding sheet)", () => {
     expect(resolveNavTarget("grounding")).toEqual({ kind: "plan" });
+    expect(resolveNavTarget("plan")).toEqual({ kind: "plan" });
   });
-  it("navStore's 'tools' tab is intentionally NOT a resolver TabView (→ unknown no-op)", () => {
-    // navStore.AppTab = nila|today|tools|you, but resolveNavTarget's TabView has no "tools" — a documented
-    // divergence a future unification must reconcile deliberately, not by accident.
-    expect(resolveNavTarget("tools")).toEqual({ kind: "unknown", target: "tools" });
+  it("'tools' is a real resolver tab now — nav.ts TabView === navStore AppTab (divergence retired)", () => {
+    expect(resolveNavTarget("tools")).toEqual({ kind: "tab", tab: "tools" });
   });
   it("an unknown/typo'd target is a deliberate no-op, never a blank tab", () => {
     expect(resolveNavTarget("totally_made_up")).toEqual({ kind: "unknown", target: "totally_made_up" });
