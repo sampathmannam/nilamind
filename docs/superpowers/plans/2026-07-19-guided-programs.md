@@ -380,13 +380,7 @@ export function continueProtocolChat(): ProtocolChatResult {
 }
 ```
 
-Add `stepUpOffer` after `protocolOfferCard` (and import `getProtocol` at the top of the file alongside the existing `protocols` imports):
-
-```typescript
-import { startProtocol, advanceProtocol, getActiveProgress, protocolOffer, completionCountFor, getProtocol } from "./protocolProgress";
-```
-
-Wait — `getProtocol` lives in `protocols.ts`, not `protocolProgress.ts`. Use two import lines:
+Add `stepUpOffer` after `protocolOfferCard`. It needs `getProtocol`, which lives in `protocols.ts` — add it as a new import line alongside the existing `protocolProgress.ts` import (do not add it to that existing import line, it's a different module):
 
 ```typescript
 import { startProtocol, advanceProtocol, getActiveProgress, protocolOffer, completionCountFor } from "./protocolProgress";
