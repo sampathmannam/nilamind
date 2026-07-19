@@ -35,6 +35,8 @@ Five scenes in a swipeable ring, dot-indicator navigation, orb always present as
 
 The ~21 screens that don't fit the ring (journal, thought record, problem solving, values-to-action, safety plan, assessments, episode tools, settings, legal, caregiver, model setup, about, your data, etc.) are reached via **You**, which opens a searchable/categorized list — the same access pattern as today's Tools tab, just re-homed. Exact grouping/IA of this list is deferred to sub-project 3; this spec only establishes that the gateway exists and where it lives.
 
+**Reachability contract:** `ToolkitScene`'s list is checked against `KNOWN_AUX_VIEWS` (`nav.contract.test.ts`) so every allowlisted screen is provably reachable from the new shell — the same class of protection the legacy nav already has, extended to the new gateway rather than assumed.
+
 ### Component tree (new, additive — nothing existing is modified)
 
 ```
@@ -54,27 +56,39 @@ src/shell/
     dayNight.ts             — Night/Daybreak tokens, extends the Phase 0 semantic token layer
 ```
 
-`TalkScene`/`CheckInScene`/`BreatheScene` are presentational hosts, not reimplementations: they mount the same hooks the current screens already use (`useCrisisGate`, `useNudges`, `useCheckinGate`, `useMessageFeedback`, the `secureData` read/write layer). No new business logic, no new state management beyond shell-local UI state (active scene, swipe position, theme).
+**Corrected after design review (see "Design review" below): `TalkScene` hosts `<ModeScreen>` wholesale**, wired through its existing 11 nav props (`onOpenSettings`, `onOpenCrisis`, `onOpenDashboard`, `onOpenMedication`, `onOpenGrounding`, `onOpenDiary`, `onOpenReachOut`, `onOpenWindDown`, `activeCapture`, `onOpenCapture`, `onCloseCapture`), not a fresh composition of its hooks. `messages` state is explicitly documented in `useCrisisGate.ts` as un-liftable (cycle with `useNudges`/selector/protocol/render), so "same hooks, presentational" was never achievable for chat — attempting it would silently re-open the `useChatController` extraction that Phase 4 deliberately declined. `TalkScene` is a thin frame around the real `ModeScreen`, nothing more.
 
-**This spec's scenes render functionally real but visually minimal content** — e.g. `TalkScene` reuses the existing chat UI (message list, input, quick actions) inside the new scene frame, with only enough styling to be usable, not the finished visual language. This is what makes the rollout gate below meaningful: §9 crisis routing can be genuinely device-verified through this spec alone, without waiting on sub-project 2's visual redesign of the same scenes.
+`BreatheScene` likely follows the same "host the existing screen wholesale" pattern (`BreathingScreen` already takes a simple `onClose` prop). `CheckInScene` is **not yet verified safe** to build as a separate hook-composed scene: `useCheckinGate`'s handlers (`handleCheckinLogged`/`handleCheckinSkip`) append synthesized turns directly into `ModeScreen`'s chat state, and `NilaCheckIn` is currently only ever rendered from inside `ModeScreen` — the same class of entanglement Talk had. Resolving this (host wholesale like Talk, or a genuine extraction) is deferred to sub-project 2's design, not decided here.
+
+**This spec's scenes render functionally real but visually minimal content** where hosting is confirmed (Talk, Breathe) — reusing the existing UI inside the new scene frame with only enough styling to be usable, not the finished visual language. This is what makes the rollout gate below meaningful for those scenes: §9 crisis routing can be genuinely device-verified through this spec alone. Check-in's device-verification readiness depends on how sub-project 2 resolves its entanglement.
+
+**Mount policy:** scenes do not unmount on swipe — the ring translates between mounted scenes, it does not conditionally render them. This matters most for Talk: a swipeable ring makes accidental mid-stream unmount far easier than a deliberate tab tap, and this app already has a known chat-lost-on-tab-switch bug class. Swiping is disabled while `CrisisOverlay` is open (crisis takeover freezes the ring).
 
 ### Flag mechanism
 
-Build-time, dev-only flag `VITE_QUIET_ROOM_SHELL`, checked once in `App.tsx`:
+**Corrected after design review:** `AppShell` (`App.tsx:187`) is not purely presentational — it owns ~20 app-lifecycle effects with no nav dependency (notification sync, deep-link routing, retention metrics, wake word, pilot-study reminders, the biometric/model-setup/onboarding gates) alongside a handful of genuinely nav-dependent listeners (hardware back button, notification-tap routing via `go(view)`). A naive top-level branch (`<QuietRoomShell/> : <ExistingTabRoot/>`) would silently drop all the lifecycle effects under the flag, or force duplicating them into `QuietRoomShell` — a maintenance trap.
+
+Instead: hoist the nav-independent effects into a shared headless `AppLifecycle` component, rendered once **above** the flag branch. Each shell (legacy `AppShell` and new `QuietRoomShell`) owns only its own nav-dependent listeners:
 
 ```tsx
-{quietRoomEnabled ? <QuietRoomShell/> : <ExistingTabRoot/>}
+<AppLifecycle>
+  {quietRoomEnabled ? <QuietRoomShell/> : <AppShell/>}
+</AppLifecycle>
 ```
 
-`ExistingTabRoot` is today's `App.tsx` body extracted verbatim — zero behavior change to the legacy path.
+This is a real, honest modification to `App.tsx` — not a byte-identical extraction — so it must ship with its own test coverage (effects still fire once, not zero or twice) before either shell is built on top of it. Call out explicitly: while touching this file, fix the pre-existing duplicate-effect bug already present in current `AppShell` — the adaptive-theme effect and `warmVoskStt()` are each registered *twice* (`App.tsx:299-312`/`397-410` and `315`/`413`), running two identical 30-second intervals. Fix this as part of the hoist, not silently carry the duplication into the shared host.
 
 ### Crisis invariant enforcement
 
-`src/shell/shell.boundary.test.ts` (same pattern as `nav.contract.test.ts` / `safety.boundary.test.ts`): fails if any file under `src/shell/scenes/` renders without also rendering `<HelpPill/>`. Static import-graph check, allowlist-based. Makes "Help on every scene" a pinned contract that a future 6th scene can't silently violate.
+Two-part test, not one — a static check alone has blind spots (a conditionally-rendered `{!immersive && <HelpPill/>}` or a z-index burial would pass a static import/JSX check while failing at runtime):
+
+1. `src/shell/shell.boundary.test.ts` (same pattern as `nav.contract.test.ts` / `safety.boundary.test.ts`): static check that every file under `src/shell/scenes/` imports and renders `<HelpPill/>` in its JSX. Catches the case of a new scene shipping without the affordance at all.
+2. Per-scene runtime render tests (jsdom) asserting an accessible, clickable crisis-help element is actually present in the rendered DOM for every scene — catches the conditional/CSS-hiding cases the static check can't.
+3. A back-handler contract test: hardware back while a crisis is active closes the overlay and never exits the app — porting the existing invariant at `App.tsx:322-331` into the new shell's back handler, tested directly rather than left as tribal knowledge.
 
 `HelpPill` wraps the existing crisis-open path (`openCrisis`/`CrisisOverlay`) — no new crisis logic, just a new presentational affordance over logic that's already tested.
 
-Shell-local refs (`hadCrisisRef`, `crisisPendingRef`) are created once at `QuietRoomShell` root and passed down as the same single ref objects throughout — per the existing §9 lift lessons (two ref instances = silent always-false gate).
+**Corrected after design review:** since `TalkScene` hosts `<ModeScreen>` wholesale rather than recomposing its hooks, `hadCrisisRef`/`crisisPendingRef` are **not** shell-local — they stay exactly where they are today, owned inside `ModeScreen`, unchanged. `QuietRoomShell` does not create or touch these refs at all. (This also removes a class of risk: there is only ever one `ModeScreen` instance, so the "exactly one ref object" invariant from the original §9 lift is automatically preserved, not something the shell has to re-establish.)
 
 ### Rollout plan
 
@@ -98,8 +112,14 @@ Shell-local refs (`hadCrisisRef`, `crisisPendingRef`) are created once at `Quiet
 - Any change to the legacy tab-based app — it is not touched, only wrapped in a conditional.
 - Default-on decision for the new shell.
 
+## Design review (Fable, 2026-07-19)
+
+This spec was reviewed by Fable (the project's design authority) before implementation planning. Its citations (`App.tsx` line ranges, `useCrisisGate.ts`'s messages-cycle comment, `nav.contract.test.ts`'s `KNOWN_AUX_VIEWS`) were independently verified against the actual source, including one additional confirmed finding not in the original ask: `CheckInScene` has the same chat-state entanglement risk `TalkScene` had, since `useCheckinGate`'s handlers write directly into `ModeScreen`'s message state and `NilaCheckIn` is currently only ever rendered from inside `ModeScreen`. Five corrections came out of this pass and are folded into the sections above: the `AppShell` lifecycle-effects hoist (flag mechanism), `TalkScene` = hosted `ModeScreen` not recomposed hooks, the two-part crisis-invariant test (static + runtime + back-handler), the mount-not-unmount policy for scenes, and the `ToolkitScene` reachability contract. It also surfaced a pre-existing, unrelated bug worth fixing opportunistically while `App.tsx` is being touched: the adaptive-theme and `warmVoskStt` effects are each registered twice.
+
 ## Risks called out explicitly
 
-- This reopens a nav surface the project deliberately sealed. Mitigated by keeping the legacy path byte-identical and gating everything behind a dev-only flag until §9 is re-verified.
+- This reopens a nav surface the project deliberately sealed. Mitigated by keeping the legacy `AppShell` behaviorally untouched (only wrapped, not rewritten) and gating everything behind a dev-only flag until §9 is re-verified.
 - `TalkScene` is the highest-risk single piece (crisis routing lives there). It gets built and verified before Check-in/Breathe/You in sub-project 2, not in parallel.
+- `CheckInScene`'s separability from `ModeScreen` is unresolved by this spec — sub-project 2 must decide between hosting it wholesale (like Talk) or a genuine extraction, and treat it with the same caution Talk received here.
 - 21-screen Toolkit gateway is a lot of surface for one list — grouping strategy is explicitly deferred rather than guessed at here.
+- The `AppLifecycle` hoist is a real (if small) change to the currently-shipping `App.tsx`, not a zero-risk wrapper — it needs its own test coverage before either shell is built on top of it.
