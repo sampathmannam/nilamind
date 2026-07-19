@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { startProtocolChat, continueProtocolChat, protocolOfferCard } from "./protocolChat";
+import { startProtocolChat, continueProtocolChat, protocolOfferCard, stepUpOffer } from "./protocolChat";
 import { abandonProtocol, getActiveProgress, completionCountFor } from "./protocolProgress";
+import { getProtocol } from "./protocols";
 
 describe("protocolChat", () => {
   beforeEach(() => abandonProtocol());
@@ -49,6 +50,20 @@ describe("protocolChat", () => {
     expect(card?.label).toContain("Self-Compassion");
   });
 
+  it("includes the protocol's evidence citation on an offer card", () => {
+    const card = protocolOfferCard("I hate myself");
+    expect(card).not.toBeNull();
+    expect(card?.basis).toBeTruthy();
+    expect(card?.basis).toMatch(/self-compassion/i);
+  });
+
+  it("includes the citation on a continue card too", () => {
+    startProtocolChat("behavioral-activation");
+    const card = protocolOfferCard("I hate myself");
+    expect(card?.active).toBe(true);
+    expect(card?.basis).toBeTruthy();
+  });
+
   it("shows a continue card when a protocol is already active", () => {
     startProtocolChat("behavioral-activation");
     const card = protocolOfferCard("I hate myself");
@@ -76,5 +91,29 @@ describe("protocolChat", () => {
     expect(card?.active).toBe(false);
     expect(card?.label).toContain("Behavioral Activation");
     expect(card?.label.toLowerCase()).toContain("again");
+  });
+});
+
+describe("stepUpOffer", () => {
+  it("offers cbti-sleep after completing sleep-wind-down", () => {
+    const card = stepUpOffer("sleep-wind-down");
+    expect(card).not.toBeNull();
+    expect(card?.protocolId).toBe("cbti-sleep");
+    expect(card?.basis).toBe(getProtocol("cbti-sleep")?.basis);
+  });
+
+  it("returns null for any other completed protocol", () => {
+    expect(stepUpOffer("self-compassion")).toBeNull();
+    expect(stepUpOffer("cbti-sleep")).toBeNull();
+  });
+});
+
+describe("continueProtocolChat done result", () => {
+  it("includes the completed protocol's id", () => {
+    startProtocolChat("self-compassion");
+    for (let i = 0; i < 4; i++) continueProtocolChat();
+    const r = continueProtocolChat();
+    expect(r.kind).toBe("done");
+    if (r.kind === "done") expect(r.id).toBe("self-compassion");
   });
 });

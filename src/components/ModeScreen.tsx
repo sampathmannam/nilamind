@@ -47,7 +47,7 @@ import { useCrisisGate } from "../hooks/useCrisisGate";
 import { useMessageFeedback } from "../hooks/useMessageFeedback";
 import { useFocusTrap } from "../hooks/useFocusTrap";
 import { looksLikeArmRequest, requestArmedCheckin } from "../services/armedCheckin";
-import { protocolOfferCard, startProtocolChat, continueProtocolChat, type ProtocolCard } from "../services/protocolChat";
+import { protocolOfferCard, startProtocolChat, continueProtocolChat, stepUpOffer, type ProtocolCard } from "../services/protocolChat";
 import { abandonProtocol } from "../services/protocolProgress";
 import { logNilaTurn } from "../services/nilaSessions";
 import { speakIfEnabled, speak, listenOnce, stopSpeaking } from "../services/voice";
@@ -463,7 +463,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           ...prev,
           { role: "assistant", content: `You've completed ${result.title}. Nice work — small steps add up.` },
         ]);
-        setProtocolCard(null);
+        setProtocolCard(stepUpOffer(result.id));
       } else if (result.kind === "advanced") {
         setMessages((prev) => [...prev, { role: "assistant", content: result.prompt }]);
         setProtocolCard(protocolOfferCard(""));
@@ -848,7 +848,8 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
               className="w-full text-left px-4 py-3 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-300 text-xs font-medium hover:bg-blue-500/20 transition-colors cursor-pointer min-h-[44px] focus-ring"
               id="protocol-card"
             >
-              {protocolCard.label}
+              <span className="block">{protocolCard.label}</span>
+              <span className="block mt-1 text-[10px] font-normal text-blue-300/70">{protocolCard.basis}</span>
             </button>
            )}
 
