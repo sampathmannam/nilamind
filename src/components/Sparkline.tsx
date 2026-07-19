@@ -5,11 +5,11 @@ interface SparklineProps {
   width?: number;
   height?: number;
   color?: string;
+  /** Fixed scale floor. Defaults to data min when omitted. */
+  min?: number;
+  /** Fixed scale ceiling. Defaults to data max when omitted. */
+  max?: number;
   className?: string;
-}
-
-function hexToCssVar(hex: string): string {
-  return `#${hex}`;
 }
 
 export default function Sparkline({
@@ -17,17 +17,19 @@ export default function Sparkline({
   width = 120,
   height = 24,
   color = "var(--color-blue-400)",
+  min,
+  max,
   className = "",
 }: SparklineProps) {
   if (data.length < 2) return null;
 
-  const min = Math.min(...data);
-  const max = Math.max(...data);
-  const range = max - min || 1;
+  const lo = min ?? Math.min(...data);
+  const hi = max ?? Math.max(...data);
+  const range = hi - lo || 1;
   const points = data
     .map((v, i) => {
       const x = (i / (data.length - 1)) * width;
-      const y = height - ((v - min) / range) * height;
+      const y = height - ((v - lo) / range) * height;
       return `${x},${y}`;
     })
     .join(" ");

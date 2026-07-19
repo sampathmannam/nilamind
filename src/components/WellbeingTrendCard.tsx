@@ -1,17 +1,9 @@
 import React, { useState, useEffect, useMemo } from "react";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  ReferenceLine,
-} from "recharts";
 import { TrendingUp, TrendingDown, TrendingUpDown, LineChart as LineChartIcon, ClipboardCheck, Check } from "lucide-react";
 import { t } from "../services/i18n";
 import { loadAssessments } from "../services/assessments";
 import { wellbeingLongitudinal } from "../services/wellbeingTrack";
+import Sparkline from "./Sparkline";
 
 /** Full WHO-5 wellbeing section embedded in DashboardScreen. Shows latest score, trajectory,
  *  sparkline chart, and a "Take the check" CTA. Replaces the compact WellbeingTrendCard
@@ -69,25 +61,29 @@ export default function WellbeingTrendCard({ onTakeCheck }: { onTakeCheck?: () =
         )}
       </div>
 
-      {/* Sparkline chart */}
+      {/* Sparkline chart — lightweight SVG (no Recharts) */}
       {wb.taken && chartData.length >= 2 && (
         <div className="glass rounded-2xl p-4 space-y-2">
           <h4 className="text-xs uppercase font-mono tracking-widest text-slate-400">
             {t("you_wellbeing_label")} · {chartData.length}
           </h4>
-          <div className="h-36 -ml-2" role="img" aria-label="Wellbeing trend over time">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-                <XAxis dataKey="date" tick={{ fontSize: 9, fill: "var(--color-ink-faint)" }} stroke="var(--color-line)" />
-                <YAxis domain={[0, 100]} tick={{ fontSize: 9, fill: "var(--color-ink-faint)" }} stroke="var(--color-line)" width={24} />
-                <Tooltip
-                  contentStyle={{ background: "var(--color-page)", border: "1px solid var(--color-line)", borderRadius: 8, fontSize: 11 }}
-                  labelStyle={{ color: "var(--color-ink-muted)" }}
-                />
-                <ReferenceLine y={50} stroke="var(--color-warn)" strokeDasharray="4 4" label={{ value: "threshold", fontSize: 8, fill: "var(--color-warn)", position: "insideTopRight" }} />
-                <Line type="monotone" dataKey="total" stroke={stroke} strokeWidth={2} dot={{ r: 3, fill: stroke }} />
-              </LineChart>
-            </ResponsiveContainer>
+          <div className="relative h-36" role="img" aria-label="Wellbeing trend over time. Dashed line marks the 50 threshold; higher is better.">
+            {/* threshold line at y=50 on a 0–100 scale */}
+            <div
+              className="absolute left-0 right-0 border-t border-dashed border-warn"
+              style={{ bottom: "50%" }}
+              aria-hidden="true"
+            />
+            <div className="absolute right-1 top-1 text-[8px] text-warn">threshold 50</div>
+            <Sparkline
+              data={chartData.map((d) => d.total)}
+              min={0}
+              max={100}
+              width={260}
+              height={140}
+              color={stroke}
+              className="w-full"
+            />
           </div>
           <p className="text-xs text-slate-600">Dashed line = wellbeing threshold (50). Higher is better. This is a pattern over time, not a diagnosis.</p>
         </div>

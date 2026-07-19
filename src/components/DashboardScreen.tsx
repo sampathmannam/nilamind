@@ -50,7 +50,7 @@ import ClinicalTrackingSection from "./ClinicalTrackingSection";
 import ActivitySection from "./ActivitySection";
 import TrendChart, { PHQ9_BANDS, GAD7_BANDS } from "./TrendChart";
 import InsightCard from "./InsightCard";
-import Section from "./Section";
+import Section, { SectionDivider } from "./Section";
 import StatCard from "./StatCard";
 import Card from "./Card";
 import PassiveInsightCard from "./PassiveInsightCard";
@@ -526,10 +526,7 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
         />
 
 {(behaviourInsights.length > 0 || proactiveCards.length > 0) && (
-  <div className="flex items-center gap-2 pt-3" role="separator" aria-label="What Nila noticed">
-    <h2 className="text-xs font-bold text-ink-muted uppercase tracking-wider whitespace-nowrap">What Nila noticed</h2>
-    <div className="flex-1 h-px bg-slate-800" />
-  </div>
+  <SectionDivider label="What Nila noticed" />
 )}
 
 {/* Behaviour Insights — patterns Nila noticed */}
@@ -784,13 +781,15 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
       )}
 
       {trendLength >= 2 && (
-        <div className="flex items-center gap-2 pt-3" role="separator" aria-label="Trends & measures">
-          <h2 className="text-xs font-bold text-ink-muted uppercase tracking-wider whitespace-nowrap">Trends & measures</h2>
-          <div className="flex-1 h-px bg-slate-800" />
-        </div>
+        <SectionDivider label="Trends & measures" />
       )}
 
-      {/* ONE trend chart (7D/30D + Emotion/Context), fed by loadMoodHistory() */}
+      {/* ONE trend chart (7D/30D + Emotion/Context), fed by loadMoodHistory().
+          Deliberately still Recharts: this is the app's only interactive multi-series chart
+          (axes, tooltips, EMA-dot overlay, audit-hardened positioning). The lightweight Sparkline
+          primitive replaced Recharts only where it was safe — the single-series WHO-5 sparkline in
+          WellbeingTrendCard. MiniBar was deleted as orphaned (no consumer). See AGENTS.md "wire what
+          you build". */}
       {trendLength >= 2 ? (
         <div className="glass rounded-2xl p-4 space-y-4">
           <div className="flex flex-col gap-3">
@@ -987,10 +986,7 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
       )}
 
       {(epPatterns || nila.recent.length > 0) && (
-        <div className="flex items-center gap-2 pt-3" role="separator" aria-label="Episodes & sessions">
-          <h2 className="text-xs font-bold text-ink-muted uppercase tracking-wider whitespace-nowrap">Episodes & sessions</h2>
-          <div className="flex-1 h-px bg-slate-800" />
-        </div>
+        <SectionDivider label="Episodes & sessions" />
       )}
 
       {/* Episode analytics (real stats only — NO fabricated correlations) */}

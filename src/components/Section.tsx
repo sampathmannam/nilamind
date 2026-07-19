@@ -7,6 +7,22 @@ interface SectionProps {
   className?: string;
 }
 
+/** Header-only divider: a labelled band that breaks a long scroll into sections. Renders the same
+ *  header styling as <Section> but without a wrapping <section>, so it can sit above sibling content
+ *  that isn't otherwise grouped. Single source of truth for section-header styling lives here. */
+export function SectionDivider({ label, className = "" }: { label: string; className?: string }) {
+  return (
+    <div
+      className={`flex items-center gap-2 pt-3 ${className}`.trim()}
+      role="separator"
+      aria-label={label}
+    >
+      <h2 className="text-xs font-bold text-ink-muted uppercase tracking-wider whitespace-nowrap">{label}</h2>
+      <div className="flex-1 h-px bg-slate-800" />
+    </div>
+  );
+}
+
 export default function Section({ title, children, action, className = "" }: SectionProps) {
   return (
     <section className={`space-y-3 ${className}`.trim()}>
