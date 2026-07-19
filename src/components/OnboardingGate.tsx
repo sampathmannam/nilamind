@@ -41,6 +41,17 @@ const MOOD_OPTIONS = [
   { value: 9, emoji: "😄", label: "Great", color: "text-emerald-300" },
 ] as const;
 
+// Soft Wellness register: same coarse 3-bucket valence mapping used for the Today mood display,
+// applied to the onboarding baseline picker's SELECTED option only (ambience on the one chosen
+// answer, not all five buttons at once). Fable review (2026-07-19) caught a mismatch: value 5 is
+// labeled "Okay" here, and TodayScreen's moodBlobVariant maps the label "okay" to steady, not
+// settling — fixed so the same word gets the same color across both surfaces.
+function onboardingMoodBlobVariant(value: number): "steady" | "settling" | "tender" {
+  if (value >= 5) return "steady";
+  if (value === 3) return "settling";
+  return "tender";
+}
+
 interface OnboardingGateProps {
   onComplete: () => void;
   onOpenCrisis: () => void;
@@ -163,7 +174,19 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
         )}
 
         <div className="space-y-2">
-          <h1 className="text-xl font-semibold text-slate-100">{slide.title}</h1>
+          {/* Soft Wellness register: the poster-line device is reserved for exactly one moment in this
+              9-slide sequence — the very first "meet Nila" slide, the single biggest first-impression
+              beat in the whole app. Every other slide (including safety-net/region, which stay
+              deliberately plain) keeps the shared plain heading, so the one poster-line stays rare. */}
+          {slide.id === "nila_intro" ? (
+            /* Fable review: text-2xl was dead weight here — .poster-line is unlayered CSS (like
+               .glass/.editorial elsewhere in this file), so it always wins over a Tailwind utility
+               on the same property regardless of the class order. Removed rather than kept as a
+               no-op. */
+            <h1 className="poster-line">{slide.title}<span className="poster-line__emoji" aria-hidden="true"> 👋</span></h1>
+          ) : (
+            <h1 className="text-xl font-semibold text-slate-100">{slide.title}</h1>
+          )}
           <p className="text-sm text-slate-400 leading-relaxed">{slide.body}</p>
         </div>
 
@@ -228,7 +251,12 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
                       : "bg-slate-800/50 border-slate-700/50 hover:border-slate-600"
                   }`}
                 >
-                  <span className="text-2xl">{opt.emoji}</span>
+                  {/* Fable review: fixed-size wrapper on every option (not just the selected one)
+                      so tapping a mood doesn't reflow the row — the blob classes are what change,
+                      the box size never does. */}
+                  <span className={`w-10 h-10 grid place-items-center ${baselineMood === opt.value ? `blob-badge blob-badge--${onboardingMoodBlobVariant(opt.value)}` : ""}`}>
+                    <span className={baselineMood === opt.value ? "blob-badge__value text-xl" : "text-2xl"} aria-hidden="true">{opt.emoji}</span>
+                  </span>
                   <span className={`text-xs ${baselineMood === opt.value ? "text-blue-300" : "text-slate-500"}`}>{opt.label}</span>
                 </button>
               ))}
