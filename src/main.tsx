@@ -17,16 +17,22 @@ initTheme(); // apply the saved System/Light/Dark choice before first paint
 // crises the keyword list misses (~40% of real disclosures). See crisisClassifier.ts / crisisEmbedder.ts.
 void (async () => {
   try {
-    const [{ transformersEmbedder, warmCrisisEmbedder }, cc, pr, er] = await Promise.all([
+    const [{ transformersEmbedder, warmCrisisEmbedder }, cc, pr, er, af] = await Promise.all([
       import("./services/crisisEmbedder"),
       import("./services/crisisClassifier"),
       import("./services/psychoedRetrieval"),
       import("./services/exemplarRetrieval"),
+      import("./services/affectHead"),
     ]);
     cc.setCrisisEmbedder(transformersEmbedder);
     cc.setCrisisClassifierEnabled(true);
     pr.setPsychoedEmbedder(transformersEmbedder);
     er.setExemplarEmbedder(transformersEmbedder); // dynamic few-shot for the on-device reply (shares the MiniLM)
+    // Orb affect accent (2026-07-19, Phase 1): reuses this SAME shared MiniLM instance — no second model
+    // load. The embedder is wired now so the head is ready to use, but setAffectAccentEnabled(true) is
+    // deliberately NOT called here — it's a manual flip after an on-device sanity pass (see
+    // docs/superpowers/plans/2026-07-19-orb-affect-accent.md Task 9 / the spec's Rollout section).
+    af.setAffectEmbedder(transformersEmbedder);
     // Warm the MiniLM shortly after startup, at idle, so the FIRST crisis check on ANY surface (episode,
     // voice call, self-compassion — not just chat, which warms on mount) doesn't degrade to keyword-only
     // during a cold load. Idle-deferred so it never delays first paint; safe on the plugin thread (this is
@@ -35,7 +41,7 @@ void (async () => {
     const ric = (globalThis as { requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => void }).requestIdleCallback;
     if (ric) ric(warm, { timeout: 4000 }); else setTimeout(warm, 2500);
   } catch {
-    /* classifier stays off → keyword-only §9 gate, no regression */
+    /* classifier/affect head stay off → keyword-only §9 gate, no affect accent, no regression */
   }
 })();
 
