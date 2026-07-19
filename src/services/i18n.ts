@@ -422,7 +422,7 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     tool_group_log: "Log & track",
     tool_ema_label: "Quick check-in",
     tool_ema_sub: "A 10-second mood check, right now",
-    tool_diary_label: "Diary",
+    tool_diary_label: "Journal",
     tool_diary_sub: "Free-write and look back on your entries",
     tool_assessment_label: "Screenings",
     tool_assessment_sub: "PHQ-9, GAD-7 & more over time",

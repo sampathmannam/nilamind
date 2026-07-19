@@ -11,12 +11,14 @@ describe("resolveNavTarget", () => {
     // navStore's unknown-branch which opens the dedicated BreathingScreen sheet.
     expect(resolveNavTarget("breathing")).toEqual({ kind: "unknown", target: "breathing" });
   });
-  it("maps each footer/sub tab to a tab resolution", () => {
+  it("maps each real footer tab to a tab resolution (nila/today/tools/you)", () => {
     expect(resolveNavTarget("nila")).toEqual({ kind: "tab", tab: "nila" });
     expect(resolveNavTarget("today")).toEqual({ kind: "tab", tab: "today" });
+    expect(resolveNavTarget("tools")).toEqual({ kind: "tab", tab: "tools" });
     expect(resolveNavTarget("you")).toEqual({ kind: "tab", tab: "you" });
-    expect(resolveNavTarget("diary")).toEqual({ kind: "tab", tab: "diary" });
-    expect(resolveNavTarget("plan")).toEqual({ kind: "tab", tab: "plan" });
+    // Legacy "diary"/"plan" are no longer phantom tabs — diary is an aux overlay, plan the grounding alias.
+    expect(resolveNavTarget("diary")).toEqual({ kind: "aux", view: "diary" });
+    expect(resolveNavTarget("plan")).toEqual({ kind: "plan" });
   });
   it("treats removed product views as unknown", () => {
     // checkin screen is orphaned (replaced by in-chat NilaCheckIn); console is dev-facing only.
@@ -61,7 +63,9 @@ describe("resolveNavTarget", () => {
     expect(KNOWN_AUX_VIEWS).not.toContain("why");
     expect(TAB_TARGETS).toContain("today");
     expect(TAB_TARGETS).toContain("nila");
-    expect(TAB_TARGETS).not.toContain("tools");
+    expect(TAB_TARGETS).toContain("tools"); // the real 4th tab — now in the resolver (divergence retired)
+    expect(TAB_TARGETS).not.toContain("diary"); // diary is an aux overlay, not a tab
+    expect(TAB_TARGETS).not.toContain("plan"); // plan is the grounding alias, not a tab
   });
 });
 

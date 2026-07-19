@@ -39,6 +39,7 @@ import { safeDraftProblem } from "../services/problemSolvingDraft";
 import { safeDraftValueDomains } from "../services/valuesDraft";
 import { safeDraftSafetyPlan, type SafetyPlanDraftFields } from "../services/safetyPlanDraft";
 import CaptureSheets from "./CaptureSheets";
+import { type CaptureSheetId } from "../services/navStore";
 import { selectVisibleNudges } from "./nudgeSelection";
 import NudgeRail from "./NudgeRail";
 import { useNudges } from "../hooks/useNudges";
@@ -67,8 +68,12 @@ interface ModeScreenProps {
   onOpenDiary?: () => void;
   onOpenReachOut?: () => void;
   onOpenWindDown?: () => void;
-  onInternalSheetChange?: (open: boolean) => void;
-  closeSheetSignal?: number;
+  // Capture sheet presence lives in the nav overlay stack (Phase 3): App passes which capture is open (or
+  // null) + open/close dispatchers. The §9-gated DRAFTS stay local to ModeScreen (below). Replaces the old
+  // onInternalSheetChange/closeSheetSignal bridge.
+  activeCapture?: CaptureSheetId | null;
+  onOpenCapture?: (id: CaptureSheetId) => void;
+  onCloseCapture?: () => void;
 }
 
 // #22 (audit): App wraps <main> in key={activeTab}, so switching tabs fully remounts ModeScreen and its
@@ -77,7 +82,7 @@ interface ModeScreenProps {
 let modeDraftCache = "";
 
 
-export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboard, onOpenMedication, onOpenGrounding, onOpenDiary, onOpenReachOut, onOpenWindDown, onInternalSheetChange, closeSheetSignal }: ModeScreenProps) {
+export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboard, onOpenMedication, onOpenGrounding, onOpenDiary, onOpenReachOut, onOpenWindDown, activeCapture = null, onOpenCapture, onCloseCapture }: ModeScreenProps) {
   const [mode, setMode] = useState(getCurrentMode());
   const { showCheckin, hideCheckin } = useCheckinGate(mode.hasCheckedIn);
   const [messages, setMessages] = useState<NilaUiMessage[]>(() => {
@@ -92,7 +97,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   const [loading, setLoading] = useState(false);
   const [listening, setListening] = useState(false);
   const [showTextInput, setShowTextInput] = useState(false);
-  const [auxView, setAuxView] = useState<"learn" | "thought_record" | "problem_solving" | "values_to_action" | "safety_plan" | null>(null);
+  const auxView = activeCapture; // capture-sheet presence now comes from the nav overlay stack (Phase 3)
   const [thoughtRecordDraft, setThoughtRecordDraft] = useState<ThoughtRecordDraft | undefined>();
   const [problemDraft, setProblemDraft] = useState<{ problem: string } | undefined>();
   const [valuesHighlight, setValuesHighlight] = useState<string[]>([]);
@@ -172,21 +177,18 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
     return () => clearInterval(interval);
   }, []);
 
-  // Notify App when internal sheets open/close (for back-button handling)
+  // Capture-sheet presence now lives in the nav overlay stack (Phase 3), so the old onInternalSheetChange +
+  // closeSheetSignal bridge is gone. Drop the §9-gated drafts whenever no capture is open — i.e. when the
+  // sheet closes (via its X, or the hardware-back CLOSE_TOP, or a chained open elsewhere). The opener sets a
+  // draft THEN dispatches openCapture, so activeCapture is non-null by the time this runs on open (no wipe).
   useEffect(() => {
-    onInternalSheetChange?.(auxView !== null);
-  }, [auxView, onInternalSheetChange]);
-
-  // Hardware-back (via App's closeSheetSignal) closes whichever auxView overlay is open + drops its draft,
-  // instead of leaving it stranded (design review 2026-07-18).
-  useEffect(() => {
-    if (!closeSheetSignal) return;
-    setAuxView(null);
-    setThoughtRecordDraft(undefined);
-    setProblemDraft(undefined);
-    setValuesHighlight([]);
-    setSafetyPlanDraft(undefined);
-  }, [closeSheetSignal]);
+    if (!activeCapture) {
+      setThoughtRecordDraft(undefined);
+      setProblemDraft(undefined);
+      setValuesHighlight([]);
+      setSafetyPlanDraft(undefined);
+    }
+  }, [activeCapture]);
 
   // (B3 safety-plan review/follow-up + C1 sleep-prodrome/JITAI/calm-moment nudge effects moved to
   //  useNudges — Phase 4 slice 2b. Behaviour, deps, and the 5-min poll are unchanged.)
@@ -392,7 +394,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
     } else {
       setThoughtRecordDraft(result.draft);
     }
-    setAuxView("thought_record");
+    onOpenCapture?.("thought_record");
   };
 
   const openProblemSolving = async () => {
@@ -409,7 +411,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
     } else {
       setProblemDraft({ problem: result.problem });
     }
-    setAuxView("problem_solving");
+    onOpenCapture?.("problem_solving");
   };
 
   const openValues = async () => {
@@ -426,7 +428,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
     } else {
       setValuesHighlight(result.domains); // presence-only; the person still rates everything
     }
-    setAuxView("values_to_action");
+    onOpenCapture?.("values_to_action");
   };
 
   const openSafetyPlan = async () => {
@@ -443,11 +445,11 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
     } else {
       setSafetyPlanDraft(result.draft); // pre-fills empty coping fields only; never saved until they save
     }
-    setAuxView("safety_plan");
+    onOpenCapture?.("safety_plan");
   };
 
   const handleOpenSafetyPlan = () => {
-    setAuxView("safety_plan");
+    onOpenCapture?.("safety_plan");
   };
 
   const handleMarkSafetyPlanReviewed = () => nudges.completeSafetyPlanReview();
@@ -521,7 +523,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
         openCrisis();
         break;
       case "learn":
-        setAuxView("learn");
+        onOpenCapture?.("learn");
         break;
       case "thought_record":
         void openThoughtRecord();
@@ -978,7 +980,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
         problemDraft={problemDraft}
         valuesHighlight={valuesHighlight}
         safetyPlanDraft={safetyPlanDraft}
-        onClose={() => setAuxView(null)}
+        onClose={() => onCloseCapture?.()}
         clearThoughtRecordDraft={() => setThoughtRecordDraft(undefined)}
         clearProblemDraft={() => setProblemDraft(undefined)}
         clearValuesHighlight={() => setValuesHighlight([])}

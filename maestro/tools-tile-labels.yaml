@@ -1,0 +1,26 @@
+# Maestro flow — Tools tab: a tile labelled X must open a screen whose header is X.
+# Catches the class the manual pass missed: the "Diary" tile opens a screen titled "Journal".
+# Run:  maestro --device ZD2232FCR5 test maestro/tools-tile-labels.yaml
+appId: com.nilamind.app
+---
+- launchApp
+- tapOn: "Tools"
+
+# --- BUG DETECTOR: "Diary" tile ---
+- scrollUntilVisible:
+    element:
+      text: "Diary"          # case-sensitive → matches the "Diary" tile, not "DBT diary card"
+    direction: DOWN
+- tapOn: "Diary"
+- assertVisible: "Free write"   # the sheet opened (the Journal screen has Free write / Gratitude)
+- assertNotVisible: "Journal"   # FAILS today: the opened sheet's header reads "Journal", not "Diary"
+- back
+
+# --- Control: the DBT diary card tile IS consistent ---
+- scrollUntilVisible:
+    element:
+      text: "DBT diary card"
+    direction: DOWN
+- tapOn: "DBT diary card"
+- assertVisible: "DBT Diary Card"   # header matches the tile → passes
+- back

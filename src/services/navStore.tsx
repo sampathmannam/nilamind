@@ -1,8 +1,10 @@
 import React, { createContext, useContext, useReducer, useCallback, useMemo } from "react";
-import { type AuxView, resolveNavTarget } from "./nav";
+import { type AuxView, type TabView, resolveNavTarget } from "./nav";
 import { suppressNudgesForCrisis } from "./notifications";
 
-export type AppTab = "nila" | "today" | "tools" | "you";
+// The bottom-nav tabs. Single source is nav.ts's TabView (the resolver + this store agree by construction —
+// the old divergence, where nav.ts still listed the legacy diary/plan "tabs", is gone).
+export type AppTab = TabView;
 
 export type SheetId =
   | "settings"
@@ -13,10 +15,22 @@ export type SheetId =
   | "grounding"
   | "breathing";
 
+// The ModeScreen capture sheets (learn / thought-record / problem-solving / values / safety-plan). Their
+// §9-gated DRAFTS stay local to ModeScreen (computed from the chat); only their PRESENCE lives in the stack,
+// so the hardware-back handler closes them generically (closeTop) instead of the old modeScreenHasSheet
+// signal bridge — which could go stale-true when ModeScreen unmounted with a sheet open (Phase 3).
+export type CaptureSheetId =
+  | "learn"
+  | "thought_record"
+  | "problem_solving"
+  | "values_to_action"
+  | "safety_plan";
+
 export type Overlay =
   | { kind: "crisis" }
   | { kind: "sheet"; id: SheetId }
-  | { kind: "aux"; view: AuxView; closing: boolean };
+  | { kind: "aux"; view: AuxView; closing: boolean }
+  | { kind: "capture"; id: CaptureSheetId };
 
 export interface NavState {
   tab: AppTab;
@@ -27,6 +41,7 @@ export type NavAction =
   | { type: "SET_TAB"; tab: AppTab }
   | { type: "OPEN_AUX"; view: AuxView }
   | { type: "OPEN_SHEET"; id: SheetId }
+  | { type: "OPEN_CAPTURE"; id: CaptureSheetId }
   | { type: "OPEN_CRISIS" }
   | { type: "CLOSE_AUX_START" }
   | { type: "CLOSE_AUX_DONE" }
@@ -54,6 +69,11 @@ export function navReducer(state: NavState, action: NavAction): NavState {
     case "OPEN_SHEET": {
       const overlays = dropClosingAux(state.overlays).filter((o) => !(o.kind === "sheet" && o.id === action.id));
       return { ...state, overlays: [...overlays, { kind: "sheet", id: action.id }] };
+    }
+    case "OPEN_CAPTURE": {
+      // One capture sheet at a time (like OPEN_AUX): drop any existing capture, then push the new one.
+      const overlays = dropClosingAux(state.overlays).filter((o) => o.kind !== "capture");
+      return { ...state, overlays: [...overlays, { kind: "capture", id: action.id }] };
     }
     case "OPEN_CRISIS":
       return { ...state, overlays: [...dropClosingAux(state.overlays), { kind: "crisis" }] };
@@ -85,6 +105,7 @@ export interface NavApi {
   setTab: (tab: AppTab) => void;
   openAux: (view: AuxView) => void;
   openSheet: (id: SheetId) => void;
+  openCapture: (id: CaptureSheetId) => void;
   openCrisis: () => void;
   closeAuxStart: () => void;
   closeAuxDone: () => void;
@@ -108,10 +129,9 @@ export function NavProvider({ children }: { children: React.ReactNode }) {
         dispatch({ type: "OPEN_SHEET", id: "grounding" });
         break;
       case "tab":
-        if (res.tab === "plan") dispatch({ type: "OPEN_SHEET", id: "grounding" });
-        else if (res.tab === "nila" || res.tab === "today" || res.tab === "you")
-          dispatch({ type: "SET_TAB", tab: res.tab });
-        else if (res.tab === "diary") dispatch({ type: "OPEN_AUX", view: "diary" });
+        // res.tab is now always a real tab (nila/today/tools/you) — the legacy diary→aux / plan→grounding
+        // re-interpretation is gone: "diary" resolves to {kind:"aux"} and "plan" to {kind:"plan"} upstream.
+        dispatch({ type: "SET_TAB", tab: res.tab });
         break;
       case "aux":
         if (res.view === "settings") dispatch({ type: "OPEN_SHEET", id: "settings" });
@@ -132,6 +152,7 @@ export function NavProvider({ children }: { children: React.ReactNode }) {
   const setTab = useCallback((tab: AppTab) => dispatch({ type: "SET_TAB", tab }), []);
   const openAux = useCallback((view: AuxView) => dispatch({ type: "OPEN_AUX", view }), []);
   const openSheet = useCallback((id: SheetId) => dispatch({ type: "OPEN_SHEET", id }), []);
+  const openCapture = useCallback((id: CaptureSheetId) => dispatch({ type: "OPEN_CAPTURE", id }), []);
   const openCrisis = useCallback(() => dispatch({ type: "OPEN_CRISIS" }), []);
   const closeAuxStart = useCallback(() => dispatch({ type: "CLOSE_AUX_START" }), []);
   const closeAuxDone = useCallback(() => dispatch({ type: "CLOSE_AUX_DONE" }), []);
@@ -139,8 +160,8 @@ export function NavProvider({ children }: { children: React.ReactNode }) {
   const closeAll = useCallback(() => dispatch({ type: "CLOSE_ALL" }), []);
 
   const api = useMemo<NavApi>(
-    () => ({ state, go, setTab, openAux, openSheet, openCrisis, closeAuxStart, closeAuxDone, closeTop, closeAll }),
-    [state, go, setTab, openAux, openSheet, openCrisis, closeAuxStart, closeAuxDone, closeTop, closeAll]
+    () => ({ state, go, setTab, openAux, openSheet, openCapture, openCrisis, closeAuxStart, closeAuxDone, closeTop, closeAll }),
+    [state, go, setTab, openAux, openSheet, openCapture, openCrisis, closeAuxStart, closeAuxDone, closeTop, closeAll]
   );
 
   return <NavContext.Provider value={api}>{children}</NavContext.Provider>;

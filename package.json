@@ -1,7 +1,7 @@
 {
   "name": "nilamind",
   "private": true,
-  "version": "1.21.1",
+  "version": "1.21.4",
   "description": "A privacy-first, fully on-device mental-health companion. Runs a local LLM on the phone via Capacitor — no account, no backend, no data ever leaves the device.",
   "license": "Apache-2.0",
   "type": "module",
@@ -53,7 +53,9 @@
     "vosk-browser": "^0.0.8"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
     "@capacitor/assets": "^3.0.5",
+    "@playwright/test": "^1.61.1",
     "@testing-library/react": "^16.3.2",
     "@types/node": "^22.14.0",
     "@types/react-dom": "^19.2.3",

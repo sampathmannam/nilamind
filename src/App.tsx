@@ -92,9 +92,7 @@ import { MessageSquare, LayoutGrid, Wrench, User } from "lucide-react";
 import { hapticLight } from "./hooks/useHaptics";
 
 // Navigation store
-import { NavProvider, useNav, hasOverlay, topOverlay, type NavApi, type SheetId } from "./services/navStore";
-
-type AppTab = "nila" | "today" | "tools" | "you";
+import { NavProvider, useNav, hasOverlay, topOverlay, type NavApi, type SheetId, type AppTab } from "./services/navStore";
 
 // ── Aux view label map for sheet headers ──
 const AUX_LABELS: Partial<Record<AuxView, string>> = {
@@ -166,7 +164,12 @@ function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () 
 function AppShell() {
   const prefersReduced = useReducedMotion();
   const nav = useNav();
-  const { state, go, openCrisis, openAux, openSheet, closeAuxStart, closeAuxDone, closeTop, setTab } = nav;
+  const { state, go, openCrisis, openAux, openSheet, openCapture, closeAuxStart, closeAuxDone, closeTop, setTab } = nav;
+  // The ModeScreen capture sheet (if any) now lives in the nav overlay STACK (Phase 3) — ModeScreen renders
+  // it + keeps its §9-gated draft local, but presence is here, so the hardware-back handler closes it
+  // generically instead of the old modeScreenHasSheet signal bridge (which could go stale-true).
+  const captureOverlay = state.overlays.find((o) => o.kind === "capture");
+  const activeCapture = captureOverlay?.kind === "capture" ? captureOverlay.id : null;
 
   // Legacy booleans that are NOT yet in the nav store (or are internal to ModeScreen)
   const [groundingExpandIndex, setGroundingExpandIndex] = useState<number | undefined>(undefined);
@@ -175,11 +178,6 @@ function AppShell() {
   const [onboardingDone, setOnboardingDone] = useState(hasCompletedOnboarding());
   const [wakeListening, setWakeListening] = useState(false);
   const [phoneEnabled] = useState(true);
-  const [modeScreenHasSheet, setModeScreenHasSheet] = useState(false);
-  // Bumped by the hardware-back handler to tell ModeScreen to close its own auxView overlays (design review
-  // 2026-07-18: back could not close them — it flipped a boolean only, so the sheet stayed and a 2nd back
-  // press exited the app with e.g. the Safety Plan still open and unsaved edits lost).
-  const [closeModeSheetSignal, setCloseModeSheetSignal] = useState(0);
   const [, setLangTick] = useState(0);
 
   // Helper: does the overlay stack contain a specific sheet?
@@ -301,8 +299,8 @@ function AppShell() {
       const top = topOverlay(state);
       if (top?.kind === "crisis") { closeTop(); return; }
       if (top?.kind === "sheet") { closeTop(); return; }
+      if (top?.kind === "capture") { closeTop(); return; } // ModeScreen capture sheet — now a normal stack overlay (Phase 3)
       if (top?.kind === "aux") { closeAuxStart(); return; }
-      if (modeScreenHasSheet) { setCloseModeSheetSignal((n) => n + 1); return; } // ModeScreen closes its auxView + reports back
       // Back roots to the LAUNCH tab (Today), not Nila (2026-07-18 design review: launch tab ≠ back-root
       // was disorienting — back from the home screen jumped to chat instead of exiting). Back now heads
       // home to Today from any other tab; back from Today exits, matching Android's home-then-exit norm.
@@ -310,7 +308,7 @@ function AppShell() {
       void CapApp.exitApp();
     }).then((h) => { handle = h; if (removed) h.remove(); });
     return () => { removed = true; handle?.remove(); };
-  }, [state, modeScreenHasSheet]);
+  }, [state]);
 
   // Local notification tap routing
   useEffect(() => {
@@ -437,8 +435,9 @@ function AppShell() {
               onOpenDiary={() => openAux("diary")}
               onOpenReachOut={() => openAux("reach_out")}
               onOpenWindDown={() => openAux("winddown")}
-              onInternalSheetChange={(open) => setModeScreenHasSheet(open)}
-              closeSheetSignal={closeModeSheetSignal}
+              activeCapture={activeCapture}
+              onOpenCapture={openCapture}
+              onCloseCapture={closeTop}
             />
           </ErrorBoundary>
         )}
