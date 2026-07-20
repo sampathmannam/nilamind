@@ -110,15 +110,15 @@ export default function CaregiverSettingsScreen({ onClose, onOpenCaregiverShare 
 
   return (
     <div className="space-y-5 max-w-md mx-auto" id="caregiver-settings-screen">
-      <button onClick={onClose} className="text-xs font-semibold text-slate-400 hover:text-slate-100 flex items-center gap-1 cursor-pointer">
+      <button onClick={onClose} className="text-xs font-semibold text-ink-muted hover:text-ink flex items-center gap-1 cursor-pointer">
         <ChevronLeft className="w-3.5 h-3.5" /> Back
       </button>
 
       <header className="space-y-2">
-        <h1 className="text-xl font-semibold text-slate-100 flex items-center gap-2">
+        <h1 className="text-xl font-semibold text-ink flex items-center gap-2">
           <Users className="w-5 h-5 text-emerald-400" /> {t("you_caregiver_settings_label") || "Caregiver settings"}
         </h1>
-        <p className="text-xs text-slate-400 leading-relaxed">{t("you_caregiver_settings_sub")}</p>
+        <p className="text-xs text-ink-muted leading-relaxed">{t("you_caregiver_settings_sub")}</p>
       </header>
 
       {/* Contact list */}
@@ -140,20 +140,20 @@ export default function CaregiverSettingsScreen({ onClose, onOpenCaregiverShare 
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-sm font-semibold text-slate-100">{c.name}</span>
-                  {c.relationship ? <span className="text-xs text-slate-400 ml-2">({c.relationship})</span> : null}
+                  <span className="text-sm font-semibold text-ink">{c.name}</span>
+                  {c.relationship ? <span className="text-xs text-ink-muted ml-2">({c.relationship})</span> : null}
                 </div>
-                <button onClick={(e) => { e.stopPropagation(); remove(c.id); }} className="text-slate-500 hover:text-rose-400 cursor-pointer">
+                <button onClick={(e) => { e.stopPropagation(); remove(c.id); }} className="text-ink-faint hover:text-rose-400 cursor-pointer">
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
-              <p className="text-xs text-slate-500 mt-0.5">{c.phoneOrEmail}</p>
+              <p className="text-xs text-ink-faint mt-0.5">{c.phoneOrEmail}</p>
             </button>
           ))
         )}
         <button
           onClick={openAdd}
-          className="w-full py-2.5 rounded-xl border border-dashed border-slate-600 text-[11px] text-slate-400 hover:text-slate-200 hover:border-slate-500 cursor-pointer transition-colors flex items-center justify-center gap-1.5"
+          className="w-full py-2.5 rounded-xl border border-dashed border-slate-600 text-[11px] text-ink-muted hover:text-ink-2 hover:border-line-strong cursor-pointer transition-colors flex items-center justify-center gap-1.5"
         >
           <Plus className="w-3.5 h-3.5" /> {t("cg_add_contact")}
         </button>
@@ -167,24 +167,24 @@ export default function CaregiverSettingsScreen({ onClose, onOpenCaregiverShare 
               value={form.name}
               onChange={(e) => { setForm({ ...form, name: e.target.value }); setFormError(null); }}
               placeholder={t("cg_name")}
-              className="glass rounded-lg px-3 py-2 text-sm text-slate-200"
+              className="glass rounded-lg px-3 py-2 text-sm text-ink-2"
             />
             <input
               value={form.phoneOrEmail}
               onChange={(e) => { setForm({ ...form, phoneOrEmail: e.target.value }); setFormError(null); }}
               placeholder={t("cg_phone_or_email")}
-              className="glass rounded-lg px-3 py-2 text-sm text-slate-200"
+              className="glass rounded-lg px-3 py-2 text-sm text-ink-2"
             />
             <input
               value={form.relationship}
               onChange={(e) => { setForm({ ...form, relationship: e.target.value }); setFormError(null); }}
               placeholder={t("cg_relationship")}
-              className="glass rounded-lg px-3 py-2 text-sm text-slate-200"
+              className="glass rounded-lg px-3 py-2 text-sm text-ink-2"
             />
           </div>
           {formError && <p className="text-[11px] text-rose-300">{formError}</p>}
           <div className="flex gap-2">
-            <button onClick={() => { setAdding(false); setEditId(null); }} className="flex-1 py-2 rounded-xl bg-slate-700 text-xs text-slate-300 cursor-pointer">
+            <button onClick={() => { setAdding(false); setEditId(null); }} className="flex-1 py-2 rounded-xl bg-line-strong text-xs text-ink-2 cursor-pointer">
               Cancel
             </button>
             <button onClick={saveContact} className="flex-1 py-2 rounded-xl bg-emerald-600 text-xs text-white font-bold cursor-pointer">
@@ -197,11 +197,11 @@ export default function CaregiverSettingsScreen({ onClose, onOpenCaregiverShare 
       {/* Per-contact preferences */}
       {selectedId && selectedPrefs ? (
         <div className="glass rounded-2xl p-4 space-y-4" id="caregiver-prefs-panel">
-          <p className="text-xs uppercase font-mono tracking-widest text-slate-400">{t("cg_share_categories")}</p>
+          <p className="text-xs uppercase font-mono tracking-widest text-ink-muted">{t("cg_share_categories")}</p>
 
           {CATEGORY_LABELS.map(({ key, label }) => (
             <label key={key} className="flex items-center justify-between cursor-pointer">
-              <span className="text-[11px] text-slate-300">{t(label as any)}</span>
+              <span className="text-[11px] text-ink-2">{t(label as any)}</span>
               <button
                 onClick={() => toggleCategory(key)}
                 className={`w-8 h-4 rounded-full relative transition-colors cursor-pointer ${
@@ -215,11 +215,11 @@ export default function CaregiverSettingsScreen({ onClose, onOpenCaregiverShare 
             </label>
           ))}
 
-          <div className="pt-3 border-t border-slate-700">
-            <p className="text-xs uppercase font-mono tracking-widest text-slate-400 mb-2">{t("cg_auto_alert")}</p>
-            <p className="text-xs text-slate-500 mb-2">{t("cg_auto_alert_desc")}</p>
+          <div className="pt-3 border-t border-line-strong">
+            <p className="text-xs uppercase font-mono tracking-widest text-ink-muted mb-2">{t("cg_auto_alert")}</p>
+            <p className="text-xs text-ink-faint mb-2">{t("cg_auto_alert_desc")}</p>
             <label className="flex items-center justify-between mb-2">
-              <span className="text-[11px] text-slate-300">Enable</span>
+              <span className="text-[11px] text-ink-2">Enable</span>
               <button
                 onClick={() => updateAutoAlert(!selectedPrefs.autoAlert.enabled)}
                 className={`w-8 h-4 rounded-full relative transition-colors cursor-pointer ${
@@ -234,21 +234,21 @@ export default function CaregiverSettingsScreen({ onClose, onOpenCaregiverShare 
             {selectedPrefs.autoAlert.enabled ? (
               <div className="grid grid-cols-2 gap-2">
                 <label className="space-y-0.5">
-                  <span className="text-xs text-slate-400">{t("cg_threshold_days")}</span>
+                  <span className="text-xs text-ink-muted">{t("cg_threshold_days")}</span>
                   <input
                     type="number" min={1} max={14}
                     value={selectedPrefs.autoAlert.thresholdDays}
                     onChange={(e) => updateThreshold(Number(e.target.value))}
-                    className="w-full glass rounded px-2 py-1 text-xs text-slate-200"
+                    className="w-full glass rounded px-2 py-1 text-xs text-ink-2"
                   />
                 </label>
                 <label className="space-y-0.5">
-                  <span className="text-xs text-slate-400">{t("cg_min_intensity")}</span>
+                  <span className="text-xs text-ink-muted">{t("cg_min_intensity")}</span>
                   <input
                     type="number" min={1} max={10}
                     value={selectedPrefs.autoAlert.minIntensity}
                     onChange={(e) => updateMinIntensity(Number(e.target.value))}
-                    className="w-full glass rounded px-2 py-1 text-xs text-slate-200"
+                    className="w-full glass rounded px-2 py-1 text-xs text-ink-2"
                   />
                 </label>
               </div>
@@ -258,7 +258,7 @@ export default function CaregiverSettingsScreen({ onClose, onOpenCaregiverShare 
           {onOpenCaregiverShare ? (
             <button
               onClick={() => onOpenCaregiverShare(selectedId)}
-              className="w-full py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-[11px] text-slate-200 font-semibold cursor-pointer transition-colors flex items-center justify-center gap-1.5"
+              className="w-full py-2.5 rounded-xl bg-line-strong hover:bg-slate-600 text-[11px] text-ink-2 font-semibold cursor-pointer transition-colors flex items-center justify-center gap-1.5"
             >
               <Eye className="w-3.5 h-3.5" /> {t("cg_preview")}
             </button>

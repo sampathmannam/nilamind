@@ -185,12 +185,12 @@ export default function ModelSetupScreen({ onReady }: { onReady: () => void }) {
 
   return (
     <div
-      className="fixed inset-0 z-[60] bg-page text-slate-200 flex flex-col items-center justify-center px-6 overflow-y-auto"
+      className="fixed inset-0 z-[60] bg-page text-ink-2 flex flex-col items-center justify-center px-6 overflow-y-auto"
       style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 88px)" }}
     >
       <NilaOrb size={80} />
       <h1 className="text-xl font-semibold mt-4">{header.title}</h1>
-      <p className="text-sm text-slate-400 text-center mt-1.5 max-w-[18rem] leading-relaxed">
+      <p className="text-sm text-ink-muted text-center mt-1.5 max-w-[18rem] leading-relaxed">
         {header.subtitle}
       </p>
 
@@ -200,14 +200,14 @@ export default function ModelSetupScreen({ onReady }: { onReady: () => void }) {
             type="button"
             onClick={() => setMode("device")}
             id="model-setup-choose-device"
-            className="w-full text-left rounded-2xl border border-slate-700 hover:border-purple-500/60 active:scale-[0.99] bg-slate-900/40 p-4 transition-all min-h-[44px]"
+            className="w-full text-left rounded-2xl border border-line-strong hover:border-purple-500/60 active:scale-[0.99] bg-slate-900/40 p-4 transition-all min-h-[44px]"
           >
             <div className="flex items-center gap-2">
               <Lock className="w-4 h-4 text-purple-300 shrink-0" />
-              <span className="font-semibold text-slate-100">On-device</span>
-              <span className="text-[11px] text-slate-500 ml-auto">{formatSize(model.sizeBytes)}</span>
+              <span className="font-semibold text-ink">On-device</span>
+              <span className="text-[11px] text-ink-faint ml-auto">{formatSize(model.sizeBytes)}</span>
            </div>
-            <ul className="text-[12px] text-slate-400 mt-2 space-y-1 leading-snug">
+            <ul className="text-[12px] text-ink-muted mt-2 space-y-1 leading-snug">
               <li className="flex gap-1.5"><span className="text-emerald-400 shrink-0">✓</span> Private — nothing you say ever leaves your phone</li>
               <li className="flex gap-1.5"><span className="text-emerald-400 shrink-0">✓</span> Works fully offline once downloaded</li>
               <li className="flex gap-1.5"><span className="text-emerald-400 shrink-0">✓</span> No account, no API key, no ongoing cost</li>
@@ -220,13 +220,13 @@ export default function ModelSetupScreen({ onReady }: { onReady: () => void }) {
             type="button"
             onClick={() => setMode("api")}
             id="model-setup-choose-api"
-            className="w-full text-left rounded-2xl border border-slate-700 hover:border-purple-500/60 active:scale-[0.99] bg-slate-900/40 p-4 transition-all min-h-[44px]"
+            className="w-full text-left rounded-2xl border border-line-strong hover:border-purple-500/60 active:scale-[0.99] bg-slate-900/40 p-4 transition-all min-h-[44px]"
           >
             <div className="flex items-center gap-2">
               <Cloud className="w-4 h-4 text-blue-300 shrink-0" />
-              <span className="font-semibold text-slate-100">Cloud API key</span>
+              <span className="font-semibold text-ink">Cloud API key</span>
            </div>
-            <ul className="text-[12px] text-slate-400 mt-2 space-y-1 leading-snug">
+            <ul className="text-[12px] text-ink-muted mt-2 space-y-1 leading-snug">
               <li className="flex gap-1.5"><span className="text-emerald-400 shrink-0">✓</span> No download — ready the moment you paste a key</li>
               <li className="flex gap-1.5"><span className="text-emerald-400 shrink-0">✓</span> Faster, more capable replies (e.g. Groq's Llama 3.3 70B)</li>
               <li className="flex gap-1.5"><span className="text-amber-400 shrink-0">!</span> Your messages leave the device and go to the provider you choose</li>
@@ -239,7 +239,7 @@ export default function ModelSetupScreen({ onReady }: { onReady: () => void }) {
             type="button"
             onClick={skipForNow}
             id="model-setup-skip"
-            className="w-full mt-1 flex items-center justify-center gap-1.5 text-[13px] font-medium text-slate-300 hover:text-slate-100 py-2 min-h-[44px] transition-colors"
+            className="w-full mt-1 flex items-center justify-center gap-1.5 text-[13px] font-medium text-ink-2 hover:text-ink py-2 min-h-[44px] transition-colors"
           >
             Skip for now — use tools &amp; crisis help
             <ArrowRight className="w-3.5 h-3.5 shrink-0" />
@@ -254,7 +254,7 @@ export default function ModelSetupScreen({ onReady }: { onReady: () => void }) {
               type="button"
               onClick={() => setMode("choice")}
               id="model-setup-back"
-              className="w-full max-w-[18rem] mt-7 text-[13px] text-slate-400 hover:text-slate-200 text-left"
+              className="w-full max-w-[18rem] mt-7 text-[13px] text-ink-muted hover:text-ink-2 text-left"
             >
               ← Back
             </button>
@@ -274,29 +274,29 @@ export default function ModelSetupScreen({ onReady }: { onReady: () => void }) {
               {/* Two visible passes: the byte transfer, then a SHA-256 integrity check that streams the whole
                   file back through JS and takes MINUTES on-device. Both must show live movement — a silent
                   verify pass at a pinned 100% bar reads as a hung app (the "downloaded but never opens" bug). */}
-              <div className="text-sm text-slate-200 mb-2">
+              <div className="text-sm text-ink-2 mb-2">
                 {progress?.phase === "verifying" ? "Checking Nila's brain…" : "Getting Nila ready…"}
              </div>
-              <div className="h-2.5 rounded-full bg-slate-800 overflow-hidden">
+              <div className="h-2.5 rounded-full bg-fill overflow-hidden">
                 <div
                   className="h-full bg-purple-500 transition-all duration-300"
                   style={{ width: `${progress?.pct ?? 0}%` }}
                 />
              </div>
-              <div className="text-[11px] text-slate-500 mt-1.5">
+              <div className="text-[11px] text-ink-faint mt-1.5">
                 {progress?.phase === "verifying"
                   ? `Verifying the download is complete and safe · ${Math.round(progress?.pct ?? 0)}%`
                   : `${Math.round(progress?.receivedMB ?? 0)} / ${Math.round(progress?.totalMB ?? totalMB)} MB · keep the app open on Wi-Fi`}
              </div>
-              <div className="mt-5 rounded-2xl border border-slate-800 bg-slate-900/40 p-4 min-h-[5.5rem] flex items-center">
-                <p key={tip} className="text-[12px] text-slate-300 leading-relaxed">
+              <div className="mt-5 rounded-2xl border border-line bg-slate-900/40 p-4 min-h-[5.5rem] flex items-center">
+                <p key={tip} className="text-[12px] text-ink-2 leading-relaxed">
                   {TIPS[tip]}
                </p>
              </div>
               <button
                 type="button"
                 onClick={cancel}
-                className="w-full mt-3 text-[13px] text-slate-400 hover:text-slate-200 py-2 min-h-[44px] transition-colors"
+                className="w-full mt-3 text-[13px] text-ink-muted hover:text-ink-2 py-2 min-h-[44px] transition-colors"
               >
                 Cancel
               </button>
@@ -304,11 +304,11 @@ export default function ModelSetupScreen({ onReady }: { onReady: () => void }) {
           ) : confirming ? (
             <div className="w-full max-w-[18rem] mt-4">
               <div className="rounded-2xl border border-purple-500/30 bg-purple-500/[0.06] p-4">
-                <div className="flex items-center gap-2 text-slate-100 font-semibold">
+                <div className="flex items-center gap-2 text-ink font-semibold">
                   <Lock className="w-4 h-4 text-purple-300 shrink-0" /> One-time {formatSize(model.sizeBytes)} — here's why
                </div>
-                <p className="text-[12px] text-slate-400 mt-2 leading-relaxed">
-                  It's large because the <b className="text-slate-200">entire AI lives on your phone</b> — that's
+                <p className="text-[12px] text-ink-muted mt-2 leading-relaxed">
+                  It's large because the <b className="text-ink-2">entire AI lives on your phone</b> — that's
                   how your conversations stay private and work offline. Use Wi-Fi to avoid mobile-data charges;
                   you only download it once.
                </p>
@@ -323,7 +323,7 @@ export default function ModelSetupScreen({ onReady }: { onReady: () => void }) {
               <button
                 type="button"
                 onClick={() => setConfirming(false)}
-                className="w-full mt-2 text-[13px] text-slate-400 py-2 min-h-[44px]"
+                className="w-full mt-2 text-[13px] text-ink-muted py-2 min-h-[44px]"
               >
                 Not now
               </button>
@@ -333,14 +333,14 @@ export default function ModelSetupScreen({ onReady }: { onReady: () => void }) {
               <button
                 type="button"
                 onClick={() => setConfirming(true)}
-                className="w-full text-left rounded-2xl border border-slate-700 hover:border-purple-500/60 active:scale-[0.99] bg-slate-900/40 p-4 transition-all min-h-[44px]"
+                className="w-full text-left rounded-2xl border border-line-strong hover:border-purple-500/60 active:scale-[0.99] bg-slate-900/40 p-4 transition-all min-h-[44px]"
               >
                 <div className="flex items-center gap-2">
-                  <span className="font-semibold text-slate-100">{model.label}</span>
-                  <span className="text-[11px] text-slate-500">{formatSize(model.sizeBytes)}</span>
-                  <Download className="w-4 h-4 ml-auto text-slate-500" />
+                  <span className="font-semibold text-ink">{model.label}</span>
+                  <span className="text-[11px] text-ink-faint">{formatSize(model.sizeBytes)}</span>
+                  <Download className="w-4 h-4 ml-auto text-ink-faint" />
                </div>
-                <div className="text-[12px] text-slate-400 mt-1 leading-snug">{model.detail}</div>
+                <div className="text-[12px] text-ink-muted mt-1 leading-snug">{model.detail}</div>
               </button>
               <p className="text-[11px] text-slate-600 flex items-center gap-1.5 pt-3 leading-relaxed">
                 <ShieldCheck className="w-3 h-3 shrink-0" /> Verified after download — a corrupt file is never
@@ -358,7 +358,7 @@ export default function ModelSetupScreen({ onReady }: { onReady: () => void }) {
             type="button"
             onClick={() => setMode("choice")}
             id="model-setup-back"
-            className="w-full text-[13px] text-slate-400 hover:text-slate-200 text-left"
+            className="w-full text-[13px] text-ink-muted hover:text-ink-2 text-left"
           >
             ← Back
           </button>

@@ -9,6 +9,8 @@ interface SparklineProps {
   min?: number;
   /** Fixed scale ceiling. Defaults to data max when omitted. */
   max?: number;
+  /** Human-readable trend summary for screen readers (e.g. "mood trending up over 7 days"). */
+  label?: string;
   className?: string;
 }
 
@@ -16,9 +18,10 @@ export default function Sparkline({
   data,
   width = 120,
   height = 24,
-  color = "var(--color-blue-400)",
+  color = "var(--color-accent-hi)",
   min,
   max,
+  label,
   className = "",
 }: SparklineProps) {
   if (data.length < 2) return null;
@@ -35,7 +38,14 @@ export default function Sparkline({
     .join(" ");
 
   return (
-    <svg width={width} height={height} className={`opacity-70 ${className}`} aria-hidden="true">
+    <svg
+      width={width}
+      height={height}
+      className={`opacity-70 ${className}`}
+      role={label ? "img" : "presentation"}
+      aria-label={label}
+      aria-hidden={label ? undefined : true}
+    >
       <polyline
         points={points}
         fill="none"

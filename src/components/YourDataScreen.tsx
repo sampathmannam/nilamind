@@ -816,59 +816,59 @@ valuesClarified: []
   return (
     <div className="space-y-5 max-w-md mx-auto" id="your-data-screen">
       <header className="space-y-1">
-        <h1 className="text-xl font-semibold text-slate-100 flex items-center gap-2"><Database className="w-5 h-5 text-blue-400" /> Your Data</h1>
-        <p className="text-xs text-slate-400 leading-relaxed">Everything NilaMind stores about you, on this device only. You can take it with you or erase it — your call, always.</p>
+        <h1 className="text-xl font-semibold text-ink flex items-center gap-2"><Database className="w-5 h-5 text-blue-400" /> Your Data</h1>
+        <p className="text-xs text-ink-muted leading-relaxed">Everything NilaMind stores about you, on this device only. You can take it with you or erase it — your call, always.</p>
       </header>
 
       <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-2xl p-3 flex gap-2.5">
         <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-        <p className="text-[11px] text-slate-400 leading-relaxed">Encrypted at rest and never uploaded. There is no server copy — if you wipe it here, it's gone.</p>
+        <p className="text-[11px] text-ink-muted leading-relaxed">Encrypted at rest and never uploaded. There is no server copy — if you wipe it here, it's gone.</p>
       </div>
 
-      <div className="glass rounded-2xl divide-y divide-slate-800/70">
+      <div className="glass rounded-2xl divide-y divide-line/70">
         {rows.map((r) => (
           <div key={r.key} className="flex items-center justify-between px-4 py-2.5">
-            <span className="text-xs text-slate-300">{r.label}</span>
-            <span className="text-xs font-mono text-slate-400">{r.n}</span>
+            <span className="text-xs text-ink-2">{r.label}</span>
+            <span className="text-xs font-mono text-ink-muted">{r.n}</span>
           </div>
         ))}
         <div className="flex items-center justify-between px-4 py-2.5">
-          <span className="text-xs font-bold text-slate-200">Total records</span>
-          <span className="text-xs font-mono font-bold text-slate-100">{total}</span>
+          <span className="text-xs font-bold text-ink-2">Total records</span>
+          <span className="text-xs font-mono font-bold text-ink">{total}</span>
         </div>
       </div>
 
       {/* Export */}
       <div className="glass rounded-2xl p-4 space-y-2">
-        <h3 className="text-xs font-bold text-slate-100 uppercase tracking-wider">Export (encrypted)</h3>
-        <p className="text-[11px] text-slate-500 leading-relaxed">A backup file encrypted with your recovery phrase — restore it on a new device by entering the same phrase. No cloud.</p>
+        <h3 className="text-xs font-bold text-ink uppercase tracking-wider">Export (encrypted)</h3>
+        <p className="text-[11px] text-ink-faint leading-relaxed">A backup file encrypted with your recovery phrase — restore it on a new device by entering the same phrase. No cloud.</p>
         {!backup ? (
-          <button onClick={doExport} disabled={busy || !id} id="data-export-btn" className="w-full bg-page border border-slate-800 hover:bg-raised text-slate-200 text-xs font-semibold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50">
+          <button onClick={doExport} disabled={busy || !id} id="data-export-btn" className="w-full bg-page border border-line hover:bg-raised text-ink-2 text-xs font-semibold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50">
             {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <><Download className="w-3.5 h-3.5" /> Create backup file</>}
           </button>
         ) : (
           <div className="flex gap-2">
             <button onClick={download} className="flex-1 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5"><Check className="w-3.5 h-3.5" /> Download .txt</button>
-            <button onClick={() => { navigator.clipboard.writeText(backup); pushAudit({ kind: "clipboard", scope: "Full encrypted backup", destination: "clipboard" }); }} className="bg-page border border-slate-800 text-slate-300 text-xs px-3 py-2.5 rounded-xl cursor-pointer">Copy</button>
+            <button onClick={() => { navigator.clipboard.writeText(backup); pushAudit({ kind: "clipboard", scope: "Full encrypted backup", destination: "clipboard" }); }} className="bg-page border border-line text-ink-2 text-xs px-3 py-2.5 rounded-xl cursor-pointer">Copy</button>
           </div>
         )}
       </div>
 
       {/* Clinician-friendly report export */}
       <div className="glass rounded-2xl p-4 space-y-2">
-        <h3 className="text-xs font-bold text-slate-100 uppercase tracking-wider flex items-center gap-1.5"><FileText className="w-3.5 h-3.5" /> Export Report</h3>
-        <p className="text-[11px] text-slate-500 leading-relaxed">A CSV or PDF of your check-in data to share with your doctor, a structured JSON (assessment history, retention &amp; pilot summary) a researcher can read, or an experimental FHIR bundle (LOINC-coded screening scores) for a clinical system. No encryption — saved to this device. Not a clinical or diagnostic tool.</p>
+        <h3 className="text-xs font-bold text-ink uppercase tracking-wider flex items-center gap-1.5"><FileText className="w-3.5 h-3.5" /> Export Report</h3>
+        <p className="text-[11px] text-ink-faint leading-relaxed">A CSV or PDF of your check-in data to share with your doctor, a structured JSON (assessment history, retention &amp; pilot summary) a researcher can read, or an experimental FHIR bundle (LOINC-coded screening scores) for a clinical system. No encryption — saved to this device. Not a clinical or diagnostic tool.</p>
         <div className="flex flex-wrap gap-2">
-          <button onClick={handleExportCsv} disabled={reportBusy} className="flex-1 min-w-[64px] bg-page border border-slate-800 hover:bg-raised text-slate-200 text-xs font-semibold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50">
+          <button onClick={handleExportCsv} disabled={reportBusy} className="flex-1 min-w-[64px] bg-page border border-line hover:bg-raised text-ink-2 text-xs font-semibold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50">
             {reportBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />} CSV
           </button>
-          <button onClick={handleExportPdf} disabled={reportBusy} className="flex-1 min-w-[64px] bg-page border border-slate-800 hover:bg-raised text-slate-200 text-xs font-semibold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50">
+          <button onClick={handleExportPdf} disabled={reportBusy} className="flex-1 min-w-[64px] bg-page border border-line hover:bg-raised text-ink-2 text-xs font-semibold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50">
             {reportBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />} PDF
           </button>
-          <button onClick={handleExportJson} disabled={reportBusy} id="export-json" className="flex-1 min-w-[64px] bg-page border border-slate-800 hover:bg-raised text-slate-200 text-xs font-semibold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50">
+          <button onClick={handleExportJson} disabled={reportBusy} id="export-json" className="flex-1 min-w-[64px] bg-page border border-line hover:bg-raised text-ink-2 text-xs font-semibold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50">
             {reportBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />} JSON
           </button>
-          <button onClick={handleExportFhir} disabled={reportBusy} id="export-fhir" className="flex-1 min-w-[64px] bg-page border border-slate-800 hover:bg-raised text-slate-200 text-xs font-semibold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50">
+          <button onClick={handleExportFhir} disabled={reportBusy} id="export-fhir" className="flex-1 min-w-[64px] bg-page border border-line hover:bg-raised text-ink-2 text-xs font-semibold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50">
             {reportBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />} FHIR
           </button>
         </div>
@@ -882,8 +882,8 @@ valuesClarified: []
 
       {/* Clinician summary (structured PDF for psychiatrist) */}
       <div className="glass rounded-2xl p-4 space-y-2">
-        <h3 className="text-xs font-bold text-slate-100 uppercase tracking-wider flex items-center gap-1.5"><FileText className="w-3.5 h-3.5" /> Share with your psychiatrist</h3>
-        <p className="text-[11px] text-slate-500 leading-relaxed">A structured summary your psychiatrist can read — check-ins, sleep, PHQ‑9/GAD‑7 trajectories, medication adherence, episode logs, and on-device app/conversation usage. Choose a time window below. Generated on-device. Not a clinical or diagnostic tool.</p>
+        <h3 className="text-xs font-bold text-ink uppercase tracking-wider flex items-center gap-1.5"><FileText className="w-3.5 h-3.5" /> Share with your psychiatrist</h3>
+        <p className="text-[11px] text-ink-faint leading-relaxed">A structured summary your psychiatrist can read — check-ins, sleep, PHQ‑9/GAD‑7 trajectories, medication adherence, episode logs, and on-device app/conversation usage. Choose a time window below. Generated on-device. Not a clinical or diagnostic tool.</p>
         <div className="flex items-center gap-1" id="clinician-period">
           {([7, 30, 90] as ReportPeriod[]).map((d) => (
             <button
@@ -893,7 +893,7 @@ valuesClarified: []
               className={`flex-1 text-xs font-semibold py-1.5 rounded-lg cursor-pointer transition-colors ${
                 reportPeriod === d
                   ? "bg-blue-600/30 text-blue-200 border border-blue-500/40"
-                  : "bg-page border border-slate-800 text-slate-400 hover:bg-raised"
+                  : "bg-page border border-line text-ink-muted hover:bg-raised"
               }`}
             >
               {d === 7 ? "Week" : d === 30 ? "Month" : "90 days"}
@@ -902,7 +902,7 @@ valuesClarified: []
         </div>
         {toneAvailable && (
           <div className="space-y-2">
-            <label className="flex items-center gap-2 text-[11px] text-slate-400 cursor-pointer">
+            <label className="flex items-center gap-2 text-[11px] text-ink-muted cursor-pointer">
               <input
                 type="checkbox"
                 checked={toneOptIn !== null}
@@ -912,7 +912,7 @@ valuesClarified: []
               Include an automatic conversation-tone estimate
             </label>
             {toneOptIn && (
-              <div className="text-[11px] text-slate-400 bg-page border border-slate-800 rounded-lg px-3 py-2 leading-relaxed">
+              <div className="text-[11px] text-ink-muted bg-page border border-line rounded-lg px-3 py-2 leading-relaxed">
                 {toneOptIn.text}
               </div>
             )}
@@ -927,8 +927,8 @@ valuesClarified: []
 
       {/* Export audit trail */}
       <div className="glass rounded-2xl p-4 space-y-2">
-        <h3 className="text-xs font-bold text-slate-100 uppercase tracking-wider flex items-center gap-1.5"><FileText className="w-3.5 h-3.5" /> Export history</h3>
-        <p className="text-[11px] text-slate-500 leading-relaxed">A private log of every export you've made on this device. Nothing here is ever sent anywhere.</p>
+        <h3 className="text-xs font-bold text-ink uppercase tracking-wider flex items-center gap-1.5"><FileText className="w-3.5 h-3.5" /> Export history</h3>
+        <p className="text-[11px] text-ink-faint leading-relaxed">A private log of every export you've made on this device. Nothing here is ever sent anywhere.</p>
         {shareErr && (
           <div className="flex items-start gap-2 text-[11px] text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2">
             <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
@@ -936,27 +936,27 @@ valuesClarified: []
           </div>
         )}
         {audit.length === 0 ? (
-          <p className="text-[11px] text-slate-500 italic">No exports yet.</p>
+          <p className="text-[11px] text-ink-faint italic">No exports yet.</p>
         ) : (
-          <div className="divide-y divide-slate-800/70">
+          <div className="divide-y divide-line/70">
             {[...audit].reverse().map((e, i) => (
               <div
                 key={i}
                 onClick={() => handleShareExport(e)}
-                className={`flex items-center justify-between py-2 ${e.filename ? "cursor-pointer hover:bg-slate-800/40 rounded-lg px-1 -mx-1 transition-colors" : ""}`}
+                className={`flex items-center justify-between py-2 ${e.filename ? "cursor-pointer hover:bg-fill/40 rounded-lg px-1 -mx-1 transition-colors" : ""}`}
                 role={e.filename ? "button" : undefined}
                 tabIndex={e.filename ? 0 : undefined}
                 onKeyDown={e.filename ? (ev) => { if (ev.key === "Enter" || ev.key === " ") handleShareExport(e); } : undefined}
                 aria-label={e.filename ? `Open ${e.filename}` : undefined}
               >
                 <div className="min-w-0 flex-1">
-                  <div className="text-xs text-slate-200 capitalize">{e.kind} · {e.scope}</div>
-                  <div className="text-xs text-slate-500">{new Date(e.timestamp).toLocaleString()}</div>
+                  <div className="text-xs text-ink-2 capitalize">{e.kind} · {e.scope}</div>
+                  <div className="text-xs text-ink-faint">{new Date(e.timestamp).toLocaleString()}</div>
                   {e.filename && <div className="text-xs font-mono text-slate-600 truncate max-w-[260px]">{e.filename}</div>}
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                  <span className="text-xs font-mono text-slate-400">{e.destination}</span>
-                  {e.filename && <Share2 className="w-3 h-3 text-slate-500" />}
+                  <span className="text-xs font-mono text-ink-muted">{e.destination}</span>
+                  {e.filename && <Share2 className="w-3 h-3 text-ink-faint" />}
                 </div>
               </div>
             ))}
@@ -967,7 +967,7 @@ valuesClarified: []
       {/* Delete */}
       <div className="bg-rose-500/5 border border-rose-500/20 rounded-2xl p-4 space-y-3">
         <h3 className="text-xs font-bold text-rose-300 uppercase tracking-wider flex items-center gap-1.5"><Trash2 className="w-3.5 h-3.5" /> Delete everything</h3>
-        <p className="text-[11px] text-slate-400 leading-relaxed">Erases all your entries AND your recovery phrase from this device, returning the app to a fresh start. This cannot be undone — export a backup first if you might want it back.</p>
+        <p className="text-[11px] text-ink-muted leading-relaxed">Erases all your entries AND your recovery phrase from this device, returning the app to a fresh start. This cannot be undone — export a backup first if you might want it back.</p>
         {!confirmWipe ? (
           <button onClick={() => setConfirmWipe(true)} className="w-full bg-card border border-rose-500/30 text-rose-300 text-xs font-semibold py-2.5 rounded-xl cursor-pointer">Delete all my data…</button>
         ) : (
@@ -977,7 +977,7 @@ valuesClarified: []
               <p className="text-[11px] text-rose-200/90">Are you sure? Everything will be gone and the app will restart at onboarding.</p>
             </div>
             <div className="flex gap-2">
-              <button onClick={() => setConfirmWipe(false)} disabled={busy} className="flex-1 glass text-slate-300 text-xs font-semibold py-2.5 rounded-xl cursor-pointer">Keep my data</button>
+              <button onClick={() => setConfirmWipe(false)} disabled={busy} className="flex-1 glass text-ink-2 text-xs font-semibold py-2.5 rounded-xl cursor-pointer">Keep my data</button>
               <button onClick={wipeEverything} disabled={busy} id="data-wipe-confirm" className="flex-1 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5">
                 {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Yes, delete everything"}
               </button>

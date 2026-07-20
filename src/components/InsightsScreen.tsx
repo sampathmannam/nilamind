@@ -26,7 +26,7 @@ const ICON_MAP: Record<string, React.ReactNode> = {
 const DIRECTION_COLORS = {
   risk: { bg: "bg-rose-500/10", border: "border-rose-500/30", text: "text-rose-300", icon: "text-rose-400" },
   protective: { bg: "bg-emerald-500/10", border: "border-emerald-500/30", text: "text-emerald-300", icon: "text-emerald-400" },
-  neutral: { bg: "bg-slate-500/10", border: "border-slate-500/30", text: "text-slate-300", icon: "text-slate-400" },
+  neutral: { bg: "bg-ink-faint/10", border: "border-line-strong/30", text: "text-ink-2", icon: "text-ink-muted" },
 };
 
 function InsightCard({ insight, index }: { insight: Insight; index: number }) {
@@ -45,14 +45,14 @@ function InsightCard({ insight, index }: { insight: Insight; index: number }) {
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h3 className="text-sm font-semibold text-slate-100">{insight.title}</h3>
+            <h3 className="text-sm font-semibold text-ink">{insight.title}</h3>
             <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${colors.bg} ${colors.text}`}>
               {insight.direction === 'risk' ? 'Risk factor' : insight.direction === 'protective' ? 'Protective' : 'Neutral'}
             </span>
           </div>
-          <p className="text-xs text-slate-300 mt-1 leading-relaxed">{insight.finding}</p>
+          <p className="text-xs text-ink-2 mt-1 leading-relaxed">{insight.finding}</p>
           <div className="flex items-center gap-2 mt-2">
-            <span className="text-xs text-slate-500 flex items-center gap-1">
+            <span className="text-xs text-ink-faint flex items-center gap-1">
               <ShieldCheck className="w-3 h-3" /> {insight.dataPoints} days of data
             </span>
             <button
@@ -67,10 +67,10 @@ function InsightCard({ insight, index }: { insight: Insight; index: number }) {
 
       {/* Research basis expandable */}
       <details className="mt-3">
-        <summary className="text-xs text-slate-500 hover:text-slate-400 cursor-pointer flex items-center gap-1">
+        <summary className="text-xs text-ink-faint hover:text-ink-muted cursor-pointer flex items-center gap-1">
           Show research citation
         </summary>
-        <div className="mt-2 p-3 bg-slate-900/50 rounded-xl text-xs text-slate-400 leading-relaxed border border-slate-800">
+        <div className="mt-2 p-3 bg-slate-900/50 rounded-xl text-xs text-ink-muted leading-relaxed border border-line">
           {insight.basis}
         </div>
       </details>
@@ -93,9 +93,9 @@ function LoadingState() {
     <div className="space-y-4">
       {[1, 2, 3].map((i) => (
         <div key={i} className="glass rounded-2xl p-4 animate-pulse">
-          <div className="h-4 w-1/3 bg-slate-700 rounded mb-3" />
-          <div className="h-3 w-full bg-slate-700 rounded" />
-          <div className="h-3 w-2/3 bg-slate-700 rounded mt-2" />
+          <div className="h-4 w-1/3 bg-line-strong rounded mb-3" />
+          <div className="h-3 w-full bg-line-strong rounded" />
+          <div className="h-3 w-2/3 bg-line-strong rounded mt-2" />
         </div>
       ))}
     </div>
@@ -156,18 +156,18 @@ export default function InsightsScreen({ onClose }: InsightsScreenProps) {
     <div className="space-y-5 max-w-md mx-auto" id="insights-screen">
       <header className="space-y-1">
         <div className="flex items-center justify-between">
-          <h1 className="editorial text-xl text-slate-100">Your patterns</h1>
+          <h1 className="editorial text-xl text-ink">Your patterns</h1>
           {onClose && (
             <button
               onClick={onClose}
-              className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer"
+              className="p-2 rounded-full hover:bg-fill text-ink-muted hover:text-ink-2 cursor-pointer"
               aria-label="Close"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
           )}
         </div>
-        <p className="text-xs text-slate-400">
+        <p className="text-xs text-ink-muted">
           Evidence-based patterns from your check-ins and phone behaviour. Everything stays on this device.
         </p>
       </header>
@@ -181,7 +181,7 @@ export default function InsightsScreen({ onClose }: InsightsScreenProps) {
             <>
               {behaviourInsights.length > 0 && (
                 <section className="space-y-2">
-                  <h2 className="text-[11px] font-mono uppercase tracking-widest text-slate-500 px-1 flex items-center gap-2">
+                  <h2 className="text-[11px] font-mono uppercase tracking-widest text-ink-faint px-1 flex items-center gap-2">
                     <Sparkles className="w-3.5 h-3.5 text-blue-400" /> Phone behaviour patterns
                   </h2>
                   <div className="space-y-3">
@@ -193,8 +193,8 @@ export default function InsightsScreen({ onClose }: InsightsScreenProps) {
               )}
 
               {assessmentInsightsList.length > 0 && (
-                <section className="space-y-2 pt-2 border-t border-slate-800/50">
-                  <h2 className="text-[11px] font-mono uppercase tracking-widest text-slate-500 px-1 flex items-center gap-2">
+                <section className="space-y-2 pt-2 border-t border-line/50">
+                  <h2 className="text-[11px] font-mono uppercase tracking-widest text-ink-faint px-1 flex items-center gap-2">
                     <TrendingUp className="w-3.5 h-3.5 text-emerald-400" /> Assessment trends
                   </h2>
                   <div className="space-y-3">
@@ -207,18 +207,18 @@ export default function InsightsScreen({ onClose }: InsightsScreenProps) {
 
               {/* N-of-1 personal correlations */}
               {no1Insights.length > 0 && (
-                <section className="space-y-2 pt-2 border-t border-slate-800/50">
-                  <h2 className="text-[11px] font-mono uppercase tracking-widest text-slate-500 px-1 flex items-center gap-2">
+                <section className="space-y-2 pt-2 border-t border-line/50">
+                  <h2 className="text-[11px] font-mono uppercase tracking-widest text-ink-faint px-1 flex items-center gap-2">
                     <Sparkles className="w-3.5 h-3.5 text-amber-400" /> What affects you most
                   </h2>
-                  <p className="text-[11px] text-slate-500 italic px-1">
+                  <p className="text-[11px] text-ink-faint italic px-1">
                     Patterns from your protocol completions — may not always hold, but worth noticing.
                   </p>
                   <div className="space-y-3">
                     {no1Insights.map((insight, i) => (
                       <div key={insight.protocolId} className="glass rounded-2xl p-4 border border-amber-500/20 space-y-1.5">
                         <p className="text-xs font-medium text-amber-300">{insight.protocolName}</p>
-                        <p className="text-xs text-slate-300">{insight.description}</p>
+                        <p className="text-xs text-ink-2">{insight.description}</p>
                       </div>
                     ))}
                   </div>
@@ -226,10 +226,10 @@ export default function InsightsScreen({ onClose }: InsightsScreenProps) {
               )}
 
               {dataDays > 0 && behaviourInsights.length === 0 && assessmentInsightsList.length === 0 && no1Insights.length === 0 && (
-                <div className="glass rounded-2xl p-4 border border-slate-700/50">
-                  <p className="text-xs text-slate-400 text-center leading-relaxed">
-                    You have <span className="text-slate-200 font-medium">{dataDays}</span> paired day{dataDays > 1 ? 's' : ''} of data.
-                    Need at least <span className="text-slate-200 font-medium">5 days</span> per pattern for an insight to appear.
+                <div className="glass rounded-2xl p-4 border border-line-strong/50">
+                  <p className="text-xs text-ink-muted text-center leading-relaxed">
+                    You have <span className="text-ink-2 font-medium">{dataDays}</span> paired day{dataDays > 1 ? 's' : ''} of data.
+                    Need at least <span className="text-ink-2 font-medium">5 days</span> per pattern for an insight to appear.
                     Keep checking in — patterns take time.
                   </p>
                 </div>
@@ -246,14 +246,14 @@ export default function InsightsScreen({ onClose }: InsightsScreenProps) {
                 <Shield className="w-5 h-5 text-amber-400" />
                 <span className="text-sm font-semibold text-amber-300">Phone behaviour insights unavailable</span>
               </div>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-ink-muted">
                 Android usage-stats permission is needed for screen-time, sleep, and movement patterns.
                 <br />This only runs on Android; web/iOS shows self-reported data only.
               </p>
             </div>
           )}
 
-          <p className="text-[11px] text-slate-500 text-center leading-relaxed px-4">
+          <p className="text-[11px] text-ink-faint text-center leading-relaxed px-4">
             NilaMind is a support alongside — not a substitute for — professional care.
           </p>
         </>

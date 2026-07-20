@@ -43,7 +43,7 @@ export default function SoftCrisisCard({ onEscalate, onDismiss }: SoftCrisisCard
         <button onClick={onEscalate} className="flex-1 py-2.5 rounded-xl bg-amber-500/25 hover:bg-amber-500/35 text-amber-100 text-xs font-bold">
           I could use support right now
         </button>
-        <button onClick={onDismiss} className="px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 text-xs">
+        <button onClick={onDismiss} className="px-3 py-2.5 rounded-xl bg-fill hover:bg-line-strong text-ink-muted text-xs">
           I'm okay, keep going
         </button>
       </div>

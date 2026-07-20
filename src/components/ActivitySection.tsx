@@ -17,15 +17,18 @@ interface ActivitySectionProps {
   nilaChats7d: number;
   usageSummary: UsageSummary;
   protocolAdherence: ProtocolAdherenceSummary;
+  /** Localized streak line (defaults to the English message from computeCompassionateStreak). */
+  streakMessage?: string;
 }
 
-export default function ActivitySection({
+function ActivitySection({
   streak,
   compassionateStreak,
   freq14,
   nilaChats7d,
   usageSummary,
   protocolAdherence,
+  streakMessage,
 }: ActivitySectionProps) {
 
   return (
@@ -33,7 +36,7 @@ export default function ActivitySection({
       {/* Compassionate streak */}
       <div className="glass rounded-2xl py-3 px-4 text-center flex items-center justify-center gap-2">
         <span aria-hidden="true">{compassionateStreak.emoji}</span>
-        <p className="text-sm text-ink">{compassionateStreak.message}</p>
+        <p className="text-sm text-ink">{streakMessage ?? compassionateStreak.message}</p>
       </div>
 
       {/* Streak counter */}
@@ -128,7 +131,7 @@ export default function ActivitySection({
             </div>
           </div>
           {protocolAdherence.perProtocol.filter((p) => p.started > 0).length > 0 && (
-            <div className="border-t border-slate-700/50 pt-2 mt-1 space-y-1">
+            <div className="border-t border-line-strong/50 pt-2 mt-1 space-y-1">
               {protocolAdherence.perProtocol.filter((p) => p.started > 0).slice(0, 4).map((p) => (
                 <div key={p.protocolId} className="flex items-center justify-between text-[11px]">
                   <span className="text-ink-muted truncate max-w-[60%]">{p.title}</span>
@@ -146,3 +149,5 @@ export default function ActivitySection({
     </>
   );
 }
+
+export default React.memo(ActivitySection);

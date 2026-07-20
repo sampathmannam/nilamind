@@ -65,7 +65,7 @@ export default function ChatLoading() {
       <div className="flex flex-col gap-3 w-full max-w-sm" id="chat-loading">
         {/* Typing indicator */}
         <div className="flex items-center gap-2 px-4 py-2">
-          <span className="text-[11px] text-slate-500">{note}</span>
+          <span className="text-[11px] text-ink-faint">{note}</span>
           <div className="flex gap-1 items-center">
             <span className="typing-dot" />
             <span className="typing-dot" />
@@ -86,7 +86,7 @@ export default function ChatLoading() {
             className="breathing-orb w-12 h-12 rounded-full bg-gradient-to-br from-purple-400/40 to-purple-600/30 border border-purple-400/20 flex items-center justify-center"
             aria-hidden="true"
           />
-          <p className="text-xs text-slate-500 leading-relaxed text-center max-w-[16rem] transition-all duration-500" key={tipIndex}>
+          <p className="text-xs text-ink-faint leading-relaxed text-center max-w-[16rem] transition-all duration-500" key={tipIndex}>
             {WAITING_TIPS[tipIndex]}
           </p>
         </div>

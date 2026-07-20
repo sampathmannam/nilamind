@@ -38,10 +38,10 @@ const COLOR_MAP: Record<string, string> = {
   teal: "border-teal-700/50 bg-teal-950/30 text-teal-200",
   indigo: "border-indigo-700/50 bg-indigo-950/30 text-indigo-200",
   yellow: "border-yellow-700/50 bg-yellow-950/30 text-yellow-200",
-  gray: "border-slate-700/50 bg-slate-950/30 text-slate-200",
+  gray: "border-line-strong/50 bg-slate-950/30 text-ink-2",
 };
 
-export default function PassiveInsightCard({
+function PassiveInsightCard({
   id,
   type,
   title,
@@ -94,3 +94,5 @@ export default function PassiveInsightCard({
     </div>
   );
 }
+
+export default React.memo(PassiveInsightCard);

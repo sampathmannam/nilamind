@@ -127,7 +127,7 @@ export default function JournalScreen() {
               key={m}
               onClick={() => setMode(m)}
               className={`px-4 min-h-[44px] inline-flex items-center rounded-full text-xs font-medium border cursor-pointer transition-all ${
-                mode === m ? "bg-blue-900/40 border-blue-700/50 text-blue-300" : "border-slate-800 text-slate-500 hover:text-slate-300 hover:border-slate-700"
+                mode === m ? "bg-blue-900/40 border-blue-700/50 text-blue-300" : "border-line text-ink-faint hover:text-ink-2 hover:border-line-strong"
               }`}
               aria-pressed={mode === m}
             >
@@ -137,10 +137,10 @@ export default function JournalScreen() {
         </div>
 
         {dailyPrompt && !promptDismissed && (
-          <div className="flex items-start gap-2 bg-page border border-slate-800 rounded-xl p-3 text-xs text-slate-400">
+          <div className="flex items-start gap-2 bg-page border border-line rounded-xl p-3 text-xs text-ink-muted">
             <Sparkles className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />
             <span className="flex-1">Try writing about: {dailyPrompt}</span>
-            <button onClick={() => setPromptDismissed(true)} aria-label="Dismiss prompt" className="text-slate-600 hover:text-slate-400 cursor-pointer shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center -m-2">
+            <button onClick={() => setPromptDismissed(true)} aria-label="Dismiss prompt" className="text-slate-600 hover:text-ink-muted cursor-pointer shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center -m-2">
               <X className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -151,7 +151,7 @@ export default function JournalScreen() {
           onChange={(e) => setText(e.target.value)}
           placeholder={MODE_PLACEHOLDER[mode]}
           aria-label="Journal entry text"
-          className="w-full bg-page border border-slate-800 rounded-xl p-3 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-blue-500/50 min-h-[80px] resize-y"
+          className="w-full bg-page border border-line rounded-xl p-3 text-sm text-ink-2 placeholder-slate-600 focus:outline-none focus:border-blue-500/50 min-h-[80px] resize-y"
         />
 
         <div className="flex gap-1.5" role="group" aria-label="Mood">
@@ -162,7 +162,7 @@ export default function JournalScreen() {
               aria-label={`Mood: ${o.label}`}
               aria-pressed={valence === o.valence}
               className={`flex-1 min-h-[44px] inline-flex items-center justify-center rounded-lg text-lg cursor-pointer border transition-all ${
-                valence === o.valence ? "bg-blue-900/40 border-blue-700/50" : "border-slate-800 hover:border-slate-700"
+                valence === o.valence ? "bg-blue-900/40 border-blue-700/50" : "border-line hover:border-line-strong"
               }`}
             >
               {o.glyph}
@@ -180,8 +180,8 @@ export default function JournalScreen() {
           Save entry
         </button>
 
-        <div className="flex items-center justify-between gap-2 bg-page border border-slate-800 rounded-xl p-3">
-          <div className="flex items-center gap-2 text-xs text-slate-400">
+        <div className="flex items-center justify-between gap-2 bg-page border border-line rounded-xl p-3">
+          <div className="flex items-center gap-2 text-xs text-ink-muted">
             <BellRing className="w-3.5 h-3.5" />
             <span>Remind me to journal</span>
           </div>
@@ -192,14 +192,14 @@ export default function JournalScreen() {
               disabled={!reminderPrefs.enabled}
               onChange={(e) => handleReminderTimeChange(e.target.value)}
               aria-label="Journal reminder time"
-              className="bg-transparent text-xs text-slate-300 border border-slate-800 rounded-lg px-2 py-1 focus:outline-none disabled:opacity-40"
+              className="bg-transparent text-xs text-ink-2 border border-line rounded-lg px-2 py-1 focus:outline-none disabled:opacity-40"
             />
             <button
               role="switch"
               aria-checked={reminderPrefs.enabled}
               aria-label="Toggle journal reminder"
               onClick={() => handleReminderToggle(!reminderPrefs.enabled)}
-              className={`w-10 h-5.5 rounded-full relative transition-all cursor-pointer ${reminderPrefs.enabled ? "bg-blue-600" : "bg-slate-800"}`}
+              className={`w-10 h-5.5 rounded-full relative transition-all cursor-pointer ${reminderPrefs.enabled ? "bg-blue-600" : "bg-fill"}`}
             >
               <span className={`absolute top-0.5 w-4.5 h-4.5 rounded-full bg-white transition-all ${reminderPrefs.enabled ? "left-[22px]" : "left-0.5"}`} />
             </button>
@@ -210,21 +210,21 @@ export default function JournalScreen() {
       {/* Feed — compact timeline list, grouped by date. */}
       {groups.map((g) => (
         <div key={g.date}>
-          <div className="text-[11px] font-semibold text-slate-500 mb-1 mt-3">{formatDateHeader(g.date)}</div>
+          <div className="text-[11px] font-semibold text-ink-faint mb-1 mt-3">{formatDateHeader(g.date)}</div>
           {g.entries.map((e) => (
-            <div key={e.id} className="border-b border-slate-800/60">
+            <div key={e.id} className="border-b border-line/60">
               <button
                 onClick={() => setExpandedId(expandedId === e.id ? null : e.id)}
                 className="w-full flex items-baseline gap-2 py-2 text-left cursor-pointer"
               >
-                <span className="text-[11px] text-slate-500 w-14 shrink-0">{formatTime(e.timestamp)}</span>
-                <span className="text-xs text-slate-300 flex-1 truncate">
+                <span className="text-[11px] text-ink-faint w-14 shrink-0">{formatTime(e.timestamp)}</span>
+                <span className="text-xs text-ink-2 flex-1 truncate">
                   {moodGlyph(e.valence)} {e.text}
                 </span>
               </button>
               {expandedId === e.id && (
                 <div className="pb-3 pl-16 pr-2 space-y-2">
-                  <p className="text-sm text-slate-200 whitespace-pre-wrap">{e.text}</p>
+                  <p className="text-sm text-ink-2 whitespace-pre-wrap">{e.text}</p>
                   <button
                     onClick={() => handleDelete(e.id)}
                     aria-label="Delete entry"

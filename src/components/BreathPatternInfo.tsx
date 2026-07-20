@@ -7,7 +7,7 @@ import { getBreathPattern, type BreathPattern } from "../services/breathPacer";
 // its own spacing (the screen uses `mt-6 … space-y-1`, the timer `… space-y-0.5`).
 export default function BreathPatternInfo({
   pattern,
-  className = "text-[11px] text-slate-500 text-center space-y-0.5",
+  className = "text-[11px] text-ink-faint text-center space-y-0.5",
 }: {
   pattern: BreathPattern;
   className?: string;

@@ -179,7 +179,7 @@ function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () 
           }}
         />
       );
-    default: return <div className="p-6 text-slate-400 text-sm text-center">Not available</div>;
+    default: return <div className="p-6 text-ink-muted text-sm text-center">Not available</div>;
   }
 }
 
@@ -414,7 +414,7 @@ function AppShell() {
 
   // ── Main render ────────────────────────────────────────────────────────────
   return (
-    <div className="relative isolate h-dvh bg-page text-slate-300 font-sans antialiased overflow-hidden flex flex-col">
+    <div className="relative isolate h-dvh bg-page text-ink-2 font-sans antialiased overflow-hidden flex flex-col">
       {/* Living aurora atmosphere */}
       <div className="aurora-field" aria-hidden="true" />
       {/* Skip link for keyboard navigation */}
@@ -505,7 +505,7 @@ function AppShell() {
       </main>
 
       {/* Bottom tab bar */}
-      <nav className="shrink-0 flex items-center justify-around border-t border-slate-800 bg-page/95 backdrop-blur pb-[max(8px,env(safe-area-inset-bottom))]" role="tablist" aria-label="Main navigation">
+      <nav className="shrink-0 flex items-center justify-around border-t border-line bg-page/95 backdrop-blur pb-[max(8px,env(safe-area-inset-bottom))]" role="tablist" aria-label="Main navigation">
         {([
           { id: "nila" as AppTab, label: "Nila", Icon: MessageSquare },
           { id: "today" as AppTab, label: "Today", Icon: LayoutGrid },
@@ -517,7 +517,7 @@ function AppShell() {
             role="tab"
             onClick={() => { setTab(id); hapticLight(); }}
             className={`flex flex-col items-center gap-0.5 py-2 px-4 rounded-lg transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] ${
-              state.tab === id ? "text-blue-400" : "text-slate-500 hover:text-slate-300"
+              state.tab === id ? "text-blue-400" : "text-ink-faint hover:text-ink-2"
             }`}
             aria-label={label}
             aria-selected={state.tab === id}

@@ -65,14 +65,14 @@ export default function BreathingTimer({ defaultPattern = "box" }: BreathingTime
   return (
     <div className="space-y-4" id="breathing-timer">
       {/* Pattern picker */}
-      <div className="flex bg-slate-800 border border-slate-700 rounded-xl overflow-hidden p-0.5 w-fit">
+      <div className="flex bg-fill border border-line-strong rounded-xl overflow-hidden p-0.5 w-fit">
         {allBreathPatterns().map((p) => (
           <button
             key={p}
             onClick={() => { reset(); setPattern(p); }}
             disabled={playing}
             className={`text-[11px] px-3 py-1.5 rounded-lg font-medium transition-colors cursor-pointer disabled:opacity-50 ${
-              pattern === p ? "bg-blue-500/20 text-blue-300" : "text-slate-400 hover:text-slate-200"
+              pattern === p ? "bg-blue-500/20 text-blue-300" : "text-ink-muted hover:text-ink-2"
             }`}
           >
             {getBreathPattern(p).label}
@@ -89,7 +89,7 @@ export default function BreathingTimer({ defaultPattern = "box" }: BreathingTime
           ariaLabel={`Breathing exercise: ${state.label}`}
         />
 
-        <p className="text-[11px] text-slate-400">
+        <p className="text-[11px] text-ink-muted">
           Cycle {totalCycles}
         </p>
 
@@ -107,7 +107,7 @@ export default function BreathingTimer({ defaultPattern = "box" }: BreathingTime
       <div className="flex items-center justify-center gap-3">
         <button
           onClick={reset}
-          className="p-2.5 rounded-full bg-slate-700 text-slate-300 hover:bg-slate-600 transition-colors cursor-pointer"
+          className="p-2.5 rounded-full bg-line-strong text-ink-2 hover:bg-slate-600 transition-colors cursor-pointer"
           aria-label="Reset"
         >
           <RotateCcw className="w-4 h-4" />

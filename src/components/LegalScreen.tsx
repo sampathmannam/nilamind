@@ -112,13 +112,13 @@ export default function LegalScreen() {
   const content = tab === "privacy" ? PRIVACY_CONTENT : tab === "terms" ? TERMS_CONTENT : OSS_CONTENT;
 
   return (
-    <div className="space-y-5 max-w-md mx-auto text-slate-100 pb-8" id="legal-screen">
+    <div className="space-y-5 max-w-md mx-auto text-ink pb-8" id="legal-screen">
       <div>
-        <h1 className="text-xl font-semibold text-slate-100 font-sans tracking-tight">Legal</h1>
-        <p className="text-xs text-slate-400 mt-1">Privacy Policy, Terms of Service, and open‑source licenses</p>
+        <h1 className="text-xl font-semibold text-ink font-sans tracking-tight">Legal</h1>
+        <p className="text-xs text-ink-muted mt-1">Privacy Policy, Terms of Service, and open‑source licenses</p>
       </div>
 
-      <div className="flex gap-1.5 border-b border-slate-800 pb-0">
+      <div className="flex gap-1.5 border-b border-line pb-0">
         {tabs.map(({ id, label, Icon }) => (
           <button
             key={id}
@@ -126,7 +126,7 @@ export default function LegalScreen() {
             className={`flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-t-lg transition-colors cursor-pointer ${
               tab === id
                 ? "text-blue-400 border-b-2 border-blue-400 bg-blue-500/5"
-                : "text-slate-500 hover:text-slate-300"
+                : "text-ink-faint hover:text-ink-2"
             }`}
           >
             <Icon className="w-3.5 h-3.5" />
@@ -137,13 +137,13 @@ export default function LegalScreen() {
 
       <div className="space-y-5 animate-fade-in" key={tab}>
         {tab === "privacy" && (
-          <p className="text-[11px] text-slate-500">Last updated: 2026-07-09</p>
+          <p className="text-[11px] text-ink-faint">Last updated: 2026-07-09</p>
         )}
         {content.map((section) => (
           <div key={section.heading} className="space-y-1.5">
-            <h2 className="text-sm font-semibold text-slate-200">{section.heading}</h2>
+            <h2 className="text-sm font-semibold text-ink-2">{section.heading}</h2>
             {section.body.map((para, i) => (
-              <p key={i} className="text-[12px] text-slate-400 leading-relaxed">{para}</p>
+              <p key={i} className="text-[12px] text-ink-muted leading-relaxed">{para}</p>
             ))}
           </div>
         ))}

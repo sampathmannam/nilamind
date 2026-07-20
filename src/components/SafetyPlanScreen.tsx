@@ -134,10 +134,10 @@ export default function SafetyPlanScreen({ draft }: { draft?: Partial<Pick<Safet
 
   return (
     <div className="space-y-6 max-w-md mx-auto" id="safety-plan-screen">
-      <div className="flex justify-between items-center bg-card p-4 rounded-xl border border-slate-800">
+      <div className="flex justify-between items-center bg-card p-4 rounded-xl border border-line">
         <div>
-          <h1 className="text-xl font-semibold text-slate-100">My Safety Plan</h1>
-          <p className="text-xs text-slate-500">Your secure emergency dashboard</p>
+          <h1 className="text-xl font-semibold text-ink">My Safety Plan</h1>
+          <p className="text-xs text-ink-faint">Your secure emergency dashboard</p>
         </div>
         <div className="flex items-center gap-1.5 text-xs font-medium text-emerald-400" role="status" aria-live="polite">
           {savedStatus ? (
@@ -146,20 +146,20 @@ export default function SafetyPlanScreen({ draft }: { draft?: Partial<Pick<Safet
               <span>Autosaved</span>
             </>
           ) : (
-            <span className="text-slate-500 flex items-center gap-1">
-              <Save className="w-3.5 h-3.5 text-slate-500" /> Idle
+            <span className="text-ink-faint flex items-center gap-1">
+              <Save className="w-3.5 h-3.5 text-ink-faint" /> Idle
             </span>
           )}
         </div>
       </div>
 
-      <div className="text-sm text-slate-300 leading-relaxed bg-card border-l-4 border-blue-500 p-4 rounded-r-xl border-y border-r border-slate-800/80">
+      <div className="text-sm text-ink-2 leading-relaxed bg-card border-l-4 border-blue-500 p-4 rounded-r-xl border-y border-r border-line/80">
         This plan stores everything strictly 100% locally on your phone. Fill this out during a calm moment so you have instant strategies when distress surges.
       </div>
 
       {draftApplied && (
         <div className="bg-amber-500/5 border border-amber-500/25 rounded-xl p-3" id="safety-plan-draft-note">
-          <p className="text-xs text-slate-300 leading-relaxed">
+          <p className="text-xs text-ink-2 leading-relaxed">
             <span className="font-semibold text-amber-300">Started from our chat.</span> I filled in a few
             fields from what you told me — please read each one, change anything that isn't right, and add the
             people you'd reach out to yourself. Nothing is saved until you edit or save it.
@@ -172,15 +172,15 @@ export default function SafetyPlanScreen({ draft }: { draft?: Partial<Pick<Safet
         {/* Section 1 */}
         <div className="space-y-2">
           <label className="block">
-            <span className="text-sm font-semibold text-slate-200">1. Warning signs I notice:</span>
-            <span className="block text-xs text-slate-500 mt-0.5">
+            <span className="text-sm font-semibold text-ink-2">1. Warning signs I notice:</span>
+            <span className="block text-xs text-ink-faint mt-0.5">
               Thoughts, moods, or situations that tell me things are getting hard
             </span>
           </label>
           <textarea
             value={safetyPlan.warningSigns}
             onChange={(e) => updateSection("warningSigns", e.target.value)}
-            className="w-full h-24 bg-card border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-300 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-all resize-none"
+            className="w-full h-24 bg-card border border-line rounded-xl px-4 py-3 text-sm text-ink-2 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-all resize-none"
             placeholder="e.g. Staying up late scrolling, feeling minor comments hold extreme weight, withdrawing from text messages..."
             aria-label="1. Warning signs I notice:"
             id="sp-warningsigns-input"
@@ -190,15 +190,15 @@ export default function SafetyPlanScreen({ draft }: { draft?: Partial<Pick<Safet
         {/* Section 2 */}
         <div className="space-y-2">
           <label className="block">
-            <span className="text-sm font-semibold text-slate-200">2. Things I can do on my own to cope:</span>
-            <span className="block text-xs text-slate-500 mt-0.5">
+            <span className="text-sm font-semibold text-ink-2">2. Things I can do on my own to cope:</span>
+            <span className="block text-xs text-ink-faint mt-0.5">
               Strategies I can use by myself, without needing anyone else
             </span>
           </label>
           <textarea
             value={safetyPlan.internalCoping}
             onChange={(e) => updateSection("internalCoping", e.target.value)}
-            className="w-full h-24 bg-card border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-300 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-all resize-none"
+            className="w-full h-24 bg-card border border-line rounded-xl px-4 py-3 text-sm text-ink-2 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-all resize-none"
             placeholder="e.g. Splash ice cold water on face for 10 seconds, or put on Fira Mono font, or do box breathing 4 counts..."
             aria-label="2. Things I can do on my own to cope:"
             id="sp-internalcoping-input"
@@ -208,15 +208,15 @@ export default function SafetyPlanScreen({ draft }: { draft?: Partial<Pick<Safet
         {/* Section 3 */}
         <div className="space-y-2">
           <label className="block">
-            <span className="text-sm font-semibold text-slate-200">3. People and places that distract me:</span>
-            <span className="block text-xs text-slate-500 mt-0.5">
+            <span className="text-sm font-semibold text-ink-2">3. People and places that distract me:</span>
+            <span className="block text-xs text-ink-faint mt-0.5">
               Who or where helps take my mind off things
             </span>
           </label>
           <textarea
             value={safetyPlan.socialDistractors}
             onChange={(e) => updateSection("socialDistractors", e.target.value)}
-            className="w-full h-24 bg-card border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-300 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-all resize-none"
+            className="w-full h-24 bg-card border border-line rounded-xl px-4 py-3 text-sm text-ink-2 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-all resize-none"
             placeholder="e.g. Taking a walk down the high-contrast street, going to a busy local botanical park, or listening to ambient audio loops..."
             aria-label="3. People and places that distract me:"
             id="sp-distractors-input"
@@ -226,15 +226,15 @@ export default function SafetyPlanScreen({ draft }: { draft?: Partial<Pick<Safet
         {/* Section 4 */}
         <div className="space-y-2">
           <label className="block">
-            <span className="text-sm font-semibold text-slate-200">4. People I can reach out to for help:</span>
-            <span className="block text-xs text-slate-500 mt-0.5">
+            <span className="text-sm font-semibold text-ink-2">4. People I can reach out to for help:</span>
+            <span className="block text-xs text-ink-faint mt-0.5">
               Name and phone number of people I trust
             </span>
           </label>
           <textarea
             value={safetyPlan.trustedPeople}
             onChange={(e) => updateSection("trustedPeople", e.target.value)}
-            className="w-full h-24 bg-card border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-300 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-all resize-none"
+            className="w-full h-24 bg-card border border-line rounded-xl px-4 py-3 text-sm text-ink-2 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-all resize-none"
             placeholder="e.g. Maya (+91 xxxxxxxxxx) - call anytime. John - text if feeling numb..."
             aria-label="4. People I can reach out to for help:"
             id="sp-trustedpeople-input"
@@ -244,15 +244,15 @@ export default function SafetyPlanScreen({ draft }: { draft?: Partial<Pick<Safet
         {/* Section 5 */}
         <div className="space-y-2">
           <label className="block">
-            <span className="text-sm font-semibold text-slate-200">5. Professionals and crisis lines:</span>
-            <span className="block text-xs text-slate-500 mt-0.5">
+            <span className="text-sm font-semibold text-ink-2">5. Professionals and crisis lines:</span>
+            <span className="block text-xs text-ink-faint mt-0.5">
               Crisis lines for your region — pre-filled, edit freely
             </span>
           </label>
           <textarea
             value={safetyPlan.professionals}
             onChange={(e) => updateSection("professionals", e.target.value)}
-            className="w-full h-24 bg-card border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-300 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-all resize-none font-mono text-xs"
+            className="w-full h-24 bg-card border border-line rounded-xl px-4 py-3 text-sm text-ink-2 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-all resize-none font-mono text-xs"
             placeholder="e.g. a local crisis line, your doctor, or therapist…"
             aria-label="5. Professionals and crisis lines:"
             id="sp-professionals-input"
@@ -262,15 +262,15 @@ export default function SafetyPlanScreen({ draft }: { draft?: Partial<Pick<Safet
         {/* Section 6 */}
         <div className="space-y-2">
           <label className="block">
-            <span className="text-sm font-semibold text-slate-200">6. Making my space safer:</span>
-            <span className="block text-xs text-slate-500 mt-0.5">
+            <span className="text-sm font-semibold text-ink-2">6. Making my space safer:</span>
+            <span className="block text-xs text-ink-faint mt-0.5">
               Steps I can take to make my environment safer right now
             </span>
           </label>
           <textarea
             value={safetyPlan.safeEnvironment}
             onChange={(e) => updateSection("safeEnvironment", e.target.value)}
-            className="w-full h-24 bg-card border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-300 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-all resize-none"
+            className="w-full h-24 bg-card border border-line rounded-xl px-4 py-3 text-sm text-ink-2 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-all resize-none"
             placeholder="e.g. Locking medications away, deleting social media venting apps, throwing out blades or cleaning instruments..."
             aria-label="6. Making my space safer:"
             id="sp-safeenvironment-input"
@@ -279,10 +279,10 @@ export default function SafetyPlanScreen({ draft }: { draft?: Partial<Pick<Safet
       </div>
 
       {/* Means safety coaching (Phase 7 — Lethal Means Counseling) */}
-      <div className="border-t border-slate-800/50 pt-4">
+      <div className="border-t border-line/50 pt-4">
         <button
           onClick={toggleCoaching}
-          className="w-full flex items-center gap-2 text-left text-sm font-medium text-slate-200 hover:text-slate-100 transition-colors cursor-pointer"
+          className="w-full flex items-center gap-2 text-left text-sm font-medium text-ink-2 hover:text-ink transition-colors cursor-pointer"
           id="sp-means-coaching-toggle"
         >
           {showCoaching ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
@@ -297,7 +297,7 @@ export default function SafetyPlanScreen({ draft }: { draft?: Partial<Pick<Safet
 
         {showCoaching && (
           <div className="mt-4 space-y-4">
-            <p className="text-xs text-slate-400 leading-relaxed">
+            <p className="text-xs text-ink-muted leading-relaxed">
               A calm, no-pressure look at your home environment. The idea is simple: in a really tough moment,
               having easy access to things that could cause harm can make things harder. This is about small
               adjustments — not getting rid of things you need. Explore the categories below, one at a time.
@@ -312,11 +312,11 @@ export default function SafetyPlanScreen({ draft }: { draft?: Partial<Pick<Safet
                 return (
                   <div
                     key={cat.id}
-                    className="bg-card border border-slate-800 rounded-xl overflow-hidden"
+                    className="bg-card border border-line rounded-xl overflow-hidden"
                   >
                     <button
                       onClick={() => toggleCategory(cat.id)}
-                      className="w-full flex items-center gap-2 px-3 py-2.5 text-left text-sm text-slate-200 hover:bg-slate-800/30 transition-colors cursor-pointer"
+                      className="w-full flex items-center gap-2 px-3 py-2.5 text-left text-sm text-ink-2 hover:bg-fill/30 transition-colors cursor-pointer"
                     >
                       {isExpanded ? <ChevronDown className="w-3.5 h-3.5 shrink-0" /> : <ChevronRight className="w-3.5 h-3.5 shrink-0" />}
                       <span className="flex-1">{cat.label}</span>
@@ -324,21 +324,21 @@ export default function SafetyPlanScreen({ draft }: { draft?: Partial<Pick<Safet
                     </button>
 
                     {isExpanded && (
-                      <div className="px-3 pb-3 space-y-3 text-xs text-slate-400">
+                      <div className="px-3 pb-3 space-y-3 text-xs text-ink-muted">
                         <p>{cat.description}</p>
-                        <div className="text-slate-500">
-                          <span className="text-slate-400">Examples: </span>
+                        <div className="text-ink-faint">
+                          <span className="text-ink-muted">Examples: </span>
                           {cat.examples.join(", ")}
                         </div>
-                        <p className="text-slate-300 italic">{cat.collaborativePrompt}</p>
+                        <p className="text-ink-2 italic">{cat.collaborativePrompt}</p>
 
                         {/* Strategies */}
                         <div className="space-y-1.5 pt-1">
-                          <p className="text-slate-300 font-medium">Ideas that have helped others:</p>
+                          <p className="text-ink-2 font-medium">Ideas that have helped others:</p>
                           {cat.strategies.map((s) => (
                             <label
                               key={s}
-                              className="flex items-start gap-2 cursor-pointer hover:text-slate-200 transition-colors"
+                              className="flex items-start gap-2 cursor-pointer hover:text-ink-2 transition-colors"
                             >
                               <input
                                 type="checkbox"
@@ -359,13 +359,13 @@ export default function SafetyPlanScreen({ draft }: { draft?: Partial<Pick<Safet
 
             {/* Commitment */}
             <div className="space-y-2">
-              <label className="block text-xs font-medium text-slate-300">
+              <label className="block text-xs font-medium text-ink-2">
                 One small step I'd like to take (optional)
               </label>
               <textarea
                 value={commitmentInput || meansProgress.commitmentText}
                 onChange={(e) => setCommitmentInput(e.target.value)}
-                className="w-full h-16 bg-card border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-300 placeholder-slate-600 focus:outline-none focus:border-violet-500 transition-all resize-none"
+                className="w-full h-16 bg-card border border-line rounded-xl px-3 py-2 text-sm text-ink-2 placeholder-slate-600 focus:outline-none focus:border-violet-500 transition-all resize-none"
                 placeholder="e.g. I'll ask my brother to hold my medication and give me a weekly supply."
               />
             </div>

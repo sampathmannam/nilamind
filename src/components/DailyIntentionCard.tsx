@@ -66,9 +66,9 @@ const DailyIntentionCard = forwardRef<DailyIntentionCardHandle, DailyIntentionCa
         >
           <div className="flex items-center gap-2">
             <Target className="w-4 h-4 text-amber-400 shrink-0" aria-hidden="true" />
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Today's intention</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">Today's intention</p>
           </div>
-          <p className="text-sm text-slate-200">
+          <p className="text-sm text-ink-2">
             If <span className="font-semibold">{intention.if}</span>, then I will{" "}
             <span className="font-semibold">{intention.then}</span>.
           </p>
@@ -98,10 +98,10 @@ const DailyIntentionCard = forwardRef<DailyIntentionCardHandle, DailyIntentionCa
         >
           <Target className="w-5 h-5 text-amber-400 shrink-0" aria-hidden="true" />
           <span className="flex-1 min-w-0">
-            <span className="block text-sm font-bold text-slate-100">Set today's intention</span>
-            <span className="block text-[11px] text-slate-400">A tiny if-then plan — no pressure, just a nudge.</span>
+            <span className="block text-sm font-bold text-ink">Set today's intention</span>
+            <span className="block text-[11px] text-ink-muted">A tiny if-then plan — no pressure, just a nudge.</span>
           </span>
-          <ChevronRight className="w-5 h-5 text-slate-500 shrink-0" aria-hidden="true" />
+          <ChevronRight className="w-5 h-5 text-ink-faint shrink-0" aria-hidden="true" />
         </button>
       );
     }
@@ -115,9 +115,9 @@ const DailyIntentionCard = forwardRef<DailyIntentionCardHandle, DailyIntentionCa
       >
         <div className="flex items-center gap-2">
           <Target className="w-4 h-4 text-amber-400 shrink-0" aria-hidden="true" />
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Set today's intention</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">Set today's intention</p>
         </div>
-        <p className="text-[11px] text-slate-500">
+        <p className="text-[11px] text-ink-faint">
           A tiny if-then plan makes it more likely you'll follow through — no pressure, just a nudge.
         </p>
         <div className="space-y-2">
@@ -128,11 +128,11 @@ const DailyIntentionCard = forwardRef<DailyIntentionCardHandle, DailyIntentionCa
             placeholder="If… (e.g. I feel anxious after lunch)"
             aria-label="If"
             // Matches the canonical `glass` input pattern used codebase-wide (10+ occurrences) instead
-            // of this file's own one-off bg-page/border-slate-800 styling. Switched the focus indicator
+            // of this file's own one-off bg-page/border-line styling. Switched the focus indicator
             // from focus:border-blue-500/50 to a ring, since .glass sets its own unlayered border which
             // would otherwise silently defeat a border-color focus utility (same hazard fixed in
             // NilaMemoryScreen/CaregiverSettingsScreen).
-            className="w-full glass rounded-lg p-2.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            className="w-full glass rounded-lg p-2.5 text-sm text-ink-2 placeholder-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           />
           <input
             type="text"
@@ -141,11 +141,11 @@ const DailyIntentionCard = forwardRef<DailyIntentionCardHandle, DailyIntentionCa
             placeholder="…then I will (e.g. do a 2-minute breathing exercise)"
             aria-label="Then"
             // Matches the canonical `glass` input pattern used codebase-wide (10+ occurrences) instead
-            // of this file's own one-off bg-page/border-slate-800 styling. Switched the focus indicator
+            // of this file's own one-off bg-page/border-line styling. Switched the focus indicator
             // from focus:border-blue-500/50 to a ring, since .glass sets its own unlayered border which
             // would otherwise silently defeat a border-color focus utility (same hazard fixed in
             // NilaMemoryScreen/CaregiverSettingsScreen).
-            className="w-full glass rounded-lg p-2.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            className="w-full glass rounded-lg p-2.5 text-sm text-ink-2 placeholder-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           />
         </div>
         <button

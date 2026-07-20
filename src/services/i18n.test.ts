@@ -10,7 +10,7 @@ vi.mock("./storageUtils", () => ({
   DAY_MS: 86_400_000,
 }));
 
-import { t, getLanguage, setLanguage, LANGUAGES, currentLanguage, DICT } from "./i18n";
+import { t, tn, getLanguage, setLanguage, LANGUAGES, currentLanguage, DICT } from "./i18n";
 
 describe("i18n core", () => {
   beforeEach(() => { store.clear(); });
@@ -60,5 +60,15 @@ describe("i18n core", () => {
       // every non-English translation must be present (covered above); English must equal t() default.
       expect(t(key as any, "en")).toBe(DICT.en[key as keyof typeof DICT.en]);
     }
+  });
+
+  it("tn() substitutes {name} tokens and falls back to English per language", () => {
+    expect(tn("narr_mood_down", "en", { avg: "4.2", delta: "1.1" })).toContain("4.2");
+    expect(tn("narr_mood_down", "en", { avg: "4.2", delta: "1.1" })).toContain("1.1");
+    // Non-English uses the localized template with the same substituted values.
+    expect(tn("narr_mood_down", "hi", { avg: "4.2", delta: "1.1" })).toContain("4.2");
+    expect(tn("narr_mood_down", "hi", { avg: "4.2", delta: "1.1" })).not.toContain("this week your distress");
+    // Unknown token is left untouched; missing key falls back to English template.
+    expect(tn("narr_mood_down", "en", { avg: "4.2" })).toContain("{delta}");
   });
 });

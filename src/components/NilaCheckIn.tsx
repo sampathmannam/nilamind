@@ -202,14 +202,14 @@ export default function NilaCheckIn({ onLogged, onSkip }: NilaCheckInProps) {
     <div className="space-y-5 max-w-md mx-auto" id="nila-checkin">
       {/* Header */}
       <header className="space-y-1 text-center">
-        <h1 className="text-lg font-bold text-slate-100">
+        <h1 className="text-lg font-bold text-ink">
           {STEP_LABELS[draft.step]}
         </h1>
         {/* Top-level skip — writes NO CheckInEntry */}
         {draft.step === "mood" && (
           <button
             onClick={onSkip}
-            className="text-xs text-slate-400 hover:text-slate-200 underline underline-offset-2 cursor-pointer transition-colors inline-flex items-center justify-center min-h-[44px] px-2"
+            className="text-xs text-ink-muted hover:text-ink-2 underline underline-offset-2 cursor-pointer transition-colors inline-flex items-center justify-center min-h-[44px] px-2"
             id="nila-checkin-skip-to-talk"
           >
             I just want to talk
@@ -228,11 +228,11 @@ export default function NilaCheckIn({ onLogged, onSkip }: NilaCheckInProps) {
               ? "w-6 h-1.5 bg-violet-500" // current mandatory step
               : i < stepIdx
               ? "w-4 h-1.5 bg-emerald-500" // completed
-              : "w-4 h-1.5 bg-slate-700"; // upcoming
+              : "w-4 h-1.5 bg-line-strong"; // upcoming
           return <span key={s} className={`rounded-full transition-all ${cls}`} />;
         })}
         {isOptionalStep && (
-          <span className="ml-1 text-[11px] text-slate-500 font-medium">optional detail</span>
+          <span className="ml-1 text-[11px] text-ink-faint font-medium">optional detail</span>
         )}
       </div>
 
@@ -249,7 +249,7 @@ export default function NilaCheckIn({ onLogged, onSkip }: NilaCheckInProps) {
                 className={`py-3 rounded-xl text-sm font-medium border cursor-pointer transition-all active:scale-95 ${
                   draft.label === m
                     ? "bg-violet-600/20 border-violet-500/50 text-violet-200"
-                    : "bg-page border-slate-800 text-slate-300 hover:border-slate-700 hover:text-slate-100"
+                    : "bg-page border-line text-ink-2 hover:border-line-strong hover:text-ink"
                 }`}
               >
                 {m}
@@ -268,11 +268,11 @@ export default function NilaCheckIn({ onLogged, onSkip }: NilaCheckInProps) {
                 className={`py-3 rounded-xl text-sm font-medium border cursor-pointer transition-all active:scale-95 ${
                   draft.intensity === chip.value
                     ? "bg-violet-600/20 border-violet-500/50 text-violet-200"
-                    : "bg-page border-slate-800 text-slate-300 hover:border-slate-700 hover:text-slate-100"
+                    : "bg-page border-line text-ink-2 hover:border-line-strong hover:text-ink"
                 }`}
               >
                 <span className="block font-semibold">{chip.label}</span>
-                <span className="block text-xs text-slate-500 mt-0.5">{chip.value}/10</span>
+                <span className="block text-xs text-ink-faint mt-0.5">{chip.value}/10</span>
               </button>
             ))}
           </div>
@@ -288,7 +288,7 @@ export default function NilaCheckIn({ onLogged, onSkip }: NilaCheckInProps) {
                  className={`py-3 rounded-xl text-sm font-medium border cursor-pointer transition-all active:scale-95 ${
                    draft.sleepHours === chip.value
                      ? "bg-indigo-600/20 border-indigo-500/50 text-indigo-200"
-                     : "bg-page border-slate-800 text-slate-300 hover:border-slate-700 hover:text-slate-100"
+                     : "bg-page border-line text-ink-2 hover:border-line-strong hover:text-ink"
                  }`}
                >
                  {chip.label}
@@ -307,7 +307,7 @@ export default function NilaCheckIn({ onLogged, onSkip }: NilaCheckInProps) {
                 className={`py-3 rounded-xl text-sm font-medium border cursor-pointer transition-all active:scale-95 ${
                   draft.energy === chip.value
                     ? "bg-violet-600/20 border-violet-500/50 text-violet-200"
-                    : "bg-page border-slate-800 text-slate-300 hover:border-slate-700 hover:text-slate-100"
+                    : "bg-page border-line text-ink-2 hover:border-line-strong hover:text-ink"
                 }`}
               >
                 {chip.label}
@@ -324,7 +324,7 @@ export default function NilaCheckIn({ onLogged, onSkip }: NilaCheckInProps) {
                 <button
                   key={tag}
                   onClick={() => handleContext(tag)}
-                  className="py-2.5 rounded-xl text-sm font-medium border border-slate-800 bg-page text-slate-300 hover:border-slate-700 hover:text-slate-100 cursor-pointer transition-all active:scale-95"
+                  className="py-2.5 rounded-xl text-sm font-medium border border-line bg-page text-ink-2 hover:border-line-strong hover:text-ink cursor-pointer transition-all active:scale-95"
                 >
                   {tag}
                 </button>
@@ -349,7 +349,7 @@ export default function NilaCheckIn({ onLogged, onSkip }: NilaCheckInProps) {
         {/* ── Step 5: Granularity — precise emotion naming ── */}
         {draft.step === "granularity" && suggestions.length > 0 && (
           <div className="space-y-3">
-            <p className="text-xs text-slate-400 leading-relaxed">
+            <p className="text-xs text-ink-muted leading-relaxed">
               Research shows that naming feelings more precisely helps us process them better. Which word fits best?
             </p>
             <div className="grid grid-cols-1 gap-2" id="nila-granularity-grid">
@@ -357,7 +357,7 @@ export default function NilaCheckIn({ onLogged, onSkip }: NilaCheckInProps) {
                 <button
                   key={word}
                   onClick={() => handleGranular(word)}
-                  className="py-3 rounded-xl text-sm font-medium border border-slate-800 bg-page text-slate-300 hover:border-violet-500/50 hover:text-violet-200 cursor-pointer transition-all active:scale-95"
+                  className="py-3 rounded-xl text-sm font-medium border border-line bg-page text-ink-2 hover:border-violet-500/50 hover:text-violet-200 cursor-pointer transition-all active:scale-95"
                 >
                   {word}
                 </button>
@@ -369,7 +369,7 @@ export default function NilaCheckIn({ onLogged, onSkip }: NilaCheckInProps) {
                 className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium border cursor-pointer transition-all ${
                   voiceListening
                     ? "bg-rose-500/20 border-rose-500/50 text-rose-300 animate-pulse"
-                    : "border-slate-700 bg-card text-slate-400 hover:text-slate-200 hover:border-slate-600"
+                    : "border-line-strong bg-card text-ink-muted hover:text-ink-2 hover:border-slate-600"
                 }`}
                 aria-label={voiceListening ? "Stop listening" : "Say it in your own words"}
               >
@@ -379,7 +379,7 @@ export default function NilaCheckIn({ onLogged, onSkip }: NilaCheckInProps) {
               <button
                 onClick={handleSkipGranular}
                 id="nila-checkin-skip-granular"
-                className="py-2.5 px-4 rounded-xl text-sm font-medium border border-slate-800 bg-card text-slate-400 hover:text-slate-200 cursor-pointer transition-all"
+                className="py-2.5 px-4 rounded-xl text-sm font-medium border border-line bg-card text-ink-muted hover:text-ink-2 cursor-pointer transition-all"
               >
                 Done
               </button>
@@ -390,16 +390,16 @@ export default function NilaCheckIn({ onLogged, onSkip }: NilaCheckInProps) {
 
       {/* Mood label in sub-steps for context */}
       {(draft.step === "intensity" || draft.step === "sleep" || draft.step === "energy" || draft.step === "context") && draft.label && (
-        <p className="text-xs text-center text-slate-500">
-          Feeling: <span className="text-slate-300 font-medium">{draft.label}</span>
+        <p className="text-xs text-center text-ink-faint">
+          Feeling: <span className="text-ink-2 font-medium">{draft.label}</span>
           {draft.intensity !== null && (
-            <> · Intensity: <span className="text-slate-300 font-medium">{draft.intensity}/10</span></>
+            <> · Intensity: <span className="text-ink-2 font-medium">{draft.intensity}/10</span></>
           )}
           {draft.sleepHours !== null && (
-            <> · Sleep: <span className="text-slate-300 font-medium">{draft.sleepHours}h</span></>
+            <> · Sleep: <span className="text-ink-2 font-medium">{draft.sleepHours}h</span></>
           )}
           {draft.energy !== null && (
-            <> · Energy: <span className="text-slate-300 font-medium">{draft.energy}/4</span></>
+            <> · Energy: <span className="text-ink-2 font-medium">{draft.energy}/4</span></>
           )}
         </p>
       )}

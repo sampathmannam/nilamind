@@ -261,7 +261,7 @@ export default function TodayScreen({
                 it can't accidentally repeat since hasAnyCheckins flips permanently once the user checks in. */}
             <p className="poster-line text-lg">Welcome to NilaMind<span className="poster-line__emoji" aria-hidden="true"> 🌿</span></p>
           </div>
-          <p className="text-xs text-slate-400 leading-relaxed">
+          <p className="text-xs text-ink-muted leading-relaxed">
             Everything here stays on your device. Nila will suggest tools based on how you're feeling —
             just tap "How are you feeling right now?" below to get started.
           </p>
@@ -310,7 +310,7 @@ export default function TodayScreen({
       {showExtraCards && timeOfDay === "morning" && checkedIn && weekInsight && (
         <div className="glass p-3 rounded-2xl space-y-1">
           <p className="text-xs uppercase font-mono tracking-widest text-ink-faint">This week</p>
-          <p className="text-[11px] text-slate-300">
+          <p className="text-[11px] text-ink-2">
             {weekInsight.checkinCount} check-in{weekInsight.checkinCount !== 1 ? "s" : ""}
             {weekInsight.topEmotion ? ` · mostly feeling ${weekInsight.topEmotion}` : ""}
           </p>
@@ -322,9 +322,9 @@ export default function TodayScreen({
         <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-2xl p-4 space-y-2">
           <div className="flex items-center gap-2">
             <LineChart className="w-4 h-4 text-emerald-400" />
-            <p className="text-sm font-semibold text-slate-100">{t(wellbeingFirstTime ? "wellbeing_baseline_title" : "wellbeing_due_title")}</p>
+            <p className="text-sm font-semibold text-ink">{t(wellbeingFirstTime ? "wellbeing_baseline_title" : "wellbeing_due_title")}</p>
           </div>
-          <p className="text-[11px] text-slate-400 leading-relaxed">{t(wellbeingFirstTime ? "wellbeing_baseline_sub" : "wellbeing_due_sub")}</p>
+          <p className="text-[11px] text-ink-muted leading-relaxed">{t(wellbeingFirstTime ? "wellbeing_baseline_sub" : "wellbeing_due_sub")}</p>
           <button
             onClick={() => go("assessment")}
             id="today-wellbeing-due"
@@ -347,13 +347,13 @@ export default function TodayScreen({
         >
           <span className="shrink-0 text-blue-400"><Activity className="w-5 h-5" aria-hidden="true" /></span>
           <span className="flex-1 min-w-0">
-            <span className="block text-sm font-bold text-slate-100">
+            <span className="block text-sm font-bold text-ink">
               {INSTRUMENTS[assessmentPrompt.instrument].measures} check {assessmentPrompt.firstTime ? "— set your baseline" : assessmentPrompt.kind === "contextual" ? "suggested" : "due"}
-              <span className="text-slate-500 font-normal"> ({assessmentPrompt.instrument})</span>
+              <span className="text-ink-faint font-normal"> ({assessmentPrompt.instrument})</span>
             </span>
-            <span className="block text-[11px] text-slate-400 mt-0.5">{assessmentPrompt.reason}</span>
+            <span className="block text-[11px] text-ink-muted mt-0.5">{assessmentPrompt.reason}</span>
           </span>
-          <ChevronRight className="w-5 h-5 text-slate-500 shrink-0" aria-hidden="true" />
+          <ChevronRight className="w-5 h-5 text-ink-faint shrink-0" aria-hidden="true" />
         </button>
       )}
 
@@ -368,10 +368,10 @@ export default function TodayScreen({
           <Wind className="w-5 h-5 text-blue-400" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-slate-200">Quick breathe</p>
-          <p className="text-[11px] text-slate-500">A 5-minute breathing session to settle your body</p>
+          <p className="text-sm font-semibold text-ink-2">Quick breathe</p>
+          <p className="text-[11px] text-ink-faint">A 5-minute breathing session to settle your body</p>
         </div>
-        <ChevronRight className="w-5 h-5 text-slate-500 shrink-0" aria-hidden="true" />
+        <ChevronRight className="w-5 h-5 text-ink-faint shrink-0" aria-hidden="true" />
       </button>
       )}
 
@@ -394,8 +394,8 @@ export default function TodayScreen({
               <span className="blob-badge__value text-2xl" aria-hidden="true">{todayMood.emoji}</span>
             </span>
             <div>
-              <p className="text-sm font-semibold text-slate-100">Feeling {todayMood.label}</p>
-              <p className="text-[11px] text-slate-400 mt-0.5">Tap to see your diary</p>
+              <p className="text-sm font-semibold text-ink">Feeling {todayMood.label}</p>
+              <p className="text-[11px] text-ink-muted mt-0.5">Tap to see your diary</p>
             </div>
           </div>
         ) : (
@@ -404,12 +404,12 @@ export default function TodayScreen({
               <Sparkles className="w-5 h-5" aria-hidden="true" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-slate-100">How are you feeling right now?</p>
-              <p className="text-[11px] text-slate-400 mt-0.5">Two taps — no typing needed</p>
+              <p className="text-sm font-bold text-ink">How are you feeling right now?</p>
+              <p className="text-[11px] text-ink-muted mt-0.5">Two taps — no typing needed</p>
             </div>
           </div>
         )}
-        <ChevronRight className="w-5 h-5 text-slate-500 shrink-0 ml-auto" aria-hidden="true" />
+        <ChevronRight className="w-5 h-5 text-ink-faint shrink-0 ml-auto" aria-hidden="true" />
       </button>
       )}
 
@@ -433,10 +433,10 @@ export default function TodayScreen({
       >
         <span className={`shrink-0 w-11 h-11 rounded-full bg-blue-500/15 flex items-center justify-center ${hero.color}`}>{hero.icon}</span>
         <span className="flex-1 min-w-0">
-          <span className="block text-base font-bold text-slate-100">{hero.label}</span>
-          <span className="block text-xs text-slate-400 mt-0.5">{hero.sub}</span>
+          <span className="block text-base font-bold text-ink">{hero.label}</span>
+          <span className="block text-xs text-ink-muted mt-0.5">{hero.sub}</span>
         </span>
-        <ChevronRight className="w-5 h-5 text-slate-500 shrink-0" aria-hidden="true" />
+        <ChevronRight className="w-5 h-5 text-ink-faint shrink-0" aria-hidden="true" />
       </button>
 
       {/* Daily intention — the structured if-then picker (Wave 3 Group I). Rendered unconditionally so
@@ -459,7 +459,7 @@ export default function TodayScreen({
           <span className="block text-sm font-bold text-ink">Talk to Nila</span>
           <span className="block text-[11px] text-ink-muted">Your companion — always here, always private</span>
         </span>
-        <ChevronRight className="w-5 h-5 text-slate-500 shrink-0" aria-hidden="true" />
+        <ChevronRight className="w-5 h-5 text-ink-faint shrink-0" aria-hidden="true" />
       </button>
       )}
 
@@ -472,14 +472,14 @@ export default function TodayScreen({
           <span className="block text-sm font-bold text-ink">Guided Programs</span>
           <span className="block text-[11px] text-ink-muted">Real, evidence-based programs you can start any time</span>
         </span>
-        <ChevronRight className="w-5 h-5 text-slate-500 shrink-0" aria-hidden="true" />
+        <ChevronRight className="w-5 h-5 text-ink-faint shrink-0" aria-hidden="true" />
       </button>
 
       {/* Show more toggle — hides informational cards by default */}
       <button
         onClick={() => setShowExtraCards(!showExtraCards)}
         aria-expanded={showExtraCards}
-        className="w-full flex items-center justify-center gap-2 py-2.5 min-h-[44px] rounded-xl border border-slate-800 hover:border-slate-700 text-slate-500 hover:text-slate-400 text-[11px] font-medium transition-all cursor-pointer"
+        className="w-full flex items-center justify-center gap-2 py-2.5 min-h-[44px] rounded-xl border border-line hover:border-line-strong text-ink-faint hover:text-ink-muted text-[11px] font-medium transition-all cursor-pointer"
       >
         <Sparkles className="w-3 h-3" />
         {showExtraCards ? "Less" : "Your patterns"}
@@ -500,19 +500,19 @@ export default function TodayScreen({
             <span className="flex-1 min-w-0">
               {rhythmLogged ? (
                 <>
-                  <span className="block text-sm font-semibold text-slate-100">
+                  <span className="block text-sm font-semibold text-ink">
                     {aWake ? `Wake ${aWake}` : ""}{aWake && aBed ? " · " : ""}{aBed ? `Bed ${aBed}` : ""}{extraCount > 0 ? ` · +${extraCount}` : ""}
                   </span>
-                  <span className="block text-[11px] text-slate-400 mt-0.5">Tap to see all anchors</span>
+                  <span className="block text-[11px] text-ink-muted mt-0.5">Tap to see all anchors</span>
                 </>
               ) : (
                 <>
-                  <span className="block text-sm font-semibold text-slate-100">Log your daily rhythm</span>
-                  <span className="block text-[11px] text-slate-400 mt-0.5">Track wake, meals &amp; bed — anchor your routine</span>
+                  <span className="block text-sm font-semibold text-ink">Log your daily rhythm</span>
+                  <span className="block text-[11px] text-ink-muted mt-0.5">Track wake, meals &amp; bed — anchor your routine</span>
                 </>
               )}
             </span>
-            <ChevronRight className="w-5 h-5 text-slate-500 shrink-0" aria-hidden="true" />
+            <ChevronRight className="w-5 h-5 text-ink-faint shrink-0" aria-hidden="true" />
           </button>
         );
       })()}
@@ -522,10 +522,10 @@ export default function TodayScreen({
         <div className="glass p-4 rounded-2xl">
           <div className="flex items-center gap-3">
             <Sparkles className="w-5 h-5 text-blue-400 shrink-0" aria-hidden="true" />
-            <p className="text-xs text-slate-400 leading-relaxed">
-              <span className="text-slate-200 font-semibold">{weekInsight.checkinCount} check-in{weekInsight.checkinCount > 1 ? "s" : ""}</span>
+            <p className="text-xs text-ink-muted leading-relaxed">
+              <span className="text-ink-2 font-semibold">{weekInsight.checkinCount} check-in{weekInsight.checkinCount > 1 ? "s" : ""}</span>
               {weekInsight.topEmotion ? (
-                <> this week · mostly <span className="text-slate-200 font-semibold capitalize">{weekInsight.topEmotion}</span></>
+                <> this week · mostly <span className="text-ink-2 font-semibold capitalize">{weekInsight.topEmotion}</span></>
               ) : (
                 <> this week</>
               )}
@@ -539,8 +539,8 @@ export default function TodayScreen({
         <div className="glass p-4 rounded-2xl border-l-4 border-l-blue-500">
           <div className="flex items-start gap-3">
             <Sparkle className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" aria-hidden="true" />
-            <p className="text-xs text-slate-300 leading-relaxed">
-              <span className="text-slate-100 font-semibold">Nila noticed:</span> {nilaReflection}
+            <p className="text-xs text-ink-2 leading-relaxed">
+              <span className="text-ink font-semibold">Nila noticed:</span> {nilaReflection}
             </p>
           </div>
         </div>

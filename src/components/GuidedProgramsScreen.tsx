@@ -36,7 +36,7 @@ export default function GuidedProgramsScreen({ onStart }: Props) {
 
   return (
     <div className="p-4 space-y-6">
-      <p className="text-sm text-slate-400">
+      <p className="text-sm text-ink-muted">
         Real, structured programs Nila can guide you through — each one traces to published research.
       </p>
 
@@ -55,7 +55,7 @@ export default function GuidedProgramsScreen({ onStart }: Props) {
               Switch
             </button>
             <button
-              className="px-3 py-2 rounded-lg bg-slate-700/50 text-slate-300 text-xs font-medium min-h-[44px]"
+              className="px-3 py-2 rounded-lg bg-line-strong/50 text-ink-2 text-xs font-medium min-h-[44px]"
               onClick={() => setPendingSwitch(null)}
             >
               Cancel
@@ -73,16 +73,16 @@ export default function GuidedProgramsScreen({ onStart }: Props) {
 function ProtocolSection({ title, protocols, onTap }: { title: string; protocols: Protocol[]; onTap: (p: Protocol) => void }) {
   return (
     <div className="space-y-2">
-      <p className="text-xs uppercase font-mono tracking-widest text-slate-500">{title}</p>
+      <p className="text-xs uppercase font-mono tracking-widest text-ink-faint">{title}</p>
       {protocols.map((p) => (
         <button
           key={p.id}
           onClick={() => onTap(p)}
           className="w-full text-left px-4 py-3 rounded-xl glass hover:brightness-125 transition-all min-h-[44px] focus-ring"
         >
-          <span className="block text-sm font-medium text-slate-200">{p.title}</span>
-          <span className="block mt-0.5 text-xs text-slate-500">{p.steps.length} steps</span>
-          <span className="block mt-1 text-[10px] text-slate-500">{p.basis}</span>
+          <span className="block text-sm font-medium text-ink-2">{p.title}</span>
+          <span className="block mt-0.5 text-xs text-ink-faint">{p.steps.length} steps</span>
+          <span className="block mt-1 text-[10px] text-ink-faint">{p.basis}</span>
         </button>
       ))}
     </div>

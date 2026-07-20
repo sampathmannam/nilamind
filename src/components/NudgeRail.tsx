@@ -191,14 +191,14 @@ export default function NudgeRail({
       {visibleNudgeIds.has("jitai") && jitaiNudge?.shouldNudge && (
         <div
           key="jitai-nudge"
-          className="w-full px-3 py-2 rounded-xl glass text-slate-200 text-xs"
+          className="w-full px-3 py-2 rounded-xl glass text-ink-2 text-xs"
           id="jitai-nudge-card"
         >
           <div className="flex items-start gap-2">
             <Brain className="w-4 h-4 text-violet-400 mt-0.5 shrink-0" />
             <div className="flex-1">
               <p className="font-medium">Quick nudge</p>
-              <p className="text-slate-200/70 mt-0.5">{jitaiNudge.nudgeText}</p>
+              <p className="text-ink-2/70 mt-0.5">{jitaiNudge.nudgeText}</p>
               {jitaiNudge.suggestedTool && (
                 <button
                   onClick={() => {

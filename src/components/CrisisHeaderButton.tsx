@@ -3,7 +3,7 @@ import { LifeBuoy } from "lucide-react";
 
 // One consistent, always-visible crisis affordance for every top-level surface (all four tabs + the
 // assessment). Design review (2026-07-18) found the crisis control was missing on the Nila + Tools tabs
-// and rendered at the palette's lowest-visibility tier (text-slate-500) where it existed — the single most
+// and rendered at the palette's lowest-visibility tier (text-ink-faint) where it existed — the single most
 // important control on the screen was the hardest to find. This is a CALM but clearly-a-help control: a
 // small rose pill with a recognizable lifebuoy + "Help" label, per the UX_RESEARCH "persistent calm crisis
 // access in the header" mandate. 44px target, real focus ring, labelled for screen readers.

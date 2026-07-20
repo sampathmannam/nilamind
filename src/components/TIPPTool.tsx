@@ -102,7 +102,7 @@ export default function TIPPTool({ onSubSkillComplete, onIntensityChange }: TIPP
 
   return (
     <div className="space-y-4" id="tipp-tool">
-      <p className="text-[11px] text-slate-500 leading-relaxed">{HONESTY_GAP_COPY}</p>
+      <p className="text-[11px] text-ink-faint leading-relaxed">{HONESTY_GAP_COPY}</p>
 
       {!showTemperature && activeTab === "exercise" && (
         <p className="text-[11px] text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded-lg px-3 py-2" id="tipp-temp-skipped-notice">
@@ -110,7 +110,7 @@ export default function TIPPTool({ onSubSkillComplete, onIntensityChange }: TIPP
         </p>
       )}
 
-      <div className="flex bg-slate-800 border border-slate-700 rounded-xl overflow-hidden p-0.5 w-fit" id="tipp-tab-strip">
+      <div className="flex bg-fill border border-line-strong rounded-xl overflow-hidden p-0.5 w-fit" id="tipp-tab-strip">
         {tabs.map((t) => {
           const selected = activeTab === t.id;
           const wasTried = tried.has(t.id);
@@ -122,7 +122,7 @@ export default function TIPPTool({ onSubSkillComplete, onIntensityChange }: TIPP
               aria-label={t.label}
               onClick={() => { setTab(t.id); setIntensityPromptFor(null); }}
               className={`flex items-center gap-1 text-[11px] px-3 py-1.5 rounded-lg font-medium transition-colors cursor-pointer ${
-                selected ? "bg-blue-500/20 text-blue-300" : "text-slate-400 hover:text-slate-200"
+                selected ? "bg-blue-500/20 text-blue-300" : "text-ink-muted hover:text-ink-2"
               }`}
             >
               <span className="font-bold">{t.letter}</span>
@@ -132,7 +132,7 @@ export default function TIPPTool({ onSubSkillComplete, onIntensityChange }: TIPP
         })}
       </div>
 
-      <p className="text-xs text-slate-400">{tabs.find((t) => t.id === activeTab)?.label}</p>
+      <p className="text-xs text-ink-muted">{tabs.find((t) => t.id === activeTab)?.label}</p>
 
       {activeTab === "temperature" && showTemperature && (
         <TimedSubSkill
@@ -188,7 +188,7 @@ function MarkTriedButton({ tried, onClick }: { tried: boolean; onClick: () => vo
     <button
       onClick={onClick}
       className={`w-full py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-        tried ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30" : "bg-page border border-slate-800 text-slate-300 hover:border-slate-600"
+        tried ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30" : "bg-page border border-line text-ink-2 hover:border-slate-600"
       }`}
     >
       <CheckCircle2 className="w-3.5 h-3.5" />
@@ -223,18 +223,18 @@ function TimedSubSkill({
   return (
     <div className="space-y-3">
       <CountdownRing progress={0} label={label} color={color} ariaLabel={ariaLabel} durationMs={durationMs} />
-      <p className="text-xs text-slate-300 leading-relaxed">{description}</p>
+      <p className="text-xs text-ink-2 leading-relaxed">{description}</p>
       <p className="text-[11px] text-amber-300/90 leading-relaxed">{caution}</p>
       <MarkTriedButton tried={tried} onClick={onMarkTried} />
       {intensityPromptOpen && (
         <div className="space-y-2 pt-1" id="tipp-intensity-recheck">
-          <p className="text-xs text-slate-500 text-center">Where's your intensity now? (1–10)</p>
+          <p className="text-xs text-ink-faint text-center">Where's your intensity now? (1–10)</p>
           <div className="grid grid-cols-5 gap-2">
             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
               <button
                 key={n}
                 onClick={() => onIntensity(n)}
-                className="bg-page border border-slate-800 text-slate-200 hover:border-blue-500 font-bold py-2 rounded-lg text-xs cursor-pointer text-center"
+                className="bg-page border border-line text-ink-2 hover:border-blue-500 font-bold py-2 rounded-lg text-xs cursor-pointer text-center"
               >
                 {n}
               </button>
@@ -256,8 +256,8 @@ function TippSafetyChecklist({ onSubmit }: { onSubmit: (flags: TippSafetyFlags) 
       <div className="flex items-start gap-2">
         <ShieldAlert className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
         <div>
-          <p className="text-sm font-semibold text-slate-100">Before we start — quick safety check</p>
-          <p className="text-xs text-slate-400 leading-relaxed">
+          <p className="text-sm font-semibold text-ink">Before we start — quick safety check</p>
+          <p className="text-xs text-ink-muted leading-relaxed">
             One of TIPP's tools (cold water) briefly changes your heart rhythm on purpose — that's usually
             safe, but not always. Check anything that applies to you; you'll only need to do this once.
           </p>
@@ -266,13 +266,13 @@ function TippSafetyChecklist({ onSubmit }: { onSubmit: (flags: TippSafetyFlags) 
 
       <div className="space-y-2">
         {TIPP_SAFETY_ITEMS.map((item) => (
-          <label key={item.key} className="flex items-center gap-2.5 text-xs text-slate-300 cursor-pointer">
+          <label key={item.key} className="flex items-center gap-2.5 text-xs text-ink-2 cursor-pointer">
             <input
               type="checkbox"
               checked={flags[item.key]}
               onChange={() => toggle(item.key)}
               aria-label={item.label}
-              className="w-4 h-4 rounded border-slate-700"
+              className="w-4 h-4 rounded border-line-strong"
             />
             {item.label}
           </label>

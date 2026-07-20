@@ -80,10 +80,10 @@ export default function ReachOutScreen() {
   return (
     <div className="space-y-4 max-w-md mx-auto" id="reachout-screen">
       <header className="space-y-1">
-        <h1 className="text-xl font-semibold text-slate-100 flex items-center gap-2">
+        <h1 className="text-xl font-semibold text-ink flex items-center gap-2">
           <MessageCircle className="w-5 h-5 text-emerald-400" /> Reach out
         </h1>
-        <p className="text-xs text-slate-400 leading-relaxed">
+        <p className="text-xs text-ink-muted leading-relaxed">
           Telling one person you trust can help. Here's a gentle way to start — you send it yourself, your way.
         </p>
       </header>
@@ -95,8 +95,8 @@ export default function ReachOutScreen() {
             <h3 className="text-sm font-semibold text-rose-200 flex items-center gap-1.5">
               <LifeBuoy className="w-4 h-4" /> You matter — support is here right now
             </h3>
-            <p className="text-xs text-slate-300 whitespace-pre-line leading-relaxed">{getCrisisReply()}</p>
-            <p className="text-xs text-slate-300 leading-relaxed">
+            <p className="text-xs text-ink-2 whitespace-pre-line leading-relaxed">{getCrisisReply()}</p>
+            <p className="text-xs text-ink-2 leading-relaxed">
               It's really good you're reaching out. Alongside your message, a crisis line can talk with you
               right now — they're free, confidential, and trained for exactly this.
             </p>
@@ -105,28 +105,28 @@ export default function ReachOutScreen() {
 
           {/* draft kept (read-only here) + DEMOTED send ── */}
           {draft.trim() && (
-            <div className="bg-page border border-slate-800 rounded-xl p-3 space-y-1">
-              <p className="text-xs uppercase tracking-wider text-slate-500 font-semibold">Your message (kept)</p>
-              <p className="text-xs text-slate-300 leading-relaxed whitespace-pre-wrap">{draft.trim()}</p>
+            <div className="bg-page border border-line rounded-xl p-3 space-y-1">
+              <p className="text-xs uppercase tracking-wider text-ink-faint font-semibold">Your message (kept)</p>
+              <p className="text-xs text-ink-2 leading-relaxed whitespace-pre-wrap">{draft.trim()}</p>
             </div>
           )}
           <div className="flex gap-2">
             <button
               onClick={() => doShare(draft.trim())}
-              className="flex-1 py-2.5 rounded-xl font-medium text-xs bg-page text-slate-400 border border-slate-800 hover:text-slate-200 transition-all cursor-pointer"
+              className="flex-1 py-2.5 rounded-xl font-medium text-xs bg-page text-ink-muted border border-line hover:text-ink-2 transition-all cursor-pointer"
             >
               Message them anyway
             </button>
             <button
               onClick={copy}
-              className="px-4 py-2.5 rounded-xl font-medium text-xs bg-page text-slate-400 border border-slate-800 hover:text-slate-200 transition-all cursor-pointer flex items-center gap-1.5"
+              className="px-4 py-2.5 rounded-xl font-medium text-xs bg-page text-ink-muted border border-line hover:text-ink-2 transition-all cursor-pointer flex items-center gap-1.5"
             >
               {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />} Copy
             </button>
           </div>
           <button
             onClick={() => setCrisisElevated(false)}
-            className="w-full text-xs text-slate-500 hover:text-slate-300 underline underline-offset-2 cursor-pointer"
+            className="w-full text-xs text-ink-faint hover:text-ink-2 underline underline-offset-2 cursor-pointer"
           >
             Back to writing
           </button>
@@ -144,9 +144,9 @@ export default function ReachOutScreen() {
           </button>
 
           {/* gentle, cited framing */}
-          <div className="bg-card border border-slate-800 rounded-2xl p-4 space-y-2">
+          <div className="bg-card border border-line rounded-2xl p-4 space-y-2">
             {REACH_FRAMING.map((f) => (
-              <p key={f.id} className="text-xs text-slate-300 leading-relaxed flex gap-2">
+              <p key={f.id} className="text-xs text-ink-2 leading-relaxed flex gap-2">
                 <Sparkles className="w-3.5 h-3.5 text-emerald-400/80 shrink-0 mt-0.5" />
                 <span>{f.text}</span>
               </p>
@@ -155,19 +155,19 @@ export default function ReachOutScreen() {
 
           {/* opener chooser */}
           <div className="space-y-2">
-            <p className="text-xs uppercase font-mono tracking-widest text-slate-500">Start with…</p>
+            <p className="text-xs uppercase font-mono tracking-widest text-ink-faint">Start with…</p>
             {REACH_OPENERS.map((o) => (
               <button
                 key={o.id}
                 onClick={() => setDraft(o.text)}
-                className="w-full text-left bg-card border border-slate-800 hover:border-emerald-500/40 rounded-xl p-3 text-xs text-slate-300 leading-relaxed transition-all cursor-pointer"
+                className="w-full text-left bg-card border border-line hover:border-emerald-500/40 rounded-xl p-3 text-xs text-ink-2 leading-relaxed transition-all cursor-pointer"
               >
                 “{o.text}”
               </button>
             ))}
             <button
               onClick={() => setDraft("")}
-              className="text-[11px] text-slate-500 hover:text-slate-300 underline underline-offset-2 cursor-pointer"
+              className="text-[11px] text-ink-faint hover:text-ink-2 underline underline-offset-2 cursor-pointer"
             >
               Write my own
             </button>
@@ -179,7 +179,7 @@ export default function ReachOutScreen() {
             onChange={(e) => onDraftChange(e.target.value)}
             placeholder="Your message — edit it however feels right."
             id="reachout-draft"
-            className="w-full h-28 bg-page border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-300 placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition-all resize-none"
+            className="w-full h-28 bg-page border border-line rounded-xl px-3 py-2 text-xs text-ink-2 placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition-all resize-none"
           />
 
           {/* send (primary) + copy (always co-equal) */}
@@ -197,13 +197,13 @@ export default function ReachOutScreen() {
             <button
               onClick={copy}
               disabled={!draft.trim()}
-              className="px-4 py-3 rounded-xl font-semibold text-xs bg-page text-slate-300 border border-slate-800 hover:bg-slate-800 transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-40"
+              className="px-4 py-3 rounded-xl font-semibold text-xs bg-page text-ink-2 border border-line hover:bg-fill transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-40"
             >
               {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />} Copy
             </button>
           </div>
 
-          <p className="text-[11px] text-slate-500 leading-relaxed px-1 flex gap-1.5">
+          <p className="text-[11px] text-ink-faint leading-relaxed px-1 flex gap-1.5">
             <ChevronRight className="w-3.5 h-3.5 shrink-0 mt-0.5 text-slate-600" />
             A trusted person is a great start — a GP or therapist can help too, whenever you're ready. A crisis
             line or your local emergency number is there for you any time, day or night.

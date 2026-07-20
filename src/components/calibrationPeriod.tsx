@@ -36,7 +36,7 @@ interface CalibrationPeriodCardProps {
   startDate: string;
 }
 
-export default function CalibrationPeriodCard({ startDate }: CalibrationPeriodCardProps) {
+function CalibrationPeriodCard({ startDate }: CalibrationPeriodCardProps) {
   const days = daysSinceFirstCheckin(startDate);
   if (days >= CALIBRATION_DAYS) return null;
 
@@ -51,20 +51,22 @@ export default function CalibrationPeriodCard({ startDate }: CalibrationPeriodCa
       </div>
       <div className="flex-1">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-semibold text-slate-100">Learning your patterns</p>
+          <p className="text-sm font-semibold text-ink">Learning your patterns</p>
           <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-300">
             {progress}%
           </span>
         </div>
-        <p className="text-[11px] text-slate-400 leading-relaxed mt-1">{message}</p>
-        <div className="mt-2 w-full bg-slate-700 rounded-full h-1.5">
+        <p className="text-[11px] text-ink-muted leading-relaxed mt-1">{message}</p>
+        <div className="mt-2 w-full bg-line-strong rounded-full h-1.5">
           <div
             className="bg-violet-500 h-1.5 rounded-full transition-all"
             style={{ width: `${progress}%` }}
           />
         </div>
-        <p className="text-xs text-slate-500 mt-1">{daysLeft} days until full personalization.</p>
+        <p className="text-xs text-ink-faint mt-1">{daysLeft} days until full personalization.</p>
       </div>
     </div>
   );
 }
+
+export default React.memo(CalibrationPeriodCard);

@@ -28,7 +28,7 @@ const PHASE_I18N: Record<EpisodePhase, string> = {
  * Each phase is a colored segment proportional to its duration.
  * Inspired by mood-tracking apps like Daylio and eMoods.
  */
-export default function PhaseTimeline({ markers, days = 365 }: Props) {
+function PhaseTimeline({ markers, days = 365 }: Props) {
   useLanguage();
 
   const { segments, totalDays } = useMemo(() => {
@@ -66,8 +66,8 @@ export default function PhaseTimeline({ markers, days = 365 }: Props) {
   if (markers.length === 0) {
     return (
       <div className="glass rounded-2xl p-4 space-y-2">
-        <p className="text-sm font-semibold text-slate-200">Episode Timeline</p>
-        <p className="text-[11px] text-slate-500">No episodes logged yet — this will show your course over time.</p>
+        <p className="text-sm font-semibold text-ink-2">Episode Timeline</p>
+        <p className="text-[11px] text-ink-faint">No episodes logged yet — this will show your course over time.</p>
       </div>
     );
   }
@@ -75,12 +75,12 @@ export default function PhaseTimeline({ markers, days = 365 }: Props) {
   return (
     <div className="glass rounded-2xl p-4 space-y-3" role="img" aria-label="Episode phase timeline">
       <div className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-slate-200">Episode Timeline</p>
-        <span className="text-xs text-slate-500">{totalDays} days</span>
+        <p className="text-sm font-semibold text-ink-2">Episode Timeline</p>
+        <span className="text-xs text-ink-faint">{totalDays} days</span>
       </div>
 
       {/* Timeline bar */}
-      <div className="relative h-6 rounded-full overflow-hidden bg-slate-800">
+      <div className="relative h-6 rounded-full overflow-hidden bg-fill">
         {segments.map((seg, i) => {
           const colors = PHASE_COLORS[seg.phase];
           return (
@@ -105,7 +105,7 @@ export default function PhaseTimeline({ markers, days = 365 }: Props) {
           return (
             <div key={phase} className="flex items-center gap-1.5">
               <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: colors.bg }} />
-              <span className="text-slate-400">{colors.label}</span>
+              <span className="text-ink-muted">{colors.label}</span>
             </div>
           );
         })}
@@ -125,8 +125,8 @@ export default function PhaseTimeline({ markers, days = 365 }: Props) {
             return (
               <div key={m.id} className="flex items-center gap-2 text-[11px]">
                 <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: colors.bg }} />
-                <span className="text-slate-300 font-medium">{colors.label}</span>
-                <span className="text-slate-500">{range}</span>
+                <span className="text-ink-2 font-medium">{colors.label}</span>
+                <span className="text-ink-faint">{range}</span>
               </div>
             );
           })}
@@ -134,3 +134,5 @@ export default function PhaseTimeline({ markers, days = 365 }: Props) {
     </div>
   );
 }
+
+export default React.memo(PhaseTimeline);

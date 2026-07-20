@@ -127,7 +127,7 @@ export default function BreathingScreen({ onClose, defaultPattern = "box" }: Pro
       <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 py-3" style={{ paddingTop: "var(--safe-top)" }}>
         <button
           onClick={onClose}
-          className="text-xs font-semibold text-slate-400 hover:text-slate-100 flex items-center gap-1 cursor-pointer transition-colors"
+          className="text-xs font-semibold text-ink-muted hover:text-ink flex items-center gap-1 cursor-pointer transition-colors"
         >
           <ChevronLeft className="w-3.5 h-3.5" /> Back
         </button>
@@ -138,7 +138,7 @@ export default function BreathingScreen({ onClose, defaultPattern = "box" }: Pro
               onClick={() => { reset(); setPattern(p); }}
               disabled={playing}
               className={`text-xs px-2 py-1 rounded-lg font-medium transition-colors cursor-pointer disabled:opacity-40 ${
-                pattern === p ? "bg-blue-500/20 text-blue-300" : "text-slate-500 hover:text-slate-300"
+                pattern === p ? "bg-blue-500/20 text-blue-300" : "text-ink-faint hover:text-ink-2"
               }`}
             >
               {getBreathPattern(p).label}
@@ -220,7 +220,7 @@ export default function BreathingScreen({ onClose, defaultPattern = "box" }: Pro
         >
           {state.label}
         </p>
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-ink-faint">
           Cycle {totalCycles}
         </p>
       </div>
@@ -237,7 +237,7 @@ export default function BreathingScreen({ onClose, defaultPattern = "box" }: Pro
       <div className="mt-8 flex items-center gap-4">
         <button
           onClick={reset}
-          className="p-3 rounded-full bg-slate-800/80 text-slate-300 hover:bg-slate-700 transition-colors cursor-pointer"
+          className="p-3 rounded-full bg-fill/80 text-ink-2 hover:bg-line-strong transition-colors cursor-pointer"
           aria-label="Reset"
         >
           <RotateCcw className="w-5 h-5" />
@@ -256,7 +256,7 @@ export default function BreathingScreen({ onClose, defaultPattern = "box" }: Pro
       </div>
 
       {/* Pattern info */}
-      <BreathPatternInfo pattern={pattern} className="mt-6 text-center text-[11px] text-slate-500 space-y-1" />
+      <BreathPatternInfo pattern={pattern} className="mt-6 text-center text-[11px] text-ink-faint space-y-1" />
     </div>
   );
 }

@@ -16,7 +16,7 @@ interface Props {
  * Inspired by Finch's achievement system: emoji icon + title + description.
  * Locked achievements are grayed out with a subtle lock indicator.
  */
-export default function AchievementBadge({ achievement, locked = false, compact = false, onClick }: Props) {
+function AchievementBadge({ achievement, locked = false, compact = false, onClick }: Props) {
   useLanguage();
 
   const Wrapper = onClick ? "button" : "div";
@@ -31,7 +31,7 @@ export default function AchievementBadge({ achievement, locked = false, compact 
           /* Matching the non-compact variant's own glass + locked/unlocked pattern below,
              instead of the two ad-hoc flat opacities this used before. */
           className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium transition-all glass ${
-            locked ? "text-slate-500 opacity-60" : "text-slate-200"
+            locked ? "text-ink-faint opacity-60" : "text-ink-2"
           }`}
           title={locked ? `Locked: ${achievement.description}` : achievement.description}
         >
@@ -54,16 +54,16 @@ export default function AchievementBadge({ achievement, locked = false, compact 
             {achievement.icon}
           </span>
           <div className="space-y-0.5 min-w-0">
-            <p className={`text-sm font-semibold ${locked ? "text-slate-500" : "text-slate-200"}`}>
+            <p className={`text-sm font-semibold ${locked ? "text-ink-faint" : "text-ink-2"}`}>
               {achievement.title}
             </p>
-            <p className="text-[11px] text-slate-400 leading-relaxed">
+            <p className="text-[11px] text-ink-muted leading-relaxed">
               {achievement.description}
             </p>
           </div>
         </div>
         {achievement.unlockedAt && !locked && (
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-ink-faint">
             Unlocked {new Date(achievement.unlockedAt).toLocaleDateString()}
           </p>
         )}
@@ -74,3 +74,5 @@ export default function AchievementBadge({ achievement, locked = false, compact 
     </Wrapper>
   );
 }
+
+export default React.memo(AchievementBadge);

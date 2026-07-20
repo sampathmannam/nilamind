@@ -25,7 +25,7 @@ export default function DailyContentCard() {
           and a flat hover-bg reads as an ad-hoc addition next to that sibling pattern. */}
       <button
         onClick={handleDismiss}
-        className="absolute top-3 right-3 p-1.5 rounded-lg text-slate-500 hover:text-slate-300 transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center"
+        className="absolute top-3 right-3 p-1.5 rounded-lg text-ink-faint hover:text-ink-2 transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center"
         aria-label="Dismiss"
       >
         <X className="w-4 h-4" />
@@ -34,13 +34,13 @@ export default function DailyContentCard() {
       <div className="flex items-start gap-2 pr-8">
         <Quote className="w-4 h-4 text-purple-400 shrink-0 mt-0.5" />
         <div>
-          <p className="text-sm text-slate-200 italic leading-relaxed">"{content.quote}"</p>
-          <p className="text-xs text-slate-500 mt-0.5">— {content.attribution}</p>
+          <p className="text-sm text-ink-2 italic leading-relaxed">"{content.quote}"</p>
+          <p className="text-xs text-ink-faint mt-0.5">— {content.attribution}</p>
         </div>
       </div>
 
       <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-3">
-        <p className="text-[11px] text-slate-300 leading-relaxed">{content.tip}</p>
+        <p className="text-[11px] text-ink-2 leading-relaxed">{content.tip}</p>
       </div>
     </div>
   );

@@ -30,7 +30,7 @@ interface SettingsScreenProps {
 function SettingsGroup({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
   return (
     <div className="space-y-3">
-      <h2 className="text-xs font-mono uppercase tracking-widest text-slate-500 px-1 flex items-center gap-1.5">
+      <h2 className="text-xs font-mono uppercase tracking-widest text-ink-faint px-1 flex items-center gap-1.5">
         {icon}
         {title}
       </h2>
@@ -47,12 +47,12 @@ export default function SettingsScreen({ onOpenCaregiver, onOpenLegal }: Setting
   const [autoUpdateOn, setAutoUpdateOn] = useState(isAutoUpdateEnabled());
   useLanguage();
   return (
-    <div className="space-y-6 max-w-md mx-auto text-slate-100" id="settings-view">
+    <div className="space-y-6 max-w-md mx-auto text-ink" id="settings-view">
       <div>
-        <h1 className="text-xl font-semibold text-slate-100 font-sans tracking-tight flex items-center gap-2">
-          <SettingsIcon className="w-5 h-5 text-slate-400" /> {t("settings")}
+        <h1 className="text-xl font-semibold text-ink font-sans tracking-tight flex items-center gap-2">
+          <SettingsIcon className="w-5 h-5 text-ink-muted" /> {t("settings")}
         </h1>
-        <p className="text-xs text-slate-400 mt-1">{t("settingsIntro")}</p>
+        <p className="text-xs text-ink-muted mt-1">{t("settingsIntro")}</p>
       </div>
 
       <SettingsGroup icon={<Sun className="w-3 h-3 text-amber-400" />} title="Preferences">
@@ -83,8 +83,8 @@ export default function SettingsScreen({ onOpenCaregiver, onOpenLegal }: Setting
           >
             <span className="shrink-0 text-emerald-400"><Users className="w-5 h-5" /></span>
               <span className="flex-1 min-w-0">
-                <span className="block text-sm font-bold text-slate-100">{t("shareTrustedTitle")}</span>
-                <span className="block text-[11px] text-slate-400">{t("shareTrustedSub")}</span>
+                <span className="block text-sm font-bold text-ink">{t("shareTrustedTitle")}</span>
+                <span className="block text-[11px] text-ink-muted">{t("shareTrustedSub")}</span>
               </span>
           </button>
         )}
@@ -95,8 +95,8 @@ export default function SettingsScreen({ onOpenCaregiver, onOpenLegal }: Setting
         >
           <span className="shrink-0 text-blue-400"><Shield className="w-5 h-5" /></span>
             <span className="flex-1 min-w-0">
-              <span className="block text-sm font-bold text-slate-100">{t("privacyPolicy")}</span>
-              <span className="block text-[11px] text-slate-400">{t("privacyPolicySub")}</span>
+              <span className="block text-sm font-bold text-ink">{t("privacyPolicy")}</span>
+              <span className="block text-[11px] text-ink-muted">{t("privacyPolicySub")}</span>
             </span>
         </button>
         <button
@@ -106,8 +106,8 @@ export default function SettingsScreen({ onOpenCaregiver, onOpenLegal }: Setting
         >
           <span className="shrink-0 text-blue-400"><Shield className="w-5 h-5" /></span>
             <span className="flex-1 min-w-0">
-              <span className="block text-sm font-bold text-slate-100">{t("sec_legal")}</span>
-              <span className="block text-[11px] text-slate-400">{t("sec_legalSub")}</span>
+              <span className="block text-sm font-bold text-ink">{t("sec_legal")}</span>
+              <span className="block text-[11px] text-ink-muted">{t("sec_legalSub")}</span>
             </span>
         </button>
       </SettingsGroup>
@@ -120,10 +120,10 @@ export default function SettingsScreen({ onOpenCaregiver, onOpenLegal }: Setting
       {/* Advanced / Developer settings toggle */}
       <button
         onClick={() => setShowAdvanced(!showAdvanced)}
-        className="w-full flex items-center justify-between py-2 px-1 text-slate-500 hover:text-slate-300 cursor-pointer transition-colors"
+        className="w-full flex items-center justify-between py-2 px-1 text-ink-faint hover:text-ink-2 cursor-pointer transition-colors"
       >
         <span className="text-xs uppercase tracking-widest font-mono flex items-center gap-1.5">
-          <Cpu className="w-3 h-3 text-slate-500" /> Advanced
+          <Cpu className="w-3 h-3 text-ink-faint" /> Advanced
         </span>
         {showAdvanced ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
       </button>
@@ -138,24 +138,24 @@ export default function SettingsScreen({ onOpenCaregiver, onOpenLegal }: Setting
           >
             <span className="shrink-0 text-blue-400"><Gauge className="w-5 h-5" /></span>
               <span className="flex-1 min-w-0">
-                <span className="block text-sm font-bold text-slate-100">{t("perfTitle")}</span>
-                <span className="block text-[11px] text-slate-400">{t("perfSub")}</span>
+                <span className="block text-sm font-bold text-ink">{t("perfTitle")}</span>
+                <span className="block text-[11px] text-ink-muted">{t("perfSub")}</span>
               </span>
           </button>
           <div className="glass p-5 rounded-2xl space-y-4 shadow-lg" id="settings-auto-update">
             <div>
-              <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-2 font-mono flex items-center gap-2">
                 <Gauge className="w-4 h-4 text-amber-400" /> Auto-update
               </h2>
-              <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+              <p className="text-[11px] text-ink-muted mt-1 leading-relaxed">
                 When enabled, the app periodically checks the GitHub releases page for a newer APK and offers to install it.
                 This is an opt-in network request — off by default for privacy.
               </p>
             </div>
-            <div className="border border-slate-800 rounded-xl p-3 flex items-center justify-between bg-page">
+            <div className="border border-line rounded-xl p-3 flex items-center justify-between bg-page">
               <div className="space-y-0.5">
-                <div className="text-sm font-medium text-slate-200">Check for updates</div>
-                <div className="text-xs text-slate-500">{autoUpdateOn ? "GitHub release check enabled" : "Disabled — no network requests"}</div>
+                <div className="text-sm font-medium text-ink-2">Check for updates</div>
+                <div className="text-xs text-ink-faint">{autoUpdateOn ? "GitHub release check enabled" : "Disabled — no network requests"}</div>
               </div>
               <button
                 type="button"
@@ -168,7 +168,7 @@ export default function SettingsScreen({ onOpenCaregiver, onOpenLegal }: Setting
                   setAutoUpdateEnabled(next);
                 }}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full cursor-pointer transition-colors focus-visible:ring-2 focus-visible:ring-blue-500 ${
-                  autoUpdateOn ? "bg-purple-600" : "bg-slate-700"
+                  autoUpdateOn ? "bg-purple-600" : "bg-line-strong"
                 }`}
               >
                 <span

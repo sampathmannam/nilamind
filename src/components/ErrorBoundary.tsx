@@ -58,12 +58,12 @@ export class ErrorBoundary extends Component<Props, State> {
       if (this.props.fallback) return this.props.fallback;
       return (
         <div className="flex-1 flex items-center justify-center p-6" role="alert">
-          <div className="w-full max-w-md bg-slate-800/50 border border-slate-700 rounded-xl p-6 text-center">
+          <div className="w-full max-w-md bg-fill/50 border border-line-strong rounded-xl p-6 text-center">
             <div className="mx-auto w-14 h-14 rounded-full bg-red-500/20 flex items-center justify-center mb-4">
               <AlertCircle className="w-7 h-7 text-red-400" aria-hidden="true" />
             </div>
-            <h2 className="text-lg font-semibold text-slate-100 mb-2">Something went wrong</h2>
-            <pre className="text-left bg-slate-900/50 rounded-lg p-3 text-xs text-slate-300 overflow-auto max-h-40 mb-4">
+            <h2 className="text-lg font-semibold text-ink mb-2">Something went wrong</h2>
+            <pre className="text-left bg-slate-900/50 rounded-lg p-3 text-xs text-ink-2 overflow-auto max-h-40 mb-4">
               {this.state.error?.message}
             </pre>
             <button
@@ -75,7 +75,7 @@ export class ErrorBoundary extends Component<Props, State> {
             </button>
             <button
               onClick={() => window.location.reload()}
-              className="w-full border border-slate-600 hover:bg-slate-800 text-slate-300 font-medium py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+              className="w-full border border-slate-600 hover:bg-fill text-ink-2 font-medium py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
             >
               <Bug className="w-4 h-4" aria-hidden="true" />
               Full Reload

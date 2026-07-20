@@ -603,15 +603,15 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   return (
     <div className="flex flex-col h-full bg-page">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800/50" style={{ paddingTop: 'var(--safe-top)' }}>
+      <div className="flex items-center justify-between px-4 py-3 border-b border-line/50" style={{ paddingTop: 'var(--safe-top)' }}>
         <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-slate-100">{greeting}</span>
+          <span className="text-sm font-semibold text-ink">{greeting}</span>
         </div>
         <div className="flex items-center gap-2">
           {messages.length > 0 && (
             <button
               onClick={() => setConfirmNewChat(true)}
-              className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer focus-ring min-w-[44px] min-h-[44px] flex items-center justify-center"
+              className="p-2 rounded-full hover:bg-fill text-ink-muted hover:text-ink-2 transition-colors cursor-pointer focus-ring min-w-[44px] min-h-[44px] flex items-center justify-center"
               aria-label="New conversation"
             >
               <SquarePen className="w-4 h-4" />
@@ -619,7 +619,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           )}
           <button
             onClick={onOpenSettings}
-            className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer focus-ring min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className="p-2 rounded-full hover:bg-fill text-ink-muted hover:text-ink-2 transition-colors cursor-pointer focus-ring min-w-[44px] min-h-[44px] flex items-center justify-center"
             aria-label={t("settings")}
           >
             <Settings className="w-4 h-4" />
@@ -643,17 +643,17 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           <div
             ref={newChatConfirmRef}
             tabIndex={-1}
-            className="w-full max-w-xs rounded-2xl bg-slate-900 border border-slate-700 p-5 space-y-3 outline-none"
+            className="w-full max-w-xs rounded-2xl bg-slate-900 border border-line-strong p-5 space-y-3 outline-none"
             onClick={(e) => e.stopPropagation()}
           >
-            <p className="text-sm font-semibold text-slate-100">Start a new conversation?</p>
-            <p className="text-xs text-slate-400">
+            <p className="text-sm font-semibold text-ink">Start a new conversation?</p>
+            <p className="text-xs text-ink-muted">
               This clears the current chat from your device. Nila won't carry what was said here into the new one.
             </p>
             <div className="flex gap-2 pt-1">
               <button
                 onClick={() => setConfirmNewChat(false)}
-                className="flex-1 py-3 rounded-xl bg-slate-800 text-slate-200 text-sm cursor-pointer hover:bg-slate-700 transition-colors min-h-[44px] focus-ring"
+                className="flex-1 py-3 rounded-xl bg-fill text-ink-2 text-sm cursor-pointer hover:bg-line-strong transition-colors min-h-[44px] focus-ring"
               >
                 Keep it
               </button>
@@ -679,7 +679,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           <div className="w-full max-w-sm relative">
             <button
               onClick={handleCheckinSkip}
-              className="absolute top-2 right-2 z-10 p-1.5 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-slate-800/50 transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center"
+              className="absolute top-2 right-2 z-10 p-1.5 rounded-lg text-ink-faint hover:text-ink-2 hover:bg-fill/50 transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center"
               aria-label="Skip check-in"
             >
               <X className="w-4 h-4" />
@@ -699,9 +699,9 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
         />
 
         <div className="text-center space-y-2">
-          <p className="text-lg text-slate-200 font-display">{question}</p>
+          <p className="text-lg text-ink-2 font-display">{question}</p>
           {mode.userState && mode.userState !== "calm" && (
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-ink-muted">
               {mode.userState === "anxious" && STATE_MESSAGES.anxious}
               {mode.userState === "low" && STATE_MESSAGES.low}
               {mode.userState === "elevated" && STATE_MESSAGES.elevated}
@@ -713,7 +713,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
         {!showQuickActions && (
           <button
             onClick={() => setShowQuickActions(true)}
-            className="text-xs text-slate-500 hover:text-slate-300 flex items-center gap-1 transition-colors cursor-pointer py-2 px-3 min-h-[44px] min-w-[44px] focus-ring"
+            className="text-xs text-ink-faint hover:text-ink-2 flex items-center gap-1 transition-colors cursor-pointer py-2 px-3 min-h-[44px] min-w-[44px] focus-ring"
           >
             <span>More tools</span>
             <span className="text-slate-600">+</span>
@@ -724,7 +724,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
             <QuickActions onAction={handleQuickAction} timeMode={mode.timeMode} userState={mode.userState} />
             <button
               onClick={() => setShowQuickActions(false)}
-              className="text-xs text-slate-500 hover:text-slate-300 transition-colors cursor-pointer py-2 px-3 min-h-[44px] min-w-[44px] focus-ring"
+              className="text-xs text-ink-faint hover:text-ink-2 transition-colors cursor-pointer py-2 px-3 min-h-[44px] min-w-[44px] focus-ring"
             >
               Hide tools
             </button>
@@ -745,7 +745,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                    className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap break-words ${
                      m.role === "user"
                        ? "bg-purple-600/70 text-white"
-                       : "bg-slate-800/80 text-slate-200"
+                       : "bg-fill/80 text-ink-2"
                    }`}
                   >
                     {m.role === "user" ? m.content : ensureListBreaks(stripChatMarkdown(m.content))}
@@ -754,14 +754,14 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                     <div className="flex gap-2 mt-1">
                       <button
                         onClick={() => feedback.rateUp(m.content, i)}
-                        className="p-2.5 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-slate-800/50 transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center focus-ring"
+                        className="p-2.5 rounded-lg text-ink-faint hover:text-ink-2 hover:bg-fill/50 transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center focus-ring"
                         aria-label="Mark as helpful"
                       >
                         <ThumbsUp className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => feedback.rateDown(m.content, i)}
-                        className="p-2.5 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-slate-800/50 transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center focus-ring"
+                        className="p-2.5 rounded-lg text-ink-faint hover:text-ink-2 hover:bg-fill/50 transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center focus-ring"
                         aria-label="Mark as not helpful"
                       >
                         <ThumbsDown className="w-4 h-4" />
@@ -791,20 +791,20 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                     {suggestionPrompt?.index === i && (
                       <div
                         id="feedback-suggestion-prompt"
-                        className="mt-1.5 p-2.5 rounded-lg bg-slate-800/50 border border-slate-700 text-xs space-y-2 max-w-[85%]"
+                        className="mt-1.5 p-2.5 rounded-lg bg-fill/50 border border-line-strong text-xs space-y-2 max-w-[85%]"
                       >
-                        <p className="text-slate-300">What would've helped?</p>
+                        <p className="text-ink-2">What would've helped?</p>
                         <input
                           type="text"
                           value={suggestionText}
                           onChange={(e) => feedback.setSuggestionText(e.target.value)}
                           placeholder="What would've helped? (optional)"
-                          className="w-full px-2.5 py-2 rounded-md bg-slate-900/70 border border-slate-700 text-slate-200 placeholder:text-slate-500 focus-ring"
+                          className="w-full px-2.5 py-2 rounded-md bg-slate-900/70 border border-line-strong text-ink-2 placeholder:text-ink-faint focus-ring"
                         />
                         <div className="flex gap-2 justify-end">
                           <button
                             onClick={() => feedback.cancelSuggestion()}
-                            className="px-3 py-2 rounded-md text-slate-400 hover:text-slate-200 hover:bg-slate-700/50 transition-colors cursor-pointer min-h-[44px] focus-ring"
+                            className="px-3 py-2 rounded-md text-ink-muted hover:text-ink-2 hover:bg-line-strong/50 transition-colors cursor-pointer min-h-[44px] focus-ring"
                             aria-label="Not now"
                           >
                             Not now
@@ -835,7 +835,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
       {/* Input bar — always visible, even during check-in (check-in is a dismissable card above, not a gate).
           Previously this was gated behind `!showCheckin`, which meant the user could see Nila but couldn't
           type/speak until the check-in was completed or dismissed. Now the chat is fully usable at all times. */}
-      <div className="px-4 py-3 border-t border-slate-800/50 space-y-2">
+      <div className="px-4 py-3 border-t border-line/50 space-y-2">
 {/* Soft crisis card (2026-07-12 Wave 3) — inline surface for a classifier-only §9 hit. Escalating opens the
               REAL full-takeover CrisisOverlay directly; dismissing only clears this card — it does NOT un-latch
               hadCrisisRef or restore the wiped transcript (one-way door, same as a keyword hit today). */}
@@ -898,7 +898,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                 <button
                   key={chip.id}
                   onClick={() => handleSendMessage(chip.text)}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-slate-800 border border-slate-700 text-xs text-slate-300 hover:bg-slate-700 hover:text-slate-100 transition-colors cursor-pointer min-h-[44px] focus-ring"
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-fill border border-line-strong text-xs text-ink-2 hover:bg-line-strong hover:text-ink transition-colors cursor-pointer min-h-[44px] focus-ring"
                 >
                   <chip.Icon className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                   {chip.text}
@@ -915,7 +915,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                   className={`p-3 rounded-full transition-colors cursor-pointer shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center focus-ring ${
                     listening
                       ? "bg-rose-500/20 text-rose-400 animate-pulse"
-                      : "bg-slate-800 text-slate-400 hover:text-slate-200"
+                      : "bg-fill text-ink-muted hover:text-ink-2"
                   }`}
                   aria-label={listening ? "Stop listening" : "Tap to talk"}
                 >
@@ -934,7 +934,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                   onBlur={() => chatTyping.onBlur(inputText.length)}
                   onFocus={chatTyping.start}
                   placeholder="Type a message..."
-                  className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                  className="flex-1 bg-fill border border-line-strong rounded-xl px-4 py-2.5 text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus:border-blue-500"
                 />
                 <button
                   onClick={() => handleSendMessage()}
@@ -942,7 +942,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                   className={`p-3 rounded-xl transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center focus-ring ${
                     inputText.trim() && !loading
                       ? "bg-blue-500/20 text-blue-400 hover:bg-blue-500/30"
-                      : "bg-slate-800 text-slate-500"
+                      : "bg-fill text-ink-faint"
                   }`}
                   aria-label="Send"
                 >
@@ -963,7 +963,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                   className={`flex-1 flex items-center justify-center gap-3 py-4 rounded-2xl transition-all cursor-pointer min-h-[44px] focus-ring ${
                     listening
                       ? "bg-rose-500/20 text-rose-400 animate-pulse"
-                      : "bg-slate-800 border border-slate-700 text-slate-300 hover:border-slate-600 hover:text-slate-100"
+                      : "bg-fill border border-line-strong text-ink-2 hover:border-slate-600 hover:text-ink"
                   }`}
                   aria-label={listening ? "Tap to stop listening" : "Tap to speak"}
                 >
@@ -975,7 +975,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                 </button>
                 <button
                   onClick={() => setShowTextInput(true)}
-                  className="p-3 rounded-xl bg-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-700 transition-colors cursor-pointer shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center focus-ring"
+                  className="p-3 rounded-xl bg-fill text-ink-muted hover:text-ink-2 hover:bg-line-strong transition-colors cursor-pointer shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center focus-ring"
                   aria-label="Type a message"
                 >
                   <Keyboard className="w-5 h-5" />

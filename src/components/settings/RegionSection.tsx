@@ -19,16 +19,16 @@ export default function RegionSection() {
   return (
     <div className="glass p-5 rounded-2xl space-y-4 shadow-lg" id="region-section">
       <div>
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-2 font-mono flex items-center gap-2">
           <Globe2 className="w-4 h-4 text-blue-400" /> {t("sec_region")}
         </h2>
-        <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+        <p className="text-[11px] text-ink-muted mt-1 leading-relaxed">
           These are the helplines shown if you ever need them.
         </p>
       </div>
 
       <div className="space-y-1.5">
-        <label htmlFor="region-select" className="block text-xs font-medium text-slate-300">
+        <label htmlFor="region-select" className="block text-xs font-medium text-ink-2">
           Region
         </label>
         <select
@@ -36,7 +36,7 @@ export default function RegionSection() {
           aria-label="Region"
           value={code}
           onChange={(e) => handleChange(e.target.value as RegionCode)}
-          className="w-full px-3 py-2.5 rounded-xl border text-sm bg-page border-slate-800 text-slate-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2.5 rounded-xl border text-sm bg-page border-line text-ink-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           {allRegions().map((r) => (
             <option key={r.code} value={r.code}>
@@ -46,11 +46,11 @@ export default function RegionSection() {
         </select>
       </div>
 
-      <div className="border border-slate-800 rounded-xl p-3 bg-page space-y-2" id="region-preview-lines">
+      <div className="border border-line rounded-xl p-3 bg-page space-y-2" id="region-preview-lines">
         {lines.map((line) => (
           <div key={line.name} className="flex items-baseline justify-between gap-3 text-sm">
-            <span className="text-slate-300">{line.name}</span>
-            <span className="text-slate-400 text-[11px] text-right">{line.display}</span>
+            <span className="text-ink-2">{line.name}</span>
+            <span className="text-ink-muted text-[11px] text-right">{line.display}</span>
           </div>
         ))}
       </div>

@@ -17,7 +17,7 @@ interface ClinicalTrackingSectionProps {
   onOpenView?: (route: string) => void;
 }
 
-export default function ClinicalTrackingSection({
+function ClinicalTrackingSection({
   checkins,
   mood,
   assessments,
@@ -64,3 +64,5 @@ export default function ClinicalTrackingSection({
     </>
   );
 }
+
+export default React.memo(ClinicalTrackingSection);

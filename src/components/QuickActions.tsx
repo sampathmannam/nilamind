@@ -80,7 +80,7 @@ export default function QuickActions({ onAction, timeMode, userState }: QuickAct
             aria-label={action.label}
           >
             <span className={action.color}>{action.icon}</span>
-            <span className="text-[11px] text-slate-300 font-medium">{action.label}</span>
+            <span className="text-[11px] text-ink-2 font-medium">{action.label}</span>
           </button>
         ))}
       </div>

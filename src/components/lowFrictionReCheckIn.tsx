@@ -66,9 +66,9 @@ export default function LowFrictionReCheckIn({ onMoodSelect, onSkip, daysSinceLa
     <div className="glass p-4 rounded-2xl space-y-3 border border-blue-400/10">
       <div className="flex items-center gap-2">
         <Sparkle className="w-4 h-4 text-blue-400" />
-        <p className="text-sm font-semibold text-slate-200">How are you right now?</p>
+        <p className="text-sm font-semibold text-ink-2">How are you right now?</p>
       </div>
-      <p className="text-[11px] text-slate-400 leading-relaxed">
+      <p className="text-[11px] text-ink-muted leading-relaxed">
         {getReCheckInMessage(daysSinceLast)}
       </p>
       <div className="grid grid-cols-2 gap-2">
@@ -85,7 +85,7 @@ export default function LowFrictionReCheckIn({ onMoodSelect, onSkip, daysSinceLa
       </div>
       <button
         onClick={onSkip}
-        className="w-full text-[11px] text-slate-500 hover:text-slate-300 transition py-1 cursor-pointer"
+        className="w-full text-[11px] text-ink-faint hover:text-ink-2 transition py-1 cursor-pointer"
       >
         Skip for now
       </button>

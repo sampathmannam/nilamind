@@ -9,7 +9,7 @@ interface StatCardProps {
   className?: string;
 }
 
-export default function StatCard({ icon, value, label, variant = "glass", className = "" }: StatCardProps) {
+function StatCard({ icon, value, label, variant = "glass", className = "" }: StatCardProps) {
   return (
     <Card variant={variant} padding="sm" className={`text-center ${className}`}>
       <div className="flex justify-center">{icon}</div>
@@ -18,3 +18,5 @@ export default function StatCard({ icon, value, label, variant = "glass", classN
     </Card>
   );
 }
+
+export default React.memo(StatCard);

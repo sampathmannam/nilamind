@@ -164,12 +164,62 @@ export type I18nKey =
   | "this_week"
   | "your_month"
   | "your_usage"
+  | "your_activity"
+  | "tracking"
+  | "what_nila_noticed"
+  | "signals_patterns"
+  | "trends_measures"
+  | "episodes_sessions"
+  | "expand_all"
+  | "collapse_all"
+  | "tracking_summary"
+  | "signals_summary"
+  | "trends_summary"
+  | "episodes_summary"
+  | "hero_title"
+  | "hero_anxious"
+  | "hero_low"
+  | "hero_elevated"
+  | "hero_calm"
+  | "hero_checkin"
+  | "hero_breathe"
+  | "hero_gentle"
   | "days_logged"
   | "nila_chats_7d"
   | "usage_checkins"
   | "usage_programs"
   | "usage_assessments"
   | "usage_features"
+  // Dashboard band narratives (built from counts/words — localized, see buildBandNarratives)
+  | "narr_tracking_month"
+  | "narr_tracking_notices_one"
+  | "narr_tracking_notices_many"
+  | "narr_tracking_none"
+  | "narr_signals_one"
+  | "narr_signals_many"
+  | "narr_signals_none"
+  | "narr_episodes_e_one"
+  | "narr_episodes_e_many"
+  | "narr_episodes_none_e"
+  | "narr_episodes_s_one"
+  | "narr_episodes_s_many"
+  // Dashboard activity (streak) + mood summaries — localized, see DashboardScreen
+  | "narr_streak_first"
+  | "narr_streak_welcome"
+  | "narr_streak_milestone"
+  | "narr_streak_active_multi"
+  | "narr_streak_active_one"
+  | "narr_streak_safe"
+  | "narr_streak_small"
+  | "narr_mood_none"
+  | "narr_mood_base_only"
+  | "narr_mood_same"
+  | "narr_mood_down"
+  | "narr_mood_up"
+  | "see_all_sessions"
+  | "see_less"
+  | "no_signals_yet"
+  | "no_sessions_yet"
   // Settings sub-section titles (Redesign §2 — Settings hub)
   | "sec_appearance"
   | "sec_voice"
@@ -477,12 +527,60 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     this_week: "This week",
     your_month: "Your month",
     your_usage: "Your usage",
+    your_activity: "Your activity",
+    tracking: "Tracking",
+    what_nila_noticed: "What Nila noticed",
+    signals_patterns: "Signals & patterns",
+    trends_measures: "Trends & measures",
+    episodes_sessions: "Episodes & sessions",
+    expand_all: "Expand all",
+    collapse_all: "Collapse all",
+    tracking_summary: "Wellbeing trend, patterns Nila noticed, and your programs",
+    signals_summary: "Sleep, routine, typing and voice signals",
+    trends_summary: "Your mood trend over time",
+    episodes_summary: "Episode history, recent sessions and deep evaluation",
+    hero_title: "Right now",
+    hero_anxious: "Your mind feels busy. A few slow breaths can help.",
+    hero_low: "A small, kind step is enough right now.",
+    hero_elevated: "Let's slow things down together.",
+    hero_calm: "You're doing okay. Keep the rhythm going.",
+    hero_checkin: "Check in",
+    hero_breathe: "3-min breathing",
+    hero_gentle: "Gentle check-in",
     days_logged: "days logged",
     nila_chats_7d: "Nila chats (7d)",
     usage_checkins: "check-ins",
     usage_programs: "programs done",
     usage_assessments: "assessments",
     usage_features: "features used",
+    narr_tracking_month: "This month has felt {word}. ",
+    narr_tracking_notices_one: "Nila noticed 1 pattern worth a closer look inside.",
+    narr_tracking_notices_many: "Nila noticed {notices} patterns worth a closer look inside.",
+    narr_tracking_none: "No new patterns flagged this period — steady is good.",
+    narr_signals_one: "1 background signal is quietly tracked below.",
+    narr_signals_many: "{count} background signals are quietly tracked below.",
+    narr_signals_none: "No background signals to report right now.",
+    narr_episodes_e_one: "1 episode on record",
+    narr_episodes_e_many: "{episodes} episodes on record",
+    narr_episodes_none_e: "No episodes recorded",
+    narr_episodes_s_one: "with 1 recent Nila session.",
+    narr_episodes_s_many: "with {sessions} recent Nila sessions.",
+    narr_streak_first: "Whenever you're ready — your first check-in starts here.",
+    narr_streak_welcome: "Welcome back — no pressure. We pick up right where you are.",
+    narr_streak_milestone: "{milestone} days of showing up for yourself. That matters.",
+    narr_streak_active_multi: "{current} days in a row. Gently done.",
+    narr_streak_active_one: "Checked in today. That counts.",
+    narr_streak_safe: "Your streak's safe today — a check-in any time keeps it going, no rush.",
+    narr_streak_small: "A small check-in whenever you can. That's enough.",
+    narr_mood_none: "No check-ins yet this week — even a one-tap mood helps your trends grow.",
+    narr_mood_base_only: "This week your distress averaged {avg}/10. Keep logging to compare week to week.",
+    narr_mood_same: "This week your distress averaged {avg}/10 — about the same as last week.",
+    narr_mood_down: "This week your distress averaged {avg}/10 — down {delta} from last week. That's a real improvement.",
+    narr_mood_up: "This week your distress averaged {avg}/10 — up {delta} from last week. Be gentle with yourself; harder stretches happen.",
+    see_all_sessions: "See all {n} sessions",
+    see_less: "Show less",
+    no_signals_yet: "Nothing to flag right now — that's a good thing. Nila keeps a quiet eye on patterns and will gently let you know if something shifts.",
+    no_sessions_yet: "No recent Nila sessions yet. Whenever you talk with Nila, a quiet snapshot stays here — on your device, never shared.",
     sec_appearance: "🎨 Appearance",
     sec_voice: "🔊 Soothing Voice",
     sec_reminders: "🔔 Gentle Reminders",
@@ -790,12 +888,60 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     this_week: "इस सप्ताह",
     your_month: "आपका महीना",
     your_usage: "आपका उपयोग",
+    your_activity: "आपकी गतिविधि",
+    tracking: "ट्रैकिंग",
+    what_nila_noticed: "जो नीला ने देखा",
+    signals_patterns: "संकेत और पैटर्न",
+    trends_measures: "रुझान और माप",
+    episodes_sessions: "एपिसोड और सत्र",
+    expand_all: "सभी विस्तार करें",
+    collapse_all: "सभी संकुचित करें",
+    tracking_summary: "कल्याण प्रवृत्ति, नीला द्वारा देखे गए पैटर्न और आपके कार्यक्रम",
+    signals_summary: "नींद, दिनचर्या, टाइपिंग और आवाज़ संकेत",
+    trends_summary: "समय के साथ आपका मूड ट्रेंड",
+    episodes_summary: "एपिसोड इतिहास, हालिया सत्र और गहन मूल्यांकन",
+    hero_title: "अभी",
+    hero_anxious: "आपका मन व्यस्त है। कुछ धीमी सांसें मदद कर सकती हैं।",
+    hero_low: "अभी एक छोटा, दयालु कदम काफी है।",
+    hero_elevated: "चलो, एक साथ इसे धीमा करते हैं।",
+    hero_calm: "आप ठीक कर रहे हैं। लय बनाए रखें।",
+    hero_checkin: "चेक इन",
+    hero_breathe: "3-मिनट श्वास",
+    hero_gentle: "कोमल चेक-इन",
     days_logged: "दिन लॉग किए",
     nila_chats_7d: "नीला चैट (7 दिन)",
     usage_checkins: "चेक-इन",
     usage_programs: "पूर्ण कार्यक्रम",
     usage_assessments: "मूल्यांकन",
     usage_features: "उपयोग किए गए फ़ीचर",
+    narr_tracking_month: "इस महीने ऐसा लगा है {word}. ",
+    narr_tracking_notices_one: "नीला ने अंदर गौर से देखने लायक 1 पैटर्न देखा।",
+    narr_tracking_notices_many: "नीला ने अंदर गौर से देखने लायक {notices} पैटर्न देखे।",
+    narr_tracking_none: "इस अवधि में कोई नया पैटर्न नहीं चिह्नित — स्थिर रहना भी अच्छा है।",
+    narr_signals_one: "नीचे 1 पृष्ठभूमि संकेत धीरे-धीरे ट्रैक किया जा रहा है।",
+    narr_signals_many: "नीचे {count} पृष्ठभूमि संकेत धीरे-धीरे ट्रैक किए जा रहे हैं।",
+    narr_signals_none: "अभी रिपोर्ट करने के लिए कोई पृष्ठभूमि संकेत नहीं।",
+    narr_episodes_e_one: "रिकॉर्ड पर 1 एपिसोड",
+    narr_episodes_e_many: "रिकॉर्ड पर {episodes} एपिसोड",
+    narr_episodes_none_e: "कोई एपिसोड दर्ज नहीं",
+    narr_episodes_s_one: "1 हालिया नीला सत्र के साथ।",
+    narr_episodes_s_many: "{sessions} हालिया नीला सत्रों के साथ।",
+    narr_streak_first: "जब भी आप तैयार हों — आपकी पहली चेक-इन यहीं से शुरू होती है।",
+    narr_streak_welcome: "वापसी पर स्वागत है — कोई दबाव नहीं। हम वहीं से आगे बढ़ते हैं जहाँ आप हैं।",
+    narr_streak_milestone: "{milestone} दिनों तक अपने लिए आगे आए — वह मायने रखता है।",
+    narr_streak_active_multi: "लगातार {current} दिन। धीरे-धीरे किया।",
+    narr_streak_active_one: "आज चेक-इन किया। वह गिनता है।",
+    narr_streak_safe: "आज आपकी स्ट्रीक सुरक्षित है — कभी भी चेक-इन उसे बनाए रखता है, जल्दी नहीं।",
+    narr_streak_small: "जब भी हो सके एक छोटी चेक-इन। वही काफी है।",
+    narr_mood_none: "इस सप्ताह अभी तक कोई चेक-इन नहीं — एक टैप मूड भी आपकी प्रवृत्तियों को बढ़ाता है।",
+    narr_mood_base_only: "इस सप्ताह आपका तनाव औसतन {avg}/10 रहा। सप्ताह-दर-सप्ताह तुलना के लिए लॉग जारी रखें।",
+    narr_mood_same: "इस सप्ताह आपका तनाव औसतन {avg}/10 रहा — पिछले सप्ताह जैसा ही।",
+    narr_mood_down: "इस सप्ताह आपका तनाव औसतन {avg}/10 रहा — पिछले सप्ताह से {delta} कम। यह एक असली सुधार है।",
+    narr_mood_up: "इस सप्ताह आपका तनाव औसतन {avg}/10 रहा — पिछले सप्ताह से {delta} अधिक। अपने साथ नरम रहें; कठिन दौर भी आते हैं।",
+    see_all_sessions: "सभी {n} सत्र देखें",
+    see_less: "कम दिखाएँ",
+    no_signals_yet: "अभी कुछ चेतावनी देने जैसा नहीं है — यह एक अच्छी बात है। नीला पैटर्न पर चुपचाप नज़र रखती है और अगर कुछ बदले तो धीरे से बताएगी।",
+    no_sessions_yet: "अभी कोई हालिया नीला सत्र नहीं है। जब भी आप नीला से बात करेंगे, एक चुपचाप स्नैपशॉट यहीं रहेगा — आपके डिवाइस पर, कभी साझा नहीं किया गया।",
     sec_appearance: "दिखावट",
     sec_voice: "सुखद आवाज़",
     sec_reminders: "सौम्य रिमाइंडर",
@@ -1097,12 +1243,60 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     this_week: "இந்த வாரம்",
     your_month: "உங்கள் மாதம்",
     your_usage: "உங்கள் பயன்பாடு",
+    your_activity: "உங்கள் செயல்பாடு",
+    tracking: "கண்காணிப்பு",
+    what_nila_noticed: "நீலா கவனித்தது",
+    signals_patterns: "சமிக்ஞைகள் மற்றும் தரப்பாடுகள்",
+    trends_measures: "போக்குகள் மற்றும் அளவீடுகள்",
+    episodes_sessions: "அத்தியாயங்கள் மற்றும் அமர்வுகள்",
+    expand_all: "அனைத்தையும் விரிவாக்கு",
+    collapse_all: "அனைத்தையும் சுருக்கு",
+    tracking_summary: "நலன் போக்கு, நீலா கவனித்த வடிவங்கள் மற்றும் உங்கள் நிகழ்ச்சிகள்",
+    signals_summary: "தூக்கம், ரூட்டீன், தட்டச்சு மற்றும் குரல் சமிக்ஞைகள்",
+    trends_summary: "காலப்போக்கில் உங்கள் மனநிலை போக்கு",
+    episodes_summary: "எபிசோட் வரலாறு, சமீபத்திய அமர்வுகள் மற்றும் ஆழ்ந்த மதிப்பீடு",
+    hero_title: "இப்போது",
+    hero_anxious: "உங்கள் மனம் பரபரப்பாக உள்ளது. சில மெதுவான மூச்சுகள் உதவும்.",
+    hero_low: "இப்போது ஒரு சிறிய, கருணை நிறைந்த படி போதுமானது.",
+    hero_elevated: "வாருங்கள், சேர்ந்து இதை மெதுவாக்குவோம்.",
+    hero_calm: "நீங்கள் சரியாகத்தான் இருக்கிறீர்கள். இந்தத் தாளத்தைத் தொடருங்கள்.",
+    hero_checkin: "செக் இன்",
+    hero_breathe: "3-நிமிட மூச்சு",
+    hero_gentle: "மென்மையான செக்-இன்",
     days_logged: "நாட்கள் பதிவு செய்யப்பட்டன",
     nila_chats_7d: "நீலா அரட்டைகள் (7 நாட்கள்)",
     usage_checkins: "செக்-இன்கள்",
     usage_programs: "முடிக்கப்பட்ட நிரல்கள்",
     usage_assessments: "மதிப்பீடுகள்",
     usage_features: "பயன்படுத்திய அம்சங்கள்",
+    narr_tracking_month: "இந்த மாதம் {word} போல் இருந்தது. ",
+    narr_tracking_notices_one: "நீலா பார்க்க வேண்டிய 1 முறையை உள்ளே கண்டறிந்தார்.",
+    narr_tracking_notices_many: "நீலா பார்க்க வேண்டிய {notices} முறைகளை உள்ளே கண்டறிந்தார்.",
+    narr_tracking_none: "இந்த காலகட்டத்தில் புதிய முறைகள் எதுவும் குறிக்கப்படவில்லை — நிலையானதே நல்லது.",
+    narr_signals_one: "1 பின்னணி சிக்னல் அமைதியாகக் கீழேக் கண்காணிக்கப்படுகிறது.",
+    narr_signals_many: "{count} பின்னணி சிக்னல்கள் அமைதியாகக் கீழேக் கண்காணிக்கப்படுகின்றன.",
+    narr_signals_none: "தற்போது அறிக்கை செய்ய பின்னணி சிக்னல்கள் ஏதுமில்லை.",
+    narr_episodes_e_one: "பதிவில் 1 அத்தியாயம்",
+    narr_episodes_e_many: "பதிவில் {episodes} அத்தியாயங்கள்",
+    narr_episodes_none_e: "அத்தியாயங்கள் எதுவும் பதிவு செய்யப்படவில்லை",
+    narr_episodes_s_one: "1 சமீபத்திய நீலா அமர்வுடன்.",
+    narr_episodes_s_many: "{sessions} சமீபத்திய நீலா அமர்வுகளுடன்.",
+    narr_streak_first: "நீங்கள் தயாரானவுடன் — உங்கள் முதல் செக்-இன் இங்கிருந்து தொடங்கும்.",
+    narr_streak_welcome: "மீண்டும் வரவேற்கிறோம் — அழுத்தம் ஏதுமில்லை. நீங்கள் இருக்கும் இடத்திலிருந்தே தொடர்வோம்.",
+    narr_streak_milestone: "{milestone} நாட்கள் உங்களுக்காக முன்வந்தீர்கள். அது முக்கியம்.",
+    narr_streak_active_multi: "தொடர்ச்சியாக {current} நாட்கள். மெதுவாக செய்தீர்கள்.",
+    narr_streak_active_one: "இன்று செக்-இன் செய்தீர்கள். அது எண்ணப்படும்.",
+    narr_streak_safe: "உங்கள் ஸ்ட்ரீக் இன்று பாதுகாப்பாக உள்ளது — எப்போது வேண்டுமானாலும் செக்-இன் அதைத் தொடர உதவும், அவசரம் இல்லை.",
+    narr_streak_small: "முடிந்தவுடன் ஒரு சிறிய செக்-இன் போதும்.",
+    narr_mood_none: "இந்த வாரம் இன்னும் செக்-இன் ஏதுமில்லை — ஒரு டேப் மூட் கூட உங்கள் போக்குகளை வளர்க்க உதவும்.",
+    narr_mood_base_only: "இந்த வாரம் உங்கள் மன அழுத்தம் சராசரியாக {avg}/10. வாரம் வாரம் ஒப்பிட லாக் பதிப்பதைத் தொடருங்கள்.",
+    narr_mood_same: "இந்த வாரம் உங்கள் மன அழுத்தம் சராசரியாக {avg}/10 — கடந்த வாரத்தைப் போலவே.",
+    narr_mood_down: "இந்த வாரம் உங்கள் மன அழுத்தம் சராசரியாக {avg}/10 — கடந்த வாரத்தை விட {delta} குறைவு. அது உண்மையான முன்னேற்றம்.",
+    narr_mood_up: "இந்த வாரம் உங்கள் மன அழுத்தம் சராசரியாக {avg}/10 — கடந்த வாரத்தை விட {delta} அதிகம். உங்களுடன் கனிவாக இருங்கள்; கடினமான காலங்களும் வரும்.",
+    see_all_sessions: "அனைத்து {n} அமர்வுகளையும் பார்",
+    see_less: "குறைவாகக் காட்டு",
+    no_signals_yet: "இப்போது எச்சரிக்க ஏதுமில்லை — அது நல்ல விஷயம். நிலாவின் பார்வை அமைதியாக பார்த்துக்கொண்டிருக்கும்; ஏதாவது மாறினால் மெதுவாக சொல்லும்.",
+    no_sessions_yet: "இதுவரை நிலா அமர்வுகள் ஏதுமில்லை. நீங்கள் நிலாவுடன் பேசும்போது, அமைதியான ஒரு சிறு பதிவு இங்கே இருக்கும் — உங்கள் சாதனத்தில், ஒருபோதும் பகிரப்படாது.",
     sec_appearance: "தோற்றம்",
     sec_voice: "அமைதியான குரல்",
     sec_reminders: "மென்மையான நினைவூட்டல்கள்",
@@ -1404,12 +1598,60 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     this_week: "ఈ వారం",
     your_month: "మీ నెల",
     your_usage: "మీ వినియోగం",
+    your_activity: "మీ కార్యాచరణ",
+    tracking: "ట్రాకింగ్",
+    what_nila_noticed: "నీలా గమనించింది",
+    signals_patterns: "సంకేతాలు మరియు నమూనాలు",
+    trends_measures: "ట్రెం�డ్లు మరియు కొలతలు",
+    episodes_sessions: "ఎపిసోడ్‌లు మరియు సెషన్లు",
+    expand_all: "అన్నీ విస్తరించు",
+    collapse_all: "అన్నీ కుదించు",
+    tracking_summary: "క్షేమ ధోరణి, నీలా గమనించిన నమూనాలు మరియు మీ కార్యక్రమాలు",
+    signals_summary: "నిద్ర, దినచర్య, టైపింగ్ మరియు వాయిస్ సంకేతాలు",
+    trends_summary: "కాలక్రమేణా మీ మూడ్ ట్రెండ్",
+    episodes_summary: "ఎపిసోడ్ చరిత్ర, ఇటీవలి సెషన్లు మరియు లోతైన మూల్యాంకనం",
+    hero_title: "ప్రస్తుతం",
+    hero_anxious: "మీ మనసు తీరికగా ఉంది. కొన్ని నెమ్మదైన శ్వాసలు సహాయపడతాయి.",
+    hero_low: "ప్రస్తుతం ఒక చిన్న, దయార్ద్రమైన అడుగు చాలు.",
+    hero_elevated: "రండి, కలిసి దీన్ని నెమ్మదిగా చేద్దాం.",
+    hero_calm: "మీరు బాగున్నారు. ఈ లయను కొనసాగించండి.",
+    hero_checkin: "చెక్ ఇన్",
+    hero_breathe: "3-నిమిషాల శ్వాస",
+    hero_gentle: "మృదువైన చెక్-ఇన్",
     days_logged: "రోజులు నమోదు చేయబడ్డాయి",
     nila_chats_7d: "నీలా చాట్‌లు (7రోజులు)",
     usage_checkins: "చెక్-ఇన్‌లు",
     usage_programs: "పూర్తి చేసిన ప్రోగ్రామ్‌లు",
     usage_assessments: "అసెస్‌మెంట్‌లు",
     usage_features: "ఉపయోగించిన ఫీచర్‌లు",
+    narr_tracking_month: "ఈ నెల {word} లా అనిపించింది. ",
+    narr_tracking_notices_one: "నీలా లోపల చూడటానికి 1 ప్యాటర్న్‌ను గమనించింది.",
+    narr_tracking_notices_many: "నీలా లోపల చూడటానికి {notices} ప్యాటర్న్‌లను గమనించింది.",
+    narr_tracking_none: "ఈ కాలంలో కొత్త ప్యాటర్న్‌లు ఏవీ గుర్తించబడలేదు — స్థిరంగా ఉండటం మంచిదే.",
+    narr_signals_one: "1 బ్యాక్‌గ్రౌండ్ సిగ్నల్ అమ్మకంగా దిగువన ట్రాక్ చేయబడుతోంది.",
+    narr_signals_many: "{count} బ్యాక్‌గ్రౌండ్ సిగ్నల్‌లు అమ్మకంగా దిగువన ట్రాక్ చేయబడుతున్నాయి.",
+    narr_signals_none: "ప్రస్తుతం నివేదించడానికి బ్యాక్‌గ్రౌండ్ సిగ్నల్‌లు ఏవీ లేవు.",
+    narr_episodes_e_one: "రికార్డులో 1 ఎపిసోడ్",
+    narr_episodes_e_many: "రికార్డులో {episodes} ఎపిసోడ్‌లు",
+    narr_episodes_none_e: "ఎపిసోడ్‌లు ఏవీ రికార్డ్ చేయబడలేదు",
+    narr_episodes_s_one: "1 ఇటీవలి నీలా సెషన్‌తో.",
+    narr_episodes_s_many: "{sessions} ఇటీవలి నీలా సెషన్‌లతో.",
+    narr_streak_first: "మీరు సిద్ధమైనప్పుడు — మీ మొదటి చెక్-ఇన్ ఇక్కడే మొదలవుతుంది.",
+    narr_streak_welcome: "తిరిగి స్వాగతం — ఒత్తిడి ఏమీ లేదు. మీరు ఉన్న చోటు నుంచే కొనసాగిస్తాం.",
+    narr_streak_milestone: "{milestone} రోజులు మీ కోసం ముందుకు వచ్చారు. అది ముఖ్యమైనది.",
+    narr_streak_active_multi: "వరుసగా {current} రోజులు. నిదానంగా చేశారు.",
+    narr_streak_active_one: "నేడు చెక్-ఇన్ చేశారు. అది లెక్కవేస్తుంది.",
+    narr_streak_safe: "మీ స్ట్రీక్ ఈరోజు సురక్షితంగా ఉంది — ఎప్పుడైనా చెక్-ఇన్ దాన్ని కొనసాగిస్తుంది, తింటే ఏమీ లేదు.",
+    narr_streak_small: "అవసరమైనప్పుడు ఒక చిన్న చెక్-ఇన్ చాలు.",
+    narr_mood_none: "ఈ వారం ఇంకా చెక్-ఇన్‌లు ఏవీ లేవు — ఒక ట్యాప్ మూడ్ కూడా మీ ట్రెండ్‌లను పెంచుతుంది.",
+    narr_mood_base_only: "ఈ వారం మీ ఒత్తిడి సగటున {avg}/10. వారం వారం పోల్చడానికి లాగింగ్ కొనసాగించండి.",
+    narr_mood_same: "ఈ వారం మీ ఒత్తిడి సగటున {avg}/10 — గత వారంలానే.",
+    narr_mood_down: "ఈ వారం మీ ఒత్తిడి సగటున {avg}/10 — గత వారం కంటే {delta} తక్కువ. అది నిజమైన మెరుగుదల.",
+    narr_mood_up: "ఈ వారం మీ ఒత్తిడి సగటున {avg}/10 — గత వారం కంటే {delta} ఎక్కువ. మీతో సౌమ్యంగా ఉండండి; కష్టమైన దశలు కూడా వస్తాయి.",
+    see_all_sessions: "అన్ని {n} సెషన్లను చూడండి",
+    see_less: "తక్కువ చూపించు",
+    no_signals_yet: "ప్రస్తుతం హెచ్చరించడానికి ఏమీ లేదు — అది మంచి విషయం. నీలా నమూనాలపై మౌనంగా దృష్టి పెడుతుంది, ఏదైనా మారితే ప్రేమగా చెబుతుంది.",
+    no_sessions_yet: "ఇంకా ఇటీవలి నీలా సెషన్లు ఏమీ లేవు. మీరు నీలాతో మాట్లాడినప్పుడల్లా, ఒక మౌన స్నాప్షాట్ ఇక్కడే ఉంటుంది — మీ పరికరంలో, ఎప్పుడూ పంచబడదు.",
     sec_appearance: "రూపు",
     sec_voice: "ప్రశాంతమైన స్వరం",
     sec_reminders: "మృదువైన రిమైండర్లు",
@@ -1598,6 +1840,23 @@ export function setLanguage(lang: SupportedLang): void {
 /** Translate a key. Falls back to English, then to the key itself. */
 export function t(key: I18nKey, lang: SupportedLang = getLanguage()): string {
   return DICT[lang]?.[key] ?? DICT.en[key] ?? key;
+}
+
+/**
+ * Translate a key and substitute `{name}` tokens from `vars`. Used only for the few dashboard
+ * band narratives that must embed a count or word inside a localized sentence (the plain `t`
+ * intentionally forbids interpolation). Tokens are replaced verbatim — no formatting, no HTML.
+ * Falls back to English if the key is missing for the requested language.
+ */
+export function tn(
+  key: I18nKey,
+  lang: SupportedLang,
+  vars: Record<string, string | number>,
+): string {
+  const template = DICT[lang]?.[key] ?? DICT.en[key] ?? key;
+  return template.replace(/\{(\w+)\}/g, (m, name: string) =>
+    name in vars ? String(vars[name]) : m,
+  );
 }
 
 /** Convenience hook-free getter for components that read language on mount/render. */

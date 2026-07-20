@@ -8,7 +8,7 @@ import Sparkline from "./Sparkline";
 /** Full WHO-5 wellbeing section embedded in DashboardScreen. Shows latest score, trajectory,
  *  sparkline chart, and a "Take the check" CTA. Replaces the compact WellbeingTrendCard
  *  + the standalone WellbeingScreen (Phase 4 consolidation). */
-export default function WellbeingTrendCard({ onTakeCheck }: { onTakeCheck?: () => void }) {
+function WellbeingTrendCard({ onTakeCheck }: { onTakeCheck?: () => void }) {
   const [history, setHistory] = useState(() => loadAssessments());
   useEffect(() => { setHistory(loadAssessments()); }, []);
 
@@ -41,30 +41,30 @@ export default function WellbeingTrendCard({ onTakeCheck }: { onTakeCheck?: () =
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <LineChartIcon className="w-4 h-4 text-emerald-400" />
-            <span className="text-sm font-bold text-slate-100">{t("you_wellbeing_label")}</span>
+            <span className="text-sm font-bold text-ink">{t("you_wellbeing_label")}</span>
           </div>
-          {wb.taken && <span className="text-xs text-slate-500">{wb.latest?.date}</span>}
+          {wb.taken && <span className="text-xs text-ink-faint">{wb.latest?.date}</span>}
         </div>
         {wb.taken ? (
           <>
             <div className="flex items-end gap-2">
               <span className={`text-3xl font-black ${tone}`}>{wb.latest?.total ?? 0}</span>
-              <span className="text-sm text-slate-500 mb-0.5">/ 100</span>
+              <span className="text-sm text-ink-faint mb-0.5">/ 100</span>
               <span className={`ml-auto text-sm font-bold ${tone} flex items-center gap-1`}>
                 <TrendIcon className="w-4 h-4" /> {trendLabel}
               </span>
             </div>
-            <p className="text-[11px] text-slate-400">{cadence}</p>
+            <p className="text-[11px] text-ink-muted">{cadence}</p>
           </>
         ) : (
-          <p className="text-[11px] text-slate-500">{t("wellbeing_none")}</p>
+          <p className="text-[11px] text-ink-faint">{t("wellbeing_none")}</p>
         )}
       </div>
 
       {/* Sparkline chart — lightweight SVG (no Recharts) */}
       {wb.taken && chartData.length >= 2 && (
         <div className="glass rounded-2xl p-4 space-y-2">
-          <h4 className="text-xs uppercase font-mono tracking-widest text-slate-400">
+          <h4 className="text-xs uppercase font-mono tracking-widest text-ink-muted">
             {t("you_wellbeing_label")} · {chartData.length}
           </h4>
           <div className="relative h-36" role="img" aria-label="Wellbeing trend over time. Dashed line marks the 50 threshold; higher is better.">
@@ -102,3 +102,5 @@ export default function WellbeingTrendCard({ onTakeCheck }: { onTakeCheck?: () =
     </div>
   );
 }
+
+export default React.memo(WellbeingTrendCard);

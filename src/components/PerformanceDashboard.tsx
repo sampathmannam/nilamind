@@ -97,14 +97,14 @@ export default function PerformanceDashboard() {
   return (
     <div className="glass rounded-2xl p-4 space-y-4" id="perf-dashboard">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-bold text-slate-100 uppercase tracking-wider flex items-center gap-1.5">
+        <h3 className="text-sm font-bold text-ink uppercase tracking-wider flex items-center gap-1.5">
           <Gauge className="w-4 h-4 text-blue-400" /> Performance
         </h3>
         <div className="flex gap-2">
-          <button onClick={handleClear} className="text-[11px] text-slate-400 hover:text-slate-200 flex items-center gap-1">
+          <button onClick={handleClear} className="text-[11px] text-ink-muted hover:text-ink-2 flex items-center gap-1">
             <TrendingDown className="w-3.5 h-3.5" /> Clear
           </button>
-          <button onClick={handleExport} className="text-[11px] text-slate-400 hover:text-slate-200 flex items-center gap-1">
+          <button onClick={handleExport} className="text-[11px] text-ink-muted hover:text-ink-2 flex items-center gap-1">
             <Download className="w-3.5 h-3.5" /> Export
           </button>
         </div>
@@ -120,7 +120,7 @@ export default function PerformanceDashboard() {
             key={t.id}
             onClick={() => { setTab(t.id); hapticLight(); }}
             className={`flex-1 text-[11px] font-semibold py-1.5 rounded-lg flex items-center justify-center gap-1 transition-colors ${
-              tab === t.id ? "bg-raised text-slate-100" : "text-slate-400"
+              tab === t.id ? "bg-raised text-ink" : "text-ink-muted"
             }`}
           >
             <t.icon className="w-3.5 h-3.5" /> {t.label}
@@ -135,22 +135,22 @@ export default function PerformanceDashboard() {
             if (val === undefined) {
               return (
                 <div key={v.name} className="flex items-center justify-between text-xs">
-                  <span className="text-slate-300 font-mono">{v.name}</span>
-                  <span className="text-slate-500">no data yet</span>
+                  <span className="text-ink-2 font-mono">{v.name}</span>
+                  <span className="text-ink-faint">no data yet</span>
                 </div>
               );
             }
             const rating = ratingFor(v.name, val);
             return (
               <div key={v.name} className="flex items-center justify-between text-xs">
-                <span className="text-slate-300 font-mono">{v.name}</span>
+                <span className="text-ink-2 font-mono">{v.name}</span>
                 <span className={ratingColor(rating)}>
                   {fmt(v.name, val)} · {rating.replace("-", " ")}
                 </span>
               </div>
             );
           })}
-          <p className="text-xs text-slate-500 leading-relaxed pt-1">
+          <p className="text-xs text-ink-faint leading-relaxed pt-1">
             Core Web Vitals are collected automatically. Use the app to populate real measurements.
           </p>
         </div>
@@ -165,9 +165,9 @@ export default function PerformanceDashboard() {
           ) : (
             <div className="space-y-2 max-h-60 overflow-auto">
               {[...errors].reverse().map((e, i) => (
-                <div key={i} className="bg-page rounded-lg p-2 border border-slate-800">
+                <div key={i} className="bg-page rounded-lg p-2 border border-line">
                   <div className="text-[11px] text-rose-300 break-words">{e.message}</div>
-                  <div className="text-xs text-slate-500">{new Date(e.timestamp).toLocaleString()}</div>
+                  <div className="text-xs text-ink-faint">{new Date(e.timestamp).toLocaleString()}</div>
                 </div>
               ))}
             </div>
@@ -179,7 +179,7 @@ export default function PerformanceDashboard() {
         <div className="space-y-2">
           {!axisScores ? (
             <div className="space-y-2">
-              <p className="text-xs text-slate-400">Run the 5-axis safety evaluation ({scenarios.length} scenarios).</p>
+              <p className="text-xs text-ink-muted">Run the 5-axis safety evaluation ({scenarios.length} scenarios).</p>
               <button
                 onClick={() => {
                   const results = scenarios.map((s) => evaluateScenario(s, ""));
@@ -195,7 +195,7 @@ export default function PerformanceDashboard() {
             <div className="space-y-1.5">
               {(Object.entries(axisScores) as [string, { pass: number; fail: number; total: number }][]).map(([axis, s]) => (
                 <div key={axis} className="flex items-center justify-between text-xs">
-                  <span className="text-slate-300 font-mono text-[11px]">{axis.replace(/_/g, " ")}</span>
+                  <span className="text-ink-2 font-mono text-[11px]">{axis.replace(/_/g, " ")}</span>
                   <span className={s.fail === 0 ? "text-emerald-400" : "text-rose-400"}>
                     {s.pass}/{s.total} pass
                   </span>
@@ -203,7 +203,7 @@ export default function PerformanceDashboard() {
               ))}
               <button
                 onClick={() => { setAxisScores(null); hapticLight(); }}
-                className="text-[11px] text-slate-500 hover:text-slate-300 transition mt-2"
+                className="text-[11px] text-ink-faint hover:text-ink-2 transition mt-2"
               >
                 Reset
               </button>
@@ -219,7 +219,7 @@ function Stat({ label, value, color }: { label: string; value: string | number; 
   return (
     <div className="bg-page rounded-xl p-3">
       <div className={`text-2xl font-bold ${color}`}>{value}</div>
-      <div className="text-xs text-slate-400">{label}</div>
+      <div className="text-xs text-ink-muted">{label}</div>
     </div>
   );
 }

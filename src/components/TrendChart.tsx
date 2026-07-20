@@ -56,7 +56,7 @@ export const WHO5_BANDS: SeverityBand[] = [
  * TrendChart — a warm, accessible line chart showing assessment scores over time.
  * Uses Recharts with severity-colored background bands.
  */
-export default function TrendChart({
+function TrendChart({
   data,
   title,
   bands = PHQ9_BANDS,
@@ -69,8 +69,8 @@ export default function TrendChart({
   if (data.length === 0) {
     return (
       <div className="glass rounded-2xl p-4 space-y-2">
-        <p className="text-sm font-semibold text-slate-200">{title}</p>
-        <p className="text-[11px] text-slate-500">No data yet — complete an assessment to see your trend.</p>
+        <p className="text-sm font-semibold text-ink-2">{title}</p>
+        <p className="text-[11px] text-ink-faint">No data yet — complete an assessment to see your trend.</p>
       </div>
     );
   }
@@ -85,10 +85,10 @@ export default function TrendChart({
     if (!active || !payload?.length) return null;
     const point = payload[0].payload as TrendPoint;
     return (
-      <div className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs shadow-lg">
-        <p className="text-slate-200 font-semibold">{point.date}</p>
-        <p className="text-slate-300">Score: {point.score}</p>
-        {point.severity && <p className="text-slate-400">{point.severity}</p>}
+      <div className="bg-fill border border-line-strong rounded-lg px-3 py-2 text-xs shadow-lg">
+        <p className="text-ink-2 font-semibold">{point.date}</p>
+        <p className="text-ink-2">Score: {point.score}</p>
+        {point.severity && <p className="text-ink-muted">{point.severity}</p>}
       </div>
     );
   };
@@ -100,7 +100,7 @@ export default function TrendChart({
       aria-label={ariaLabel ?? `${title} trend chart`}
     >
       <div className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-slate-200">{title}</p>
+        <p className="text-sm font-semibold text-ink-2">{title}</p>
         {data.length >= 2 && (
           <TrendBadge first={data[0].score} last={data[data.length - 1].score} />
         )}
@@ -126,20 +126,20 @@ export default function TrendChart({
               stroke="var(--color-rose-400)"
               strokeDasharray="6 3"
               strokeOpacity={0.6}
-              label={{ value: "Clinical", position: "right", fontSize: 9, fill: "var(--color-slate-500)" }}
+              label={{ value: "Clinical", position: "right", fontSize: 9, fill: "var(--color-ink-faint)" }}
             />
           )}
 
           <XAxis
             dataKey="label"
-            tick={{ fontSize: 9, fill: "var(--color-slate-500)" }}
+            tick={{ fontSize: 9, fill: "var(--color-ink-faint)" }}
             tickLine={false}
             axisLine={false}
             interval="preserveStartEnd"
           />
           <YAxis
             domain={[0, maxScore]}
-            tick={{ fontSize: 9, fill: "var(--color-slate-500)" }}
+            tick={{ fontSize: 9, fill: "var(--color-ink-faint)" }}
             tickLine={false}
             axisLine={false}
           />
@@ -158,7 +158,7 @@ export default function TrendChart({
       </ResponsiveContainer>
 
       {/* Legend */}
-      <div className="flex flex-wrap gap-2 text-xs text-slate-500">
+      <div className="flex flex-wrap gap-2 text-xs text-ink-faint">
         {bands.map((band, i) => (
           <div key={i} className="flex items-center gap-1">
             <div className="w-2 h-2 rounded-full" style={{ backgroundColor: band.color }} />
@@ -175,10 +175,12 @@ function TrendBadge({ first, last }: { first: number; last: number }) {
   const diff = last - first;
   const absDiff = Math.abs(diff);
   if (absDiff < 3) {
-    return <span className="text-xs px-2 py-0.5 rounded-full bg-slate-700 text-slate-400">Stable</span>;
+    return <span className="text-xs px-2 py-0.5 rounded-full bg-line-strong text-ink-muted">Stable</span>;
   }
   if (diff < 0) {
     return <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">Improving ↓</span>;
   }
   return <span className="text-xs px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400">Worsening ↑</span>;
 }
+
+export default React.memo(TrendChart);

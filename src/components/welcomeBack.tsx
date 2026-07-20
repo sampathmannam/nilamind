@@ -49,8 +49,8 @@ export default function WelcomeBackCard({ lastVisitDate, onDismiss }: WelcomeBac
       <div className="flex items-start gap-2">
         <MessageCircle className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" />
         <div className="flex-1">
-          <p className="text-[13px] text-slate-200 leading-relaxed">{message}</p>
-          <p className="text-[11px] text-slate-400 mt-1">Welcome back — {days} day{days === 1 ? "" : "s"} away.</p>
+          <p className="text-[13px] text-ink-2 leading-relaxed">{message}</p>
+          <p className="text-[11px] text-ink-muted mt-1">Welcome back — {days} day{days === 1 ? "" : "s"} away.</p>
           <div className="flex gap-2 mt-2">
             <button
               onClick={onDismiss}

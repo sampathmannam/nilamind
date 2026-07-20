@@ -1,19 +1,14 @@
-import React, { useMemo, useState, useEffect } from "react";
-import {
-  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, Legend,
-  Scatter, ComposedChart, ScatterChart,
-} from "recharts";
+import React, { useMemo, useState, useEffect, lazy, Suspense } from "react";
 import { loadEmaEntries } from "../services/ema";
 import {
-  Flame, TrendingUp as TrendUpIcon, TrendingDown, Minus, Activity, MessageSquare,
-  CalendarCheck, ClipboardCheck, Database, Sparkles, ShieldAlert, Clock, BrainCircuit,
-  Loader2, Tag, Lightbulb, Pill, Moon, Mic, Download, FileText, Clock3,
+  Flame, TrendingUp as TrendUpIcon, TrendingDown, Minus, Activity,
+  CalendarCheck, ClipboardCheck, Database, Sparkles, BrainCircuit,
+  Loader2, Tag, Lightbulb, Download, FileText, Clock3,
 } from "lucide-react";
 import Markdown from "react-markdown";
 import { loadMoodHistory } from "../services/moodHistory";
 import { readEpisodeMarkers, type EpisodeMarker } from "../services/episodeMarker";
-import { t, useLanguage } from "../services/i18n";
+import { t, tn, useLanguage } from "../services/i18n";
 import { loadAssessments, latestFor, INSTRUMENTS, type InstrumentId } from "../services/assessments";
 import { assessmentInsights, generateInsights, daysOfData, medicationMoodInsight, type Insight } from "../services/patternInsights";
 import { computeStreak, computeCompassionateStreak } from "../services/streaks";
@@ -46,14 +41,13 @@ import { detectPhaseShift } from "../services/episodeSuggester";
 import { getFeatureWindow } from "../services/signalStore";
 import { getPassiveSensingEnabled } from "../services/passiveSensingPrefs";
 import CrisisCard from "./CrisisCard";
-import ClinicalTrackingSection from "./ClinicalTrackingSection";
-import ActivitySection from "./ActivitySection";
+import SignalsBand from "./SignalsBand";
+import ActivityBand from "./ActivityBand";
+import TrackingBand from "./TrackingBand";
+import EpisodesBand from "./EpisodesBand";
 import TrendChart, { PHQ9_BANDS, GAD7_BANDS } from "./TrendChart";
-import InsightCard from "./InsightCard";
-import Section, { SectionDivider } from "./Section";
 import StatCard from "./StatCard";
 import Card from "./Card";
-import PassiveInsightCard from "./PassiveInsightCard";
 import { getAllAchievements, getAchievementCount } from "../services/achievements";
 import { stripProvenance } from "../services/emotionParse";
 import {
@@ -64,6 +58,13 @@ import { getRecentSnapshots } from "../db/behaviourDb";
 import type { CheckInEntry, DiaryCardEntry, EpisodeRecord } from "../types";
 import { DAY_MS, localDateKey} from "../services/storageUtils";
 import EmptyStateShared, { EMPTY_STATES } from "./EmptyState";
+import CollapsibleSection, { CollapsibleGroup } from "./CollapsibleSection";
+import HeroCard from "./HeroCard";
+import BandNarrative from "./BandNarrative";
+import { buildBandNarratives } from "../services/bandNarratives";
+import { buildBandConfig } from "../services/bandConfig";
+import { generateDashboardNarrative } from "../services/dashboardNarrative";
+const LazyDashboardCharts = lazy(() => import("./DashboardCharts"));
 
 const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 const r1 = (n: number) => Math.round(n * 10) / 10;
@@ -89,7 +90,7 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
   const [behaviourInsights, setBehaviourInsights] = useState<Insight[]>([]);
   const [behaviourDays, setBehaviourDays] = useState(0);
   const [proactiveCards, setProactiveCards] = useState<ReturnType<typeof selectProactiveCards>>([]);
-  useLanguage();
+  const lang = useLanguage();
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [exportBusy, setExportBusy] = useState(false);
 
@@ -192,6 +193,19 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
 
   const { mood, streak, compassionateStreak, nila, thisAvg, lastAvg, freq14, assessments, trajectories, checkins, diaryEntries, episodes, medSummary, circadian, nOf1, usageSummary, circadianFeedback, rhythmReg, protocolAdherence, disengagementRisk, episodeMarkers, depLevel, depReason, ceilingStatus, ceilingMessage, connLevel, connReason, connTotal } = data;
 
+  // Single source of truth for which background signal cards are visible.
+  // Both the rendered cards and `signalCount` read these — never tally by hand.
+  const showDisengagement = !!(
+    disengagementRisk &&
+    disengagementRisk.riskLevel !== "low" &&
+    disengagementRisk.frequencyTrend !== "insufficient_data"
+  );
+  const showDependency = !!depLevel && depLevel !== "none";
+  const showCeiling = !!ceilingStatus;
+  const showConnection = connLevel === "low";
+  const showCircadian = !!circadian;
+  const showCircadianFeedback = !!circadianFeedback;
+
   // Load behaviour snapshots async and compute daily-behaviour insights
   useEffect(() => {
     let cancelled = false;
@@ -259,6 +273,18 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
     return detectMoodSignal(combined);
   }, []);
   const voiceSignal = useMemo(() => voiceMoodSignal(), []);
+  const showTyping = !!typingSignal;
+  const showVoice = !!voiceSignal;
+  const signalCount = [
+    showDisengagement,
+    showDependency,
+    showCeiling,
+    showConnection,
+    showTyping,
+    showVoice,
+    showCircadian,
+    showCircadianFeedback,
+  ].filter(Boolean).length;
   const epPatterns = useMemo(() => episodePatterns(episodes), [episodes]);
   const topTags = useMemo(() => quickNoteTags(diaryEntries), [diaryEntries]);
   const emotionTrend = useMemo(() => moodTrend(mood, timeRange), [mood, timeRange]);
@@ -271,14 +297,27 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
   const trendLength = chartTab === "emotion" ? emotionTrend.length : chartTab === "energy" ? energyScatter.length : chartTab === "sleep-mood" ? sleepMoodTrendData.length : ctxTrend.length;
 
   const moodSummary = (() => {
-    if (thisAvg == null) return "No check-ins yet this week — even a one-tap mood helps your trends grow.";
-    const base = `This week your distress averaged ${r1(thisAvg)}/10`;
-    if (lastAvg == null) return `${base}. Keep logging to compare week to week.`;
+    if (thisAvg == null) return tn("narr_mood_none", lang, {});
+    const avgStr = r1(thisAvg);
+    if (lastAvg == null) return tn("narr_mood_base_only", lang, { avg: avgStr });
     const delta = thisAvg - lastAvg;
-    if (Math.abs(delta) < 0.5) return `${base} — about the same as last week.`;
+    if (Math.abs(delta) < 0.5) return tn("narr_mood_same", lang, { avg: avgStr });
     return delta < 0
-      ? `${base} — down ${r1(Math.abs(delta))} from last week. That's a real improvement. 💙`
-      : `${base} — up ${r1(delta)} from last week. Be gentle with yourself; harder stretches happen.`;
+      ? tn("narr_mood_down", lang, { avg: avgStr, delta: r1(Math.abs(delta)) })
+      : tn("narr_mood_up", lang, { avg: avgStr, delta: r1(delta) });
+  })();
+
+  // Localized activity (streak) line — mirrors the English branches in computeCompassionateStreak
+  // so the Activity band's narrative is fully translated instead of carrying the raw English message.
+  const activityMessage = (() => {
+    const s = compassionateStreak;
+    if (s.totalActiveDays === 0 || s.daysSinceLast === -1) return tn("narr_streak_first", lang, {});
+    if (s.lapsed) return tn("narr_streak_welcome", lang, {});
+    if (s.milestone) return tn("narr_streak_milestone", lang, { milestone: s.milestone });
+    if (s.activeToday) {
+      return s.current > 1 ? tn("narr_streak_active_multi", lang, { current: s.current }) : tn("narr_streak_active_one", lang, {});
+    }
+    return s.current > 0 ? tn("narr_streak_safe", lang, {}) : tn("narr_streak_small", lang, {});
   })();
 
   // Monthly narrative — "your month in a word"
@@ -430,6 +469,38 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
     }
   };
 
+  // Narrative-first summaries (Phase 1.2) — a calm 1–2 sentence gist per band.
+  const narrativeInput = {
+    activityMessage,
+    monthlyWord: monthlyNarrative?.word ?? null,
+    behaviourCount: behaviourInsights.length,
+    proactiveCount: proactiveCards.length,
+    moodSummary,
+    signalCount,
+    episodeCount: episodes.length,
+    sessionCount: nila.last7,
+    lang,
+  };
+  const narratives = buildBandNarratives(narrativeInput);
+
+  // Phase 4: upgrade the trends narrative with a short on-device LLM sentence when the model is ready.
+  // The static gist stays on screen until/unless the model returns something safe (see dashboardNarrative.ts).
+  const [trendsNarrative, setTrendsNarrative] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    generateDashboardNarrative(narrativeInput).then((text) => {
+      if (!cancelled && text && text !== narratives.trends) setTrendsNarrative(text);
+    });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Capacity-aware band config (Phase 3): low-capacity states keep every band collapsed and engage
+  // a soft visual register; a calm user gets the lightest band gently opened.
+  // Derived once from the loaded dashboard data (data is stable for the screen's lifetime), so a
+  // user's capacity state is read at mount and stays consistent with the band-open defaults it seeds.
+  const bandConfig = useMemo(() => buildBandConfig(getUserState()), [data]);
+
   return (
     <div className="space-y-5 max-w-md mx-auto" id="dashboard-screen">
       <header className="space-y-1">
@@ -465,6 +536,11 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
         </h1>
         <p className="text-xs text-slate-400 leading-relaxed">{t("dash_privacy")}</p>
       </header>
+
+      {/* State-aware "what now" hero — ONE contextual action (Smashing Mag: Nonori/Teeni
+          single-action pattern). Picks a CTA from the user's current derived state so a
+          distressed user is never faced with a wall of choices. */}
+      <HeroCard onOpenView={onOpenView} />
 
 {/* This-week summary */}
        <div className="bg-blue-500/5 border border-blue-500/20 rounded-2xl p-4">
@@ -508,281 +584,75 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
            Byrne, Tibbett & Pericot-Valverde (2021), JMIR Mental Health; Kahneman & Tversky (1979),
            Econometrica. The raw count is still shown, just demoted to small muted caption text
            below rather than a big Flame+number stat tile. */}
-        <ActivitySection
-          streak={streak}
-          compassionateStreak={compassionateStreak}
-          freq14={freq14}
-          nilaChats7d={nila.last7}
-          usageSummary={usageSummary}
-          protocolAdherence={protocolAdherence}
-        />
+         <CollapsibleGroup className={bandConfig.softRegister ? "soft-register" : ""}>
+          <ActivityBand
+            openActivity={bandConfig.openActivity}
+            summary={activityMessage}
+            narrative={narratives.activity}
+            streak={streak}
+            compassionateStreak={compassionateStreak}
+            freq14={freq14}
+            nilaChats7d={nila.last7}
+            usageSummary={usageSummary}
+            protocolAdherence={protocolAdherence}
+            streakMessage={activityMessage}
+          />
 
-        <ClinicalTrackingSection
-          checkins={checkins}
-          mood={mood}
-          assessments={assessments}
-          episodeMarkers={episodeMarkers}
-          onOpenView={onOpenView}
-        />
+         <TrackingBand
+           openTracking={bandConfig.openTracking}
+           summary={monthlyNarrative ? tn("narr_tracking_month", lang, { word: monthlyNarrative.word }) : t("tracking_summary")}
+           narrative={narratives.tracking}
+           checkins={checkins}
+           mood={mood}
+           assessments={assessments}
+           episodeMarkers={episodeMarkers}
+           onOpenView={onOpenView}
+           behaviourInsights={behaviourInsights}
+           proactiveCards={proactiveCards}
+           onProactiveAction={(card) => {
+             const action = card.action;
+             if (action) {
+               markCardClicked(card);
+               onOpenView?.(action.route);
+             }
+           }}
+           onProactiveDismiss={(cardId) => {
+             const card = proactiveCards.find((c) => c.id === cardId);
+             if (card) markCardDismissed(card);
+             setProactiveCards((cs) => cs.filter((c) => c.id !== cardId)); // hide immediately, not on remount
+           }}
+         />
 
-{(behaviourInsights.length > 0 || proactiveCards.length > 0) && (
-  <SectionDivider label="What Nila noticed" />
-)}
+      <SignalsBand
+        t={t}
+        openSignals={bandConfig.openSignals}
+        summary={t("signals_summary")}
+        showDisengagement={showDisengagement}
+        showDependency={showDependency}
+        showCeiling={showCeiling}
+        showConnection={showConnection}
+        showTyping={showTyping}
+        showVoice={showVoice}
+        showCircadian={showCircadian}
+        showCircadianFeedback={showCircadianFeedback}
+        disengagementRisk={disengagementRisk}
+        depLevel={depLevel}
+        depReason={depReason}
+        ceilingStatus={ceilingStatus}
+        ceilingMessage={ceilingMessage}
+        connLevel={connLevel}
+        connReason={connReason}
+        medSummary={medSummary}
+        typingSignal={typingSignal}
+        voiceSignal={voiceSignal}
+        circadian={circadian}
+        circadianFeedback={circadianFeedback}
+        rhythmReg={rhythmReg}
+        nOf1={nOf1}
+      />
 
-{/* Behaviour Insights — patterns Nila noticed */}
-        {behaviourInsights.length > 0 && (
-          <div className="space-y-2">
-            <p className="text-xs uppercase font-mono tracking-widest text-slate-500">Nila noticed</p>
-            {behaviourInsights.slice(0, 3).map((insight, i) => (
-              <InsightCard
-                key={i}
-                insight={{
-                  title: insight.title,
-                  body: insight.finding,
-                  trend: insight.direction === "protective" ? "improving" : insight.direction === "risk" ? "declining" : "stable",
-                  citation: insight.basis,
-                }}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* Proactive surface cards — compound signal patterns */}
-        {proactiveCards.length > 0 && (
-          <div className="space-y-2">
-            <p className="text-xs uppercase font-mono tracking-widest text-slate-500">Patterns noticed</p>
-            {proactiveCards.map((card) => {
-              const action = card.action;
-              return (
-                <PassiveInsightCard
-                  key={card.id}
-                  id={card.id}
-                  type={card.type}
-                  title={card.title}
-                  body={card.body}
-                  icon={card.icon}
-                  color={card.color}
-                  actionLabel={action?.label}
-                  onAction={action ? () => { markCardClicked(card); onOpenView?.(action.route); } : undefined}
-                  onDismiss={() => {
-                    markCardDismissed(card);
-                    setProactiveCards((cs) => cs.filter((c) => c.id !== card.id)); // hide immediately, not on remount
-                  }}
-                />
-              );
-            })}
-          </div>
-        )}
-
-      {/* Engagement disengagement risk — early warning when usage declines */}
-      {disengagementRisk && disengagementRisk.riskLevel !== "low" && disengagementRisk.frequencyTrend !== "insufficient_data" && (
-        <Card variant="raised" gap="none" className="flex items-start gap-3">
-          <div className={`p-2 rounded-xl ${disengagementRisk.riskLevel === "high" ? "bg-rose-500/10 text-rose-400" : disengagementRisk.riskLevel === "elevated" ? "bg-amber-500/10 text-amber-400" : "bg-blue-500/10 text-blue-400"}`}>
-            <Activity className="w-5 h-5" />
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-slate-100">Engagement trend</p>
-              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${disengagementRisk.riskLevel === "high" ? "bg-rose-500/20 text-rose-300" : disengagementRisk.riskLevel === "elevated" ? "bg-amber-500/20 text-amber-300" : "bg-blue-500/20 text-blue-300"}`}>
-                {disengagementRisk.score}/100
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-400 leading-relaxed mt-1">
-              {disengagementRisk.daysSinceLastCheckin >= 3
-                ? `It's been ${disengagementRisk.daysSinceLastCheckin} days since your last check-in. `
-                : ""}
-              {disengagementRisk.frequencyTrend === "declining"
-                ? "Your check-in frequency has been tapering off — no pressure, just noticing."
-                : "Your recent engagement has been lower — whenever you're ready."}
-            </p>
-            <p className="text-xs text-slate-500 mt-1">A gentle observation, not a measure of you.</p>
-          </div>
-        </Card>
-      )}
-
-      {/* Dependency signal — when usage suggests over-reliance */}
-      {depLevel && depLevel !== "none" && (
-        <Card variant="raised" gap="none" className="flex items-start gap-3">
-          <div className={`p-2 rounded-xl ${depLevel === "severe" ? "bg-rose-500/10 text-rose-400" : depLevel === "moderate" ? "bg-amber-500/10 text-amber-400" : "bg-blue-500/10 text-blue-400"}`}>
-            <Activity className="w-5 h-5" />
-          </div>
-          <div className="flex-1">
-            <p className="text-sm font-semibold text-slate-100">Usage balance</p>
-            <p className="text-[11px] text-slate-400 leading-relaxed mt-1">{depReason}</p>
-            <p className="text-xs text-slate-500 mt-1">Nila is here when you need her — real connections matter too.</p>
-          </div>
-        </Card>
-      )}
-
-      {/* Usage ceiling — daily turn limit reached */}
-      {ceilingStatus && (
-        <Card variant="raised" gap="none" className="flex items-start gap-3">
-          <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400">
-            <Clock className="w-5 h-5" />
-          </div>
-          <div className="flex-1">
-            <p className="text-sm font-semibold text-slate-100">Take a breather</p>
-            <p className="text-[11px] text-slate-400 leading-relaxed mt-1">{ceilingMessage}</p>
-            <p className="text-xs text-slate-500 mt-1">This resets tomorrow. No pressure.</p>
-          </div>
-        </Card>
-      )}
-
-      {/* Human connection — social interaction metric */}
-      {connLevel && connLevel === "low" && (
-        <Card variant="raised" gap="none" className="flex items-start gap-3">
-          <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400">
-            <MessageSquare className="w-5 h-5" />
-          </div>
-          <div className="flex-1">
-            <p className="text-sm font-semibold text-slate-100">Social connection</p>
-            <p className="text-[11px] text-slate-400 leading-relaxed mt-1">{connReason}</p>
-            <p className="text-xs text-slate-500 mt-1">Even a quick message counts.</p>
-          </div>
-        </Card>
-      )}
-
-      {/* Medication adherence summary */}
-      {medSummary.activeMeds > 0 && (
-        <Card variant="raised" gap="none" className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-blue-500/10 text-blue-400">
-              <Pill className="w-5 h-5" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-slate-100">Medication adherence</p>
-              <p className="text-[11px] text-slate-400">{medSummary.activeMeds} active medication{medSummary.activeMeds === 1 ? "" : "s"}</p>
-            </div>
-          </div>
-          <div className="text-right">
-            <p className="text-xl font-bold text-slate-100">{medSummary.avgAdherence}%</p>
-            <p className="text-xs text-slate-500">last 7 days</p>
-          </div>
-        </Card>
-      )}
-
-      {/* Typing pattern signal */}
-      {typingSignal && (
-        <Card variant="raised" gap="none" className="flex items-start gap-3">
-          <div className="p-2 rounded-xl bg-violet-500/10 text-violet-400">
-            <BrainCircuit className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-slate-100">Typing pattern note</p>
-            <p className="text-[11px] text-slate-400 leading-relaxed">
-              {typingSignal === "mania" && "Your recent typing has been unusually fast and bursty — sometimes a sign of elevated energy. A quick check-in might help."}
-              {typingSignal === "depression" && "Your recent typing has been slower with more pauses — a gentle check-in could be worth it."}
-              {typingSignal === "anxiety" && "Your recent typing shows a lot of starts and stops — maybe take a slow breath when you're ready."}
-            </p>
-            <p className="text-xs text-slate-500 mt-1">Private: only timing is stored, never what you typed.</p>
-          </div>
-        </Card>
-      )}
-
-      {/* Voice pattern signal */}
-      {voiceSignal && (
-        <Card variant="raised" gap="none" className="flex items-start gap-3">
-          <div className="p-2 rounded-xl bg-rose-500/10 text-rose-400">
-            <Mic className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-slate-100">Voice pattern note</p>
-            <p className="text-[11px] text-slate-400 leading-relaxed">
-              {voiceSignal === "mania" && "Your recent speech patterns have been faster than usual — sometimes a sign of elevated energy. A quick check-in might help."}
-              {voiceSignal === "depression" && "Your recent speech has been slower with shorter responses — a gentle check-in could be worth it."}
-              {voiceSignal === "anxiety" && "Your recent speech pattern shows some variability — maybe take a slow breath when you're ready."}
-            </p>
-            <p className="text-xs text-slate-500 mt-1">Opt-in: only speaking rate is stored locally, never what you said.</p>
-          </div>
-        </Card>
-      )}
-
-      {/* Circadian rhythm regularity */}
-      {circadian && (
-        <Card variant="raised" gap="none" className="flex items-start gap-3">
-          <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-400">
-            <Moon className="w-5 h-5" />
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-slate-100">Sleep regularity</p>
-              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${circadian.irregular ? "bg-amber-500/20 text-amber-300" : "bg-emerald-500/20 text-emerald-300"}`}>
-                {circadian.regularityScore}/100
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-400 leading-relaxed mt-1">{circadian.note}</p>
-            <p className="text-xs text-slate-500 mt-1">From {circadian.nights} nights of self-reported sleep. Avg {circadian.avgSleep}h.</p>
-          </div>
-        </Card>
-      )}
-
-      {/* Fused circadian + social rhythm feedback loop */}
-      {circadianFeedback && (
-        <Card variant="raised" gap="none" className="flex items-start gap-3">
-          <div className={`p-2 rounded-xl ${circadianFeedback.needsAttention ? "bg-amber-500/10 text-amber-400" : "bg-emerald-500/10 text-emerald-400"}`}>
-            <Moon className="w-5 h-5" />
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-slate-100">Rhythm stability</p>
-              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${circadianFeedback.needsAttention ? "bg-amber-500/20 text-amber-300" : "bg-emerald-500/20 text-emerald-300"}`}>
-                {circadianFeedback.combinedScore}/100
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-400 leading-relaxed mt-1">{circadianFeedback.guidance}</p>
-          </div>
-        </Card>
-      )}
-
-      {/* Social rhythm per-anchor breakdown (Phase 10) */}
-      {rhythmReg && rhythmReg.daysLogged >= 3 && rhythmReg.anchors.some((a) => a.meanTime) && (
-        <Card variant="raised">
-          <p className="text-sm font-semibold text-slate-100 flex items-center gap-2">
-            <Clock3 className="w-4 h-4 text-blue-400" /> Anchor timing
-          </p>
-          <div className="space-y-1">
-            {rhythmReg.anchors.filter((a) => a.meanTime).map((a) => (
-              <div key={a.key} className="flex items-center justify-between text-[11px]">
-                <span className="text-slate-400">{a.label}</span>
-                <span className="text-slate-300 tabular-nums">
-                  ~{a.meanTime}
-                  {a.variabilityMin !== null && a.daysLogged >= 5 && (
-                    <span className="text-slate-500"> · ±{a.variabilityMin}m</span>
-                  )}
-                </span>
-              </div>
-            ))}
-          </div>
-          <p className="text-xs text-slate-500">
-            Over {rhythmReg.daysLogged} days · <span className="italic">Smaller ± is steadier</span>
-          </p>
-        </Card>
-      )}
-
-      {/* N-of-1: what helps THIS person */}
-      {nOf1.length > 0 && (
-        <Card variant="raised">
-          <p className="text-sm font-semibold text-slate-100 flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-amber-400" /> What's been helping you
-          </p>
-          {nOf1.slice(0, 3).map((r) => {
-            const title = PROTOCOLS.find((p) => p.id === r.protocolId)?.title ?? r.protocolId;
-            return (
-              <div key={r.protocolId} className="flex items-center justify-between text-[11px]">
-                <span className="text-slate-300">{title}</span>
-                <span className={r.avgDelta < 0 ? "text-emerald-300" : "text-slate-400"}>
-                  {r.avgDelta < 0 ? "↘ steadier after" : "↗ more distress after"} · {r.completions}×
-                </span>
-              </div>
-            );
-          })}
-          <p className="text-xs text-slate-500">Your own pattern, from completed programs. Not a diagnosis.</p>
-        </Card>
-      )}
-
-      {trendLength >= 2 && (
-        <SectionDivider label="Trends & measures" />
-      )}
+      <CollapsibleSection title={t("trends_measures")} summary={t("trends_summary")} defaultOpen={bandConfig.openTrends}>
+      <BandNarrative text={trendsNarrative ?? narratives.trends} />
 
       {/* ONE trend chart (7D/30D + Emotion/Context), fed by loadMoodHistory().
           Deliberately still Recharts: this is the app's only interactive multi-series chart
@@ -790,122 +660,21 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
           primitive replaced Recharts only where it was safe — the single-series WHO-5 sparkline in
           WellbeingTrendCard. MiniBar was deleted as orphaned (no consumer). See AGENTS.md "wire what
           you build". */}
-      {trendLength >= 2 ? (
-        <div className="glass rounded-2xl p-4 space-y-4">
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500 font-mono flex items-center gap-1.5"><TrendUpIcon className="w-3.5 h-3.5" /> Trend</h2>
-              <div className="flex bg-page border border-slate-800 rounded-lg overflow-hidden p-0.5">
-                {(["7d", "30d"] as const).map((r) => (
-                  <button key={r} onClick={() => setTimeRange(r)} aria-label={`Show ${r === "7d" ? "7 day" : "30 day"} trend`} aria-pressed={timeRange === r}
-                    className={`text-xs px-3 min-h-[44px] inline-flex items-center justify-center rounded-md font-medium transition-colors ${timeRange === r ? "bg-slate-800 text-slate-200" : "text-slate-500 hover:text-slate-300"}`}>
-                    {r.toUpperCase()}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="flex bg-page border border-slate-800 rounded-lg overflow-hidden p-0.5 self-start">
-              <button onClick={() => setChartTab("emotion")} aria-label="Show emotion trend" aria-pressed={chartTab === "emotion"}
-                className={`text-xs px-3 min-h-[44px] inline-flex items-center justify-center rounded-md font-medium transition-colors ${chartTab === "emotion" ? "bg-purple-500/20 text-purple-400" : "text-slate-500 hover:text-slate-300"}`}>Emotion</button>
-              <button onClick={() => setChartTab("context")} aria-label="Show sleep and social context" aria-pressed={chartTab === "context"}
-                className={`text-xs px-3 min-h-[44px] inline-flex items-center justify-center rounded-md font-medium transition-colors ${chartTab === "context" ? "bg-blue-500/20 text-blue-400" : "text-slate-500 hover:text-slate-300"}`}>Context</button>
-              <button onClick={() => setChartTab("energy")} aria-label="Show mood vs energy scatter" aria-pressed={chartTab === "energy"}
-                className={`text-xs px-3 min-h-[44px] inline-flex items-center justify-center rounded-md font-medium transition-colors ${chartTab === "energy" ? "bg-amber-500/20 text-amber-400" : "text-slate-500 hover:text-slate-300"}`}>Energy</button>
-              <button onClick={() => setChartTab("sleep-mood")} aria-label="Show sleep vs mood correlation" aria-pressed={chartTab === "sleep-mood"}
-                className={`text-xs px-3 min-h-[44px] inline-flex items-center justify-center rounded-md font-medium transition-colors ${chartTab === "sleep-mood" ? "bg-emerald-500/20 text-emerald-400" : "text-slate-500 hover:text-slate-300"}`}>Sleep-Mood</button>
-            </div>
-          </div>
-          <div className="w-full h-48" role="img" aria-label={chartTab === "emotion" ? "Line chart showing emotional intensity trend over time. Lower values indicate calmer states." : chartTab === "energy" ? "Scatter plot of mood intensity vs energy level. Each dot is one check-in." : chartTab === "sleep-mood" ? "Dual-axis line chart showing sleep hours and mood intensity over time." : "Line chart showing sleep hours and social connection over time."}>
-            <ResponsiveContainer width="100%" height="100%">
-              {chartTab === "emotion" ? (
-                <ComposedChart data={emotionTrendWithEma}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#2E2922" vertical={false} />
-                  <XAxis dataKey="date" stroke="#948A7E" fontSize={10} tickLine={false} axisLine={false} />
-                  <YAxis stroke="#948A7E" fontSize={10} domain={[1, 10]} allowDecimals={false} tickLine={false} axisLine={false} />
-                  <Tooltip contentStyle={{ backgroundColor: "#171311", borderColor: "#2E2922", borderRadius: "8px" }} labelStyle={{ color: "#ECE5DA" }} itemStyle={{ color: "#9479B0" }} />
-                  <Line type="monotone" dataKey="intensity" name="Intensity" stroke="#9479B0" strokeWidth={3} activeDot={{ r: 6, fill: "#D8B4FE", stroke: "#9479B0" }} dot={{ r: 4, fill: "#211C17" }} />
-                  {/* EMA micro-check-in dots (re-audit #4): Scatter belongs in a ComposedChart — inside a
-                      LineChart recharts silently drops it. Reads emaIntensity off the SAME array as the
-                      Line (mergeEmaIntoTrend) rather than a separately-ordered array — otherwise Recharts
-                      merges the two arrays' orderings into a jumbled, non-chronological date axis (device
-                      screenshot 2026-07-16: loadEmaEntries() is newest-first, emotionTrend is oldest-first). */}
-                  <Scatter dataKey="emaIntensity" name="Quick check-in" fill="#D8A657" />
-                </ComposedChart>
-              ) : chartTab === "energy" ? (
-                <ScatterChart>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#2E2922" vertical={false} />
-                  <XAxis dataKey="energy" stroke="#948A7E" fontSize={10} tickLine={false} axisLine={false} domain={[0.5, 4.5]} ticks={[1, 2, 3, 4]} tickFormatter={(v: number) => ["", "Very low", "Low", "Moderate", "High"][v] || ""} />
-                  <YAxis stroke="#948A7E" fontSize={10} domain={[1, 10]} allowDecimals={false} tickLine={false} axisLine={false} label={{ value: "Distress", angle: -90, position: "insideLeft", style: { fill: "#948A7E", fontSize: 10 } }} />
-                  <Tooltip contentStyle={{ backgroundColor: "#171311", borderColor: "#2E2922", borderRadius: "8px" }} labelFormatter={() => ""} wrapperStyle={{ fontSize: "12px" }} />
-                  <Scatter data={energyScatter} dataKey="intensity" name="Distress" fill="#D8A657" stroke="#2E2922" strokeWidth={0.5} />
-                </ScatterChart>
-              ) : chartTab === "sleep-mood" ? (
-                <LineChart data={sleepMoodTrendData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#2E2922" vertical={false} />
-                  <XAxis dataKey="date" stroke="#948A7E" fontSize={10} tickLine={false} axisLine={false} />
-                  <YAxis yAxisId="left" stroke="#948A7E" fontSize={10} domain={[0, 14]} allowDecimals={false} tickLine={false} axisLine={false} orientation="left" />
-                  <YAxis yAxisId="right" stroke="#948A7E" fontSize={10} domain={[1, 10]} allowDecimals={false} tickLine={false} axisLine={false} orientation="right" />
-                  <Tooltip contentStyle={{ backgroundColor: "#171311", borderColor: "#2E2922", borderRadius: "8px", fontSize: "12px" }} labelStyle={{ color: "#ECE5DA" }} />
-                  <Legend wrapperStyle={{ fontSize: "10px", color: "#948A7E" }} verticalAlign="top" height={36} />
-                  <Line yAxisId="left" type="monotone" dataKey="sleepHours" name="Sleep (hrs)" stroke="#46735C" strokeWidth={3} dot={{ r: 3, fill: "#211C17" }} />
-                  <Line yAxisId="right" type="monotone" dataKey="intensity" name="Distress" stroke="#9479B0" strokeWidth={3} dot={{ r: 3, fill: "#211C17" }} />
-                </LineChart>
-              ) : (
-                <LineChart data={ctxTrend}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#2E2922" vertical={false} />
-                  <XAxis dataKey="date" stroke="#948A7E" fontSize={10} tickLine={false} axisLine={false} />
-                  <YAxis yAxisId="left" stroke="#948A7E" fontSize={10} domain={[0, 14]} allowDecimals={false} tickLine={false} axisLine={false} orientation="left" />
-                  <YAxis yAxisId="right" stroke="#948A7E" fontSize={10} domain={[1, 10]} allowDecimals={false} tickLine={false} axisLine={false} orientation="right" />
-                  <Tooltip contentStyle={{ backgroundColor: "#171311", borderColor: "#2E2922", borderRadius: "8px", fontSize: "12px" }} labelStyle={{ color: "#ECE5DA" }} />
-                  <Legend wrapperStyle={{ fontSize: "10px", color: "#948A7E" }} verticalAlign="top" height={36} />
-                  <Line yAxisId="left" type="monotone" dataKey="sleepHours" name="Sleep (hrs)" stroke="#46735C" strokeWidth={3} dot={{ r: 3, fill: "#211C17" }} />
-                  <Line yAxisId="right" type="monotone" dataKey="social" name="Social Connect" stroke="#10B981" strokeWidth={3} dot={{ r: 3, fill: "#211C17" }} />
-                </LineChart>
-              )}
-            </ResponsiveContainer>
-          </div>
-          <p className="text-xs text-slate-600">{chartTab === "emotion" ? "Lower is calmer. Per-day average of your check-ins." : chartTab === "energy" ? "Each dot is one check-in. Lower distress + higher energy = Vibrant; higher distress + lower energy = Sluggish." : chartTab === "sleep-mood" ? "Sleep hours vs distress. Lower sleep often correlates with higher distress." : "Sleep hours and felt-connection, per day."}</p>
-        </div>
-      ) : (
-        <EmptyCard illustration="📊" text="Your trend will appear here after a couple of check-ins." />
-      )}
-
-      {/* Emotion distribution (suffix-stripped counts) */}
-      {emoBars.length > 0 && (
-        <div className="glass rounded-2xl p-4 space-y-3">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500 font-mono">Emotion log frequency</h2>
-          <div className="w-full h-44" role="img" aria-label="Bar chart showing frequency of each emotion logged. Taller bars indicate more frequent emotions.">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={emoBars}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#2E2922" vertical={false} />
-                <XAxis dataKey="name" stroke="#948A7E" fontSize={9} tickLine={false} axisLine={false} />
-                <YAxis stroke="#948A7E" fontSize={9} allowDecimals={false} tickLine={false} axisLine={false} />
-                <Tooltip contentStyle={{ backgroundColor: "#171311", borderColor: "#2E2922", borderRadius: "8px" }} itemStyle={{ color: "#5AA483" }} />
-                <Bar dataKey="value" fill="#5AA483" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      )}
-
-      {/* Weekly rhythm: per-day-of-week mood averages */}
-      {weeklyBars.length > 0 && (
-        <div className="glass rounded-2xl p-4 space-y-3">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500 font-mono">Weekly rhythm</h2>
-          <div className="w-full h-44" role="img" aria-label="Bar chart showing average mood intensity by day of week.">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={weeklyBars}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#2E2922" vertical={false} />
-                <XAxis dataKey="day" stroke="#948A7E" fontSize={9} tickLine={false} axisLine={false} />
-                <YAxis stroke="#948A7E" fontSize={9} domain={[1, 10]} allowDecimals={false} tickLine={false} axisLine={false} />
-                <Tooltip contentStyle={{ backgroundColor: "#171311", borderColor: "#2E2922", borderRadius: "8px" }} labelStyle={{ color: "#ECE5DA" }} />
-                <Bar dataKey="avg" name="Avg distress" fill="#D8A657" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-          <p className="text-xs text-slate-600">Average distress by day of week. Based on {weeklyBars.reduce((s, b) => s + b.count, 0)} check-ins.</p>
-        </div>
-      )}
+      <Suspense fallback={<div className="glass rounded-2xl p-8 text-center text-slate-500 text-sm">Loading charts…</div>}>
+        <LazyDashboardCharts
+          timeRange={timeRange}
+          setTimeRange={setTimeRange}
+          chartTab={chartTab}
+          setChartTab={setChartTab}
+          emotionTrendWithEma={emotionTrendWithEma}
+          energyScatter={energyScatter}
+          sleepMoodTrendData={sleepMoodTrendData}
+          ctxTrend={ctxTrend}
+          emoBars={emoBars}
+          weeklyBars={weeklyBars}
+          trendLength={trendLength}
+        />
+      </Suspense>
 
       {/* Validated assessments (unchanged Dashboard section) */}
       <div className="space-y-2">
@@ -984,75 +753,44 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
           </div>
         </div>
       )}
+      </CollapsibleSection>
 
-      {(epPatterns || nila.recent.length > 0) && (
-        <SectionDivider label="Episodes & sessions" />
-      )}
-
-      {/* Episode analytics (real stats only — NO fabricated correlations) */}
-      {epPatterns && (
-        <div className="bg-card border-y border-r border-slate-800 border-l-4 border-l-amber-500 p-5 rounded-r-2xl space-y-4">
-          <h2 className="text-xs font-semibold text-slate-100 flex items-center gap-1.5 uppercase tracking-wider font-mono">
-            <ShieldAlert className="w-4 h-4 text-amber-500" /> Episode insights
-          </h2>
-          <div className="grid grid-cols-2 gap-3" id="episode-stat-cards">
-            <div className="bg-page p-3 rounded-xl border border-slate-850 text-center space-y-1">
-              <span className="text-xs uppercase font-mono tracking-widest text-slate-500">Peak spikes</span>
-              <p className="text-2xl font-bold text-amber-500 capitalize flex items-center justify-center gap-1 font-mono">
-                <Clock className="w-4 h-4 text-slate-500" /> {epPatterns.mostCommonTime || "Night"}
-              </p>
-            </div>
-            <div className="bg-page p-3 rounded-xl border border-slate-850 text-center space-y-1">
-              <span className="text-xs uppercase font-mono tracking-widest text-slate-500">Avg duration</span>
-              <p className="text-2xl font-bold text-purple-400 font-mono">{epPatterns.avgDuration} min</p>
-            </div>
-            <div className="bg-page col-span-2 p-3.5 rounded-xl border border-slate-850 text-center space-y-1">
-              <span className="text-xs uppercase font-mono tracking-widest text-slate-500">Avg intensity drop per episode</span>
-              <p className="text-base text-emerald-400 font-extrabold font-sans">{epPatterns.avgDrop} points</p>
-            </div>
+       <EpisodesBand
+         openEpisodes={bandConfig.openEpisodes}
+         narrative={narratives.episodes}
+         epPatterns={epPatterns}
+         nilaRecent={nila.recent}
+         lang={lang}
+         t={t}
+       >
+        {/* Nila's Deep Evaluation — runs fully on-device via the same local AI that powers your conversations.
+            User-initiated + disclosed. Kept in the dashboard because it owns the crisis-gated state. */}
+        <div className="bg-card border border-purple-500/20 p-5 rounded-2xl space-y-4 shadow-[0_0_15px_rgba(168,85,247,0.05)]">
+          <div>
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-purple-400 font-mono flex items-center gap-1.5 mb-1">
+              <BrainCircuit className="w-4 h-4" /> Nila's Deep Evaluation ✨
+            </h2>
+            <p className="text-[11px] text-slate-400 leading-relaxed">
+              This asks Nila to analyze your recent check-ins, diary notes, and episode records — all on your device, using the same local AI that powers your conversations. Nothing leaves your phone.
+            </p>
           </div>
-        </div>
-      )}
-
-      {/* Recent Nila (unchanged Dashboard section) */}
-      {nila.recent.length > 0 && (
-        <div className="space-y-2">
-          <div className="text-xs uppercase font-mono tracking-widest text-slate-400 flex items-center gap-1.5"><MessageSquare className="w-3.5 h-3.5" /> Recent Nila sessions</div>
-          {nila.recent.slice(0, 5).map((t) => (
-            <div key={t.id} className="glass rounded-xl p-3 flex items-start justify-between gap-2">
-              <span className="text-[11px] text-slate-300 italic min-w-0">"{t.snippet}{t.snippet.length >= 80 ? "…" : ""}"</span>
-              <span className="text-xs text-slate-600 shrink-0">{t.surface === "episode" ? "episode" : "coach"} · {t.date.slice(5)}</span>
+          <button onClick={runDeepAssessment} disabled={isAssessing}
+            className="w-full bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            {isAssessing ? (<><Loader2 className="w-4 h-4 animate-spin" /> Nila is evaluating patterns...</>) : ("Ask Nila for Deep Evaluation ✨")}
+          </button>
+          {assessmentCrisis && (
+            <CrisisCard id="dashboard-crisis" className="mt-4" heading="Something in your recent notes matters more than this evaluation" />
+          )}
+          {assessmentResult && !assessmentCrisis && (
+            <div className="mt-4 p-4 bg-page border border-slate-800 rounded-xl">
+              <div className="text-xs text-slate-300 leading-relaxed space-y-2 markdown-body font-sans">
+                <Markdown>{assessmentResult}</Markdown>
+              </div>
             </div>
-          ))}
+          )}
         </div>
-      )}
-
-      {/* Nila's Deep Evaluation — runs fully on-device via the same local AI that powers your conversations.
-          User-initiated + disclosed. */}
-      <div className="bg-card border border-purple-500/20 p-5 rounded-2xl space-y-4 shadow-[0_0_15px_rgba(168,85,247,0.05)]">
-        <div>
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-purple-400 font-mono flex items-center gap-1.5 mb-1">
-            <BrainCircuit className="w-4 h-4" /> Nila's Deep Evaluation ✨
-          </h2>
-          <p className="text-[11px] text-slate-400 leading-relaxed">
-            This asks Nila to analyze your recent check-ins, diary notes, and episode records — all on your device, using the same local AI that powers your conversations. Nothing leaves your phone.
-          </p>
-        </div>
-        <button onClick={runDeepAssessment} disabled={isAssessing}
-          className="w-full bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-          {isAssessing ? (<><Loader2 className="w-4 h-4 animate-spin" /> Nila is evaluating patterns...</>) : ("Ask Nila for Deep Evaluation ✨")}
-        </button>
-        {assessmentCrisis && (
-          <CrisisCard id="dashboard-crisis" className="mt-4" heading="Something in your recent notes matters more than this evaluation" />
-        )}
-        {assessmentResult && !assessmentCrisis && (
-          <div className="mt-4 p-4 bg-page border border-slate-800 rounded-xl">
-            <div className="text-xs text-slate-300 leading-relaxed space-y-2 markdown-body font-sans">
-              <Markdown>{assessmentResult}</Markdown>
-            </div>
-          </div>
-        )}
-      </div>
+      </EpisodesBand>
+      </CollapsibleGroup>
 
       {onManageData && (
         <button onClick={onManageData} id="dashboard-manage-data" className="w-full glass hover:bg-raised text-slate-300 text-xs font-semibold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5">

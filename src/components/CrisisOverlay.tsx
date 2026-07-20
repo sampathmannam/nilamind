@@ -68,7 +68,7 @@ export default function CrisisOverlay({
   return (
     <div
       ref={trapRef}
-      className="fixed inset-0 z-[70] bg-page text-slate-300 overflow-y-auto"
+      className="fixed inset-0 z-[70] bg-page text-ink-2 overflow-y-auto"
       id="crisis-overlay-container"
       role="dialog"
       aria-modal="true"
@@ -81,10 +81,10 @@ export default function CrisisOverlay({
         <div className="flex justify-center mb-2">
           <ShieldAlert className="text-rose-500 w-12 h-12 stroke-[2.5]" />
         </div>
-        <h1 id="crisis-overlay-heading" ref={headingRef} tabIndex={-1} className="text-xl font-semibold tracking-tight text-slate-100 mb-1 outline-none">
+        <h1 id="crisis-overlay-heading" ref={headingRef} tabIndex={-1} className="text-xl font-semibold tracking-tight text-ink mb-1 outline-none">
           You're not alone right now. Let's find something that helps.
         </h1>
-        <p className="text-slate-400 text-sm max-w-md mx-auto leading-relaxed">
+        <p className="text-ink-muted text-sm max-w-md mx-auto leading-relaxed">
           Reaching out is a strong thing to do, whatever brought you here. Ground yourself first, or reach a trained listener.
         </p>
       </div>
@@ -92,7 +92,7 @@ export default function CrisisOverlay({
       <div className="max-w-md mx-auto px-4 py-6 pb-24 space-y-6">
         {/* Quick solutions — grounding and breathing first */}
         <div className="space-y-3">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-ink-faint">
             Try these first
           </h2>
 
@@ -106,8 +106,8 @@ export default function CrisisOverlay({
           >
             <Heart className="w-6 h-6" />
             <div>
-              <div className="font-semibold text-slate-100">5-4-3-2-1 Grounding</div>
-              <div className="text-xs text-slate-400">Notice what's around you to settle into the present moment</div>
+              <div className="font-semibold text-ink">5-4-3-2-1 Grounding</div>
+              <div className="text-xs text-ink-muted">Notice what's around you to settle into the present moment</div>
             </div>
           </button>
 
@@ -121,8 +121,8 @@ export default function CrisisOverlay({
           >
             <Wind className="w-6 h-6" />
             <div>
-              <div className="font-semibold text-slate-100">Box Breathing (4-4-4-4)</div>
-              <div className="text-xs text-slate-400">Paced breathing to calm your nervous system</div>
+              <div className="font-semibold text-ink">Box Breathing (4-4-4-4)</div>
+              <div className="text-xs text-ink-muted">Paced breathing to calm your nervous system</div>
             </div>
           </button>
         </div>
@@ -132,78 +132,78 @@ export default function CrisisOverlay({
 
         {/* Crisis lines — secondary, always available */}
         <div className="space-y-3">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-ink-faint">
             Or speak with someone now
           </h2>
 
           <CrisisLines tone="rose" />
-          <p className="text-xs text-slate-500 text-center">Free, confidential helplines for your region — change in Settings.</p>
+          <p className="text-xs text-ink-faint text-center">Free, confidential helplines for your region — change in Settings.</p>
         </div>
 
         {/* Your coping plan — decluttered: only sections with real content render */}
         {anyContent ? (
           <div className="space-y-4 pt-2">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-ink-faint">
               Your coping plan
             </h2>
 
             {hasContent(safetyPlan.warningSigns) && (
-              <div className="bg-card border border-slate-800 p-4 rounded-xl">
-                <h3 className="text-slate-100 font-semibold text-sm mb-1">
+              <div className="bg-card border border-line p-4 rounded-xl">
+                <h3 className="text-ink font-semibold text-sm mb-1">
                   1. Warning signs I notice:
                 </h3>
-                <p className="text-slate-300 text-sm whitespace-pre-wrap">{safetyPlan.warningSigns}</p>
+                <p className="text-ink-2 text-sm whitespace-pre-wrap">{safetyPlan.warningSigns}</p>
               </div>
             )}
 
             {hasContent(safetyPlan.internalCoping) && (
-              <div className="bg-card border border-slate-800 p-4 rounded-xl">
-                <h3 className="text-slate-100 font-semibold text-sm mb-1">
+              <div className="bg-card border border-line p-4 rounded-xl">
+                <h3 className="text-ink font-semibold text-sm mb-1">
                   2. Things I can do on my own to cope:
                 </h3>
-                <p className="text-slate-300 text-sm whitespace-pre-wrap">{safetyPlan.internalCoping}</p>
+                <p className="text-ink-2 text-sm whitespace-pre-wrap">{safetyPlan.internalCoping}</p>
               </div>
             )}
 
             {hasContent(safetyPlan.socialDistractors) && (
-              <div className="bg-card border border-slate-800 p-4 rounded-xl">
-                <h3 className="text-slate-100 font-semibold text-sm mb-1">
+              <div className="bg-card border border-line p-4 rounded-xl">
+                <h3 className="text-ink font-semibold text-sm mb-1">
                   3. People and places that distract me:
                 </h3>
-                <p className="text-slate-300 text-sm whitespace-pre-wrap">{safetyPlan.socialDistractors}</p>
+                <p className="text-ink-2 text-sm whitespace-pre-wrap">{safetyPlan.socialDistractors}</p>
               </div>
             )}
 
             {hasContent(safetyPlan.trustedPeople) && (
-              <div className="bg-card border border-slate-800 p-4 rounded-xl">
-                <h3 className="text-slate-100 font-semibold text-sm mb-1">
+              <div className="bg-card border border-line p-4 rounded-xl">
+                <h3 className="text-ink font-semibold text-sm mb-1">
                   4. People I can reach out to for help:
                 </h3>
-                <p className="text-slate-300 text-sm whitespace-pre-wrap">{safetyPlan.trustedPeople}</p>
+                <p className="text-ink-2 text-sm whitespace-pre-wrap">{safetyPlan.trustedPeople}</p>
               </div>
             )}
 
             {hasContent(safetyPlan.professionals) && (
-              <div className="bg-card border border-slate-800 p-4 rounded-xl">
-                <h3 className="text-slate-100 font-semibold text-sm mb-1">
+              <div className="bg-card border border-line p-4 rounded-xl">
+                <h3 className="text-ink font-semibold text-sm mb-1">
                   5. Professionals and crisis lines:
                 </h3>
-                <p className="text-slate-300 text-sm whitespace-pre-wrap">{safetyPlan.professionals}</p>
+                <p className="text-ink-2 text-sm whitespace-pre-wrap">{safetyPlan.professionals}</p>
               </div>
             )}
 
             {hasContent(safetyPlan.safeEnvironment) && (
-              <div className="bg-card border border-slate-800 p-4 rounded-xl">
-                <h3 className="text-slate-100 font-semibold text-sm mb-1">
+              <div className="bg-card border border-line p-4 rounded-xl">
+                <h3 className="text-ink font-semibold text-sm mb-1">
                   6. Making my space safer:
                 </h3>
-                <p className="text-slate-300 text-sm whitespace-pre-wrap">{safetyPlan.safeEnvironment}</p>
+                <p className="text-ink-2 text-sm whitespace-pre-wrap">{safetyPlan.safeEnvironment}</p>
               </div>
             )}
           </div>
         ) : (
-          <div className="bg-card border border-slate-800 p-4 rounded-xl text-center space-y-3">
-            <p className="text-sm text-slate-300 leading-relaxed">
+          <div className="bg-card border border-line p-4 rounded-xl text-center space-y-3">
+            <p className="text-sm text-ink-2 leading-relaxed">
               You haven't built a coping plan yet — and this moment isn't the time to start one. Once this
               passes, I can help you put one together in a couple of minutes.
             </p>
@@ -227,7 +227,7 @@ export default function CrisisOverlay({
               exact timing — see postCrisisCheckIn.ts. */}
           <label
             id="post-crisis-checkin-toggle"
-            className="flex items-center justify-center gap-2 text-xs text-slate-400 cursor-pointer"
+            className="flex items-center justify-center gap-2 text-xs text-ink-muted cursor-pointer"
           >
             <input
               type="checkbox"
@@ -242,10 +242,10 @@ export default function CrisisOverlay({
               if (wantsCheckIn) offerPostCrisisCheckIn();
               onClose();
             }}
-            className="bg-card hover:bg-raised border border-slate-800 text-slate-300 font-medium px-8 py-3.5 rounded-full transition-all cursor-pointer w-full flex items-center justify-center gap-2"
+            className="bg-card hover:bg-raised border border-line text-ink-2 font-medium px-8 py-3.5 rounded-full transition-all cursor-pointer w-full flex items-center justify-center gap-2"
             id="close-crisis-overlay-btn"
           >
-            <ArrowLeft className="w-5 h-5 text-slate-500" />
+            <ArrowLeft className="w-5 h-5 text-ink-faint" />
             I feel steadier now
           </button>
         </div>

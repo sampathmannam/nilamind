@@ -36,8 +36,8 @@ export default function EmptyState({ illustration, nilaState = "calm", title, bo
     <div className="flex flex-col items-center justify-center text-center px-6 py-10 space-y-4">
       {illustration ?? <NilaCharacter state={nilaState} size={64} />}
       <div className="space-y-1.5 max-w-xs">
-        <p className="text-sm font-semibold text-slate-200">{title}</p>
-        <p className="text-[11px] text-slate-400 leading-relaxed">{body}</p>
+        <p className="text-sm font-semibold text-ink-2">{title}</p>
+        <p className="text-[11px] text-ink-muted leading-relaxed">{body}</p>
       </div>
       {cta && (
         <button
@@ -50,7 +50,7 @@ export default function EmptyState({ illustration, nilaState = "calm", title, bo
       {secondary && (
         <button
           onClick={secondary.onClick}
-          className="text-[11px] text-slate-500 hover:text-slate-300 cursor-pointer transition-colors"
+          className="text-[11px] text-ink-faint hover:text-ink-2 cursor-pointer transition-colors"
         >
           {secondary.label}
         </button>

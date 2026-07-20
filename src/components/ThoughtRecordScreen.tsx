@@ -151,10 +151,10 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
     <div className="space-y-6 max-w-md mx-auto" id="thought-record-screen">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-xl font-semibold text-slate-100">CBT Thought Record</h1>
-          <p className="text-xs text-slate-500">Challenging automatic cognitive filters</p>
+          <h1 className="text-xl font-semibold text-ink">CBT Thought Record</h1>
+          <p className="text-xs text-ink-faint">Challenging automatic cognitive filters</p>
         </div>
-        <span className="text-xs font-mono px-3 py-1 bg-card text-slate-400 border border-slate-800 rounded-full">
+        <span className="text-xs font-mono px-3 py-1 bg-card text-ink-muted border border-line rounded-full">
           Step {currentPage} of 5
         </span>
       </div>
@@ -167,14 +167,14 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
               Step 1: The Situation
             </h3>
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-200 block">
+              <label className="text-sm font-semibold text-ink-2 block">
                 What happened?
               </label>
               <textarea
                 aria-label="What happened?"
                 value={situation}
                 onChange={(e) => setSituation(e.target.value)}
-                className="w-full h-32 bg-page border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-300 placeholder-slate-600 focus:outline-none focus:border-blue-500 text-left transition-all resize-none"
+                className="w-full h-32 bg-page border border-line rounded-xl px-4 py-3 text-sm text-ink-2 placeholder-slate-600 focus:outline-none focus:border-blue-500 text-left transition-all resize-none"
                 placeholder="Explain the triggering event objective: e.g., 'An argument with a friend at noon about dinner plans...'"
               />
             </div>
@@ -189,7 +189,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
             </h3>
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-200 block">
+                <label className="text-sm font-semibold text-ink-2 block">
                   What did you feel?
                 </label>
                 <input
@@ -197,14 +197,14 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
                   aria-label="What did you feel?"
                   value={feeling}
                   onChange={(e) => setFeeling(e.target.value)}
-                  className="w-full bg-page border border-slate-800 rounded-xl px-4 py-3.5 text-sm text-slate-300 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-all"
+                  className="w-full bg-page border border-line rounded-xl px-4 py-3.5 text-sm text-ink-2 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-all"
                   placeholder="e.g. Shame, intense anger, abandonment, panic"
                 />
               </div>
 
               <div className="space-y-2 pt-2">
                 <div className="flex justify-between items-center">
-                  <label className="text-sm font-semibold text-slate-200">
+                  <label className="text-sm font-semibold text-ink-2">
                     Feeling Intensity?
                   </label>
                   <span className="text-xs font-mono font-bold text-blue-400">
@@ -234,7 +234,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
             <div className="space-y-4">
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <label className="text-sm font-semibold text-slate-200 block">
+                  <label className="text-sm font-semibold text-ink-2 block">
                     What automatic thoughts went through your mind?
                   </label>
                   <button
@@ -251,7 +251,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
                   aria-label="What automatic thoughts went through your mind?"
                   value={automaticThought}
                   onChange={(e) => setAutomaticThought(e.target.value)}
-                  className="w-full h-24 bg-page border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-300 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-all resize-none"
+                  className="w-full h-24 bg-page border border-line rounded-xl px-4 py-3 text-sm text-ink-2 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-all resize-none"
                   placeholder="e.g. 'They are leaving me because I am totally toxic and unlovable...'"
                 />
                 {distortionNotice && (
@@ -263,7 +263,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
 
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <label className="text-sm font-semibold text-slate-200">
+                  <label className="text-sm font-semibold text-ink-2">
                     How strongly do you believe this thought?
                   </label>
                   <span className="text-xs font-mono font-bold text-blue-400">
@@ -290,7 +290,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
             <h3 className="text-sm font-semibold text-blue-400 uppercase tracking-wider font-mono">
               Step 4: Identify Trap Cards
             </h3>
-            <label className="text-xs text-slate-500 block">
+            <label className="text-xs text-ink-faint block">
               Which cognitive distortions apply in this moment? Tap all that align:
             </label>
             <div className="space-y-2 max-h-64 overflow-y-auto pr-1" id="traps-selector">
@@ -303,12 +303,12 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
                     onClick={() => toggleTrap(t.name)}
                     className={`w-full text-left p-3 rounded-xl border text-xs transition-all cursor-pointer flex justify-between items-center ${
                       isSelected
-                        ? "bg-blue-500/10 border-blue-500 text-slate-100"
-                        : "bg-page border-slate-800 text-slate-500"
+                        ? "bg-blue-500/10 border-blue-500 text-ink"
+                        : "bg-page border-line text-ink-faint"
                     }`}
                   >
                     <div>
-                      <span className="font-semibold text-slate-200">{t.name}:</span>{" "}
+                      <span className="font-semibold text-ink-2">{t.name}:</span>{" "}
                       <span className="opacity-80 block mt-0.5">{t.desc}</span>
                     </div>
                     {isSelected && (
@@ -333,7 +333,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
             <div className="space-y-4">
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <label className="text-sm font-semibold text-slate-200">
+                  <label className="text-sm font-semibold text-ink-2">
                     What is a more balanced thought?
                   </label>
                   <button
@@ -356,7 +356,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
                   aria-label="What is a more balanced thought?"
                   value={balancedThought}
                   onChange={(e) => setBalancedThought(e.target.value)}
-                  className="w-full h-24 bg-page border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-300 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-all resize-none"
+                  className="w-full h-24 bg-page border border-line rounded-xl px-4 py-3 text-sm text-ink-2 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-all resize-none"
                   placeholder="Draft an objective re-evaluation or let the assistant generate one for you..."
                 />
               </div>
@@ -371,7 +371,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
               <div className="bg-page p-4 rounded-xl border border-slate-850 space-y-4">
                 <div className="space-y-1.5">
                   <div className="flex justify-between items-center">
-                    <label className="text-xs font-semibold text-slate-300">
+                    <label className="text-xs font-semibold text-ink-2">
                       Re-rate original emotion intensity now:
                     </label>
                     <span className="text-xs font-mono font-bold text-emerald-400">
@@ -401,14 +401,14 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
         )}
 
         {/* Wizard Controls Footer */}
-        <div className="flex justify-between items-center pt-4 border-t border-slate-800/80 mt-6 font-medium">
+        <div className="flex justify-between items-center pt-4 border-t border-line/80 mt-6 font-medium">
           <button
             onClick={() => currentPage > 1 && setCurrentPage(currentPage - 1)}
             disabled={currentPage === 1}
             className={`flex items-center gap-1 text-xs font-semibold transition-all cursor-pointer ${
               currentPage === 1 
                 ? "text-slate-600 cursor-not-allowed" 
-                : "text-slate-500 hover:text-slate-200"
+                : "text-ink-faint hover:text-ink-2"
             }`}
           >
             <ChevronLeft className="w-4 h-4" /> Back
@@ -417,7 +417,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
           {currentPage < 5 ? (
             <button
               onClick={() => setCurrentPage(currentPage + 1)}
-              className="flex items-center gap-1 text-xs font-bold text-slate-100 bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg cursor-pointer transition-all"
+              className="flex items-center gap-1 text-xs font-bold text-ink bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg cursor-pointer transition-all"
             >
               Continue <ChevronRight className="w-4 h-4" />
             </button>

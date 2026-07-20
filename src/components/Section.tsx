@@ -18,7 +18,7 @@ export function SectionDivider({ label, className = "" }: { label: string; class
       aria-label={label}
     >
       <h2 className="text-xs font-bold text-ink-muted uppercase tracking-wider whitespace-nowrap">{label}</h2>
-      <div className="flex-1 h-px bg-slate-800" />
+      <div className="flex-1 h-px bg-line" />
     </div>
   );
 }

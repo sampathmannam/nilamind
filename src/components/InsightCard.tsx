@@ -27,10 +27,10 @@ const TREND_ICONS = {
 const TREND_COLORS = {
   improving: "text-emerald-400",
   declining: "text-rose-400",
-  stable: "text-slate-400",
+  stable: "text-ink-muted",
 };
 
-export default function InsightCard({ insight }: Props) {
+function InsightCard({ insight }: Props) {
   useLanguage();
 
   const Icon = insight.icon ?? Lightbulb;
@@ -49,12 +49,13 @@ export default function InsightCard({ insight }: Props) {
         <div className="pt-1">
           <Sparkline
             data={insight.sparkline}
+            label={`${insight.title} trend (${insight.trend ?? "stable"})`}
             color={
               insight.trend === "improving"
                 ? "var(--color-emerald-400)"
                 : insight.trend === "declining"
                   ? "var(--color-rose-400)"
-                  : "var(--color-blue-400)"
+                  : "var(--color-accent-hi)"
             }
           />
         </div>
@@ -65,3 +66,5 @@ export default function InsightCard({ insight }: Props) {
     </Card>
   );
 }
+
+export default React.memo(InsightCard);

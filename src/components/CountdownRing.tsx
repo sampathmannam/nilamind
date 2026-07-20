@@ -53,11 +53,11 @@ export default function CountdownRing({ progress, label, color, ariaLabel, durat
       </svg>
 
       <div className="text-center space-y-1">
-        <p className="text-lg font-bold text-slate-100" style={{ color }}>
+        <p className="text-lg font-bold text-ink" style={{ color }}>
           {label}
         </p>
         {remainingSeconds !== null && (
-          <p className="text-[11px] text-slate-400" id="countdown-ring-remaining">
+          <p className="text-[11px] text-ink-muted" id="countdown-ring-remaining">
             {remainingSeconds}s remaining
           </p>
         )}

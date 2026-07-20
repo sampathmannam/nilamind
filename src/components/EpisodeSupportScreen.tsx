@@ -317,15 +317,15 @@ export default function EpisodeSupportScreen({
   };
 
   return (
-    <div className="space-y-6 max-w-md mx-auto text-slate-300" id="episode-agent-wrapper">
+    <div className="space-y-6 max-w-md mx-auto text-ink-2" id="episode-agent-wrapper">
       
       {/* 20-Minute inline Amber Warning */}
       {escalationShown && stage === "chat" && (
-        <div className="bg-amber-500/10 border-y border-r border-slate-800 border-l-4 border-l-amber-500 p-4 rounded-r-xl space-y-4" id="escalation-alert-panel">
-          <p className="text-sm font-semibold text-slate-100">
+        <div className="bg-amber-500/10 border-y border-r border-line border-l-4 border-l-amber-500 p-4 rounded-r-xl space-y-4" id="escalation-alert-panel">
+          <p className="text-sm font-semibold text-ink">
             You've been in this for 20 minutes and you're still at high intensity.
           </p>
-          <p className="text-xs text-slate-300 leading-relaxed">
+          <p className="text-xs text-ink-2 leading-relaxed">
             This is the moment for a human. Not because I can't help — because humans can do something I genuinely cannot: exist with you physically and hear your voice.
           </p>
           
@@ -333,7 +333,7 @@ export default function EpisodeSupportScreen({
             <CrisisLines tone="amber" />
             <button
               onClick={() => setEscalationShown(false)}
-              className="w-full bg-card border border-slate-800 text-xs text-slate-300 py-3 rounded-xl transition-all cursor-pointer hover:bg-slate-800"
+              className="w-full bg-card border border-line text-xs text-ink-2 py-3 rounded-xl transition-all cursor-pointer hover:bg-fill"
             >
               Keep talking with Nila
             </button>
@@ -343,13 +343,13 @@ export default function EpisodeSupportScreen({
 
       {/* STAGE: OPENING PANEL */}
       {stage === "opening" && (
-        <div className="bg-card border border-slate-800 border-l-4 border-l-amber-500 p-6 rounded-r-2xl space-y-6 relative" id="episode-opening-container">
+        <div className="bg-card border border-line border-l-4 border-l-amber-500 p-6 rounded-r-2xl space-y-6 relative" id="episode-opening-container">
           <div className="space-y-2">
-            <h1 className="text-2xl font-semibold tracking-tight text-slate-100">I'm here.</h1>
-            <p className="text-sm text-slate-300 leading-relaxed">
+            <h1 className="text-2xl font-semibold tracking-tight text-ink">I'm here.</h1>
+            <p className="text-sm text-ink-2 leading-relaxed">
               This is your episode support tool — an AI, not a person. I cannot replace a human but I can help you secure grounded thoughts to navigate the next few minutes.
             </p>
-            <p className="text-sm text-slate-100 font-bold">
+            <p className="text-sm text-ink font-bold">
               What is happening right now?
             </p>
           </div>
@@ -359,7 +359,7 @@ export default function EpisodeSupportScreen({
               aria-label="Message Nila"
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
-              className="w-full h-36 bg-page border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-300 placeholder-slate-600 focus:outline-none focus:border-amber-500 transition-all resize-none"
+              className="w-full h-36 bg-page border border-line rounded-xl px-4 py-3 text-sm text-ink-2 placeholder-slate-600 focus:outline-none focus:border-amber-500 transition-all resize-none"
               placeholder="Explain how you feel, what triggered you, or what unwanted urge you have... (text is 100% secure/private)"
               id="episode-starter-input"
             />
@@ -370,7 +370,7 @@ export default function EpisodeSupportScreen({
               className={`w-full py-4 rounded-xl font-bold transition-all text-sm cursor-pointer flex items-center justify-center gap-2 ${
                 chatInput.trim()
                   ? "bg-amber-500 hover:bg-amber-450 hover:bg-amber-400 text-slate-950 font-extrabold"
-                  : "bg-page text-slate-500 border border-slate-800 cursor-not-allowed"
+                  : "bg-page text-ink-faint border border-line cursor-not-allowed"
               }`}
               id="start-episode-btn"
             >
@@ -378,7 +378,7 @@ export default function EpisodeSupportScreen({
             </button>
           </div>
 
-          <p className="text-xs text-center text-slate-500 leading-relaxed font-sans">
+          <p className="text-xs text-center text-ink-faint leading-relaxed font-sans">
             Nila runs entirely on your device — no connection needed. If the model is still loading, the secure Guided Mode runs automatically.
           </p>
         </div>
@@ -386,12 +386,12 @@ export default function EpisodeSupportScreen({
 
       {/* STAGE: ACTIVE CHAT VIEW */}
       {stage === "chat" && (
-        <div className="flex flex-col h-[76dvh] bg-page border border-slate-800 rounded-2xl overflow-hidden relative" id="episode-chat-dock">
+        <div className="flex flex-col h-[76dvh] bg-page border border-line rounded-2xl overflow-hidden relative" id="episode-chat-dock">
           {/* Header Row */}
-          <div className="bg-card py-3.5 px-4 border-b border-slate-800 flex justify-between items-center shrink-0">
+          <div className="bg-card py-3.5 px-4 border-b border-line flex justify-between items-center shrink-0">
             <button
               onClick={handleEndSession}
-              className="text-xs text-slate-500 hover:text-slate-200 flex items-center gap-1 cursor-pointer transition-colors"
+              className="text-xs text-ink-faint hover:text-ink-2 flex items-center gap-1 cursor-pointer transition-colors"
               id="end-episode-session-btn"
             >
               <LogOut className="w-3.5 h-3.5" /> End Session
@@ -402,7 +402,7 @@ export default function EpisodeSupportScreen({
                 <span>Nila · on-device</span>
               </div>
             )}
-            <div className="flex items-center gap-2 font-mono text-xs font-bold text-slate-400">
+            <div className="flex items-center gap-2 font-mono text-xs font-bold text-ink-muted">
               <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
               <span>{formatTimer(elapsedSeconds)}</span>
             </div>
@@ -417,8 +417,8 @@ export default function EpisodeSupportScreen({
                   <div
                     className={`max-w-[85%] rounded-2xl px-4 py-3.5 text-sm leading-relaxed whitespace-pre-wrap ${
                       isUser
-                        ? "bg-card text-slate-200 border border-slate-800"
-                        : "bg-card text-slate-300 border-y border-r border-slate-850 border-l-4 border-l-amber-500 rounded-bl-none"
+                        ? "bg-card text-ink-2 border border-line"
+                        : "bg-card text-ink-2 border-y border-r border-slate-850 border-l-4 border-l-amber-500 rounded-bl-none"
                     }`}
                   >
                     {m.content}
@@ -436,9 +436,9 @@ export default function EpisodeSupportScreen({
           </div>
 
           {/* Controls Segment */}
-          <div className="p-3 bg-card border-t border-slate-800">
+          <div className="p-3 bg-card border-t border-line">
             <div className="pb-2 space-y-1.5">
-              <p className="text-xs text-slate-500 font-mono tracking-wider uppercase text-center">
+              <p className="text-xs text-ink-faint font-mono tracking-wider uppercase text-center">
                 Not a therapist. Not a diagnosis tool.
               </p>
               {/* Real tappable crisis lines (tel: links) — the numbers were previously plain text. */}
@@ -463,7 +463,7 @@ export default function EpisodeSupportScreen({
               </div>
             ) : isWaitingForIntensityUpdate ? (
               <div className="space-y-3">
-                <div className="text-xs font-bold text-center text-slate-500">
+                <div className="text-xs font-bold text-center text-ink-faint">
                   Select your current intensity (1 is calm, 10 is crisis limit):
                 </div>
                 <div className="grid grid-cols-5 gap-2" id="intensity-locks">
@@ -471,7 +471,7 @@ export default function EpisodeSupportScreen({
                     <button
                       key={num}
                       onClick={() => registerIntensityAndTriggerAI(num)}
-                      className="bg-page border border-slate-850 border-slate-800 text-slate-100 hover:border-amber-500 font-bold py-2.5 rounded-xl transition-all cursor-pointer text-center text-sm"
+                      className="bg-page border border-slate-850 border-line text-ink hover:border-amber-500 font-bold py-2.5 rounded-xl transition-all cursor-pointer text-center text-sm"
                     >
                       {num}
                     </button>
@@ -491,7 +491,7 @@ export default function EpisodeSupportScreen({
                   aria-label="Message Nila"
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
-                  className="flex-1 bg-page border border-slate-850 border-slate-800 text-xs text-slate-100 rounded-xl px-4 py-3 focus:outline-none focus:border-amber-500"
+                  className="flex-1 bg-page border border-slate-850 border-line text-xs text-ink rounded-xl px-4 py-3 focus:outline-none focus:border-amber-500"
                   placeholder="Express how you feel..."
                   disabled={loading}
                 />
@@ -512,9 +512,9 @@ export default function EpisodeSupportScreen({
 
       {/* STAGE: OFFLINE GUIDED MODE (Pure branching logic walkthrough, Doc 1 Step 5) */}
       {stage === "offline_guided" && (
-        <div className="bg-card border border-slate-800 p-6 rounded-2xl space-y-6" id="offline-guided-container">
-          <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-            <h2 className="text-base font-semibold text-slate-100 flex items-center gap-1.5 font-sans">
+        <div className="bg-card border border-line p-6 rounded-2xl space-y-6" id="offline-guided-container">
+          <div className="flex justify-between items-center border-b border-line pb-3">
+            <h2 className="text-base font-semibold text-ink flex items-center gap-1.5 font-sans">
               <Shield className="w-5 h-5 text-amber-500" /> Guided Offline Mode
             </h2>
             <span className="text-xs bg-amber-500/10 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full font-sans">
@@ -525,10 +525,10 @@ export default function EpisodeSupportScreen({
           {/* Guided Branching Step: init */}
           {guidedStep === "init" && (
             <div className="space-y-5" id="guided-init">
-              <p className="text-sm text-slate-300 leading-relaxed">
+              <p className="text-sm text-ink-2 leading-relaxed">
                 The AI companion isn't reachable right now, but I can still walk you through this. Let's go step by step.
               </p>
-              <p className="text-sm font-semibold text-slate-100">
+              <p className="text-sm font-semibold text-ink">
                 How intense is what you're feeling right now?
               </p>
               
@@ -546,7 +546,7 @@ export default function EpisodeSupportScreen({
                         setGuidedStep("low_end");
                       }
                     }}
-                    className="bg-page border border-slate-800 hover:bg-amber-500 hover:text-slate-950 py-3.5 rounded-xl font-mono text-sm cursor-pointer font-bold text-center text-slate-200 transition-colors"
+                    className="bg-page border border-line hover:bg-amber-500 hover:text-slate-950 py-3.5 rounded-xl font-mono text-sm cursor-pointer font-bold text-center text-ink-2 transition-colors"
                   >
                     {num}
                   </button>
@@ -562,8 +562,8 @@ export default function EpisodeSupportScreen({
           {guidedStep === "extreme_tipp" && (
             <div className="space-y-4" id="tipp-step-guided">
               <div className="p-4 bg-amber-500/10 border-y border-r border-slate-850 border-l-4 border-l-amber-500 rounded-r-xl">
-                <h4 className="text-sm font-bold text-slate-100 mb-1 font-sans">Biological shock reset</h4>
-                <p className="text-xs text-slate-300 leading-relaxed">
+                <h4 className="text-sm font-bold text-ink mb-1 font-sans">Biological shock reset</h4>
+                <p className="text-xs text-ink-2 leading-relaxed">
                   Your intensity is extreme. This means your thinking brain is offline. This is biology, not weakness. Try whichever of these fits right now.
                 </p>
               </div>
@@ -587,26 +587,26 @@ export default function EpisodeSupportScreen({
           {/* Medium paths (5-7): check specifics */}
           {guidedStep === "medium_racing" && (
             <div className="space-y-4" id="guided-medium-racing">
-              <p className="text-sm font-semibold text-slate-100">
+              <p className="text-sm font-semibold text-ink">
                 What is the strongest unwanted filter right now?
               </p>
               
               <div className="space-y-2">
                 <button
                   onClick={() => setGuidedStep("medium_panic")}
-                  className="w-full text-left bg-page border border-slate-800 p-3.5 rounded-xl text-xs font-semibold text-slate-200 cursor-pointer hover:border-amber-500 transition-colors"
+                  className="w-full text-left bg-page border border-line p-3.5 rounded-xl text-xs font-semibold text-ink-2 cursor-pointer hover:border-amber-500 transition-colors"
                 >
                   Racing, chaotic thoughts spinning
                 </button>
                 <button
                   onClick={() => setGuidedStep("medium_harm")}
-                  className="w-full text-left bg-page border border-slate-800 p-3.5 rounded-xl text-xs font-semibold text-slate-200 cursor-pointer hover:border-amber-500 transition-colors"
+                  className="w-full text-left bg-page border border-line p-3.5 rounded-xl text-xs font-semibold text-ink-2 cursor-pointer hover:border-amber-500 transition-colors"
                 >
                   An intense urge to hurt myself or act impulsively
                 </button>
                 <button
                   onClick={() => setGuidedStep("medium_shame")}
-                  className="w-full text-left bg-page border border-slate-800 p-3.5 rounded-xl text-xs font-semibold text-slate-200 cursor-pointer hover:border-amber-500 transition-colors"
+                  className="w-full text-left bg-page border border-line p-3.5 rounded-xl text-xs font-semibold text-ink-2 cursor-pointer hover:border-amber-500 transition-colors"
                 >
                   Intense shame or hating myself
                 </button>
@@ -616,9 +616,9 @@ export default function EpisodeSupportScreen({
 
           {guidedStep === "medium_panic" && (
             <div className="space-y-4" id="guided-panic">
-              <div className="bg-page p-4 rounded-xl border border-slate-800 space-y-2">
-                <h4 className="text-sm font-bold text-slate-150 text-slate-100">Box Breathing</h4>
-                <p className="text-xs text-slate-300 leading-relaxed font-sans">
+              <div className="bg-page p-4 rounded-xl border border-line space-y-2">
+                <h4 className="text-sm font-bold text-slate-150 text-ink">Box Breathing</h4>
+                <p className="text-xs text-ink-2 leading-relaxed font-sans">
                   Slow, even breathing steadies your body and helps calm a racing mind. Let's do 4-4-4-4 cycles: breathe in 4s, hold 4s, out 4s, hold 4s.
                 </p>
               </div>
@@ -633,9 +633,9 @@ export default function EpisodeSupportScreen({
 
           {guidedStep === "medium_harm" && (
             <div className="space-y-4" id="guided-harm">
-              <div className="bg-page p-4 rounded-xl border border-slate-800 space-y-2">
-                <h4 className="text-sm font-bold text-slate-150 text-slate-100">Wave Surfing Script</h4>
-                <p className="text-xs text-slate-300 leading-relaxed font-sans">
+              <div className="bg-page p-4 rounded-xl border border-line space-y-2">
+                <h4 className="text-sm font-bold text-slate-150 text-ink">Wave Surfing Script</h4>
+                <p className="text-xs text-ink-2 leading-relaxed font-sans">
                   Urges are like waves. They rise, peak, and inevitably fall if you do not feed them. Picture yourself on a secure surfboard. Press your feet down and stay steady — do not fight the urge. Just ride it out for 10 minutes.
                 </p>
               </div>
@@ -650,9 +650,9 @@ export default function EpisodeSupportScreen({
 
           {guidedStep === "medium_shame" && (
             <div className="space-y-4" id="guided-shame">
-              <div className="bg-page p-4 rounded-xl border border-slate-800 space-y-2">
-                <h4 className="text-sm font-bold text-slate-150 text-slate-100 font-sans">Neff's Self-Compassion script</h4>
-                <p className="text-xs text-slate-300 leading-relaxed font-sans">
+              <div className="bg-page p-4 rounded-xl border border-line space-y-2">
+                <h4 className="text-sm font-bold text-slate-150 text-ink font-sans">Neff's Self-Compassion script</h4>
+                <p className="text-xs text-ink-2 leading-relaxed font-sans">
                   Take a self-compassion break. Read slowly: "This is hard. This pain is part of life. May I give myself the same kindness I'd offer to a dear friend in tears."
                 </p>
               </div>
@@ -667,7 +667,7 @@ export default function EpisodeSupportScreen({
 
           {guidedStep === "low_end" && (
             <div className="space-y-4" id="guided-low">
-              <p className="text-sm text-slate-300 font-sans">
+              <p className="text-sm text-ink-2 font-sans">
                 You're in a steadier place. Let's calm our systems down and proceed to a gentle closure.
               </p>
               <button
@@ -683,14 +683,14 @@ export default function EpisodeSupportScreen({
 
       {/* DEBRIEF SCREEN 1 OF 3 (OPTIONAL TRIGGER EXPLAIN) */}
       {stage === "debrief_1" && (
-        <div className="bg-card border border-slate-800 p-6 rounded-2xl space-y-6" id="debrief-step-1">
+        <div className="bg-card border border-line p-6 rounded-2xl space-y-6" id="debrief-step-1">
           <div className="space-y-1">
-            <h2 className="text-lg font-semibold text-slate-100 font-sans">Closing Recovery Debrief</h2>
-            <p className="text-xs text-slate-500 font-mono">Step 1 of 3: Tracking trigger context</p>
+            <h2 className="text-lg font-semibold text-ink font-sans">Closing Recovery Debrief</h2>
+            <p className="text-xs text-ink-faint font-mono">Step 1 of 3: Tracking trigger context</p>
           </div>
 
           <div className="space-y-4">
-            <label className="text-sm font-medium text-slate-300 block">
+            <label className="text-sm font-medium text-ink-2 block">
               What triggered this acute episode? (Optional)
             </label>
             <textarea
@@ -708,7 +708,7 @@ export default function EpisodeSupportScreen({
                 setTriggerExplanation("");
                 setStage("debrief_2");
               }}
-              className="bg-page hover:bg-slate-800 border border-slate-800 text-xs font-semibold py-3.5 rounded-xl cursor-pointer text-slate-300 transition-colors"
+              className="bg-page hover:bg-fill border border-line text-xs font-semibold py-3.5 rounded-xl cursor-pointer text-ink-2 transition-colors"
             >
               Skip
             </button>
@@ -724,14 +724,14 @@ export default function EpisodeSupportScreen({
 
       {/* DEBRIEF SCREEN 2 OF 3 (WHAT HELPED WORKBOOK) */}
       {stage === "debrief_2" && (
-        <div className="bg-card border border-slate-800 p-6 rounded-2xl space-y-6" id="debrief-step-2">
+        <div className="bg-card border border-line p-6 rounded-2xl space-y-6" id="debrief-step-2">
           <div className="space-y-1">
-            <h2 className="text-lg font-semibold text-slate-100">Debrief: Coping Verification</h2>
-            <p className="text-xs text-slate-500 font-mono">Step 2 of 3: Check which skills helped you</p>
+            <h2 className="text-lg font-semibold text-ink">Debrief: Coping Verification</h2>
+            <p className="text-xs text-ink-faint font-mono">Step 2 of 3: Check which skills helped you</p>
           </div>
 
           <div className="space-y-3">
-            <p className="text-xs text-slate-300 font-bold block mb-1">
+            <p className="text-xs text-ink-2 font-bold block mb-1">
               What helped most during this session? Toggle helpers:
             </p>
             <div className="grid grid-cols-2 gap-2" id="debrief-skills-checklist">
@@ -745,7 +745,7 @@ export default function EpisodeSupportScreen({
                     className={`flex items-center gap-2 p-3 text-xs rounded-xl border text-left transition-all cursor-pointer ${
                       checked
                         ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 font-bold"
-                        : "bg-page border-slate-850 text-slate-500 hover:border-slate-700"
+                        : "bg-page border-slate-850 text-ink-faint hover:border-line-strong"
                     }`}
                   >
                     <span>{s}</span>
@@ -766,23 +766,23 @@ export default function EpisodeSupportScreen({
 
       {/* DEBRIEF SCREEN 3 OF 3 (INTENSITY LOCK-OUT OUTCOME) */}
       {stage === "debrief_3" && (
-        <div className="bg-card border border-slate-800 p-6 rounded-2xl space-y-6" id="debrief-step-3">
+        <div className="bg-card border border-line p-6 rounded-2xl space-y-6" id="debrief-step-3">
           <div className="space-y-1">
-            <h2 className="text-lg font-semibold text-slate-100">Debrief: Intensity Journey</h2>
-            <p className="text-xs text-slate-500">Step 3 of 3: Rate your final current state</p>
+            <h2 className="text-lg font-semibold text-ink">Debrief: Intensity Journey</h2>
+            <p className="text-xs text-ink-faint">Step 3 of 3: Rate your final current state</p>
           </div>
 
           {/* Intenisty Side-by-Side comparator mapping */}
           <div className="grid grid-cols-2 gap-4 bg-page p-4 rounded-xl border border-slate-850">
             <div className="text-center space-y-1">
-              <span className="text-xs text-slate-500 uppercase tracking-wide">When you started</span>
+              <span className="text-xs text-ink-faint uppercase tracking-wide">When you started</span>
               <p className="text-4xl font-extrabold text-amber-500 font-mono">
                 {intensityList[0] || 8}/10
               </p>
             </div>
             
-            <div className="text-center space-y-1 border-l border-slate-800">
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Highest point</span>
+            <div className="text-center space-y-1 border-l border-line">
+              <span className="text-xs text-ink-faint uppercase tracking-wide">Highest point</span>
               <p className="text-4xl font-extrabold text-rose-400 font-mono">
                 {Math.max(...intensityList, intensityList[0] || 8)}/10
               </p>
@@ -790,7 +790,7 @@ export default function EpisodeSupportScreen({
           </div>
 
           <div className="space-y-3">
-            <p className="text-xs text-center text-slate-200 font-bold">
+            <p className="text-xs text-center text-ink-2 font-bold">
               Where is your intensity rating ending up right now?
             </p>
             
@@ -799,7 +799,7 @@ export default function EpisodeSupportScreen({
                 <button
                   key={num}
                   onClick={() => saveEpisodeRecord(num)}
-                  className="bg-page border border-slate-800 text-slate-200 hover:bg-amber-500 hover:text-slate-950 font-bold py-3 rounded-xl transition-all font-mono cursor-pointer text-center text-sm"
+                  className="bg-page border border-line text-ink-2 hover:bg-amber-500 hover:text-slate-950 font-bold py-3 rounded-xl transition-all font-mono cursor-pointer text-center text-sm"
                 >
                   {num}
                 </button>
@@ -817,7 +817,7 @@ export default function EpisodeSupportScreen({
           </div>
           
           <div className="space-y-2">
-            <h2 className="text-lg font-bold text-slate-100">Session Saved Offline</h2>
+            <h2 className="text-lg font-bold text-ink">Session Saved Offline</h2>
             <p className="text-sm text-slate-350">
               You got through it. That matters more than it might feel right now.
             </p>

@@ -171,16 +171,16 @@ export default function DiaryCardScreen() {
       {/* Date Picker row */}
       <div className="flex justify-between items-center glass p-4 rounded-xl">
         <div>
-          <h1 className="text-xl font-semibold text-slate-100">DBT Diary Card</h1>
-          <p className="text-xs text-slate-500">Your daily tracking metrics</p>
+          <h1 className="text-xl font-semibold text-ink">DBT Diary Card</h1>
+          <p className="text-xs text-ink-faint">Your daily tracking metrics</p>
         </div>
-        <div className="flex items-center gap-1.5 relative bg-page p-2 rounded-xl border border-slate-800">
+        <div className="flex items-center gap-1.5 relative bg-page p-2 rounded-xl border border-line">
           <Calendar className="w-4 h-4 text-blue-400" />
           <input
             type="date"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
-            className="bg-transparent text-xs text-slate-300 focus:outline-none cursor-pointer max-w-[110px]"
+            className="bg-transparent text-xs text-ink-2 focus:outline-none cursor-pointer max-w-[110px]"
             aria-label="Diary date"
             id="diary-date-picker"
           />
@@ -192,16 +192,16 @@ export default function DiaryCardScreen() {
             the 2026-07-16 research-grounded redesign. Purely self-report: never surfaces the
             crisis flow on its own. */}
         <div className="space-y-4">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-2">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-ink-muted border-b border-line pb-2">
             1. Urges &amp; Target Behaviors (0 to 5)
           </h3>
-          <p className="text-[11px] text-slate-500">
+          <p className="text-[11px] text-ink-faint">
             Rating an urge — even a high one — is just tracking. It's private and never flags anything on its own.
           </p>
 
           {urges.map((urge) => (
             <div key={urge.key} className="space-y-1.5" id={`diary-urge-row-${urge.key}`}>
-              <div className="flex justify-between text-xs font-semibold text-slate-200">
+              <div className="flex justify-between text-xs font-semibold text-ink-2">
                 <span>{urge.label}</span>
                 <span className="font-mono text-blue-400">{urge.intensity} / 5</span>
               </div>
@@ -225,7 +225,7 @@ export default function DiaryCardScreen() {
                       className={`w-11 h-11 rounded-full text-xs font-bold flex items-center justify-center cursor-pointer transition-all ${
                         urge.intensity === num
                           ? "bg-rose-600 text-white"
-                          : "bg-page text-slate-500 border border-slate-800/80 hover:border-slate-700"
+                          : "bg-page text-ink-faint border border-line/80 hover:border-line-strong"
                       }`}
                       aria-label={`${urge.label} intensity ${num}`}
                     >
@@ -236,15 +236,15 @@ export default function DiaryCardScreen() {
               </div>
 
               {urge.intensity > 0 && (
-                <div className="flex items-center justify-between bg-page border border-slate-800 rounded-xl p-2.5 mt-1" id={`diary-urge-actedon-${urge.key}`}>
-                  <span className="text-xs text-slate-400">Did you act on this urge today?</span>
+                <div className="flex items-center justify-between bg-page border border-line rounded-xl p-2.5 mt-1" id={`diary-urge-actedon-${urge.key}`}>
+                  <span className="text-xs text-ink-muted">Did you act on this urge today?</span>
                   <button
                     role="switch"
                     aria-checked={urge.actedOn}
                     aria-label={`Did you act on: ${urge.label} today?`}
                     onClick={() => toggleUrgeActedOn(urge.key)}
                     className={`w-10 h-5.5 rounded-full relative transition-all cursor-pointer ${
-                      urge.actedOn ? "bg-rose-600" : "bg-slate-800"
+                      urge.actedOn ? "bg-rose-600" : "bg-fill"
                     }`}
                   >
                     <span
@@ -261,13 +261,13 @@ export default function DiaryCardScreen() {
 
         {/* PART 1: Slide indicators for emotions */}
         <div className="space-y-4">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-2">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-ink-muted border-b border-line pb-2">
             2. Daily Emotion Peak Ratings (0 to 5)
           </h3>
 
           {Object.entries(emotions).map(([key, val]) => (
             <div key={key} className="space-y-1.5" id={`diary-slider-row-${key}`}>
-              <div className="flex justify-between text-xs font-semibold capitalize text-slate-200">
+              <div className="flex justify-between text-xs font-semibold capitalize text-ink-2">
                 <span>{key}</span>
                 <span className="font-mono text-blue-400">{val} / 5</span>
               </div>
@@ -294,7 +294,7 @@ export default function DiaryCardScreen() {
                       className={`w-11 h-11 rounded-full text-xs font-bold flex items-center justify-center cursor-pointer transition-all ${
                         val === num
                           ? "bg-blue-600 text-white"
-                          : "bg-page text-slate-500 border border-slate-800/80 hover:border-slate-700"
+                          : "bg-page text-ink-faint border border-line/80 hover:border-line-strong"
                       }`}
                       aria-label={`${key} rating ${num}`}
                     >
@@ -312,10 +312,10 @@ export default function DiaryCardScreen() {
             2026-07-16): tried-no-help vs tried-helped is the clinically useful distinction; an
             8-option scale per skill is friction the diary-app research links to lower completion. */}
         <div className="space-y-4">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-2">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-ink-muted border-b border-line pb-2">
             3. Skills I Used Today
           </h3>
-          <p className="text-[11px] text-slate-500">Tap once for "tried, didn't help." Tap again for "tried, helped."</p>
+          <p className="text-[11px] text-ink-faint">Tap once for "tried, didn't help." Tap again for "tried, helped."</p>
 
           <div className="grid grid-cols-2 gap-2" id="skills-diary-grid">
             {ALL_DIARY_DBT_SKILLS.map((skill) => {
@@ -332,7 +332,7 @@ export default function DiaryCardScreen() {
                       ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-300 font-semibold"
                       : isEngaged
                       ? "bg-amber-500/10 border-amber-500/50 text-amber-300 font-semibold"
-                      : "bg-page border-slate-800 text-slate-500 hover:text-slate-300 hover:border-slate-700"
+                      : "bg-page border-line text-ink-faint hover:text-ink-2 hover:border-line-strong"
                   }`}
                 >
                   <div className={`w-4.5 h-4.5 rounded-md flex items-center justify-center border shrink-0 transition-all ${
@@ -340,7 +340,7 @@ export default function DiaryCardScreen() {
                       ? "bg-emerald-500 border-emerald-500 text-[#171311]"
                       : isEngaged
                       ? "bg-amber-500 border-amber-500 text-[#171311]"
-                      : "border-slate-800"
+                      : "border-line"
                   }`}>
                     {isEngaged && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                   </div>
@@ -364,7 +364,7 @@ export default function DiaryCardScreen() {
             canonical daily-intention store (weeklyIntention.ts), so setting/editing it here and
             on the Today hub stay in sync instead of drifting apart. */}
         <div className="space-y-4">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-2 flex items-center gap-2">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-ink-muted border-b border-line pb-2 flex items-center gap-2">
             4. Today's Intention
           </h3>
           <DailyIntentionCard defaultOpen />
@@ -372,10 +372,10 @@ export default function DiaryCardScreen() {
 
         {/* PART 4: Quick Notes */}
         <div className="space-y-4">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-2">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-ink-muted border-b border-line pb-2">
             5. Quick Notes
           </h3>
-          <p className="text-[11px] text-slate-500">
+          <p className="text-[11px] text-ink-faint">
             Jot down transient thoughts, observations, or brief reflections on your day.
           </p>
           <button
@@ -401,7 +401,7 @@ export default function DiaryCardScreen() {
             className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium border cursor-pointer transition-all mb-2 ${
               voiceListening
                 ? "bg-rose-500/20 border-rose-500/50 text-rose-300 animate-pulse"
-                : "border-slate-700 bg-card text-slate-400 hover:text-slate-200 hover:border-slate-600"
+                : "border-line-strong bg-card text-ink-muted hover:text-ink-2 hover:border-slate-600"
             }`}
             aria-label={voiceListening ? "Stop listening" : "Record a voice note"}
           >
@@ -420,7 +420,7 @@ export default function DiaryCardScreen() {
             onBlur={() => diaryTyping.onBlur(quickNotes.length)}
             placeholder="e.g., Felt a bit annoyed this morning before my meeting, but then practiced deep breathing. After lunch, I felt much more grounded."
             aria-label="Quick Notes"
-            className="w-full bg-page border border-slate-800 rounded-xl p-3 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-blue-500/50 min-h-[100px] resize-y"
+            className="w-full bg-page border border-line rounded-xl p-3 text-sm text-ink-2 placeholder-slate-600 focus:outline-none focus:border-blue-500/50 min-h-[100px] resize-y"
           />
           
           {quickNoteTags.length > 0 && (
@@ -457,7 +457,7 @@ export default function DiaryCardScreen() {
                 <MessageSquare className="w-4 h-4" />
                 <span className="text-xs font-bold uppercase tracking-wider font-mono">Nila's Insights ✨</span>
               </div>
-              <div className="text-sm text-slate-300 leading-relaxed markdown-body">
+              <div className="text-sm text-ink-2 leading-relaxed markdown-body">
                 <Markdown>{aiAnalysis}</Markdown>
               </div>
             </div>

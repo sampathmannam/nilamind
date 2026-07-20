@@ -167,10 +167,10 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
     return (
       <div className="space-y-5 max-w-md mx-auto" id="assessment-screen">
         <header className="space-y-1">
-          <h1 className="text-xl font-semibold text-slate-100 flex items-center gap-2">
+          <h1 className="text-xl font-semibold text-ink flex items-center gap-2">
             <ClipboardCheck className="w-5 h-5 text-blue-400" /> Validated Check-Ins
           </h1>
-          <p className="text-xs text-slate-400 leading-relaxed">
+          <p className="text-xs text-ink-muted leading-relaxed">
             Short, research-validated check-ins — depression (PHQ-9 / quick PHQ-2), anxiety (GAD-7),
             wellbeing (WHO-5) and stress (PSS-4). They turn a vague "I feel worse" into something you
             can actually see move.
@@ -179,8 +179,8 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
 
         <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl p-3 flex gap-2.5">
           <Info className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
-          <p className="text-[11px] text-slate-400 leading-relaxed">
-            These are <span className="text-slate-200 font-semibold">screening tools, not a diagnosis</span>.
+          <p className="text-[11px] text-ink-muted leading-relaxed">
+            These are <span className="text-ink-2 font-semibold">screening tools, not a diagnosis</span>.
             A high score is a reason to talk to a professional — not a verdict about who you are. They
             ask about the last week or two, so a retake mostly re-scores that same window — weekly or
             fortnightly tends to show clearer movement than taking them every day.
@@ -201,13 +201,13 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
             >
               <div className="space-y-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold text-slate-100">{it.name}</span>
-                  <span className="text-xs uppercase tracking-wider text-slate-500 font-mono">{it.measures}</span>
+                  <span className="text-sm font-bold text-ink">{it.name}</span>
+                  <span className="text-xs uppercase tracking-wider text-ink-faint font-mono">{it.measures}</span>
                 </div>
-                <p className="text-[11px] text-slate-400">{it.fullName}</p>
+                <p className="text-[11px] text-ink-muted">{it.fullName}</p>
                 {last && tone ? (
                   <>
-                    <p className="text-[11px] text-slate-500">
+                    <p className="text-[11px] text-ink-faint">
                       Last: <span className={`font-semibold ${tone.text}`}>{last.total}/{it.maxScore} · {last.severity}</span>
                       {since !== null && <span className="text-slate-600"> · {since === 0 ? "today" : `${since}d ago`}</span>}
                     </p>
@@ -246,17 +246,17 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
             if (result.status === "insufficient_data") return null;
             return (
               <div className="glass rounded-2xl p-4 space-y-2">
-                <h4 className="text-xs uppercase font-mono tracking-widest text-slate-400">
+                <h4 className="text-xs uppercase font-mono tracking-widest text-ink-muted">
                   N-of-1 combined · {result.dataPoints} data points
                 </h4>
                 <div className={`flex items-center gap-1.5 text-[11px] ${
                   result.status === "improving" ? "text-emerald-400"
                   : result.status === "deteriorating" ? "text-rose-400"
-                  : "text-slate-400"
+                  : "text-ink-muted"
                 }`}>
                   <span className="font-semibold capitalize">{result.status}</span>
                   {result.reliableChange && (
-                    <span className={result.reliableChange.reliableImprovement ? "text-emerald-400" : "text-slate-500"}>
+                    <span className={result.reliableChange.reliableImprovement ? "text-emerald-400" : "text-ink-faint"}>
                       · {result.reliableChange.reliableImprovement ? "reliable improvement" : "no reliable change"}
                     </span>
                   )}
@@ -275,7 +275,7 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
       <div className="space-y-4 max-w-md mx-auto" id="assessment-running">
         <button
           onClick={() => { if (answeredCount === 0) { setPhase("menu"); setActive(null); } else { setConfirmCancel(true); } }}
-          className="text-xs font-semibold text-slate-400 hover:text-slate-100 flex items-center gap-1 cursor-pointer min-h-[44px]"
+          className="text-xs font-semibold text-ink-muted hover:text-ink flex items-center gap-1 cursor-pointer min-h-[44px]"
         >
           <ChevronLeft className="w-3.5 h-3.5" /> Cancel
         </button>
@@ -284,11 +284,11 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
             in-progress answers with no warning). Only shown once at least one item is answered. */}
         {confirmCancel && (
           <div role="alertdialog" aria-label="Cancel check-in?" className="glass rounded-xl p-3 space-y-2 border border-amber-500/30">
-            <p className="text-xs text-slate-200">Cancel this check-in? Your {answeredCount} answer{answeredCount !== 1 ? "s" : ""} won't be saved.</p>
+            <p className="text-xs text-ink-2">Cancel this check-in? Your {answeredCount} answer{answeredCount !== 1 ? "s" : ""} won't be saved.</p>
             <div className="flex gap-2">
               <button
                 onClick={() => setConfirmCancel(false)}
-                className="flex-1 min-h-[44px] rounded-lg bg-slate-700/50 hover:bg-slate-700 text-slate-200 text-sm font-semibold cursor-pointer"
+                className="flex-1 min-h-[44px] rounded-lg bg-line-strong/50 hover:bg-line-strong text-ink-2 text-sm font-semibold cursor-pointer"
               >
                 Keep going
               </button>
@@ -305,19 +305,19 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
         <header className="space-y-2">
           <div className="flex items-start justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
-              <h2 className="text-lg font-bold text-slate-100">{inst.name}</h2>
-              <span className="text-xs uppercase tracking-wider text-slate-500 font-mono">{inst.measures}</span>
+              <h2 className="text-lg font-bold text-ink">{inst.name}</h2>
+              <span className="text-xs uppercase tracking-wider text-ink-faint font-mono">{inst.measures}</span>
             </div>
             {/* Design review (2026-07-18): the copy below promised a crisis button that was never rendered
                 during the questionnaire — a hard safety failure on a screen that asks about suicidality.
                 onActivateCrisis was already wired; this surfaces it. */}
             <CrisisHeaderButton onClick={onActivateCrisis} className="shrink-0" />
           </div>
-          <p className="text-xs text-slate-300 leading-relaxed glass rounded-xl p-3">
+          <p className="text-xs text-ink-2 leading-relaxed glass rounded-xl p-3">
             {inst.prompt}
           </p>
           {inst.safetyItemIndex !== undefined && (
-            <p className="text-[11px] text-slate-500 leading-relaxed">
+            <p className="text-[11px] text-ink-faint leading-relaxed">
               Answer as honestly as you can. If anything hard comes up while you answer, the
               <span className="text-rose-300 font-semibold"> Help</span> button at the top is always one tap away.
             </p>
@@ -330,8 +330,8 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
         <div className={`grid ${COLS[optionsFor(inst, 0).length] ?? "grid-cols-4"} gap-1.5 sticky top-0 bg-page py-2 z-10`}>
           {optionsFor(inst, 0).map((a, i) => (
             <div key={i} className="text-center">
-              <div className="text-[11px] font-mono font-semibold text-slate-300">{i}</div>
-              <div className="text-[11px] text-slate-400 leading-tight">{a}</div>
+              <div className="text-[11px] font-mono font-semibold text-ink-2">{i}</div>
+              <div className="text-[11px] text-ink-muted leading-tight">{a}</div>
             </div>
           ))}
         </div>
@@ -343,12 +343,12 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
             return (
               <div
                 key={idx}
-                className={`rounded-xl p-3.5 border ${responses[idx] !== null ? "bg-card border-slate-700" : "bg-card border-slate-800"}`}
+                className={`rounded-xl p-3.5 border ${responses[idx] !== null ? "bg-card border-line-strong" : "bg-card border-line"}`}
                 id={`assessment-item-${idx}`}
               >
                 <div className="flex gap-2 mb-3">
                   <span className="text-[11px] font-mono text-slate-600 shrink-0">{idx + 1}.</span>
-                  <p className={`text-xs leading-relaxed ${isSafety ? "text-slate-200" : "text-slate-300"}`}>{item}</p>
+                  <p className={`text-xs leading-relaxed ${isSafety ? "text-ink-2" : "text-ink-2"}`}>{item}</p>
                 </div>
                 <div className={`grid ${COLS[optionsFor(inst, idx).length] ?? "grid-cols-4"} gap-1.5`}>
                   {optionsFor(inst, idx).map((opt, val) => {
@@ -360,7 +360,7 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
                         className={`min-h-[44px] px-1 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
                           selected
                             ? "bg-blue-600 border-blue-500 text-white"
-                            : "bg-page border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200"
+                            : "bg-page border-line text-ink-muted hover:border-line-strong hover:text-ink-2"
                         }`}
                         aria-label={opt}
                       >
@@ -380,7 +380,7 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
             onClick={submit}
             disabled={!allAnswered}
             id="assessment-submit"
-            className="w-full font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed bg-blue-600 hover:bg-blue-500 text-white disabled:bg-slate-800 disabled:text-slate-500"
+            className="w-full font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed bg-blue-600 hover:bg-blue-500 text-white disabled:bg-fill disabled:text-ink-faint"
           >
             {allAnswered ? (
               <><Check className="w-4 h-4" /> See my result</>
@@ -407,7 +407,7 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
               <ShieldAlert className="w-5 h-5" />
               <h3 className="text-sm font-bold">You're not alone in this</h3>
             </div>
-            <p className="text-xs text-slate-300 leading-relaxed">
+            <p className="text-xs text-ink-2 leading-relaxed">
               You marked having had thoughts of being better off dead or of hurting yourself. That
               takes honesty, and it matters. Please consider reaching out right now — to someone you
               trust, or to a trained listener who is available 24/7:
@@ -425,19 +425,19 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
         {/* Score card */}
         <div className={`rounded-2xl p-5 border ${tone.bg} ${tone.border} space-y-3`}>
           <div className="flex items-center justify-between">
-            <span className="text-xs uppercase tracking-widest font-mono text-slate-400">{inst.name} · {inst.measures}</span>
-            <span className="text-xs text-slate-500">{new Date().toLocaleDateString()}</span>
+            <span className="text-xs uppercase tracking-widest font-mono text-ink-muted">{inst.name} · {inst.measures}</span>
+            <span className="text-xs text-ink-faint">{new Date().toLocaleDateString()}</span>
           </div>
           <div className="flex items-end gap-2">
             <span className={`text-4xl font-black ${tone.text}`}>{result.total}</span>
-            <span className="text-sm text-slate-500 mb-1">/ {inst.maxScore}</span>
+            <span className="text-sm text-ink-faint mb-1">/ {inst.maxScore}</span>
             <span className={`ml-auto text-sm font-bold ${tone.text}`}>{result.band.label}</span>
           </div>
           {/* severity bar */}
           <div className="h-2 rounded-full bg-page overflow-hidden">
             <div className={`h-full ${tone.bar} rounded-full transition-all`} style={{ width: `${Math.round((result.total / inst.maxScore) * 100)}%` }} />
           </div>
-          <p className="text-xs text-slate-300 leading-relaxed">{result.band.interpretation}</p>
+          <p className="text-xs text-ink-2 leading-relaxed">{result.band.interpretation}</p>
         </div>
 
         {/* Reliable-change / deterioration nudge — fires ONLY on a reliable (>=MCID) worsening vs. the
@@ -452,7 +452,7 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
               <Activity className="w-4 h-4 shrink-0" />
               <h3 className="text-xs font-bold">This looks like a real shift, not day-to-day noise</h3>
             </div>
-            <p className="text-[11px] text-slate-300 leading-relaxed">
+            <p className="text-[11px] text-ink-2 leading-relaxed">
               {change.confidence === "cited" ? (
                 <>
                   Your {inst.name} score moved by more than the {change.threshold}-point range research
@@ -477,11 +477,11 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
           {overCut && (
             <div className="flex items-start gap-2">
               <Activity className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-              <p className="text-[11px] text-slate-300 leading-relaxed">{inst.cutPoint.note}</p>
+              <p className="text-[11px] text-ink-2 leading-relaxed">{inst.cutPoint.note}</p>
             </div>
           )}
-          <p className="text-xs text-slate-500 leading-relaxed">
-            <span className="text-slate-400 font-semibold">Not a diagnosis.</span> This is a validated
+          <p className="text-xs text-ink-faint leading-relaxed">
+            <span className="text-ink-muted font-semibold">Not a diagnosis.</span> This is a validated
             screening questionnaire. Only a qualified professional can diagnose — but they use exactly
             these scores as a starting point. Source: {inst.citation}
           </p>
@@ -490,7 +490,7 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
         <button
           onClick={() => speak(`Your ${inst.name} score is ${result.total} out of ${inst.maxScore}. ${result.band.label}. ${result.band.interpretation}`)}
           id="assessment-read-aloud"
-          className="w-full glass hover:bg-raised text-slate-300 text-xs font-semibold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5"
+          className="w-full glass hover:bg-raised text-ink-2 text-xs font-semibold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5"
         >
           <Volume2 className="w-3.5 h-3.5" /> Read this aloud
         </button>
@@ -507,7 +507,7 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
 
         <button
           onClick={() => { setPhase("menu"); setActive(null); }}
-          className="w-full glass hover:bg-raised text-slate-200 font-semibold py-3 rounded-xl text-sm cursor-pointer transition-colors"
+          className="w-full glass hover:bg-raised text-ink-2 font-semibold py-3 rounded-xl text-sm cursor-pointer transition-colors"
         >
           Done
         </button>
@@ -541,7 +541,7 @@ function TrendBlock({ instrumentId, history }: { instrumentId: InstrumentId; his
 
   return (
     <div className="glass rounded-2xl p-4 space-y-2">
-      <h4 className="text-xs uppercase font-mono tracking-widest text-slate-400">
+      <h4 className="text-xs uppercase font-mono tracking-widest text-ink-muted">
         {inst.name} trend · last {data.length}
       </h4>
       <div className="h-36 -ml-2" role="img" aria-label={`${inst.name} trend chart over last ${data.length} assessments`}>
@@ -569,7 +569,7 @@ function TrendBlock({ instrumentId, history }: { instrumentId: InstrumentId; his
         <div className={`flex items-center gap-1.5 text-[11px] ${
           status.current.trend === "reliably_improved" ? "text-emerald-400"
           : status.current.trend === "reliably_deteriorated" ? "text-rose-400"
-          : "text-slate-400"
+          : "text-ink-muted"
         }`}>
           <TrendIcon className="w-3.5 h-3.5" />
           <span>

@@ -16,7 +16,7 @@ import TIPPTool from "./TIPPTool";
 const SOURCE_BADGE: Record<LearnSource, { label: string; cls: string }> = {
   skill: { label: "Skill", cls: "bg-blue-500/20 border-blue-500/50 text-blue-200" },
   understand: { label: "Explainer", cls: "bg-indigo-500/20 border-indigo-500/50 text-indigo-200" },
-  why: { label: "Research", cls: "bg-slate-500/20 border-slate-500/50 text-slate-200" },
+  why: { label: "Research", cls: "bg-ink-faint/20 border-line-strong/50 text-ink-2" },
 };
 
 function lookupDetail(id: string, source: LearnSource): {
@@ -106,10 +106,10 @@ export default function LearnScreen() {
   return (
     <div className="space-y-4 max-w-md mx-auto" id="learn-screen">
       <header className="space-y-1">
-        <h1 className="text-xl font-semibold text-slate-100 flex items-center gap-2">
+        <h1 className="text-xl font-semibold text-ink flex items-center gap-2">
           <BookOpen className="w-5 h-5 text-blue-400" /> Learn
         </h1>
-        <p className="text-xs text-slate-400 leading-relaxed">
+        <p className="text-xs text-ink-muted leading-relaxed">
           Skills, explainers &amp; research — one library. A reference, not advice.
         </p>
       </header>
@@ -119,9 +119,9 @@ export default function LearnScreen() {
           <h3 className="text-sm font-semibold text-rose-200 flex items-center gap-1.5">
             <LifeBuoy className="w-4 h-4" /> You matter — support is here right now
           </h3>
-          <p className="text-xs text-slate-300 whitespace-pre-line leading-relaxed">{getCrisisReply()}</p>
+          <p className="text-xs text-ink-2 whitespace-pre-line leading-relaxed">{getCrisisReply()}</p>
           <CrisisLines tone="rose" compact />
-          <button onClick={() => setCrisis(false)} className="text-xs text-slate-400 hover:text-slate-200 underline underline-offset-2 cursor-pointer">
+          <button onClick={() => setCrisis(false)} className="text-xs text-ink-muted hover:text-ink-2 underline underline-offset-2 cursor-pointer">
             I'm okay — back to reading
           </button>
         </div>
@@ -155,12 +155,12 @@ export default function LearnScreen() {
             <div className="bg-card border border-blue-500/30 rounded-2xl p-4 space-y-2.5" id="learn-recommended">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-mono uppercase tracking-widest text-blue-300 flex items-center gap-1.5"><Sparkles className="w-3 h-3" /> For how you've been feeling</span>
-                <button onClick={() => setDismissedRec(true)} aria-label="Dismiss recommendation" className="flex items-center justify-center w-8 h-8 -m-1.5 text-slate-500 hover:text-slate-300 cursor-pointer"><X className="w-3.5 h-3.5" /></button>
+                <button onClick={() => setDismissedRec(true)} aria-label="Dismiss recommendation" className="flex items-center justify-center w-8 h-8 -m-1.5 text-ink-faint hover:text-ink-2 cursor-pointer"><X className="w-3.5 h-3.5" /></button>
               </div>
               <button onClick={() => { setSourceFilter("skill"); setGroupFilter(null); setQuery(recommended.name); setExpanded((prev) => new Set(prev).add(`skill:${recommended.id}`)); }} className="w-full flex items-center gap-3 text-left cursor-pointer" id="learn-rec-open">
                 <span className="flex-1 min-w-0">
-                  <span className="block text-sm font-bold text-slate-100">{recommended.name}</span>
-                  <span className="block text-[11px] text-slate-400 leading-snug">{recommended.purpose}</span>
+                  <span className="block text-sm font-bold text-ink">{recommended.name}</span>
+                  <span className="block text-[11px] text-ink-muted leading-snug">{recommended.purpose}</span>
                 </span>
                 <ChevronRight className="w-5 h-5 text-blue-400 shrink-0" />
               </button>
@@ -168,16 +168,16 @@ export default function LearnScreen() {
           )}
 
           <div className="relative">
-            <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-ink-faint absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               value={query}
               onChange={(e) => onQueryChange(e.target.value)}
               placeholder="Search skills, explainers & research…"
               id="learn-search"
-              className="w-full glass rounded-xl pl-9 pr-9 py-2.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-blue-500/50"
+              className="w-full glass rounded-xl pl-9 pr-9 py-2.5 text-xs text-ink-2 placeholder-slate-600 focus:outline-none focus:border-blue-500/50"
             />
             {query && (
-              <button onClick={() => setQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 cursor-pointer" aria-label="Clear search">
+              <button onClick={() => setQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-faint hover:text-ink-2 cursor-pointer" aria-label="Clear search">
                 <X className="w-4 h-4" />
               </button>
             )}
@@ -186,7 +186,7 @@ export default function LearnScreen() {
           <div className="flex flex-wrap gap-1.5">
             <button
               onClick={() => setSourceFilter(null)}
-              className={`px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all cursor-pointer ${sourceFilter === null ? "bg-slate-200/20 border-slate-400/50 text-slate-100" : "bg-page border-slate-800 text-slate-400 hover:text-slate-200"}`}
+              className={`px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all cursor-pointer ${sourceFilter === null ? "bg-slate-200/20 border-slate-400/50 text-ink" : "bg-page border-line text-ink-muted hover:text-ink-2"}`}
             >
               All ({allResults.length})
             </button>
@@ -194,7 +194,7 @@ export default function LearnScreen() {
               <button
                 key={src}
                 onClick={() => setSourceFilter(sourceFilter === src ? null : src)}
-                className={`px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all cursor-pointer ${sourceFilter === src ? SOURCE_BADGE[src].cls : "bg-page border-slate-800 text-slate-400 hover:text-slate-200"}`}
+                className={`px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all cursor-pointer ${sourceFilter === src ? SOURCE_BADGE[src].cls : "bg-page border-line text-ink-muted hover:text-ink-2"}`}
               >
                 {SOURCE_BADGE[src].label} ({counts[src]})
               </button>
@@ -206,7 +206,7 @@ export default function LearnScreen() {
             <div className="flex flex-wrap gap-1.5">
               <button
                 onClick={() => setGroupFilter(null)}
-                className={`px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all cursor-pointer ${groupFilter === null ? "bg-slate-200/20 border-slate-400/50 text-slate-100" : "bg-page border-slate-800 text-slate-400 hover:text-slate-200"}`}
+                className={`px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all cursor-pointer ${groupFilter === null ? "bg-slate-200/20 border-slate-400/50 text-ink" : "bg-page border-line text-ink-muted hover:text-ink-2"}`}
               >
                 All skills
               </button>
@@ -214,7 +214,7 @@ export default function LearnScreen() {
                 <button
                   key={g.id}
                   onClick={() => setGroupFilter(groupFilter === g.id ? null : g.id)}
-                  className={`px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all cursor-pointer ${groupFilter === g.id ? "bg-blue-500/20 border-blue-500/50 text-blue-200" : "bg-page border-slate-800 text-slate-400 hover:text-slate-200"}`}
+                  className={`px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all cursor-pointer ${groupFilter === g.id ? "bg-blue-500/20 border-blue-500/50 text-blue-200" : "bg-page border-line text-ink-muted hover:text-ink-2"}`}
                 >
                   {g.label}
                 </button>
@@ -223,9 +223,9 @@ export default function LearnScreen() {
           )}
 
           <div className="space-y-2" id="learn-results">
-            <div className="text-xs uppercase font-mono tracking-widest text-slate-500">{results.length} result{results.length === 1 ? "" : "s"}</div>
+            <div className="text-xs uppercase font-mono tracking-widest text-ink-faint">{results.length} result{results.length === 1 ? "" : "s"}</div>
             {results.length === 0 ? (
-              <div className="glass rounded-2xl p-5 text-center text-xs text-slate-400">
+              <div className="glass rounded-2xl p-5 text-center text-xs text-ink-muted">
                 {query ? <>Nothing matches "{query}". Try a feeling, a skill name, or a topic.</> : "Loading library…"}
               </div>
             ) : (
@@ -233,7 +233,7 @@ export default function LearnScreen() {
             )}
           </div>
 
-          <p className="text-[11px] text-slate-500 text-center leading-relaxed px-4">
+          <p className="text-[11px] text-ink-faint text-center leading-relaxed px-4">
             Understanding can help — it isn't a substitute for professional care.
           </p>
         </>
@@ -251,12 +251,12 @@ function LearnCard({ result, open, onToggle }: { result: LearnResult; open: bool
       <button onClick={onToggle} className="w-full text-left p-4 flex items-start justify-between gap-3 cursor-pointer" aria-expanded={open}>
         <div className="min-w-0 space-y-1.5">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-bold text-slate-100">{result.title}</span>
+            <span className="text-sm font-bold text-ink">{result.title}</span>
             <span className={`text-xs font-mono uppercase tracking-wider px-1.5 py-0.5 rounded border ${badge.cls}`}>{badge.label}</span>
           </div>
-          <p className="text-[11px] text-slate-400 leading-relaxed">{result.snippet}</p>
+          <p className="text-[11px] text-ink-muted leading-relaxed">{result.snippet}</p>
         </div>
-        <ChevronDown className={`w-4 h-4 text-slate-500 shrink-0 mt-0.5 transition-transform ${open ? "rotate-180" : ""}`} />
+        <ChevronDown className={`w-4 h-4 text-ink-faint shrink-0 mt-0.5 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
 
       {open && detail && (
@@ -268,7 +268,7 @@ function LearnCard({ result, open, onToggle }: { result: LearnResult; open: bool
             if (detail.steps) return (
               <ol className="space-y-1.5">
                 {detail.steps.map((step, i) => (
-                  <li key={i} className="flex gap-2 text-xs text-slate-300 leading-relaxed">
+                  <li key={i} className="flex gap-2 text-xs text-ink-2 leading-relaxed">
                     <span className="shrink-0 w-4 h-4 rounded-full bg-blue-500 text-xs font-bold text-[#171311] flex items-center justify-center mt-0.5">{i + 1}</span>
                     <span>{step}</span>
                   </li>
@@ -285,25 +285,25 @@ function LearnCard({ result, open, onToggle }: { result: LearnResult; open: bool
                   <p className="text-xs text-rose-200/90 leading-relaxed">{detail.emergencyCaveat}</p>
                 </div>
               )}
-              {detail.body && <p className="text-xs text-slate-300 leading-relaxed">{detail.body}</p>}
+              {detail.body && <p className="text-xs text-ink-2 leading-relaxed">{detail.body}</p>}
             </>
           )}
           {result.source === "why" && detail.what && (
             <div className="space-y-2 text-xs leading-relaxed">
-              <p className="text-slate-300"><span className="text-slate-500 font-semibold">What it is — </span>{detail.what}</p>
+              <p className="text-ink-2"><span className="text-ink-faint font-semibold">What it is — </span>{detail.what}</p>
               {detail.why && (
-                <p className="text-slate-300 flex gap-1.5">
+                <p className="text-ink-2 flex gap-1.5">
                   <Heart className="w-3.5 h-3.5 text-rose-400/80 shrink-0 mt-0.5" />
-                  <span><span className="text-slate-500 font-semibold">Why it helps — </span>{detail.why}</span>
+                  <span><span className="text-ink-faint font-semibold">Why it helps — </span>{detail.why}</span>
                 </p>
               )}
               {detail.research && detail.research.length > 0 && (
-                <div className="border-t border-slate-800/70 pt-2.5 space-y-1.5">
-                  <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <div className="border-t border-line/70 pt-2.5 space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-ink-faint">
                     <FlaskConical className="w-3 h-3" /> The research
                   </div>
                   {detail.research.map((r, i) => (
-                    <p key={i} className="text-[11px] text-slate-400 leading-relaxed pl-1">
+                    <p key={i} className="text-[11px] text-ink-muted leading-relaxed pl-1">
                       {r.citation}
                       {!r.verified && (
                         <span className="inline-flex items-center gap-1 ml-1 text-amber-300/90 font-medium" title="We're double-checking this reference's exact details.">
@@ -316,7 +316,7 @@ function LearnCard({ result, open, onToggle }: { result: LearnResult; open: bool
               )}
             </div>
           )}
-          {detail.basis && <p className="text-xs text-slate-500 italic leading-relaxed border-t border-slate-800 pt-2">{detail.basis}</p>}
+          {detail.basis && <p className="text-xs text-ink-faint italic leading-relaxed border-t border-line pt-2">{detail.basis}</p>}
         </div>
       )}
     </div>

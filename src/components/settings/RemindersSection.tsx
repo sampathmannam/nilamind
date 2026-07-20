@@ -23,46 +23,46 @@ export default function RemindersSection() {
     });
   };
   const TimeInput = ({ value, on }: { value: string; on: (v: string) => void }) => (
-    <input type="time" value={value} onChange={(e) => on(e.target.value)} aria-label="Time" className="glass rounded-lg px-2 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500/50" />
+    <input type="time" value={value} onChange={(e) => on(e.target.value)} aria-label="Time" className="glass rounded-lg px-2 py-1.5 text-xs text-ink-2 focus:outline-none focus:border-blue-500/50" />
   );
   return (
     <div className="glass p-5 rounded-2xl space-y-4 shadow-lg" id="settings-reminders">
       <div>
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-2 font-mono flex items-center gap-2">
           <Bell className="w-4 h-4 text-blue-400" /> {t("sec_reminders")}
         </h2>
-        <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+        <p className="text-[11px] text-ink-muted mt-1 leading-relaxed">
           One gentle nudge a day — inside your window, never during quiet hours. No streak guilt, ever.
           {status && <span className="block text-blue-300 mt-1" id="settings-reminders-status">{status}</span>}
         </p>
       </div>
-      <div className="border border-slate-800 rounded-xl p-3 flex items-center justify-between bg-page">
-        <div className="text-sm font-medium text-slate-200">Reminders</div>
+      <div className="border border-line rounded-xl p-3 flex items-center justify-between bg-page">
+        <div className="text-sm font-medium text-ink-2">Reminders</div>
         <button
           onClick={() => up({ enabled: !p.enabled })}
           id="settings-reminders-toggle"
-          className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors ${p.enabled ? "bg-blue-500" : "bg-slate-700"}`}
+          className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors ${p.enabled ? "bg-blue-500" : "bg-line-strong"}`}
           role="switch" aria-checked={p.enabled}
         >
           <span aria-hidden="true" className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200 ease-in-out ${p.enabled ? "translate-x-2.5" : "-translate-x-2.5"}`} />
         </button>
       </div>
       {p.enabled && (
-        <div className="border border-slate-800 rounded-xl p-3 bg-page space-y-3">
+        <div className="border border-line rounded-xl p-3 bg-page space-y-3">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-slate-400">Remind me between</span>
+            <span className="text-ink-muted">Remind me between</span>
             <div className="flex items-center gap-1"><TimeInput value={p.windowStart} on={(v) => up({ windowStart: v })} /><span className="text-slate-600">–</span><TimeInput value={p.windowEnd} on={(v) => up({ windowEnd: v })} /></div>
           </div>
           <div className="flex items-center justify-between text-xs">
-            <span className="text-slate-400">Quiet hours</span>
+            <span className="text-ink-muted">Quiet hours</span>
             <div className="flex items-center gap-1"><TimeInput value={p.quietStart} on={(v) => up({ quietStart: v })} /><span className="text-slate-600">–</span><TimeInput value={p.quietEnd} on={(v) => up({ quietEnd: v })} /></div>
           </div>
           <div className="flex items-center justify-between text-xs pt-1">
-            <span className="text-slate-400">Weekly review (Sundays)</span>
+            <span className="text-ink-muted">Weekly review (Sundays)</span>
             <button
               onClick={() => up({ weeklyDigest: !p.weeklyDigest })}
               id="settings-weekly-digest-toggle"
-              className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors ${p.weeklyDigest ? "bg-blue-500" : "bg-slate-700"}`}
+              className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors ${p.weeklyDigest ? "bg-blue-500" : "bg-line-strong"}`}
               role="switch" aria-checked={p.weeklyDigest}
             >
               <span aria-hidden="true" className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200 ease-in-out ${p.weeklyDigest ? "translate-x-2.5" : "-translate-x-2.5"}`} />

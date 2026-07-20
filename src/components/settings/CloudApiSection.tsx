@@ -69,7 +69,7 @@ export default function CloudApiSection() {
         setCloudApiEnabled(next);
       }}
       className={`relative inline-flex h-6 w-11 items-center rounded-full cursor-pointer transition-colors focus-visible:ring-2 focus-visible:ring-blue-500 ${
-        enabled ? "bg-purple-600" : "bg-slate-700"
+        enabled ? "bg-purple-600" : "bg-line-strong"
       }`}
     >
       <span
@@ -83,10 +83,10 @@ export default function CloudApiSection() {
   return (
     <div className="glass p-5 rounded-2xl space-y-4 shadow-lg" id="settings-cloud-api">
       <div>
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-2 font-mono flex items-center gap-2">
           <Cloud className="w-4 h-4 text-blue-400" /> {t("sec_cloud_api")}
        </h2>
-        <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">{t("sec_cloud_apiSub")}</p>
+        <p className="text-[11px] text-ink-muted mt-1 leading-relaxed">{t("sec_cloud_apiSub")}</p>
      </div>
 
       <div className="border border-amber-500/30 bg-amber-500/10 rounded-xl p-3">
@@ -114,12 +114,12 @@ export default function CloudApiSection() {
      </div>
 
       <div
-        className="border border-slate-800 rounded-xl p-3 flex items-center justify-between bg-page"
+        className="border border-line rounded-xl p-3 flex items-center justify-between bg-page"
         id="cloud-api-toggle"
       >
         <div className="space-y-0.5">
-          <div className="text-sm font-medium text-slate-200">Enable cloud API</div>
-          <div className="text-xs text-slate-500" id="cloud-api-status">
+          <div className="text-sm font-medium text-ink-2">Enable cloud API</div>
+          <div className="text-xs text-ink-faint" id="cloud-api-status">
             {statusNode}
          </div>
        </div>

@@ -4,7 +4,7 @@ import { t, type I18nKey } from "../services/i18n";
 import { currentPhase } from "../services/episodeMarker";
 
 /** Compact Dashboard card showing the active episode-phase marker, if any. */
-export default function EpisodeMarkerCard({ onOpen }: { onOpen: () => void }) {
+function EpisodeMarkerCard({ onOpen }: { onOpen: () => void }) {
   const cur = currentPhase();
   const phaseKey: I18nKey =
     cur?.phase === "elevated" ? "em_phase_elevated"
@@ -21,17 +21,19 @@ export default function EpisodeMarkerCard({ onOpen }: { onOpen: () => void }) {
       <div className="space-y-1 min-w-0">
         <div className="flex items-center gap-2">
           <Activity className="w-4 h-4 text-amber-400" />
-          <span className="text-sm font-bold text-slate-100">{t("you_episode_marker_label")}</span>
+          <span className="text-sm font-bold text-ink">{t("you_episode_marker_label")}</span>
         </div>
         {cur ? (
-          <p className="text-[11px] text-slate-400">
-            <span className="font-semibold text-slate-200">{t(phaseKey)}</span> · {cur.startDate === cur.endDate ? cur.startDate : `${cur.startDate} – ${cur.endDate}`}
+          <p className="text-[11px] text-ink-muted">
+            <span className="font-semibold text-ink-2">{t(phaseKey)}</span> · {cur.startDate === cur.endDate ? cur.startDate : `${cur.startDate} – ${cur.endDate}`}
           </p>
         ) : (
-          <p className="text-[11px] text-slate-500">{t("em_none")}</p>
+          <p className="text-[11px] text-ink-faint">{t("em_none")}</p>
         )}
       </div>
       <Activity className={`w-5 h-5 ${cur ? "text-amber-300" : "text-slate-600"}`} />
     </button>
   );
 }
+
+export default React.memo(EpisodeMarkerCard);

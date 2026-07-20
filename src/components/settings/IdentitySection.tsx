@@ -31,18 +31,18 @@ export default function IdentitySection() {
   return (
     <div className="glass p-5 rounded-2xl space-y-4 shadow-lg" id="settings-identity">
       <div>
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-2 font-mono flex items-center gap-2">
           <KeyRound className="w-4 h-4 text-blue-400" /> {t("sec_identity")}
         </h2>
-        <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+        <p className="text-[11px] text-ink-muted mt-1 leading-relaxed">
           No email or password — your space is recovered with a 12-word phrase only you hold.
-          <span className="block mt-1">ID: <span className="font-mono text-slate-300">{id.userId}</span></span>
+          <span className="block mt-1">ID: <span className="font-mono text-ink-2">{id.userId}</span></span>
         </p>
       </div>
 
-      <div className="border border-slate-800 rounded-xl p-3 bg-page space-y-2">
+      <div className="border border-line rounded-xl p-3 bg-page space-y-2">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold text-slate-200">Recovery phrase</span>
+          <span className="text-xs font-semibold text-ink-2">Recovery phrase</span>
           <button
             onClick={async () => {
               if (!revealed && !(await requireAuth("Confirm it's you to show your recovery phrase."))) return;
@@ -55,29 +55,29 @@ export default function IdentitySection() {
         </div>
         {revealed ? (
           <>
-            <p className="text-xs text-slate-200 font-mono leading-relaxed break-words">{id.mnemonic}</p>
-            <button onClick={copyPhrase} className="text-[11px] text-slate-300 hover:text-slate-100 cursor-pointer flex items-center gap-1">
+            <p className="text-xs text-ink-2 font-mono leading-relaxed break-words">{id.mnemonic}</p>
+            <button onClick={copyPhrase} className="text-[11px] text-ink-2 hover:text-ink cursor-pointer flex items-center gap-1">
               {copied ? <><Check className="w-3 h-3 text-emerald-400" /> Copied</> : <><Copy className="w-3 h-3" /> Copy</>}
             </button>
             <p className="text-xs text-amber-300/80">Keep it private — anyone with it can restore your data.</p>
           </>
         ) : (
-          <p className="text-[11px] text-slate-500">Hidden. Tap Reveal only when no one's looking.</p>
+          <p className="text-[11px] text-ink-faint">Hidden. Tap Reveal only when no one's looking.</p>
         )}
-        <p className="text-xs text-slate-500 leading-relaxed">{bioAvail === false ? "🔒 No device lock set on this phone — wiping data, showing this phrase, and exporting each ask you to confirm in-app first." : "🔒 Wiping data, showing this phrase, and exporting a backup each ask for your fingerprint or device lock first."}</p>
+        <p className="text-xs text-ink-faint leading-relaxed">{bioAvail === false ? "🔒 No device lock set on this phone — wiping data, showing this phrase, and exporting each ask you to confirm in-app first." : "🔒 Wiping data, showing this phrase, and exporting a backup each ask for your fingerprint or device lock first."}</p>
       </div>
 
-      <div className="border border-slate-800 rounded-xl p-3 bg-page space-y-2">
-        <span className="text-xs font-semibold text-slate-200">Encrypted backup</span>
-        <p className="text-[11px] text-slate-500 leading-relaxed">A file you control, encrypted with your phrase — restore it on a new device by entering the same phrase. No cloud.</p>
+      <div className="border border-line rounded-xl p-3 bg-page space-y-2">
+        <span className="text-xs font-semibold text-ink-2">Encrypted backup</span>
+        <p className="text-[11px] text-ink-faint leading-relaxed">A file you control, encrypted with your phrase — restore it on a new device by entering the same phrase. No cloud.</p>
         {!backup ? (
-          <button onClick={doExport} disabled={busy} id="settings-export-backup" className="w-full glass hover:bg-raised text-slate-200 text-xs font-semibold py-2.5 rounded-lg cursor-pointer flex items-center justify-center gap-1.5">
+          <button onClick={doExport} disabled={busy} id="settings-export-backup" className="w-full glass hover:bg-raised text-ink-2 text-xs font-semibold py-2.5 rounded-lg cursor-pointer flex items-center justify-center gap-1.5">
             {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <><Download className="w-3.5 h-3.5" /> Create backup</>}
           </button>
         ) : (
           <div className="flex gap-2">
             <button onClick={download} className="flex-1 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2.5 rounded-lg cursor-pointer">Download .txt</button>
-            <button onClick={() => navigator.clipboard.writeText(backup)} className="glass text-slate-300 text-xs px-3 py-2.5 rounded-lg cursor-pointer">Copy</button>
+            <button onClick={() => navigator.clipboard.writeText(backup)} className="glass text-ink-2 text-xs px-3 py-2.5 rounded-lg cursor-pointer">Copy</button>
           </div>
         )}
       </div>

@@ -36,7 +36,7 @@ const ACCENT: Record<string, string> = {
 
 const VARIANT: Record<CardVariant, string> = {
   glass: "glass",
-  raised: "bg-card border border-slate-700",
+  raised: "bg-card border border-line-strong",
   fill: "bg-fill",
 };
 

@@ -23,7 +23,7 @@ import { scanForCrisis } from "../safety";
 const VALENCE_OPTIONS = [
   { key: -3, label: "Very bad", icon: Frown, class: "text-amber-400" },
   { key: -1, label: "Bad", icon: Frown, class: "text-orange-400" },
-  { key: 0, label: "Neutral", icon: Meh, class: "text-slate-400" },
+  { key: 0, label: "Neutral", icon: Meh, class: "text-ink-muted" },
   { key: 1, label: "Good", icon: Smile, class: "text-green-400" },
   { key: 3, label: "Very good", icon: Smile, class: "text-cyan-400" },
 ];
@@ -42,7 +42,7 @@ export default function EmaCheckIn({ onLogged, onCrisis }: { onLogged?: () => vo
     <div className="flex flex-col min-h-full bg-page" id="ema-checkin">
       <div className="flex-1 p-6 flex flex-col gap-6">
         <div className="text-center">
-          <p className="text-sm text-slate-300 font-semibold">How are you right now?</p>
+          <p className="text-sm text-ink-2 font-semibold">How are you right now?</p>
         </div>
 
         {step === "valence" && (
@@ -60,7 +60,7 @@ export default function EmaCheckIn({ onLogged, onCrisis }: { onLogged?: () => vo
                 id={`ema-valence-${o.key}`}
               >
                 <o.icon className={`w-7 h-7 ${o.class}`} />
-                <span className="text-[11px] mt-2 text-slate-400">{o.label}</span>
+                <span className="text-[11px] mt-2 text-ink-muted">{o.label}</span>
               </button>
             ))}
           </div>
@@ -68,7 +68,7 @@ export default function EmaCheckIn({ onLogged, onCrisis }: { onLogged?: () => vo
 
         {step === "energy" && (
           <div className="flex flex-col gap-4">
-            <p className="text-sm text-slate-300 font-semibold text-center">Your energy?</p>
+            <p className="text-sm text-ink-2 font-semibold text-center">Your energy?</p>
             <div className="grid grid-cols-4 gap-3">
               {[1, 2, 3, 4].map((e) => (
                 <button
@@ -92,7 +92,7 @@ export default function EmaCheckIn({ onLogged, onCrisis }: { onLogged?: () => vo
                       }`} />
                     ))}
                   </div>
-                  <span className="text-[11px] mt-2 text-slate-400">{
+                  <span className="text-[11px] mt-2 text-ink-muted">{
                     e === 1 ? "Very low" :
                     e === 2 ? "Low" :
                     e === 3 ? "Moderate" : "High"
@@ -112,12 +112,12 @@ export default function EmaCheckIn({ onLogged, onCrisis }: { onLogged?: () => vo
               // Matches the canonical `glass` input pattern (see DailyIntentionCard). Its existing
               // ring-based focus (focus:ring-1 focus:ring-purple-400) is unaffected - a box-shadow ring
               // doesn't compete with .glass's unlayered border the way a border-color utility would.
-              className="glass text-sm text-slate-200 rounded-2xl px-4 py-2.5 focus:outline-none focus:ring-1 focus:ring-purple-400 placeholder-slate-500"
+              className="glass text-sm text-ink-2 rounded-2xl px-4 py-2.5 focus:outline-none focus:ring-1 focus:ring-purple-400 placeholder-ink-faint"
               maxLength={30}
             />
             <button
               onClick={saveAndClose}
-              className="bg-purple-600 hover:bg-purple-500 mt-auto text-slate-100 font-semibold py-3 rounded-2xl transition-colors"
+              className="bg-purple-600 hover:bg-purple-500 mt-auto text-ink font-semibold py-3 rounded-2xl transition-colors"
               id="ema-save"
             >
               Done

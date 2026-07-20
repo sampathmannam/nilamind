@@ -36,30 +36,30 @@ export default function PassiveSensingSection() {
   return (
     <div className="glass p-5 rounded-2xl space-y-4 shadow-lg" id="settings-passive-sensing">
       <div>
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-2 font-mono flex items-center gap-2">
           <Activity className="w-4 h-4 text-blue-400" /> {t("sec_passive_sensing")}
         </h2>
-        <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+        <p className="text-[11px] text-ink-muted mt-1 leading-relaxed">
           {t("sec_passive_sensing_sub")}
         </p>
       </div>
-      <div className="border border-slate-800 rounded-xl p-3 flex items-center justify-between bg-page">
+      <div className="border border-line rounded-xl p-3 flex items-center justify-between bg-page">
         <div className="space-y-0.5">
-          <div className="text-sm font-medium text-slate-200">{t("pi_enable_label")}</div>
-          <div className="text-xs text-slate-500">{t("pi_enable_sub")}</div>
+          <div className="text-sm font-medium text-ink-2">{t("pi_enable_label")}</div>
+          <div className="text-xs text-ink-faint">{t("pi_enable_sub")}</div>
         </div>
         <button
           onClick={toggle}
           id="settings-passive-sensing-toggle"
-          className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors ${on ? "bg-blue-500" : "bg-slate-700"}`}
+          className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors ${on ? "bg-blue-500" : "bg-line-strong"}`}
           role="switch" aria-checked={on}
         >
           <span aria-hidden="true" className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200 ease-in-out ${on ? "translate-x-2.5" : "-translate-x-2.5"}`} />
         </button>
       </div>
       {on && (
-        <div className="space-y-3 pt-2 border-t border-slate-800">
-          <div className="flex items-center gap-3 text-xs text-slate-400">
+        <div className="space-y-3 pt-2 border-t border-line">
+          <div className="flex items-center gap-3 text-xs text-ink-muted">
             <span className="flex items-center gap-1">
               <Database className="w-3 h-3" /> {status.featureCount} {t("pi_extractions")}
             </span>
@@ -67,7 +67,7 @@ export default function PassiveSensingSection() {
               <Eye className="w-3 h-3" /> {status.activeSources.join(", ") || t("pi_no_sources")}
             </span>
           </div>
-          <div className="flex items-center gap-3 text-xs text-slate-500">
+          <div className="flex items-center gap-3 text-xs text-ink-faint">
             <span className="flex items-center gap-1">
               <span className="w-2 h-2 rounded-full bg-slate-600" /> {t("pi_last_extraction")}: {status.lastExtraction ? new Date(status.lastExtraction).toLocaleDateString() : t("pi_never")}
             </span>
@@ -79,7 +79,7 @@ export default function PassiveSensingSection() {
           >
             <Trash2 className="w-4 h-4" />
             <span className="text-sm font-medium">{t("pi_delete_data")}</span>
-            <span className="text-[11px] text-slate-500 ml-auto">{t("pi_delete_sub")}</span>
+            <span className="text-[11px] text-ink-faint ml-auto">{t("pi_delete_sub")}</span>
           </button>
         </div>
       )}

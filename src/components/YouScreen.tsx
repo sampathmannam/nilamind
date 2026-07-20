@@ -150,7 +150,7 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
         </div>
         {streak.totalActiveDays > 0 && (
           <>
-            <div className="mt-3 pt-3 border-t border-slate-800">
+            <div className="mt-3 pt-3 border-t border-line">
               <StreakConstellation activeDays={activeDays} />
             </div>
               <p className="text-xs text-ink-faint text-center mt-1.5">
@@ -175,10 +175,10 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
         <div className="glass rounded-2xl p-4">
           <div className="flex items-center gap-3">
             <TrendingUp className="w-5 h-5 text-emerald-400 shrink-0" aria-hidden="true" />
-            <div className="text-xs text-slate-400">
-              <span className="text-slate-200 font-semibold">{weekSnapshot.checkinDays} day{weekSnapshot.checkinDays > 1 ? "s" : ""}</span> checked in this week
+            <div className="text-xs text-ink-muted">
+              <span className="text-ink-2 font-semibold">{weekSnapshot.checkinDays} day{weekSnapshot.checkinDays > 1 ? "s" : ""}</span> checked in this week
               {weekSnapshot.topEmotion && (
-                <> · mostly <span className="text-slate-200 font-semibold capitalize">{weekSnapshot.topEmotion}</span></>
+                <> · mostly <span className="text-ink-2 font-semibold capitalize">{weekSnapshot.topEmotion}</span></>
               )}
             </div>
           </div>
@@ -190,7 +190,7 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
         <div className="glass rounded-2xl p-4 border-l-4 border-l-emerald-500">
           <div className="flex items-center gap-3">
             <CheckCircle className="w-5 h-5 text-emerald-400 shrink-0" />
-            <p className="text-xs text-slate-300 leading-relaxed">{ack}</p>
+            <p className="text-xs text-ink-2 leading-relaxed">{ack}</p>
           </div>
         </div>
       )}
@@ -199,8 +199,8 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
           <div className="flex items-start gap-3">
             <Target className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-slate-400">This week's intention</p>
-              <p className="text-sm text-slate-200 font-medium mt-0.5">{intention.text}</p>
+              <p className="text-xs text-ink-muted">This week's intention</p>
+              <p className="text-sm text-ink-2 font-medium mt-0.5">{intention.text}</p>
               <div className="flex gap-2 mt-3">
                 <button
                   onClick={handleComplete}
@@ -210,7 +210,7 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
                 </button>
                 <button
                   onClick={handleClear}
-                  className="px-4 min-h-[44px] inline-flex items-center rounded-lg hover:bg-slate-800/50 text-slate-500 text-xs font-medium transition-colors cursor-pointer"
+                  className="px-4 min-h-[44px] inline-flex items-center rounded-lg hover:bg-fill/50 text-ink-faint text-xs font-medium transition-colors cursor-pointer"
                 >
                   Clear
                 </button>
@@ -229,9 +229,9 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
           </span>
           <span className="flex-1 min-w-0">
               <span className="block text-sm font-bold text-ink">Set a gentle intention</span>
-            <span className="block text-[11px] text-slate-400">One small thing you'd like to try this week</span>
+            <span className="block text-[11px] text-ink-muted">One small thing you'd like to try this week</span>
           </span>
-          <ChevronRight className="w-5 h-5 text-slate-500 shrink-0" />
+          <ChevronRight className="w-5 h-5 text-ink-faint shrink-0" />
         </button>
       )}
 
@@ -249,11 +249,11 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
           >
             <div className="flex items-center justify-between mb-4">
               <h2 id="intention-picker-title" className="text-lg font-semibold text-ink">Set an intention</h2>
-              <button onClick={() => setShowPicker(false)} aria-label="Close" className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-400 hover:text-slate-200">
+              <button onClick={() => setShowPicker(false)} aria-label="Close" className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-ink-muted hover:text-ink-2">
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <p className="text-xs text-slate-400 mb-4">Pick one, or write your own. No pressure — just a gentle nudge.</p>
+            <p className="text-xs text-ink-muted mb-4">Pick one, or write your own. No pressure — just a gentle nudge.</p>
             <div className="space-y-2 max-h-60 overflow-y-auto">
               {INTENTION_OPTIONS.map((opt) => (
                 <button
@@ -261,14 +261,14 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
                   onClick={() => { handleSetIntention(opt); }}
                   className="w-full text-left glass hover:brightness-125 p-3 rounded-xl transition-all cursor-pointer"
                 >
-                  <span className="text-sm text-slate-200">{opt}</span>
+                  <span className="text-sm text-ink-2">{opt}</span>
                 </button>
               ))}
-              <div className="pt-2 border-t border-slate-800">
+              <div className="pt-2 border-t border-line">
                 <input
                   type="text"
                   placeholder="Or write your own…"
-                  className="w-full glass rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                  className="w-full glass rounded-xl px-3 py-2 text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus:border-blue-500"
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && e.currentTarget.value.trim()) {
                       handleSetIntention(e.currentTarget.value.trim());
@@ -298,10 +298,10 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
               >
                 <span className="shrink-0"><r.Icon className={r.iconClass} aria-hidden="true" /></span>
                 <span className="flex-1 min-w-0">
-                  <span className="block text-sm font-bold text-slate-100">{r.label}</span>
-                  <span className="block text-[11px] text-slate-400">{r.sub}</span>
+                  <span className="block text-sm font-bold text-ink">{r.label}</span>
+                  <span className="block text-[11px] text-ink-muted">{r.sub}</span>
                 </span>
-                <ChevronRight className="w-5 h-5 text-slate-500 shrink-0" aria-hidden="true" />
+                <ChevronRight className="w-5 h-5 text-ink-faint shrink-0" aria-hidden="true" />
               </button>
             ))}
           </div>
@@ -312,7 +312,7 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
       {!showMoreResources && groups.some((g) => g.rows.some((r) => r.more)) && (
         <button
           onClick={() => setShowMoreResources(true)}
-          className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-dashed border-slate-700/50 hover:border-slate-600/50 text-slate-400 hover:text-slate-300 text-sm font-medium transition-all cursor-pointer active:scale-[0.99]"
+          className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-dashed border-line-strong/50 hover:border-slate-600/50 text-ink-muted hover:text-ink-2 text-sm font-medium transition-all cursor-pointer active:scale-[0.99]"
         >
           <Lightbulb className="w-4 h-4 text-amber-400" aria-hidden="true" />
           More resources
@@ -323,7 +323,7 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
           MH home should not solicit ratings). Self-gates via shouldPromptRating(). */}
       <RatingPromptCard />
 
-      <p className="text-[11px] text-slate-500 text-center leading-relaxed px-4">
+      <p className="text-[11px] text-ink-faint text-center leading-relaxed px-4">
         NilaMind is a support alongside — not a substitute for — professional care.
       </p>
     </div>

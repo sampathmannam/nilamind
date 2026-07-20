@@ -44,7 +44,7 @@ export default function ConversationalCheckinCard({
       <button
         onClick={dismiss}
         aria-label="Not now"
-        className="absolute top-3 right-3 p-1.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-300 cursor-pointer"
+        className="absolute top-3 right-3 p-1.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-ink-faint hover:text-ink-2 cursor-pointer"
       >
         <X className="w-4 h-4" />
       </button>
@@ -53,8 +53,8 @@ export default function ConversationalCheckinCard({
           <Sparkles className="w-5 h-5" aria-hidden="true" />
         </span>
         <div className="min-w-0">
-          <p className="text-sm font-bold text-slate-100 leading-snug">{summarizeDraft(draft)}</p>
-          <p className="text-[11px] text-slate-400 mt-0.5 leading-relaxed">
+          <p className="text-sm font-bold text-ink leading-snug">{summarizeDraft(draft)}</p>
+          <p className="text-[11px] text-ink-muted mt-0.5 leading-relaxed">
             From what you shared with me — want me to log that as today's check-in? You can tweak it too.
           </p>
         </div>
@@ -71,7 +71,7 @@ export default function ConversationalCheckinCard({
         <button
           onClick={notQuite}
           id="conv-checkin-adjust"
-          className="px-4 py-2.5 rounded-xl border border-slate-700/50 hover:border-slate-600/50 text-slate-300 hover:text-slate-100 text-sm font-medium cursor-pointer transition-all active:scale-[0.99]"
+          className="px-4 py-2.5 rounded-xl border border-line-strong/50 hover:border-slate-600/50 text-ink-2 hover:text-ink text-sm font-medium cursor-pointer transition-all active:scale-[0.99]"
         >
           Not quite
         </button>

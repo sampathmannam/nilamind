@@ -4,7 +4,7 @@ import { buildAffectToneStrip } from "../services/affectToneChart";
 import { valenceToColor, NO_DATA_COLOR } from "../services/affectToneColor";
 import { localDateKey } from "../services/storageUtils";
 
-export default function AffectToneStrip() {
+function AffectToneStrip() {
   const { sufficient, cells } = buildAffectToneStrip();
   const byDate = new Map(cells.map((c) => [c.date, c]));
 
@@ -49,3 +49,5 @@ export default function AffectToneStrip() {
     </Card>
   );
 }
+
+export default React.memo(AffectToneStrip);

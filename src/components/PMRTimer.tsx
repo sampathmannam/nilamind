@@ -73,11 +73,11 @@ export default function PMRTimer({ onComplete }: PMRTimerProps = {}) {
           ariaLabel={`Paired muscle relaxation: ${state.group.label}, ${state.phase}`}
         />
 
-        <p className="text-[11px] text-slate-400" id="pmr-group-counter">
+        <p className="text-[11px] text-ink-muted" id="pmr-group-counter">
           Group {state.groupIndex + 1} of 6
         </p>
 
-        <p className="text-sm text-slate-300 text-center leading-relaxed max-w-xs" id="pmr-cue">
+        <p className="text-sm text-ink-2 text-center leading-relaxed max-w-xs" id="pmr-cue">
           {state.cue}
         </p>
 
@@ -92,7 +92,7 @@ export default function PMRTimer({ onComplete }: PMRTimerProps = {}) {
       <div className="flex items-center justify-center gap-3">
         <button
           onClick={reset}
-          className="p-2.5 rounded-full bg-slate-700 text-slate-300 hover:bg-slate-600 transition-colors cursor-pointer"
+          className="p-2.5 rounded-full bg-line-strong text-ink-2 hover:bg-slate-600 transition-colors cursor-pointer"
           aria-label="Reset"
         >
           <RotateCcw className="w-4 h-4" />
@@ -109,7 +109,7 @@ export default function PMRTimer({ onComplete }: PMRTimerProps = {}) {
         </button>
       </div>
 
-      <p className="text-[11px] text-slate-500 text-center">
+      <p className="text-[11px] text-ink-faint text-center">
         Tense on the in-breath, release on the out-breath. Skip a group if it hurts.
       </p>
     </div>

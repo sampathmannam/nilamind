@@ -122,7 +122,7 @@ export default function SoundPlayer({ compact = false }: Props) {
           className={`p-3 rounded-full transition-all cursor-pointer ${
             playing
               ? "bg-emerald-500/20 text-emerald-400"
-              : "bg-slate-800 text-slate-400 hover:text-slate-200"
+              : "bg-fill text-ink-muted hover:text-ink-2"
           }`}
           aria-label={playing ? "Pause ambient sound" : "Play ambient sound"}
         >
@@ -138,7 +138,7 @@ export default function SoundPlayer({ compact = false }: Props) {
                 className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
                   selectedType === type
                     ? "bg-blue-500/20 text-blue-300"
-                    : "bg-slate-800/50 text-slate-500 hover:text-slate-300"
+                    : "bg-fill/50 text-ink-faint hover:text-ink-2"
                 }`}
                 title={info.description}
               >
@@ -157,7 +157,7 @@ export default function SoundPlayer({ compact = false }: Props) {
           renders the "Ambient sounds" title + close button (App.tsx renderAuxView). Rendering our
           own header duplicated both (device screenshot 2026-07-15). We keep only the unique
           on-device privacy caption, which the Sheet chrome does not provide. */}
-      <p className="text-xs text-slate-500">Generated on-device — no files, no network</p>
+      <p className="text-xs text-ink-faint">Generated on-device — no files, no network</p>
 
       {/* Sound grid */}
       <div className="grid grid-cols-2 gap-2">
@@ -175,10 +175,10 @@ export default function SoundPlayer({ compact = false }: Props) {
               <div className="flex items-center gap-2">
                 <span className="text-lg">{info.icon}</span>
                 <div className="min-w-0">
-                  <p className={`text-xs font-semibold ${isSelected ? "text-blue-300" : "text-slate-300"}`}>
+                  <p className={`text-xs font-semibold ${isSelected ? "text-blue-300" : "text-ink-2"}`}>
                     {info.name}
                   </p>
-                  <p className="text-xs text-slate-500 truncate">{info.description}</p>
+                  <p className="text-xs text-ink-faint truncate">{info.description}</p>
                 </div>
               </div>
             </button>
@@ -205,7 +205,7 @@ export default function SoundPlayer({ compact = false }: Props) {
       <div className="flex items-center gap-3">
         <button
           onClick={() => handleVolume(volume > 0 ? 0 : 0.3)}
-          className="text-slate-500 hover:text-slate-300 cursor-pointer"
+          className="text-ink-faint hover:text-ink-2 cursor-pointer"
         >
           {volume > 0 ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
         </button>
@@ -216,17 +216,17 @@ export default function SoundPlayer({ compact = false }: Props) {
           step={0.05}
           value={volume}
           onChange={(e) => handleVolume(Number(e.target.value))}
-          className="flex-1 h-1 bg-slate-700 rounded-full appearance-none cursor-pointer accent-blue-400"
+          className="flex-1 h-1 bg-line-strong rounded-full appearance-none cursor-pointer accent-blue-400"
           aria-label="Volume"
         />
-        <span className="text-xs text-slate-500 w-8 text-right">{Math.round(volume * 100)}%</span>
+        <span className="text-xs text-ink-faint w-8 text-right">{Math.round(volume * 100)}%</span>
       </div>
 
       {/* Timer */}
       <div className="space-y-2">
         <div className="flex items-center gap-2">
-          <Timer className="w-3.5 h-3.5 text-slate-500" />
-          <span className="text-xs text-slate-500">Auto-stop</span>
+          <Timer className="w-3.5 h-3.5 text-ink-faint" />
+          <span className="text-xs text-ink-faint">Auto-stop</span>
           {timerRemaining > 0 && (
             <span className="text-xs text-amber-400 font-mono ml-auto">{formatTime(timerRemaining)}</span>
           )}
@@ -239,7 +239,7 @@ export default function SoundPlayer({ compact = false }: Props) {
               className={`flex-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
                 timerMinutes === opt.minutes
                   ? "bg-blue-500/20 text-blue-300"
-                  : "bg-slate-800/50 text-slate-500 hover:text-slate-300"
+                  : "bg-fill/50 text-ink-faint hover:text-ink-2"
               }`}
             >
               {opt.label}

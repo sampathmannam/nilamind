@@ -35,7 +35,7 @@ export default function SafetyPlanNudgeCard({ go }: SafetyPlanNudgeCardProps) {
     >
       <button
         onClick={handleDismiss}
-        className="absolute top-3 right-3 p-1.5 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-slate-800/50 transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center"
+        className="absolute top-3 right-3 p-1.5 rounded-lg text-ink-faint hover:text-ink-2 hover:bg-fill/50 transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center"
         aria-label="Dismiss"
       >
         <X className="w-4 h-4" />
@@ -44,7 +44,7 @@ export default function SafetyPlanNudgeCard({ go }: SafetyPlanNudgeCardProps) {
       <div className="flex items-start gap-2.5 pr-8">
         <LifeBuoy className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
         <div className="space-y-2">
-          <p className="text-sm text-slate-200 leading-relaxed">
+          <p className="text-sm text-ink-2 leading-relaxed">
             You haven't set up a coping plan yet. A couple of quick notes now can help a lot on a harder day.
           </p>
           <div className="flex gap-2">
@@ -58,7 +58,7 @@ export default function SafetyPlanNudgeCard({ go }: SafetyPlanNudgeCardProps) {
             </button>
             <button
               onClick={handleDismiss}
-              className="px-3 py-2 rounded-xl text-xs text-slate-500 hover:text-slate-300 transition-colors cursor-pointer min-h-[44px]"
+              className="px-3 py-2 rounded-xl text-xs text-ink-faint hover:text-ink-2 transition-colors cursor-pointer min-h-[44px]"
             >
               Not now
             </button>

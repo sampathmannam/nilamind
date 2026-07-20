@@ -38,13 +38,13 @@ export default function ProactiveNudgeRail({
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onTap?.(); }}
     >
       <Icon className="w-4 h-4 text-amber-400 shrink-0" />
-      <p className="text-[12px] text-slate-300 leading-snug flex-1">{text}</p>
-      <ChevronRight className="w-3 h-3 text-slate-500 shrink-0" />
+      <p className="text-[12px] text-ink-2 leading-snug flex-1">{text}</p>
+      <ChevronRight className="w-3 h-3 text-ink-faint shrink-0" />
       {onDismiss && (
         <button
           onClick={(e) => { e.stopPropagation(); onDismiss(); }}
           aria-label="Dismiss"
-          className="shrink-0 p-1 -mr-1 rounded-lg text-slate-500 hover:text-slate-300 cursor-pointer"
+          className="shrink-0 p-1 -mr-1 rounded-lg text-ink-faint hover:text-ink-2 cursor-pointer"
         >
           <X className="w-3.5 h-3.5" />
         </button>

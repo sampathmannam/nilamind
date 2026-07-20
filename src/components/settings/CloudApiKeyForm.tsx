@@ -44,7 +44,7 @@ export default function CloudApiKeyForm(props: CloudApiKeyFormProps) {
   return (
     <>
       <div className="space-y-2" id="cloud-api-provider">
-        <label className="text-xs font-medium text-slate-300">
+        <label className="text-xs font-medium text-ink-2">
           {t("cloud_api_provider_label")}
        </label>
         <div className="grid grid-cols-2 gap-2">
@@ -55,7 +55,7 @@ export default function CloudApiKeyForm(props: CloudApiKeyFormProps) {
             className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-medium transition-colors ${
               isGroq
                 ? "bg-emerald-600 border-emerald-400 text-white"
-                : "bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700"
+                : "bg-fill border-line-strong text-ink-2 hover:bg-line-strong"
             }`}
           >
             <Sparkles className="w-3 h-3" /> {t("cloud_api_groq_recommended")}
@@ -67,7 +67,7 @@ export default function CloudApiKeyForm(props: CloudApiKeyFormProps) {
             className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-medium transition-colors ${
               !isGroq
                 ? "bg-emerald-600 border-emerald-400 text-white"
-                : "bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700"
+                : "bg-fill border-line-strong text-ink-2 hover:bg-line-strong"
             }`}
           >
             <Cpu className="w-3 h-3" /> {t("cloud_api_custom_label")}
@@ -128,7 +128,7 @@ function GroqPanel(props: {
       ? t("cloud_api_groq_key_hint_ok")
       : `⚠ ${props.keyValidation.hint}`;
   const keyHintColor = !props.apiKey
-    ? "text-slate-500"
+    ? "text-ink-faint"
     : props.keyValidation.ok
       ? "text-emerald-400"
       : "text-amber-300";
@@ -151,8 +151,8 @@ function GroqPanel(props: {
         <ExternalLink className="w-3.5 h-3.5 text-emerald-300" />
      </a>
 
-      <div className="border border-slate-800 rounded-xl p-3 bg-page space-y-2" id="cloud-api-key">
-        <label className="text-xs font-medium text-slate-300">
+      <div className="border border-line rounded-xl p-3 bg-page space-y-2" id="cloud-api-key">
+        <label className="text-xs font-medium text-ink-2">
           {t("cloud_api_groq_key_label")}
        </label>
         <div className="flex gap-2">
@@ -163,12 +163,12 @@ function GroqPanel(props: {
             placeholder={`${GROQ_KEY_PREFIX}…`}
             autoComplete="off"
             spellCheck={false}
-            className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 font-mono focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            className="flex-1 bg-fill border border-line-strong rounded-lg px-3 py-2 text-xs text-ink-2 font-mono focus:outline-none focus:ring-1 focus:ring-emerald-500"
           />
           <button
             type="button"
             onClick={() => props.setShowKey(!props.showKey)}
-            className="px-2 py-1 text-slate-400 hover:text-slate-200 transition-colors"
+            className="px-2 py-1 text-ink-muted hover:text-ink-2 transition-colors"
             aria-label={props.showKey ? "Hide API key" : "Show API key"}
           >
             {props.showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -179,8 +179,8 @@ function GroqPanel(props: {
        </p>
      </div>
 
-      <div className="border border-slate-800 rounded-xl p-3 bg-page space-y-2" id="cloud-api-model">
-        <label className="text-xs font-medium text-slate-300">
+      <div className="border border-line rounded-xl p-3 bg-page space-y-2" id="cloud-api-model">
+        <label className="text-xs font-medium text-ink-2">
           {t("cloud_api_model_label")}
        </label>
         <select
@@ -189,7 +189,7 @@ function GroqPanel(props: {
             if (e.target.value !== "custom") props.setApiModel(e.target.value);
             else props.setApiModel("");
           }}
-          className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+          className="w-full bg-fill border border-line-strong rounded-lg px-3 py-2 text-xs text-ink-2 focus:outline-none focus:ring-1 focus:ring-emerald-500"
         >
           {GROQ_RECOMMENDED_MODELS.map((m) => (
             <option key={m.id} value={m.id}>
@@ -204,15 +204,15 @@ function GroqPanel(props: {
             value={props.apiModel}
             onChange={(e) => props.setApiModel(e.target.value)}
             placeholder="llama-3.1-8b-instant"
-            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 font-mono focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            className="w-full bg-fill border border-line-strong rounded-lg px-3 py-2 text-xs text-ink-2 font-mono focus:outline-none focus:ring-1 focus:ring-emerald-500"
           />
         ) : null}
-        <p className="text-[11px] text-slate-500">{modelHint}</p>
+        <p className="text-[11px] text-ink-faint">{modelHint}</p>
      </div>
 
       <button
         onClick={() => props.setShowAdvanced(!props.showAdvanced)}
-        className="w-full flex items-center justify-between py-1 px-1 text-slate-500 hover:text-slate-300 cursor-pointer transition-colors text-xs"
+        className="w-full flex items-center justify-between py-1 px-1 text-ink-faint hover:text-ink-2 cursor-pointer transition-colors text-xs"
         type="button"
       >
         <span className="uppercase tracking-widest font-mono">
@@ -222,8 +222,8 @@ function GroqPanel(props: {
      </button>
 
       {props.showAdvanced ? (
-        <div className="border border-slate-800 rounded-xl p-3 bg-page space-y-2" id="cloud-api-url">
-          <label className="text-xs font-medium text-slate-300">
+        <div className="border border-line rounded-xl p-3 bg-page space-y-2" id="cloud-api-url">
+          <label className="text-xs font-medium text-ink-2">
             {t("cloud_api_endpoint_label")}
          </label>
           <input
@@ -231,9 +231,9 @@ function GroqPanel(props: {
             value={props.advancedUrl}
             onChange={(e) => props.setAdvancedUrl(e.target.value)}
             placeholder={GROQ_DEFAULT_URL}
-            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 font-mono focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            className="w-full bg-fill border border-line-strong rounded-lg px-3 py-2 text-xs text-ink-2 font-mono focus:outline-none focus:ring-1 focus:ring-emerald-500"
           />
-          <p className="text-[11px] text-slate-500">
+          <p className="text-[11px] text-ink-faint">
             {t("cloud_api_endpoint_hint_groq")}
          </p>
        </div>
@@ -270,8 +270,8 @@ function OpenAiCompatiblePanel(props: {
         <ExternalLink className="w-3.5 h-3.5 text-emerald-300" />
      </a>
 
-      <div className="border border-slate-800 rounded-xl p-3 bg-page space-y-2" id="cloud-api-url">
-        <label className="text-xs font-medium text-slate-300">
+      <div className="border border-line rounded-xl p-3 bg-page space-y-2" id="cloud-api-url">
+        <label className="text-xs font-medium text-ink-2">
           {t("cloud_api_endpoint_label")}
        </label>
         <input
@@ -279,13 +279,13 @@ function OpenAiCompatiblePanel(props: {
           value={props.apiUrl}
           onChange={(e) => props.setApiUrl(e.target.value)}
           placeholder="https://api.openai.com/v1/chat/completions"
-          className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 font-mono focus:outline-none focus:ring-1 focus:ring-purple-500"
+          className="w-full bg-fill border border-line-strong rounded-lg px-3 py-2 text-xs text-ink-2 font-mono focus:outline-none focus:ring-1 focus:ring-purple-500"
         />
-        <p className="text-[11px] text-slate-500">{t("cloud_api_endpoint_hint_custom")}</p>
+        <p className="text-[11px] text-ink-faint">{t("cloud_api_endpoint_hint_custom")}</p>
      </div>
 
-      <div className="border border-slate-800 rounded-xl p-3 bg-page space-y-2" id="cloud-api-key">
-        <label className="text-xs font-medium text-slate-300">
+      <div className="border border-line rounded-xl p-3 bg-page space-y-2" id="cloud-api-key">
+        <label className="text-xs font-medium text-ink-2">
           {t("cloud_api_groq_key_label")}
        </label>
         <div className="flex gap-2">
@@ -296,22 +296,22 @@ function OpenAiCompatiblePanel(props: {
             placeholder="sk-... or your provider's key"
             autoComplete="off"
             spellCheck={false}
-            className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 font-mono focus:outline-none focus:ring-1 focus:ring-purple-500"
+            className="flex-1 bg-fill border border-line-strong rounded-lg px-3 py-2 text-xs text-ink-2 font-mono focus:outline-none focus:ring-1 focus:ring-purple-500"
           />
           <button
             type="button"
             onClick={() => props.setShowKey(!props.showKey)}
-            className="px-2 py-1 text-slate-400 hover:text-slate-200 transition-colors"
+            className="px-2 py-1 text-ink-muted hover:text-ink-2 transition-colors"
             aria-label={props.showKey ? "Hide API key" : "Show API key"}
           >
             {props.showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
          </button>
        </div>
-        <p className="text-[11px] text-slate-500">{t("cloud_api_openai_key_hint")}</p>
+        <p className="text-[11px] text-ink-faint">{t("cloud_api_openai_key_hint")}</p>
      </div>
 
-      <div className="border border-slate-800 rounded-xl p-3 bg-page space-y-2" id="cloud-api-model">
-        <label className="text-xs font-medium text-slate-300">
+      <div className="border border-line rounded-xl p-3 bg-page space-y-2" id="cloud-api-model">
+        <label className="text-xs font-medium text-ink-2">
           {t("cloud_api_model_label")}
        </label>
         <input
@@ -319,9 +319,9 @@ function OpenAiCompatiblePanel(props: {
           value={props.apiModel}
           onChange={(e) => props.setApiModel(e.target.value)}
           placeholder="gpt-4o-mini"
-          className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-purple-500"
+          className="w-full bg-fill border border-line-strong rounded-lg px-3 py-2 text-xs text-ink-2 focus:outline-none focus:ring-1 focus:ring-purple-500"
         />
-        <p className="text-[11px] text-slate-500">{t("cloud_api_model_hint_custom")}</p>
+        <p className="text-[11px] text-ink-faint">{t("cloud_api_model_hint_custom")}</p>
      </div>
     </>
   );

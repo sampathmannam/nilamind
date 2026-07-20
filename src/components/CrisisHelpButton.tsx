@@ -58,12 +58,12 @@ export default function CrisisHelpButton({ variant = "bar" }: { variant?: "bar" 
                 type="button"
                 onClick={() => setOpen(false)}
                 aria-label="Close crisis help"
-                className="text-slate-400 hover:text-slate-200 cursor-pointer shrink-0 p-1 -m-1"
+                className="text-ink-muted hover:text-ink-2 cursor-pointer shrink-0 p-1 -m-1"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <p className="text-xs text-slate-300 leading-relaxed mb-4">
+            <p className="text-xs text-ink-2 leading-relaxed mb-4">
               These lines are free, confidential, and there for you any time — day or night. You don't need
               the app set up to reach them. If you're in immediate danger, call your local emergency number.
             </p>
@@ -71,7 +71,7 @@ export default function CrisisHelpButton({ variant = "bar" }: { variant?: "bar" 
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="w-full mt-5 rounded-full border border-slate-800 bg-card hover:bg-raised text-slate-300 font-medium px-8 py-3 min-h-[44px] transition-all cursor-pointer"
+              className="w-full mt-5 rounded-full border border-line bg-card hover:bg-raised text-ink-2 font-medium px-8 py-3 min-h-[44px] transition-all cursor-pointer"
             >
               I'm okay for now
             </button>

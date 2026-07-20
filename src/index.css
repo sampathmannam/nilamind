@@ -334,6 +334,17 @@ html.sensory-comfort body::after {
    recommends for wellness — kept subtle (tight negative-spread) so it never competes with content
    or hurts contrast. Applied app-wide via the semantic surface utilities. */
 .bg-card { box-shadow: 0 1px 2px rgba(0,0,0,0.14), 0 10px 24px -14px rgba(0,0,0,0.28); }
+
+/* ── Soft visual register (Phase 3) ──────────────────────────────────────────────────────────
+   When the derived user state is low-capacity (anxious / low / elevated / crisis), the dashboard
+   engages a "soft register": reduced contrast + desaturated accents so a distressed mind meets a
+   calmer screen. Honours prefers-reduced-motion by skipping the transition. */
+.soft-register { filter: saturate(0.82) contrast(0.94); transition: filter 240ms ease; }
+.soft-register .text-ink-2,
+.soft-register .text-ink-muted { opacity: 0.92; }
+@media (prefers-reduced-motion: reduce) {
+  .soft-register { transition: none; }
+}
 .bg-raised { box-shadow: 0 1px 2px rgba(0,0,0,0.16), 0 12px 28px -14px rgba(0,0,0,0.32); }
 :root.theme-light .bg-card { box-shadow: 0 1px 2px rgba(122,93,72,0.05), 0 10px 26px -16px rgba(122,93,72,0.15); }
 :root.theme-light .bg-raised { box-shadow: 0 1px 2px rgba(122,93,72,0.06), 0 12px 30px -16px rgba(122,93,72,0.19); }

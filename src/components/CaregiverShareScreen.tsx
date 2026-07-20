@@ -39,27 +39,27 @@ export default function CaregiverShareScreen({ selectedContactId }: Props) {
   return (
     <div className="space-y-5 max-w-md mx-auto" id="caregiver-share-screen">
       <header className="space-y-1">
-        <h1 className="text-xl font-semibold text-slate-100 flex items-center gap-2">
+        <h1 className="text-xl font-semibold text-ink flex items-center gap-2">
           <Users className="w-5 h-5 text-emerald-400" /> {t("shareTrustedTitle")}
-          {contact ? <span className="text-sm font-normal text-slate-400">— {contact.name}</span> : null}
+          {contact ? <span className="text-sm font-normal text-ink-muted">— {contact.name}</span> : null}
         </h1>
-        <p className="text-xs text-slate-400 leading-relaxed">
+        <p className="text-xs text-ink-muted leading-relaxed">
           {t("cg_consent_body")}
         </p>
       </header>
 
       <div className="glass rounded-2xl p-4 space-y-3">
-        <div className="flex items-center gap-2 text-sm font-semibold text-slate-100">
+        <div className="flex items-center gap-2 text-sm font-semibold text-ink">
           <HeartHandshake className="w-4 h-4 text-rose-400" /> {snapshot.headline}
         </div>
-        <ul className="space-y-1.5 text-[11px] text-slate-300 leading-relaxed">
+        <ul className="space-y-1.5 text-[11px] text-ink-2 leading-relaxed">
           {snapshot.lines.map((l, i) => (
             <li key={i} className="flex gap-2"><span className="text-emerald-400">•</span><span>{l}</span></li>
           ))}
         </ul>
-        <div className="pt-2 border-t border-slate-700">
-          <p className="text-[11px] font-semibold text-slate-400 mb-1">If they're in crisis:</p>
-          <ul className="space-y-1 text-[11px] text-slate-300">
+        <div className="pt-2 border-t border-line-strong">
+          <p className="text-[11px] font-semibold text-ink-muted mb-1">If they're in crisis:</p>
+          <ul className="space-y-1 text-[11px] text-ink-2">
             {snapshot.crisisLines.map((l, i) => (
               <li key={i} className="flex gap-2"><span className="text-rose-400">•</span><span>{l}</span></li>
             ))}
@@ -70,7 +70,7 @@ export default function CaregiverShareScreen({ selectedContactId }: Props) {
       <div className="flex gap-3">
         <button
           onClick={copy}
-          className="flex-1 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+          className="flex-1 py-3 rounded-xl bg-line-strong hover:bg-slate-600 text-white text-sm font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5"
         >
           <Copy className="w-4 h-4" /> {copied ? "Copied!" : "Copy"}
         </button>
@@ -82,7 +82,7 @@ export default function CaregiverShareScreen({ selectedContactId }: Props) {
         </button>
       </div>
 
-      <p className="text-xs text-slate-500 text-center">
+      <p className="text-xs text-ink-faint text-center">
         This is a wellness snapshot, not a clinical summary. NilaMind is not a substitute for professional care.
       </p>
     </div>

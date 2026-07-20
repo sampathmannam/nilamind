@@ -36,8 +36,8 @@ export default function SecureGate({ children }: { children: React.ReactNode }) 
               <Lock className="w-6 h-6 text-amber-400" />
             </div>
             <div className="space-y-1">
-              <h1 className="text-lg font-bold text-slate-100">We couldn't open your data this time</h1>
-              <p className="text-xs text-slate-400 leading-relaxed">
+              <h1 className="text-lg font-bold text-ink">We couldn't open your data this time</h1>
+              <p className="text-xs text-ink-muted leading-relaxed">
                 Your encrypted entries are still saved on this device — something just stopped us opening them
                 right now. Nothing has been deleted. This is often temporary, so please try again.
               </p>
@@ -58,7 +58,7 @@ export default function SecureGate({ children }: { children: React.ReactNode }) 
 
   if (phase === "loading") {
     return (
-      <div className="min-h-screen bg-page flex flex-col items-center justify-center gap-3 text-slate-500">
+      <div className="min-h-screen bg-page flex flex-col items-center justify-center gap-3 text-ink-faint">
         <Anchor className="w-8 h-8 text-blue-500 animate-pulse" />
         <div className="flex items-center gap-2 text-xs">
           <Loader2 className="w-3.5 h-3.5 animate-spin" /> Securing your space…
@@ -99,8 +99,8 @@ function UnlockScreen({ onUnlocked }: { onUnlocked: () => void }) {
             <Lock className="w-6 h-6 text-blue-400" />
           </div>
           <div className="space-y-1">
-            <h1 className="text-lg font-bold text-slate-100">Welcome back</h1>
-            <p className="text-xs text-slate-400 leading-relaxed">
+            <h1 className="text-lg font-bold text-ink">Welcome back</h1>
+            <p className="text-xs text-ink-muted leading-relaxed">
               Your entries are encrypted on this device. Enter your PIN to unlock them.
             </p>
           </div>
@@ -116,7 +116,7 @@ function UnlockScreen({ onUnlocked }: { onUnlocked: () => void }) {
             onKeyDown={(e) => e.key === "Enter" && submit()}
             placeholder="PIN"
             aria-label="Enter your PIN"
-            className="w-full glass rounded-xl px-4 py-3 text-center text-lg tracking-[0.4em] text-slate-100 placeholder:tracking-normal placeholder:text-slate-600 focus:outline-none focus:border-blue-500/50"
+            className="w-full glass rounded-xl px-4 py-3 text-center text-lg tracking-[0.4em] text-ink placeholder:tracking-normal placeholder:text-slate-600 focus:outline-none focus:border-blue-500/50"
             id="unlock-pin-input"
           />
           {error && <p className="text-[11px] text-rose-400">{error}</p>}
@@ -124,7 +124,7 @@ function UnlockScreen({ onUnlocked }: { onUnlocked: () => void }) {
             onClick={submit}
             disabled={!pin || busy}
             id="unlock-submit"
-            className="w-full bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-500 text-white font-bold py-3 rounded-xl text-sm cursor-pointer transition-colors flex items-center justify-center gap-2"
+            className="w-full bg-blue-600 hover:bg-blue-500 disabled:bg-fill disabled:text-ink-faint text-white font-bold py-3 rounded-xl text-sm cursor-pointer transition-colors flex items-center justify-center gap-2"
           >
             {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : "Unlock"}
           </button>

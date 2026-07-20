@@ -35,7 +35,7 @@ const USER_GOALS = [
 
 const MOOD_OPTIONS = [
   { value: 1, emoji: "😔", label: "Very low", color: "text-blue-400" },
-  { value: 3, emoji: "😐", label: "A bit low", color: "text-slate-400" },
+  { value: 3, emoji: "😐", label: "A bit low", color: "text-ink-muted" },
   { value: 5, emoji: "🙂", label: "Okay", color: "text-amber-400" },
   { value: 7, emoji: "😊", label: "Good", color: "text-emerald-400" },
   { value: 9, emoji: "😄", label: "Great", color: "text-emerald-300" },
@@ -168,7 +168,7 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
         {slide.id === "nila_intro" ? (
           <NilaOrbIntro />
         ) : (
-          <div className="p-4 rounded-2xl bg-slate-800/50 border border-slate-700/50">
+          <div className="p-4 rounded-2xl bg-fill/50 border border-line-strong/50">
             {slide.icon}
           </div>
         )}
@@ -185,26 +185,26 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
                no-op. */
             <h1 className="poster-line">{slide.title}<span className="poster-line__emoji" aria-hidden="true"> 👋</span></h1>
           ) : (
-            <h1 className="text-xl font-semibold text-slate-100">{slide.title}</h1>
+            <h1 className="text-xl font-semibold text-ink">{slide.title}</h1>
           )}
-          <p className="text-sm text-slate-400 leading-relaxed">{slide.body}</p>
+          <p className="text-sm text-ink-muted leading-relaxed">{slide.body}</p>
         </div>
 
         {/* Region selector */}
         {slide.id === "region" && (
           <div className="w-full space-y-2 text-left">
-            <label htmlFor="region-select" className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Crisis lines</label>
+            <label htmlFor="region-select" className="text-[11px] uppercase tracking-wider text-ink-faint font-semibold">Crisis lines</label>
             <select
               id="region-select"
               value={region}
               onChange={(e) => handleRegionChange(e.target.value as RegionCode)}
-              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer"
+              className="w-full bg-fill border border-line-strong rounded-xl px-3 py-2.5 text-sm text-ink-2 focus:outline-none focus:border-indigo-500 cursor-pointer"
             >
               {allRegions().map((r) => (
                 <option key={r.code} value={r.code}>{r.label}</option>
               ))}
             </select>
-            <p className="text-[11px] text-slate-500">Preview: {preview}</p>
+            <p className="text-[11px] text-ink-faint">Preview: {preview}</p>
           </div>
         )}
 
@@ -220,15 +220,15 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
                   className={`w-full flex items-center gap-3 p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
                     selected
                       ? "bg-amber-500/15 border-amber-500/50"
-                      : "bg-slate-800/50 border-slate-700/50 hover:border-slate-600"
+                      : "bg-fill/50 border-line-strong/50 hover:border-slate-600"
                   }`}
                 >
-                  <div className={`p-2 rounded-lg ${selected ? "bg-amber-500/20 text-amber-300" : "bg-slate-700/50 text-slate-400"}`}>
+                  <div className={`p-2 rounded-lg ${selected ? "bg-amber-500/20 text-amber-300" : "bg-line-strong/50 text-ink-muted"}`}>
                     {opt.icon}
                   </div>
                   <div className="flex-1">
-                    <div className={`text-sm font-semibold ${selected ? "text-amber-200" : "text-slate-300"}`}>{opt.label}</div>
-                    <div className="text-[11px] text-slate-500">{opt.desc}</div>
+                    <div className={`text-sm font-semibold ${selected ? "text-amber-200" : "text-ink-2"}`}>{opt.label}</div>
+                    <div className="text-[11px] text-ink-faint">{opt.desc}</div>
                   </div>
                   {selected && <Check className="w-4 h-4 text-amber-400 shrink-0" />}
                 </button>
@@ -248,7 +248,7 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
                   className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all cursor-pointer ${
                     baselineMood === opt.value
                       ? "bg-blue-500/15 border-blue-500/50 scale-110"
-                      : "bg-slate-800/50 border-slate-700/50 hover:border-slate-600"
+                      : "bg-fill/50 border-line-strong/50 hover:border-slate-600"
                   }`}
                 >
                   {/* Fable review: fixed-size wrapper on every option (not just the selected one)
@@ -257,12 +257,12 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
                   <span className={`w-10 h-10 grid place-items-center ${baselineMood === opt.value ? `blob-badge blob-badge--${onboardingMoodBlobVariant(opt.value)}` : ""}`}>
                     <span className={baselineMood === opt.value ? "blob-badge__value text-xl" : "text-2xl"} aria-hidden="true">{opt.emoji}</span>
                   </span>
-                  <span className={`text-xs ${baselineMood === opt.value ? "text-blue-300" : "text-slate-500"}`}>{opt.label}</span>
+                  <span className={`text-xs ${baselineMood === opt.value ? "text-blue-300" : "text-ink-faint"}`}>{opt.label}</span>
                 </button>
               ))}
             </div>
             {baselineMood != null && (
-              <p className="text-[11px] text-slate-500 animate-fade-in">
+              <p className="text-[11px] text-ink-faint animate-fade-in">
                 Thank you for sharing. This helps me understand where you're starting from.
               </p>
             )}
@@ -281,7 +281,7 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
                   className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm transition-all cursor-pointer ${
                     selected
                       ? "bg-blue-500/20 border-blue-500/50 text-blue-300 font-semibold"
-                      : "bg-slate-800/50 border-slate-700/50 text-slate-400 hover:text-slate-300 hover:border-slate-600"
+                      : "bg-fill/50 border-line-strong/50 text-ink-muted hover:text-ink-2 hover:border-slate-600"
                   }`}
                 >
                   {goal.icon}
@@ -297,7 +297,7 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
         {slide.id === "safety_net" && (
           <div className="w-full space-y-3 text-left">
             <div>
-              <label htmlFor="sp-onboarding-warningsign-input" className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">
+              <label htmlFor="sp-onboarding-warningsign-input" className="text-[11px] uppercase tracking-wider text-ink-faint font-semibold">
                 A warning sign for you (optional)
               </label>
               <input
@@ -306,11 +306,11 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
                 value={safetyNet.warningSign}
                 onChange={(e) => setSafetyNet((p) => ({ ...p, warningSign: e.target.value }))}
                 placeholder="e.g. not sleeping, going quiet"
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 mt-1"
+                className="w-full bg-fill border border-line-strong rounded-xl px-3 py-2.5 text-sm text-ink-2 focus:outline-none focus:border-indigo-500 mt-1"
               />
             </div>
             <div>
-              <label htmlFor="sp-onboarding-copingidea-input" className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">
+              <label htmlFor="sp-onboarding-copingidea-input" className="text-[11px] uppercase tracking-wider text-ink-faint font-semibold">
                 One thing you can do alone to cope (optional)
               </label>
               <input
@@ -319,11 +319,11 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
                 value={safetyNet.copingIdea}
                 onChange={(e) => setSafetyNet((p) => ({ ...p, copingIdea: e.target.value }))}
                 placeholder="e.g. cold water on my face, a walk"
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 mt-1"
+                className="w-full bg-fill border border-line-strong rounded-xl px-3 py-2.5 text-sm text-ink-2 focus:outline-none focus:border-indigo-500 mt-1"
               />
             </div>
             <div>
-              <label htmlFor="sp-onboarding-trustedperson-input" className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">
+              <label htmlFor="sp-onboarding-trustedperson-input" className="text-[11px] uppercase tracking-wider text-ink-faint font-semibold">
                 Someone you could reach out to (optional, name only)
               </label>
               <input
@@ -332,10 +332,10 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
                 value={safetyNet.trustedPerson}
                 onChange={(e) => setSafetyNet((p) => ({ ...p, trustedPerson: e.target.value }))}
                 placeholder="e.g. Maya"
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 mt-1"
+                className="w-full bg-fill border border-line-strong rounded-xl px-3 py-2.5 text-sm text-ink-2 focus:outline-none focus:border-indigo-500 mt-1"
               />
             </div>
-            <p className="text-[11px] text-slate-500">
+            <p className="text-[11px] text-ink-faint">
               You can skip this and fill it in anytime — even one line helps future-you.
             </p>
           </div>
@@ -345,7 +345,7 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
         {slide.id === "ready" && (
           <div className="space-y-3 animate-fade-in">
             <div className="text-4xl">🌱</div>
-            <p className="text-[11px] text-slate-400 leading-relaxed">
+            <p className="text-[11px] text-ink-muted leading-relaxed">
               Your story starts now. Every check-in, every tool, every insight — it all builds from here.
             </p>
           </div>
@@ -358,7 +358,7 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
           {slides.map((_, i) => (
             <div
               key={i}
-              className={`h-1.5 rounded-full transition-all ${i === step ? "w-6 bg-blue-500" : "w-1.5 bg-slate-700"}`}
+              className={`h-1.5 rounded-full transition-all ${i === step ? "w-6 bg-blue-500" : "w-1.5 bg-line-strong"}`}
             />
           ))}
         </div>
@@ -367,14 +367,14 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
           {step > 0 ? (
             <button
               onClick={() => setStep((s) => s - 1)}
-              className="flex-1 py-3 rounded-xl border border-slate-700 text-slate-300 text-sm font-semibold hover:bg-slate-800 transition-colors cursor-pointer flex items-center justify-center gap-1"
+              className="flex-1 py-3 rounded-xl border border-line-strong text-ink-2 text-sm font-semibold hover:bg-fill transition-colors cursor-pointer flex items-center justify-center gap-1"
             >
               <ChevronLeft className="w-4 h-4" /> {t("back")}
             </button>
           ) : (
             <button
               onClick={finish}
-              className="flex-1 py-3 rounded-xl border border-slate-700 text-slate-400 text-sm font-semibold hover:bg-slate-800 transition-colors cursor-pointer"
+              className="flex-1 py-3 rounded-xl border border-line-strong text-ink-muted text-sm font-semibold hover:bg-fill transition-colors cursor-pointer"
             >
               {t("skip")}
             </button>
@@ -403,7 +403,7 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
         {step > 0 && !isLast && (
           <button
             onClick={finish}
-            className="w-full text-center text-xs text-slate-500 hover:text-slate-300 py-1.5 transition-colors cursor-pointer"
+            className="w-full text-center text-xs text-ink-faint hover:text-ink-2 py-1.5 transition-colors cursor-pointer"
           >
             {t("skip")}
           </button>

@@ -14,7 +14,7 @@ interface Props {
 
 const MILESTONES = [3, 7, 14, 30, 100];
 
-export default function StreakCounter({ current, longest, totalActiveDays, celebrate = false }: Props) {
+function StreakCounter({ current, longest, totalActiveDays, celebrate = false }: Props) {
   useLanguage();
   const [showCelebration, setShowCelebration] = useState(false);
 
@@ -64,7 +64,7 @@ export default function StreakCounter({ current, longest, totalActiveDays, celeb
 
         {current > 0 && current < 100 && (
           <div className="space-y-1">
-            <div className="h-1.5 rounded-full bg-slate-800 overflow-hidden">
+            <div className="h-1.5 rounded-full bg-fill overflow-hidden">
               <div
                 className="h-full rounded-full bg-gradient-to-r from-amber-500 to-amber-400 transition-all duration-500"
                 style={{ width: `${Math.min(progress * 100, 100)}%` }}
@@ -85,3 +85,5 @@ export default function StreakCounter({ current, longest, totalActiveDays, celeb
     </div>
   );
 }
+
+export default React.memo(StreakCounter);

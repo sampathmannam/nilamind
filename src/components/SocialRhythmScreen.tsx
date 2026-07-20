@@ -40,7 +40,7 @@ const BAND_COPY: Record<RhythmBand, { label: string; cls: string }> = {
   regular: { label: "Steady rhythm", cls: "text-emerald-400" },
   variable: { label: "Somewhat variable", cls: "text-amber-400" },
   irregular: { label: "Quite variable", cls: "text-rose-300" },
-  insufficient: { label: "Keep logging", cls: "text-slate-400" },
+  insufficient: { label: "Keep logging", cls: "text-ink-muted" },
 };
 
 export default function SocialRhythmScreen() {
@@ -102,10 +102,10 @@ export default function SocialRhythmScreen() {
   return (
     <div className="space-y-6 max-w-md mx-auto" id="social-rhythm-screen">
       <div>
-        <h1 className="text-xl font-semibold text-slate-100 flex items-center gap-2">
+        <h1 className="text-xl font-semibold text-ink flex items-center gap-2">
           <Clock3 className="w-5 h-5 text-indigo-400" /> Social rhythm
         </h1>
-        <p className="text-xs text-slate-500 mt-1">
+        <p className="text-xs text-ink-faint mt-1">
           Keeping daily routines at steady times can help steady mood. Log when a few everyday anchors
           happened today.
         </p>
@@ -113,15 +113,15 @@ export default function SocialRhythmScreen() {
 
       {/* Today's anchors */}
       <div className="glass rounded-2xl p-4 space-y-3">
-        <div className="text-sm font-semibold text-slate-200">Today</div>
+        <div className="text-sm font-semibold text-ink-2">Today</div>
         {RHYTHM_ANCHORS.map(({ key, label }) => (
           <label key={key} className="flex items-center justify-between gap-3">
-            <span className="text-sm text-slate-300">{label}</span>
+            <span className="text-sm text-ink-2">{label}</span>
             <input
               type="time"
               value={anchors[key] ?? ""}
               onChange={(e) => setAnchor(key, e.target.value)}
-              className="bg-page border border-slate-700 rounded-lg px-2.5 py-1.5 text-sm text-slate-100 focus:outline-none focus:border-indigo-500"
+              className="bg-page border border-line-strong rounded-lg px-2.5 py-1.5 text-sm text-ink focus:outline-none focus:border-indigo-500"
               aria-label={label}
             />
           </label>
@@ -138,11 +138,11 @@ export default function SocialRhythmScreen() {
       {/* Wake-time-lever insight — right at the point of logging */}
       {wakeInsight && (
         <div className="glass rounded-2xl p-4 space-y-2 border border-indigo-500/20" id="wake-time-insight">
-          <div className="text-sm font-semibold text-slate-200 flex items-center gap-2">
+          <div className="text-sm font-semibold text-ink-2 flex items-center gap-2">
             <Sunrise className="w-4 h-4 text-indigo-400" /> Wake-time insight
           </div>
-          <p className="text-xs text-slate-400 leading-relaxed">{wakeInsight.guidance}</p>
-          <p className="text-xs text-slate-500 leading-relaxed">
+          <p className="text-xs text-ink-muted leading-relaxed">{wakeInsight.guidance}</p>
+          <p className="text-xs text-ink-faint leading-relaxed">
             Wake time is the anchor most emphasized in Interpersonal &amp; Social Rhythm Therapy (Frank et
             al., 2005; Monk, Frank, Potts &amp; Kupfer, 2002).
           </p>
@@ -152,29 +152,29 @@ export default function SocialRhythmScreen() {
       {/* Regularity read */}
       <div className="glass rounded-2xl p-4 space-y-3">
         <div className="flex items-center justify-between">
-          <div className="text-sm font-semibold text-slate-200">Your rhythm</div>
+          <div className="text-sm font-semibold text-ink-2">Your rhythm</div>
           <span className={`text-sm font-semibold ${band.cls}`}>{band.label}</span>
         </div>
         {reg.band === "insufficient" ? (
-          <p className="text-xs text-slate-400 leading-relaxed">
+          <p className="text-xs text-ink-muted leading-relaxed">
             Logged {reg.daysLogged} of {MIN_RHYTHM_DAYS} days needed. Keep going for a few days and a gentle
             read of how steady your timing is will appear here.
           </p>
         ) : (
           <div className="space-y-2">
-            <p className="text-xs text-slate-400 leading-relaxed">
+            <p className="text-xs text-ink-muted leading-relaxed">
               Over the last {reg.windowDays} days, your anchor times varied by about{" "}
-              <span className="text-slate-200 font-medium">±{reg.overallVariabilityMin} min</span> on average.
+              <span className="text-ink-2 font-medium">±{reg.overallVariabilityMin} min</span> on average.
               Smaller is steadier — many people aim to keep key anchors within ~45 minutes day to day.
             </p>
             <div className="space-y-1 pt-1">
               {reg.anchors.filter((a) => a.meanTime).map((a) => (
                 <div key={a.key} className="flex items-center justify-between text-[11px]">
-                  <span className="text-slate-400">{a.label}</span>
-                  <span className="text-slate-300 tabular-nums">
+                  <span className="text-ink-muted">{a.label}</span>
+                  <span className="text-ink-2 tabular-nums">
                     ~{a.meanTime}
                     {a.variabilityMin !== null && a.daysLogged >= MIN_RHYTHM_DAYS && (
-                      <span className="text-slate-500"> · ±{a.variabilityMin}m</span>
+                      <span className="text-ink-faint"> · ±{a.variabilityMin}m</span>
                     )}
                   </span>
                 </div>
@@ -185,7 +185,7 @@ export default function SocialRhythmScreen() {
       </div>
 
       {/* Honest basis + limit */}
-      <p className="text-xs text-slate-500 leading-relaxed px-1">
+      <p className="text-xs text-ink-faint leading-relaxed px-1">
         Based on the Social Rhythm Metric (Monk et al., 1990/1991) as used in Interpersonal &amp; Social
         Rhythm Therapy (Frank et al., 2005). The evidence for rhythm regularity is strongest for bipolar
         disorder and rests on a small number of trials; the bands here are a self-reflection aid, not a
@@ -195,14 +195,14 @@ export default function SocialRhythmScreen() {
       {/* P5.4 — 7-day anchor timeline: dots positioned by time-of-day, with a variability band and a
           mood overlay so the user can see how steady rhythm tracks with how they felt. */}
       <div className="glass rounded-2xl p-4 space-y-3" id="rhythm-timeline">
-        <div className="text-sm font-semibold text-slate-200">Last 7 days</div>
+        <div className="text-sm font-semibold text-ink-2">Last 7 days</div>
         <div className="flex gap-1 items-end">
-          <div className="w-28 shrink-0 text-xs text-slate-500">Mood</div>
+          <div className="w-28 shrink-0 text-xs text-ink-faint">Mood</div>
           {timeline.days.map((d) => (
             <div key={d} className="flex-1 flex flex-col items-center gap-1">
-              <span className="text-xs text-slate-500">{WEEKDAY[new Date(d + "T00:00:00").getDay()]}</span>
+              <span className="text-xs text-ink-faint">{WEEKDAY[new Date(d + "T00:00:00").getDay()]}</span>
               <span
-                className="h-2 w-2 rounded-full ring-1 ring-slate-700"
+                className="h-2 w-2 rounded-full ring-1 ring-line-strong"
                 style={{ background: moodDot(moodByDay.get(d) ?? null) }}
                 aria-label={moodByDay.has(d) ? `mood ${Math.round(moodByDay.get(d)!)}` : "no check-in"}
               />
@@ -215,11 +215,11 @@ export default function SocialRhythmScreen() {
           const max = vals.length >= 2 ? Math.max(...vals) : null;
           return (
             <div key={a.key} className="flex gap-1 items-center">
-              <div className="w-28 shrink-0 text-[11px] text-slate-400 truncate" title={a.label}>{a.label}</div>
+              <div className="w-28 shrink-0 text-[11px] text-ink-muted truncate" title={a.label}>{a.label}</div>
               <div className="relative flex-1 h-5">
                 {min !== null && max !== null && (
                   <div
-                    className="absolute top-1/2 -translate-y-1/2 h-1.5 rounded bg-slate-700/70"
+                    className="absolute top-1/2 -translate-y-1/2 h-1.5 rounded bg-line-strong/70"
                     style={{ left: `${(min / 1440) * 100}%`, width: `${((max - min) / 1440) * 100}%` }}
                   />
                 )}
@@ -238,7 +238,7 @@ export default function SocialRhythmScreen() {
             </div>
           );
         })}
-        <p className="text-xs text-slate-500 leading-relaxed">
+        <p className="text-xs text-ink-faint leading-relaxed">
           Each dot is when that anchor happened that day. Dots close together = a steady rhythm; spread out = more
           variation. The grey band shows the range across the week. The top row is how your mood averaged that day.
         </p>

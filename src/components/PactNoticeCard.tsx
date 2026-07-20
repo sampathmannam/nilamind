@@ -24,7 +24,7 @@ export default function PactNoticeCard({ notice, onDismiss }: { notice: PactNoti
           <X className="w-4 h-4" />
         </button>
       </div>
-      <p className="text-sm text-slate-200 italic whitespace-pre-wrap">&ldquo;{notice.letter}&rdquo;</p>
+      <p className="text-sm text-ink-2 italic whitespace-pre-wrap">&ldquo;{notice.letter}&rdquo;</p>
       {sms && (
         <a
           href={sms}
