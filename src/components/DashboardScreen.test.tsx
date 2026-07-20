@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, afterEach, vi, beforeEach } from "vitest";
-import { render, screen, cleanup, fireEvent } from "@testing-library/react";
+import { render, screen, cleanup, fireEvent, act } from "@testing-library/react";
 import React from "react";
 
 vi.mock("../services/modeEngine", async (importActual) => ({
@@ -44,5 +44,33 @@ describe("DashboardScreen capacity-aware bands (Phase 3)", () => {
     expect(container.querySelector(".soft-register")).toBeNull();
     const activity = screen.getAllByRole("button").find((b) => /Your activity/.test(b.textContent || ""));
     expect(activity?.getAttribute("aria-expanded")).toBe("false");
+  });
+
+  it("#12 quiet-hours nudge appears for elevated users after a few minutes and is dismissible", () => {
+    vi.useFakeTimers();
+    try {
+      (getUserState as unknown as ReturnType<typeof vi.fn>).mockReturnValue("elevated");
+      render(<DashboardScreen />);
+      expect(screen.queryByText(/been here 3 minutes/i)).toBeNull();
+      act(() => vi.advanceTimersByTime(3 * 60_000 + 1000));
+      const nudge = screen.getByText(/been here 3 minutes/i);
+      expect(nudge).toBeTruthy();
+      fireEvent.click(screen.getByLabelText("Dismiss"));
+      expect(screen.queryByText(/been here 3 minutes/i)).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("#12 quiet-hours nudge does NOT appear for a calm user", () => {
+    vi.useFakeTimers();
+    try {
+      (getUserState as unknown as ReturnType<typeof vi.fn>).mockReturnValue("calm");
+      render(<DashboardScreen />);
+      act(() => vi.advanceTimersByTime(5 * 60_000));
+      expect(screen.queryByText(/been here/i)).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

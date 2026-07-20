@@ -3,12 +3,12 @@ import { loadEmaEntries } from "../services/ema";
 import {
   Flame, TrendingUp as TrendUpIcon, TrendingDown, Minus, Activity,
   CalendarCheck, ClipboardCheck, Database, Sparkles, BrainCircuit,
-  Loader2, Tag, Lightbulb, Download, FileText, Clock3,
+  Loader2, Tag, Lightbulb, Download, FileText, Clock3, Moon,
 } from "lucide-react";
 import Markdown from "react-markdown";
 import { loadMoodHistory } from "../services/moodHistory";
 import { readEpisodeMarkers, type EpisodeMarker } from "../services/episodeMarker";
-import { t, tn, useLanguage } from "../services/i18n";
+import { t, tn, useLanguage, type I18nKey } from "../services/i18n";
 import { loadAssessments, latestFor, INSTRUMENTS, type InstrumentId } from "../services/assessments";
 import { assessmentInsights, generateInsights, daysOfData, medicationMoodInsight, type Insight } from "../services/patternInsights";
 import { computeStreak, computeCompassionateStreak } from "../services/streaks";
@@ -501,6 +501,19 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
   // user's capacity state is read at mount and stays consistent with the band-open defaults it seeds.
   const bandConfig = useMemo(() => buildBandConfig(getUserState()), [data]);
 
+  // #12 — Quiet-hours / "too much screen" awareness. Folded into capacity awareness: only a user who is
+  // elevated or already hitting their daily usage ceiling gets a gentle "maybe step away" nudge after
+  // a few minutes on the dashboard. Pure client timer; dismissible; never a crisis surface.
+  const [dashMinutes, setDashMinutes] = useState(0);
+  const [stepAwayDismissed, setStepAwayDismissed] = useState(false);
+  useEffect(() => {
+    const id = setInterval(() => setDashMinutes((m) => m + 1), 60_000);
+    return () => clearInterval(id);
+  }, []);
+  const userCapacity = getUserState();
+  const showStepAway =
+    !stepAwayDismissed && dashMinutes >= 3 && (showCeiling || userCapacity === "elevated");
+
   return (
     <div className="space-y-5 max-w-md mx-auto" id="dashboard-screen">
       <header className="space-y-1">
@@ -548,36 +561,51 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
          <p className="text-sm text-slate-200 leading-relaxed">{moodSummary}</p>
        </div>
 
-       {/* Monthly narrative */}
-       {monthlyNarrative && (
-          <Card variant="raised">
-            <div className="text-xs uppercase tracking-wider text-ink-muted mb-1">{t("your_month")}</div>
-            <p className="text-sm text-ink leading-relaxed">
-             This month has been <span className="font-semibold text-slate-100">{monthlyNarrative.word}</span>{" "}
-             with mood averaging <span className="font-semibold text-slate-100">{monthlyNarrative.avgIntensity}/10</span> (
-             {monthlyNarrative.minIntensity}-{monthlyNarrative.maxIntensity}).{" "}
-             {monthlyNarrative.topEmotion && (
-               <>
-                 You've felt most often <span className="font-semibold text-slate-100">{monthlyNarrative.topEmotion}</span>{" "}
-                 ({monthlyNarrative.topEmotion === "calm" ? "peaceful moments" :
-                   monthlyNarrative.topEmotion === "anxious" ? "worried thoughts" :
-                   monthlyNarrative.topEmotion === "sad" ? "low feelings" :
-                   monthlyNarrative.topEmotion === "angry" ? "frustrated moments" :
-                   monthlyNarrative.topEmotion === "hopeful" ? "optimistic sparks" :
-                   monthlyNarrative.topEmotion}).
-               </>
-             )}
-             You've checked in {monthlyNarrative.daysLogged}/{monthlyNarrative.totalDays} days — {" "}
-             {monthlyNarrative.daysLogged >= 15
-               ? "strong consistency this month!"
-               : monthlyNarrative.daysLogged >= 8
-               ? "good momentum building."
-               : "every check-in adds clarity — keep going."}
-            </p>
-          </Card>
+        {/* Monthly narrative */}
+        {monthlyNarrative && (() => {
+          const wordText = t(`monthly_word_${monthlyNarrative.word}` as I18nKey, lang);
+          const knownEmotions = ["calm", "anxious", "sad", "angry", "hopeful"] as const;
+          const emotionText = monthlyNarrative.topEmotion
+            ? (knownEmotions as readonly string[]).includes(monthlyNarrative.topEmotion)
+              ? t(`emotion_${monthlyNarrative.topEmotion}` as I18nKey, lang)
+              : monthlyNarrative.topEmotion
+            : "";
+          const pacing = monthlyNarrative.daysLogged >= 15 ? t("pacing_strong", lang) : monthlyNarrative.daysLogged >= 8 ? t("pacing_good", lang) : t("pacing_keep", lang);
+          return (
+           <Card variant="raised">
+             <div className="text-xs uppercase tracking-wider text-ink-muted mb-1">{t("your_month")}</div>
+             <p className="text-sm text-ink leading-relaxed">
+              {tn("narr_tracking_body", lang, {
+                word: wordText,
+                avg: monthlyNarrative.avgIntensity,
+                min: monthlyNarrative.minIntensity,
+                max: monthlyNarrative.maxIntensity,
+                emotion: emotionText,
+                days: monthlyNarrative.daysLogged,
+                total: monthlyNarrative.totalDays,
+                pacing,
+              })}
+             </p>
+           </Card>
+          );
+        })()}
+        
+        {/* #12 — gentle "too much screen" nudge for elevated / ceiling states */}
+        {showStepAway && (
+          <div className="bg-page border border-slate-850 rounded-2xl p-4 flex items-start gap-3" role="status">
+            <Moon className="w-5 h-5 text-indigo-300 shrink-0 mt-0.5" aria-hidden="true" />
+            <p className="text-sm text-slate-200 leading-relaxed flex-1">{tn("quiet_step_away", lang, { mins: dashMinutes })}</p>
+            <button
+              onClick={() => setStepAwayDismissed(true)}
+              aria-label={t("dismiss", lang)}
+              className="text-slate-500 hover:text-slate-300 text-xs shrink-0 min-w-[44px] min-h-[44px]"
+            >
+              {t("dismiss", lang)}
+            </button>
+          </div>
         )}
 
-       {/* Compassionate streak — leads with the warm message, not the raw number. Gamification
+        {/* Compassionate streak — leads with the warm message, not the raw number. Gamification
            elements show no measurable depression-outcome/adherence benefit, and a prominent
            breakable-looking count is exactly the loss-aversion mechanism the forgiving-streak logic
            in streaks.ts (freeze budget, never-zero-reset) was already built to defuse, per Six,
@@ -600,7 +628,7 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
 
          <TrackingBand
            openTracking={bandConfig.openTracking}
-           summary={monthlyNarrative ? tn("narr_tracking_month", lang, { word: monthlyNarrative.word }) : t("tracking_summary")}
+           summary={monthlyNarrative ? tn("narr_tracking_month", lang, { word: t(`monthly_word_${monthlyNarrative.word}` as I18nKey, lang) }) : t("tracking_summary")}
            narrative={narratives.tracking}
            checkins={checkins}
            mood={mood}

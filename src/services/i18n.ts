@@ -220,6 +220,21 @@ export type I18nKey =
   | "see_less"
   | "no_signals_yet"
   | "no_sessions_yet"
+  | "monthly_word_calm"
+  | "monthly_word_steady"
+  | "monthly_word_choppy"
+  | "monthly_word_rough"
+  | "narr_tracking_body"
+  | "emotion_calm"
+  | "emotion_anxious"
+  | "emotion_sad"
+  | "emotion_angry"
+  | "emotion_hopeful"
+  | "pacing_strong"
+  | "pacing_good"
+  | "pacing_keep"
+  | "quiet_step_away"
+  | "dismiss"
   // Settings sub-section titles (Redesign §2 — Settings hub)
   | "sec_appearance"
   | "sec_voice"
@@ -581,6 +596,21 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     see_less: "Show less",
     no_signals_yet: "Nothing to flag right now — that's a good thing. Nila keeps a quiet eye on patterns and will gently let you know if something shifts.",
     no_sessions_yet: "No recent Nila sessions yet. Whenever you talk with Nila, a quiet snapshot stays here — on your device, never shared.",
+    monthly_word_calm: "calm",
+    monthly_word_steady: "steady",
+    monthly_word_choppy: "choppy",
+    monthly_word_rough: "rough",
+    narr_tracking_body: "This month has felt {word}, with mood averaging {avg}/10 ({min}-{max}). You've felt most often {emotion}. You've checked in {days}/{total} days — {pacing}.",
+    emotion_calm: "peaceful moments",
+    emotion_anxious: "worried thoughts",
+    emotion_sad: "low feelings",
+    emotion_angry: "frustrated moments",
+    emotion_hopeful: "optimistic sparks",
+    pacing_strong: "strong consistency this month!",
+    pacing_good: "good momentum building.",
+    pacing_keep: "every check-in adds clarity — keep going.",
+    quiet_step_away: "You've been here {mins} minutes. If your mind is busy, a short break or a slow breath can help more than more screen. No rush — Nila will be here.",
+    dismiss: "Dismiss",
     sec_appearance: "🎨 Appearance",
     sec_voice: "🔊 Soothing Voice",
     sec_reminders: "🔔 Gentle Reminders",
@@ -942,6 +972,21 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     see_less: "कम दिखाएँ",
     no_signals_yet: "अभी कुछ चेतावनी देने जैसा नहीं है — यह एक अच्छी बात है। नीला पैटर्न पर चुपचाप नज़र रखती है और अगर कुछ बदले तो धीरे से बताएगी।",
     no_sessions_yet: "अभी कोई हालिया नीला सत्र नहीं है। जब भी आप नीला से बात करेंगे, एक चुपचाप स्नैपशॉट यहीं रहेगा — आपके डिवाइस पर, कभी साझा नहीं किया गया।",
+    monthly_word_calm: "शांत",
+    monthly_word_steady: "स्थिर",
+    monthly_word_choppy: "उतार-चढ़ाव वाला",
+    monthly_word_rough: "कठिन",
+    narr_tracking_body: "इस महीने महसूस {word} रहा, मूड औसतन {avg}/10 ({min}-{max})। सबसे अधिक आपने {emotion} महसूस किए। आपने {days}/{total} दिन चेक-इन किए — {pacing}।",
+    emotion_calm: "शांत पल",
+    emotion_anxious: "चिंतित विचार",
+    emotion_sad: "नीचे के एहसास",
+    emotion_angry: "हताश पल",
+    emotion_hopeful: "आशावादी लौ",
+    pacing_strong: "इस महीने बहुत अच्छी निरंतरता!",
+    pacing_good: "अच्छी गति बन रही है।",
+    pacing_keep: "हर चेक-इन से स्पष्टता बढ़ती है — जारी रखें।",
+    quiet_step_away: "आप {mins} मिनट से यहाँ हैं। अगर आपका मन व्यस्त है, तो थोड़ा ब्रेक या धीमी सांस स्क्रीन से ज़्यादा मदद कर सकती है। कोई जल्दी नहीं — नीला यहीं रहेगी।",
+    dismiss: "बंद करें",
     sec_appearance: "दिखावट",
     sec_voice: "सुखद आवाज़",
     sec_reminders: "सौम्य रिमाइंडर",
@@ -1297,6 +1342,21 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     see_less: "குறைவாகக் காட்டு",
     no_signals_yet: "இப்போது எச்சரிக்க ஏதுமில்லை — அது நல்ல விஷயம். நிலாவின் பார்வை அமைதியாக பார்த்துக்கொண்டிருக்கும்; ஏதாவது மாறினால் மெதுவாக சொல்லும்.",
     no_sessions_yet: "இதுவரை நிலா அமர்வுகள் ஏதுமில்லை. நீங்கள் நிலாவுடன் பேசும்போது, அமைதியான ஒரு சிறு பதிவு இங்கே இருக்கும் — உங்கள் சாதனத்தில், ஒருபோதும் பகிரப்படாது.",
+    monthly_word_calm: "அமைதியான",
+    monthly_word_steady: "நிலையான",
+    monthly_word_choppy: "ஏற்றத்தாழ்வான",
+    monthly_word_rough: "கடினமான",
+    narr_tracking_body: "இந்த மாதம் {word} உணர்ந்தீர்கள், மனநிலை சராசரியாக {avg}/10 ({min}-{max}). பெரும்பாலும் நீங்கள் {emotion} உணர்ந்தீர்கள். {days}/{total} நாட்கள் செக்-இன் செய்தீர்கள் — {pacing}.",
+    emotion_calm: "அமைதியான தருணங்கள்",
+    emotion_anxious: "கவலையான எண்ணங்கள்",
+    emotion_sad: "தாழ்ந்த உணர்வுகள்",
+    emotion_angry: "சலிப்பான தருணங்கள்",
+    emotion_hopeful: "நம்பிக்கைத் துளிர்கள்",
+    pacing_strong: "இந்த மாதம் வலுவான தொடர்ச்சி!",
+    pacing_good: "நல்ல வேகம் உருவாகிறது.",
+    pacing_keep: "ஒவ்வொரு செக்-இன்னும் தெளிவைத் தரும் — தொடருங்கள்.",
+    quiet_step_away: "நீங்கள் {mins} நிமிடங்களாக இங்கே இருக்கிறீர்கள். உங்கள் மனம் பரபரப்பாக இருந்தால், சிறு இடைவேளை அல்லது மெதுவான மூச்சு திரையை விட உதவும். அவசரம் இல்லை — நிலா இங்கேயே இருப்பாள்.",
+    dismiss: "மூடு",
     sec_appearance: "தோற்றம்",
     sec_voice: "அமைதியான குரல்",
     sec_reminders: "மென்மையான நினைவூட்டல்கள்",
@@ -1652,6 +1712,21 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     see_less: "తక్కువ చూపించు",
     no_signals_yet: "ప్రస్తుతం హెచ్చరించడానికి ఏమీ లేదు — అది మంచి విషయం. నీలా నమూనాలపై మౌనంగా దృష్టి పెడుతుంది, ఏదైనా మారితే ప్రేమగా చెబుతుంది.",
     no_sessions_yet: "ఇంకా ఇటీవలి నీలా సెషన్లు ఏమీ లేవు. మీరు నీలాతో మాట్లాడినప్పుడల్లా, ఒక మౌన స్నాప్షాట్ ఇక్కడే ఉంటుంది — మీ పరికరంలో, ఎప్పుడూ పంచబడదు.",
+    monthly_word_calm: "ప్రశాంతమైన",
+    monthly_word_steady: "స్థిరమైన",
+    monthly_word_choppy: "హెచ్చుతగ్గులు ఉన్న",
+    monthly_word_rough: "కష్టమైన",
+    narr_tracking_body: "ఈ నెల {word}గా అనిపించింది, మూడ్ సగటున {avg}/10 ({min}-{max}). ఎక్కువగా మీరు {emotion} అనుభవించారు. మీరు {days}/{total} రోజులు చెక్-ఇన్ చేశారు — {pacing}.",
+    emotion_calm: "ప్రశాంత క్షణాలు",
+    emotion_anxious: "ఆందోళన ఆలోచనలు",
+    emotion_sad: "లోతైన భావాలు",
+    emotion_angry: "అలసట క్షణాలు",
+    emotion_hopeful: "ఆశావహ కిరణాలు",
+    pacing_strong: "ఈ నెల బలమైన నిలకడ!",
+    pacing_good: "మంచి వేగం పెరుగుతోంది.",
+    pacing_keep: "ప్రతి చెక్-ఇన్ స్పష్టత ఇస్తుంది — కొనసాగించండి.",
+    quiet_step_away: "మీరు {mins} నిమిషాలుగా ఇక్కడే ఉన్నారు. మీ మనసు తొట్టలుగా ఉంటే, చిన్న విరామం లేదా నెమ్మది శ్వాస ఎక్కువ స్క్రీన్ కంటే ఎక్కువ సహాయపడుతుంది. ఆర్పు లేదు — నీలా ఇక్కడే ఉంటుంది.",
+    dismiss: "మూసివేయి",
     sec_appearance: "రూపు",
     sec_voice: "ప్రశాంతమైన స్వరం",
     sec_reminders: "మృదువైన రిమైండర్లు",

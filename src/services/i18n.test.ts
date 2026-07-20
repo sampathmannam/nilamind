@@ -71,4 +71,27 @@ describe("i18n core", () => {
     // Unknown token is left untouched; missing key falls back to English template.
     expect(tn("narr_mood_down", "en", { avg: "4.2" })).toContain("{delta}");
   });
+
+  it("localizes the monthly tracking word + body tokens (India-first finish, agent #C)", () => {
+    // The English adjective token is resolved to a localized word, not passed raw.
+    expect(tn("monthly_word_rough", "en", {})).toBe("rough");
+    expect(tn("monthly_word_rough", "hi", {})).toBe("कठिन");
+    expect(tn("monthly_word_rough", "ta", {})).toBe("கடினமான");
+    expect(tn("monthly_word_rough", "te", {})).toBe("కష్టమైన");
+    // The body composes all localized tokens — no English leak in a Hindi render.
+    const hi = tn("narr_tracking_body", "hi", {
+      word: tn("monthly_word_steady", "hi", {}),
+      avg: "5.0",
+      min: 2,
+      max: 8,
+      emotion: tn("emotion_calm", "hi", {}),
+      days: 12,
+      total: 30,
+      pacing: tn("pacing_good", "hi", {}),
+    });
+    expect(hi).toContain("स्थिर");
+    expect(hi).toContain("शांत पल");
+    expect(hi).not.toContain("This month has felt");
+    expect(hi).not.toContain("steady");
+  });
 });
