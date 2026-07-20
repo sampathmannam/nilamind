@@ -123,8 +123,9 @@ describe("SignalsBand", () => {
     nOf1: [],
   };
 
-  it("shows a reassuring empty-state note when no signals are present", () => {
+  it("shows a reassuring illustrated empty-state when no signals are present", () => {
     render(<SignalsBand {...noSignals} />);
+    expect(screen.getByText(t("no_signals_title"))).toBeTruthy();
     expect(screen.getByText(t("no_signals_yet"))).toBeTruthy();
   });
 

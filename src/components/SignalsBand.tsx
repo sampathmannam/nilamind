@@ -11,6 +11,7 @@ import { computeNof1Ranking, type No1RankingEntry } from "../services/nOf1";
 import CollapsibleSection from "./CollapsibleSection";
 import BandNarrative from "./BandNarrative";
 import Card from "./Card";
+import EmptyState from "./EmptyState";
 import { PROTOCOLS } from "../services/protocols";
 
 export interface SignalsBandProps {
@@ -91,9 +92,11 @@ export default function SignalsBand({
     <CollapsibleSection title={t("signals_patterns")} summary={summary} defaultOpen={openSignals}>
       <BandNarrative text={t("signals_summary")} />
       {!hasAnySignal && (
-        <p className="text-sm text-slate-300 bg-page border border-slate-850 rounded-xl px-3 py-3 leading-relaxed">
-          {t("no_signals_yet")}
-        </p>
+        <EmptyState
+          nilaState="calm"
+          title={t("no_signals_title")}
+          body={t("no_signals_yet")}
+        />
       )}
       {/* Engagement disengagement risk — early warning when usage declines */}
       {showDisengagement && (

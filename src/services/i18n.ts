@@ -235,6 +235,8 @@ export type I18nKey =
   | "pacing_keep"
   | "quiet_step_away"
   | "dismiss"
+  | "no_signals_title"
+  | "no_sessions_title"
   // Settings sub-section titles (Redesign §2 — Settings hub)
   | "sec_appearance"
   | "sec_voice"
@@ -611,6 +613,8 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     pacing_keep: "every check-in adds clarity — keep going.",
     quiet_step_away: "You've been here {mins} minutes. If your mind is busy, a short break or a slow breath can help more than more screen. No rush — Nila will be here.",
     dismiss: "Dismiss",
+    no_signals_title: "All quiet on the signals front",
+    no_sessions_title: "Your conversations with Nila",
     sec_appearance: "🎨 Appearance",
     sec_voice: "🔊 Soothing Voice",
     sec_reminders: "🔔 Gentle Reminders",
@@ -987,6 +991,8 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     pacing_keep: "हर चेक-इन से स्पष्टता बढ़ती है — जारी रखें।",
     quiet_step_away: "आप {mins} मिनट से यहाँ हैं। अगर आपका मन व्यस्त है, तो थोड़ा ब्रेक या धीमी सांस स्क्रीन से ज़्यादा मदद कर सकती है। कोई जल्दी नहीं — नीला यहीं रहेगी।",
     dismiss: "बंद करें",
+    no_signals_title: "सिग्नल वाले हिस्से में सब शांत है",
+    no_sessions_title: "नीला के साथ आपकी बातचीत",
     sec_appearance: "दिखावट",
     sec_voice: "सुखद आवाज़",
     sec_reminders: "सौम्य रिमाइंडर",
@@ -1357,6 +1363,8 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     pacing_keep: "ஒவ்வொரு செக்-இன்னும் தெளிவைத் தரும் — தொடருங்கள்.",
     quiet_step_away: "நீங்கள் {mins} நிமிடங்களாக இங்கே இருக்கிறீர்கள். உங்கள் மனம் பரபரப்பாக இருந்தால், சிறு இடைவேளை அல்லது மெதுவான மூச்சு திரையை விட உதவும். அவசரம் இல்லை — நிலா இங்கேயே இருப்பாள்.",
     dismiss: "மூடு",
+    no_signals_title: "சிக்னல் பக்கம் அமைதியாக உள்ளது",
+    no_sessions_title: "நிலாவுடன் உங்கள் உரையாடல்கள்",
     sec_appearance: "தோற்றம்",
     sec_voice: "அமைதியான குரல்",
     sec_reminders: "மென்மையான நினைவூட்டல்கள்",
@@ -1727,6 +1735,8 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     pacing_keep: "ప్రతి చెక్-ఇన్ స్పష్టత ఇస్తుంది — కొనసాగించండి.",
     quiet_step_away: "మీరు {mins} నిమిషాలుగా ఇక్కడే ఉన్నారు. మీ మనసు తొట్టలుగా ఉంటే, చిన్న విరామం లేదా నెమ్మది శ్వాస ఎక్కువ స్క్రీన్ కంటే ఎక్కువ సహాయపడుతుంది. ఆర్పు లేదు — నీలా ఇక్కడే ఉంటుంది.",
     dismiss: "మూసివేయి",
+    no_signals_title: "సిగ్నల్ విభాగంలో నిశ్శబ్దంగా ఉంది",
+    no_sessions_title: "నీలాతో మీ సంభాషణలు",
     sec_appearance: "రూపు",
     sec_voice: "ప్రశాంతమైన స్వరం",
     sec_reminders: "మృదువైన రిమైండర్లు",

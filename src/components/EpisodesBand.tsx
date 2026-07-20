@@ -4,6 +4,7 @@ import { t as translate, tn as translateN, type I18nKey, type SupportedLang } fr
 import CollapsibleSection from "./CollapsibleSection";
 import BandNarrative from "./BandNarrative";
 import Section, { SectionDivider } from "./Section";
+import EmptyState from "./EmptyState";
 import type { EpisodePatterns } from "../services/dashboardInsights";
 import type { NilaTurn } from "../services/nilaSessions";
 
@@ -92,9 +93,11 @@ export default function EpisodesBand({
           )}
         </div>
       ) : (
-        <p className="text-sm text-slate-300 bg-page border border-slate-850 rounded-xl px-3 py-3 leading-relaxed">
-          {t("no_sessions_yet", lang)}
-        </p>
+        <EmptyState
+          nilaState="greeting"
+          title={t("no_sessions_title", lang)}
+          body={t("no_sessions_yet", lang)}
+        />
       )}
 
       {children}
