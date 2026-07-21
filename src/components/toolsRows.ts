@@ -27,6 +27,8 @@ export interface ToolRow {
   Icon: LucideIcon;
   iconClass: string;
   onTap: () => void;
+  /** Brief inline help tip shown below the subtitle for unfamiliar clinical terms. */
+  help?: string;
 }
 
 export interface ToolGroup {
@@ -61,7 +63,7 @@ export function buildToolGroups({ go, onEpisode, phoneEnabled }: ToolRowDeps): T
       rows: [
         { id: "ema_checkin", label: t("tool_ema_label"), sub: t("tool_ema_sub"), Icon: Smile, iconClass: "w-5 h-5 text-purple-400", onTap: () => go("ema_checkin") },
         { id: "diary", label: t("tool_diary_label"), sub: t("tool_diary_sub"), Icon: NotebookPen, iconClass: "w-5 h-5 text-blue-400", onTap: () => go("diary") },
-        { id: "dbt_diary_card", label: "DBT diary card", sub: "Emotion ratings, skills checklist, today's intention", Icon: Sliders, iconClass: "w-5 h-5 text-indigo-400", onTap: () => go("dbt_diary_card") },
+        { id: "dbt_diary_card", label: "DBT diary card", sub: "Emotion ratings, skills checklist, today's intention", Icon: Sliders, iconClass: "w-5 h-5 text-indigo-400", onTap: () => go("dbt_diary_card"), help: "DBT = Dialectical Behaviour Therapy — a skill-based approach." },
         { id: "medication", label: t("tool_medication_label"), sub: t("tool_medication_sub"), Icon: Pill, iconClass: "w-5 h-5 text-blue-400", onTap: () => go("medication") },
       ],
     },
@@ -69,11 +71,11 @@ export function buildToolGroups({ go, onEpisode, phoneEnabled }: ToolRowDeps): T
       title: t("tool_group_skills"),
       more: true,
       rows: [
-        { id: "problem_solving", label: t("tool_problem_solving_label"), sub: t("tool_problem_solving_sub"), Icon: Lightbulb, iconClass: "w-5 h-5 text-amber-400", onTap: () => go("problem_solving") },
+        { id: "problem_solving", label: t("tool_problem_solving_label"), sub: t("tool_problem_solving_sub"), Icon: Lightbulb, iconClass: "w-5 h-5 text-amber-400", onTap: () => go("problem_solving"), help: "A structured way to work through a challenge." },
         { id: "values_to_action", label: t("tool_values_work_label"), sub: t("tool_values_work_sub"), Icon: Compass, iconClass: "w-5 h-5 text-violet-400", onTap: () => go("values_to_action") },
         { id: "assessment", label: t("tool_assessment_label"), sub: t("tool_assessment_sub"), Icon: Activity, iconClass: "w-5 h-5 text-blue-400", onTap: () => go("assessment") },
         { id: "social_rhythm", label: t("tool_social_rhythm_label"), sub: t("tool_social_rhythm_sub"), Icon: Clock3, iconClass: "w-5 h-5 text-indigo-400", onTap: () => go("social_rhythm") },
-        { id: "exposure", label: t("tool_exposure_label"), sub: t("tool_exposure_sub"), Icon: Mountain, iconClass: "w-5 h-5 text-orange-400", onTap: () => go("exposure") },
+        { id: "exposure", label: t("tool_exposure_label"), sub: t("tool_exposure_sub"), Icon: Mountain, iconClass: "w-5 h-5 text-orange-400", onTap: () => go("exposure"), help: "Gentle step-by-step practice, building at your pace." },
         { id: "relapse_plan", label: t("tool_relapse_label"), sub: t("tool_relapse_sub"), Icon: AlertTriangle, iconClass: "w-5 h-5 text-amber-400", onTap: () => go("relapse_plan") },
       ],
     },

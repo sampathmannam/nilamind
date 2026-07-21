@@ -12,6 +12,7 @@
 import { generateMnemonic, mnemonicToSeedSync, validateMnemonic } from "@scure/bip39";
 import { wordlist } from "@scure/bip39/wordlists/english.js";
 import { secureLocal, SENSITIVE_KEYS, flush } from "./secureLocal";
+import { reportError } from "./errorReporter";
 
 export interface Identity {
   userId: string;
@@ -38,7 +39,8 @@ export function newMnemonic(): string {
 export function isValidMnemonic(m: string): boolean {
   try {
     return validateMnemonic(normalize(m), wordlist);
-  } catch {
+  } catch (e) {
+    reportError(e, "identity.isValidMnemonic");
     return false;
   }
 }
@@ -54,7 +56,8 @@ export function loadIdentity(): Identity | null {
   try {
     const raw = secureLocal.getItem(IDENTITY_KEY);
     return raw ? (JSON.parse(raw) as Identity) : null;
-  } catch {
+  } catch (e) {
+    reportError(e, "identity.loadIdentity");
     return null;
   }
 }

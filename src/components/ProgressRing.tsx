@@ -77,7 +77,7 @@ export default function ProgressRing({
           </text>
         )}
       </svg>
-      <span className="text-[10px] text-ink-muted text-center leading-tight">{label}</span>
+      <span className="text-xs text-ink-muted text-center leading-tight">{label}</span>
     </div>
   );
 }

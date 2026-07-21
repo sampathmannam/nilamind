@@ -53,6 +53,7 @@ export default function JournalScreen() {
   const [text, setText] = useState("");
   const [valence, setValence] = useState<number | undefined>(undefined);
   const [dailyPrompt, setDailyPrompt] = useState<string | null>(null);
+  const [promptLoading, setPromptLoading] = useState(true);
   const [promptDismissed, setPromptDismissed] = useState(false);
   const [crisis, setCrisis] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -65,7 +66,8 @@ export default function JournalScreen() {
   useEffect(() => {
     let cancelled = false;
     setPromptDismissed(false);
-    getDailyPrompt(mode).then((p) => { if (!cancelled) setDailyPrompt(p); });
+    setPromptLoading(true);
+    getDailyPrompt(mode).then((p) => { if (!cancelled) { setDailyPrompt(p); setPromptLoading(false); } });
     return () => { cancelled = true; };
   }, [mode]);
 
@@ -136,6 +138,12 @@ export default function JournalScreen() {
           ))}
         </div>
 
+        {promptLoading && !dailyPrompt && !promptDismissed && (
+          <div className="flex items-start gap-2 bg-page border border-line rounded-xl p-3 text-xs text-ink-muted">
+            <Sparkles className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />
+            <span className="flex-1 text-ink-faint italic">Finding a prompt for you…</span>
+          </div>
+        )}
         {dailyPrompt && !promptDismissed && (
           <div className="flex items-start gap-2 bg-page border border-line rounded-xl p-3 text-xs text-ink-muted">
             <Sparkles className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />

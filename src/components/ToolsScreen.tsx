@@ -43,12 +43,11 @@ export default function ToolsScreen({ go, onEpisode, phoneEnabled, onOpenCrisis 
 
   return (
     <div className="space-y-5 max-w-md mx-auto" id="tools-hub">
-      <header className="flex items-start justify-between gap-3">
+      <header className="flex items-start gap-3">
         <div className="space-y-0.5">
           <h1 className="editorial text-2xl text-ink">Tools</h1>
           <p className="text-xs text-ink-muted">Skills, trackers, and practices — here whenever you need them.</p>
         </div>
-        <CrisisHeaderButton onClick={onOpenCrisis} className="shrink-0 mt-0.5" />
       </header>
 
       {/* Search input */}
@@ -73,23 +72,34 @@ export default function ToolsScreen({ go, onEpisode, phoneEnabled, onOpenCrisis 
         )}
       </div>
 
-      {visibleGroups.map((g) => (
+      {visibleGroups.map((g, gi) => (
         <section key={g.title} className="space-y-2">
-          <h2 className="text-[11px] font-mono uppercase tracking-widest text-ink-faint px-1">{g.title}</h2>
+          <h2 className="text-xs font-mono uppercase tracking-widest text-ink-faint px-1">{g.title}</h2>
           <div className="space-y-2">
             {g.rows.map((r) => (
               <button
                 key={r.id}
                 onClick={r.onTap}
                 id={`tools-${r.id}`}
-                className="w-full flex items-center gap-3 glass hover:brightness-125 p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left"
+                className={`w-full flex items-center gap-3 transition-all active:scale-[0.99] cursor-pointer text-left ${
+                  g.more
+                    ? "glass p-3.5 rounded-xl opacity-80 hover:opacity-100"
+                    : "glass p-4 rounded-2xl hover:brightness-125"
+                }`}
               >
-                <span className="shrink-0"><r.Icon className={r.iconClass} aria-hidden="true" /></span>
-                <span className="flex-1 min-w-0">
-                  <span className="block text-sm font-bold text-ink">{r.label}</span>
-                  <span className="block text-[11px] text-ink-muted">{r.sub}</span>
+                <span className={`shrink-0 flex items-center justify-center w-9 h-9 rounded-xl ${
+                  g.more ? "" : "bg-fill/50"
+                }`}>
+                  <r.Icon className={g.more ? "w-4 h-4" : "w-5 h-5"} aria-hidden="true" />
                 </span>
-                <ChevronRight className="w-5 h-5 text-ink-faint shrink-0" aria-hidden="true" />
+                <span className="flex-1 min-w-0">
+                  <span className={`block font-bold text-ink ${g.more ? "text-xs" : "text-sm"}`}>{r.label}</span>
+                  <span className={`block text-ink-muted ${g.more ? "text-[11px]" : "text-[11px]"}`}>{r.sub}</span>
+                  {"help" in r && r.help && (
+                    <span className="block text-[10px] text-ink-faint mt-0.5 leading-tight">{r.help}</span>
+                  )}
+                </span>
+                <ChevronRight className={`shrink-0 text-ink-faint ${g.more ? "w-4 h-4" : "w-5 h-5"}`} aria-hidden="true" />
               </button>
             ))}
           </div>
@@ -100,15 +110,21 @@ export default function ToolsScreen({ go, onEpisode, phoneEnabled, onOpenCrisis 
         <p className="text-sm text-ink-faint text-center py-4">No tools match "{toolSearch}"</p>
       )}
 
-      {!showMoreSkills && filteredGroups.some((g) => g.more) && !toolSearch && (
+      {filteredGroups.some((g) => g.more) && !toolSearch && (
         <button
-          onClick={() => setShowMoreSkills(true)}
-          className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-dashed border-line-strong/50 hover:border-slate-600/50 text-ink-muted hover:text-ink-2 text-sm font-medium transition-all cursor-pointer active:scale-[0.99]"
+          onClick={() => setShowMoreSkills(!showMoreSkills)}
+          aria-expanded={showMoreSkills}
+          className="w-full flex items-center justify-center gap-2 py-2.5 min-h-[44px] rounded-xl border border-line hover:border-line-strong text-ink-faint hover:text-ink-muted text-xs font-medium transition-all cursor-pointer"
         >
-          <Lightbulb className="w-4 h-4 text-amber-400" aria-hidden="true" />
-          Skills &amp; practice
+          <Lightbulb className="w-3.5 h-3.5 text-amber-400" aria-hidden="true" />
+          {showMoreSkills ? "Less" : "More resources"}
         </button>
       )}
+
+      {/* Crisis button — bottom thumb zone, always reachable */}
+      <div className="flex justify-center pt-2 pb-4">
+        <CrisisHeaderButton onClick={onOpenCrisis} />
+      </div>
     </div>
   );
 }

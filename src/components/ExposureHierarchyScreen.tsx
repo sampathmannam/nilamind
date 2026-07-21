@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Mountain, Plus, X, CheckCircle } from "lucide-react";
+import ConfirmDialog from "./ConfirmDialog";
 import { createHierarchy, addStep, removeStep, completeStep, loadHierarchy, saveHierarchy, completionRate, averageSudReduction, inhibitoryLearningPrompts, type ExposureHierarchy } from "../services/exposureHierarchy";
 import { scanForCrisis } from "../safety";
 import { hapticSuccess } from "../hooks/useHaptics";
@@ -18,6 +19,7 @@ export default function ExposureHierarchyScreen() {
   // §9: a free-text field is a crisis-disclosure surface. If the input reads as crisis, we surface help
   // instead of treating it as an exposure — the deterministic gate, matching ReachOut/Psychoed.
   const [crisisShown, setCrisisShown] = useState(false);
+  const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
 
   function refresh() { setHierarchy(loadHierarchy()); }
 
@@ -41,9 +43,13 @@ export default function ExposureHierarchyScreen() {
   }
 
   function handleRemoveStep(stepId: string) {
-    if (!hierarchy) return;
-    const updated = removeStep(hierarchy, stepId);
+    setConfirmRemove(stepId);
+  }
+  function handleConfirmRemove() {
+    if (!hierarchy || !confirmRemove) return;
+    const updated = removeStep(hierarchy, confirmRemove);
     saveHierarchy(updated);
+    setConfirmRemove(null);
     refresh();
   }
 
@@ -189,6 +195,16 @@ export default function ExposureHierarchyScreen() {
         <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Hierarchy name (e.g. Social anxiety)" className="flex-1 glass rounded-xl px-3 py-2 text-xs text-ink-2 placeholder-ink-faint" />
         <button onClick={handleCreate} className="glass rounded-xl px-3 py-2 text-xs text-orange-300 cursor-pointer"><Plus className="w-4 h-4" /></button>
       </div>
+
+      <ConfirmDialog
+        open={confirmRemove !== null}
+        title="Remove step?"
+        message="This step will be deleted from your hierarchy. Progress for this step will be lost."
+        confirmLabel="Remove"
+        cancelLabel="Keep"
+        onConfirm={handleConfirmRemove}
+        onCancel={() => setConfirmRemove(null)}
+      />
     </div>
   );
 }

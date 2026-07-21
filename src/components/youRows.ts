@@ -20,6 +20,8 @@ export interface YouRow {
    *  (about_nila, nila_memory, thought_record, learn, episode_marker) are kept accessible but not
    *  surfaced by default. */
   more?: true;
+  /** Brief inline help tip shown below the subtitle for unfamiliar clinical terms. */
+  help?: string;
 }
 
 export interface YouGroup {
@@ -45,7 +47,7 @@ export function buildYouGroups(): YouGroup[] {
         { id: "about_nila", label: t("you_about_nila_label"), sub: t("you_about_nila_sub"), Icon: Info, iconClass: "w-5 h-5 text-blue-400" },
         { id: "insights", label: t("you_insights_label"), sub: t("you_insights_sub"), Icon: TrendingUp, iconClass: "w-5 h-5 text-emerald-400" },
         { id: "nila_memory", label: t("you_nila_memory_label"), sub: t("you_nila_memory_sub"), Icon: Sparkles, iconClass: "w-5 h-5 text-fuchsia-400", more: true },
-        { id: "thought_record", label: t("you_thought_record_label"), sub: t("you_thought_record_sub"), Icon: Brain, iconClass: "w-5 h-5 text-blue-400", more: true },
+        { id: "thought_record", label: t("you_thought_record_label"), sub: t("you_thought_record_sub"), Icon: Brain, iconClass: "w-5 h-5 text-blue-400", more: true, help: "A CBT exercise to notice and gently question thought patterns." },
         { id: "learn", label: t("you_learn_label"), sub: t("you_learn_sub"), Icon: BookOpen, iconClass: "w-5 h-5 text-blue-400", more: true },
         { id: "episode_marker", label: t("you_episode_marker_label"), sub: t("you_episode_marker_sub"), Icon: Activity, iconClass: "w-5 h-5 text-amber-400", more: true },
       ],

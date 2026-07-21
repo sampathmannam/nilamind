@@ -88,8 +88,11 @@ export default function DashboardScreen({ onOpenView }: { onOpenView?: (target: 
   const [assessmentCrisis, setAssessmentCrisis] = useState(false);
   const [behaviourInsights, setBehaviourInsights] = useState<Insight[]>([]);
   const [behaviourDays, setBehaviourDays] = useState(0);
+  const [behaviourLoading, setBehaviourLoading] = useState(true);
   const [proactiveCards, setProactiveCards] = useState<ReturnType<typeof selectProactiveCards>>([]);
   const lang = useLanguage();
+  const [showAllObservations, setShowAllObservations] = useState(false);
+  const [showAllBehaviour, setShowAllBehaviour] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [exportBusy, setExportBusy] = useState(false);
 
@@ -208,6 +211,7 @@ export default function DashboardScreen({ onOpenView }: { onOpenView?: (target: 
   // Load behaviour snapshots async and compute daily-behaviour insights
   useEffect(() => {
     let cancelled = false;
+    setBehaviourLoading(true);
     void (async () => {
       try {
         const snaps = await getRecentSnapshots(30);
@@ -219,6 +223,7 @@ export default function DashboardScreen({ onOpenView }: { onOpenView?: (target: 
         setBehaviourInsights(insights);
         setBehaviourDays(daysOfData(snaps, mood));
       } catch { /* fresh db or no permission */ }
+      if (!cancelled) setBehaviourLoading(false);
     })();
     return () => { cancelled = true; };
   }, [mood]);
@@ -747,16 +752,32 @@ export default function DashboardScreen({ onOpenView }: { onOpenView?: (target: 
             <Sparkles className="w-3.5 h-3.5 text-emerald-400" /> Patterns from your data
           </h2>
           <ul className="space-y-3">
-            {observations.map((ins, i) => (
+            {observations.slice(0, showAllObservations ? observations.length : 3).map((ins, i) => (
               <li key={i} className="text-xs text-slate-300 leading-relaxed flex items-start gap-2 bg-page p-3 rounded-xl border border-slate-850">
                 <span className="text-emerald-400 font-bold">●</span><span>{ins}</span>
               </li>
             ))}
           </ul>
+          {observations.length > 3 && (
+            <button
+              onClick={() => setShowAllObservations((v) => !v)}
+              className="text-xs font-semibold text-blue-400 hover:text-blue-300 cursor-pointer transition-colors"
+            >
+              {showAllObservations ? `Show less` : `See all ${observations.length} patterns`}
+            </button>
+          )}
         </div>
       )}
 
       {/* Daily-behaviour insights (sleep, screen time, steps, etc.) */}
+      {behaviourLoading && behaviourInsights.length === 0 && (
+        <div className="glass p-5 rounded-2xl space-y-3">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400 font-mono flex items-center gap-1.5">
+            <Lightbulb className="w-3.5 h-3.5 text-amber-400" /> Behaviour insights
+          </h2>
+          <p className="text-xs text-ink-faint italic">Analysing your patterns…</p>
+        </div>
+      )}
       {behaviourInsights.length > 0 && (
         <div className="glass p-5 rounded-2xl space-y-3">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400 font-mono flex items-center gap-1.5">
@@ -764,7 +785,7 @@ export default function DashboardScreen({ onOpenView }: { onOpenView?: (target: 
             {behaviourDays > 0 && <span className="text-xs text-slate-600 normal-case tracking-normal ml-1">({behaviourDays} days of paired data)</span>}
           </h2>
           <ul className="space-y-3">
-            {behaviourInsights.map((ins) => (
+            {behaviourInsights.slice(0, showAllBehaviour ? behaviourInsights.length : 3).map((ins) => (
               <li key={ins.id} className={`text-xs leading-relaxed flex items-start gap-2 bg-page p-3 rounded-xl border ${
                 ins.direction === "risk" ? "border-amber-500/30" : ins.direction === "protective" ? "border-emerald-500/30" : "border-slate-850"
               }`}>
@@ -773,6 +794,14 @@ export default function DashboardScreen({ onOpenView }: { onOpenView?: (target: 
               </li>
             ))}
           </ul>
+          {behaviourInsights.length > 3 && (
+            <button
+              onClick={() => setShowAllBehaviour((v) => !v)}
+              className="text-xs font-semibold text-blue-400 hover:text-blue-300 cursor-pointer transition-colors"
+            >
+              {showAllBehaviour ? `Show less` : `See all ${behaviourInsights.length} insights`}
+            </button>
+          )}
         </div>
       )}
 

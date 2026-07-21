@@ -24,7 +24,7 @@ export default function StatPill({ icon, value, label, onTap, className = "" }: 
     >
       <span className="text-base block" aria-hidden="true">{icon}</span>
       <span className="text-sm font-bold text-ink block leading-tight">{value}</span>
-      <span className="text-[10px] text-ink-muted block leading-tight">{label}</span>
+      <span className="text-xs text-ink-muted block leading-tight">{label}</span>
     </button>
   );
 }

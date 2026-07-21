@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Sparkles, Pencil, Trash2, Check, X, TrendingUp, TrendingDown } from "lucide-react";
+import ConfirmDialog from "./ConfirmDialog";
 import {
   loadInsights, editInsight, deleteInsight, INSIGHT_KINDS,
   type Insight, type InsightKind,
@@ -64,10 +65,16 @@ export default function NilaMemoryScreen() {
 
   // On-device reply feedback — the improvement signal; shown as totals + a wipe (services/nilaFeedback).
   const [fb, setFb] = useState<FeedbackSummary>(() => feedbackSummary());
-  const clearFb = () => { clearFeedback(); setFb(feedbackSummary()); };
   // Consented donations — examples the person chose to share to help train Nila (still on-device; no upload exists yet).
   const [donations, setDonations] = useState<number>(() => donationCount());
-  const withdrawAll = () => { clearDonations(); setDonations(donationCount()); };
+  const [confirmAction, setConfirmAction] = useState<"clearFb" | "withdrawAll" | null>(null);
+  const handleConfirmAction = () => {
+    if (confirmAction === "clearFb") { clearFeedback(); setFb(feedbackSummary()); }
+    if (confirmAction === "withdrawAll") { clearDonations(); setDonations(donationCount()); }
+    setConfirmAction(null);
+  };
+  const withdrawAll = () => { setConfirmAction("withdrawAll"); };
+  const clearFb = () => { setConfirmAction("clearFb"); };
 
   const [noticed, setNoticed] = useState<(InflectionSignal & { surfaced: boolean })[]>(() => latestInflectionsForLog());
   const dismissNoticed = (id: string) => { dismissLoggedSignal(id); setNoticed(latestInflectionsForLog()); };
@@ -276,6 +283,16 @@ export default function NilaMemoryScreen() {
           )}
         </section>
       )}
+
+      <ConfirmDialog
+        open={confirmAction !== null}
+        title={confirmAction === "withdrawAll" ? "Withdraw all contributions?" : "Clear feedback history?"}
+        message={confirmAction === "withdrawAll" ? "All shared examples will be withdrawn. You can share new ones later." : "Your feedback ratings and suggestions will be erased. This cannot be undone."}
+        confirmLabel={confirmAction === "withdrawAll" ? "Withdraw all" : "Clear"}
+        cancelLabel="Keep"
+        onConfirm={handleConfirmAction}
+        onCancel={() => setConfirmAction(null)}
+      />
     </div>
   );
 }

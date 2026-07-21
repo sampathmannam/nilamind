@@ -1,4 +1,5 @@
 import { secureLocal } from "./secureLocal";
+import { reportError } from "./errorReporter";
 
 const VALUES_KEY = "nilamind_values_work";
 
@@ -42,7 +43,8 @@ export function loadValuesWork(): ValueDomain[] {
     const raw = secureLocal.getItem(VALUES_KEY);
     if (!raw) return [];
     return JSON.parse(raw) as ValueDomain[];
-  } catch {
+  } catch (e) {
+    reportError(e, "valuesWork.loadValuesWork");
     return [];
   }
 }

@@ -232,7 +232,7 @@ export default function NilaCheckIn({ onLogged, onSkip }: NilaCheckInProps) {
           return <span key={s} className={`rounded-full transition-all ${cls}`} />;
         })}
         {isOptionalStep && (
-          <span className="ml-1 text-[11px] text-ink-faint font-medium">optional detail</span>
+          <span className="ml-1 text-xs text-ink-faint font-medium">optional detail</span>
         )}
       </div>
 

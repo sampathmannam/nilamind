@@ -14,7 +14,7 @@ function AffectToneStrip() {
         Conversation tone (automatic)
       </h3>
       {!sufficient ? (
-        <p className="text-[11px] text-ink-muted">No data yet.</p>
+        <p className="text-xs text-ink-muted">No data yet.</p>
       ) : (
         <>
           <div

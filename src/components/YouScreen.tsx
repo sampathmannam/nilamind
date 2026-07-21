@@ -2,6 +2,7 @@ import { localDateKey } from "../services/storageUtils";
 import React, { useState } from "react";
 import { ChevronRight, Sparkles, TrendingUp, Target, CheckCircle, X, Circle, Lightbulb } from "lucide-react";
 import CrisisHeaderButton from "./CrisisHeaderButton";
+import ConfettiBurst from "./ConfettiBurst";
 import RatingPromptCard from "./RatingPromptCard";
 import { useFocusTrap } from "../hooks/useFocusTrap";
 import { buildYouGroups } from "./youRows";
@@ -96,6 +97,7 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
   useLanguage();
   const groups = buildYouGroups();
   const [showMoreResources, setShowMoreResources] = useState(false);
+  const [confettiActive, setConfettiActive] = useState(false);
   const weekSnapshot = getWeekSnapshot();
   const [intention, setIntentionState] = React.useState(getIntention());
   const [showPicker, setShowPicker] = React.useState(false);
@@ -120,6 +122,7 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
   const handleComplete = () => {
     completeIntention();
     setIntentionState(getIntention());
+    setConfettiActive(true);
   };
 
   const handleClear = () => {
@@ -146,7 +149,6 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
             <h1 className="editorial text-2xl text-ink">You</h1>
             <p className="text-xs text-ink-muted mt-0.5">{streak.message}</p>
           </div>
-          <CrisisHeaderButton onClick={onOpenCrisis} />
         </div>
         {streak.totalActiveDays > 0 && (
           <>
@@ -287,21 +289,30 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
         if (visible.length === 0) return null;
         return (
         <section key={g.title} className="space-y-2">
-          <h2 className="text-[11px] font-mono uppercase tracking-widest text-ink-faint px-1">{g.title}</h2>
+          <h2 className="text-xs font-mono uppercase tracking-widest text-ink-faint px-1">{g.title}</h2>
           <div className="space-y-2">
             {visible.map((r) => (
               <button
                 key={r.id}
                 onClick={() => go(r.id)}
                 id={`you-${r.id}`}
-                className="w-full flex items-center gap-3 glass hover:brightness-125 p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left"
+                className={`w-full flex items-center gap-3 transition-all active:scale-[0.99] cursor-pointer text-left ${
+                  r.more
+                    ? "glass p-3.5 rounded-xl opacity-80 hover:opacity-100"
+                    : "glass p-4 rounded-2xl hover:brightness-125"
+                }`}
               >
-                <span className="shrink-0"><r.Icon className={r.iconClass} aria-hidden="true" /></span>
-                <span className="flex-1 min-w-0">
-                  <span className="block text-sm font-bold text-ink">{r.label}</span>
-                  <span className="block text-[11px] text-ink-muted">{r.sub}</span>
+                <span className={`shrink-0 flex items-center justify-center w-9 h-9 rounded-xl ${r.more ? "" : "bg-fill/50"}`}>
+                  <r.Icon className={r.more ? "w-4 h-4" : "w-5 h-5"} aria-hidden="true" />
                 </span>
-                <ChevronRight className="w-5 h-5 text-ink-faint shrink-0" aria-hidden="true" />
+                <span className="flex-1 min-w-0">
+                  <span className={`block font-bold text-ink ${r.more ? "text-xs" : "text-sm"}`}>{r.label}</span>
+                  <span className="block text-ink-muted text-[11px]">{r.sub}</span>
+                  {"help" in r && r.help && (
+                    <span className="block text-[10px] text-ink-faint mt-0.5 leading-tight">{r.help}</span>
+                  )}
+                </span>
+                <ChevronRight className={`shrink-0 text-ink-faint ${r.more ? "w-4 h-4" : "w-5 h-5"}`} aria-hidden="true" />
               </button>
             ))}
           </div>
@@ -309,13 +320,14 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
         );
       })}
 
-      {!showMoreResources && groups.some((g) => g.rows.some((r) => r.more)) && (
+      {groups.some((g) => g.rows.some((r) => r.more)) && (
         <button
-          onClick={() => setShowMoreResources(true)}
-          className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-dashed border-line-strong/50 hover:border-slate-600/50 text-ink-muted hover:text-ink-2 text-sm font-medium transition-all cursor-pointer active:scale-[0.99]"
+          onClick={() => setShowMoreResources(!showMoreResources)}
+          aria-expanded={showMoreResources}
+          className="w-full flex items-center justify-center gap-2 py-2.5 min-h-[44px] rounded-xl border border-line hover:border-line-strong text-ink-faint hover:text-ink-muted text-xs font-medium transition-all cursor-pointer"
         >
-          <Lightbulb className="w-4 h-4 text-amber-400" aria-hidden="true" />
-          More resources
+          <Lightbulb className="w-3.5 h-3.5 text-amber-400" aria-hidden="true" />
+          {showMoreResources ? "Less" : "More resources"}
         </button>
       )}
 
@@ -326,6 +338,19 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
       <p className="text-[11px] text-ink-faint text-center leading-relaxed px-4">
         NilaMind is a support alongside — not a substitute for — professional care.
       </p>
+
+      {/* Celebration confetti on intention completion */}
+      <ConfettiBurst
+        active={confettiActive}
+        onComplete={() => setConfettiActive(false)}
+        duration={1800}
+        count={24}
+      />
+
+      {/* Crisis button — bottom thumb zone, always reachable */}
+      <div className="flex justify-center pt-2 pb-4">
+        <CrisisHeaderButton onClick={onOpenCrisis} />
+      </div>
     </div>
   );
 }

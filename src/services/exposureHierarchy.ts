@@ -1,4 +1,5 @@
 import { secureLocal } from "./secureLocal";
+import { reportError } from "./errorReporter";
 import { scanForCrisis } from "../safety";
 
 const HIERARCHY_KEY = "nilamind_exposure_hierarchy";
@@ -87,7 +88,8 @@ export function loadHierarchy(): ExposureHierarchy | null {
   try {
     const raw = secureLocal.getItem(HIERARCHY_KEY);
     return raw ? JSON.parse(raw) : null;
-  } catch {
+  } catch (e) {
+    reportError(e, "exposureHierarchy.loadHierarchy");
     return null;
   }
 }

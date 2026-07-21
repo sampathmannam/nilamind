@@ -44,7 +44,7 @@ function InsightCard({ insight }: Props) {
         <p className="text-sm font-semibold text-ink flex-1">{insight.title}</p>
         {TrendIcon && <TrendIcon className={`w-4 h-4 ${trendColor}`} />}
       </div>
-      <p className="text-[11px] text-ink-muted leading-relaxed">{insight.body}</p>
+      <p className="text-sm text-ink-muted leading-relaxed">{insight.body}</p>
       {insight.sparkline && insight.sparkline.length >= 2 && (
         <div className="pt-1">
           <Sparkline

@@ -2,6 +2,7 @@
 // On-device only; nothing leaves the phone without explicit user action.
 
 import { secureLocal } from "./secureLocal";
+import { reportError } from "./errorReporter";
 
 const KEY = "nilamind_caregiver_contacts";
 
@@ -19,7 +20,8 @@ function load(): CaregiverContact[] {
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? parsed : [];
-  } catch {
+  } catch (e) {
+    reportError(e, "caregiverContacts.load");
     return [];
   }
 }

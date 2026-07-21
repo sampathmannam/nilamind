@@ -2,6 +2,7 @@ import { useState, useMemo, useCallback } from "react";
 import { ChevronLeft, Plus, Trash2, Eye, Bell, Users, type LucideIcon } from "lucide-react";
 import { t, useLanguage } from "../services/i18n";
 import EmptyState from "./EmptyState";
+import ConfirmDialog from "./ConfirmDialog";
 import { hapticSuccess } from "../hooks/useHaptics";
 import { tryUnlockAchievement } from "../services/achievements";
 import {
@@ -36,6 +37,7 @@ export default function CaregiverSettingsScreen({ onClose, onOpenCaregiverShare 
   const [added, setAdded] = useState(0);
   const [adding, setAdding] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
+  const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
 
   const [form, setForm] = useState({ name: "", phoneOrEmail: "", relationship: "" });
   const [formError, setFormError] = useState<string | null>(null);
@@ -63,9 +65,14 @@ export default function CaregiverSettingsScreen({ onClose, onOpenCaregiverShare 
   };
 
   const remove = (id: string) => {
-    removeCaregiverContact(id);
-    if (selectedId === id) setSelectedId(null);
-    if (editId === id) setEditId(null);
+    setConfirmRemove(id);
+  };
+  const handleConfirmRemove = () => {
+    if (!confirmRemove) return;
+    removeCaregiverContact(confirmRemove);
+    if (selectedId === confirmRemove) setSelectedId(null);
+    if (editId === confirmRemove) setEditId(null);
+    setConfirmRemove(null);
     refresh();
   };
 
@@ -265,6 +272,16 @@ export default function CaregiverSettingsScreen({ onClose, onOpenCaregiverShare 
           ) : null}
         </div>
       ) : null}
+
+      <ConfirmDialog
+        open={confirmRemove !== null}
+        title="Remove contact?"
+        message="This contact will no longer receive updates. You can add them again later."
+        confirmLabel="Remove"
+        cancelLabel="Keep"
+        onConfirm={handleConfirmRemove}
+        onCancel={() => setConfirmRemove(null)}
+      />
     </div>
   );
 }

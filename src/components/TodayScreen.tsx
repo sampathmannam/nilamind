@@ -28,8 +28,11 @@ import { getPassiveSensingEnabled } from "../services/passiveSensingPrefs";
 import ProactiveNudgeRail from "./ProactiveNudgeRail";
 import IntentFlowBar, { suggestPhase } from "./IntentFlowBar";
 import OnboardingMomentum from "./OnboardingMomentum";
+import { usePullToRefresh } from "../hooks/usePullToRefresh";
+import PullToRefresh from "./PullToRefresh";
 import AgencyNarrative from "./AgencyNarrative";
 import ValuePropBanner from "./ValuePropBanner";
+import ConfettiBurst from "./ConfettiBurst";
 import type { TimeMode, UserState } from "../types/modes";
 
 const MOOD_EMOJI: Record<string, string> = {
@@ -152,6 +155,7 @@ export default function TodayScreen({
   const [showExtraCards, setShowExtraCards] = useState(false);
   const [proactiveNudge, setProactiveNudge] = useState<{ text: string; route: string; icon: string } | null>(null);
   const [selectedIntentPhase, setSelectedIntentPhase] = useState<"calm" | "data" | "protocol">("data");
+  const [confettiActive, setConfettiActive] = useState(false);
   useLanguage();
   const { timeOfDay } = useTimeOfDay();
   const timeMode = getTimeMode();
@@ -184,6 +188,11 @@ export default function TodayScreen({
   const [, refreshAfterCheckinResolve] = useReducer((n: number) => n + 1, 0);
   const [reCheckinSkipped, setReCheckinSkipped] = useState(false);
   const checkedIn = hasCheckinToday(localDateKey());
+  const prevCheckedIn = useRef(checkedIn);
+  useEffect(() => {
+    if (checkedIn && !prevCheckedIn.current) setConfettiActive(true);
+    prevCheckedIn.current = checkedIn;
+  }, [checkedIn]);
   // A model-drafted check-in waiting to be confirmed (conversational capture). When present and not yet
   // checked in, it replaces the cold "How are you feeling?" prompt with a warm, pre-filled confirm.
   const pendingCheckinDraft = !checkedIn ? getPendingCheckinDraft() : null;
@@ -273,11 +282,23 @@ export default function TodayScreen({
     hasProactiveNudge: !!proactiveNudge,
   });
 
+  const ptr = usePullToRefresh(async () => {
+    await new Promise((r) => setTimeout(r, 500));
+    window.dispatchEvent(new CustomEvent("nila-refresh-today"));
+  });
+
   return (
+    <PullToRefresh
+      pullDistance={ptr.pullDistance}
+      pulling={ptr.pulling}
+      refreshing={ptr.refreshing}
+      onTouchStart={ptr.onTouchStart}
+      onTouchMove={ptr.onTouchMove}
+      onTouchEnd={ptr.onTouchEnd}
+    >
     <div className="space-y-5 max-w-md mx-auto" id="today-hub">
       {/* Greeting — time-aware, serif voice, with subtle gradient backdrop */}
-      <header className={`relative rounded-2xl p-4 -mx-1 bg-gradient-to-br ${heroGradient(timeOfDay)}`}>
-        <CrisisHeaderButton onClick={onOpenCrisis} className="absolute top-3 right-3" />
+       <header className={`relative rounded-2xl p-4 -mx-1 bg-gradient-to-br ${heroGradient(timeOfDay)}`}>
          <div className="space-y-0.5">
            <h1 className="editorial text-3xl text-ink">{greeting}</h1>
            <p className="text-sm text-ink-muted">{formatDate()}</p>
@@ -468,6 +489,7 @@ export default function TodayScreen({
       {weekInsight && weekInsight.checkinCount > 0 && (
         <div className="glass p-3 rounded-2xl space-y-2">
           <p className="text-xs uppercase font-mono tracking-widest text-ink-faint">This week</p>
+
           <p className="text-[11px] text-ink-2">
             {weekInsight.checkinCount} check-in{weekInsight.checkinCount !== 1 ? "s" : ""}
             {weekInsight.topEmotion ? ` · mostly feeling ${weekInsight.topEmotion}` : ""}
@@ -491,7 +513,7 @@ export default function TodayScreen({
       <button
         onClick={() => setShowExtraCards(!showExtraCards)}
         aria-expanded={showExtraCards}
-        className="w-full flex items-center justify-center gap-2 py-2.5 min-h-[44px] rounded-xl border border-line hover:border-line-strong text-ink-faint hover:text-ink-muted text-[11px] font-medium transition-all cursor-pointer"
+        className="w-full flex items-center justify-center gap-2 py-2.5 min-h-[44px] rounded-xl border border-line hover:border-line-strong text-ink-faint hover:text-ink-muted text-xs font-medium transition-all cursor-pointer"
       >
         <Sparkles className="w-3 h-3" />
         {showExtraCards ? "Less" : "Your patterns"}
@@ -545,6 +567,20 @@ export default function TodayScreen({
       )}
       </div>
       )}
+
+      {/* Celebration confetti on check-in completion */}
+      <ConfettiBurst
+        active={confettiActive}
+        onComplete={() => setConfettiActive(false)}
+        duration={1800}
+        count={24}
+      />
+
+      {/* Crisis button — bottom thumb zone, always reachable */}
+      <div className="flex justify-center pt-2 pb-4">
+        <CrisisHeaderButton onClick={onOpenCrisis} />
+      </div>
     </div>
+    </PullToRefresh>
   );
 }

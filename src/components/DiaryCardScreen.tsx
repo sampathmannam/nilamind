@@ -195,8 +195,8 @@ export default function DiaryCardScreen() {
           <h3 className="text-xs font-semibold uppercase tracking-wider text-ink-muted border-b border-line pb-2">
             1. Urges &amp; Target Behaviors (0 to 5)
           </h3>
-          <p className="text-[11px] text-ink-faint">
-            Rating an urge — even a high one — is just tracking. It's private and never flags anything on its own.
+<p className="text-xs text-ink-faint">
+             Rating an urge — even a high one — is just tracking. It's private and never flags anything on its own.
           </p>
 
           {urges.map((urge) => (
@@ -315,7 +315,7 @@ export default function DiaryCardScreen() {
           <h3 className="text-xs font-semibold uppercase tracking-wider text-ink-muted border-b border-line pb-2">
             3. Skills I Used Today
           </h3>
-          <p className="text-[11px] text-ink-faint">Tap once for "tried, didn't help." Tap again for "tried, helped."</p>
+          <p className="text-xs text-ink-faint">Tap once for "tried, didn't help." Tap again for "tried, helped."</p>
 
           <div className="grid grid-cols-2 gap-2" id="skills-diary-grid">
             {ALL_DIARY_DBT_SKILLS.map((skill) => {
@@ -375,9 +375,9 @@ export default function DiaryCardScreen() {
           <h3 className="text-xs font-semibold uppercase tracking-wider text-ink-muted border-b border-line pb-2">
             5. Quick Notes
           </h3>
-          <p className="text-[11px] text-ink-faint">
-            Jot down transient thoughts, observations, or brief reflections on your day.
-          </p>
+<p className="text-xs text-ink-faint">
+             Jot down transient thoughts, observations, or brief reflections on your day.
+           </p>
           <button
             onClick={async () => {
               if (voiceListening) {

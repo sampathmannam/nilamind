@@ -40,12 +40,12 @@ export default function EmptyState({ illustration, nilaState = "calm", title, bo
         {illustration ?? <NilaCharacter state={nilaState} size={32} />}
         <div className="flex-1 min-w-0 space-y-0.5">
           <p className="text-xs font-semibold text-ink-2">{title}</p>
-          <p className="text-[10px] text-ink-muted leading-relaxed">{body}</p>
+          <p className="text-xs text-ink-muted leading-relaxed">{body}</p>
         </div>
         {cta && (
           <button
             onClick={cta.onClick}
-            className="shrink-0 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold cursor-pointer transition-colors"
+            className="shrink-0 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold cursor-pointer transition-colors"
           >
             {cta.label}
           </button>
@@ -59,7 +59,7 @@ export default function EmptyState({ illustration, nilaState = "calm", title, bo
       {illustration ?? <NilaCharacter state={nilaState} size={64} />}
       <div className="space-y-1.5 max-w-xs">
         <p className="text-sm font-semibold text-ink-2">{title}</p>
-        <p className="text-[11px] text-ink-muted leading-relaxed">{body}</p>
+        <p className="text-sm text-ink-muted leading-relaxed">{body}</p>
       </div>
       {cta && (
         <button

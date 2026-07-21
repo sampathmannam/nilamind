@@ -30,7 +30,7 @@ function AchievementBadge({ achievement, locked = false, compact = false, onClic
         <div
           /* Matching the non-compact variant's own glass + locked/unlocked pattern below,
              instead of the two ad-hoc flat opacities this used before. */
-          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium transition-all glass ${
+          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all glass ${
             locked ? "text-ink-faint opacity-60" : "text-ink-2"
           }`}
           title={locked ? `Locked: ${achievement.description}` : achievement.description}
@@ -57,7 +57,7 @@ function AchievementBadge({ achievement, locked = false, compact = false, onClic
             <p className={`text-sm font-semibold ${locked ? "text-ink-faint" : "text-ink-2"}`}>
               {achievement.title}
             </p>
-            <p className="text-[11px] text-ink-muted leading-relaxed">
+            <p className="text-xs text-ink-muted leading-relaxed">
               {achievement.description}
             </p>
           </div>

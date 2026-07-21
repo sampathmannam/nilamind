@@ -40,7 +40,7 @@ export default function DailyContentCard() {
       </div>
 
       <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-3">
-        <p className="text-[11px] text-ink-2 leading-relaxed">{content.tip}</p>
+        <p className="text-sm text-ink-2 leading-relaxed">{content.tip}</p>
       </div>
     </div>
   );

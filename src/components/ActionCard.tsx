@@ -45,7 +45,7 @@ export default function ActionCard({
       <span className={`shrink-0 ${iconColor}`} aria-hidden="true">{icon}</span>
       <span className="flex-1 min-w-0">
         <span className="block text-sm font-bold text-ink">{title}</span>
-        {subtitle && <span className="block text-[11px] text-ink-muted mt-0.5">{subtitle}</span>}
+        {subtitle && <span className="block text-xs text-ink-muted mt-0.5">{subtitle}</span>}
       </span>
       <ChevronRight className="w-5 h-5 text-ink-faint shrink-0" aria-hidden="true" />
     </button>

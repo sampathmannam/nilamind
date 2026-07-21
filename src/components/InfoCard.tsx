@@ -19,7 +19,7 @@ export default function InfoCard({ title, children, eyebrow, className = "" }: I
         <p className="text-xs uppercase font-mono tracking-widest text-ink-faint">{eyebrow}</p>
       )}
       <h3 className="text-sm font-semibold text-ink">{title}</h3>
-      <div className="text-[11px] text-ink-muted leading-relaxed">{children}</div>
+      <div className="text-sm text-ink-muted leading-relaxed">{children}</div>
     </section>
   );
 }

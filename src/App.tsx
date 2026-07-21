@@ -2,6 +2,8 @@
 // BiometricGateHost and ModelSetupGate are standalone gates (no children).
 
 import { onPersistError } from "./services/secureLocal";
+import { onError } from "./services/errorReporter";
+import ErrorDisplay from "./components/ErrorDisplay";
 import React, { useState, useEffect, lazy, Suspense, useCallback } from "react";
 import { App as CapApp } from "@capacitor/app";
 import { useReducedMotion } from "./hooks/useReducedMotion";
@@ -200,6 +202,7 @@ function AppShell() {
   const [groundingExpandIndex, setGroundingExpandIndex] = useState<number | undefined>(undefined);
   const [selectedCaregiverContactId, setSelectedCaregiverContactId] = useState<string | undefined>();
   const [saveWarning, setSaveWarning] = useState(false);
+  const [appError, setAppError] = useState<{ message: string; type: "error" | "warning" | "info" } | null>(null);
   const [onboardingDone, setOnboardingDone] = useState(hasCompletedOnboarding());
   const [wakeListening, setWakeListening] = useState(false);
   const [phoneEnabled] = useState(true);
@@ -228,6 +231,12 @@ function AppShell() {
 
   // Persistence error banner
   useEffect(() => onPersistError((failingKeys) => setSaveWarning(failingKeys.length > 0)), []);
+
+  // App-level error display
+  useEffect(() => onError((err, context) => {
+    setAppError({ message: context ? `[${context}] ${err instanceof Error ? err.message : String(err)}` : (err instanceof Error ? err.message : String(err)), type: "error" });
+    setTimeout(() => setAppError(null), 8000);
+  }), []);
 
   // Language change re-render
   useEffect(() => {
@@ -444,6 +453,16 @@ function AppShell() {
         </div>
       )}
 
+      {/* App-level error toast */}
+      {appError && (
+        <ErrorDisplay
+          message={appError.message}
+          type={appError.type}
+          isVisible={true}
+          onDismiss={() => setAppError(null)}
+        />
+      )}
+
       {/* Listening indicator (wake word) */}
       <ListeningIndicator active={wakeListening} onClick={() => openSheet("settings")} />
 
@@ -525,7 +544,7 @@ function AppShell() {
             aria-selected={state.tab === id}
           >
             <Icon className="w-5 h-5" aria-hidden="true" />
-            <span className="text-[10px] font-medium">{label}</span>
+            <span className="text-xs font-medium">{label}</span>
           </button>
         ))}
       </nav>
