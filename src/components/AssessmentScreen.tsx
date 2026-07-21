@@ -171,8 +171,8 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
             <ClipboardCheck className="w-5 h-5 text-blue-400" /> Validated Check-Ins
           </h1>
           <p className="text-xs text-ink-muted leading-relaxed">
-            Short, research-validated check-ins — depression (PHQ-9 / quick PHQ-2), anxiety (GAD-7),
-            wellbeing (WHO-5) and stress (PSS-4). They turn a vague "I feel worse" into something you
+            Short, research-validated check-ins — depression (<span className="text-ink-faint">PHQ-9 / quick PHQ-2</span>), anxiety (<span className="text-ink-faint">GAD-7</span>),
+            wellbeing (<span className="text-ink-faint">WHO-5</span>) and stress (<span className="text-ink-faint">PSS-4</span>). They turn a vague "I feel worse" into something you
             can actually see move.
           </p>
         </header>
@@ -201,8 +201,8 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
             >
               <div className="space-y-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold text-ink">{it.name}</span>
-                  <span className="text-xs uppercase tracking-wider text-ink-faint font-mono">{it.measures}</span>
+                  <span className="text-sm font-bold text-ink">{it.measures} check-in</span>
+                  <span className="text-xs font-mono text-ink-faint">{it.name}</span>
                 </div>
                 <p className="text-[11px] text-ink-muted">{it.fullName}</p>
                 {last && tone ? (
@@ -461,8 +461,8 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
                 </>
               ) : (
                 <>
-                  Your {inst.name} score moved more than usual. WHO-5 doesn't have as well-established a
-                  reliable-change threshold as PHQ-9/GAD-7, so take this as a gentle heads-up rather than
+                  Your {inst.name} score moved more than usual. <span className="text-ink-faint">WHO-5</span> doesn't have as well-established a
+                  reliable-change threshold as <span className="text-ink-faint">PHQ-9/GAD-7</span>, so take this as a gentle heads-up rather than
                   a firm signal.
                 </>
               )}{" "}
@@ -501,7 +501,7 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
             id="phq2-escalate-phq9"
             className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-xl text-sm cursor-pointer transition-colors"
           >
-            Take the full PHQ-9 now →
+            Take the full <span className="text-white/80">PHQ-9</span> now →
           </button>
         )}
 

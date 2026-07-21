@@ -66,7 +66,7 @@ function loadRecentEpisodes(): EpisodeRecord[] {
 export async function sendToNila(
   history: NilaUiMessage[],
   mode: NilaMode,
-  opts: { onDelta: (t: string) => void }
+  opts: { onDelta: (t: string) => void; signal?: AbortSignal }
 ): Promise<NilaSendResult> {
   const userText = lastUserText(history);
 
@@ -114,7 +114,7 @@ export async function sendToNila(
     // tools / crisis), never the network. The §9 stream guard + output gate wrap whatever the model —
     // local or cloud — produces, so safety is identical on both paths.
     if (!isLocalLlmReady()) return { reply: "", reachedAI: false };
-    const r = await askNilaLocalStream(outgoing as NilaMessage[], { onDelta: guard.onDelta });
+    const r = await askNilaLocalStream(outgoing as NilaMessage[], { onDelta: guard.onDelta, signal: opts.signal });
     if (r.reachedAI) {
       if (guard.tripped()) {
         // Unsafe output was suppressed mid-stream — do NOT honor the model's tool-driven UI side
@@ -137,7 +137,7 @@ export async function sendToNila(
   const guard = createStreamGuard(opts.onDelta);
   // wait:true — episode is a PRIMARY user conversation, so it waits its turn on the model lock instead of
   // skipping-if-busy (which would drop a user mid-episode to the offline walkthrough).
-  const reply = (await generateOnDevice(systemInstruction, outgoing as NilaMessage[], guard.onDelta, undefined, { wait: true })) ?? "";
+  const reply = (await generateOnDevice(systemInstruction, outgoing as NilaMessage[], guard.onDelta, opts.signal, { wait: true })) ?? "";
   if (!reply) return { reply: "", reachedAI: false };
   if (guard.tripped()) return { reply: getUnsafeFallbackReply(), reachedAI: true };
   const safe = applyOutputSafety(reply, userText, true, crisisSignal.hit); // INVARIANT 3 (soft-crisis verdict threaded)

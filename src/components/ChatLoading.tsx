@@ -1,11 +1,4 @@
-// ChatLoading — skeleton shimmer + typing indicator + breathing bubble for when Nila is generating.
-// Research: skeleton screens reduce perceived wait time (Google, 2019); typing indicators
-// are a conversational UI convention (WhatsApp/Facebook/iMessage). The breathing bubble gives
-// the user something to DO while waiting — sync their breath to the expanding/contracting orb.
-// The copy escalates with wait time (useSettlingNote) so a long cold-load never reads as broken.
-
 import { useState, useEffect } from "react";
-import { useSettlingNote } from "./useSettlingNote";
 
 const WAITING_TIPS = [
   "Tip: Name 5 things you can see right now — it gently anchors you while you wait.",
@@ -15,14 +8,25 @@ const WAITING_TIPS = [
   "Tip: One slow exhale. Let your shoulders drop. Nila's almost here.",
 ];
 
-export default function ChatLoading() {
-  const note = useSettlingNote(true, "Nila is thinking");
+const PHASE1_MS = 8_000;
+const PHASE2_MS = 15_000;
+
+export default function ChatLoading({ onCancel }: { onCancel?: () => void }) {
+  const [phase, setPhase] = useState(0);
   const [tipIndex, setTipIndex] = useState(0);
 
   useEffect(() => {
-    const id = setInterval(() => setTipIndex((i) => (i + 1) % WAITING_TIPS.length), 6000);
-    return () => clearInterval(id);
+    const t1 = setTimeout(() => setPhase(1), PHASE1_MS);
+    const t2 = setTimeout(() => setPhase(2), PHASE2_MS);
+    const ti = setInterval(() => setTipIndex((i) => (i + 1) % WAITING_TIPS.length), 6000);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearInterval(ti);
+    };
   }, []);
+
+  const note = phase === 0 ? "Nila is thinking" : phase === 1 ? "Still thinking…" : "Having trouble?";
 
   return (
     <>
@@ -71,6 +75,15 @@ export default function ChatLoading() {
             <span className="typing-dot" />
             <span className="typing-dot" />
           </div>
+          {phase >= 2 && onCancel && (
+            <button
+              onClick={onCancel}
+              className="ml-auto text-[11px] text-rose-400/80 hover:text-rose-300 underline transition-colors cursor-pointer min-h-[44px] focus-ring"
+              aria-label="Cancel and stop generating"
+            >
+              Tap to cancel
+            </button>
+          )}
         </div>
         {/* Skeleton shimmer bars */}
         <div className="flex flex-col gap-2 px-0">

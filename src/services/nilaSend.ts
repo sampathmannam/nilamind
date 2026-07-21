@@ -20,6 +20,8 @@ export interface NilaUiMessage {
   synthetic?: boolean;
   /** UI-only in-moment insight (research explainer + skill suggestion); never sent on the wire. */
   insight?: InMomentInsight;
+  /** When the message was created (for timestamp display in chat bubbles). */
+  timestamp?: number;
 }
 
 export interface WireMessage {

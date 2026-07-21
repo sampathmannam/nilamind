@@ -733,7 +733,7 @@ export default function DashboardScreen({ onOpenView }: { onOpenView?: (target: 
             return (
               <div key={id} className="glass rounded-xl p-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-100">{inst.measures.split(" ")[0]} · {id}</span>
+                  <span className="text-xs font-bold text-slate-100">{inst.measures.split(" ")[0]} · <span className="text-slate-500 font-normal">{id}</span></span>
                   <span className="text-xs text-slate-300">{last.total}/{inst.maxScore} <span className="text-slate-500">{last.severity}</span></span>
                 </div>
                 {traj && <p className="text-[11px] text-slate-400 mt-1 flex items-start gap-1">{dirIcon}<span>{traj.finding.split(" — ").slice(1).join(" — ") || traj.finding}</span></p>}
@@ -741,7 +741,7 @@ export default function DashboardScreen({ onOpenView }: { onOpenView?: (target: 
             );
           })
         ) : (
-          <EmptyCard illustration="📝" text="Take a PHQ-9 or GAD-7 (Validated Check-In) to track depression/anxiety over time." />
+          <EmptyCard illustration="📝" text="Take a screening (PHQ-9 or GAD-7) to track depression and anxiety over time." />
         )}
       </div>
 

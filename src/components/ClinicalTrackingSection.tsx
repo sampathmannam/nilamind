@@ -55,7 +55,7 @@ function ClinicalTrackingSection({
             .filter((a) => a.instrument === "PHQ-9")
             .sort((a, b) => a.date.localeCompare(b.date))
             .map((a) => ({ date: a.date, score: a.total, severity: a.severity }))}
-          title="PHQ-9 Depression"
+          title="Depression (PHQ-9)"
           bands={PHQ9_BANDS}
           maxScore={27}
           threshold={10}

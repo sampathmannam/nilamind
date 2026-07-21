@@ -1,6 +1,6 @@
 import { localDateKey } from "../services/storageUtils";
-import React, { useState } from "react";
-import { ChevronRight, Sparkles, TrendingUp, Target, CheckCircle, X, Circle, Lightbulb } from "lucide-react";
+import React, { useState, useMemo } from "react";
+import { ChevronRight, Sparkles, Target, CheckCircle, X, Lightbulb, Heart, Wind } from "lucide-react";
 import CrisisHeaderButton from "./CrisisHeaderButton";
 import ConfettiBurst from "./ConfettiBurst";
 import RatingPromptCard from "./RatingPromptCard";
@@ -8,10 +8,15 @@ import { useFocusTrap } from "../hooks/useFocusTrap";
 import { buildYouGroups } from "./youRows";
 import { useLanguage } from "../services/i18n";
 import { computeCompassionateStreak } from "../services/streaks";
+import { SkeletonCard } from "./Skeleton";
 import { loadCheckins } from "../services/checkin";
 import { getIntention, setIntention, completeIntention, clearIntention, INTENTION_OPTIONS, getCompletionAck, markAckShown } from "../services/weeklyIntention";
 import { getCapacityLevel } from "../services/capacitySignal";
 import { getUserState } from "../services/modeEngine";
+import { useUserContext } from "../hooks/useUserContext";
+import { secureLocal } from "../services/secureLocal";
+
+const GROUP_ACCENTS = ["#C784B0"];
 
 function getWeekSnapshot(): { checkinDays: number; topEmotion: string | null } | null {
   try {
@@ -36,12 +41,10 @@ function getWeekSnapshot(): { checkinDays: number; topEmotion: string | null } |
   } catch { return null; }
 }
 
-/** A 7-dot constellation showing the last 7 days. Filled dots for active days, empty for missed. */
 function StreakConstellation({ activeDays }: { activeDays: string[] }) {
   const dots: React.ReactNode[] = [];
   const today = new Date();
   const dayLabels = ["M", "T", "W", "T", "F", "S", "S"];
-  // Start from Monday of current week
   const monday = new Date(today);
   const dayOfWeek = today.getDay();
   const monOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
@@ -54,15 +57,12 @@ function StreakConstellation({ activeDays }: { activeDays: string[] }) {
     const active = activeDays.includes(dateStr);
     dots.push(
       <div key={i} className="flex flex-col items-center gap-1" title={dateStr}>
-        <Circle
-          className={`w-3.5 h-3.5 ${active ? "text-emerald-400 fill-emerald-400/50" : "text-slate-600"}`}
-          aria-hidden="true"
-        />
-        <span className="text-xs font-mono text-slate-600">{dayLabels[i]}</span>
+        <div className={`w-4 h-4 rounded-full ${active ? "bg-emerald-400/70 shadow-sm shadow-emerald-400/30" : "bg-slate-700/50"}`} aria-hidden="true" />
+        <span className="text-[10px] font-mono text-slate-600">{dayLabels[i]}</span>
       </div>
     );
   }
-  return <div className="flex items-center justify-center gap-2.5 mt-2">{dots}</div>;
+  return <div className="flex items-center justify-center gap-3 mt-2">{dots}</div>;
 }
 
 function getLast7Days(): string[] {
@@ -93,8 +93,78 @@ function getActiveDaysInRange(): string[] {
   } catch { return []; }
 }
 
+function greeting(timeMode: string): string {
+  if (timeMode === "morning") return "Good morning";
+  if (timeMode === "evening") return "Good evening";
+  if (timeMode === "night") return "Hey";
+  return "Hey";
+}
+
+interface Suggestion {
+  hint: string;
+  label: string;
+  target: string;
+}
+
+function contextSuggestion(timeMode: string, state: string | null): Suggestion | null {
+  if (state === "crisis") return null;
+  if (state === "elevated") return { hint: "High energy — check your patterns or review your dashboard.", label: "Dashboard", target: "dashboard" };
+  if (state === "anxious") return { hint: "Feeling anxious? Your insights or a thought record might help.", label: "Insights", target: "insights" };
+  if (state === "low") return { hint: "Even a small step counts. Check your progress or dashboard.", label: "Progress", target: "progress" };
+  if (timeMode === "night") return { hint: "Quiet time — review how your week went.", label: "Dashboard", target: "dashboard" };
+  if (timeMode === "evening") return { hint: "Evening reflection — check your week's patterns.", label: "Dashboard", target: "dashboard" };
+  return null;
+}
+
+function WelcomeCard({
+  greet, onCheckin, onIntention, onDashboard,
+}: {
+  greet: string; onCheckin: () => void; onIntention: () => void; onDashboard: () => void;
+}) {
+  const steps = [
+    { icon: Heart, label: "First check-in", sub: "Tell Nila how you're feeling right now", action: onCheckin },
+    { icon: Target, label: "Set an intention", sub: "One small thing you'd like to try this week", action: onIntention },
+    { icon: Sparkles, label: "Explore your dashboard", sub: "See your progress take shape", action: onDashboard },
+  ] as const;
+  return (
+    <div className="bg-fill/80 rounded-2xl border border-line/30 shadow-sm p-5">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-10 h-10 rounded-full bg-[#C784B0]/15 flex items-center justify-center shrink-0">
+          <Sparkles className="w-5 h-5 text-[#C784B0]" aria-hidden="true" />
+        </div>
+        <div>
+          <h1 className="editorial text-2xl text-ink">{greet}</h1>
+          <p className="text-xs text-ink-muted mt-0.5">Welcome to NilaMind</p>
+        </div>
+      </div>
+      <p className="text-xs text-ink-muted leading-relaxed mb-4">
+        Your private wellness companion. Everything stays on your device — nothing leaves your phone.
+      </p>
+      <div className="space-y-2">
+        {steps.map((s) => (
+          <button
+            key={s.label}
+            onClick={s.action}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl border border-line/20 bg-fill/50 hover:border-line-strong transition-all active:scale-[0.99] cursor-pointer text-left"
+          >
+            <span className="shrink-0 flex items-center justify-center w-9 h-9 rounded-xl bg-[#C784B0]/10">
+              <s.icon className="w-5 h-5 text-[#C784B0]" aria-hidden="true" />
+            </span>
+            <span className="flex-1 min-w-0">
+              <span className="block text-sm font-semibold text-ink">{s.label}</span>
+              <span className="block text-[11px] text-ink-muted">{s.sub}</span>
+            </span>
+            <ChevronRight className="w-4 h-4 text-ink-faint shrink-0" aria-hidden="true" />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) => void; onOpenCrisis: () => void }) {
   useLanguage();
+  const { timeMode, state } = useUserContext();
   const groups = buildYouGroups();
   const [showMoreResources, setShowMoreResources] = useState(false);
   const [confettiActive, setConfettiActive] = useState(false);
@@ -112,6 +182,25 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
     /* ignore */
   }
   const activeDays = getActiveDaysInRange();
+  const greet = greeting(timeMode);
+  const suggest = contextSuggestion(timeMode, state);
+  const isFirstRun = streak.totalActiveDays === 0;
+  const isEarlyUser = !isFirstRun && streak.totalActiveDays < 3;
+  // U5.5 — Loading skeleton for async data boundaries
+  const [youLoading] = useState(false);
+  // U5.2 — Storage corruption check
+  const dataErrors = useMemo(() => {
+    const badKeys: string[] = [];
+    for (const key of ["nilamind_checkins", "nilamind_episodes", "nilamind_diary", "nilamind_insights"]) {
+      try {
+        const raw = secureLocal.getItem(key);
+        if (raw) { JSON.parse(raw); }
+      } catch {
+        badKeys.push(key);
+      }
+    }
+    return badKeys;
+  }, []);
 
   const handleSetIntention = (text: string) => {
     const i = setIntention(text);
@@ -132,64 +221,84 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
 
   const ack = getCompletionAck();
   if (ack) {
-    // auto-mark shown after a tick
     setTimeout(() => markAckShown(), 0);
   }
 
   return (
-    <div className="space-y-6 max-w-md mx-auto" id="you-hub">
-      {/* Profile card — constellation metaphor (Phase 8: forgiving engagement).
-          No streak numbers — a visual constellation of the week instead. */}
-      <div className="glass rounded-2xl p-5">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full sun-cta flex items-center justify-center shrink-0">
-            <Sparkles className="w-5 h-5" aria-hidden="true" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h1 className="editorial text-2xl text-ink">You</h1>
-            <p className="text-xs text-ink-muted mt-0.5">{streak.message}</p>
-          </div>
+    <div className="space-y-5 max-w-md mx-auto animate-fade-in" id="you-hub">
+      {/* U5.2 — Error banner for corrupted storage */}
+      {dataErrors.length > 0 && (
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-3 text-xs text-ink-muted flex items-center gap-2" role="alert">
+          <span className="shrink-0">⚠️</span>
+          <span>Some data couldn&apos;t load. Pull down to refresh.</span>
         </div>
-        {streak.totalActiveDays > 0 && (
-          <>
-            <div className="mt-3 pt-3 border-t border-line">
-              <StreakConstellation activeDays={activeDays} />
-            </div>
-              <p className="text-xs text-ink-faint text-center mt-1.5">
-              {/* Bug fix: this previously read streak.totalActiveDays, which computeCompassionateStreak
-                  (services/streaks.ts) defines as an ALL-TIME count of distinct active dates - so a
-                  long-time user saw e.g. "30 days this week" under a 7-dot week. activeDays is already
-                  computed above (via getActiveDaysInRange, last 7 days) for the StreakConstellation -
-                  reusing it here makes the label match what's actually being counted. */}
-              {activeDays.length} day{activeDays.length !== 1 ? "s" : ""} this week
-            </p>
-          </>
-        )}
-        {capacity === "low" && (
-          <p className="text-xs text-ink-faint mt-2 text-center italic">
-            Today might feel heavy — that's okay. Just being here is enough.
-          </p>
-        )}
-      </div>
+      )}
 
-      {/* Weekly snapshot — visible when the user has check-in data this week */}
-      {weekSnapshot && weekSnapshot.checkinDays > 0 && (
-        <div className="glass rounded-2xl p-4">
+      {/* First-run: welcome card with guided first steps */}
+      {youLoading ? (
+        <SkeletonCard />
+      ) : isFirstRun ? (
+        <WelcomeCard
+          greet={greet}
+          onCheckin={() => go("ema_checkin")}
+          onIntention={() => setShowPicker(true)}
+          onDashboard={() => go("dashboard")}
+        />
+      ) : (
+        /* Profile card — personalized + inline progress */
+        <div className="bg-fill/80 rounded-2xl border border-line/30 shadow-sm p-5">
           <div className="flex items-center gap-3">
-            <TrendingUp className="w-5 h-5 text-emerald-400 shrink-0" aria-hidden="true" />
-            <div className="text-xs text-ink-muted">
-              <span className="text-ink-2 font-semibold">{weekSnapshot.checkinDays} day{weekSnapshot.checkinDays > 1 ? "s" : ""}</span> checked in this week
-              {weekSnapshot.topEmotion && (
-                <> · mostly <span className="text-ink-2 font-semibold capitalize">{weekSnapshot.topEmotion}</span></>
-              )}
+            <div className="w-10 h-10 rounded-full bg-[#C784B0]/15 flex items-center justify-center shrink-0">
+              <Sparkles className="w-5 h-5 text-[#C784B0]" aria-hidden="true" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h1 className="editorial text-2xl text-ink">{greet}</h1>
+              <p className="text-xs text-ink-muted mt-0.5">{streak.message}</p>
+              {/* U9.1 — Persistent privacy badge in header */}
+              <p className="text-[10px] text-emerald-500/60 mt-1 flex items-center gap-1">
+                <span aria-hidden="true">🔒</span> On-device
+              </p>
             </div>
           </div>
+          <div className="mt-3 pt-3 border-t border-line">
+            <StreakConstellation activeDays={activeDays} />
+          </div>
+          <div className="flex items-center justify-center gap-1.5 mt-1.5">
+            <span className="text-xs text-ink-faint">
+              {activeDays.length} day{activeDays.length !== 1 ? "s" : ""} this week
+            </span>
+            {weekSnapshot && weekSnapshot.checkinDays > 0 && (
+              <>
+                <span className="text-xs text-ink-faint">·</span>
+                <span className="text-xs text-ink-faint">
+                  mostly <span className="text-ink-2 font-medium capitalize">{weekSnapshot.topEmotion || "checking in"}</span>
+                </span>
+              </>
+            )}
+          </div>
+          {capacity === "low" && (
+            <p className="text-xs text-ink-faint mt-2 text-center italic">
+              Today might feel heavy — that's okay. Just being here is enough.
+            </p>
+          )}
         </div>
+      )}
+
+      {/* Contextual suggestion strip — shown after the first check-in, not on first run */}
+      {!isFirstRun && suggest && (
+        <button
+          onClick={() => go(suggest.target)}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-[#C784B0]/8 border border-[#C784B0]/20 text-sm text-ink-2 hover:bg-[#C784B0]/15 transition-colors cursor-pointer min-h-[44px] focus-ring"
+        >
+          <Heart className="w-4 h-4 text-[#C784B0] shrink-0" aria-hidden="true" />
+          <span className="flex-1 text-left">{suggest.hint}</span>
+          <span className="text-xs font-medium text-[#C784B0] shrink-0">{suggest.label} →</span>
+        </button>
       )}
 
       {/* Weekly intention — gentle micro-commitment */}
       {ack && (
-        <div className="glass rounded-2xl p-4 border-l-4 border-l-emerald-500">
+        <div className="bg-fill/80 rounded-2xl border border-line/30 shadow-sm p-4 border-l-4 border-l-emerald-500">
           <div className="flex items-center gap-3">
             <CheckCircle className="w-5 h-5 text-emerald-400 shrink-0" />
             <p className="text-xs text-ink-2 leading-relaxed">{ack}</p>
@@ -197,7 +306,7 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
         </div>
       )}
       {intention && !intention.completed && (
-        <div className="glass rounded-2xl p-4">
+        <div className="bg-fill/80 rounded-2xl border border-line/30 shadow-sm p-4">
           <div className="flex items-start gap-3">
             <Target className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
@@ -221,16 +330,16 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
           </div>
         </div>
       )}
-      {(!intention || intention.completed) && !ack && (
+      {!isFirstRun && (!intention || intention.completed) && !ack && (
         <button
           onClick={() => setShowPicker(true)}
-          className="w-full glass hover:brightness-125 p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left flex items-center gap-3"
+          className="w-full bg-fill/80 hover:bg-fill p-4 rounded-2xl border border-line/30 shadow-sm transition-all active:scale-[0.99] cursor-pointer text-left flex items-center gap-3"
         >
-          <span className="w-10 h-10 rounded-full sun-cta flex items-center justify-center shrink-0">
-            <Target className="w-5 h-5" aria-hidden="true" />
+          <span className="w-10 h-10 rounded-full bg-[#C784B0]/10 flex items-center justify-center shrink-0">
+            <Target className="w-5 h-5 text-[#C784B0]" aria-hidden="true" />
           </span>
           <span className="flex-1 min-w-0">
-              <span className="block text-sm font-bold text-ink">Set a gentle intention</span>
+            <span className="block text-sm font-bold text-ink">Set a gentle intention</span>
             <span className="block text-[11px] text-ink-muted">One small thing you'd like to try this week</span>
           </span>
           <ChevronRight className="w-5 h-5 text-ink-faint shrink-0" />
@@ -261,7 +370,7 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
                 <button
                   key={opt}
                   onClick={() => { handleSetIntention(opt); }}
-                  className="w-full text-left glass hover:brightness-125 p-3 rounded-xl transition-all cursor-pointer"
+                  className="w-full text-left bg-fill/80 border border-line/20 hover:border-line-strong p-3 rounded-xl transition-all cursor-pointer"
                 >
                   <span className="text-sm text-ink-2">{opt}</span>
                 </button>
@@ -270,7 +379,7 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
                 <input
                   type="text"
                   placeholder="Or write your own…"
-                  className="w-full glass rounded-xl px-3 py-2 text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus:border-blue-500"
+                  className="w-full bg-fill/80 border border-line/20 rounded-xl px-3 py-2 text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus:border-[#C784B0]"
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && e.currentTarget.value.trim()) {
                       handleSetIntention(e.currentTarget.value.trim());
@@ -284,39 +393,66 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
         </div>
       )}
 
+      {/* Early-user nudge — habit-building prompt for < 3 check-in days */}
+      {isEarlyUser && (
+        <div className="bg-[#C784B0]/8 border border-[#C784B0]/20 rounded-2xl p-4">
+          <p className="text-xs text-ink-muted mb-3">Building a habit? Try another:</p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => go("ema_checkin")}
+              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-fill/60 border border-line/20 hover:border-line-strong text-xs font-medium text-ink-2 transition-all cursor-pointer min-h-[44px]"
+            >
+              <Heart className="w-3.5 h-3.5" aria-hidden="true" />
+              Check-in
+            </button>
+            <button
+              onClick={() => go("diary")}
+              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-fill/60 border border-line/20 hover:border-line-strong text-xs font-medium text-ink-2 transition-all cursor-pointer min-h-[44px]"
+            >
+              <Wind className="w-3.5 h-3.5" aria-hidden="true" />
+              Diary
+            </button>
+          </div>
+        </div>
+      )}
+
       {groups.map((g) => {
         const visible = showMoreResources ? g.rows : g.rows.filter((r) => !r.more);
         if (visible.length === 0) return null;
         return (
-        <section key={g.title} className="space-y-2">
-          <h2 className="text-xs font-mono uppercase tracking-widest text-ink-faint px-1">{g.title}</h2>
-          <div className="space-y-2">
-            {visible.map((r) => (
-              <button
-                key={r.id}
-                onClick={() => go(r.id)}
-                id={`you-${r.id}`}
-                className={`w-full flex items-center gap-3 transition-all active:scale-[0.99] cursor-pointer text-left ${
-                  r.more
-                    ? "glass p-3.5 rounded-xl opacity-80 hover:opacity-100"
-                    : "glass p-4 rounded-2xl hover:brightness-125"
-                }`}
-              >
-                <span className={`shrink-0 flex items-center justify-center w-9 h-9 rounded-xl ${r.more ? "" : "bg-fill/50"}`}>
-                  <r.Icon className={r.more ? "w-4 h-4" : "w-5 h-5"} aria-hidden="true" />
-                </span>
-                <span className="flex-1 min-w-0">
-                  <span className={`block font-bold text-ink ${r.more ? "text-xs" : "text-sm"}`}>{r.label}</span>
-                  <span className="block text-ink-muted text-[11px]">{r.sub}</span>
-                  {"help" in r && r.help && (
-                    <span className="block text-[10px] text-ink-faint mt-0.5 leading-tight">{r.help}</span>
-                  )}
-                </span>
-                <ChevronRight className={`shrink-0 text-ink-faint ${r.more ? "w-4 h-4" : "w-5 h-5"}`} aria-hidden="true" />
-              </button>
-            ))}
-          </div>
-        </section>
+          <section key={g.title} className="space-y-2">
+            <div className="flex items-center gap-2 pl-3 border-l-2 border-[#C784B0] py-0.5">
+              <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-faint">{g.title}</h2>
+            </div>
+            <div className="space-y-2">
+              {visible.map((r, ri) => (
+                <button
+                  key={r.id}
+                  onClick={() => go(r.id)}
+                  id={`you-${r.id}`}
+                  className={`w-full flex items-center gap-3 transition-all active:scale-[0.99] cursor-pointer text-left ${
+                    r.more
+                      ? "bg-fill/50 px-3.5 py-3 rounded-xl border border-line/30 hover:border-line-strong"
+                      : "bg-fill/50 px-4 py-3 rounded-2xl border border-line/20 hover:border-line-strong"
+                  }`}
+                >
+                  <span className={`shrink-0 flex items-center justify-center w-9 h-9 rounded-xl ${
+                    r.more ? "" : "bg-fill/50"
+                  }`}>
+                    <r.Icon className={r.more ? "w-4 h-4" : "w-5 h-5"} aria-hidden="true" />
+                  </span>
+                  <span className="flex-1 min-w-0">
+                    <span className={`block font-semibold text-ink ${r.more ? "text-xs" : "text-sm"}`}>{r.label}</span>
+                    <span className={`block text-ink-muted ${r.more ? "text-[11px]" : "text-[11px]"}`}>{r.sub}</span>
+                    {"help" in r && r.help && (
+                      <span className="block text-[10px] text-ink-faint mt-0.5 leading-tight">{r.help}</span>
+                    )}
+                  </span>
+                  <ChevronRight className="shrink-0 w-4 h-4 text-ink-faint" aria-hidden="true" />
+                </button>
+              ))}
+            </div>
+          </section>
         );
       })}
 
@@ -324,22 +460,20 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
         <button
           onClick={() => setShowMoreResources(!showMoreResources)}
           aria-expanded={showMoreResources}
-          className="w-full flex items-center justify-center gap-2 py-2.5 min-h-[44px] rounded-xl border border-line hover:border-line-strong text-ink-faint hover:text-ink-muted text-xs font-medium transition-all cursor-pointer"
+          className="w-full flex items-center justify-center gap-2 py-3 min-h-[44px] rounded-xl bg-fill/30 border border-dashed border-line/50 hover:border-line-strong text-ink-muted hover:text-ink text-xs font-medium transition-all cursor-pointer"
         >
-          <Lightbulb className="w-3.5 h-3.5 text-amber-400" aria-hidden="true" />
-          {showMoreResources ? "Less" : "More resources"}
+          <Lightbulb className="w-3.5 h-3.5 text-amber-400/70" aria-hidden="true" />
+          {showMoreResources ? "Show fewer resources" : `${groups.flatMap((g) => g.rows).filter((r) => r.more).length} more resources`}
+          <ChevronRight className={`w-3 h-3 transition-transform duration-200 ${showMoreResources ? "rotate-90" : ""}`} aria-hidden="true" />
         </button>
       )}
 
-      {/* Play-Store rating prompt lives here (moved off the Today home 2026-07-18 design review — the
-          MH home should not solicit ratings). Self-gates via shouldPromptRating(). */}
       <RatingPromptCard />
 
       <p className="text-[11px] text-ink-faint text-center leading-relaxed px-4">
         NilaMind is a support alongside — not a substitute for — professional care.
       </p>
 
-      {/* Celebration confetti on intention completion */}
       <ConfettiBurst
         active={confettiActive}
         onComplete={() => setConfettiActive(false)}
@@ -348,7 +482,7 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
       />
 
       {/* Crisis button — bottom thumb zone, always reachable */}
-      <div className="flex justify-center pt-2 pb-4">
+      <div className="flex justify-center pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))]">
         <CrisisHeaderButton onClick={onOpenCrisis} />
       </div>
     </div>

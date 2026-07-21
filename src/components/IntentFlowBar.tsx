@@ -6,6 +6,14 @@ export interface IntentFlowBarProps {
   timeMode?: "morning" | "afternoon" | "evening" | "night";
   state?: string | null;
   className?: string;
+  /** U1.5 — When true, show the tooltip for the current phase below the bar. */
+  tooltipDismissed?: boolean;
+  /** U1.5 — Called when the user dismisses the tooltip. */
+  onDismissTooltip?: () => void;
+  /** U3.4 — Current streak day for the pathway label. */
+  day?: number;
+  /** U3.4 — Next due item description shown inline in the active phase label. */
+  nextDue?: string;
 }
 
 const PHASES: { id: IntentPhase; label: string }[] = [
@@ -18,6 +26,12 @@ const PHASE_ICONS: Record<IntentPhase, string> = {
   calm: "🧘",
   data: "📊",
   protocol: "🎯",
+};
+
+const PHASE_DESCRIPTIONS: Record<IntentPhase, string> = {
+  calm: "Ground yourself — check in and breathe. Best when you feel anxious or need a pause.",
+  data: "Review today's check-in, intentions, and weekly patterns.",
+  protocol: "Practice skills and track your coping plan progress.",
 };
 
 const TIME_SUGGESTIONS: Record<string, IntentPhase> = {
@@ -47,8 +61,13 @@ export default function IntentFlowBar({
   currentPhase,
   onPhaseChange,
   className = "",
+  tooltipDismissed = true,
+  onDismissTooltip,
+  day,
+  nextDue,
 }: IntentFlowBarProps) {
   return (
+    <div>
     <nav
       className={`flex items-center justify-between rounded-xl bg-[var(--gray-100)] p-1 dark:bg-[var(--gray-800)] ${className}`}
       aria-label="Intent phase navigation"
@@ -68,9 +87,29 @@ export default function IntentFlowBar({
           >
             <span aria-hidden="true">{PHASE_ICONS[phase.id]}</span>
             <span>{phase.label}</span>
+            {active && (day !== undefined || nextDue) && (
+              <span className="text-[10px] text-ink-faint font-normal ml-1">
+                · {day !== undefined && `Day ${day}`}{day !== undefined && nextDue ? ' · ' : ''}{nextDue ?? ''}
+              </span>
+            )}
           </button>
         );
       })}
     </nav>
+
+    {/* U1.5 — Phase tooltip: one-line description, shown until dismissed */}
+    {!tooltipDismissed && (
+      <div className="mt-2 flex items-start gap-2 bg-fill/80 border border-line/30 rounded-xl px-3 py-2 text-[11px] text-ink-muted leading-relaxed animate-fade-in">
+        <span className="flex-1">{PHASE_DESCRIPTIONS[currentPhase]}</span>
+        <button
+          onClick={() => onDismissTooltip?.()}
+          className="shrink-0 p-0.5 rounded text-ink-faint hover:text-ink-2 cursor-pointer min-w-[22px] min-h-[22px] flex items-center justify-center"
+          aria-label="Dismiss tip"
+        >
+          ✕
+        </button>
+      </div>
+    )}
+    </div>
   );
 }

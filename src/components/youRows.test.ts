@@ -42,7 +42,7 @@ describe("You hub rows (redesign §2)", () => {
     expect(row?.label).toBe("Your progress");
   });
   it("buildYouGroups exposes the Manage and Resources groups in order", () => {
-    expect(buildYouGroups().map((g) => g.title)).toEqual(["Manage", "Resources"]);
+    expect(buildYouGroups().map((g) => g.title)).toEqual(["Manage", "External resources"]);
   });
 
   it("marks informational/niche rows as 'more' (hidden behind a toggle, not shown by default)", () => {

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
-import { render, screen, cleanup, fireEvent } from "@testing-library/react";
+import { render, screen, cleanup, fireEvent, act } from "@testing-library/react";
 
 const store = new Map<string, string>();
 vi.mock("../services/secureLocal", async (importOriginal) => {
@@ -94,11 +94,10 @@ describe("personalizeToolByContext — UX-3 time/state-aware tool ordering", () 
   });
 });
 
-// Wave 3 Group I (2026-07-12, confirmed product decision) — the Today hub's default hero action now
-// leads with a structured tool (the daily if-then intention) rather than "Talk to Nila" as the
-// primary CTA, whenever today's intention hasn't been set yet. Safety-adaptive branches (wind-down
-// at night, grounding when anxious/elevated) stay unconditionally on top of this — they must never
-// be displaced by an engagement nudge.
+// Design intent (U1.2, 2026-07-21): the standalone "Talk to Nila" card was removed as a duplicate
+// — the hero action already handles Nila navigation when intention is set, so the card was adding
+// visual noise. The primary Nila entry point is the tab bar; Today's hero surfaces the most
+// contextually-relevant action. Tests updated to reflect this.
 describe("getHeroAction — structured-tool-first rebalance", () => {
   // getHeroAction reads the real wall-clock hour for its night branch (pre-existing behavior,
   // independent of the timeMode/first param) — pin the clock to a stable daytime hour so these
@@ -129,22 +128,102 @@ describe("getHeroAction — structured-tool-first rebalance", () => {
   });
 });
 
-describe("TodayScreen — structured-tool lead, chat still one tap away", () => {
+describe("TodayScreen — structured-tool lead, phase-aware rendering", () => {
   const noop = () => {};
+  beforeEach(() => { vi.useFakeTimers(); vi.setSystemTime(new Date("2026-07-21T10:00:00")); });
+  afterEach(() => { vi.useRealTimers(); });
 
-  it("renders the daily-intention card ahead of the 'Talk to Nila' card", () => {
+  it("shows intention-set hero when daily intention has not been set", () => {
     render(<TodayScreen go={noop} phoneEnabled={false} onEpisode={noop} onOpenCrisis={noop} />);
-    const intentionCard = document.getElementById("today-daily-intention");
-    const chatCard = screen.getByText(/Talk to Nila/).closest("button")!;
-    expect(intentionCard).toBeTruthy();
-    // DOCUMENT_POSITION_FOLLOWING (4) means intentionCard comes BEFORE chatCard in the DOM.
-    expect(intentionCard!.compareDocumentPosition(chatCard) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.getByText(/Set today's intention/)).toBeTruthy();
   });
 
-  it("keeps chat reachable in exactly one tap from the default hero — 'Talk to Nila' always renders and navigates to nila", () => {
+  it("daily-intention card renders below the hero", () => {
+    render(<TodayScreen go={noop} phoneEnabled={false} onEpisode={noop} onOpenCrisis={noop} />);
+    const intentionCard = document.getElementById("today-daily-intention");
+    expect(intentionCard).toBeTruthy();
+  });
+
+  it("keeps chat reachable via the tab bar — no standalone Talk to Nila card on Today", () => {
+    render(<TodayScreen go={noop} phoneEnabled={false} onEpisode={noop} onOpenCrisis={noop} />);
+    expect(screen.queryAllByText(/Talk to Nila/).length).toBe(0);
+  });
+
+  it("hero navigates to nila when daily intention is already set", () => {
+    // DailyIntention requires `if` + `then` + `date` fields
+    store.set("nilamind_daily_intention", JSON.stringify({ if: "test cue", then: "test action", date: "2026-07-21" }));
+    store.set("nilamind_checkins", JSON.stringify([{ date: "2026-07-20", emotion: "okay", intensity: 5 }]));
     const go = vi.fn();
     render(<TodayScreen go={go} phoneEnabled={false} onEpisode={noop} onOpenCrisis={noop} />);
-    fireEvent.click(screen.getByText(/Talk to Nila/));
+    // The hero button has a gradient bg class. Find it and verify the label
+    const btns = screen.getAllByRole("button");
+    const heroBtn = btns.find((b) => b.className.includes("bg-gradient-to-br"));
+    expect(heroBtn).toBeTruthy();
+    expect(heroBtn!.textContent).toMatch(/Talk to Nila/);
+    expect(heroBtn!.textContent).toMatch(/A conversation/);
+    fireEvent.click(heroBtn!);
     expect(go).toHaveBeenCalledWith("nila");
+  });
+});
+
+describe("TodayScreen — phase-based section filtering (U1.1)", () => {
+  const noop = () => {};
+  beforeEach(() => { vi.useFakeTimers(); vi.setSystemTime(new Date("2026-07-21T10:00:00")); });
+  afterEach(() => { vi.useRealTimers(); });
+
+  it("calm phase: only mood and hero render, no intention or week insight", () => {
+    store.set("nilamind_daily_intention", JSON.stringify({ intention: "breathe", date: "2026-07-21" }));
+    render(<TodayScreen go={noop} phoneEnabled={false} onEpisode={noop} onOpenCrisis={noop} />);
+    // Click the Data button first (default phase at 10am is "data"), THEN click Calm
+    const calmBtn = screen.getAllByRole("button", { name: /Calm/i }).find(
+      (b) => b.closest("nav") !== null
+    )!;
+    fireEvent.click(calmBtn);
+    // Mood card should be visible
+    expect(screen.getByText(/How are you feeling/)).toBeTruthy();
+    // This week insight should NOT be visible in calm phase
+    expect(screen.queryByText(/This week/i)).toBeNull();
+  });
+
+  it("data phase: intention and week insight are visible", () => {
+    const today = "2026-07-21";
+    store.set("nilamind_checkins", JSON.stringify([{ date: today, emotion: "good", intensity: 6 }]));
+    render(<TodayScreen go={noop} phoneEnabled={false} onEpisode={noop} onOpenCrisis={noop} />);
+    expect(screen.getByText(/Set today's intention/)).toBeTruthy();
+    // Week insight appears inline inside mood card (merged per U1.2)
+    expect(screen.getByText(/This week/i)).toBeTruthy();
+  });
+
+  it("data phase: patterns toggle (Your week) is accessible", () => {
+    render(<TodayScreen go={noop} phoneEnabled={false} onEpisode={noop} onOpenCrisis={noop} />);
+    // Default phase at 10am morning is "data"
+    expect(screen.queryByText(/Your week/i)).toBeTruthy();
+  });
+
+  it("protocol phase: hides mood, intention, and patterns (minimal surface)", () => {
+    store.set("nilamind_daily_intention", JSON.stringify({ intention: "breathe", date: "2026-07-21" }));
+    render(<TodayScreen go={noop} phoneEnabled={false} onEpisode={noop} onOpenCrisis={noop} />);
+    const protocolBtn = screen.getAllByRole("button", { name: /Protocol/i }).find(
+      (b) => b.closest("nav") !== null
+    )!;
+    fireEvent.click(protocolBtn);
+    // Mood card hidden
+    expect(screen.queryByText(/How are you feeling/)).toBeNull();
+    // Intention hidden
+    expect(screen.queryByText(/Set today's intention/i)).toBeNull();
+    // Patterns hidden
+    expect(screen.queryByText(/Your week/i)).toBeNull();
+    // Crisis button still reachable
+    expect(screen.getByRole("button", { name: /get help now/i })).toBeTruthy();
+  });
+});
+
+describe("TodayScreen — data error feedback", () => {
+  const noop = () => {};
+
+  it("shows error banner when checkin storage is corrupted", () => {
+    store.set("nilamind_checkins", "garbage");
+    render(<TodayScreen go={noop} phoneEnabled={false} onEpisode={noop} onOpenCrisis={noop} />);
+    expect(screen.getByText(/couldn't load/i)).toBeTruthy();
   });
 });

@@ -116,9 +116,7 @@ afterEach(() => {
 });
 
 function openTextInput() {
-  // The keyboard-toggle button only renders while the text input is hidden — once shown (e.g. after a prior
-  // send in the same test), it stays shown, so this is a no-op on subsequent calls.
-  const toggle = screen.queryByLabelText("Type a message");
+  const toggle = screen.queryByLabelText("Tap to type");
   if (toggle) fireEvent.click(toggle);
 }
 
@@ -248,7 +246,7 @@ describe("ModeScreen — Bug 2 fix: stale SoftCrisisCard clears on a later full-
 // that await window, so a second message could be sent concurrently and interleave with the still-pending §9
 // verdict. Fix: set the same loading lock before the arm-request branch's await, matching the main path.
 describe("ModeScreen — Bug 3 fix: arm-request branch sets loading before its async §9 check (2026-07-12)", () => {
-  it("the Send button is disabled while the arm-request's §9 gate is pending, blocking a concurrent second send", async () => {
+  it("the button switches to Stop while the arm-request's §9 gate is pending, and re-entry is blocked", async () => {
     // Hold the arm-request's §9 gate open indefinitely so we can observe the pending window.
     let resolveGate!: (v: boolean) => void;
     const pending = new Promise<boolean>((res) => { resolveGate = res; });
@@ -265,18 +263,16 @@ describe("ModeScreen — Bug 3 fix: arm-request branch sets loading before its a
     // The user types a second message B while A's gate is still unresolved.
     fireEvent.change(input, { target: { value: "message B" } });
 
-    // Without the fix, `loading` never became true during the arm-request branch's await, so the Send button
-    // (disabled={!inputText.trim() || loading}) would be enabled again as soon as inputText was non-empty —
-    // this is the exact race the bug describes. With the fix, it must stay disabled until A resolves.
-    expect((screen.getByLabelText("Send") as HTMLButtonElement).disabled).toBe(true);
+    // U7.2: the button switches to "Stop generating" (active / not disabled) while loading.
+    // Re-entry is blocked by handleSendMessage's `if (!textToSend || loading) return` guard.
+    expect(screen.getByLabelText("Stop generating")).toBeTruthy();
 
-    // Attempting to send anyway must be a no-op: handleSendMessage's top-of-function `if (!msg || loading)
-    // return` guard must block re-entry, so message B must never appear in the transcript while A is pending.
-    fireEvent.click(screen.getByLabelText("Send"));
+    // Attempting to send via the returned-to-"Stop generating" button + a direct click must be a no-op:
+    // handleSendMessage's top-of-function `if (!msg || loading) return` guard blocks re-entry.
     expect(screen.queryByText("message B")).toBeNull();
 
     resolveGate(false); // let A resolve as "not a crisis" so the pending promise doesn't leak into other tests
-    await waitFor(() => expect((screen.getByLabelText("Send") as HTMLButtonElement).disabled).toBe(false));
+    await waitFor(() => expect(screen.getByLabelText("Send")).toBeTruthy());
   });
 });
 
@@ -292,10 +288,16 @@ describe("ModeScreen — feedback-suggestion UI (2026-07-12 Wave 3, Group F)", (
     await waitFor(() => expect(screen.getByText(replyText)).toBeTruthy());
   }
 
+  /** U7.6: feedback is now collapsed behind "+Feedback" — expand the latest assistant message. */
+  function expandLastFeedback() {
+    const buttons = screen.getAllByLabelText("Show feedback");
+    fireEvent.click(buttons[buttons.length - 1]);
+  }
+
   it("tapping thumbs-down on a reply shows a one-tap 'what would've helped' prompt", async () => {
     await sendAndGetReply("a reply");
+    expandLastFeedback();
     expect(document.getElementById("feedback-suggestion-prompt")).toBeNull();
-    // Use getAllByLabelText and pick the last one — the greeting message also has feedback buttons
     const downButtons = screen.getAllByLabelText("Mark as not helpful");
     fireEvent.click(downButtons[downButtons.length - 1]);
     expect(recordFeedbackMock).toHaveBeenCalledWith("a reply", "down");
@@ -304,6 +306,7 @@ describe("ModeScreen — feedback-suggestion UI (2026-07-12 Wave 3, Group F)", (
 
   it("tapping thumbs-up does NOT show the suggestion prompt (only a down-rating asks what would help)", async () => {
     await sendAndGetReply("a good reply");
+    expandLastFeedback();
     const upButtons = screen.getAllByLabelText("Mark as helpful");
     fireEvent.click(upButtons[upButtons.length - 1]);
     expect(document.getElementById("feedback-suggestion-prompt")).toBeNull();
@@ -311,6 +314,7 @@ describe("ModeScreen — feedback-suggestion UI (2026-07-12 Wave 3, Group F)", (
 
   it("submitting a typed suggestion calls attachSuggestion with the exact feedback id, then closes the prompt", async () => {
     await sendAndGetReply("a reply");
+    expandLastFeedback();
     const downButtons = screen.getAllByLabelText("Mark as not helpful");
     fireEvent.click(downButtons[downButtons.length - 1]);
     const input = screen.getByPlaceholderText(/what would.*helped/i);
@@ -322,6 +326,7 @@ describe("ModeScreen — feedback-suggestion UI (2026-07-12 Wave 3, Group F)", (
 
   it("dismissing without submitting never calls attachSuggestion and closes the prompt (optional, not forced)", async () => {
     await sendAndGetReply("a reply");
+    expandLastFeedback();
     const downButtons = screen.getAllByLabelText("Mark as not helpful");
     fireEvent.click(downButtons[downButtons.length - 1]);
     expect(document.getElementById("feedback-suggestion-prompt")).toBeTruthy();
@@ -332,20 +337,29 @@ describe("ModeScreen — feedback-suggestion UI (2026-07-12 Wave 3, Group F)", (
 });
 
 describe("in-moment skill suggestion (2026-07-16 dedupe)", () => {
-  it("shows exactly one skill suggestion (no pinned duplicate) and it uses buttons", async () => {
+  async function sendAndGetSkillReply() {
     sendToNilaMock.mockResolvedValueOnce({ reply: "That sounds hard.", reachedAI: true, blocked: false });
     render(<ModeScreen />);
     await sendMessage("i feel so low and empty lately");
     await waitFor(() => expect(screen.getByText("That sounds hard.")).toBeTruthy());
+  }
+
+  function expandLastFeedback() {
+    const buttons = screen.getAllByLabelText("Show feedback");
+    fireEvent.click(buttons[buttons.length - 1]);
+  }
+
+  it("shows exactly one skill suggestion (no pinned duplicate) and it uses buttons", async () => {
+    await sendAndGetSkillReply();
+    expandLastFeedback();
     await waitFor(() => expect(screen.getByText("Try this skill")).toBeTruthy());
     expect(document.getElementById("skill-offer-card")).toBeNull();
     expect(screen.getAllByText("Opposite Action")).toHaveLength(1);
   });
 
   it("clicking Not now removes the skill suggestion without wiping the reply", async () => {
-    sendToNilaMock.mockResolvedValueOnce({ reply: "That sounds hard.", reachedAI: true, blocked: false });
-    render(<ModeScreen />);
-    await sendMessage("i feel so low and empty lately");
+    await sendAndGetSkillReply();
+    expandLastFeedback();
     await waitFor(() => expect(screen.getByText("Try this skill")).toBeTruthy());
     fireEvent.click(screen.getByText("Not now"));
     await waitFor(() => expect(screen.queryByText("Try this skill")).toBeNull());

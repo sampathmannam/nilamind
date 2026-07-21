@@ -16,7 +16,7 @@ export default function AgencyNarrative({ goal = "stress management", className 
       className={`relative overflow-hidden rounded-xl border-(--sage-green) border-opacity-30 bg-[var(--mint)] p-5 shadow-sm ${className}`}
       aria-labelledby="agency-title"
     >
-      <h3 id="agency-title" className="mb-2 font-semibold text-[var(--sage-green)]">Your agency in action</h3>
+      <h3 id="agency-title" className="mb-2 font-semibold text-[var(--sage-green)]">Your progress</h3>
       <p className="mb-4 leading-relaxed text-[var(--text-main)]">
         Your goal <em>"{goal}"</em> generated pattern insight → <em>data-driven check-in triggered</em>
       </p>

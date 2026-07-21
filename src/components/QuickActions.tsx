@@ -47,6 +47,9 @@ const CALMING_WHEN_ELEVATED = ["grounding", "breathing", "wind_down", "reach_out
  * "let's slow things down" copy (Østergaard 2023 — don't feed an elevated state with more stimulation).
  * Otherwise: the existing time-of-day filter, capped at 9.
  */
+/** Cap for the home quick-actions grid (Mohr's ≤4 visible choices). */
+const MAX_QUICK_ACTIONS = 4;
+
 export function selectQuickActions(timeMode: TimeMode, userState?: UserState | null): ActionDef[] {
   if (userState === "elevated") {
     return ACTIONS.filter((a) => CALMING_WHEN_ELEVATED.includes(a.id));
@@ -58,12 +61,12 @@ export function selectQuickActions(timeMode: TimeMode, userState?: UserState | n
   // re-surfaces precisely when the user is `low`/distressed (visible when needed).
   const crisisVisible = userState === "low";
   if (!crisisVisible) {
-    return base.filter((a) => a.id !== "crisis").slice(0, 9);
+    return base.filter((a) => a.id !== "crisis").slice(0, MAX_QUICK_ACTIONS);
   }
   const withoutCrisis = base.filter((a) => a.id !== "crisis");
   const crisisAction = ACTIONS.find((a) => a.id === "crisis");
-  if (!crisisAction) return withoutCrisis.slice(0, 9);
-  return [...withoutCrisis.slice(0, 8), crisisAction]; // crisis + up to 8 others = 9
+  if (!crisisAction) return withoutCrisis.slice(0, MAX_QUICK_ACTIONS);
+  return [...withoutCrisis.slice(0, MAX_QUICK_ACTIONS - 1), crisisAction];
 }
 
 export default function QuickActions({ onAction, timeMode, userState }: QuickActionsProps) {

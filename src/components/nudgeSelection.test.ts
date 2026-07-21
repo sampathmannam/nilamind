@@ -31,20 +31,21 @@ describe("selectVisibleNudges — safety-plan clinical priority", () => {
   });
 });
 
-describe("selectVisibleNudges — MAX_NUDGES cap by array priority order", () => {
-  it("caps at MAX_NUDGES (=2) ambient nudges", () => {
-    expect(MAX_NUDGES).toBe(2);
-    const { visibleNudgeIds } = selectVisibleNudges({
+describe("selectVisibleNudges — returns ALL visible nudges (UI cap moved to NudgeRail)", () => {
+  it("returns all 5 when all are due (no cap in selector)", () => {
+    expect(MAX_NUDGES).toBe(3);
+    const { visibleNudgeIds, totalNudges } = selectVisibleNudges({
       ...NONE,
-      safetyPlanReview: true, // safetyPlan
+      safetyPlanReview: true,
       sleepProdrome: true,
       jitaiShouldNudge: true,
       pact: true,
       welcome: true,
     });
-    expect(visibleNudgeIds.size).toBe(2);
+    expect(visibleNudgeIds.size).toBe(5);
+    expect(totalNudges).toBe(5);
   });
-  it("keeps the two HIGHEST-priority nudges (safetyPlan > sleep > jitai > pact > welcome)", () => {
+  it("keeps all visible items by priority order", () => {
     const { visibleNudgeIds } = selectVisibleNudges({
       ...NONE,
       safetyPlanReview: true,
@@ -55,21 +56,19 @@ describe("selectVisibleNudges — MAX_NUDGES cap by array priority order", () =>
     });
     expect(visibleNudgeIds.has("safetyPlan")).toBe(true);
     expect(visibleNudgeIds.has("sleep")).toBe(true);
-    expect(visibleNudgeIds.has("jitai")).toBe(false);
-    expect(visibleNudgeIds.has("pact")).toBe(false);
-    expect(visibleNudgeIds.has("welcome")).toBe(false);
+    expect(visibleNudgeIds.has("jitai")).toBe(true);
+    expect(visibleNudgeIds.has("pact")).toBe(true);
+    expect(visibleNudgeIds.has("welcome")).toBe(true);
   });
-  it("drops higher-priority slots that aren't showing, promoting lower ones", () => {
-    // No safetyPlan, no sleep → jitai + pact take the two slots, welcome drops.
-    const { visibleNudgeIds } = selectVisibleNudges({
+  it("reports totalNudges correctly when some are hidden", () => {
+    const { totalNudges } = selectVisibleNudges({
       ...NONE,
       jitaiShouldNudge: true,
       pact: true,
-      welcome: true,
     });
-    expect([...visibleNudgeIds].sort()).toEqual(["jitai", "pact"]);
+    expect(totalNudges).toBe(2);
   });
-  it("shows fewer than the cap when fewer are due", () => {
+  it("shows only the due ones", () => {
     const { visibleNudgeIds } = selectVisibleNudges({ ...NONE, sleepProdrome: true });
     expect([...visibleNudgeIds]).toEqual(["sleep"]);
   });

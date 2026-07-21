@@ -1,12 +1,14 @@
 import { localDateKey } from "../services/storageUtils";
 import { useRef, useState, useEffect, useReducer, useMemo } from "react";
-import { Wind, MessageCircle, Moon, Sparkles, ChevronRight, Sparkle, Clock3, Target, LineChart, Activity } from "lucide-react";
+import { Wind, MessageCircle, Moon, Sparkles, ChevronRight, Sparkle, Clock3, Target, LineChart, Activity, Loader2 } from "lucide-react";
 import { getTimeMode, getUserState } from "../services/modeEngine";
 import { hasCheckinToday, loadCheckins } from "../services/checkin";
 import { useLanguage, t } from "../services/i18n";
+import { secureLocal } from "../services/secureLocal";
 import { loadInsights } from "../services/nilaInsights";
 import { loadAssessments, INSTRUMENTS } from "../services/assessments";
 import { isWellbeingDue, wellbeingCadence } from "../services/wellbeingTrack";
+import { computeCompassionateStreak } from "../services/streaks";
 import { hasRhythmToday, loadTodayAnchors } from "../services/socialRhythm";
 import { getDailyIntention } from "../services/weeklyIntention";
 import DailyIntentionCard, { type DailyIntentionCardHandle } from "./DailyIntentionCard";
@@ -26,7 +28,8 @@ import { detectCompoundSignals } from "../services/compoundDetector";
 import { getFeatureWindow } from "../services/signalStore";
 import { getPassiveSensingEnabled } from "../services/passiveSensingPrefs";
 import ProactiveNudgeRail from "./ProactiveNudgeRail";
-import IntentFlowBar, { suggestPhase } from "./IntentFlowBar";
+import IntentFlowBar, { suggestPhase, type IntentPhase } from "./IntentFlowBar";
+import SkeletonCard from "./SkeletonCard";
 import OnboardingMomentum from "./OnboardingMomentum";
 import { usePullToRefresh } from "../hooks/usePullToRefresh";
 import PullToRefresh from "./PullToRefresh";
@@ -38,6 +41,17 @@ import type { TimeMode, UserState } from "../types/modes";
 const MOOD_EMOJI: Record<string, string> = {
   calm: "😌", good: "😊", okay: "😐", fine: "😊", anxious: "😰",
   low: "😢", sad: "😢", angry: "😤", overwhelmed: "😩", stressed: "😫",
+};
+
+// U1.1 — Phase-based section visibility. Each IntentPhase maps to which content sections are
+// visible on TodayScreen. Nudge cascade, crisis button, error banner, and first-time user content
+// remain unconditional across all phases.
+// Calm: mood + hero. Data: mood + hero + intention + patterns. Protocol: nudges + crisis only
+// (the protocol card lives on the Nila tab; TodayScreen keeps its surface minimal in protocol phase).
+const PHASE_VIS: Record<IntentPhase, { moodAndHero: boolean; intention: boolean; patterns: boolean }> = {
+  calm:     { moodAndHero: true,  intention: false, patterns: false },
+  data:     { moodAndHero: true,  intention: true,  patterns: true  },
+  protocol: { moodAndHero: false, intention: false, patterns: false },
 };
 
 function getTodayMood(): { label: string; emoji: string } | null {
@@ -94,7 +108,7 @@ if (!dailyIntentionSet) {
   }
   // Intention already set → promote Talk to Nila (not a duplicate check-in prompt — the mood
   // card directly below already handles that, and stacking two check-in CTAs is confusing).
-  return { id: "nila", label: "Talk to Nila", sub: "A conversation, a reflection, or just a listen", icon: <MessageCircle className="w-5 h-5" aria-hidden="true" />, color: "text-blue-400", route: "nila" };
+  return { id: "nila", label: "Talk to Nila", sub: "A conversation, a reflection, or just a listen", icon: <MessageCircle className="w-5 h-5" aria-hidden="true" />, color: "text-[#C784B0]", route: "nila" };
 }
 
 function formatDate(): string {
@@ -135,7 +149,6 @@ function getNilaReflection(): string | null {
   try {
     const insights = loadInsights();
     if (!insights.length) return null;
-    // Pick a random insight (rotates on each render, but stable within session is fine)
     const idx = Math.floor(Math.random() * insights.length);
     return insights[idx].text;
   } catch { return null; }
@@ -153,13 +166,52 @@ export default function TodayScreen({
   onOpenCrisis: () => void;
 }) {
   const [showExtraCards, setShowExtraCards] = useState(false);
+  const [showHelp, setShowHelp] = useState(false); // U3.5
+  const [isSaving, setIsSaving] = useState(false); // U2.1/U2.2
+  const [lastRefreshed, setLastRefreshed] = useState<number | null>(null); // U2.3
+  useEffect(() => {
+    if (!lastRefreshed) return;
+    const id = setTimeout(() => setLastRefreshed(null), 3000);
+    return () => clearTimeout(id);
+  }, [lastRefreshed]);
   const [proactiveNudge, setProactiveNudge] = useState<{ text: string; route: string; icon: string } | null>(null);
-  const [selectedIntentPhase, setSelectedIntentPhase] = useState<"calm" | "data" | "protocol">("data");
   const [confettiActive, setConfettiActive] = useState(false);
+  const STORAGE_KEYS = ["nilamind_checkins", "nilamind_episodes", "nilamind_diary", "nilamind_insights"];
+  const dataErrors = useMemo(() => {
+    const badKeys: string[] = [];
+    for (const key of STORAGE_KEYS) {
+      try {
+        const raw = secureLocal.getItem(key);
+        if (raw) { JSON.parse(raw); }
+      } catch {
+        badKeys.push(key);
+      }
+    }
+    return badKeys;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   useLanguage();
   const { timeOfDay } = useTimeOfDay();
   const timeMode = getTimeMode();
   const userState = getUserState();
+  const suggestedPhase = useMemo(() => suggestPhase(userState, timeMode), [userState, timeMode]);
+  const [selectedIntentPhase, setSelectedIntentPhase] = useState<IntentPhase>(suggestedPhase);
+
+  // U1.5 — Phase tooltip: shows on first phase tap, persists dismissed state.
+  const [phaseTooltipDismissed, setPhaseTooltipDismissed] = useState(() => {
+    try { return secureLocal.getItem("nilamind_phase_tooltip_dismissed") === "true"; }
+    catch { return false; }
+  });
+  const [phaseTooltipActive, setPhaseTooltipActive] = useState(false);
+  const dismissPhaseTooltip = () => {
+    setPhaseTooltipActive(false);
+    setPhaseTooltipDismissed(true);
+    try { secureLocal.setItem("nilamind_phase_tooltip_dismissed", "true"); } catch {}
+  };
+  const onPhaseChange = (newPhase: IntentPhase) => {
+    setSelectedIntentPhase(newPhase);
+    if (!phaseTooltipDismissed) setPhaseTooltipActive(true);
+  };
 
   // Load proactive nudge from compound signals
   useEffect(() => {
@@ -185,14 +237,35 @@ export default function TodayScreen({
     night: t("greeting_night"),
   };
   const greeting = greetingMap[timeMode];
-  const [, refreshAfterCheckinResolve] = useReducer((n: number) => n + 1, 0);
+  const refreshKey = useRef(0);
+  const refreshAfterCheckinResolve = () => {
+    setIsSaving(false);
+    refreshKey.current += 1;
+  };
+  const [, forceRerender] = useReducer((n: number) => n + 1, 0);
   const [reCheckinSkipped, setReCheckinSkipped] = useState(false);
+  const [weekInsightExpanded, setWeekInsightExpanded] = useState(false); // U1.2 — collapsible week insight
   const checkedIn = hasCheckinToday(localDateKey());
   const prevCheckedIn = useRef(checkedIn);
   useEffect(() => {
-    if (checkedIn && !prevCheckedIn.current) setConfettiActive(true);
+    if (checkedIn && !prevCheckedIn.current) {
+      // U2.4 — Confetti gating: skip if intensity>6, negative emotion, or elevated state
+      const mood = getTodayMood();
+      const shouldConfetti = (() => {
+        if (userState === "elevated") return false; // don't celebrate when elevated
+        const NEGATIVE_EMOTIONS = ["low", "sad", "angry", "overwhelmed", "stressed", "anxious"];
+        if (mood && NEGATIVE_EMOTIONS.includes(mood.label.toLowerCase())) return false;
+        try {
+          const list = loadCheckins();
+          const last = list[list.length - 1];
+          if (last?.intensity != null && last.intensity > 6) return false;
+        } catch { /* no check-ins */ }
+        return true;
+      })();
+      if (shouldConfetti) setConfettiActive(true);
+    }
     prevCheckedIn.current = checkedIn;
-  }, [checkedIn]);
+  }, [checkedIn, userState]);
   // A model-drafted check-in waiting to be confirmed (conversational capture). When present and not yet
   // checked in, it replaces the cold "How are you feeling?" prompt with a warm, pre-filled confirm.
   const pendingCheckinDraft = !checkedIn ? getPendingCheckinDraft() : null;
@@ -246,6 +319,19 @@ export default function TodayScreen({
   })();
   const contextLine = contextualSummary(timeOfDay, checkedIn, recentAvg, 0);
 
+  // U1.3 — Loading skeleton for async data boundaries. Currently all data loads synchronously from
+  // secureLocal; set to true when wiring async sources (Healthy Connect, passive sensing, etc.).
+  const [loading] = useState(false);
+
+  const vis = (() => {
+    const base = PHASE_VIS[selectedIntentPhase];
+    // U4.1 — State-aware simplification: when anxious or elevated, reduce to minimal surface
+    if (userState === "anxious" || userState === "elevated") {
+      return { moodAndHero: true, intention: false, patterns: false };
+    }
+    return base;
+  })();
+
   // Nila's warm companion message based on current state
   const nilaMsg = buildNilaMessage({
     timeOfDay,
@@ -273,18 +359,34 @@ export default function TodayScreen({
       return daysSince >= 2;
     } catch { return false; }
   })();
-  const topNudge = selectTopNudge({
+  const nudgeCandidates = {
     hasSafetyPlanNudge: true, // SafetyPlanNudgeCard handles its own visibility internally
     hasReCheckIn: reCheckinVisible,
     hasPendingDraft: !!pendingCheckinDraft,
     hasWellbeingDue: wellbeingDue && earnedBaselinePrompts,
-    hasAssessmentPrompt: !!assessmentPrompt && earnedBaselinePrompts && !wellbeingDue,
-    hasProactiveNudge: !!proactiveNudge,
-  });
+    // U4.2 — When anxious, skip assessment and proactive nudges (only crisis + safety plan pass through)
+    hasAssessmentPrompt: userState !== "anxious" && !!assessmentPrompt && earnedBaselinePrompts && !wellbeingDue,
+    hasProactiveNudge: userState !== "anxious" && !!proactiveNudge,
+  };
+  const topNudge = selectTopNudge(nudgeCandidates);
+  const totalNudges = (Object.values(nudgeCandidates) as boolean[]).filter(Boolean).length;
+  const [nudgeCascadeExpanded, setNudgeCascadeExpanded] = useState(false); // U1.4
+
+  // U3.4 — Pathway label: compute streak day + next due item.
+  const pathwayDay = useMemo(() => {
+    try { return computeCompassionateStreak().current; }
+    catch { return undefined; }
+  }, []);
+  const pathwayNextDue = useMemo(() => {
+    if (wellbeingDue && earnedBaselinePrompts) return "Wellbeing check";
+    if (assessmentPrompt && earnedBaselinePrompts) return `${INSTRUMENTS[assessmentPrompt.instrument].measures} check`;
+    return undefined;
+  }, [wellbeingDue, earnedBaselinePrompts, assessmentPrompt]);
 
   const ptr = usePullToRefresh(async () => {
     await new Promise((r) => setTimeout(r, 500));
     window.dispatchEvent(new CustomEvent("nila-refresh-today"));
+    setLastRefreshed(Date.now());
   });
 
   return (
@@ -296,38 +398,93 @@ export default function TodayScreen({
       onTouchMove={ptr.onTouchMove}
       onTouchEnd={ptr.onTouchEnd}
     >
-    <div className="space-y-5 max-w-md mx-auto" id="today-hub">
+    <div className="space-y-5 max-w-md mx-auto animate-fade-in" id="today-hub">
       {/* Greeting — time-aware, serif voice, with subtle gradient backdrop */}
        <header className={`relative rounded-2xl p-4 -mx-1 bg-gradient-to-br ${heroGradient(timeOfDay)}`}>
-         <div className="space-y-0.5">
-           <h1 className="editorial text-3xl text-ink">{greeting}</h1>
-           <p className="text-sm text-ink-muted">{formatDate()}</p>
+          <div className="space-y-0.5">
+            <div className="flex items-center justify-between">
+              <h1 className="editorial text-3xl text-ink">{greeting}</h1>
+              <button
+                onClick={() => setShowHelp((v) => !v)}
+                className="w-8 h-8 rounded-full bg-fill/60 border border-line/20 flex items-center justify-center text-ink-faint hover:text-ink-2 hover:bg-fill transition-colors cursor-pointer shrink-0"
+                aria-label="Help — what am I looking at?"
+              >
+                <span className="text-sm font-semibold">?</span>
+              </button>
+            </div>
+            <p className="text-sm text-ink-muted">{formatDate()}</p>
+            {/* U2.3 — Staleness indicator shown briefly after pull-to-refresh completes */}
+            {lastRefreshed && (
+              <p className="text-[10px] text-emerald-500/80 mt-0.5 animate-fade-in" aria-live="polite">
+                Updated just now
+              </p>
+            )}
            {contextLine && (
              <p className="text-[11px] text-ink-faint leading-relaxed mt-1">{contextLine}</p>
            )}
-           {!contextLine && nilaMsg.message && (
-             <p className="text-[11px] text-ink-faint leading-relaxed mt-1 italic">"{nilaMsg.message}"</p>
-           )}
-         </div>
+{!contextLine && nilaMsg.message && (
+              <p className="text-[11px] text-ink-faint leading-relaxed mt-1 italic">"{nilaMsg.message}"</p>
+            )}
+            {/* U9.1 — Persistent privacy badge in header */}
+            <p className="text-[10px] text-emerald-500/60 mt-1 flex items-center gap-1">
+              <span aria-hidden="true">🔒</span> On-device
+            </p>
+          </div>
 
         {/* Intent phase navigation (Phase 2: Adaptive UI) */}
         <div className="-mx-1 mt-3">
           <IntentFlowBar
             currentPhase={selectedIntentPhase || suggestPhase(userState, timeOfDay)}
-            onPhaseChange={(newPhase) => {
-              setSelectedIntentPhase(newPhase);
-            }}
+            onPhaseChange={onPhaseChange}
             className="bg-[var(--white)]/80 backdrop-blur-xl mt-3"
+            tooltipDismissed={!phaseTooltipActive}
+            onDismissTooltip={dismissPhaseTooltip}
+            day={pathwayDay}
+            nextDue={pathwayNextDue}
           />
         </div>
 
        </header>
 
-      {/* Daily inspiration — quote + tip. Informational, not a primary action → behind the "Your patterns" fold. */}
+      {/* U3.5 — Help FAQ sheet */}
+      {showHelp && (
+        <div className="relative z-10">
+          <div className="absolute right-0 top-0 w-72 bg-fill border border-line/30 rounded-xl shadow-lg p-4 space-y-3 text-xs animate-fade-in" role="dialog" aria-label="Help">
+            <div className="space-y-2">
+              <p className="font-semibold text-ink">What am I looking at?</p>
+              <p className="text-ink-muted leading-relaxed">Today shows what matters most based on your current phase — Calm (grounding), Data (review), or Protocol (skills).</p>
+            </div>
+            <div className="space-y-2">
+              <p className="font-semibold text-ink">What is a nudge?</p>
+              <p className="text-ink-muted leading-relaxed">Gentle reminders — a check-in you missed, a wellbeing check that's due, or an insight from your data. They appear one at a time to keep things calm.</p>
+            </div>
+            <div className="space-y-2">
+              <p className="font-semibold text-ink">How do I change what appears?</p>
+              <p className="text-ink-muted leading-relaxed">Tap Calm / Data / Protocol above to switch what's shown. The app suggests a phase based on your state and time of day — you can always override.</p>
+            </div>
+            <button
+              onClick={() => setShowHelp(false)}
+              className="w-full text-center py-2 text-ink-faint hover:text-ink-2 transition-colors cursor-pointer min-h-[44px]"
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Data load error feedback — visible when storage errors occur */}
+      {dataErrors.length > 0 && (
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-3 text-xs text-ink-muted flex items-center gap-2" role="alert">
+          <span className="shrink-0">⚠️</span>
+          <span>Some data couldn&apos;t load. Pull down to refresh.</span>
+        </div>
+      )}
+
+      {/* Daily inspiration — quote + tip. Informational, not a primary action → behind the "Your week" fold. */}
       {showExtraCards && <DailyContentCard />}
 
-      {/* Proactive nudge rail — surfaced from compound signal analysis (only when it's the top nudge) */}
-      {proactiveNudge && topNudge === "proactive" && (
+      {/* Proactive nudge rail — surfaced from compound signal analysis */}
+      {proactiveNudge && (nudgeCascadeExpanded || topNudge === "proactive") && (
         <ProactiveNudgeRail
           text={proactiveNudge.text}
           icon={proactiveNudge.icon}
@@ -347,19 +504,18 @@ export default function TodayScreen({
       {/* (Play-Store rating prompt moved off the mental-health home to the You tab — 2026-07-18 design
           review: a store-rating ask does not belong on the daily support surface.) */}
 
-      {/* Nudge to set up a coping plan — only when it's the top nudge */}
-      {topNudge === "safety_plan" && <SafetyPlanNudgeCard go={go} />}
-
-      {/* Low-friction re-check-in — one-tap mood log for returning users after a gap (only when top nudge) */}
-      {reCheckinVisible && topNudge === "re_checkin" && (
+      {/* U1.4 — Nudge cascade: shows only the top nudge by default; when expanded shows all. */}
+      {hasAnyCheckins && nudgeCascadeExpanded && !wellbeingDue && !assessmentPrompt && !pendingCheckinDraft && (
+        <p className="text-[10px] text-ink-faint text-center">No nudges right now</p>
+      )}
+      {topNudge === "safety_plan" && (nudgeCascadeExpanded || topNudge === "safety_plan") && <SafetyPlanNudgeCard go={go} />}
+      {reCheckinVisible && (nudgeCascadeExpanded || topNudge === "re_checkin") && (
         <LowFrictionReCheckIn
           onMoodSelect={() => refreshAfterCheckinResolve()}
           onSkip={() => setReCheckinSkipped(true)}
         />
       )}
-
-      {/* Longitudinal wellbeing — gentle fortnightly cadence prompt (only when top nudge) */}
-      {wellbeingDue && earnedBaselinePrompts && topNudge === "wellbeing_due" && (
+      {wellbeingDue && earnedBaselinePrompts && (nudgeCascadeExpanded || topNudge === "wellbeing_due") && (
         <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-2xl p-4 space-y-2">
           <div className="flex items-center gap-2">
             <LineChart className="w-4 h-4 text-emerald-400" />
@@ -375,18 +531,12 @@ export default function TodayScreen({
           </button>
         </div>
       )}
-
-      {/* Proactive assessment suggestion — contextual or routine. Uses the instrument's plain-language
-          `measures` field (not the raw clinical acronym) as the headline, with the acronym kept as a
-          small secondary label so it still matches what the user sees once they open the screening.
-          Styled like every other suggestion card here (no amber "warning" tint) — this is a supportive
-          nudge, not an alert, and shouldn't read as one. */}
-      {assessmentPrompt && earnedBaselinePrompts && !wellbeingDue && topNudge === "assessment_prompt" && (
+      {assessmentPrompt && earnedBaselinePrompts && !wellbeingDue && (nudgeCascadeExpanded || topNudge === "assessment_prompt") && (
         <button
           onClick={() => go("assessment")}
-          className="w-full glass hover:brightness-125 p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left flex items-center gap-3"
+          className="w-full bg-fill/80 hover:bg-fill border border-line/30 shadow-sm p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left flex items-center gap-3"
         >
-          <span className="shrink-0 text-blue-400"><Activity className="w-5 h-5" aria-hidden="true" /></span>
+          <span className="shrink-0 text-[#C784B0]"><Activity className="w-5 h-5" aria-hidden="true" /></span>
           <span className="flex-1 min-w-0">
             <span className="block text-sm font-bold text-ink">
               {INSTRUMENTS[assessmentPrompt.instrument].measures} check {assessmentPrompt.firstTime ? "— set your baseline" : assessmentPrompt.kind === "contextual" ? "suggested" : "due"}
@@ -397,27 +547,108 @@ export default function TodayScreen({
           <ChevronRight className="w-5 h-5 text-ink-faint shrink-0" aria-hidden="true" />
         </button>
       )}
-
-      {/* Conversational check-in capture — only when it's the top nudge */}
-      {pendingCheckinDraft && topNudge === "pending_draft" && (
+      {pendingCheckinDraft && (nudgeCascadeExpanded || topNudge === "pending_draft") && (
         <ConversationalCheckinCard go={go} onResolved={refreshAfterCheckinResolve} />
       )}
 
-      {/* Mood card — prompt to log if not checked in, show reflection if done. The cold "how are you
-          feeling?" prompt is suppressed while a drafted check-in is offered above (they'd be redundant). */}
+      {/* "+N more" toggle when collapsed and more nudges are available */}
+      {!nudgeCascadeExpanded && totalNudges > 1 && (
+        <button
+          onClick={() => setNudgeCascadeExpanded(true)}
+          className="w-full text-center py-2 text-xs text-ink-faint hover:text-ink-2 transition-colors cursor-pointer min-h-[44px]"
+        >
+          +{totalNudges - 1} more
+        </button>
+      )}
+
+      {/* "Dismiss all" when expanded */}
+      {nudgeCascadeExpanded && totalNudges > 0 && (
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => setNudgeCascadeExpanded(false)}
+            className="text-xs text-ink-faint hover:text-ink-2 transition-colors cursor-pointer min-h-[44px]"
+          >
+            Show fewer
+          </button>
+          <button
+            onClick={() => {
+              setReCheckinSkipped(true);
+              setProactiveNudge(null);
+              setNudgeCascadeExpanded(false);
+            }}
+            className="text-xs text-ink-faint hover:text-rose-400 transition-colors cursor-pointer min-h-[44px]"
+          >
+            Dismiss all
+          </button>
+        </div>
+      )}
+
+      {/* U1.2 — Merged section: mood card + hero action + daily intention as a single stacked pair.
+          Phase-gated by vis.moodAndHero. Intention renders only in data phase (vis.intention).
+          Calm and Data phases show this block; Protocol hides it for a minimal surface. */}
+      {vis.moodAndHero && (
+        <div className="space-y-3">
+      {/* U1.3 — Loading skeleton replaces mood+hero+intention while data resolves. */}
+      {loading ? <SkeletonCard lines={4} /> : <>
+      {/* Mood card — prompt to log if not checked in, show reflection if done with week
+          insight merged inline, collapsible (U1.2). The cold "how are you feeling?" prompt
+          is suppressed while a drafted check-in is offered above (they'd be redundant). */}
       {!(pendingCheckinDraft && !checkedIn) && (
-      <button
-        onClick={() => checkedIn ? go("diary") : go("ema_checkin")}
-        className="w-full glass hover:brightness-125 p-5 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left"
+      <div
+        onClick={() => {
+          if (isSaving) return; // U2.1 double-tap guard
+          if (!checkedIn) setIsSaving(true);
+          checkedIn ? go("diary") : go("ema_checkin");
+        }}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); if (!isSaving) { if (!checkedIn) setIsSaving(true); checkedIn ? go("diary") : go("ema_checkin"); } } }}
+        role="button"
+        tabIndex={0}
+        aria-disabled={isSaving}
+        className={`w-full bg-fill/80 hover:bg-fill border border-line/30 shadow-sm p-5 rounded-2xl transition-all cursor-pointer text-left ${isSaving ? "opacity-60" : "active:scale-[0.99]"}`}
       >
-        {checkedIn && todayMood ? (
-          <div className="flex items-center gap-4">
+        {/* U2.2 — Save-state spinner when check-in is saving */}
+        {isSaving ? (
+          <div className="flex items-center gap-3">
+            <Loader2 className="w-10 h-10 text-[#C784B0] animate-spin shrink-0" aria-hidden="true" />
+            <div>
+              <p className="text-sm font-bold text-ink">Saving your check-in…</p>
+              <p className="text-[11px] text-ink-muted mt-0.5">Almost done</p>
+            </div>
+          </div>
+        ) : checkedIn && todayMood ? (
+          <div className="flex items-start gap-4">
             <span className={`blob-badge blob-badge--${moodBlobVariant(todayMood.label)} w-12 h-12 shrink-0`}>
               <span className="blob-badge__value text-2xl" aria-hidden="true">{todayMood.emoji}</span>
             </span>
-            <div>
+            <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-ink">Feeling {todayMood.label}</p>
               <p className="text-[11px] text-ink-muted mt-0.5">Tap to see your diary</p>
+              {/* U1.2 — Week insight merged inline into mood card, collapsible (expandable trend) */}
+              {weekInsight && weekInsight.checkinCount > 0 && (
+                <div className="mt-3 pt-3 border-t border-line/20">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setWeekInsightExpanded(!weekInsightExpanded); }}
+                    className="flex items-center gap-1.5 text-[10px] uppercase font-mono tracking-wider text-ink-faint hover:text-ink-2 transition-colors cursor-pointer min-h-[22px]"
+                    aria-expanded={weekInsightExpanded}
+                  >
+                    <span>This week: {weekInsight.checkinCount} check-in{weekInsight.checkinCount !== 1 ? "s" : ""}
+                    {weekInsight.topEmotion && ` · mostly ${weekInsight.topEmotion}`}</span>
+                    <span className="text-[8px]">{weekInsightExpanded ? "▲" : "▼"}</span>
+                  </button>
+                  {weekInsightExpanded && weekMoodSpark.length >= 2 && (
+                    <Sparkline
+                      data={weekMoodSpark}
+                      width={160}
+                      height={28}
+                      min={0}
+                      max={10}
+                      color="#C784B0"
+                      label="Your mood over the last 7 check-ins"
+                      className="mt-2"
+                    />
+                  )}
+                </div>
+              )}
             </div>
           </div>
         ) : (
@@ -432,13 +663,13 @@ export default function TodayScreen({
           </div>
         )}
         <ChevronRight className="w-5 h-5 text-ink-faint shrink-0 ml-auto" aria-hidden="true" />
-      </button>
+      </div>
       )}
 
       {/* Hero action — time-aware: wind-down at night, grounding when elevated, else the structured
           daily-intention prompt (until set) or the check-in prompt. (2026-07-18 QA: hoisted ABOVE the
-          "Your patterns" fold — per docs/UX_RESEARCH.md the time-aware hero is a LEAD element, not
-          something buried below a show-more toggle. The daily-intention branch opens the card inline.) */}
+          "Your week" fold — the time-aware hero is a LEAD element, not something buried below a
+          show-more toggle. The daily-intention branch opens the card inline.) */}
       {/* Distinct HERO treatment (2026-07-18 design review): the lead action was byte-identical to every
           other glass card, so nothing read as primary. Give it an elevated, accented surface (gradient +
           accent border + a filled icon chip + larger label) so the eye lands here first. */}
@@ -451,64 +682,28 @@ export default function TodayScreen({
           }
           go(hero.route);
         }}
-        className="w-full bg-gradient-to-br from-blue-500/12 to-blue-500/[0.02] border border-blue-500/30 shadow-sm hover:brightness-110 p-5 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left flex items-center gap-3.5"
+        className="w-full bg-gradient-to-br from-[#C784B0]/12 to-[#C784B0]/[0.02] border border-[#C784B0]/30 shadow-sm hover:brightness-110 p-5 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left flex items-center gap-3.5"
       >
-        <span className={`shrink-0 w-11 h-11 rounded-full bg-blue-500/15 flex items-center justify-center ${hero.color}`}>{hero.icon}</span>
+        <span className="shrink-0 w-11 h-11 rounded-full bg-[#C784B0]/15 flex items-center justify-center text-[#C784B0]">{hero.icon}</span>
         <span className="flex-1 min-w-0">
           <span className="block text-base font-bold text-ink">{hero.label}</span>
           <span className="block text-xs text-ink-muted mt-0.5">{hero.sub}</span>
         </span>
-        <ChevronRight className="w-5 h-5 text-ink-faint shrink-0" aria-hidden="true" />
+        <ChevronRight className="w-5 h-5 text-ink-faint shrink-0 ml-auto" aria-hidden="true" />
       </button>
 
-      {/* Daily intention — the structured if-then picker (Wave 3 Group I). Rendered unconditionally so
-          it's also where you review/edit today's plan; the SAME canonical store DiaryCardScreen Part 3
-          uses. Collapsed by default; the hero above reveals it (promptWhenClosed=false while promoting). */}
-      <DailyIntentionCard ref={intentionCardRef} promptWhenClosed={hero.id !== "daily_intention"} />
-
-      {/* Talk to Nila card — one tap away. Rendered only when the time-aware hero above ISN'T already
-          "Talk to Nila" (getHeroAction's default branch), so the two identical CTAs never both show
-          (2026-07-18 design review: duplicate "Talk to Nila" cards on a normal day). */}
-      {hero.id !== "nila" && (
-      <button
-        onClick={() => go("nila")}
-        className="w-full glass hover:brightness-125 p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left flex items-center gap-3"
-      >
-        <span className="w-10 h-10 rounded-full sun-cta flex items-center justify-center shrink-0">
-          <MessageCircle className="w-5 h-5" aria-hidden="true" />
-        </span>
-        <span className="flex-1 min-w-0">
-          <span className="block text-sm font-bold text-ink">Talk to Nila</span>
-          <span className="block text-[11px] text-ink-muted">Your companion — always here, always private</span>
-        </span>
-        <ChevronRight className="w-5 h-5 text-ink-faint shrink-0" aria-hidden="true" />
-      </button>
+      {/* U1.2 — Daily intention stacked right below hero. Phase-gated (data only). */}
+      {vis.intention && (
+        <DailyIntentionCard ref={intentionCardRef} promptWhenClosed={hero.id !== "daily_intention"} />
+      )}
+      </>}
+      </div>
       )}
 
-      {/* Daily insight — a quick sparkline summary. Always visible when data exists. */}
-      {weekInsight && weekInsight.checkinCount > 0 && (
-        <div className="glass p-3 rounded-2xl space-y-2">
-          <p className="text-xs uppercase font-mono tracking-widest text-ink-faint">This week</p>
-
-          <p className="text-[11px] text-ink-2">
-            {weekInsight.checkinCount} check-in{weekInsight.checkinCount !== 1 ? "s" : ""}
-            {weekInsight.topEmotion ? ` · mostly feeling ${weekInsight.topEmotion}` : ""}
-          </p>
-          {weekMoodSpark.length >= 2 && (
-            <Sparkline
-              data={weekMoodSpark}
-              width={160}
-              height={28}
-              min={0}
-              max={10}
-              color="var(--color-blue-400)"
-              label="Your mood over the last 7 check-ins"
-              className="mt-1"
-            />
-          )}
-        </div>
-      )}
-
+      {/* Patterns section — toggle + extra content, phase-gated by vis.patterns (U1.1).
+          Only Data phase shows patterns. */}
+      {vis.patterns && (
+        <>
       {/* Show more toggle — hides informational cards by default */}
       <button
         onClick={() => setShowExtraCards(!showExtraCards)}
@@ -516,7 +711,7 @@ export default function TodayScreen({
         className="w-full flex items-center justify-center gap-2 py-2.5 min-h-[44px] rounded-xl border border-line hover:border-line-strong text-ink-faint hover:text-ink-muted text-xs font-medium transition-all cursor-pointer"
       >
         <Sparkles className="w-3 h-3" />
-        {showExtraCards ? "Less" : "Your patterns"}
+        {showExtraCards ? "Less" : "Your week"}
       </button>
 
       {showExtraCards && (
@@ -529,8 +724,8 @@ export default function TodayScreen({
         const aBed = anchors?.bed;
         const extraCount = anchors ? Object.keys(anchors).length - (aWake ? 1 : 0) - (aBed ? 1 : 0) : 0;
         return (
-          <button onClick={() => go("social_rhythm")} className="w-full glass hover:brightness-125 p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left flex items-center gap-3">
-            <span className="shrink-0 text-blue-400"><Clock3 className="w-5 h-5" aria-hidden="true" /></span>
+          <button onClick={() => go("social_rhythm")} className="w-full bg-fill/80 hover:bg-fill border border-line/30 shadow-sm p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left flex items-center gap-3">
+            <span className="shrink-0 text-[#C784B0]"><Clock3 className="w-5 h-5" aria-hidden="true" /></span>
             <span className="flex-1 min-w-0">
               {rhythmLogged ? (
                 <>
@@ -551,21 +746,27 @@ export default function TodayScreen({
         );
       })()}
 
-      {/* Agency narrative — goal→insight linkage for users with goals */}
+      {/* U3.1 — Your progress: goal→insight linkage for users with goals */}
       {checkedIn && <AgencyNarrative goal="daily wellness" />}
 
-      {/* Nila's reflection — a durable insight from your history */}
+      {/* Nila's reflection — a durable insight from your history (U9.9: tappable to expand) */}
       {nilaReflection && (
-        <div className="glass p-4 rounded-2xl border-l-4 border-l-blue-500">
+        <button
+          onClick={() => go("nila")}
+          className="w-full bg-fill/80 border border-line/30 shadow-sm p-4 rounded-2xl border-l-4 border-l-[#C784B0] hover:border-line-strong transition-all cursor-pointer text-left"
+        >
           <div className="flex items-start gap-3">
-            <Sparkle className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" aria-hidden="true" />
-            <p className="text-xs text-ink-2 leading-relaxed">
+            <Sparkle className="w-5 h-5 text-[#C784B0] shrink-0 mt-0.5" aria-hidden="true" />
+            <p className="text-xs text-ink-2 leading-relaxed flex-1">
               <span className="text-ink font-semibold">Nila noticed:</span> {nilaReflection}
             </p>
+            <ChevronRight className="w-4 h-4 text-ink-faint shrink-0 mt-0.5" aria-hidden="true" />
           </div>
-        </div>
+        </button>
       )}
       </div>
+      )}
+      </>
       )}
 
       {/* Celebration confetti on check-in completion */}

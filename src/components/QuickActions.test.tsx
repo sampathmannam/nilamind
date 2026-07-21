@@ -6,10 +6,10 @@ import { selectQuickActions } from "./QuickActions";
 // Everything stays reachable via the Tools tab; this only calms the home surface (mirrors the settling orb
 // + "let's slow things down" copy). The four calming tiles are all verified to route to real handlers.
 describe("selectQuickActions — home actions quiet down when elevated", () => {
-  it("non-elevated (calm) → the time-filtered set, capped at 9, incl. activating tools", () => {
+  it("non-elevated (calm) → the time-filtered set, capped at 4 (Mohr), incl. activating tools", () => {
     const day = selectQuickActions("day", "calm");
     expect(day.length).toBeGreaterThan(0);
-    expect(day.length).toBeLessThanOrEqual(9);
+    expect(day.length).toBeLessThanOrEqual(4);
     expect(day.every((a) => a.modes.includes("day"))).toBe(true);
     expect(day.map((a) => a.id)).toContain("diary"); // accessible when not elevated
   });
@@ -24,8 +24,8 @@ describe("selectQuickActions — home actions quiet down when elevated", () => {
     }
   });
 
-  it("elevated surfaces FEWER options than the calm set (quieter)", () => {
-    expect(selectQuickActions("day", "elevated").length).toBeLessThan(
+  it("elevated surfaces at most as many as the calm set (quieter or equal with Mohr cap)", () => {
+    expect(selectQuickActions("day", "elevated").length).toBeLessThanOrEqual(
       selectQuickActions("day", "calm").length,
     );
   });
