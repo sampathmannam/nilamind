@@ -3,7 +3,6 @@
 // short-sleep run or mood deterioration — was never rendered anywhere, so the feature silently did nothing.
 // This is that surface. Never autonomous, never restrictive, dismissible; §9 always takes precedence (the
 // caller only shows this outside a crisis).
-import React from "react";
 import { Heart, X } from "lucide-react";
 import { reachOutSmsUri, type PactNotice } from "../services/pactNotice";
 

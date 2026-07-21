@@ -1,4 +1,3 @@
-import React from "react";
 import { LifeBuoy } from "lucide-react";
 
 // One consistent, always-visible crisis affordance for every top-level surface (all four tabs + the

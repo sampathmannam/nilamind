@@ -1,7 +1,8 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Search, X, ChevronRight, Lightbulb } from "lucide-react";
-import { buildToolGroups, personalizeToolOrder } from "./toolsRows";
+import { buildToolGroups, personalizeToolOrder, personalizeToolByContext } from "./toolsRows";
 import { getUserGoals } from "../services/chatSuggestions";
+import { useUserContext } from "../hooks/useUserContext";
 import CrisisHeaderButton from "./CrisisHeaderButton";
 
 interface Props {
@@ -14,11 +15,16 @@ interface Props {
 // Dedicated Tools tab (2026-07-18 QA, per docs/UX_RESEARCH.md's 4-tab IA: Today · Nila · Tools · You). The
 // tool library used to be a collapsible "All tools" section at the bottom of Today; giving it its own tab
 // lets Today lead with the daily loop while every skill / screening / tracker has one stable home here.
-// Search + goal-personalized ordering carry over unchanged.
+// Search + goal-personalized ordering carry over unchanged. UX-3: time/state-aware ordering is layered on
+// top so the right tool for the moment (wind-down at night, grounding when anxious) leads.
 export default function ToolsScreen({ go, onEpisode, phoneEnabled, onOpenCrisis }: Props) {
   const [toolSearch, setToolSearch] = useState("");
   const [showMoreSkills, setShowMoreSkills] = useState(false);
-  const groups = personalizeToolOrder(buildToolGroups({ go, onEpisode, phoneEnabled }), getUserGoals());
+  const { timeMode, state } = useUserContext();
+  const groups = personalizeToolByContext(
+    personalizeToolOrder(buildToolGroups({ go, onEpisode, phoneEnabled }), getUserGoals()),
+    { timeMode, state },
+  );
 
   const filteredGroups = useMemo(() => {
     if (!toolSearch.trim()) return groups;

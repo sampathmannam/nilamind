@@ -31,10 +31,15 @@ describe("You hub rows (redesign §2)", () => {
   it("renders exactly the expected hub rows in order (catches accidental add/remove/reorder)", () => {
     const rendered = buildYouGroups().flatMap((g) => g.rows.map((r) => r.id));
     expect(rendered).toEqual([
-      "dashboard", "your_data", "settings", "caregiver_settings",
+      "dashboard", "your_data", "progress", "settings", "caregiver_settings",
       "about_nila", "insights", "nila_memory", "thought_record", "learn", "episode_marker",
     ]);
     expect(YOU_ROW_IDS).toEqual(rendered);
+  });
+  it("exposes a Progress dashboard row (UX-8 gamification home)", () => {
+    expect(YOU_ROW_IDS).toContain("progress");
+    const row = buildYouGroups().flatMap((g) => g.rows).find((r) => r.id === "progress");
+    expect(row?.label).toBe("Your progress");
   });
   it("buildYouGroups exposes the Manage and Resources groups in order", () => {
     expect(buildYouGroups().map((g) => g.title)).toEqual(["Manage", "Resources"]);

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { t } from "../../services/i18n";
 import { Globe2 } from "lucide-react";
 import { allRegions, getRegionCode, setRegionCode, getCrisisLines, type RegionCode } from "../../services/crisisResources";

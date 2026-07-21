@@ -1,4 +1,3 @@
-import React from "react";
 
 export type NilaState = "calm" | "supporting" | "celebrating" | "resting" | "crisis" | "greeting";
 

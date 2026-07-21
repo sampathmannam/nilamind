@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { CheckCircle2, ShieldAlert } from "lucide-react";
 import CountdownRing from "./CountdownRing";
 import BreathingTimer from "./BreathingTimer";

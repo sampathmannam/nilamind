@@ -1,4 +1,4 @@
-import { secureLocal, appendToSecureArray } from "./secureLocal";
+import { secureLocal } from "./secureLocal";
 
 const ADHERENCE_KEY = "nilamind_protocol_adherence";
 

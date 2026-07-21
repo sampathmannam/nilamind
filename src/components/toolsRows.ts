@@ -121,3 +121,44 @@ export function personalizeToolOrder(groups: ToolGroup[], goals: string[]): Tool
     }),
   }));
 }
+
+// Time/state -> the tool row ids it should promote to the front of their group, IN ORDER, when present.
+// Mirrors the research behind personalizeToolOrder: surface the right tool for the moment, not a
+// flat list. Evening/night lead with wind-down then grounding (sleep/settle); anxious/elevated lead with
+// grounding (plan); crisis additionally leads with direct crisis support (episode) then grounding.
+const TIME_TOOL_PRIORITY: Record<"morning" | "day" | "evening" | "night", string[]> = {
+  morning: [],
+  day: [],
+  evening: ["winddown", "plan"],
+  night: ["winddown", "plan"],
+};
+
+const STATE_TOOL_PRIORITY: Partial<Record<string, string[]>> = {
+  anxious: ["plan"],
+  elevated: ["plan"],
+  crisis: ["episode", "plan"],
+};
+
+/** Reorders each group's rows so time- and state-relevant tools lead (in the declared order), without
+ *  changing group titles, membership, or row count. Priority tools sort ahead of the rest by their index
+ *  in the merged priority list; non-priority rows keep their original relative order. A no-op (same array
+ *  reference) when there is nothing to promote. (UX-3: Adaptive Home Screen.) */
+export function personalizeToolByContext(
+  groups: ToolGroup[],
+  ctx: { timeMode: "morning" | "day" | "evening" | "night"; state: string | null },
+): ToolGroup[] {
+  const priority: string[] = [
+    ...(TIME_TOOL_PRIORITY[ctx.timeMode] ?? []),
+    ...(ctx.state ? (STATE_TOOL_PRIORITY[ctx.state] ?? []) : []),
+  ];
+  if (priority.length === 0) return groups;
+  const rank = new Map(priority.map((id, i) => [id, i]));
+  return groups.map((g) => ({
+    ...g,
+    rows: [...g.rows].sort((a, b) => {
+      const ar = rank.has(a.id) ? (rank.get(a.id) as number) : Number.MAX_SAFE_INTEGER;
+      const br = rank.has(b.id) ? (rank.get(b.id) as number) : Number.MAX_SAFE_INTEGER;
+      return ar - br;
+    }),
+  }));
+}

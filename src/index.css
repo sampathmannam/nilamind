@@ -330,6 +330,34 @@ html.sensory-comfort body::after {
   animation: fade-in 0.3s ease-out both;
 }
 
+/* ── Staggered card entrance (UX-5 Phase 1) ── */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up {
+  animation: fade-up 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up { animation: none; transform: none; }
+}
+
+/* ── 4-7-8 breathing guide (UX-5 Phase 4) ──
+   Inhale 4s (0–21%) → hold 7s (21–58%) → exhale 8s (58–100%). Scale + soft opacity track the rhythm. */
+@keyframes breathe-478 {
+  0%   { transform: scale(0.62); opacity: 0.55; }
+  21%  { transform: scale(1);    opacity: 1; }
+  58%  { transform: scale(1);    opacity: 1; }
+  100% { transform: scale(0.62); opacity: 0.55; }
+}
+.breathe-478 {
+  animation: breathe-478 19s ease-in-out infinite;
+  transform-origin: center;
+}
+@media (prefers-reduced-motion: reduce) {
+  .breathe-478 { animation: none; transform: scale(0.85); opacity: 0.8; }
+}
+
 /* ── Touch-friendly tap targets + focus rings ── */
 .tap-target { min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center; }
 .focus-ring:focus-visible { outline: 2px solid var(--color-blue-500); outline-offset: 2px; }

@@ -10,7 +10,6 @@
  * cause 60%+ dropout after Day 3.
  */
 
-import React from "react";
 import { Sparkle } from "lucide-react";
 import { buildCheckinEntry, appendCheckin } from "../services/checkin";
 

@@ -13,7 +13,7 @@
 // the working alliance are the most consistent predictors of benefit (Flückiger et al., 2018).
 
 import { crisisLinesInline } from "./crisisResources";
-import { WELCOME_GREETING as WELCOME_GREETING_PERSONA, WELCOME_FIRST, WELCOME_RETURNING, CRISIS_RESPONSE } from "./personaConfig";
+import { WELCOME_GREETING as WELCOME_GREETING_PERSONA, WELCOME_FIRST, WELCOME_RETURNING } from "./personaConfig";
 import { relevantSkillsBlock } from "./skillRetrieval";
 import { buildPersonalContext, activeProtocolContextBlock } from "./nilaContext";
 import { getLatestReflection } from "./asyncReflection";

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { PROTOCOLS, type Protocol } from "../services/protocols";
 import { getActiveProgress } from "../services/protocolProgress";
 

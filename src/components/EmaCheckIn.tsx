@@ -1,7 +1,7 @@
 // Micro-check-in that opens from push notification (<10s interaction).
 // Three-tap interaction: tap valence → tap energy (optional) → save.
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { Smile, Frown, Meh, Sparkle, Flame } from "lucide-react";
 import { t } from "../services/i18n";
 import { saveEmaEntry, emaDateKey } from "../services/ema";

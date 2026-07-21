@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { MessageCircle, Send, Copy, Check, LifeBuoy, Sparkles, ChevronRight } from "lucide-react";
 import { REACH_OPENERS, REACH_FRAMING, buildSmsHref } from "../services/reachOut";
 import { getCrisisReply, scanForCrisis } from "../safety";

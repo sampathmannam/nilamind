@@ -1,4 +1,3 @@
-import { selfReportSleepSignal } from "./sleepInsight";
 import { loadMoodHistory } from "./moodHistory";
 import { safeSpotDistortions } from "./distortionSpotter"; // 🟡 Safety: Jitai now uses §9‑gated distortion check, needs review
 import { detectElevationRisk } from "./elevationGuard";

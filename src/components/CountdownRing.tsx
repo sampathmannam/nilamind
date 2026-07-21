@@ -1,4 +1,3 @@
-import React from "react";
 
 // Pure presentational SVG ring, extracted from BreathingTimer.tsx's original ring shell (2026-07-12
 // Wave 3, Group E). No timing/state of its own — the caller drives `progress`. This lets the same

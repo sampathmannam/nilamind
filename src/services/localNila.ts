@@ -13,10 +13,11 @@ import { detectElevationRisk, elevationGuardNote, elevationOutputNote, energyEle
 import { emaElevationSignal } from "./ema";
 import { suppressNudgesForCrisis } from "./notifications";
 import { retrievePsychoedForQuery, psychoedContextBlock } from "./psychoedRetrieval";
-import { retrieveExemplarsForQuery, retrieveExemplarsForMove, exemplarFewShotBlock } from "./exemplarRetrieval";
+import { retrieveExemplarsForMove, exemplarFewShotBlock } from "./exemplarRetrieval";
 import { resolveMove, type MoveResult } from "./moveEngine";
 import { runOutputGuards, hasGenerationBlockingFailure, type GuardResult } from "./outputGuards";
 import { offlineFallbackReply } from "./nilaReflect";
+import { buildOfflineCompanionReply } from "./responseBuilder";
 import type { AgentView } from "./agent";
 
 export interface LocalNilaResult {
@@ -30,7 +31,10 @@ export async function askNilaLocalStream(
   messages: NilaMessage[],
   opts: { onDelta: (t: string) => void; signal?: AbortSignal }
 ): Promise<LocalNilaResult> {
-  if (!isLocalLlmReady()) return { reply: "", reachedAI: false };
+  if (!isLocalLlmReady()) {
+    // Companion voice offline message (UX-7): warm, deterministic, §9-ungated-safe.
+    return { reply: buildOfflineCompanionReply(), reachedAI: false };
+  }
 
   // Ground the system prompt with RAG top-3 skills for THIS turn (buildNilaSystem(lastUser)) instead of
   // dumping the whole 40-skill library — far fewer prompt tokens to re-prefill, which is the dominant

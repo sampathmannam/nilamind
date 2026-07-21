@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { t } from "../../services/i18n";
 import { FlaskConical } from "lucide-react";
 import {

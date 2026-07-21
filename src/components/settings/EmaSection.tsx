@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { t } from "../../services/i18n";
 import { Bell } from "lucide-react";
 import { getEmaEnabled, setEmaEnabled, getEmaFrequency, setEmaFrequency } from "../../services/emaPrefs";

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { t } from "../../services/i18n";
 import { Activity, Database, Eye, Trash2 } from "lucide-react";
 import { getPassiveSensingEnabled, setPassiveSensingEnabled } from "../../services/passiveSensingPrefs";

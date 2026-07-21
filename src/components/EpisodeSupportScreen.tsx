@@ -1,5 +1,5 @@
 import { localDateKey } from "../services/storageUtils";
-import { secureLocal, appendToSecureArray } from "../services/secureLocal";
+import { appendToSecureArray } from "../services/secureLocal";
 import React, { useState, useEffect, useRef } from "react";
 import { getCrisisReply } from "../safety";
 import { detectCrisis } from "../services/crisisClassifier";

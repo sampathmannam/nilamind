@@ -1,7 +1,7 @@
 // ModeScreen — the living interface that adapts to time + user state.
 // Replaces the static stream with a mode-based UI.
 
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import NilaFace from "./NilaFace";
 import CrisisHeaderButton from "./CrisisHeaderButton";
 import QuickActions from "./QuickActions";
@@ -15,7 +15,6 @@ import { detectElevationRisk } from "../services/elevationGuard";
 import { scoreAffect, affectAccentActive } from "../services/affectHead";
 import { blendAffect } from "../services/affectBlend";
 import { noteChatAffect } from "../services/chatAffect";
-import { hasCheckinToday, getSkipFlag } from "../services/checkin";
 import { stripProvenance } from "../services/emotionParse";
 import { t } from "../services/i18n";
 import { WELCOME_SEED, STATE_MESSAGES } from "../services/personaConfig";
@@ -23,7 +22,7 @@ import { useTypingSession } from "../hooks/useTypingSession";
 import { getSuggestions, timeSlot } from "../services/chatSuggestions";
 import { stripChatMarkdown, ensureListBreaks } from "../services/chatText";
 import { deriveInMomentInsight } from "../services/inMomentInsight";
-import { filterSkills, type Skill } from "../services/skillsLibrary";
+import { type Skill } from "../services/skillsLibrary";
 import NilaCheckIn from "./NilaCheckIn";
 import ChatLoading from "./ChatLoading";
 import InMomentInsightCard from "./InMomentInsightCard";
@@ -31,7 +30,7 @@ import PactNoticeCard from "./PactNoticeCard";
 import WelcomeBackCard from "./welcomeBack";
 import type { CheckInEntry } from "../types";
 import { sendToNila } from "../services/sendToNila";
-import { NilaMode, NilaUiMessage, shouldBlockForCrisisAsync } from "../services/nilaSend";
+import { NilaUiMessage, shouldBlockForCrisisAsync } from "../services/nilaSend";
 import { notifyReplyReady } from "../services/notifications";
 import SoftCrisisCard from "./SoftCrisisCard";
 import { getSessionChat, clearSessionChat } from "../services/sessionChat";
@@ -57,7 +56,6 @@ import { logNilaTurn } from "../services/nilaSessions";
 import { speakIfEnabled, speak, listenOnce, stopSpeaking } from "../services/voice";
 import { startVoiceSession, endVoiceSession } from "../services/voicePatterns";
 import { checkSttCoherence } from "../services/sttCoherenceGate";
-import { checkProactiveCheckIn, recordProactiveCheckIn } from "../services/proactiveCheckIn";
 import { Settings, Mic, Send, MicOff, Keyboard, X, ThumbsUp, ThumbsDown, SquarePen } from "lucide-react";
 import { hapticLight, hapticMedium } from "../hooks/useHaptics";
 import { isCloudApiEnabled, getCloudApiKey } from "../services/cloudApi";

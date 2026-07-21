@@ -17,7 +17,7 @@ vi.mock("../services/secureLocal", async (importOriginal) => {
 vi.mock("../hooks/useHaptics", () => ({ hapticMedium: vi.fn() }));
 
 import TodayScreen, { getHeroAction } from "./TodayScreen";
-import { personalizeToolOrder } from "./toolsRows";
+import { personalizeToolOrder, personalizeToolByContext } from "./toolsRows";
 import { buildToolGroups, type ToolGroup } from "./toolsRows";
 
 afterEach(() => { cleanup(); store.clear(); });
@@ -60,6 +60,36 @@ describe("personalizeToolOrder", () => {
   it("does not drop or duplicate any row when reordering", () => {
     const groups = buildToolGroups(STUB);
     const result = personalizeToolOrder(groups, ["grounding", "mood"]);
+    expect(rowIds(result).sort()).toEqual(rowIds(groups).sort());
+  });
+});
+
+describe("personalizeToolByContext — UX-3 time/state-aware tool ordering", () => {
+  it("is a no-op for daytime with no state", () => {
+    const groups = buildToolGroups(STUB);
+    expect(personalizeToolByContext(groups, { timeMode: "day", state: null })).toBe(groups);
+  });
+  it("promotes wind-down and grounding in the evening", () => {
+    const groups = buildToolGroups(STUB);
+    const result = personalizeToolByContext(groups, { timeMode: "evening", state: null });
+    const moment = result.find((g) => g.title === "In the moment")!;
+    expect(moment.rows[0].id).toBe("winddown");
+  });
+  it("promotes grounding (plan) when anxious", () => {
+    const groups = buildToolGroups(STUB);
+    const result = personalizeToolByContext(groups, { timeMode: "day", state: "anxious" });
+    const moment = result.find((g) => g.title === "In the moment")!;
+    expect(moment.rows[0].id).toBe("plan");
+  });
+  it("promotes crisis support first when in crisis", () => {
+    const groups = buildToolGroups(STUB);
+    const result = personalizeToolByContext(groups, { timeMode: "day", state: "crisis" });
+    const moment = result.find((g) => g.title === "In the moment")!;
+    expect(moment.rows[0].id).toBe("episode");
+  });
+  it("does not drop or duplicate any row", () => {
+    const groups = buildToolGroups(STUB);
+    const result = personalizeToolByContext(groups, { timeMode: "night", state: "elevated" });
     expect(rowIds(result).sort()).toEqual(rowIds(groups).sort());
   });
 });

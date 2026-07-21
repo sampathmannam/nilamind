@@ -1,9 +1,9 @@
 import { localDateKey } from "../services/storageUtils";
 import { appendToSecureArray } from "../services/secureLocal";
 import { SECURE_KEYS } from "../services/secureData";
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { ThoughtRecord } from "../types";
-import { ChevronLeft, ChevronRight, BrainCircuit, RefreshCw, Check, Brain } from "lucide-react";
+import { ChevronLeft, ChevronRight, BrainCircuit, Check, Brain } from "lucide-react";
 import { fetchBalancedThought } from "../services/coachAssist";
 import { hapticSuccess } from "../hooks/useHaptics";
 import CrisisCard from "./CrisisCard";

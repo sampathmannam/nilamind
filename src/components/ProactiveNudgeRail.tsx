@@ -1,7 +1,6 @@
 // ProactiveNudgeRail — surfaced on the TodayScreen below the hero action.
 // Single line, icon + text, tappable. Shows the best passive-signal nudge.
 // Pure presentational; data comes from proactiveSurfaceRouter.selectProactiveNudge.
-import React from "react";
 import { AlertCircle, Activity, Moon, TrendingUp, ChevronRight, X } from "lucide-react";
 
 export interface ProactiveNudgeRailProps {

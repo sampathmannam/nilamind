@@ -2,7 +2,7 @@ import { t as translate, type I18nKey, type SupportedLang } from "../services/i1
 import CollapsibleSection from "./CollapsibleSection";
 import BandNarrative from "./BandNarrative";
 import ClinicalTrackingSection from "./ClinicalTrackingSection";
-import Section, { SectionDivider } from "./Section";
+import { SectionDivider } from "./Section";
 import InsightCard from "./InsightCard";
 import PassiveInsightCard from "./PassiveInsightCard";
 import type { CheckInEntry } from "../types";

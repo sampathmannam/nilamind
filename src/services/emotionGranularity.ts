@@ -1,4 +1,4 @@
-import { EMOTION_FAMILIES, familyForBroad } from "../data/emotions";
+import { familyForBroad } from "../data/emotions";
 
 interface Scored {
   word: string;

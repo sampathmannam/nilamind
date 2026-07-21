@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Globe } from "lucide-react";
 import { LANGUAGES, getLanguage, setLanguage, t, type SupportedLang } from "../../services/i18n";
 

@@ -1,4 +1,3 @@
-import React from "react";
 
 interface SkeletonCardProps {
   /** Number of shimmer lines to render inside the card. */

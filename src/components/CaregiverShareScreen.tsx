@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Users, Copy, Share2, HeartHandshake } from "lucide-react";
 import { caregiverSummaryText, buildCaregiverSnapshot } from "../services/caregiverShare";
 import { getCaregiverPreferences } from "../services/caregiverPreferences";

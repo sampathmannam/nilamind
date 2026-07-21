@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Play, Pause, RotateCcw, CheckCircle2 } from "lucide-react";
 import {
   breathState,

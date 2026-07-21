@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { t } from "../../services/i18n";
 import { Lock, ShieldCheck, AlertTriangle, Loader2 } from "lucide-react";
 import { hasPin, setPin as setStorePin, removePin as removeStorePin } from "../../services/secureStore";

@@ -10,7 +10,6 @@
  * constellation metaphor (no streaks) both show gentleness improves retention.
  */
 
-import React from "react";
 import { MessageCircle } from "lucide-react";
 
 export function daysSinceLastVisit(lastVisitDate: string): number {

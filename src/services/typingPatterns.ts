@@ -94,9 +94,6 @@ export function computeMetrics(session: TypingSession): TypingMetrics {
     return zeroMetrics();
   }
 
-  const downs = events.filter((e) => e.type === "down");
-  const ups = events.filter((e) => e.type === "up");
-
   let holdSum = 0, holdCount = 0;
   let flightSum = 0, flightCount = 0;
   let pauseSum = 0, pauseCount = 0;

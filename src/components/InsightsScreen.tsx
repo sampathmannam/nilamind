@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Sparkles, Shield, TrendingUp, TrendingDown, Minus, HelpCircle, Activity, Moon, Smartphone, Heart, Footprints, Users, ShieldCheck } from "lucide-react";
+import { Sparkles, Shield, TrendingUp, HelpCircle, Activity, Moon, Smartphone, Heart, Footprints, Users, ShieldCheck } from "lucide-react";
 import { generateInsights, assessmentInsights, daysOfData, type Insight } from "../services/patternInsights";
 import { getRecentSnapshots } from "../db/behaviourDb";
 import EmptyStateShared, { EMPTY_STATES } from "./EmptyState";

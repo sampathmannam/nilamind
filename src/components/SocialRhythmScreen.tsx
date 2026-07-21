@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Clock3, Sunrise } from "lucide-react";
 import {
   RHYTHM_ANCHORS,

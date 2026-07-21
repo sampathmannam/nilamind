@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { TrendingDown, Download, AlertCircle, CheckCircle, Gauge, ShieldCheck } from "lucide-react";
 import { useReducedMotion } from "../hooks/useReducedMotion";
 import { hapticLight } from "../hooks/useHaptics";
-import { getMetrics, recordMetric, onMetric, clearMetrics, type PerformanceMetric } from "../services/performance";
+import { getMetrics, onMetric, clearMetrics, type PerformanceMetric } from "../services/performance";
 import { secureLocal } from "../services/secureLocal";
 import { scenarios, evaluateScenario, computeAxisScores, type AxisScores } from "../services/scenarioEvaluation";
 

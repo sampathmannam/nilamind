@@ -1,16 +1,15 @@
 import { localDateKey } from "./storageUtils";
 import { loadMoodHistory } from "./moodHistory";
-import { loadAssessments, type AssessmentEntry, INSTRUMENTS } from "./assessments";
+import { type AssessmentEntry, INSTRUMENTS } from "./assessments";
 import { selfReportSleepSignal, selfReportedSleepNights } from "./sleepInsight";
 import { computeCircadianInsight } from "./circadian";
 import { generateInsights, assessmentInsights, type Insight, type MoodPoint } from "./patternInsights";
-import { detectInflections, type InflectionSignal, topFireableSignal } from "./nilaInflection";
+import { type InflectionSignal, topFireableSignal } from "./nilaInflection";
 import { getInflectionEnabled } from "./inflectionPrefs";
 import { assessJitai, type JitaiDecision } from "./jitaiEngine";
 import { computeUsageSummary } from "./usageAnalytics";
 import { loadActivities, computeInsight, type BAActivityLog } from "./behaviouralActivation";
 import { computeCompassionateStreak } from "./streaks";
-import { detectElevationRisk } from "./elevationGuard";
 import { secureLocal } from "./secureLocal";
 import type { CheckInEntry, DiaryCardEntry, EpisodeRecord } from "../types";
 import type { SleepSignal } from "./healthConnect";
@@ -234,8 +233,6 @@ function computeMoodState(
   });
   const hasAnxious = emotions.some((e) => /anx|worr|panic|nervous/.test(e));
   const hasLow = emotions.some((e) => /low|sad|down|empty|hopeless/.test(e));
-  const hasAngry = emotions.some((e) => /angr|irritab|frustrat/.test(e));
-  const hasCalm = emotions.some((e) => /calm|okay|good|fine/.test(e));
 
   // Crisis check (screening band or very high distress)
   if (screeningBand.includes("severe") || avgDistress >= 8) return { state: "crisis", confidence: 0.9 };

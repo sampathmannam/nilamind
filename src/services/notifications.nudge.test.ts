@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { chooseNudge, WARM_NUDGES, ELEVATION_NUDGES, DISENGAGEMENT_NUDGES } from "./notifications";
+import { chooseNudge, WARM_NUDGES, ELEVATION_NUDGES, DISENGAGEMENT_NUDGES } from "./notificationCopy";
 
 // Audit finding (2026-07-06): the daily nudge was a static day-rotation blind to every signal. This adapts it
 // GENTLY — JITAI research says mistimed/irrelevant prompts backfire, and a notification must never state the

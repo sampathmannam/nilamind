@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { t } from "../../services/i18n";
 import { MessageSquare, ExternalLink, Copy, Check } from "lucide-react";
 import { pendingContributions, type ReplyFeedback } from "../../services/nilaFeedback";

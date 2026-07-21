@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { t } from "../../services/i18n";
 import { Volume2, Play, Check } from "lucide-react";
 import { getVoicePrefs, setVoicePrefs, speak, listEnglishVoices, type TtsVoice } from "../../services/voice";

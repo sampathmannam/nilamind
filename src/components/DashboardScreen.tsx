@@ -1,9 +1,9 @@
-import React, { useMemo, useState, useEffect, lazy, Suspense } from "react";
+import { useMemo, useState, useEffect, lazy, Suspense } from "react";
 import { loadEmaEntries } from "../services/ema";
 import {
   Flame, TrendingUp as TrendUpIcon, TrendingDown, Minus, Activity,
-  CalendarCheck, ClipboardCheck, Database, Sparkles, BrainCircuit,
-  Loader2, Tag, Lightbulb, Download, FileText, Clock3, Moon,
+  ClipboardCheck, Sparkles, BrainCircuit,
+  Loader2, Tag, Lightbulb, Download, FileText,
 } from "lucide-react";
 import Markdown from "react-markdown";
 import { loadMoodHistory } from "../services/moodHistory";
@@ -20,7 +20,6 @@ import { computeCircadianInsight } from "../services/circadian";
 import { computeCircadianFeedback } from "../services/circadianFeedback";
 import { computeRhythmRegularity } from "../services/socialRhythm";
 import { computeNof1Ranking } from "../services/nOf1";
-import { PROTOCOLS } from "../services/protocols";
 import { secureLocal } from "../services/secureLocal";
 import { loadDiaryEntries } from "../services/diary";
 import { runDeepAssessment as runDeepAssessmentRequest } from "../services/coachAssist";
@@ -45,10 +44,7 @@ import SignalsBand from "./SignalsBand";
 import ActivityBand from "./ActivityBand";
 import TrackingBand from "./TrackingBand";
 import EpisodesBand from "./EpisodesBand";
-import TrendChart, { PHQ9_BANDS, GAD7_BANDS } from "./TrendChart";
-import StatCard from "./StatCard";
 import Card from "./Card";
-import { getAllAchievements, getAchievementCount } from "../services/achievements";
 import { stripProvenance } from "../services/emotionParse";
 import {
   emotionDistribution, derivedObservations, episodePatterns, quickNoteTags,
@@ -60,6 +56,9 @@ import { DAY_MS, localDateKey} from "../services/storageUtils";
 import EmptyStateShared, { EMPTY_STATES } from "./EmptyState";
 import CollapsibleSection, { CollapsibleGroup } from "./CollapsibleSection";
 import HeroCard from "./HeroCard";
+import HeroMetric from "./HeroMetric";
+import StatPill, { StatPillRow } from "./StatPill";
+import AnimatedCard from "./AnimatedCard";
 import BandNarrative from "./BandNarrative";
 import { buildBandNarratives } from "../services/bandNarratives";
 import { buildBandConfig } from "../services/bandConfig";
@@ -81,7 +80,7 @@ function readArr<T>(key: string): T[] {
 }
 
 // The USER's own private analytics. Local sections never leave the device.
-export default function DashboardScreen({ onManageData, onOpenView }: { onManageData?: () => void; onOpenView?: (target: string) => void }) {
+export default function DashboardScreen({ onOpenView }: { onOpenView?: (target: string) => void }) {
   const [timeRange, setTimeRange] = useState<"7d" | "30d">("30d");
   const [chartTab, setChartTab] = useState<"emotion" | "context" | "energy" | "sleep-mood">("emotion");
   const [isAssessing, setIsAssessing] = useState(false);
@@ -501,23 +500,13 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
   // user's capacity state is read at mount and stays consistent with the band-open defaults it seeds.
   const bandConfig = useMemo(() => buildBandConfig(getUserState()), [data]);
 
-  // #12 — Quiet-hours / "too much screen" awareness. Folded into capacity awareness: only a user who is
-  // elevated or already hitting their daily usage ceiling gets a gentle "maybe step away" nudge after
-  // a few minutes on the dashboard. Pure client timer; dismissible; never a crisis surface.
-  const [dashMinutes, setDashMinutes] = useState(0);
-  const [stepAwayDismissed, setStepAwayDismissed] = useState(false);
-  useEffect(() => {
-    const id = setInterval(() => setDashMinutes((m) => m + 1), 60_000);
-    return () => clearInterval(id);
-  }, []);
+  // #12 — Quiet-hours / "too much screen" awareness. Removed ( paternalistic — UI simplification via capacity-aware bands is sufficient).
   const userCapacity = getUserState();
-  const showStepAway =
-    !stepAwayDismissed && dashMinutes >= 3 && (showCeiling || userCapacity === "elevated");
 
   return (
     <div className="space-y-5 max-w-md mx-auto" id="dashboard-screen">
       <header className="space-y-1">
-        <h1 className="text-xl font-semibold text-slate-100 flex items-center gap-2">
+        <h1 className="text-2xl font-semibold text-slate-100 flex items-center gap-2">
           <Activity className="w-5 h-5 text-blue-400" /> {t("dashboard")}
           <div className="relative ml-auto">
             <button
@@ -549,6 +538,36 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
         </h1>
         <p className="text-xs text-slate-400 leading-relaxed">{t("dash_privacy")}</p>
       </header>
+
+      {/* Level 1: Hero metric + stat pills — answers "How am I doing?" in 2 seconds */}
+      <HeroMetric
+        value={thisAvg != null ? r1(thisAvg) : "—"}
+        label={t("mood_avg_7d")}
+        sparkData={mood.slice(-7).map((m) => m.intensity ?? 0).filter((v) => v > 0)}
+        sparkMin={0}
+        sparkMax={10}
+        trend={lastAvg != null && thisAvg != null ? Math.round(((thisAvg - lastAvg) / lastAvg) * 100) : undefined}
+        trendLabel={t("from_last_week")}
+        ariaLabel={`${t("mood_avg_7d")}: ${thisAvg != null ? r1(thisAvg) : "no data"}`}
+      />
+
+      <StatPillRow>
+        <StatPill
+          icon="😴"
+          value={(() => { const recent = mood.filter((m) => typeof m.sleepHours === "number" && m.sleepHours > 0).slice(-7); return recent.length > 0 ? `${r1(recent.reduce((s, m) => s + (m.sleepHours as number), 0) / recent.length)}h` : "—"; })()}
+          label={t("avg_sleep")}
+        />
+        <StatPill
+          icon="🧘"
+          value={freq14 > 0 ? `${freq14}/14` : "—"}
+          label={t("days_active")}
+        />
+        <StatPill
+          icon="🔥"
+          value={streak.current > 0 ? `${streak.current}d` : "—"}
+          label={t("streak")}
+        />
+      </StatPillRow>
 
       {/* State-aware "what now" hero — ONE contextual action (Smashing Mag: Nonori/Teeni
           single-action pattern). Picks a CTA from the user's current derived state so a
@@ -589,21 +608,6 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
            </Card>
           );
         })()}
-        
-        {/* #12 — gentle "too much screen" nudge for elevated / ceiling states */}
-        {showStepAway && (
-          <div className="bg-page border border-slate-850 rounded-2xl p-4 flex items-start gap-3" role="status">
-            <Moon className="w-5 h-5 text-indigo-300 shrink-0 mt-0.5" aria-hidden="true" />
-            <p className="text-sm text-slate-200 leading-relaxed flex-1">{tn("quiet_step_away", lang, { mins: dashMinutes })}</p>
-            <button
-              onClick={() => setStepAwayDismissed(true)}
-              aria-label={t("dismiss", lang)}
-              className="text-slate-500 hover:text-slate-300 text-xs shrink-0 min-w-[44px] min-h-[44px]"
-            >
-              {t("dismiss", lang)}
-            </button>
-          </div>
-        )}
 
         {/* Compassionate streak — leads with the warm message, not the raw number. Gamification
            elements show no measurable depression-outcome/adherence benefit, and a prominent
@@ -612,21 +616,24 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
            Byrne, Tibbett & Pericot-Valverde (2021), JMIR Mental Health; Kahneman & Tversky (1979),
            Econometrica. The raw count is still shown, just demoted to small muted caption text
            below rather than a big Flame+number stat tile. */}
-         <CollapsibleGroup className={bandConfig.softRegister ? "soft-register" : ""}>
-          <ActivityBand
-            openActivity={bandConfig.openActivity}
-            summary={activityMessage}
-            narrative={narratives.activity}
-            streak={streak}
-            compassionateStreak={compassionateStreak}
-            freq14={freq14}
-            nilaChats7d={nila.last7}
-            usageSummary={usageSummary}
-            protocolAdherence={protocolAdherence}
-            streakMessage={activityMessage}
-          />
+          <CollapsibleGroup className={bandConfig.softRegister ? "soft-register" : ""}>
+           <AnimatedCard delayMs={0}>
+           <ActivityBand
+             openActivity={bandConfig.openActivity}
+             summary={activityMessage}
+             narrative={narratives.activity}
+             streak={streak}
+             compassionateStreak={compassionateStreak}
+             freq14={freq14}
+             nilaChats7d={nila.last7}
+             usageSummary={usageSummary}
+             protocolAdherence={protocolAdherence}
+             streakMessage={activityMessage}
+           />
+           </AnimatedCard>
 
-         <TrackingBand
+          <AnimatedCard delayMs={60}>
+          <TrackingBand
            openTracking={bandConfig.openTracking}
            summary={monthlyNarrative ? tn("narr_tracking_month", lang, { word: t(`monthly_word_${monthlyNarrative.word}` as I18nKey, lang) }) : t("tracking_summary")}
            narrative={narratives.tracking}
@@ -648,10 +655,12 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
              const card = proactiveCards.find((c) => c.id === cardId);
              if (card) markCardDismissed(card);
              setProactiveCards((cs) => cs.filter((c) => c.id !== cardId)); // hide immediately, not on remount
-           }}
-         />
+            }}
+          />
+          </AnimatedCard>
 
-      <SignalsBand
+       <AnimatedCard delayMs={120}>
+       <SignalsBand
         t={t}
         openSignals={bandConfig.openSignals}
         summary={t("signals_summary")}
@@ -676,10 +685,12 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
         circadian={circadian}
         circadianFeedback={circadianFeedback}
         rhythmReg={rhythmReg}
-        nOf1={nOf1}
-      />
+         nOf1={nOf1}
+       />
+       </AnimatedCard>
 
-      <CollapsibleSection title={t("trends_measures")} summary={t("trends_summary")} defaultOpen={bandConfig.openTrends}>
+       <AnimatedCard delayMs={180}>
+       <CollapsibleSection title={t("trends_measures")} summary={t("trends_summary")} defaultOpen={bandConfig.openTrends}>
       <BandNarrative text={trendsNarrative ?? narratives.trends} />
 
       {/* ONE trend chart (7D/30D + Emotion/Context), fed by loadMoodHistory().
@@ -781,9 +792,11 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
           </div>
         </div>
       )}
-      </CollapsibleSection>
+       </CollapsibleSection>
+       </AnimatedCard>
 
-       <EpisodesBand
+        <AnimatedCard delayMs={240}>
+        <EpisodesBand
          openEpisodes={bandConfig.openEpisodes}
          narrative={narratives.episodes}
          epPatterns={epPatterns}
@@ -818,13 +831,8 @@ export default function DashboardScreen({ onManageData, onOpenView }: { onManage
           )}
         </div>
       </EpisodesBand>
+      </AnimatedCard>
       </CollapsibleGroup>
-
-      {onManageData && (
-        <button onClick={onManageData} id="dashboard-manage-data" className="w-full glass hover:bg-raised text-slate-300 text-xs font-semibold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5">
-          <Database className="w-3.5 h-3.5" /> Manage, export or delete your data
-        </button>
-      )}
     </div>
   );
 }

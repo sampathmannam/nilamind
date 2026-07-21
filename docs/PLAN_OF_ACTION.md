@@ -1,7 +1,7 @@
 # NilaMind — Plan of Action (the build queue)
 
 **This is the single source of truth for what to build next and how.** Read it with `AGENTS.md` (golden
-rules + reward-hacking guardrails). Written 2026-07-06; updated 2026-07-12 (all 7 phases shipped); **updated 2026-07-12 (Phases 8–16 complete, queue cleared).**
+rules + reward-hacking guardrails). Written 2026-07-06; updated 2026-07-12 (all 7 phases shipped); **updated 2026-07-12 (Phases 8–16 complete, queue cleared); updated 2026-07-18 (Phases 20.5–20.9 + 21–24 complete — full build queue shipped).**
 
 **Autonomy legend:**
 - 🟢 **Autonomous** — build it, `npm run guard` green, commit. No sign-off needed.
@@ -270,6 +270,14 @@ automation bias, FDA 2022 CDS Guidance) inherited from the 2026-07-16 redesign. 
 | G8 | Relapse plan → clinician report — `summarizeRelapsePlanForReport()` aggregator, render block showing phase structure + actions + last-updated | 🟢 |
 | G9 | Relapse plan review cycle — `lastReviewedAt?` field on `RelapsePlan`, `isRelapsePlanStale()` (30-day), `markRelapsePlanReviewed()`, parity with safety plan review cycle | 🟢 |
 
+**Built (2026-07-18):** All of 20.5–20.9 + G3/G4/G8/G9 are implemented, wired, and committed with green tests:
+- `clinicianRiskEvents.ts` + guard test asserting no risk-level/score/gauge word appears (F11/F13/F14) (20.5, 🟡 flagged)
+- `voicePatterns.ts` read by `clinicianReport.ts` voice block — surfaces only when `voiceSignal.sessionCount > 0` (opt-in by structure) (20.6)
+- WHO-5 wellbeing trajectory block + Topp-2015 ≤13 threshold + `MIN_TREND_POINTS` gate in `clinicianReport.ts`/`clinicianCharts.ts` (20.7)
+- `clinicianCover.ts` — cover, exec-summary page, SHA-256 integrity footer, 4-quarter stitch; BIP39 pseudonymous cover ID (20.8)
+- `cr_*` i18n parity en/hi/ta/te (10-test completeness gate passes) (20.9)
+- `medicationAdherence.ts` `recordDoseChange()`/`DoseChange[]` + aggregator + render block (G3); `resolveSideEffect()` + `resolvedAt` + resolved/active aggregator (G4); `summarizeRelapsePlanForReport()` (G8); `isRelapsePlanStale()`/`markRelapsePlanReviewed()` (G9)
+
 **Wire to (no fragmentation):** `YourDataScreen.tsx` "Share with your psychiatrist" card expanded in place;
 one JITAI Dashboard card in `DashboardScreen.tsx`; `exportAudit`; `secureLocal` keys
 `nilamind_redaction_prefs`, `nilamind_visit_note_<ISO>`. No new `youRows.ts` row.
@@ -374,16 +382,25 @@ systematic review), Fang & Chen 2026 (52-study systematic review).
 
 **Wire to:** SettingsScreen, YourDataScreen, modeEngine (🟡).
 
+**Built (2026-07-18):** All of Phases 21–24 are implemented, wired, and committed with green tests:
+- `signalExtractor.ts` + `signalStore.ts` (encrypted, 90-day rolling cap, anti-fatigue cooldown) + `trendAggregator.ts` (`passiveSignalContextLine`) (21.1–21.6, 21.9)
+- `passiveSensingManager.ts` lifecycle + `passiveSensingPrefs.ts` opt-in + `ps_*` i18n (21.7–21.11)
+- `compoundDetector.ts` (5 rules, paired benign-controls) + `episodeSuggester.ts` (suggest-only, 0.6+ threshold, 7-day cooldown) + `proactiveSurfaceRouter.ts` (max 3/day, 48h cooldown, safety suppression) (22.1–22.6)
+- Compound signals folded into the mode decision via `modeEngine.ts` (`foldCompoundSignals`) — note: plan said `stateEngine.ts` (22.7) but the wiring landed in `modeEngine`; intent (compound signals feed the mode/state decision) is met. 🟡 review.
+- `PassiveInsightCard.tsx` (Dashboard) + `ProactiveNudgeRail.tsx` (TodayScreen) + `notifications.ts` weekly passive nudge + `proactiveEngine.ts` (23.1–23.9)
+- Settings passive-sensing toggle + YourDataScreen deletion (24.1–24.2); `modeEngine` compound incorporation (24.3, 🟡); device/battery QA deferred (24.4–24.5 blocked: no Android SDK); integration suite green (24.6)
+
 ---
 
-## All Phases Complete (2026-07-14)
-- Phases 1–20: All shipped
+## All Phases Complete (updated 2026-07-18)
+- Phases 1–20: All shipped (incl. 20.5–20.9 + G3/G4/G8/G9)
+- Phases 21–24 (Proactive AI Agent): All shipped
 - P4 Localization: Paused by user (~45 screens remain)
 - UX Masterplan (10 phases): All complete
 - Data Collection Fixes (5): All complete
 - Retention Mechanics (5): All complete
 - 9/10 Feature Plan (5): All complete
-- Test count: 2551
+- Test count: 3728 (live suite)
 
 ---
 

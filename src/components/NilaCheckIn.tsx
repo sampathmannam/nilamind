@@ -27,7 +27,7 @@
  *   6. No double-writes: rapidly tapping context writes exactly one entry (doneRef guard).
  */
 
-import React, { useReducer, useRef, useMemo, useEffect, useState } from "react";
+import { useReducer, useRef, useMemo, useEffect, useState } from "react";
 import type { CheckInEntry } from "../types";
 import {
   INITIAL_DRAFT,

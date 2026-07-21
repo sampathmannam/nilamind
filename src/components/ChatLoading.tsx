@@ -4,7 +4,7 @@
 // the user something to DO while waiting — sync their breath to the expanding/contracting orb.
 // The copy escalates with wait time (useSettlingNote) so a long cold-load never reads as broken.
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useSettlingNote } from "./useSettlingNote";
 
 const WAITING_TIPS = [

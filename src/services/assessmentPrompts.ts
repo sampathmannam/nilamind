@@ -4,7 +4,7 @@
 // This transforms assessments from "never used" to "contextually relevant."
 
 import { loadAssessments, latestFor, daysSince, type InstrumentId } from "./assessments";
-import { topFireableSignal, type InflectionSignal } from "./nilaInflection";
+import { topFireableSignal } from "./nilaInflection";
 import { selfReportSleepSignal } from "./sleepInsight";
 import { emaElevationSignal } from "./ema";
 

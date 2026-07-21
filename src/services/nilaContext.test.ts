@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { trajectoryContextBlock, inflectionContextBlock, antiSycophancyContextBlock, wellbeingContextBlock, episodeMarkerContextBlock, caregiverContextBlock } from "./nilaContext";
+import { trajectoryContextBlock, inflectionContextBlock, antiSycophancyContextBlock, wellbeingContextBlock, episodeMarkerContextBlock, caregiverContextBlock, onboardingContextBlock } from "./nilaContext";
 import type { SleepSignal } from "./healthConnect";
 import type { InflectionSignal } from "./nilaInflection";
 import type { AssessmentEntry } from "./assessments";
@@ -133,5 +133,34 @@ describe("caregiverContextBlock — trusted-person sharing (Phase 19)", () => {
     expect(b).toContain("2 trusted people");
     expect(b).toContain("Priya");
     expect(b).toContain("Raj");
+  });
+});
+
+describe("onboardingContextBlock — UX-2 day-one personalization into Nila's context", () => {
+  beforeEach(() => emStore.clear());
+  it("returns '' when no onboarding data was captured", () => {
+    expect(onboardingContextBlock()).toBe("");
+  });
+  it("reads chosen goals and surfaces them as gentle focus areas", () => {
+    emStore.set("nilamind_user_goal", JSON.stringify(["sleep", "mood"]));
+    const b = onboardingContextBlock();
+    expect(b).toContain("sleep");
+    expect(b).toContain("mood");
+    expect(b).toContain("focus areas");
+    expect(b.toLowerCase()).not.toMatch(/diagnos|disorder|clinical/i);
+  });
+  it("reads baseline mood and frames it as a starting point, not a label", () => {
+    emStore.set("nilamind_onboarding_mood", "2");
+    const b = onboardingContextBlock();
+    expect(b).toContain("really struggling");
+    expect(b).toContain("mood 2/10");
+    expect(b).toContain("gentle starting point");
+  });
+  it("combines goals and mood in a single warm block", () => {
+    emStore.set("nilamind_user_goal", JSON.stringify(["grounding"]));
+    emStore.set("nilamind_onboarding_mood", "8");
+    const b = onboardingContextBlock();
+    expect(b).toContain("grounding");
+    expect(b).toContain("feeling good");
   });
 });

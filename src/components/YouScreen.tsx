@@ -8,7 +8,7 @@ import { buildYouGroups } from "./youRows";
 import { useLanguage } from "../services/i18n";
 import { computeCompassionateStreak } from "../services/streaks";
 import { loadCheckins } from "../services/checkin";
-import { getIntention, setIntention, completeIntention, clearIntention, INTENTION_OPTIONS, isIntentionCompleted, getCompletionAck, markAckShown } from "../services/weeklyIntention";
+import { getIntention, setIntention, completeIntention, clearIntention, INTENTION_OPTIONS, getCompletionAck, markAckShown } from "../services/weeklyIntention";
 import { getCapacityLevel } from "../services/capacitySignal";
 import { getUserState } from "../services/modeEngine";
 
@@ -143,7 +143,7 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
             <Sparkles className="w-5 h-5" aria-hidden="true" />
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="editorial text-xl text-ink">You</h1>
+            <h1 className="editorial text-2xl text-ink">You</h1>
             <p className="text-xs text-ink-muted mt-0.5">{streak.message}</p>
           </div>
           <CrisisHeaderButton onClick={onOpenCrisis} />

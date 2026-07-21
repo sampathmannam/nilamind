@@ -1,16 +1,19 @@
-import React from "react";
-import { Wind, Heart, Sparkles, Activity } from "lucide-react";
+import { Wind, Heart, Sparkles, Activity, LifeBuoy } from "lucide-react";
 import { t } from "../services/i18n";
 import { getUserState } from "../services/modeEngine";
+import BreathingCircle from "./BreathingCircle";
 
 /** A single state-aware call-to-action shown at the top of the dashboard. Per the distressed-user
  *  research (Smashing Magazine, Nonori/Teeni): one clear action beats a wall of cards when the user
- *  is anxious, low, or exhausted. The state is derived locally (getUserState) — never network. */
+ *  is anxious, low, or exhausted. The state is derived locally (getUserState) — never network.
+ *  A detected crisis state (UX-3) leads with direct support, never a generic "keep going" CTA. */
 export default function HeroCard({ onOpenView }: { onOpenView?: (target: string) => void }) {
   const state = getUserState();
 
   const config = (() => {
     switch (state) {
+      case "crisis":
+        return { msg: t("hero_crisis"), label: t("hero_crisis_label"), icon: LifeBuoy, route: "episode", tone: "text-rose-400" };
       case "anxious":
         return { msg: t("hero_anxious"), label: t("hero_breathe"), icon: Wind, route: "breathing", tone: "text-blue-400" };
       case "low":
@@ -23,6 +26,7 @@ export default function HeroCard({ onOpenView }: { onOpenView?: (target: string)
   })();
 
   const Icon = config.icon;
+  const showBreathCue = config.route === "breathing";
 
   return (
     <div className="bg-card border border-line-strong rounded-2xl p-4 space-y-3">
@@ -30,6 +34,7 @@ export default function HeroCard({ onOpenView }: { onOpenView?: (target: string)
       <div className="flex items-start gap-3">
         <span className={`p-2 rounded-xl bg-fill ${config.tone}`} aria-hidden="true"><Icon className="w-5 h-5" /></span>
         <p className="text-sm text-ink-2 leading-relaxed flex-1">{config.msg}</p>
+        {showBreathCue && <BreathingCircle size={44} className="shrink-0" />}
       </div>
       <button
         onClick={() => onOpenView?.(config.route)}

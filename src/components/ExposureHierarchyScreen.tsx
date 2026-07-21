@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Mountain, Plus, X, CheckCircle } from "lucide-react";
 import { createHierarchy, addStep, removeStep, completeStep, loadHierarchy, saveHierarchy, completionRate, averageSudReduction, inhibitoryLearningPrompts, type ExposureHierarchy } from "../services/exposureHierarchy";
 import { scanForCrisis } from "../safety";

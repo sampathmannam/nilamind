@@ -1,5 +1,5 @@
 import { localDateKey } from "../services/storageUtils";
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { ChevronLeft, CalendarRange, Check } from "lucide-react";
 import { t, useLanguage, type I18nKey } from "../services/i18n";
 import { hapticSuccess } from "../hooks/useHaptics";

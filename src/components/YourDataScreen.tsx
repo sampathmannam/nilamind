@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Database, Download, Trash2, ShieldCheck, Loader2, AlertTriangle, Check, FileText, Share2 } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
 import { Filesystem, Directory } from "@capacitor/filesystem";
@@ -37,7 +37,6 @@ import { loadMoodHistory } from "../services/moodHistory";
 import { computeCircadianFeedback } from "../services/circadianFeedback";
 import type { BehaviourSnapshot, AppCategory } from "../services/phoneBehaviour";
 import { loadMedications, loadMedicationLogs, adherenceRate, commonSideEffects } from "../services/medicationAdherence";
-import { nilaStats } from "../services/nilaSessions";
 import { summarizeDiaryForClinician } from "../services/diaryClinicianSummary";
 import type { DiaryCardEntry } from "../types";
 import { featureAdoption } from "../services/usageAnalytics";
@@ -634,7 +633,6 @@ valuesClarified: []
       const periodConnections = allConnections.filter((c) => c.date >= cutoff);
       const connections = summarizeConnectionsForReport(periodConnections, now);
 
-      const stats = nilaStats();
       const featuresUsed = featureAdoption();
 
       // DBT diary card entries within the window — urges/target behaviors, emotions, skills

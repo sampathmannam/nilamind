@@ -132,6 +132,13 @@ export type I18nKey =
   | "you_dashboard_sub"
   | "you_your_data_label"
   | "you_your_data_sub"
+  | "you_progress_label"
+  | "you_progress_sub"
+  | "achievements_title"
+  | "achievements_empty"
+  | "milestones_title"
+  | "milestones_body"
+  | "streak_milestone_reached"
   | "you_nila_memory_label"
   | "you_nila_memory_sub"
   | "you_settings_label"
@@ -160,6 +167,11 @@ export type I18nKey =
   | "new_conversation"
   // Dashboard
   | "dash_privacy"
+  | "mood_avg_7d"
+  | "from_last_week"
+  | "avg_sleep"
+  | "days_active"
+  | "streak"
   | "weekly_report"
   | "this_week"
   | "your_month"
@@ -181,6 +193,8 @@ export type I18nKey =
   | "hero_low"
   | "hero_elevated"
   | "hero_calm"
+  | "hero_crisis"
+  | "hero_crisis_label"
   | "hero_checkin"
   | "hero_breathe"
   | "hero_gentle"
@@ -514,6 +528,13 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     you_dashboard_sub: "Streak, mood & score trends, recent conversations",
     you_your_data_label: "Your data",
     you_your_data_sub: "Export everything, or delete it — your call",
+    you_progress_label: "Your progress",
+    you_progress_sub: "Streaks, milestones, and what you've earned",
+    achievements_title: "Achievements",
+    achievements_empty: "Small steps count. Your first check-in earns your first badge.",
+    milestones_title: "Streak milestones",
+    milestones_body: "Every 3, 7, 14, 30, 60, and 100 days of showing up is worth celebrating.",
+    streak_milestone_reached: "Milestone reached — be gentle and proud of showing up.",
     you_nila_memory_label: "What Nila remembers",
     you_nila_memory_sub: "See, edit, or delete what she knows",
     you_settings_label: "Settings",
@@ -540,6 +561,11 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     dnd_turn_off: "Turn quiet mode off",
     new_conversation: "New conversation",
     dash_privacy: "Your local sections stay only on your device. A picture of how you're doing over time.",
+    mood_avg_7d: "Mood average (7 days)",
+    from_last_week: "from last week",
+    avg_sleep: "Avg sleep",
+    days_active: "Days active",
+    streak: "Streak",
     weekly_report: "Weekly report",
     this_week: "This week",
     your_month: "Your month",
@@ -561,6 +587,8 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     hero_low: "A small, kind step is enough right now.",
     hero_elevated: "Let's slow things down together.",
     hero_calm: "You're doing okay. Keep the rhythm going.",
+    hero_crisis: "You're not alone in this. Let's get you to support right now.",
+    hero_crisis_label: "Get support",
     hero_checkin: "Check in",
     hero_breathe: "3-min breathing",
     hero_gentle: "Gentle check-in",
@@ -892,6 +920,13 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     you_dashboard_sub: "स्ट्रीक, मूड और स्कोर प्रवृत्तियाँ, हाल की नीला",
     you_your_data_label: "आपका डेटा",
     you_your_data_sub: "सब कुछ निर्यात करें, या हटाएं — आपकी पसंद",
+    you_progress_label: "आपकी प्रगति",
+    you_progress_sub: "स्ट्रीक, मील के पत्थर और जो कमाया",
+    achievements_title: "उपलब्धियाँ",
+    achievements_empty: "छोटे कदम भी मायने रखते हैं। पहली चेक-इन से आपका पहला बैज मिलता है।",
+    milestones_title: "स्ट्रीक मीलस्टोन",
+    milestones_body: "हर 3, 7, 14, 30, 60 और 100 दिन की उपस्थिति मनाने लायक है।",
+    streak_milestone_reached: "मीलस्टोन पूरा — अपनी उपस्थिति पर गर्व करें।",
     you_nila_memory_label: "नीला क्या याद रखती है",
     you_nila_memory_sub: "देखें, संपादित करें, या हटाएं जो वह जानती है",
     you_settings_label: "सेटिंग्स",
@@ -918,6 +953,11 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     dnd_turn_off: "शांत मोड बंद करें",
     new_conversation: "नई बातचीत",
     dash_privacy: "आपके स्थानीय भाग केवल आपके डिवाइस पर रहते हैं। समय के साथ आप कैसे कर रहे हैं, इसकी एक तस्वीर।",
+    mood_avg_7d: "मूड औसत (7 दिन)",
+    from_last_week: "पिछले सप्ताह से",
+    avg_sleep: "औसत नींद",
+    days_active: "सक्रिय दिन",
+    streak: "लगातार",
     weekly_report: "साप्ताहिक रिपोर्ट",
     this_week: "इस सप्ताह",
     your_month: "आपका महीना",
@@ -939,6 +979,8 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     hero_low: "अभी एक छोटा, दयालु कदम काफी है।",
     hero_elevated: "चलो, एक साथ इसे धीमा करते हैं।",
     hero_calm: "आप ठीक कर रहे हैं। लय बनाए रखें।",
+    hero_crisis: "आप इसमें अकेले नहीं हैं। चलिए अभी सहायता तक पहुँचते हैं।",
+    hero_crisis_label: "सहायता लें",
     hero_checkin: "चेक इन",
     hero_breathe: "3-मिनट श्वास",
     hero_gentle: "कोमल चेक-इन",
@@ -1264,6 +1306,13 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     you_dashboard_sub: "தொடர், மனநிலை & மதிப்பு போக்குகள், சமீபத்திய நீலா",
     you_your_data_label: "உங்கள் தரவு",
     you_your_data_sub: "அனைத்தையும் ஏற்றுமதி செய்யுங்கள், அல்லது அழிக்குங்கள் — உங்கள் தேர்வு",
+    you_progress_label: "உங்கள் முன்னேற்றம்",
+    you_progress_sub: "சரணிகள், மைல்கற்கள் மற்றும் நீங்கள் பெற்றவை",
+    achievements_title: "சாதனைகள்",
+    achievements_empty: "சிறிய அடிகளும் முக்கியம். உங்கள் முதல் செக்-இன் உங்கள் முதல் பதக்கத்தைத் தரும்.",
+    milestones_title: "சரணி மைல்கற்கள்",
+    milestones_body: "ஒவ்வொரு 3, 7, 14, 30, 60 மற்றும் 100 நாட்களுக்கும் உங்கள் வருகை கொண்டாடத்தக்கது.",
+    streak_milestone_reached: "மைல்கல் அடையப்பட்டது — வருவதில் பெருமை கொள்ளுங்கள்.",
     you_nila_memory_label: "நீலா எதை நினைவில் வைத்திருக்கிறாள்",
     you_nila_memory_sub: "அவள் அறிந்ததைப் பாருங்கள், திருத்துங்கள் அல்லது அழிக்கவும்",
     you_settings_label: "அமைப்புகள்",
@@ -1290,6 +1339,11 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     dnd_turn_off: "அமைதி முறையை அணை",
     new_conversation: "புதிய உரையாடல்",
     dash_privacy: "உங்கள் உள்ளூர் பிரிவுகள் உங்கள் சாதனத்தில் மட்டுமே இருக்கும். நீங்கள் எப்படி செல்கிறீர்கள் என்பதன் காலப்போக்கு படம்.",
+    mood_avg_7d: "மனநிலை சராசரி (7 நாட்கள்)",
+    from_last_week: "கடந்த வாரத்திலிருந்து",
+    avg_sleep: "சராசரி தூக்கம்",
+    days_active: "செயலில் உள்ள நாட்கள்",
+    streak: "தொடர்ச்சி",
     weekly_report: "வாராந்திர அறிக்கை",
     this_week: "இந்த வாரம்",
     your_month: "உங்கள் மாதம்",
@@ -1311,6 +1365,8 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     hero_low: "இப்போது ஒரு சிறிய, கருணை நிறைந்த படி போதுமானது.",
     hero_elevated: "வாருங்கள், சேர்ந்து இதை மெதுவாக்குவோம்.",
     hero_calm: "நீங்கள் சரியாகத்தான் இருக்கிறீர்கள். இந்தத் தாளத்தைத் தொடருங்கள்.",
+    hero_crisis: "இதில் நீங்கள் தனியாக இல்லை. இப்போதே உதவியை அடைவோம்.",
+    hero_crisis_label: "உதவி பெறு",
     hero_checkin: "செக் இன்",
     hero_breathe: "3-நிமிட மூச்சு",
     hero_gentle: "மென்மையான செக்-இன்",
@@ -1636,6 +1692,13 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     you_dashboard_sub: "స్ట్రీక్, మూడ్ & స్కోర్ ట్రెండ్‌లు, ఇటీవలి నీలా",
     you_your_data_label: "మీ డేటా",
     you_your_data_sub: "అన్నీ ఎగుమతి చేయండి, లేదా తొలగించండి — మీ ఇష్టం",
+    you_progress_label: "మీ పురోగతి",
+    you_progress_sub: "స్ట్రీక్‌లు, మైలురాళ్లు మరియు మీరు సాధించినవి",
+    achievements_title: "సాధనలు",
+    achievements_empty: "చిన్న అడుగులు కూడా ముఖ్యమైనవి. మీ మొదటి చెక్-ఇన్ మీకు మొదటి బ్యాడ్జ్‌ను ఇస్తుంది.",
+    milestones_title: "స్ట్రీక్ మైలురాళ్లు",
+    milestones_body: "ప్రతి 3, 7, 14, 30, 60 మరియు 100 రోజులకు మీరు వచ్చినందుకు గర్వపడవచ్చు.",
+    streak_milestone_reached: "మైలురాయి చేరుకున్నారు — వచ్చినందుకు గర్వపడండి.",
     you_nila_memory_label: "నీలా ఏమి గుర్తుంచుకుంటుంది",
     you_nila_memory_sub: "ఆమె తెలిసినదాన్ని చూడండి, సవరించండి లేదా తొలగించండి",
     you_settings_label: "సెట్టింగ్‌లు",
@@ -1662,6 +1725,11 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     dnd_turn_off: "క్వైట్ మోడ్ ఆఫ్ చేయి",
     new_conversation: "కొత్త సంభాషణ",
     dash_privacy: "మీ స్థానిక విభాగాలు మీ పరికరంలోనే ఉంటాయి. కాలక్రమేణా మీరు ఎలా ఉన్నారో ఒక చిత్రం.",
+    mood_avg_7d: "మూడ్ సగటు (7 రోజులు)",
+    from_last_week: "గత వారం నుండి",
+    avg_sleep: "సగటు నిద్ర",
+    days_active: "సక్రియ రోజులు",
+    streak: "క్రమం",
     weekly_report: "వారపు నివేదిక",
     this_week: "ఈ వారం",
     your_month: "మీ నెల",
@@ -1683,6 +1751,8 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     hero_low: "ప్రస్తుతం ఒక చిన్న, దయార్ద్రమైన అడుగు చాలు.",
     hero_elevated: "రండి, కలిసి దీన్ని నెమ్మదిగా చేద్దాం.",
     hero_calm: "మీరు బాగున్నారు. ఈ లయను కొనసాగించండి.",
+    hero_crisis: "మీరు దీనిలో ఒంటరి కాదు. ఇప్పుడే మద్దతు చేరుకుందాం.",
+    hero_crisis_label: "మద్దతు పొందండి",
     hero_checkin: "చెక్ ఇన్",
     hero_breathe: "3-నిమిషాల శ్వాస",
     hero_gentle: "మృదువైన చెక్-ఇన్",

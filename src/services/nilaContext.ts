@@ -201,6 +201,38 @@ export function caregiverContextBlock(): string {
 }
 
 /**
+ * Onboarding personalization — feeds the user's day-one intent (chosen goals + baseline mood) into
+ * Nila's context. This is the "onboarding data → nilaContext integration" seam from the UX-2 masterplan
+ * item: a person who told us they care about sleep or mood patterns should feel recognized from their
+ * very first conversation, not greeted as a blank slate. Model stays fixed; this is memory-into-context
+ * only (AGENTS.md rule 4). Best-effort, never throws, returns "" when nothing was captured yet.
+ * (🟡 touches a flagged file; reviewed before merge.)
+ */
+export function onboardingContextBlock(): string {
+  const goals = readArray("nilamind_user_goal");
+  let mood: number | null = null;
+  try {
+    const raw = secureLocal.getItem("nilamind_onboarding_mood");
+    if (raw != null) {
+      const n = Number(raw);
+      if (!isNaN(n)) mood = n;
+    }
+  } catch { /* best-effort */ }
+
+  const parts: string[] = [];
+  if (goals.length) {
+    const friendly = goals.map((g) => String(g).replace(/_/g, " ")).join(", ");
+    parts.push(`they mentioned their focus areas are ${friendly}`);
+  }
+  if (mood != null) {
+    const how = mood >= 7 ? "feeling good" : mood >= 5 ? "doing okay" : mood >= 3 ? "a bit low" : "really struggling";
+    parts.push(`when they first arrived they were ${how} (mood ${mood}/10)`);
+  }
+  if (parts.length === 0) return "";
+  return `- From onboarding, ${joinNatural(parts)}. Keep this lightly in mind — it's a gentle starting point, not a label.`;
+}
+
+/**
  * Build a compact, warm briefing of what Nila knows about this person, from their on-device history.
  * Returns "" when there's essentially nothing yet — Nila is told (in its prompt) to simply be present
  * and not pretend to know someone it doesn't.
@@ -293,6 +325,13 @@ export function buildPersonalContext(): string {
   {
     const cgBlock = caregiverContextBlock();
     if (cgBlock) lines.push(cgBlock);
+  }
+
+  // ── Onboarding personalization (UX-2) ─────────────────────────────────────
+  // Day-one intent: chosen goals + baseline mood, fed as gentle context. (🟡 flagged file.)
+  {
+    const obBlock = onboardingContextBlock();
+    if (obBlock) lines.push(obBlock);
   }
 
   // ── Conversation topics (Lever 11) ─────────────────────────────────────────

@@ -1,0 +1,1092 @@
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 3 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 3 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m src/components/IntentFlowBar.test.tsx[2m > [22mIntentFlowBar[2m > [22mmarks current phase as active
+[41m[1m FAIL [22m[49m src/components/IntentFlowBar.test.tsx[2m > [22mIntentFlowBar[2m > [22mmarks current phase as active
+[31m[1mTestingLibraryElementError[22m: Found multiple elements with the text: Data
+
+Here are the matching elements:
+
+Ignored nodes: comments, script, style
+[36m<span>[31m
+  [0mData[0m
+[36m</span>[31m
+
+Ignored nodes: comments, script, style
+[36m<span>[31m
+  [0mData[0m
+[36m</span>[31m
+
+(If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+Ignored nodes: comments, script, style
+[36m<body>[31m
+  [36m<div>[31m
+    [36m<nav[31m
+      [33maria-label[31m=[32m"Intent phase navigation"[31m
+      [33mclass[31m=[32m"flex items-center justify-between rounded-xl bg-[var(--gray-100)] p-1 dark:bg-[var(--gray-800)] "[31m
+    [36m>[31m
+      [36m<button[31m
+        [33mclass[31m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              text-[var(--gray-500)] hover:text-[var(--text-main)] dark:text-[var(--gray-400)]"[31m
+      [36m>[31m
+        [36m<span[31m
+          [33maria-hidden[31m=[32m"true"[31m
+        [36m>[31m
+          [0m🧘[0m
+        [36m</span>[31m
+        [36m<span>[31m
+          [0mCalm[0m
+        [36m</span>[31m
+      [36m</button>[31m
+      [36m<button[31m
+        [33maria-current[31m=[32m"step"[31m
+        [33mclass[31m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              bg-white text-[var(--text-main)] shadow-sm dark:bg-[var(--gray-700)] dark:text-white"[31m
+      [36m>[31m
+        [36m<span[31m
+          [33maria-hidden[31m=[32m"true"[31m
+        [36m>[31m
+          [0m📊[0m
+        [36m</span>[31m
+        [36m<span>[31m
+          [0mData[0m
+        [36m</span>[31m
+      [36m</button>[31m
+      [36m<button[31m
+        [33mclass[31m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              text-[var(--gray-500)] hover:text-[var(--text-main)] dark:text-[var(--gray-400)]"[31m
+      [36m>[31m
+        [36m<span[31m
+          [33maria-hidden[31m=[32m"true"[31m
+        [36m>[31m
+          [0m🎯[0m
+        [36m</span>[31m
+        [36m<span>[31m
+          [0mProtocol[0m
+        [36m</span>[31m
+      [36m</button>[31m
+    [36m</nav>[31m
+  [36m</div>[31m
+  [36m<div>[31m
+    [36m<nav[31m
+      [33maria-label[31m=[32m"Intent phase navigation"[31m
+      [33mclass[31m=[32m"flex items-center justify-between rounded-xl bg-[var(--gray-100)] p-1 dark:bg-[var(--gray-800)] "[31m
+    [36m>[31m
+      [36m<button[31m
+        [33mclass[31m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              text-[var(--gray-500)] hover:text-[var(--text-main)] dark:text-[var(--gray-400)]"[31m
+      [36m>[31m
+        [36m<span[31m
+          [33maria-hidden[31m=[32m"true"[31m
+        [36m>[31m
+          [0m🧘[0m
+        [36m</span>[31m
+        [36m<span>[31m
+          [0mCalm[0m
+        [36m</span>[31m
+      [36m</button>[31m
+      [36m<button[31m
+        [33maria-current[31m=[32m"step"[31m
+        [33mclass[31m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              bg-white text-[var(--text-main)] shadow-sm dark:bg-[var(--gray-700)] dark:text-white"[31m
+      [36m>[31m
+        [36m<span[31m
+          [33maria-hidden[31m=[32m"true"[31m
+        [36m>[31m
+          [0m📊[0m
+        [36m</span>[31m
+        [36m<span>[31m
+          [0mData[0m
+        [36m</span>[31m
+      [36m</button>[31m
+      [36m<button[31m
+        [33mclass[31m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              text-[var(--gray-500)] hover:text-[var(--text-main)] dark:text-[var(--gray-400)]"[31m
+      [36m>[31m
+        [36m<span[31m
+          [33maria-hidden[31m=[32m"true"[31m
+        [36m>[31m
+          [0m🎯[0m
+        [36m</span>[31m
+  [31m[1mTestingLibraryElementError[22m: Found multiple elements with the text: Data
+
+Here are the matching elements:
+
+Ignored nodes: comments, script, style
+[36m<span>[31m
+  [0mData[0m
+[36m</span>[31m
+
+Ignored nodes: comments, script, style
+[36m<span>[31m
+  [0mData[0m
+[36m</span>[31m
+
+(If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+Ignored nodes: comments, script, style
+[36m<body>[31m
+  [36m<div>[31m
+    [36m<nav[31m
+      [33maria-label[31m=[32m"Intent phase navigation"[31m
+      [33mclass[31m=[32m"flex items-center justify-between rounded-xl bg-[var(--gray-100)] p-1 dark:bg-[var(--gray-800)] "[31m
+    [36m>[31m
+      [36m<button[31m
+        [33mclass[31m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              text-[var(--gray-500)] hover:text-[var(--text-main)] dark:text-[var(--gray-400)]"[31m
+      [36m>[31m
+        [36m<span[31m
+          [33maria-hidden[31m=[32m"true"[31m
+        [36m>[31m
+          [0m🧘[0m
+        [36m</span>[31m
+        [36m<span>[31m
+          [0mCalm[0m
+        [36m</span>[31m
+      [36m</button>[31m
+      [36m<button[31m
+        [33maria-current[31m=[32m"step"[31m
+        [33mclass[31m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              bg-white text-[var(--text-main)] shadow-sm dark:bg-[var(--gray-700)] dark:text-white"[31m
+      [36m>[31m
+        [36m<span[31m
+          [33maria-hidden[31m=[32m"true"[31m
+        [36m>[31m
+          [0m📊[0m
+        [36m</span>[31m
+        [36m<span>[31m
+          [0mData[0m
+        [36m</span>[31m
+      [36m</button>[31m
+      [36m<button[31m
+        [33mclass[31m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              text-[var(--gray-500)] hover:text-[var(--text-main)] dark:text-[var(--gray-400)]"[31m
+      [36m>[31m
+        [36m<span[31m
+          [33maria-hidden[31m=[32m"true"[31m
+        [36m>[31m
+          [0m🎯[0m
+        [36m</span>[31m
+        [36m<span>[31m
+          [0mProtocol[0m
+        [36m</span>[31m
+      [36m</button>[31m
+    [36m</nav>[31m
+  [36m</div>[31m
+  [36m<div>[31m
+    [36m<nav[31m
+      [33maria-label[31m=[32m"Intent phase navigation"[31m
+      [33mclass[31m=[32m"flex items-center justify-between rounded-xl bg-[var(--gray-100)] p-1 dark:bg-[var(--gray-800)] "[31m
+    [36m>[31m
+      [36m<button[31m
+        [33mclass[31m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              text-[var(--gray-500)] hover:text-[var(--text-main)] dark:text-[var(--gray-400)]"[31m
+      [36m>[31m
+        [36m<span[31m
+          [33maria-hidden[31m=[32m"true"[31m
+        [36m>[31m
+          [0m🧘[0m
+        [36m</span>[31m
+        [36m<span>[31m
+          [0mCalm[0m
+        [36m</span>[31m
+      [36m</button>[31m
+      [36m<button[31m
+        [33maria-current[31m=[32m"step"[31m
+        [33mclass[31m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              bg-white text-[var(--text-main)] shadow-sm dark:bg-[var(--gray-700)] dark:text-white"[31m
+      [36m>[31m
+        [36m<span[31m
+          [33maria-hidden[31m=[32m"true"[31m
+        [36m>[31m
+          [0m📊[0m
+        [36m</span>[31m
+        [36m<span>[31m
+          [0mData[0m
+        [36m</span>[31m
+      [36m</button>[31m
+      [36m<button[31m
+        [33mclass[31m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              text-[var(--gray-500)] hover:text-[var(--text-main)] dark:text-[var(--gray-400)]"[31m
+      [36m>[31m
+        [36m<span[31m
+          [33maria-hidden[31m=[32m"true"[31m
+        [36m>[31m
+          [0m🎯[0m
+        [36m</span>[31m
+        [36m<span>[31m
+          [0mProtocol[0m
+        [36m</span>[31m
+      [36m</button>[31m
+    [36m</nav>[31m
+  [36m</div>[31m
+[36m</body>[31m[39m
+      [36m<span>[31m
+          [0mProtocol[0m
+        [36m</span>[31m
+      [36m</button>[31m
+    [36m</nav>[31m
+  [36m</div>[31m
+[36m</body>[31m[39m
+[90m [2m❯[22m Object.getElementError node_modules/@testing-library/dom/dist/config.js:[2m37:19[22m[39m
+[90m [2m❯[22m Object.getElementError node_modules/@testing-library/dom/dist/config.js:[2m37:19[22m[39m
+[90m [2m❯[22m getElementError node_modules/@testing-library/dom/dist/query-helpers.js:[2m20:35[22m[39m
+[90m [2m❯[22m getElementError node_modules/@testing-library/dom/dist/query-helpers.js:[2m20:35[22m[39m
+[90m [2m❯[22m getMultipleElementsFoundError node_modules/@testing-library/dom/dist/query-helpers.js:[2m23:10[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m55:13[22m[39m
+[90m [2m❯[22m getMultipleElementsFoundError node_modules/@testing-library/dom/dist/query-helpers.js:[2m23:10[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m55:13[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m95:19[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m95:19[22m[39m
+[36m [2m❯[22m src/components/IntentFlowBar.test.tsx:[2m20:28[22m[39m
+[36m [2m❯[22m src/components/IntentFlowBar.test.tsx:[2m20:28[22m[39m
+    [90m 18|[39m     [35mconst[39m onChange [33m=[39m vi[33m.[39m[34mfn[39m()[33m;[39m
+    [90m 19|[39m     render(<IntentFlowBar currentPhase="data" onPhaseChange={onChange}…
+    [90m 20|[39m     [35mconst[39m dataBtn [33m=[39m screen[33m.[39m[34mgetByText[39m([32m"Data"[39m)[33m;[39m
+    [90m   |[39m                            [31m^[39m
+    [90m 21|[39m     [35mconst[39m button [33m=[39m dataBtn[33m.[39m[34mclosest[39m([32m"button"[39m)[33m;[39m
+    [90m 22|[39m     [34mexpect[39m(button)[33m.[39m[34mtoHaveAttribute[39m([32m"aria-current"[39m[33m,[39m [32m"step"[39m)[33m;[39m
+    [90m 18|[39m     [35mconst[39m onChange [33m=[39m vi[33m.[39m[34mfn[39m()[33m;[39m
+    [90m 19|[39m     render(<IntentFlowBar currentPhase="data" onPhaseChange={onChange}…
+    [90m 20|[39m     [35mconst[39m dataBtn [33m=[39m screen[33m.[39m[34mgetByText[39m([32m"Data"[39m)[33m;[39m
+    [90m   |[39m                            [31m^[39m
+    [90m 21|[39m     [35mconst[39m button [33m=[39m dataBtn[33m.[39m[34mclosest[39m([32m"button"[39m)[33m;[39m
+    [90m 22|[39m     [34mexpect[39m(button)[33m.[39m[34mtoHaveAttribute[39m([32m"aria-current"[39m[33m,[39m [32m"step"[39m)[33m;[39m
+
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/components/IntentFlowBar.test.tsx[2m > [22mIntentFlowBar[2m > [22mcalls onPhaseChange on click
+[41m[1m FAIL [22m[49m src/components/IntentFlowBar.test.tsx[2m > [22mIntentFlowBar[2m > [22mcalls onPhaseChange on click
+[31m[1mTestingLibraryElementError[22m[39m: Found multiple elements with the text: Calm
+
+Here are the matching elements:
+
+Ignored nodes: comments, script, style
+[36m<span>[39m
+  [0mCalm[0m
+[36m</span>[39m
+
+Ignored nodes: comments, script, style
+[36m<span>[39m
+  [0mCalm[0m
+[36m</span>[39m
+
+Ignored nodes: comments, script, style
+[36m<span>[39m
+  [0mCalm[0m
+[36m</span>[39m
+
+(If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<nav[39m
+      [33maria-label[39m=[32m"Intent phase navigation"[39m
+      [33mclass[39m=[32m"flex items-center justify-between rounded-xl bg-[var(--gray-100)] p-1 dark:bg-[var(--gray-800)] "[39m
+    [36m>[39m
+      [36m<button[39m
+        [33mclass[39m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              text-[var(--gray-500)] hover:text-[var(--text-main)] dark:text-[var(--gray-400)]"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+        [36m>[39m
+          [0m🧘[0m
+        [36m</span>[39m
+        [36m<span>[39m
+          [0mCalm[0m
+        [36m</span>[39m
+      [36m</button>[39m
+      [36m<button[39m
+        [33maria-current[39m=[32m"step"[39m
+        [33mclass[39m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              bg-white text-[var(--text-main)] shadow-sm dark:bg-[var(--gray-700)] dark:text-white"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+        [36m>[39m
+          [0m📊[0m
+        [36m</span>[39m
+        [36m<span>[39m
+          [0mData[0m
+        [36m</span>[39m
+      [36m</button>[39m
+      [36m<button[39m
+        [33mclass[39m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              text-[var(--gray-500)] hover:text-[var(--text-main)] dark:text-[var(--gray-400)]"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+        [36m>[39m
+          [0m🎯[0m
+        [36m</span>[39m
+        [36m<span>[39m
+          [0mProtocol[0m
+        [36m</span>[39m
+      [36m</button>[39m
+    [36m</nav>[39m
+  [36m</div>[39m
+  [36m<div>[39m
+    [36m<nav[39m
+      [33maria-label[39m=[32m"Intent phase navigation"[39m
+      [33mclass[39m=[32m"flex items-center justify-between rounded-xl bg-[var(--gray-100)] p-1 dark:bg-[var(--gray-800)] "[39m
+    [36m>[39m
+      [36m<button[39m
+        [33mclass[39m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              text-[var(--gray-500)] hover:text-[var(--text-main)] dark:text-[var(--gray-400)]"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+        [36m>[39m
+          [0m🧘[0m
+        [36m</span>[39m
+        [36m<span>[39m
+          [0mCalm[0m
+        [36m</span>[39m
+      [36m</button>[39m
+      [36m<button[39m
+        [33maria-current[39m=[32m"step"[39m
+        [33mclass[39m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              bg-white text-[var(--text-main)] shadow-sm dark:bg-[var(--gray-700)] dark:text-white"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+        [36m>[39m
+          [0m📊[0m
+        [36m</span>[39m
+        [36m<span>[39m
+          [0mData[0m
+        [36m</span>[39m
+      [36m</button>[39m
+      [36m<button[39m
+        [33mclass[39m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              text-[var(--gray-500)] hover:text-[var(--text-main)] dark:text-[var(--gray-400)]"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidde[31m[1mTestingLibraryElementError[22m[39m: Found multiple elements with the text: Calm
+
+Here are the matching elements:
+
+Ignored nodes: comments, script, style
+[36m<span>[39m
+  [0mCalm[0m
+[36m</span>[39m
+
+Ignored nodes: comments, script, style
+[36m<span>[39m
+  [0mCalm[0m
+[36m</span>[39m
+
+Ignored nodes: comments, script, style
+[36m<span>[39m
+  [0mCalm[0m
+[36m</span>[39m
+
+(If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<nav[39m
+      [33maria-label[39m=[32m"Intent phase navigation"[39m
+      [33mclass[39m=[32m"flex items-center justify-between rounded-xl bg-[var(--gray-100)] p-1 dark:bg-[var(--gray-800)] "[39m
+    [36m>[39m
+      [36m<button[39m
+        [33mclass[39m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              text-[var(--gray-500)] hover:text-[var(--text-main)] dark:text-[var(--gray-400)]"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+        [36m>[39m
+          [0m🧘[0m
+        [36m</span>[39m
+        [36m<span>[39m
+          [0mCalm[0m
+        [36m</span>[39m
+      [36m</button>[39m
+      [36m<button[39m
+        [33maria-current[39m=[32m"step"[39m
+        [33mclass[39m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              bg-white text-[var(--text-main)] shadow-sm dark:bg-[var(--gray-700)] dark:text-white"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+        [36m>[39m
+          [0m📊[0m
+        [36m</span>[39m
+        [36m<span>[39m
+          [0mData[0m
+        [36m</span>[39m
+      [36m</button>[39m
+      [36m<button[39m
+        [33mclass[39m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              text-[var(--gray-500)] hover:text-[var(--text-main)] dark:text-[var(--gray-400)]"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+        [36m>[39m
+          [0m🎯[0m
+        [36m</span>[39m
+        [36m<span>[39m
+          [0mProtocol[0m
+        [36m</span>[39m
+      [36m</button>[39m
+    [36m</nav>[39m
+  [36m</div>[39m
+  [36m<div>[39m
+    [36m<nav[39m
+      [33maria-label[39m=[32m"Intent phase navigation"[39m
+      [33mclass[39m=[32m"flex items-center justify-between rounded-xl bg-[var(--gray-100)] p-1 dark:bg-[var(--gray-800)] "[39m
+    [36m>[39m
+      [36m<button[39m
+        [33mclass[39m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              text-[var(--gray-500)] hover:text-[var(--text-main)] dark:text-[var(--gray-400)]"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+        [36m>[39m
+          [0m🧘[0m
+        [36m</span>[39m
+        [36m<span>[39m
+          [0mCalm[0m
+        [36m</span>[39m
+      [36m</button>[39m
+      [36m<button[39m
+        [33maria-current[39m=[32m"step"[39m
+        [33mclass[39m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              bg-white text-[var(--text-main)] shadow-sm dark:bg-[var(--gray-700)] dark:text-white"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+        [36m>[39m
+          [0m📊[0m
+        [36m</span>[39m
+        [36m<span>[39m
+          [0mData[0m
+        [36m</span>[39m
+      [36m</button>[39m
+      [36m<button[39m
+        [33mclass[39m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              text-[var(--gray-500)] hover:text-[var(--text-main)] dark:text-[var(--gray-400)]"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+        [36m>[39m
+          [0m🎯[0m
+        [36m</span>[39m
+        [36m<span>[39m
+          [0mProtocol[0m
+        [36m</span>[39m
+      [36m</button>[39m
+    [36m</nav>[39m
+  [36m</div>[39m
+  [36m<div>[39m
+    [36m<nav[39m
+      [33maria-label[39m=[32m"Intent phase navigation"[39m
+      [33mclass[39m=[32m"flex items-center justify-between rounded-xl bg-[var(--gray-100)] p-1 dark:bg-[var(--gray-800)] "[39m
+    [36m>[39m
+      [36m<button[39m
+        [33mclass[39m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              text-[var(--gray-500)] hover:text-[var(--text-main)] dark:text-[var(--gray-400)]"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+        [36m>[39m
+          [0m🧘[0m
+        [36m</span>[39m
+        [36m<span>[39m
+          [0mCalm[0m
+        [36m</span>[39m
+      [36m</button>[39m
+      [36m<button[39m
+        [33maria-current[39m=[32m"step"[39m
+        [33mclass[39m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              bg-white text-[var(--text-main)] shadow-sm dark:bg-[var(--gray-700)] dark:text-white"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+        [36m>[39m
+          [0m📊[0m
+        [36m</span>[39m
+        [36m<span>[39m
+          [0mData[0m
+        [36m</span>[39m
+      [36m</button>[39m
+      [36m<button[39m
+        [33mclass[39m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              text-[var(--gray-500)] hover:text-[var(--text-main)] dark:text-[var(--gray-400)]"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+        [36m>[39m
+          [0m🎯[0m
+        [36m</span>[39m
+        [36m<span>[39m
+          [0mProtocol[0m
+        [36m</span>[39m
+      [36m</button>[39m
+    [36m</nav>[39m
+  [36m</div>[39m
+[36m</body>[39m
+n[39m=[32m"true"[39m
+        [36m>[39m
+          [0m🎯[0m
+        [36m</span>[39m
+        [36m<span>[39m
+          [0mProtocol[0m
+        [36m</span>[39m
+      [36m</button>[39m
+    [36m</nav>[39m
+  [36m</div>[39m
+  [36m<div>[39m
+    [36m<nav[39m
+      [33maria-label[39m=[32m"Intent phase navigation"[39m
+      [33mclass[39m=[32m"flex items-center justify-between rounded-xl bg-[var(--gray-100)] p-1 dark:bg-[var(--gray-800)] "[39m
+    [36m>[39m
+      [36m<button[39m
+        [33mclass[39m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              text-[var(--gray-500)] hover:text-[var(--text-main)] dark:text-[var(--gray-400)]"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+        [36m>[39m
+          [0m🧘[0m
+        [36m</span>[39m
+        [36m<span>[39m
+          [0mCalm[0m
+        [36m</span>[39m
+      [36m</button>[39m
+      [36m<button[39m
+        [33maria-current[39m=[32m"step"[39m
+        [33mclass[39m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              bg-white text-[var(--text-main)] shadow-sm dark:bg-[var(--gray-700)] dark:text-white"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+        [36m>[39m
+          [0m📊[0m
+        [36m</span>[39m
+        [36m<span>[39m
+          [0mData[0m
+        [36m</span>[39m
+      [36m</button>[39m
+      [36m<button[39m
+        [33mclass[39m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              text-[var(--gray-500)] hover:text-[var(--text-main)] dark:text-[var(--gray-400)]"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+        [36m>[39m
+          [0m🎯[0m
+        [36m</span>[39m
+        [36m<span>[39m
+          [0mProtocol[0m
+        [36m</span>[39m
+      [36m</button>[39m
+    [36m</nav>[39m
+  [36m</div>[39m
+[36m</body>[39m
+[90m [2m❯[22m Object.getElementError node_modules/@testing-library/dom/dist/config.js:[2m37:19[22m[39m
+[90m [2m❯[22m Object.getElementError node_modules/@testing-library/dom/dist/config.js:[2m37:19[22m[39m
+[90m [2m❯[22m getElementError node_modules/@testing-library/dom/dist/query-helpers.js:[2m20:35[22m[39m
+[90m [2m❯[22m getElementError node_modules/@testing-library/dom/dist/query-helpers.js:[2m20:35[22m[39m
+[90m [2m❯[22m getMultipleElementsFoundError node_modules/@testing-library/dom/dist/query-helpers.js:[2m23:10[22m[39m
+[90m [2m❯[22m getMultipleElementsFoundError node_modules/@testing-library/dom/dist/query-helpers.js:[2m23:10[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m55:13[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m55:13[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m95:19[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m95:19[22m[39m
+[36m [2m❯[22m src/components/IntentFlowBar.test.tsx:[2m28:28[22m[39m
+[36m [2m❯[22m src/components/IntentFlowBar.test.tsx:[2m28:28[22m[39m
+    [90m 26|[39m     [35mconst[39m onChange [33m=[39m vi[33m.[39m[34mfn[39m()[33m;[39m
+    [90m 27|[39m     render(<IntentFlowBar currentPhase="data" onPhaseChange={onChange}…
+    [90m 28|[39m     [35mconst[39m calmBtn [33m=[39m screen[33m.[39m[34mgetByText[39m([32m"Calm"[39m)[33m;[39m
+    [90m   |[39m                            [31m^[39m
+    [90m 29|[39m     [35mconst[39m button [33m=[39m calmBtn[33m.[39m[34mclosest[39m([32m"button"[39m)[33m![39m[33m;[39m
+    [90m 30|[39m     fireEvent[33m.[39m[34mclick[39m(button)[33m;[39m
+    [90m 26|[39m     [35mconst[39m onChange [33m=[39m vi[33m.[39m[34mfn[39m()[33m;[39m
+    [90m 27|[39m     render(<IntentFlowBar currentPhase="data" onPhaseChange={onChange}…
+    [90m 28|[39m     [35mconst[39m calmBtn [33m=[39m screen[33m.[39m[34mgetByText[39m([32m"Calm"[39m)[33m;[39m
+    [90m   |[39m                            [31m^[39m
+    [90m 29|[39m     [35mconst[39m button [33m=[39m calmBtn[33m.[39m[34mclosest[39m([32m"button"[39m)[33m![39m[33m;[39m
+    [90m 30|[39m     fireEvent[33m.[39m[34mclick[39m(button)[33m;[39m
+
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/components/IntentFlowBar.test.tsx[2m > [22mIntentFlowBar[2m > [22mdoes not mark non-current phases as active
+[41m[1m FAIL [22m[49m src/components/IntentFlowBar.test.tsx[2m > [22mIntentFlowBar[2m > [22mdoes not mark non-current phases as active
+[31m[1mTestingLibraryElementError[22m[39m: Found multiple elements with the text: Calm
+
+Here are the matching elements:
+
+Ignored nodes: comments, script, style
+[36m<span>[39m
+  [0mCalm[0m
+[36m</span>[39m
+
+Ignored nodes: comments, script, style
+[36m<span>[39m
+  [0mCalm[0m
+[36m</span>[39m
+
+Ignored nodes: comments, script, style
+[36m<span>[39m
+  [0mCalm[0m
+[36m</span>[39m
+
+Ignored nodes: comments, script, style
+[36m<span>[39m
+  [0mCalm[0m
+[36m</span>[39m
+
+(If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<nav[39m
+      [33maria-label[39m=[32m"Intent phase navigation"[39m
+      [33mclass[39m=[32m"flex items-center justify-between rounded-xl bg-[var(--gray-100)] p-1 dark:bg-[var(--gray-800)] "[39m
+    [36m>[39m
+      [36m<button[39m
+        [33mclass[39m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              text-[var(--gray-500)] hover:text-[var(--text-main)] dark:text-[var(--gray-400)]"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+        [36m>[39m
+          [0m🧘[0m
+        [36m</span>[39m
+        [36m<span>[39m
+          [0mCalm[0m
+        [36m</span>[39m
+      [36m</button>[39m
+      [36m<button[39m
+        [33maria-current[39m=[32m"step"[39m
+        [33mclass[39m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              bg-white text-[var(--text-main)] shadow-sm dark:bg-[var(--gray-700)] dark:text-white"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+        [36m>[39m
+          [0m📊[0m
+        [36m</span>[39m
+        [36m<span>[39m
+          [0mData[0m
+        [36m</span>[39m
+      [36m</button>[39m
+      [36m<button[39m
+        [33mclass[39m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              text-[var(--gray-500)] hover:text-[var(--text-main)] dark:text-[var(--gray-400)]"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+        [36m>[39m
+          [0m🎯[0m
+        [36m</span>[39m
+        [36m<span>[39m
+          [0mProtocol[0m
+        [36m</span>[39m
+      [36m</button>[39m
+    [36m</nav>[39m
+  [36m</div>[39m
+  [36m<div>[39m
+    [36m<nav[39m
+      [33maria-label[39m=[32m"Intent phase navigation"[39m
+      [33mclass[39m=[32m"flex items-center justify-between rounded-xl bg-[var(--gray-100)] p-1 dark:bg-[var(--gray-800)] "[39m
+    [36m>[39m
+      [36m<button[39m
+        [33mclass[39m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              text-[var(--gray-500)] hover:text-[var(--text-main)] dark:text-[var(--gray-400)]"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+        [36m>[39m
+          [0m🧘[0m
+        [36m</span>[39m
+        [36m<span>[39m
+          [0mCalm[0m
+        [36m</span>[39m
+      [36m</button>[39m
+      [36m<button[39m
+        [33maria-current[39m=[32m"step"[39m
+        [33mclass[39m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              bg-white text-[var(--text-main)] shadow-sm dark:bg-[var(--gray-700)] dark:text-white"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+        [36m>[39m
+          [0m📊[0m
+        [36m</span>[39m
+        [36m<span>[39m
+          [0mData[0m
+        [36m</span>[39m
+      [36m</button>[39m
+      [36m<button[39m
+        [33mclass[39m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              text-[var(--gray-500)] hover:text-[var(--text-main)] dark:text-[[31m[1mTestingLibraryElementError[22m[39m: Found multiple elements with the text: Calm
+
+Here are the matching elements:
+
+Ignored nodes: comments, script, style
+[36m<span>[39m
+  [0mCalm[0m
+[36m</span>[39m
+
+Ignored nodes: comments, script, style
+[36m<span>[39m
+  [0mCalm[0m
+[36m</span>[39m
+
+Ignored nodes: comments, script, style
+[36m<span>[39m
+  [0mCalm[0m
+[36m</span>[39m
+
+Ignored nodes: comments, script, style
+[36m<span>[39m
+  [0mCalm[0m
+[36m</span>[39m
+
+(If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<nav[39m
+      [33maria-label[39m=[32m"Intent phase navigation"[39m
+      [33mclass[39m=[32m"flex items-center justify-between rounded-xl bg-[var(--gray-100)] p-1 dark:bg-[var(--gray-800)] "[39m
+    [36m>[39m
+      [36m<button[39m
+        [33mclass[39m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              text-[var(--gray-500)] hover:text-[var(--text-main)] dark:text-[var(--gray-400)]"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+        [36m>[39m
+          [0m🧘[0m
+        [36m</span>[39m
+        [36m<span>[39m
+          [0mCalm[0m
+        [36m</span>[39m
+      [36m</button>[39m
+      [36m<button[39m
+        [33maria-current[39m=[32m"step"[39m
+        [33mclass[39m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              bg-white text-[var(--text-main)] shadow-sm dark:bg-[var(--gray-700)] dark:text-white"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+        [36m>[39m
+          [0m📊[0m
+        [36m</span>[39m
+        [36m<span>[39m
+          [0mData[0m
+        [36m</span>[39m
+      [36m</button>[39m
+      [36m<button[39m
+        [33mclass[39m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              text-[var(--gray-500)] hover:text-[var(--text-main)] dark:text-[var(--gray-400)]"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+        [36m>[39m
+          [0m🎯[0m
+        [36m</span>[39m
+        [36m<span>[39m
+          [0mProtocol[0m
+        [36m</span>[39m
+      [36m</button>[39m
+    [36m</nav>[39m
+  [36m</div>[39m
+  [36m<div>[39m
+    [36m<nav[39m
+      [33maria-label[39m=[32m"Intent phase navigation"[39m
+      [33mclass[39m=[32m"flex items-center justify-between rounded-xl bg-[var(--gray-100)] p-1 dark:bg-[var(--gray-800)] "[39m
+    [36m>[39m
+      [36m<button[39m
+        [33mclass[39m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              text-[var(--gray-500)] hover:text-[var(--text-main)] dark:text-[var(--gray-400)]"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+        [36m>[39m
+          [0m🧘[0m
+        [36m</span>[39m
+        [36m<span>[39m
+          [0mCalm[0m
+        [36m</span>[39m
+      [36m</button>[39m
+      [36m<button[39m
+        [33maria-current[39m=[32m"step"[39m
+        [33mclass[39m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              bg-white text-[var(--text-main)] shadow-sm dark:bg-[var(--gray-700)] dark:text-white"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+        [36m>[39m
+          [0m📊[0m
+        [36m</span>[39m
+        [36m<span>[39m
+          [0mData[0m
+        [36m</span>[39m
+      [36m</button>[39m
+      [36m<button[39m
+        [33mclass[39m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              text-[var(--gray-500)] hover:text-[var(--text-main)] dark:text-[var(--gray-400)]"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+        [36m>[39m
+          [0m🎯[0m
+        [36m</span>[39m
+        [36m<span>[39m
+          [0mProtocol[0m
+        [36m</span>[39m
+      [36m</button>[39m
+    [36m</nav>[39m
+  [36m</div>[39m
+  [36m<div>[39m
+    [36m<nav[39m
+      [33maria-label[39m=[32m"Intent phase navigation"[39m
+      [33mclass[39m=[32m"flex items-center justify-between rounded-xl bg-[var(--gray-100)] p-1 dark:bg-[var(--gray-800)] "[39m
+    [36m>[39m
+      [36m<button[39m
+        [33mclass[39m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              text-[var(--gray-500)] hover:text-[var(--text-main)] dark:text-[var(--gray-400)]"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+        [36m>[39m
+          [0m🧘[0m
+        [36m</span>[39m
+        [36m<span>[39m
+          [0mCalm[0m
+        [36m</span>[39m
+      [36m</button>[39m
+      [36m<button[39m
+        [33maria-current[39m=[32m"step"[39m
+        [33mclass[39m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              bg-white text-[var(--text-main)] shadow-sm dark:bg-[var(--gray-700)] dark:text-white"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+        [36m>[39m
+          [0m📊[0m
+        [36m</span>[39m
+        [36m<span>[39m
+          [0mData[0m
+        [36m</span>[39m
+      [36m</button>[39m
+      [36m<button[39m
+        [33mclass[39m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              text-[var(--gray-500)] hover:text-[var(--text-main)] dark:text-[var(--gray-400)]"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+        [36m>[39m
+          [0m🎯[0m
+        [36m</span>[39m
+        [36m<span>[39m
+          [0mProtocol[0m
+        [36m</span>[39m
+      [36m</button>[39m
+    [36m</nav>[39m
+  [36m</div>[39m
+  [36m<div>[39m
+    [36m<nav[39m
+      [33maria-label[39m=[32m"Intent phase navigation"[39m
+      [33mclass[39m=[32m"flex items-center justify-between rounded-xl bg-[var(--gray-100)] p-1 dark:bg-[var(--gray-800)] "[39m
+    [36m>[39m
+      [36m<button[39m
+        [33mclass[39m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              text-[var(--gray-500)] hover:text-[var(--text-main)] dark:text-[var(--gray-400)]"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+        [36m>[39m
+          [0m🧘[0m
+        [36m</span>[39m
+        [36m<span>[39m
+          [0mCalm[0m
+        [36m</span>[39m
+      [36m</button>[39m
+      [36m<button[39m
+        [33maria-current[39m=[32m"step"[39m
+        [33mclass[39m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              bg-white text-[var(--text-main)] shadow-sm dark:bg-[var(--gray-700)] dark:text-white"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+        [36m>[39m
+          [0m📊[0m
+        [36m</span>[39m
+        [36m<span>[39m
+          [0mData[0m
+        [36m</span>[39m
+      [36m</button>[39m
+      [36m<button[39m
+        [33mclass[39m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              text-[var(--gray-500)] hover:text-[var(--text-main)] dark:text-[var(--gray-400)]"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+        [36m>[39m
+          [0m🎯[0m
+        [36m</span>[39m
+        [36m<span>[39m
+          [0mProtocol[0m
+        [36m</span>[39m
+      [36m</button>[39m
+    [36m</nav>[39m
+  [36m</div>[39m
+[36m</body>[39m
+var(--gray-400)]"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+        [36m>[39m
+          [0m🎯[0m
+        [36m</span>[39m
+        [36m<span>[39m
+          [0mProtocol[0m
+        [36m</span>[39m
+      [36m</button>[39m
+    [36m</nav>[39m
+  [36m</div>[39m
+  [36m<div>[39m
+    [36m<nav[39m
+      [33maria-label[39m=[32m"Intent phase navigation"[39m
+      [33mclass[39m=[32m"flex items-center justify-between rounded-xl bg-[var(--gray-100)] p-1 dark:bg-[var(--gray-800)] "[39m
+    [36m>[39m
+      [36m<button[39m
+        [33mclass[39m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              text-[var(--gray-500)] hover:text-[var(--text-main)] dark:text-[var(--gray-400)]"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+        [36m>[39m
+          [0m🧘[0m
+        [36m</span>[39m
+        [36m<span>[39m
+          [0mCalm[0m
+        [36m</span>[39m
+      [36m</button>[39m
+      [36m<button[39m
+        [33maria-current[39m=[32m"step"[39m
+        [33mclass[39m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              bg-white text-[var(--text-main)] shadow-sm dark:bg-[var(--gray-700)] dark:text-white"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+        [36m>[39m
+          [0m📊[0m
+        [36m</span>[39m
+        [36m<span>[39m
+          [0mData[0m
+        [36m</span>[39m
+      [36m</button>[39m
+      [36m<button[39m
+        [33mclass[39m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              text-[var(--gray-500)] hover:text-[var(--text-main)] dark:text-[var(--gray-400)]"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+        [36m>[39m
+          [0m🎯[0m
+        [36m</span>[39m
+        [36m<span>[39m
+          [0mProtocol[0m
+        [36m</span>[39m
+      [36m</button>[39m
+    [36m</nav>[39m
+  [36m</div>[39m
+  [36m<div>[39m
+    [36m<nav[39m
+      [33maria-label[39m=[32m"Intent phase navigation"[39m
+      [33mclass[39m=[32m"flex items-center justify-between rounded-xl bg-[var(--gray-100)] p-1 dark:bg-[var(--gray-800)] "[39m
+    [36m>[39m
+      [36m<button[39m
+        [33mclass[39m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              text-[var(--gray-500)] hover:text-[var(--text-main)] dark:text-[var(--gray-400)]"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+        [36m>[39m
+          [0m🧘[0m
+        [36m</span>[39m
+        [36m<span>[39m
+          [0mCalm[0m
+        [36m</span>[39m
+      [36m</button>[39m
+      [36m<button[39m
+        [33maria-current[39m=[32m"step"[39m
+        [33mclass[39m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              bg-white text-[var(--text-main)] shadow-sm dark:bg-[var(--gray-700)] dark:text-white"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+        [36m>[39m
+          [0m📊[0m
+        [36m</span>[39m
+        [36m<span>[39m
+          [0mData[0m
+        [36m</span>[39m
+      [36m</button>[39m
+      [36m<button[39m
+        [33mclass[39m=[32m"flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+              text-[var(--gray-500)] hover:text-[var(--text-main)] dark:text-[var(--gray-400)]"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+        [36m>[39m
+          [0m🎯[0m
+        [36m</span>[39m
+        [36m<span>[39m
+          [0mProtocol[0m
+        [36m</span>[39m
+      [36m</button>[39m
+    [36m</nav>[39m
+  [36m</div>[39m
+[36m</body>[39m
+[90m [2m❯[22m Object.getElementError node_modules/@testing-library/dom/dist/config.js:[2m37:19[22m[39m
+[90m [2m❯[22m getElementError node_modules/@testing-library/dom/dist/query-helpers.js:[2m20:35[22m[39m
+[90m [2m❯[22m Object.getElementError node_modules/@testing-library/dom/dist/config.js:[2m37:19[22m[39m
+[90m [2m❯[22m getElementError node_modules/@testing-library/dom/dist/query-helpers.js:[2m20:35[22m[39m
+[90m [2m❯[22m getMultipleElementsFoundError node_modules/@testing-library/dom/dist/query-helpers.js:[2m23:10[22m[39m
+[90m [2m❯[22m getMultipleElementsFoundError node_modules/@testing-library/dom/dist/query-helpers.js:[2m23:10[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m55:13[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m55:13[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m95:19[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m95:19[22m[39m
+[36m [2m❯[22m src/components/IntentFlowBar.test.tsx:[2m37:28[22m[39m
+[36m [2m❯[22m src/components/IntentFlowBar.test.tsx:[2m37:28[22m[39m
+    [90m 35|[39m     [35mconst[39m onChange [33m=[39m vi[33m.[39m[34mfn[39m()[33m;[39m
+    [90m 36|[39m     render(<IntentFlowBar currentPhase="data" onPhaseChange={onChange}…
+    [90m 37|[39m     [35mconst[39m calmBtn [33m=[39m screen[33m.[39m[34mgetByText[39m([32m"Calm"[39m)[33m;[39m
+    [90m   |[39m                            [31m^[39m
+    [90m 38|[39m     [35mconst[39m button [33m=[39m calmBtn[33m.[39m[34mclosest[39m([32m"button"[39m)[33m![39m[33m;[39m
+    [90m 39|[39m     [34mexpect[39m(button)[33m.[39mnot[33m.[39m[34mtoHaveAttribute[39m([32m"aria-current"[39m)[33m;[39m
+    [90m 35|[39m     [35mconst[39m onChange [33m=[39m vi[33m.[39m[34mfn[39m()[33m;[39m
+    [90m 36|[39m     render(<IntentFlowBar currentPhase="data" onPhaseChange={onChange}…
+    [90m 37|[39m     [35mconst[39m calmBtn [33m=[39m screen[33m.[39m[34mgetByText[39m([32m"Calm"[39m)[33m;[39m
+    [90m   |[39m                            [31m^[39m
+    [90m 38|[39m     [35mconst[39m button [33m=[39m calmBtn[33m.[39m[34mclosest[39m([32m"button"[39m)[33m![39m[33m;[39m
+    [90m 39|[39m     [34mexpect[39m(button)[33m.[39mnot[33m.[39m[34mtoHaveAttribute[39m([32m"aria-current"[39m)[33m;[39m
+
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯[22m[39m
+

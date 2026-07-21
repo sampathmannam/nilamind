@@ -1,4 +1,3 @@
-import React from "react";
 import { Wind } from "lucide-react";
 import { getBreathPattern, type BreathPattern } from "../services/breathPacer";
 

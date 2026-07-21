@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { BookOpen, Search, X, ChevronDown, LifeBuoy, AlertTriangle, FlaskConical, Heart, Sparkles, ChevronRight } from "lucide-react";
 import { searchLearn, type LearnResult, type LearnSource } from "../services/learnLibrary";
 import { checkPsychoedQuery } from "../services/psychoed";
 import { getCrisisReply } from "../safety";
-import { getSkill, SKILL_GROUPS, groupMeta, skillForEmotion, type Skill } from "../services/skillsLibrary";
+import { getSkill, SKILL_GROUPS, skillForEmotion, type Skill } from "../services/skillsLibrary";
 import { PSYCHOED_TOPICS } from "../services/psychoed";
 import { WHY_WE_BUILT_THIS } from "../data/whyWeBuiltThis";
 import { loadCheckins } from "../services/checkin";

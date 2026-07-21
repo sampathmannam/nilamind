@@ -3,8 +3,6 @@
 
 import { localDateKey } from "./storageUtils";
 import { hasCheckinToday, getSkipFlag, loadCheckins } from "./checkin";
-import { selfReportSleepSignal } from "./sleepInsight";
-import { detectElevationRisk } from "./elevationGuard";
 import type { ElevationLevel } from "./elevationGuard";
 import { emaElevationSignal } from "./ema";
 import { chatElevationSignal } from "./chatElevation";

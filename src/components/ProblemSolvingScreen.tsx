@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Lightbulb, ChevronLeft, Plus } from "lucide-react";
 import { createSession, addSolution, setProsCons, chooseSolution, setActionPlan, completeSession, loadSessions, saveSession, type ProblemSession } from "../services/problemSolving";
 

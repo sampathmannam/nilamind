@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { t } from "../../services/i18n";
 import { Cpu } from "lucide-react";
 import { Capacitor } from "@capacitor/core";

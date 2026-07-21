@@ -1,5 +1,5 @@
 import { localDateKey } from "../services/storageUtils";
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   BA_CATEGORIES,
   ACTIVITY_MENU,

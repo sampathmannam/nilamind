@@ -1,4 +1,3 @@
-import React from "react";
 import { Phone, MessageSquare, ExternalLink } from "lucide-react";
 import { getCrisisLines } from "../services/crisisResources";
 

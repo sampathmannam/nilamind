@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { t } from "../../services/i18n";
 import { Activity } from "lucide-react";
 import {

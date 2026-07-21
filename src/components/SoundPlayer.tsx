@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Play, Pause, Volume2, VolumeX, Timer } from "lucide-react";
 import {
   startNoise,

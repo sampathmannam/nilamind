@@ -3,7 +3,6 @@
 // themes helps the companion feel like it understands the person's life, not just their data.
 // This feeds into nilaContext as "Over the past 2 weeks, you've talked mostly about..."
 
-import { secureLocal } from "./secureLocal";
 import { retrieveConversationMemories, type MemoryEntry } from "./conversationMemory";
 
 const KEY = "nilamind_topic_tracker";

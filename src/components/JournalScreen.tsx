@@ -1,5 +1,5 @@
 import { localDateKey } from "../services/storageUtils";
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Sparkles, X, Trash2, BellRing } from "lucide-react";
 import { JournalEntry } from "../types";
 import { loadJournalEntries, saveJournalEntry, deleteJournalEntry, groupByDate } from "../services/journal";

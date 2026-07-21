@@ -1,7 +1,7 @@
 import { localDateKey } from "../services/storageUtils";
 import { loadDiaryMap } from "../services/diary";
 import { updateSecureRecord, SECURE_KEYS } from "../services/secureData";
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { DiaryCardEntry, DiaryUrge, SkillEffectiveness } from "../types";
 import { ALL_DIARY_DBT_SKILLS, DEFAULT_DIARY_URGE_DEFS } from "../data";
 import { Check, Clipboard, Calendar, MessageSquare, Sparkles, Loader2, Mic, MicOff } from "lucide-react";

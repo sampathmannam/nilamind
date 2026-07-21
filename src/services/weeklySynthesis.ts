@@ -6,7 +6,6 @@ import { computeCompassionateStreak } from "./streaks";
 import { getActiveProgress } from "./protocolProgress";
 import { selfReportSleepSignal } from "./sleepInsight";
 import { napDisruptionSignal } from "./napTracking";
-import { ls } from "./storageUtils";
 
 export interface WeeklyFacts {
   checkinCount: number;

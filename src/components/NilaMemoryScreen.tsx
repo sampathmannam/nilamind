@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Sparkles, Pencil, Trash2, Check, X, TrendingUp, TrendingDown } from "lucide-react";
 import {
   loadInsights, editInsight, deleteInsight, INSIGHT_KINDS,

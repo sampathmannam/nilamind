@@ -1,7 +1,6 @@
 // InMomentInsightCard — surfaced under Nila's reply: a brief, research-cited
 // "why you might feel this way" explainer + a relevant skill/tool suggestion.
 // Pure presentational; the data comes from deriveInMomentInsight (on-device, deterministic).
-import React from "react";
 import { Lightbulb, Sparkles } from "lucide-react";
 
 interface InMomentInsightCardProps {

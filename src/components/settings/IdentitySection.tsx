@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { t } from "../../services/i18n";
 import { EyeOff, Eye, KeyRound, Copy, Download, Check, Loader2 } from "lucide-react";
 import { loadIdentity, exportBackup } from "../../services/identity";

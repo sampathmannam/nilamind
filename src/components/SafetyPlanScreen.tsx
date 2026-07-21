@@ -1,5 +1,5 @@
 import { secureLocal } from "../services/secureLocal";
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { SafetyPlan } from "../types";
 import { INITIAL_SAFETY_PLAN } from "../data";
 import { parseSafetyPlan } from "../services/safetyPlan";

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Cloud, AlertTriangle } from "lucide-react";
 import { t, useLanguage } from "../../services/i18n";
 import {

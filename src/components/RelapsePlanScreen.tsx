@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { AlertTriangle, ChevronLeft, Save } from "lucide-react";
+import { useState, useEffect } from "react";
+import { AlertTriangle } from "lucide-react";
 import { createEmptyPlan, loadRelapsePlan, saveRelapsePlan, currentPhase, phaseLabel, phaseDescription, signalFields, actionFields, type RelapsePlan, type PlanPhase } from "../services/relapsePlan";
 
 const PHASES: PlanPhase[] = ["green", "orange", "red"];

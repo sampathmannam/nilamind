@@ -1,8 +1,8 @@
 // App.tsx — 3-tab IA (Nila / Today / You) with nav-store-driven overlays.
 // BiometricGateHost and ModelSetupGate are standalone gates (no children).
 
-import { secureLocal, onPersistError } from "./services/secureLocal";
-import React, { useState, useEffect, lazy, Suspense, useCallback, useMemo } from "react";
+import { onPersistError } from "./services/secureLocal";
+import React, { useState, useEffect, lazy, Suspense, useCallback } from "react";
 import { App as CapApp } from "@capacitor/app";
 import { useReducedMotion } from "./hooks/useReducedMotion";
 
@@ -26,6 +26,7 @@ const CaregiverShareScreen = lazy(() => import("./components/CaregiverShareScree
 const ThoughtRecordScreen = lazy(() => import("./components/ThoughtRecordScreen"));
 const AssessmentScreen = lazy(() => import("./components/AssessmentScreen"));
 const YourDataScreen = lazy(() => import("./components/YourDataScreen"));
+const ProgressDashboard = lazy(() => import("./components/ProgressDashboard"));
 const NilaMemoryScreen = lazy(() => import("./components/NilaMemoryScreen"));
 const WindDownScreen = lazy(() => import("./components/WindDownScreen"));
 const SocialRhythmScreen = lazy(() => import("./components/SocialRhythmScreen"));
@@ -50,7 +51,7 @@ const LegalScreen = lazy(() => import("./components/LegalScreen"));
 const InsightsScreen = lazy(() => import("./components/InsightsScreen"));
 
 // Calm fallback while lazy chunks load
-import { Skeleton, SkeletonCard, SkeletonList, SkeletonChart } from "./components/Skeleton";
+import { SkeletonCard, SkeletonList } from "./components/Skeleton";
 
 function ScreenFallback() {
   return (
@@ -68,7 +69,6 @@ import { recordEngagement, recordDismissal } from "./services/notificationBudget
 import { recordNotificationOpen } from "./services/notificationEngagement";
 import { enableDndFor } from "./services/dnd";
 import { logMedication, loadMedications } from "./services/medicationAdherence";
-import { isCategoryEnabled } from "./services/notificationCategories";
 import { LocalNotifications } from "@capacitor/local-notifications";
 import { t, LANGUAGE_CHANGED_EVENT } from "./services/i18n";
 import { wakeWord } from "./services/wakeWord";
@@ -125,6 +125,7 @@ const AUX_LABELS: Partial<Record<AuxView, string>> = {
   sounds: "Ambient sounds",
   safety_plan: "My Safety Plan",
   guided_programs: "Guided Programs",
+  progress: "Your progress",
 };
 
 function auxViewLabel(view: AuxView): string {
@@ -151,6 +152,7 @@ function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () 
     case "exposure": return <ExposureHierarchyScreen />;
     case "relapse_plan": return <RelapsePlanScreen />;
     case "behaviour": return <DashboardScreen onOpenView={onOpenView} />;
+    case "progress": return <ProgressDashboard onClose={onClose} />;
     case "diary": return <JournalScreen />;
     case "dbt_diary_card": return <DiaryCardScreen />;
     case "episode": return <EpisodeSupportScreen onSessionEnded={onClose} onNavigateToGrounding={() => { onClose(); onOpenGrounding(); }} onNavigateToBreathing={() => { onClose(); onOpenGrounding(); }} />;

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { Play, Pause, RotateCcw, CheckCircle2 } from "lucide-react";
 import { pmrState, pmrProgress, pmrTotalMs, type PMRPhase } from "../services/pmrPacer";
 import CountdownRing from "./CountdownRing";

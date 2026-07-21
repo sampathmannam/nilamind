@@ -1,4 +1,3 @@
-import React from "react";
 
 /** A calm, one-line narrative strip shown at the top of an expanded dashboard band. It gives the
  *  user the gist before they scroll the cards below (narrative-first for distressed users). */

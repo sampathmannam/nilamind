@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { ChevronLeft, Plus, Trash2, Eye, Bell, Users, type LucideIcon } from "lucide-react";
 import { t, useLanguage } from "../services/i18n";
 import EmptyState from "./EmptyState";

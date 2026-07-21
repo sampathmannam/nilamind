@@ -22,6 +22,8 @@ interface Props {
     label: string;
     onClick: () => void;
   };
+  /** Compact mode — icon-only illustration, smaller padding. For inline cards. */
+  compact?: boolean;
 }
 
 /**
@@ -29,8 +31,28 @@ interface Props {
  * Shows a NilaCharacter illustration, title, body, and optional CTA.
  * Designed to feel like a gentle invitation, not a blank wall.
  */
-export default function EmptyState({ illustration, nilaState = "calm", title, body, cta, secondary }: Props) {
+export default function EmptyState({ illustration, nilaState = "calm", title, body, cta, secondary, compact }: Props) {
   useLanguage();
+
+  if (compact) {
+    return (
+      <div className="flex items-center gap-3 px-4 py-3 text-left">
+        {illustration ?? <NilaCharacter state={nilaState} size={32} />}
+        <div className="flex-1 min-w-0 space-y-0.5">
+          <p className="text-xs font-semibold text-ink-2">{title}</p>
+          <p className="text-[10px] text-ink-muted leading-relaxed">{body}</p>
+        </div>
+        {cta && (
+          <button
+            onClick={cta.onClick}
+            className="shrink-0 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold cursor-pointer transition-colors"
+          >
+            {cta.label}
+          </button>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center justify-center text-center px-6 py-10 space-y-4">

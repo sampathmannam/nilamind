@@ -1,5 +1,5 @@
 import { localDateKey } from "../services/storageUtils";
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import CrisisHeaderButton from "./CrisisHeaderButton";
 import {
   INSTRUMENTS,

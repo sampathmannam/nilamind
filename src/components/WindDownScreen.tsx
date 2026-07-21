@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Moon, Wind, Heart, Bell, BellOff, Play, Pause, LifeBuoy, ChevronRight } from "lucide-react";
 import {
   WINDDOWN_STEPS,

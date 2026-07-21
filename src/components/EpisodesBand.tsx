@@ -3,7 +3,7 @@ import { ShieldAlert, Clock, MessageSquare, ChevronDown } from "lucide-react";
 import { t as translate, tn as translateN, type I18nKey, type SupportedLang } from "../services/i18n";
 import CollapsibleSection from "./CollapsibleSection";
 import BandNarrative from "./BandNarrative";
-import Section, { SectionDivider } from "./Section";
+import { SectionDivider } from "./Section";
 import EmptyState from "./EmptyState";
 import type { EpisodePatterns } from "../services/dashboardInsights";
 import type { NilaTurn } from "../services/nilaSessions";

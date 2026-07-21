@@ -1,4 +1,3 @@
-import React from "react";
 import NilaCharacter from "../illustrations/NilaCharacter";
 import { useLanguage, t as translate } from "../services/i18n";
 

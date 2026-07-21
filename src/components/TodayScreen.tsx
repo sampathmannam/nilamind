@@ -1,13 +1,13 @@
 import { localDateKey } from "../services/storageUtils";
-import { useRef, useState, useEffect, useReducer } from "react";
-import { Wind, MessageCircle, Moon, Sparkles, ChevronRight, HeartHandshake, Sparkle, Clock3, Target, LineChart, Activity } from "lucide-react";
+import { useRef, useState, useEffect, useReducer, useMemo } from "react";
+import { Wind, MessageCircle, Moon, Sparkles, ChevronRight, Sparkle, Clock3, Target, LineChart, Activity } from "lucide-react";
 import { getTimeMode, getUserState } from "../services/modeEngine";
 import { hasCheckinToday, loadCheckins } from "../services/checkin";
 import { useLanguage, t } from "../services/i18n";
 import { loadInsights } from "../services/nilaInsights";
 import { loadAssessments, INSTRUMENTS } from "../services/assessments";
 import { isWellbeingDue, wellbeingCadence } from "../services/wellbeingTrack";
-import { hasRhythmToday, loadTodayAnchors, RHYTHM_ANCHORS } from "../services/socialRhythm";
+import { hasRhythmToday, loadTodayAnchors } from "../services/socialRhythm";
 import { getDailyIntention } from "../services/weeklyIntention";
 import DailyIntentionCard, { type DailyIntentionCardHandle } from "./DailyIntentionCard";
 import ConversationalCheckinCard from "./ConversationalCheckinCard";
@@ -18,12 +18,18 @@ import SafetyPlanNudgeCard from "./SafetyPlanNudgeCard";
 import LowFrictionReCheckIn from "./lowFrictionReCheckIn";
 import { useTimeOfDay, heroGradient, contextualSummary } from "../hooks/useTimeOfDay";
 import { buildNilaMessage } from "../services/nilaVoice";
+import Sparkline from "./Sparkline";
 import { getTopAssessmentPrompt } from "../services/assessmentPrompts";
 import { selectProactiveNudge } from "../services/proactiveSurfaceRouter";
+import { selectTopNudge } from "../services/nudgePrioritization";
 import { detectCompoundSignals } from "../services/compoundDetector";
 import { getFeatureWindow } from "../services/signalStore";
 import { getPassiveSensingEnabled } from "../services/passiveSensingPrefs";
 import ProactiveNudgeRail from "./ProactiveNudgeRail";
+import IntentFlowBar, { suggestPhase } from "./IntentFlowBar";
+import OnboardingMomentum from "./OnboardingMomentum";
+import AgencyNarrative from "./AgencyNarrative";
+import ValuePropBanner from "./ValuePropBanner";
 import type { TimeMode, UserState } from "../types/modes";
 
 const MOOD_EMOJI: Record<string, string> = {
@@ -145,6 +151,7 @@ export default function TodayScreen({
 }) {
   const [showExtraCards, setShowExtraCards] = useState(false);
   const [proactiveNudge, setProactiveNudge] = useState<{ text: string; route: string; icon: string } | null>(null);
+  const [selectedIntentPhase, setSelectedIntentPhase] = useState<"calm" | "data" | "protocol">("data");
   useLanguage();
   const { timeOfDay } = useTimeOfDay();
   const timeMode = getTimeMode();
@@ -186,6 +193,17 @@ export default function TodayScreen({
   const intentionCardRef = useRef<DailyIntentionCardHandle>(null);
   const weekInsight = getWeekInsight();
   const nilaReflection = getNilaReflection();
+  // UX-6: a tiny 7-day mood sparkline for the "This week" card — show, don't tell (charts > text).
+  const weekMoodSpark = useMemo(() => {
+    try {
+      const recent = loadCheckins()
+        .filter((c) => typeof c?.intensity === "number" && c.date)
+        .sort((a, b) => (a.date < b.date ? -1 : 1))
+        .slice(-7)
+        .map((c) => c.intensity as number);
+      return recent.length >= 2 ? recent : [];
+    } catch { return []; }
+  }, [checkedIn]);
   const hasAnyCheckins = (() => {
     try {
       const list = loadCheckins();
@@ -234,46 +252,61 @@ export default function TodayScreen({
   // Proactive assessment suggestion based on signals
   const assessmentPrompt = getTopAssessmentPrompt();
 
+  // Nudge prioritization — max 1 visible at a time, safety-first cascade
+  const reCheckinVisible = hasAnyCheckins && !checkedIn && !reCheckinSkipped && (() => {
+    try {
+      const list = loadCheckins();
+      if (list.length === 0) return false;
+      const last = list[list.length - 1];
+      if (!last?.date) return false;
+      const lastDate = new Date(last.date + "T00:00:00");
+      const daysSince = Math.floor((Date.now() - lastDate.getTime()) / 86_400_000);
+      return daysSince >= 2;
+    } catch { return false; }
+  })();
+  const topNudge = selectTopNudge({
+    hasSafetyPlanNudge: true, // SafetyPlanNudgeCard handles its own visibility internally
+    hasReCheckIn: reCheckinVisible,
+    hasPendingDraft: !!pendingCheckinDraft,
+    hasWellbeingDue: wellbeingDue && earnedBaselinePrompts,
+    hasAssessmentPrompt: !!assessmentPrompt && earnedBaselinePrompts && !wellbeingDue,
+    hasProactiveNudge: !!proactiveNudge,
+  });
+
   return (
     <div className="space-y-5 max-w-md mx-auto" id="today-hub">
       {/* Greeting — time-aware, serif voice, with subtle gradient backdrop */}
       <header className={`relative rounded-2xl p-4 -mx-1 bg-gradient-to-br ${heroGradient(timeOfDay)}`}>
         <CrisisHeaderButton onClick={onOpenCrisis} className="absolute top-3 right-3" />
-        <div className="space-y-0.5">
-          <h1 className="editorial text-3xl text-ink">{greeting}</h1>
-          <p className="text-sm text-ink-muted">{formatDate()}</p>
-          {contextLine && (
-            <p className="text-[11px] text-ink-faint leading-relaxed mt-1">{contextLine}</p>
-          )}
-          {!contextLine && nilaMsg.message && (
-            <p className="text-[11px] text-ink-faint leading-relaxed mt-1 italic">"{nilaMsg.message}"</p>
-          )}
-        </div>
-      </header>
+         <div className="space-y-0.5">
+           <h1 className="editorial text-3xl text-ink">{greeting}</h1>
+           <p className="text-sm text-ink-muted">{formatDate()}</p>
+           {contextLine && (
+             <p className="text-[11px] text-ink-faint leading-relaxed mt-1">{contextLine}</p>
+           )}
+           {!contextLine && nilaMsg.message && (
+             <p className="text-[11px] text-ink-faint leading-relaxed mt-1 italic">"{nilaMsg.message}"</p>
+           )}
+         </div>
 
-      {/* Empty-state welcome — shown only on first launch when no check-ins exist yet */}
-      {!hasAnyCheckins && (
-        <div className="glass p-5 rounded-2xl space-y-2">
-          <div className="flex items-center gap-3">
-            <HeartHandshake className="w-6 h-6 text-blue-400 shrink-0" aria-hidden="true" />
-            {/* Poster-line: a once-only first-launch moment (this card renders exactly once, before the
-                first check-in), so it's a legitimate single use of the register's emoji-swap headline —
-                it can't accidentally repeat since hasAnyCheckins flips permanently once the user checks in. */}
-            <p className="poster-line text-lg">Welcome to NilaMind<span className="poster-line__emoji" aria-hidden="true"> 🌿</span></p>
-          </div>
-          <p className="text-xs text-ink-muted leading-relaxed">
-            Everything here stays on your device. Nila will suggest tools based on how you're feeling —
-            just tap "How are you feeling right now?" below to get started.
-          </p>
+        {/* Intent phase navigation (Phase 2: Adaptive UI) */}
+        <div className="-mx-1 mt-3">
+          <IntentFlowBar
+            currentPhase={selectedIntentPhase || suggestPhase(userState, timeOfDay)}
+            onPhaseChange={(newPhase) => {
+              setSelectedIntentPhase(newPhase);
+            }}
+            className="bg-[var(--white)]/80 backdrop-blur-xl mt-3"
+          />
         </div>
-      )}
 
-      {/* Daily inspiration — quote + tip. Informational, not a primary action → behind the "Your patterns"
-          fold so the home leads with one clear thing (2026-07-18 QA, per docs/UX_RESEARCH.md "~4 elements"). */}
+       </header>
+
+      {/* Daily inspiration — quote + tip. Informational, not a primary action → behind the "Your patterns" fold. */}
       {showExtraCards && <DailyContentCard />}
 
-      {/* Proactive nudge rail — surfaced from compound signal analysis */}
-      {proactiveNudge && (
+      {/* Proactive nudge rail — surfaced from compound signal analysis (only when it's the top nudge) */}
+      {proactiveNudge && topNudge === "proactive" && (
         <ProactiveNudgeRail
           text={proactiveNudge.text}
           icon={proactiveNudge.icon}
@@ -282,43 +315,30 @@ export default function TodayScreen({
         />
       )}
 
+      {/* First-time user: value proposition + momentum builder */}
+      {!hasAnyCheckins && (
+        <>
+          <ValuePropBanner />
+          <OnboardingMomentum onComplete={refreshAfterCheckinResolve} />
+        </>
+      )}
+
       {/* (Play-Store rating prompt moved off the mental-health home to the You tab — 2026-07-18 design
           review: a store-rating ask does not belong on the daily support surface.) */}
 
-      {/* Nudge to set up a coping plan — the create-nudge that didn't exist before this redesign */}
-      <SafetyPlanNudgeCard go={go} />
+      {/* Nudge to set up a coping plan — only when it's the top nudge */}
+      {topNudge === "safety_plan" && <SafetyPlanNudgeCard go={go} />}
 
-      {/* Low-friction re-check-in — one-tap mood log for returning users after a gap */}
-      {hasAnyCheckins && !checkedIn && !reCheckinSkipped && (() => {
-        try {
-          const list = loadCheckins();
-          if (list.length === 0) return false;
-          const last = list[list.length - 1];
-          if (!last?.date) return false;
-          const lastDate = new Date(last.date + "T00:00:00");
-          const daysSince = Math.floor((Date.now() - lastDate.getTime()) / 86_400_000);
-          return daysSince >= 2;
-        } catch { return false; }
-      })() && (
+      {/* Low-friction re-check-in — one-tap mood log for returning users after a gap (only when top nudge) */}
+      {reCheckinVisible && topNudge === "re_checkin" && (
         <LowFrictionReCheckIn
-          onMoodSelect={() => refreshAfterCheckinResolve() /* entry already written — just re-render so the mood card updates */}
-          onSkip={() => setReCheckinSkipped(true) /* dismiss for the session; don't open the form the user just skipped */}
+          onMoodSelect={() => refreshAfterCheckinResolve()}
+          onSkip={() => setReCheckinSkipped(true)}
         />
       )}
 
-      {/* Morning focus — a this-week mini-stat. Informational → behind the "Your patterns" fold. */}
-      {showExtraCards && timeOfDay === "morning" && checkedIn && weekInsight && (
-        <div className="glass p-3 rounded-2xl space-y-1">
-          <p className="text-xs uppercase font-mono tracking-widest text-ink-faint">This week</p>
-          <p className="text-[11px] text-ink-2">
-            {weekInsight.checkinCount} check-in{weekInsight.checkinCount !== 1 ? "s" : ""}
-            {weekInsight.topEmotion ? ` · mostly feeling ${weekInsight.topEmotion}` : ""}
-          </p>
-        </div>
-      )}
-
-      {/* Longitudinal wellbeing — gentle fortnightly cadence prompt (Phase 17) */}
-      {wellbeingDue && earnedBaselinePrompts && (
+      {/* Longitudinal wellbeing — gentle fortnightly cadence prompt (only when top nudge) */}
+      {wellbeingDue && earnedBaselinePrompts && topNudge === "wellbeing_due" && (
         <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-2xl p-4 space-y-2">
           <div className="flex items-center gap-2">
             <LineChart className="w-4 h-4 text-emerald-400" />
@@ -340,7 +360,7 @@ export default function TodayScreen({
           small secondary label so it still matches what the user sees once they open the screening.
           Styled like every other suggestion card here (no amber "warning" tint) — this is a supportive
           nudge, not an alert, and shouldn't read as one. */}
-      {assessmentPrompt && earnedBaselinePrompts && !wellbeingDue && (
+      {assessmentPrompt && earnedBaselinePrompts && !wellbeingDue && topNudge === "assessment_prompt" && (
         <button
           onClick={() => go("assessment")}
           className="w-full glass hover:brightness-125 p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left flex items-center gap-3"
@@ -357,27 +377,8 @@ export default function TodayScreen({
         </button>
       )}
 
-      {/* Quick breathe — a breathing-tool shortcut. Tools live in the grounding library / Tools; behind
-          the fold here so the home isn't a tool list (2026-07-18 QA, per docs/UX_RESEARCH.md). */}
-      {showExtraCards && (
-      <button
-        onClick={() => go("breathing")}
-        className="w-full glass hover:brightness-110 p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left flex items-center gap-3"
-      >
-        <div className="p-2 rounded-xl bg-blue-500/10">
-          <Wind className="w-5 h-5 text-blue-400" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-ink-2">Quick breathe</p>
-          <p className="text-[11px] text-ink-faint">A 5-minute breathing session to settle your body</p>
-        </div>
-        <ChevronRight className="w-5 h-5 text-ink-faint shrink-0" aria-hidden="true" />
-      </button>
-      )}
-
-      {/* Conversational check-in capture — a one-tap confirm of the check-in Nila drafted from the chat,
-          instead of the cold form. Self-renders only when a draft is pending (and not yet checked in). */}
-      {pendingCheckinDraft && (
+      {/* Conversational check-in capture — only when it's the top nudge */}
+      {pendingCheckinDraft && topNudge === "pending_draft" && (
         <ConversationalCheckinCard go={go} onResolved={refreshAfterCheckinResolve} />
       )}
 
@@ -463,17 +464,28 @@ export default function TodayScreen({
       </button>
       )}
 
-      <button
-        onClick={() => go("guided_programs")}
-        className="w-full glass hover:brightness-125 p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left flex items-center gap-3"
-      >
-        <span className="shrink-0 text-violet-400"><Sparkle className="w-5 h-5" aria-hidden="true" /></span>
-        <span className="flex-1 min-w-0">
-          <span className="block text-sm font-bold text-ink">Guided Programs</span>
-          <span className="block text-[11px] text-ink-muted">Real, evidence-based programs you can start any time</span>
-        </span>
-        <ChevronRight className="w-5 h-5 text-ink-faint shrink-0" aria-hidden="true" />
-      </button>
+      {/* Daily insight — a quick sparkline summary. Always visible when data exists. */}
+      {weekInsight && weekInsight.checkinCount > 0 && (
+        <div className="glass p-3 rounded-2xl space-y-2">
+          <p className="text-xs uppercase font-mono tracking-widest text-ink-faint">This week</p>
+          <p className="text-[11px] text-ink-2">
+            {weekInsight.checkinCount} check-in{weekInsight.checkinCount !== 1 ? "s" : ""}
+            {weekInsight.topEmotion ? ` · mostly feeling ${weekInsight.topEmotion}` : ""}
+          </p>
+          {weekMoodSpark.length >= 2 && (
+            <Sparkline
+              data={weekMoodSpark}
+              width={160}
+              height={28}
+              min={0}
+              max={10}
+              color="var(--color-blue-400)"
+              label="Your mood over the last 7 check-ins"
+              className="mt-1"
+            />
+          )}
+        </div>
+      )}
 
       {/* Show more toggle — hides informational cards by default */}
       <button
@@ -517,22 +529,8 @@ export default function TodayScreen({
         );
       })()}
 
-      {/* Weekly insight card — contextual data summary when there's check-in data */}
-      {weekInsight && weekInsight.checkinCount > 0 && (
-        <div className="glass p-4 rounded-2xl">
-          <div className="flex items-center gap-3">
-            <Sparkles className="w-5 h-5 text-blue-400 shrink-0" aria-hidden="true" />
-            <p className="text-xs text-ink-muted leading-relaxed">
-              <span className="text-ink-2 font-semibold">{weekInsight.checkinCount} check-in{weekInsight.checkinCount > 1 ? "s" : ""}</span>
-              {weekInsight.topEmotion ? (
-                <> this week · mostly <span className="text-ink-2 font-semibold capitalize">{weekInsight.topEmotion}</span></>
-              ) : (
-                <> this week</>
-              )}
-            </p>
-          </div>
-        </div>
-      )}
+      {/* Agency narrative — goal→insight linkage for users with goals */}
+      {checkedIn && <AgencyNarrative goal="daily wellness" />}
 
       {/* Nila's reflection — a durable insight from your history */}
       {nilaReflection && (
