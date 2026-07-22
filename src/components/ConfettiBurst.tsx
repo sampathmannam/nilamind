@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useReducedMotion } from "../hooks/useReducedMotion";
 
 interface Props {
   /** Whether to show the confetti burst. */
@@ -36,6 +37,7 @@ const COLORS = [
  * Uses CSS animations for smooth 60fps performance.
  */
 export default function ConfettiBurst({ active, count = 20, duration = 1500, onComplete }: Props) {
+  const prefersReduced = useReducedMotion();
   const [particles, setParticles] = useState<Particle[]>([]);
   const [visible, setVisible] = useState(false);
 
@@ -56,7 +58,7 @@ export default function ConfettiBurst({ active, count = 20, duration = 1500, onC
   }, [count]);
 
   useEffect(() => {
-    if (active) {
+    if (active && !prefersReduced) {
       setParticles(generateParticles());
       setVisible(true);
       const timer = setTimeout(() => {
@@ -66,8 +68,9 @@ export default function ConfettiBurst({ active, count = 20, duration = 1500, onC
       return () => clearTimeout(timer);
     } else {
       setVisible(false);
+      if (active && prefersReduced) onComplete?.();
     }
-  }, [active, duration, generateParticles, onComplete]);
+  }, [active, duration, generateParticles, onComplete, prefersReduced]);
 
   if (!visible || particles.length === 0) return null;
 

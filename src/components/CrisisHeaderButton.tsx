@@ -1,4 +1,5 @@
 import { LifeBuoy } from "lucide-react";
+import { useState, useEffect } from "react";
 
 // One consistent, always-visible crisis affordance for every top-level surface (all four tabs + the
 // assessment). Design review (2026-07-18) found the crisis control was missing on the Nila + Tools tabs
@@ -6,16 +7,37 @@ import { LifeBuoy } from "lucide-react";
 // important control on the screen was the hardest to find. This is a CALM but clearly-a-help control: a
 // small rose pill with a recognizable lifebuoy + "Help" label, per the UX_RESEARCH "persistent calm crisis
 // access in the header" mandate. 44px target, real focus ring, labelled for screen readers.
+// U9.3 — offline indicator: shows "(Offline — crisis resources available)" next to the button when offline.
 export default function CrisisHeaderButton({ onClick, className = "" }: { onClick: () => void; className?: string }) {
+  const [isOffline, setIsOffline] = useState(() => typeof navigator !== "undefined" && !navigator.onLine);
+
+  useEffect(() => {
+    const onOnline = () => setIsOffline(false);
+    const onOffline = () => setIsOffline(true);
+    window.addEventListener("online", onOnline);
+    window.addEventListener("offline", onOffline);
+    return () => {
+      window.removeEventListener("online", onOnline);
+      window.removeEventListener("offline", onOffline);
+    };
+  }, []);
+
   return (
-    <button
-      onClick={onClick}
-      aria-label="Get help now"
-      title="Get help now"
-      className={`flex items-center gap-1.5 rounded-full border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 px-3 min-w-[44px] min-h-[44px] text-xs font-semibold transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-rose-400 focus-visible:outline-offset-2 ${className}`}
-    >
-      <LifeBuoy className="w-4 h-4 shrink-0" aria-hidden="true" />
-      Help
-    </button>
+    <div className={`flex items-center gap-1.5 ${className}`}>
+      {isOffline && (
+        <span className="text-[10px] text-amber-400/80 whitespace-nowrap" role="status" aria-live="polite">
+          Offline — crisis resources available
+        </span>
+      )}
+      <button
+        onClick={onClick}
+        aria-label="Get help now"
+        title="Get help now"
+        className="flex items-center gap-1.5 rounded-full border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 px-3 min-w-[44px] min-h-[44px] text-xs font-semibold transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-rose-400 focus-visible:outline-offset-2"
+      >
+        <LifeBuoy className="w-4 h-4 shrink-0" aria-hidden="true" />
+        Help
+      </button>
+    </div>
   );
 }

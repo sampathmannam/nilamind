@@ -58,6 +58,7 @@ import { speakIfEnabled, speak, listenOnce, stopSpeaking } from "../services/voi
 import { startVoiceSession, endVoiceSession } from "../services/voicePatterns";
 import { checkSttCoherence } from "../services/sttCoherenceGate";
 import { Settings, Mic, Send, MicOff, Keyboard, X, ThumbsUp, ThumbsDown, Clock, Square } from "lucide-react";
+import RatingPromptCard from "./RatingPromptCard";
 import { hapticLight, hapticMedium } from "../hooks/useHaptics";
 import { isCloudApiEnabled, getCloudApiKey } from "../services/cloudApi";
 
@@ -872,6 +873,9 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
             </button>
           </div>
         )}
+
+        {/* Rating prompt — shown after enough Nila conversations */}
+        <RatingPromptCard />
 
         {/* #23 (audit): scroll anchor so a new reply is always brought into view. */}
         <div ref={bottomRef} />

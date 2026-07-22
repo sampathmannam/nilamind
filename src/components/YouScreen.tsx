@@ -3,10 +3,10 @@ import React, { useState, useMemo } from "react";
 import { ChevronRight, Sparkles, Target, CheckCircle, X, Lightbulb, Heart, Wind } from "lucide-react";
 import CrisisHeaderButton from "./CrisisHeaderButton";
 import ConfettiBurst from "./ConfettiBurst";
-import RatingPromptCard from "./RatingPromptCard";
+
 import { useFocusTrap } from "../hooks/useFocusTrap";
 import { buildYouGroups } from "./youRows";
-import { useLanguage } from "../services/i18n";
+import { useLanguage, t } from "../services/i18n";
 import { computeCompassionateStreak } from "../services/streaks";
 import { SkeletonCard } from "./Skeleton";
 import { loadCheckins } from "../services/checkin";
@@ -165,7 +165,17 @@ function WelcomeCard({
 export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) => void; onOpenCrisis: () => void }) {
   useLanguage();
   const { timeMode, state } = useUserContext();
-  const groups = buildYouGroups();
+  const groups = useMemo(() => {
+    const all = buildYouGroups();
+    if (state !== "anxious") return all;
+    // U6.4 — When anxious: hide dashboard row + entire resources group
+    return all
+      .map((g) => ({
+        ...g,
+        rows: g.rows.filter((r) => r.id !== "dashboard"),
+      }))
+      .filter((g) => g.title !== t("you_group_resources") && g.rows.length > 0);
+  }, [state]);
   const [showMoreResources, setShowMoreResources] = useState(false);
   const [confettiActive, setConfettiActive] = useState(false);
   const weekSnapshot = getWeekSnapshot();
@@ -254,9 +264,10 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
             <div className="flex-1 min-w-0">
               <h1 className="editorial text-2xl text-ink">{greet}</h1>
               <p className="text-xs text-ink-muted mt-0.5">{streak.message}</p>
-              {/* U9.1 — Persistent privacy badge in header */}
-              <p className="text-[10px] text-emerald-500/60 mt-1 flex items-center gap-1">
-                <span aria-hidden="true">🔒</span> On-device
+              {/* U9.1 + U9.2 — Privacy + crisis-awareness badges */}
+              <p className="text-[10px] text-emerald-500/60 mt-1 flex items-center gap-2">
+                <span className="flex items-center gap-1"><span aria-hidden="true">🔒</span> On-device</span>
+                <span className="flex items-center gap-1 text-rose-400/60"><span aria-hidden="true">🛡</span> Crisis support always here</span>
               </p>
             </div>
           </div>
@@ -467,8 +478,6 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
           <ChevronRight className={`w-3 h-3 transition-transform duration-200 ${showMoreResources ? "rotate-90" : ""}`} aria-hidden="true" />
         </button>
       )}
-
-      <RatingPromptCard />
 
       <p className="text-[11px] text-ink-faint text-center leading-relaxed px-4">
         NilaMind is a support alongside — not a substitute for — professional care.

@@ -1,6 +1,6 @@
 import { localDateKey } from "../services/storageUtils";
 import { useRef, useState, useEffect, useReducer, useMemo } from "react";
-import { Wind, MessageCircle, Moon, Sparkles, ChevronRight, Sparkle, Clock3, Target, LineChart, Activity, Loader2 } from "lucide-react";
+import { Wind, MessageCircle, Moon, Sparkles, ChevronRight, Sparkle, Clock3, Target, LineChart, Activity, Loader2, LifeBuoy } from "lucide-react";
 import { getTimeMode, getUserState } from "../services/modeEngine";
 import { hasCheckinToday, loadCheckins } from "../services/checkin";
 import { useLanguage, t } from "../services/i18n";
@@ -425,9 +425,10 @@ export default function TodayScreen({
 {!contextLine && nilaMsg.message && (
               <p className="text-[11px] text-ink-faint leading-relaxed mt-1 italic">"{nilaMsg.message}"</p>
             )}
-            {/* U9.1 — Persistent privacy badge in header */}
-            <p className="text-[10px] text-emerald-500/60 mt-1 flex items-center gap-1">
-              <span aria-hidden="true">🔒</span> On-device
+            {/* U9.1 + U9.2 — Privacy + crisis-awareness badges */}
+            <p className="text-[10px] text-emerald-500/60 mt-1 flex items-center gap-2">
+              <span className="flex items-center gap-1"><span aria-hidden="true">🔒</span> On-device</span>
+              <span className="flex items-center gap-1 text-rose-400/60"><span aria-hidden="true">🛡</span> Crisis support always here</span>
             </p>
           </div>
 
@@ -445,6 +446,19 @@ export default function TodayScreen({
         </div>
 
        </header>
+
+      {/* U9.4 — Proactive elevation check on mount */}
+      {userState === "elevated" && (
+        <button
+          onClick={onOpenCrisis}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-rose-500/8 border border-rose-500/20 text-xs text-ink-2 hover:bg-rose-500/15 transition-colors cursor-pointer text-left"
+          role="status"
+        >
+          <LifeBuoy className="w-4 h-4 text-rose-400 shrink-0" aria-hidden="true" />
+          <span className="flex-1">You seem energized — crisis resources are here if needed.</span>
+          <ChevronRight className="w-4 h-4 text-ink-faint shrink-0" aria-hidden="true" />
+        </button>
+      )}
 
       {/* U3.5 — Help FAQ sheet */}
       {showHelp && (
@@ -776,6 +790,14 @@ export default function TodayScreen({
         duration={1800}
         count={24}
       />
+
+      {/* U9.8 — Inline "See all tools" link */}
+      <button
+        onClick={() => go("tools")}
+        className="w-full text-center text-xs text-ink-faint hover:text-ink-muted py-2 transition-colors cursor-pointer"
+      >
+        See all tools →
+      </button>
 
       {/* Crisis button — bottom thumb zone, always reachable */}
       <div className="flex justify-center pt-2 pb-4">
