@@ -441,7 +441,7 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
                   key={r.id}
                   onClick={() => go(r.id)}
                   id={`you-${r.id}`}
-                  className={`w-full flex items-center gap-3 transition-all active:scale-[0.99] cursor-pointer text-left ${
+                  className={`w-full flex items-center gap-3 transition-all active:scale-[0.99] cursor-pointer text-left focus-ring ${
                     r.more
                       ? "bg-fill/50 px-3.5 py-3 rounded-xl border border-line/30 hover:border-line-strong"
                       : "bg-fill/50 px-4 py-3 rounded-2xl border border-line/20 hover:border-line-strong"

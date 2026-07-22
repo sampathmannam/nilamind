@@ -262,7 +262,7 @@ export default function ToolsScreen({ go, onEpisode, phoneEnabled, onOpenCrisis 
                   key={r.id}
                   onClick={() => handleToolTap(r.id, r.onTap)}
                   id={`tools-${r.id}`}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl border border-line/20 bg-fill/50 hover:border-line-strong hover:bg-fill/70 transition-all active:scale-[0.99] cursor-pointer text-left"
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl border border-line/20 bg-fill/50 hover:border-line-strong hover:bg-fill/70 transition-all active:scale-[0.99] cursor-pointer text-left focus-ring"
                 >
                   <span className="shrink-0 flex items-center justify-center w-9 h-9 rounded-xl bg-[#C784B0]/10">
                     <r.Icon className="w-5 h-5" aria-hidden="true" />

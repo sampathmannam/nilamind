@@ -794,7 +794,7 @@ export default function TodayScreen({
       {/* U9.8 — Inline "See all tools" link */}
       <button
         onClick={() => go("tools")}
-        className="w-full text-center text-xs text-ink-faint hover:text-ink-muted py-2 transition-colors cursor-pointer"
+        className="w-full text-center text-xs text-ink-faint hover:text-ink-muted py-2 transition-colors cursor-pointer focus-ring"
       >
         See all tools →
       </button>
