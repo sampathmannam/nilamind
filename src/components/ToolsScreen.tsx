@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import {
   Search, X, ChevronRight, Heart, Sparkles, Wind, Moon,
-  Lightbulb, Activity, SearchX, type LucideIcon,
+  Lightbulb, Activity, SearchX, ShieldAlert, type LucideIcon,
 } from "lucide-react";
 import { buildToolGroups, personalizeToolOrder, personalizeToolByContext } from "./toolsRows";
 import type { ToolGroup, ToolRow } from "./toolsRows";
@@ -81,9 +81,14 @@ function trackRecent(id: string) {
   _recentToolIds = [id, ..._recentToolIds.filter((x) => x !== id)].slice(0, RECENT_MAX);
 }
 
+// U8.1 — Category filter persistence (survives remount, resets on page refresh)
+let _lastActiveCategory: CatId = "all";
+
 // ── Component ──────────────────────────────────────────────────────
 export default function ToolsScreen({ go, onEpisode, phoneEnabled, onOpenCrisis }: Props) {
-  const [activeCategory, setActiveCategory] = useState<CatId>("all");
+  const [activeCategory, setActiveCategory] = useState<CatId>(() => _lastActiveCategory);
+  // U8.1 — persist active category across remounts
+  useEffect(() => { _lastActiveCategory = activeCategory; }, [activeCategory]);
   const [toolSearch, setToolSearch] = useState("");
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [recentIds, setRecentIds] = useState<string[]>(_recentToolIds);
@@ -185,26 +190,35 @@ export default function ToolsScreen({ go, onEpisode, phoneEnabled, onOpenCrisis 
         ))}
       </div>
 
-      {/* Search — secondary, always below filters */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-ink-faint" aria-hidden="true" />
-        <input
-          type="text"
-          value={toolSearch}
-          onChange={(e) => setToolSearch(e.target.value)}
-          placeholder="Find a tool by name..."
-          className="w-full pl-8 pr-8 py-2 rounded-lg bg-fill border border-line/50 text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus:border-[#C784B0]/40 focus:ring-1 focus:ring-[#C784B0]/20 transition-all"
-          aria-label="Search tools"
-        />
-        {toolSearch && (
-          <button
-            onClick={() => setToolSearch("")}
-            className="absolute right-1 top-1/2 -translate-y-1/2 min-w-[36px] min-h-[36px] flex items-center justify-center text-ink-faint hover:text-ink-2 cursor-pointer"
-            aria-label="Clear search"
-          >
-            <X className="w-3.5 h-3.5" />
-          </button>
-        )}
+      {/* U8.2 — Search + mini crisis button */}
+      <div className="flex items-center gap-2">
+        <button
+          onClick={onOpenCrisis}
+          className="shrink-0 w-9 h-9 rounded-lg bg-rose-500/10 border border-rose-500/25 flex items-center justify-center text-rose-400/70 hover:text-rose-400 hover:bg-rose-500/15 transition-all cursor-pointer focus-ring"
+          aria-label="Crisis resources"
+        >
+          <ShieldAlert className="w-4 h-4" aria-hidden="true" />
+        </button>
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-ink-faint" aria-hidden="true" />
+          <input
+            type="text"
+            value={toolSearch}
+            onChange={(e) => setToolSearch(e.target.value)}
+            placeholder="Find a tool by name..."
+            className="w-full pl-8 pr-8 py-2 rounded-lg bg-fill border border-line/50 text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus:border-[#C784B0]/40 focus:ring-1 focus:ring-[#C784B0]/20 transition-all"
+            aria-label="Search tools"
+          />
+          {toolSearch && (
+            <button
+              onClick={() => setToolSearch("")}
+              className="absolute right-1 top-1/2 -translate-y-1/2 min-w-[36px] min-h-[36px] flex items-center justify-center text-ink-faint hover:text-ink-2 cursor-pointer"
+              aria-label="Clear search"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Recently used — personal relevance, only shows after first tap */}
