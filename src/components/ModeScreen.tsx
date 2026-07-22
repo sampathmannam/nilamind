@@ -763,7 +763,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                       className={`rounded-2xl px-4 py-3 text-[13px] leading-relaxed whitespace-pre-wrap break-words ${
                         isUser
                           ? "bg-accent/90 text-white rounded-br-md"
-                          : "bg-card border border-line-strong/60 text-ink-2 rounded-bl-md"
+                          : "bg-card border border-accent/15 text-ink-2 rounded-bl-md"
                       }`}
                     >
                       {isUser ? m.content : ensureListBreaks(stripChatMarkdown(m.content))}
