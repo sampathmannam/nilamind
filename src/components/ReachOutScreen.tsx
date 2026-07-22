@@ -179,7 +179,7 @@ export default function ReachOutScreen() {
             onChange={(e) => onDraftChange(e.target.value)}
             placeholder="Your message — edit it however feels right."
             id="reachout-draft"
-            className="w-full h-28 bg-page border border-line rounded-xl px-3 py-2 text-xs text-ink-2 placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition-all resize-none"
+            className="w-full h-28 bg-page border border-line rounded-xl px-3 py-2 text-xs text-ink-2 placeholder-ink-faint focus:outline-none focus:border-emerald-500 transition-all resize-none"
           />
 
           {/* send (primary) + copy (always co-equal) */}

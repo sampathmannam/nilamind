@@ -50,7 +50,7 @@ export default function RelapsePlanScreen() {
             <div className="text-xs uppercase font-mono tracking-widest text-ink-faint">Warning signs</div>
             {fields.map((f) => (
               <input key={f.key} value={plan[p].signals[f.key]} onChange={(e) => updateSignal(p, f.key, e.target.value)}
-                placeholder={f.placeholder} className={`w-full glass rounded-xl px-3 py-2 text-xs text-ink-2 placeholder-slate-600 ${p === phase ? PHASE_BG[p] : ""}`} />
+                placeholder={f.placeholder} className={`w-full glass rounded-xl px-3 py-2 text-xs text-ink-2 placeholder-ink-faint ${p === phase ? PHASE_BG[p] : ""}`} />
             ))}
           </div>
 
@@ -58,7 +58,7 @@ export default function RelapsePlanScreen() {
             <div className="text-xs uppercase font-mono tracking-widest text-ink-faint">Things I can do</div>
             {actionFields().map((f) => (
               <input key={f.key} value={plan[p].actions[f.key].join(", ")} onChange={(e) => updateActions(p, f.key, e.target.value)}
-                placeholder={f.placeholder} className="w-full glass rounded-xl px-3 py-2 text-xs text-ink-2 placeholder-slate-600" />
+                placeholder={f.placeholder} className="w-full glass rounded-xl px-3 py-2 text-xs text-ink-2 placeholder-ink-faint" />
             ))}
           </div>
         </div>

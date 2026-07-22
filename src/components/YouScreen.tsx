@@ -16,7 +16,7 @@ import { getUserState } from "../services/modeEngine";
 import { useUserContext } from "../hooks/useUserContext";
 import { secureLocal } from "../services/secureLocal";
 
-const GROUP_ACCENTS = ["#C784B0"];
+const GROUP_ACCENTS = ["var(--color-accent)"];
 
 function getWeekSnapshot(): { checkinDays: number; topEmotion: string | null } | null {
   try {
@@ -127,10 +127,10 @@ function WelcomeCard({
     { icon: Sparkles, label: "Explore your dashboard", sub: "See your progress take shape", action: onDashboard },
   ] as const;
   return (
-    <div className="bg-fill/80 rounded-2xl border border-line/30 shadow-sm p-5">
+    <div className="bg-card rounded-2xl border border-line shadow-sm p-5">
       <div className="flex items-center gap-3 mb-4">
-        <div className="w-10 h-10 rounded-full bg-[#C784B0]/15 flex items-center justify-center shrink-0">
-          <Sparkles className="w-5 h-5 text-[#C784B0]" aria-hidden="true" />
+        <div className="w-10 h-10 rounded-full bg-accent/15 flex items-center justify-center shrink-0">
+          <Sparkles className="w-5 h-5 text-accent" aria-hidden="true" />
         </div>
         <div>
           <h1 className="editorial text-2xl text-ink">{greet}</h1>
@@ -145,10 +145,10 @@ function WelcomeCard({
           <button
             key={s.label}
             onClick={s.action}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl border border-line/20 bg-fill/50 hover:border-line-strong transition-all active:scale-[0.99] cursor-pointer text-left"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl border border-line bg-card hover:border-line-strong transition-all active:scale-[0.99] cursor-pointer text-left"
           >
-            <span className="shrink-0 flex items-center justify-center w-9 h-9 rounded-xl bg-[#C784B0]/10">
-              <s.icon className="w-5 h-5 text-[#C784B0]" aria-hidden="true" />
+            <span className="shrink-0 flex items-center justify-center w-9 h-9 rounded-xl bg-accent/10">
+              <s.icon className="w-5 h-5 text-accent" aria-hidden="true" />
             </span>
             <span className="flex-1 min-w-0">
               <span className="block text-sm font-semibold text-ink">{s.label}</span>
@@ -235,7 +235,7 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
   }
 
   return (
-    <div className="space-y-5 max-w-md mx-auto animate-fade-in" id="you-hub">
+    <div className="space-y-4 max-w-md mx-auto animate-fade-in px-4" id="you-hub">
       {/* U5.2 — Error banner for corrupted storage */}
       {dataErrors.length > 0 && (
         <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-3 text-xs text-ink-muted flex items-center gap-2" role="alert">
@@ -256,18 +256,18 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
         />
       ) : (
         /* Profile card — personalized + inline progress */
-        <div className="bg-fill/80 rounded-2xl border border-line/30 shadow-sm p-5">
+        <div className="bg-card rounded-2xl border border-line shadow-sm p-5">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#C784B0]/15 flex items-center justify-center shrink-0">
-              <Sparkles className="w-5 h-5 text-[#C784B0]" aria-hidden="true" />
+            <div className="w-10 h-10 rounded-full bg-accent/15 flex items-center justify-center shrink-0">
+              <Sparkles className="w-5 h-5 text-accent" aria-hidden="true" />
             </div>
             <div className="flex-1 min-w-0">
               <h1 className="editorial text-2xl text-ink">{greet}</h1>
               <p className="text-xs text-ink-muted mt-0.5">{streak.message}</p>
               {/* U9.1 + U9.2 — Privacy + crisis-awareness badges */}
-              <p className="text-[10px] text-emerald-500/60 mt-1 flex items-center gap-2">
+              <p className="text-[10px] text-ink-faint mt-1 flex items-center gap-3">
                 <span className="flex items-center gap-1"><span aria-hidden="true">🔒</span> On-device</span>
-                <span className="flex items-center gap-1 text-rose-400/60"><span aria-hidden="true">🛡</span> Crisis support always here</span>
+                <span className="flex items-center gap-1 text-rose-400/70"><span aria-hidden="true">🛡</span> Crisis support always here</span>
               </p>
             </div>
           </div>
@@ -299,17 +299,17 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
       {!isFirstRun && suggest && (
         <button
           onClick={() => go(suggest.target)}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-[#C784B0]/8 border border-[#C784B0]/20 text-sm text-ink-2 hover:bg-[#C784B0]/15 transition-colors cursor-pointer min-h-[44px] focus-ring"
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-accent/8 border border-accent/20 text-sm text-ink-2 hover:bg-accent/12 transition-colors cursor-pointer min-h-[44px] focus-ring"
         >
-          <Heart className="w-4 h-4 text-[#C784B0] shrink-0" aria-hidden="true" />
+          <Heart className="w-4 h-4 text-accent shrink-0" aria-hidden="true" />
           <span className="flex-1 text-left">{suggest.hint}</span>
-          <span className="text-xs font-medium text-[#C784B0] shrink-0">{suggest.label} →</span>
+          <span className="text-xs font-medium text-accent shrink-0">{suggest.label} →</span>
         </button>
       )}
 
       {/* Weekly intention — gentle micro-commitment */}
       {ack && (
-        <div className="bg-fill/80 rounded-2xl border border-line/30 shadow-sm p-4 border-l-4 border-l-emerald-500">
+        <div className="bg-card rounded-2xl border border-line shadow-sm p-4 border-l-[3px] border-l-success">
           <div className="flex items-center gap-3">
             <CheckCircle className="w-5 h-5 text-emerald-400 shrink-0" />
             <p className="text-xs text-ink-2 leading-relaxed">{ack}</p>
@@ -317,7 +317,7 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
         </div>
       )}
       {intention && !intention.completed && (
-        <div className="bg-fill/80 rounded-2xl border border-line/30 shadow-sm p-4">
+        <div className="bg-card rounded-2xl border border-line shadow-sm p-4">
           <div className="flex items-start gap-3">
             <Target className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
@@ -326,13 +326,13 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
               <div className="flex gap-2 mt-3">
                 <button
                   onClick={handleComplete}
-                  className="px-4 min-h-[44px] inline-flex items-center rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-xs font-medium transition-colors cursor-pointer"
+                  className="px-4 min-h-[44px] inline-flex items-center rounded-lg bg-success/15 hover:bg-success/25 text-emerald-300 text-xs font-medium transition-colors cursor-pointer"
                 >
                   Mark done
                 </button>
                 <button
                   onClick={handleClear}
-                  className="px-4 min-h-[44px] inline-flex items-center rounded-lg hover:bg-fill/50 text-ink-faint text-xs font-medium transition-colors cursor-pointer"
+                  className="px-4 min-h-[44px] inline-flex items-center rounded-lg hover:bg-fill text-ink-faint text-xs font-medium transition-colors cursor-pointer"
                 >
                   Clear
                 </button>
@@ -344,10 +344,10 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
       {!isFirstRun && (!intention || intention.completed) && !ack && (
         <button
           onClick={() => setShowPicker(true)}
-          className="w-full bg-fill/80 hover:bg-fill p-4 rounded-2xl border border-line/30 shadow-sm transition-all active:scale-[0.99] cursor-pointer text-left flex items-center gap-3"
+          className="w-full bg-card hover:bg-fill p-4 rounded-2xl border border-line shadow-sm transition-all active:scale-[0.99] cursor-pointer text-left flex items-center gap-3"
         >
-          <span className="w-10 h-10 rounded-full bg-[#C784B0]/10 flex items-center justify-center shrink-0">
-            <Target className="w-5 h-5 text-[#C784B0]" aria-hidden="true" />
+          <span className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
+            <Target className="w-5 h-5 text-accent" aria-hidden="true" />
           </span>
           <span className="flex-1 min-w-0">
             <span className="block text-sm font-bold text-ink">Set a gentle intention</span>
@@ -359,11 +359,11 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
 
       {/* Intention picker modal */}
       {showPicker && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-end" onClick={() => setShowPicker(false)}>
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end" onClick={() => setShowPicker(false)}>
           <div
             ref={pickerRef}
             tabIndex={-1}
-            className="w-full bg-page rounded-t-2xl p-4 max-h-[80vh] overflow-y-auto outline-none"
+            className="w-full bg-page rounded-t-3xl p-5 max-h-[80vh] overflow-y-auto outline-none shadow-2xl"
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-modal="true"
@@ -371,7 +371,7 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
           >
             <div className="flex items-center justify-between mb-4">
               <h2 id="intention-picker-title" className="text-lg font-semibold text-ink">Set an intention</h2>
-              <button onClick={() => setShowPicker(false)} aria-label="Close" className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-ink-muted hover:text-ink-2">
+              <button onClick={() => setShowPicker(false)} aria-label="Close" className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-ink-muted hover:text-ink-2 hover:bg-fill">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -381,7 +381,7 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
                 <button
                   key={opt}
                   onClick={() => { handleSetIntention(opt); }}
-                  className="w-full text-left bg-fill/80 border border-line/20 hover:border-line-strong p-3 rounded-xl transition-all cursor-pointer"
+                  className="w-full text-left bg-card border border-line hover:border-line-strong p-3 rounded-xl transition-all cursor-pointer"
                 >
                   <span className="text-sm text-ink-2">{opt}</span>
                 </button>
@@ -390,7 +390,7 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
                 <input
                   type="text"
                   placeholder="Or write your own…"
-                  className="w-full bg-fill/80 border border-line/20 rounded-xl px-3 py-2 text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus:border-[#C784B0]"
+                  className="w-full bg-card border border-line rounded-xl px-3 py-2.5 text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30"
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && e.currentTarget.value.trim()) {
                       handleSetIntention(e.currentTarget.value.trim());
@@ -406,19 +406,19 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
 
       {/* Early-user nudge — habit-building prompt for < 3 check-in days */}
       {isEarlyUser && (
-        <div className="bg-[#C784B0]/8 border border-[#C784B0]/20 rounded-2xl p-4">
+        <div className="bg-accent/8 border border-accent/20 rounded-2xl p-4">
           <p className="text-xs text-ink-muted mb-3">Building a habit? Try another:</p>
           <div className="flex gap-2">
             <button
               onClick={() => go("ema_checkin")}
-              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-fill/60 border border-line/20 hover:border-line-strong text-xs font-medium text-ink-2 transition-all cursor-pointer min-h-[44px]"
+              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-card border border-line hover:border-line-strong text-xs font-medium text-ink-2 transition-all cursor-pointer min-h-[44px]"
             >
               <Heart className="w-3.5 h-3.5" aria-hidden="true" />
               Check-in
             </button>
             <button
               onClick={() => go("diary")}
-              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-fill/60 border border-line/20 hover:border-line-strong text-xs font-medium text-ink-2 transition-all cursor-pointer min-h-[44px]"
+              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-card border border-line hover:border-line-strong text-xs font-medium text-ink-2 transition-all cursor-pointer min-h-[44px]"
             >
               <Wind className="w-3.5 h-3.5" aria-hidden="true" />
               Diary
@@ -432,7 +432,7 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
         if (visible.length === 0) return null;
         return (
           <section key={g.title} className="space-y-2">
-            <div className="flex items-center gap-2 pl-3 border-l-2 border-[#C784B0] py-0.5">
+            <div className="flex items-center gap-2 pl-3 border-l-2 border-accent py-0.5">
               <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-faint">{g.title}</h2>
             </div>
             <div className="space-y-2">
@@ -443,12 +443,12 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
                   id={`you-${r.id}`}
                   className={`w-full flex items-center gap-3 transition-all active:scale-[0.99] cursor-pointer text-left focus-ring ${
                     r.more
-                      ? "bg-fill/50 px-3.5 py-3 rounded-xl border border-line/30 hover:border-line-strong"
-                      : "bg-fill/50 px-4 py-3 rounded-2xl border border-line/20 hover:border-line-strong"
+                      ? "bg-card px-3.5 py-3 rounded-xl border border-line hover:border-line-strong"
+                      : "bg-card px-4 py-3 rounded-2xl border border-line hover:border-line-strong"
                   }`}
                 >
                   <span className={`shrink-0 flex items-center justify-center w-9 h-9 rounded-xl ${
-                    r.more ? "" : "bg-fill/50"
+                    r.more ? "" : "bg-fill"
                   }`}>
                     <r.Icon className={r.more ? "w-4 h-4" : "w-5 h-5"} aria-hidden="true" />
                   </span>
@@ -471,7 +471,7 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
         <button
           onClick={() => setShowMoreResources(!showMoreResources)}
           aria-expanded={showMoreResources}
-          className="w-full flex items-center justify-center gap-2 py-3 min-h-[44px] rounded-xl bg-fill/30 border border-dashed border-line/50 hover:border-line-strong text-ink-muted hover:text-ink text-xs font-medium transition-all cursor-pointer"
+          className="w-full flex items-center justify-center gap-2 py-3 min-h-[44px] rounded-xl bg-card border border-dashed border-line hover:border-line-strong text-ink-muted hover:text-ink text-xs font-medium transition-all cursor-pointer"
         >
           <Lightbulb className="w-3.5 h-3.5 text-amber-400/70" aria-hidden="true" />
           {showMoreResources ? "Show fewer resources" : `${groups.flatMap((g) => g.rows).filter((r) => r.more).length} more resources`}

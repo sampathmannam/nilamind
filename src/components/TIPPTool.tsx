@@ -234,7 +234,7 @@ function TimedSubSkill({
               <button
                 key={n}
                 onClick={() => onIntensity(n)}
-                className="bg-page border border-line text-ink-2 hover:border-blue-500 font-bold py-2 rounded-lg text-xs cursor-pointer text-center"
+                className="bg-page border border-line text-ink-2 hover:border-accent font-bold py-2 rounded-lg text-xs cursor-pointer text-center"
               >
                 {n}
               </button>

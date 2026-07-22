@@ -28,7 +28,7 @@ export default function LanguageSection() {
             onClick={() => handleChange(l.code)}
             className={`text-left px-3 py-2.5 rounded-xl border text-sm transition-colors cursor-pointer ${
               lang === l.code
-                ? "bg-blue-500/20 border-blue-500/40 text-blue-200"
+                ? "bg-blue-500/20 border-accent/40 text-blue-200"
                 : "bg-page border-line text-ink-2 hover:border-slate-600"
             }`}
           >

@@ -94,6 +94,16 @@ export default function CaptureSheets(props: CaptureSheetsProps) {
         onClose();
         def.clearDraft(props);
       }}
+      footer={
+        <button
+          onClick={onClose}
+          className="w-full py-3 text-center text-[13px] text-ink-muted hover:text-ink
+                     cursor-pointer transition-colors"
+          aria-label="Take a break — save your progress and close"
+        >
+          Take a break — your work is saved
+        </button>
+      }
     >
       {def.render(props)}
     </Sheet>

@@ -229,7 +229,7 @@ export default function ValuesToActionScreen({ highlightDomains = [] }: { highli
         <RatingSlider label="Mood after" help="How's your mood right now, after doing it? Comparing before/after is how BA actually works." value={rating.moodAfter} onChange={(v) => setRating({ ...rating, moodAfter: v })} />
         <div className="space-y-1.5">
           <label className="text-[11px] uppercase tracking-wider text-ink-muted font-semibold">Note (optional)</label>
-          <textarea aria-label="Note (optional)" value={rating.note} onChange={(e) => setRating({ ...rating, note: e.target.value })} placeholder="Anything you noticed…" className="w-full bg-page border border-line rounded-xl p-3 text-sm text-ink-2 placeholder-slate-600 focus:outline-none focus:border-blue-500/50 min-h-[60px] resize-y" />
+          <textarea aria-label="Note (optional)" value={rating.note} onChange={(e) => setRating({ ...rating, note: e.target.value })} placeholder="Anything you noticed…" className="w-full bg-page border border-line rounded-xl p-3 text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus:border-accent/50 min-h-[60px] resize-y" />
         </div>
         <div className="flex gap-2">
           <button onClick={() => setRating(null)} className="flex-1 glass hover:bg-raised text-ink-2 font-semibold py-3 rounded-xl text-sm cursor-pointer">Cancel</button>
@@ -267,7 +267,7 @@ export default function ValuesToActionScreen({ highlightDomains = [] }: { highli
               </div>
             )}
             {highlightDomains.length > 0 && (
-              <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl p-3" id="vta-highlight-note">
+              <div className="bg-blue-500/5 border border-accent/20 rounded-xl p-3" id="vta-highlight-note">
                 <p className="text-xs text-ink-muted leading-relaxed">
                   These came up when we talked:{" "}
                   <span className="text-ink-2 font-semibold">
@@ -384,7 +384,7 @@ export default function ValuesToActionScreen({ highlightDomains = [] }: { highli
                     </div>
                     {addingFor === g.domainId ? (
                       <div className="space-y-2 pt-1">
-                        <input aria-label="One small step" value={actionText} onChange={(e) => setActionText(e.target.value)} placeholder={`One small "toward" step for ${g.label.toLowerCase()}…`} className="w-full bg-page border border-line rounded-xl px-3 py-2.5 text-xs text-ink-2 placeholder-slate-600 focus:outline-none focus:border-rose-500/50" autoFocus />
+                        <input aria-label="One small step" value={actionText} onChange={(e) => setActionText(e.target.value)} placeholder={`One small "toward" step for ${g.label.toLowerCase()}…`} className="w-full bg-page border border-line rounded-xl px-3 py-2.5 text-xs text-ink-2 placeholder-ink-faint focus:outline-none focus:border-rose-500/50" autoFocus />
                         <div className="flex gap-2">
                           <button onClick={() => { setAddingFor(null); setActionText(""); }} className="flex-1 bg-page border border-line text-ink-muted text-xs py-2 rounded-lg cursor-pointer">Cancel</button>
                           <button onClick={() => addAction(g.domainId)} className="flex-1 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold py-2 rounded-lg cursor-pointer">Add step</button>
@@ -454,7 +454,7 @@ export default function ValuesToActionScreen({ highlightDomains = [] }: { highli
             {menu.map((idea) => {
               const on = picked?.title === idea.title;
               return (
-                <button key={idea.title} onClick={() => { setPicked(on ? null : idea); setCustomTitle(""); }} className={`w-full text-left px-3 py-2.5 rounded-xl border transition-all cursor-pointer ${on ? "bg-blue-600/20 border-blue-500/50" : "bg-page border-line hover:border-line-strong"}`}>
+                <button key={idea.title} onClick={() => { setPicked(on ? null : idea); setCustomTitle(""); }} className={`w-full text-left px-3 py-2.5 rounded-xl border transition-all cursor-pointer ${on ? "bg-blue-600/20 border-accent/50" : "bg-page border-line hover:border-line-strong"}`}>
                   <div className="flex items-center justify-between gap-2">
                     <span className={`text-xs font-medium ${on ? "text-blue-200" : "text-ink-2"}`}>{idea.title}</span>
                     {on && <Check className="w-3.5 h-3.5 text-blue-300 shrink-0" />}
@@ -464,7 +464,7 @@ export default function ValuesToActionScreen({ highlightDomains = [] }: { highli
               );
             })}
           </div>
-          <input aria-label="Write your own activity" value={customTitle} onChange={(e) => { setCustomTitle(e.target.value); setPicked(null); }} placeholder="…or write your own" className="w-full bg-page border border-line rounded-xl px-3 py-2.5 text-xs text-ink-2 placeholder-slate-600 focus:outline-none focus:border-blue-500/50" />
+          <input aria-label="Write your own activity" value={customTitle} onChange={(e) => { setCustomTitle(e.target.value); setPicked(null); }} placeholder="…or write your own" className="w-full bg-page border border-line rounded-xl px-3 py-2.5 text-xs text-ink-2 placeholder-ink-faint focus:outline-none focus:border-accent/50" />
           {chosenTitle && (
             <div className="space-y-2.5 pt-1">
               <div className="space-y-1">

@@ -33,7 +33,7 @@ export default function RideTheWaveCard() {
           inside it. The next few minutes matter more than the rest of tonight does. Your only job right
           now is to get through them.
         </p>
-        <div className="flex items-start gap-2 bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+        <div className="flex items-start gap-2 bg-blue-500/10 border border-accent/20 rounded-lg p-3">
           <Snowflake className="w-4 h-4 text-blue-300 shrink-0 mt-0.5" />
           <p className="text-ink-2">
             One thing that can help fast: fill a bowl or sink with cold water, take a breath, and put your

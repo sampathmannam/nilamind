@@ -95,7 +95,7 @@ function UnlockScreen({ onUnlocked }: { onUnlocked: () => void }) {
     <div className="min-h-screen bg-page flex flex-col items-center justify-center px-6">
       <div className="w-full max-w-xs space-y-6 text-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center">
+          <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-accent/30 flex items-center justify-center">
             <Lock className="w-6 h-6 text-blue-400" />
           </div>
           <div className="space-y-1">
@@ -116,7 +116,7 @@ function UnlockScreen({ onUnlocked }: { onUnlocked: () => void }) {
             onKeyDown={(e) => e.key === "Enter" && submit()}
             placeholder="PIN"
             aria-label="Enter your PIN"
-            className="w-full glass rounded-xl px-4 py-3 text-center text-lg tracking-[0.4em] text-ink placeholder:tracking-normal placeholder:text-slate-600 focus:outline-none focus:border-blue-500/50"
+            className="w-full glass rounded-xl px-4 py-3 text-center text-lg tracking-[0.4em] text-ink placeholder:tracking-normal placeholder:text-ink-faint focus:outline-none focus:border-accent/50"
             id="unlock-pin-input"
           />
           {error && <p className="text-[11px] text-rose-400">{error}</p>}

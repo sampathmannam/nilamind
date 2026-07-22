@@ -102,7 +102,7 @@ export default function PrivacyLockSection() {
               onChange={(e) => setPin(e.target.value)} placeholder="New PIN (min 4 digits)"
               aria-label="New PIN" aria-describedby="pin-warning"
               id="settings-pin-input"
-              className="w-full glass rounded-lg px-3 py-2.5 text-sm text-ink tracking-widest placeholder:tracking-normal placeholder:text-slate-600 focus:outline-none focus:border-blue-500/50"
+              className="w-full glass rounded-lg px-3 py-2.5 text-sm text-ink tracking-widest placeholder:tracking-normal placeholder:text-ink-faint focus:outline-none focus:border-accent/50"
             />
             <input
               type="password" inputMode="numeric" value={confirm}
@@ -110,7 +110,7 @@ export default function PrivacyLockSection() {
               onKeyDown={(e) => e.key === "Enter" && doSetPin()}
               aria-label="Confirm PIN" aria-describedby="pin-warning"
               id="settings-pin-confirm"
-              className="w-full glass rounded-lg px-3 py-2.5 text-sm text-ink tracking-widest placeholder:tracking-normal placeholder:text-slate-600 focus:outline-none focus:border-blue-500/50"
+              className="w-full glass rounded-lg px-3 py-2.5 text-sm text-ink tracking-widest placeholder:tracking-normal placeholder:text-ink-faint focus:outline-none focus:border-accent/50"
             />
             <p id="pin-warning" className="text-xs text-amber-300/80 leading-relaxed flex items-start gap-1">
               <AlertTriangle className="w-3 h-3 shrink-0 mt-0.5" /> If you forget this PIN, your encrypted entries cannot be recovered. There's no reset.

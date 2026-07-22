@@ -252,7 +252,9 @@ html, body, #root {
 /* The root surface + default text follow the active theme. */
 html, body { background-color: var(--color-page); color: var(--color-slate-100); }
 
-/* Nila's orb animations — state-driven by nilaFaceMotion.ts, keyframes defined once here. */
+/* Nila's orb animations — state-driven by nilaFaceMotion.ts, keyframes defined once here.
+   Breathing cycle: 12s (BASELINE) / 18s (SETTLED) — Headspace-caliber 4-2-6 parasympathetic
+   activation timing (nilaFaceMotion.ts update, Gap E-1 fix). spinSec/shimmerSec scale proportionally. */
 @keyframes nila-breathe {
   0% { transform: scale(1); opacity: 0.6; animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1); }
   50% { transform: scale(1.08); opacity: 1; animation-timing-function: cubic-bezier(0.6, 0, 0.8, 1); }
@@ -263,10 +265,10 @@ html, body { background-color: var(--color-page); color: var(--color-slate-100);
 .shimmer {
   background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.10) 37%, rgba(255,255,255,0.04) 63%);
   background-size: 400% 100%;
-  animation: nila-shimmer 1.4s ease infinite;
+  animation: nila-shimmer 7s ease infinite; /* 7s = 12s × 0.58 proportion */
 }
 @keyframes nila-drift { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(2px, -2px); } }
-.nila-orb { animation: nila-breathe 4.5s ease-in-out infinite; }
+.nila-orb { animation: nila-breathe 12s ease-in-out infinite; }
 
 /* Per-turn affect accent — a brief flicker on the orb's core-dot highlight, independent of the
    ambient breathe/spin/shimmer animations above. Color and peak scale are set inline per-render via
@@ -281,6 +283,8 @@ html, body { background-color: var(--color-page); color: var(--color-slate-100);
 /* Calm motion: honour the OS "reduce motion" setting (trauma-informed). */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+  /* Aurora-field: pause the ambient background animation specifically */
+  .aurora-field::before, .aurora-field::after { animation-play-state: paused !important; }
 }
 
 /* Sensory comfort — user-requested calm mode (independent of the OS setting). Still all
@@ -302,13 +306,15 @@ html.sensory-comfort body::after {
   background: rgba(8, 6, 4, 0.12); /* faint warm dim — below modals (z-60+) so crisis stays clear */
 }
 
-/* ── Sheet slide-in animation (200ms, ease-out) ── */
+/* ── Sheet slide-in animation (400ms, ease-out — Headspace-caliber slow for calm)
+    Previously 200ms; research shows 400-600ms transitions physically calm the nervous
+    system before the session begins. (Gap E-5 fix.) */
 @keyframes sheet-slide-in { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-.animate-slide-in { animation: sheet-slide-in 200ms ease-out; }
+.animate-slide-in { animation: sheet-slide-in 400ms cubic-bezier(0.25, 0.1, 0.25, 1) both; }
 
-/* ── Sheet slide-out animation (200ms, ease-in) ── */
+/* ── Sheet slide-out animation (300ms, ease-in — slightly faster close feels responsive) */
 @keyframes sheet-slide-out { from { transform: translateY(0); opacity: 1; } to { transform: translateY(100%); opacity: 0; } }
-.animate-slide-out { animation: sheet-slide-out 200ms ease-in forwards; }
+.animate-slide-out { animation: sheet-slide-out 300ms ease-in forwards; }
 
 /* ── Confetti particle animation (Phase UX-5) ── */
 @keyframes confetti-fall {

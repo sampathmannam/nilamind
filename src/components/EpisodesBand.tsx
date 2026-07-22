@@ -50,17 +50,17 @@ export default function EpisodesBand({
             <ShieldAlert className="w-4 h-4 text-amber-500" /> Episode insights
           </h2>
           <div className="grid grid-cols-2 gap-3" id="episode-stat-cards">
-            <div className="bg-page p-3 rounded-xl border border-slate-850 text-center space-y-1">
+            <div className="bg-page p-3 rounded-xl border border-line text-center space-y-1">
               <span className="text-xs uppercase font-mono tracking-widest text-slate-500">Peak spikes</span>
               <p className="text-2xl font-bold text-amber-500 capitalize flex items-center justify-center gap-1 font-mono">
                 <Clock className="w-4 h-4 text-slate-500" /> {epPatterns.mostCommonTime || "Night"}
               </p>
             </div>
-            <div className="bg-page p-3 rounded-xl border border-slate-850 text-center space-y-1">
+            <div className="bg-page p-3 rounded-xl border border-line text-center space-y-1">
               <span className="text-xs uppercase font-mono tracking-widest text-slate-500">Avg duration</span>
               <p className="text-2xl font-bold text-purple-400 font-mono">{epPatterns.avgDuration} min</p>
             </div>
-            <div className="bg-page col-span-2 p-3.5 rounded-xl border border-slate-850 text-center space-y-1">
+            <div className="bg-page col-span-2 p-3.5 rounded-xl border border-line text-center space-y-1">
               <span className="text-xs uppercase font-mono tracking-widest text-slate-500">Avg intensity drop per episode</span>
               <p className="text-base text-emerald-400 font-extrabold font-sans">{epPatterns.avgDrop} points</p>
             </div>
@@ -83,7 +83,7 @@ export default function EpisodesBand({
               type="button"
               onClick={() => setExpanded((v) => !v)}
               aria-expanded={expanded}
-              className="w-full mt-1 flex items-center justify-center gap-1.5 py-2 text-xs font-medium text-slate-400 bg-page rounded-xl border border-slate-850 hover:text-slate-200 hover:border-slate-700 transition-colors"
+              className="w-full mt-1 flex items-center justify-center gap-1.5 py-2 text-xs font-medium text-slate-400 bg-page rounded-xl border border-line hover:text-slate-200 hover:border-slate-700 transition-colors"
             >
               {expanded
                 ? t("see_less", lang)

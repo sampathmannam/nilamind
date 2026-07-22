@@ -63,7 +63,7 @@ export class ErrorBoundary extends Component<Props, State> {
               <AlertCircle className="w-7 h-7 text-red-400" aria-hidden="true" />
             </div>
             <h2 className="text-lg font-semibold text-ink mb-2">Something went wrong</h2>
-            <pre className="text-left bg-slate-900/50 rounded-lg p-3 text-xs text-ink-2 overflow-auto max-h-40 mb-4">
+            <pre className="text-left bg-card/50 rounded-lg p-3 text-xs text-ink-2 overflow-auto max-h-40 mb-4">
               {this.state.error?.message}
             </pre>
             <button

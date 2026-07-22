@@ -8,7 +8,7 @@ export default function ListeningIndicator({ active, onClick }: { active: boolea
       type="button"
       onClick={onClick}
       aria-label="Hey Nila is listening — tap for settings"
-      className="fixed top-3 right-3 z-[60] flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-card/90 border border-blue-500/40 backdrop-blur shadow"
+      className="fixed top-3 right-3 z-[60] flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-card/90 border border-accent/40 backdrop-blur shadow"
     >
       <span className="relative flex h-2 w-2">
         <span className="absolute inline-flex h-full w-full rounded-full bg-blue-400/60 motion-safe:animate-ping" />

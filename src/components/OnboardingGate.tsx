@@ -169,7 +169,7 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
                   onClick={() => selectMood(opt.value)}
                   className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all cursor-pointer ${
                     baselineMood === opt.value
-                      ? "bg-blue-500/15 border-blue-500/50 scale-110"
+                      ? "bg-blue-500/15 border-accent/50 scale-110"
                       : "bg-fill/50 border-line-strong/50 hover:border-slate-600"
                   }`}
                 >

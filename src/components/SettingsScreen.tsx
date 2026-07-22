@@ -68,7 +68,7 @@ export default function SettingsScreen({ onOpenCaregiver, onOpenLegal }: Setting
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search settings..."
           aria-label="Search settings"
-          className="w-full glass rounded-xl px-4 py-2.5 text-sm text-ink-2 placeholder-slate-600 focus:outline-none focus:border-blue-500/50 border border-line"
+          className="w-full bg-card rounded-xl px-4 py-2.5 text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus:border-accent/50 border border-line transition-colors"
         />
         {searchQuery && (
           <button

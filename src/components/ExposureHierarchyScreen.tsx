@@ -138,7 +138,7 @@ export default function ExposureHierarchyScreen() {
                 ))}
               </ul>
             </div>
-            <textarea value={learning} onChange={(e) => setLearning(e.target.value)} placeholder="What did you learn? (optional)" rows={2} className="w-full glass rounded-xl px-3 py-2 text-xs text-ink-2 placeholder-slate-600" />
+            <textarea value={learning} onChange={(e) => setLearning(e.target.value)} placeholder="What did you learn? (optional)" rows={2} className="w-full glass rounded-xl px-3 py-2 text-xs text-ink-2 placeholder-ink-faint" />
             <div className="flex gap-2">
               <button onClick={() => handleCompleteStep(completingStep)} className="flex-1 glass rounded-xl py-2 text-xs text-emerald-300 cursor-pointer">Save</button>
               <button onClick={() => setCompletingStep(null)} className="glass rounded-xl px-3 py-2 text-xs text-ink-muted cursor-pointer">Cancel</button>

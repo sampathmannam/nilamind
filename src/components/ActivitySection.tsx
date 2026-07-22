@@ -76,19 +76,19 @@ function ActivitySection({
       {usageSummary.totalCheckins > 0 && (
         <Section title={t("your_usage")}>
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-page p-2.5 rounded-xl text-center border border-slate-850">
+            <div className="bg-page p-2.5 rounded-xl text-center border border-line">
               <p className="text-lg font-bold text-ink font-mono">{usageSummary.totalCheckins}</p>
               <p className="text-xs text-ink-muted uppercase tracking-wide">{t("usage_checkins")}</p>
             </div>
-            <div className="bg-page p-2.5 rounded-xl text-center border border-slate-850">
+            <div className="bg-page p-2.5 rounded-xl text-center border border-line">
               <p className="text-lg font-bold text-ink font-mono">{usageSummary.protocols.completed}</p>
               <p className="text-xs text-ink-muted uppercase tracking-wide">{t("usage_programs")}</p>
             </div>
-            <div className="bg-page p-2.5 rounded-xl text-center border border-slate-850">
+            <div className="bg-page p-2.5 rounded-xl text-center border border-line">
               <p className="text-lg font-bold text-ink font-mono">{Object.keys(usageSummary.assessments).length}</p>
               <p className="text-xs text-ink-muted uppercase tracking-wide">{t("usage_assessments")}</p>
             </div>
-            <div className="bg-page p-2.5 rounded-xl text-center border border-slate-850">
+            <div className="bg-page p-2.5 rounded-xl text-center border border-line">
               <p className="text-lg font-bold text-ink font-mono">{usageSummary.features.length}</p>
               <p className="text-xs text-ink-muted uppercase tracking-wide">{t("usage_features")}</p>
             </div>

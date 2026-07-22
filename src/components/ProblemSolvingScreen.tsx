@@ -107,8 +107,8 @@ export default function ProblemSolvingScreen({ draft }: { draft?: { problem: str
               {sol.cons.length > 0 && <p className="text-xs text-rose-400">Cons: {sol.cons.join(", ")}</p>}
               {editingSolution === sol.id ? (
                 <div className="space-y-2">
-                  <input value={prosText} onChange={(e) => setProsText(e.target.value)} placeholder="Pros (comma-separated)" className="w-full glass rounded-xl px-3 py-1.5 text-[11px] text-ink-2 placeholder-slate-600" />
-                  <input value={consText} onChange={(e) => setConsText(e.target.value)} placeholder="Cons (comma-separated)" className="w-full glass rounded-xl px-3 py-1.5 text-[11px] text-ink-2 placeholder-slate-600" />
+                  <input value={prosText} onChange={(e) => setProsText(e.target.value)} placeholder="Pros (comma-separated)" className="w-full glass rounded-xl px-3 py-1.5 text-[11px] text-ink-2 placeholder-ink-faint" />
+                  <input value={consText} onChange={(e) => setConsText(e.target.value)} placeholder="Cons (comma-separated)" className="w-full glass rounded-xl px-3 py-1.5 text-[11px] text-ink-2 placeholder-ink-faint" />
                   <div className="flex gap-2">
                     <button onClick={() => handleSaveProsCons(sol.id)} className="text-xs text-blue-300 cursor-pointer">Save</button>
                     <button onClick={() => setEditingSolution(null)} className="text-xs text-ink-faint cursor-pointer">Cancel</button>
@@ -129,14 +129,14 @@ export default function ProblemSolvingScreen({ draft }: { draft?: { problem: str
         {activeSession.solutions.some((s) => s.chosen) && (
           <div className="space-y-2">
             <div className="text-xs uppercase font-mono tracking-widest text-ink-faint">Action plan</div>
-            <textarea value={actionSteps} onChange={(e) => setActionSteps(e.target.value)} placeholder="What steps will you take? (one per line)" rows={3} className="w-full glass rounded-xl px-3 py-2 text-xs text-ink-2 placeholder-slate-600" />
+            <textarea value={actionSteps} onChange={(e) => setActionSteps(e.target.value)} placeholder="What steps will you take? (one per line)" rows={3} className="w-full glass rounded-xl px-3 py-2 text-xs text-ink-2 placeholder-ink-faint" />
             <div className="space-y-1">
               <label htmlFor="pst-if-then" className="text-xs text-ink-faint">Make it concrete (optional) — plans with an if-then are more likely to happen</label>
-              <input id="pst-if-then" value={implementationIntention} onChange={(e) => setImplementationIntention(e.target.value)} placeholder="If [time/place], then I will [action]..." className="w-full glass rounded-xl px-3 py-2 text-xs text-ink-2 placeholder-slate-600" />
+              <input id="pst-if-then" value={implementationIntention} onChange={(e) => setImplementationIntention(e.target.value)} placeholder="If [time/place], then I will [action]..." className="w-full glass rounded-xl px-3 py-2 text-xs text-ink-2 placeholder-ink-faint" />
             </div>
             <div className="space-y-1">
               <label htmlFor="pst-barrier" className="text-xs text-ink-faint">What might get in the way — and your backup move (optional)</label>
-              <input id="pst-barrier" value={barrierPlan} onChange={(e) => setBarrierPlan(e.target.value)} placeholder="What might get in the way, and what will you do?" className="w-full glass rounded-xl px-3 py-2 text-xs text-ink-2 placeholder-slate-600" />
+              <input id="pst-barrier" value={barrierPlan} onChange={(e) => setBarrierPlan(e.target.value)} placeholder="What might get in the way, and what will you do?" className="w-full glass rounded-xl px-3 py-2 text-xs text-ink-2 placeholder-ink-faint" />
             </div>
             <button onClick={handleActionPlan} className="w-full glass rounded-xl py-2 text-xs text-blue-300 cursor-pointer">Save action plan</button>
           </div>

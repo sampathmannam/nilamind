@@ -890,7 +890,7 @@ valuesClarified: []
               aria-pressed={reportPeriod === d}
               className={`flex-1 text-xs font-semibold py-1.5 rounded-lg cursor-pointer transition-colors ${
                 reportPeriod === d
-                  ? "bg-blue-600/30 text-blue-200 border border-blue-500/40"
+                  ? "bg-blue-600/30 text-blue-200 border border-accent/40"
                   : "bg-page border border-line text-ink-muted hover:bg-raised"
               }`}
             >
@@ -917,7 +917,7 @@ valuesClarified: []
           </div>
         )}
         <div className="flex flex-wrap gap-2">
-          <button onClick={handleExportClinicianPdf} disabled={reportBusy} id="export-clinician-pdf" className="flex-1 min-w-[64px] bg-blue-600/10 border border-blue-500/30 hover:bg-blue-600/20 text-blue-300 text-xs font-semibold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50">
+          <button onClick={handleExportClinicianPdf} disabled={reportBusy} id="export-clinician-pdf" className="flex-1 min-w-[64px] bg-blue-600/10 border border-accent/30 hover:bg-blue-600/20 text-blue-300 text-xs font-semibold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50">
             {reportBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />} Generate report PDF
           </button>
         </div>

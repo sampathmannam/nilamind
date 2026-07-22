@@ -73,7 +73,7 @@ export default function NudgeRail({
 
   if (visibleNudgeIds.has("safetyPlan") && safetyPlanCard === "followup") {
     items.push({ key: "safetyPlan-followup", el: (
-      <div className="w-full px-3 py-2 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-200 text-xs" id="safety-plan-followup-card">
+      <div className="w-full px-3 py-2 rounded-xl bg-blue-500/10 border border-accent/30 text-blue-200 text-xs" id="safety-plan-followup-card">
         <div className="flex items-start gap-2">
           <ShieldCheck className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" />
           <div className="flex-1">
@@ -91,7 +91,7 @@ export default function NudgeRail({
 
   if (visibleNudgeIds.has("safetyPlan") && safetyPlanCard === "calm" && calmSafetyNudge?.show) {
     items.push({ key: "safetyPlan-calm", el: (
-      <div key="calm-safety-plan-nudge" className="w-full px-3 py-2 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-200 text-xs" id="calm-safety-plan-nudge-card">
+      <div key="calm-safety-plan-nudge" className="w-full px-3 py-2 rounded-xl bg-blue-500/10 border border-accent/30 text-blue-200 text-xs" id="calm-safety-plan-nudge-card">
         <div className="flex items-start gap-2">
           <ShieldCheck className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" />
           <div className="flex-1">

@@ -31,7 +31,7 @@ export default function AppearanceSection() {
             id={`settings-theme-${o.id}`}
             role="radio"
             aria-checked={choice === o.id}
-            className={`flex flex-col items-center gap-1.5 py-3 rounded-xl border text-xs font-semibold cursor-pointer transition-all ${choice === o.id ? "bg-blue-500/15 border-blue-500/50 text-blue-300" : "bg-page border-line text-ink-muted hover:border-line-strong"}`}
+            className={`flex flex-col items-center gap-1.5 py-3 rounded-xl border text-xs font-semibold cursor-pointer transition-all ${choice === o.id ? "bg-blue-500/15 border-accent/50 text-blue-300" : "bg-page border-line text-ink-muted hover:border-line-strong"}`}
           >
             {o.icon}
             {o.label}

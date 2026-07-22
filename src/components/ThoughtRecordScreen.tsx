@@ -174,7 +174,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
                 aria-label="What happened?"
                 value={situation}
                 onChange={(e) => setSituation(e.target.value)}
-                className="w-full h-32 bg-page border border-line rounded-xl px-4 py-3 text-sm text-ink-2 placeholder-slate-600 focus:outline-none focus:border-blue-500 text-left transition-all resize-none"
+                className="w-full h-32 bg-page border border-line rounded-xl px-4 py-3 text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus:border-accent text-left transition-all resize-none"
                 placeholder="Explain the triggering event objective: e.g., 'An argument with a friend at noon about dinner plans...'"
               />
             </div>
@@ -197,7 +197,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
                   aria-label="What did you feel?"
                   value={feeling}
                   onChange={(e) => setFeeling(e.target.value)}
-                  className="w-full bg-page border border-line rounded-xl px-4 py-3.5 text-sm text-ink-2 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-all"
+                  className="w-full bg-page border border-line rounded-xl px-4 py-3.5 text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus:border-accent transition-all"
                   placeholder="e.g. Shame, intense anger, abandonment, panic"
                 />
               </div>
@@ -251,7 +251,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
                   aria-label="What automatic thoughts went through your mind?"
                   value={automaticThought}
                   onChange={(e) => setAutomaticThought(e.target.value)}
-                  className="w-full h-24 bg-page border border-line rounded-xl px-4 py-3 text-sm text-ink-2 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-all resize-none"
+                  className="w-full h-24 bg-page border border-line rounded-xl px-4 py-3 text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus:border-accent transition-all resize-none"
                   placeholder="e.g. 'They are leaving me because I am totally toxic and unlovable...'"
                 />
                 {distortionNotice && (
@@ -303,7 +303,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
                     onClick={() => toggleTrap(t.name)}
                     className={`w-full text-left p-3 rounded-xl border text-xs transition-all cursor-pointer flex justify-between items-center ${
                       isSelected
-                        ? "bg-blue-500/10 border-blue-500 text-ink"
+                        ? "bg-blue-500/10 border-accent text-ink"
                         : "bg-page border-line text-ink-faint"
                     }`}
                   >
@@ -340,7 +340,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
                     type="button"
                     onClick={fetchBalancedThoughtFromCoach}
                     disabled={aiLoading}
-                    className="text-xs bg-blue-500/10 hover:bg-blue-500/25 border border-blue-500/30 text-blue-400 rounded-lg px-2.5 py-1.5 flex items-center gap-1 cursor-pointer transition-colors"
+                    className="text-xs bg-blue-500/10 hover:bg-blue-500/25 border border-accent/30 text-blue-400 rounded-lg px-2.5 py-1.5 flex items-center gap-1 cursor-pointer transition-colors"
                   >
                     <BrainCircuit className="w-3.5 h-3.5" />
                     <span>{aiLoading ? "Asking Nila..." : "Ask Nila"}</span>
@@ -356,7 +356,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
                   aria-label="What is a more balanced thought?"
                   value={balancedThought}
                   onChange={(e) => setBalancedThought(e.target.value)}
-                  className="w-full h-24 bg-page border border-line rounded-xl px-4 py-3 text-sm text-ink-2 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-all resize-none"
+                  className="w-full h-24 bg-page border border-line rounded-xl px-4 py-3 text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus:border-accent transition-all resize-none"
                   placeholder="Draft an objective re-evaluation or let the assistant generate one for you..."
                 />
               </div>
@@ -368,7 +368,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
               )}
 
               {/* Rerating Section */}
-              <div className="bg-page p-4 rounded-xl border border-slate-850 space-y-4">
+              <div className="bg-page p-4 rounded-xl border border-line space-y-4">
                 <div className="space-y-1.5">
                   <div className="flex justify-between items-center">
                     <label className="text-xs font-semibold text-ink-2">

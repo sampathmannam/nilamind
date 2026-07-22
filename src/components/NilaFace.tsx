@@ -96,12 +96,7 @@ export default function NilaFace({ state, onClick, onLongPress, size = 160, isLi
   const [sensoryComfort] = useSensoryComfort();
   const reduced = prefersReduced || sensoryComfort;
   const baseMotion = useMemo(() => faceMotion(state, reduced), [state, reduced]);
-  const motion = useMemo(() => {
-    if (isListening && baseMotion.animate) {
-      return { ...baseMotion, breatheSec: baseMotion.breatheSec / 2, shimmerSec: baseMotion.shimmerSec / 2 };
-    }
-    return baseMotion;
-  }, [isListening, baseMotion]);
+  const motion = baseMotion;
   // Per-turn affect accent — see nilaFaceAccent.ts for the dead-zone/cooldown/elevated-crisis-dormancy/
   // anxious-damping logic. `reduced` (prefers-reduced-motion OR sensory-comfort) suppresses this the
   // same way it suppresses ambient motion above.
@@ -145,8 +140,11 @@ export default function NilaFace({ state, onClick, onLongPress, size = 160, isLi
     prevState.current = state;
   }, [state]);
 
+  // WCAG accessibility: 500ms long-press excludes users with tremor (anxiety, medication side
+  // effects, Parkinson's). 200ms is the minimum for intentionality detection while remaining
+  // accessible. Also reduced from original 500ms per the UX gap analysis finding A-1.
   const handleTouchStart = () => {
-    holdTimer.current = setTimeout(() => onLongPress?.(), 500);
+    holdTimer.current = setTimeout(() => onLongPress?.(), 200);
   };
   const handleTouchEnd = () => {
     if (holdTimer.current) { clearTimeout(holdTimer.current); holdTimer.current = null; }

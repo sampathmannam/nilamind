@@ -108,7 +108,7 @@ if (!dailyIntentionSet) {
   }
   // Intention already set → promote Talk to Nila (not a duplicate check-in prompt — the mood
   // card directly below already handles that, and stacking two check-in CTAs is confusing).
-  return { id: "nila", label: "Talk to Nila", sub: "A conversation, a reflection, or just a listen", icon: <MessageCircle className="w-5 h-5" aria-hidden="true" />, color: "text-[#C784B0]", route: "nila" };
+  return { id: "nila", label: "Talk to Nila", sub: "A conversation, a reflection, or just a listen", icon: <MessageCircle className="w-5 h-5" aria-hidden="true" />, color: "text-accent", route: "nila" };
 }
 
 function formatDate(): string {
@@ -398,46 +398,46 @@ export default function TodayScreen({
       onTouchMove={ptr.onTouchMove}
       onTouchEnd={ptr.onTouchEnd}
     >
-    <div className="space-y-5 max-w-md mx-auto animate-fade-in" id="today-hub">
-      {/* Greeting — time-aware, serif voice, with subtle gradient backdrop */}
-       <header className={`relative rounded-2xl p-4 -mx-1 bg-gradient-to-br ${heroGradient(timeOfDay)}`}>
-          <div className="space-y-0.5">
+    <div className="space-y-4 max-w-md mx-auto animate-fade-in px-4" id="today-hub">
+      {/* Greeting — time-aware, serif voice, refined */}
+       <header className="relative pt-2 pb-1">
+          <div className="space-y-1">
             <div className="flex items-center justify-between">
-              <h1 className="editorial text-3xl text-ink">{greeting}</h1>
+              <h1 className="editorial text-[28px] text-ink leading-tight">{greeting}</h1>
               <button
                 onClick={() => setShowHelp((v) => !v)}
-                className="w-8 h-8 rounded-full bg-fill/60 border border-line/20 flex items-center justify-center text-ink-faint hover:text-ink-2 hover:bg-fill transition-colors cursor-pointer shrink-0"
+                className="w-8 h-8 rounded-xl bg-fill border border-line flex items-center justify-center text-ink-faint hover:text-ink-2 hover:border-line-strong transition-colors cursor-pointer shrink-0"
                 aria-label="Help — what am I looking at?"
               >
-                <span className="text-sm font-semibold">?</span>
+                <span className="text-xs font-semibold">?</span>
               </button>
             </div>
-            <p className="text-sm text-ink-muted">{formatDate()}</p>
+            <p className="text-[13px] text-ink-muted">{formatDate()}</p>
             {/* U2.3 — Staleness indicator shown briefly after pull-to-refresh completes */}
             {lastRefreshed && (
-              <p className="text-[10px] text-emerald-500/80 mt-0.5 animate-fade-in" aria-live="polite">
+              <p className="text-[11px] text-success mt-0.5 animate-fade-in" aria-live="polite">
                 Updated just now
               </p>
             )}
            {contextLine && (
-             <p className="text-[11px] text-ink-faint leading-relaxed mt-1">{contextLine}</p>
+             <p className="text-[12px] text-ink-muted leading-relaxed mt-1">{contextLine}</p>
            )}
 {!contextLine && nilaMsg.message && (
-              <p className="text-[11px] text-ink-faint leading-relaxed mt-1 italic">"{nilaMsg.message}"</p>
+              <p className="text-[12px] text-ink-muted leading-relaxed mt-1 italic">"{nilaMsg.message}"</p>
             )}
             {/* U9.1 + U9.2 — Privacy + crisis-awareness badges */}
-            <p className="text-[10px] text-emerald-500/60 mt-1 flex items-center gap-2">
+            <p className="text-[10px] text-ink-faint mt-1.5 flex items-center gap-3">
               <span className="flex items-center gap-1"><span aria-hidden="true">🔒</span> On-device</span>
-              <span className="flex items-center gap-1 text-rose-400/60"><span aria-hidden="true">🛡</span> Crisis support always here</span>
+              <span className="flex items-center gap-1 text-rose-400/70"><span aria-hidden="true">🛡</span> Crisis support always here</span>
             </p>
           </div>
 
         {/* Intent phase navigation (Phase 2: Adaptive UI) */}
-        <div className="-mx-1 mt-3">
+        <div className="mt-3">
           <IntentFlowBar
             currentPhase={selectedIntentPhase || suggestPhase(userState, timeOfDay)}
             onPhaseChange={onPhaseChange}
-            className="bg-[var(--white)]/80 backdrop-blur-xl mt-3"
+            className="bg-card/80 backdrop-blur-xl border border-line/40 rounded-xl"
             tooltipDismissed={!phaseTooltipActive}
             onDismissTooltip={dismissPhaseTooltip}
             day={pathwayDay}
@@ -451,7 +451,7 @@ export default function TodayScreen({
       {userState === "elevated" && (
         <button
           onClick={onOpenCrisis}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-rose-500/8 border border-rose-500/20 text-xs text-ink-2 hover:bg-rose-500/15 transition-colors cursor-pointer text-left"
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-danger/8 border border-danger/20 text-xs text-ink-2 hover:bg-danger/12 transition-colors cursor-pointer text-left"
           role="status"
         >
           <LifeBuoy className="w-4 h-4 text-rose-400 shrink-0" aria-hidden="true" />
@@ -463,7 +463,7 @@ export default function TodayScreen({
       {/* U3.5 — Help FAQ sheet */}
       {showHelp && (
         <div className="relative z-10">
-          <div className="absolute right-0 top-0 w-72 bg-fill border border-line/30 rounded-xl shadow-lg p-4 space-y-3 text-xs animate-fade-in" role="dialog" aria-label="Help">
+          <div className="absolute right-0 top-0 w-72 bg-card border border-line-strong rounded-2xl shadow-xl p-5 space-y-4 text-xs animate-fade-in" role="dialog" aria-label="Help">
             <div className="space-y-2">
               <p className="font-semibold text-ink">What am I looking at?</p>
               <p className="text-ink-muted leading-relaxed">Today shows what matters most based on your current phase — Calm (grounding), Data (review), or Protocol (skills).</p>
@@ -478,7 +478,7 @@ export default function TodayScreen({
             </div>
             <button
               onClick={() => setShowHelp(false)}
-              className="w-full text-center py-2 text-ink-faint hover:text-ink-2 transition-colors cursor-pointer min-h-[44px]"
+              className="w-full text-center py-2.5 rounded-xl bg-fill text-ink-muted hover:text-ink-2 transition-colors cursor-pointer min-h-[44px] font-medium"
             >
               Got it
             </button>
@@ -530,7 +530,7 @@ export default function TodayScreen({
         />
       )}
       {wellbeingDue && earnedBaselinePrompts && (nudgeCascadeExpanded || topNudge === "wellbeing_due") && (
-        <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-2xl p-4 space-y-2">
+        <div className="bg-success/8 border border-success/20 rounded-2xl p-4 space-y-2.5">
           <div className="flex items-center gap-2">
             <LineChart className="w-4 h-4 text-emerald-400" />
             <p className="text-sm font-semibold text-ink">{t(wellbeingFirstTime ? "wellbeing_baseline_title" : "wellbeing_due_title")}</p>
@@ -548,9 +548,9 @@ export default function TodayScreen({
       {assessmentPrompt && earnedBaselinePrompts && !wellbeingDue && (nudgeCascadeExpanded || topNudge === "assessment_prompt") && (
         <button
           onClick={() => go("assessment")}
-          className="w-full bg-fill/80 hover:bg-fill border border-line/30 shadow-sm p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left flex items-center gap-3"
+          className="w-full bg-card hover:bg-fill border border-line hover:border-line-strong shadow-sm p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left flex items-center gap-3"
         >
-          <span className="shrink-0 text-[#C784B0]"><Activity className="w-5 h-5" aria-hidden="true" /></span>
+          <span className="shrink-0 text-accent"><Activity className="w-5 h-5" aria-hidden="true" /></span>
           <span className="flex-1 min-w-0">
             <span className="block text-sm font-bold text-ink">
               {INSTRUMENTS[assessmentPrompt.instrument].measures} check {assessmentPrompt.firstTime ? "— set your baseline" : assessmentPrompt.kind === "contextual" ? "suggested" : "due"}
@@ -618,12 +618,12 @@ export default function TodayScreen({
         role="button"
         tabIndex={0}
         aria-disabled={isSaving}
-        className={`w-full bg-fill/80 hover:bg-fill border border-line/30 shadow-sm p-5 rounded-2xl transition-all cursor-pointer text-left ${isSaving ? "opacity-60" : "active:scale-[0.99]"}`}
+        className={`w-full bg-card border border-line hover:border-line-strong shadow-sm p-5 rounded-2xl transition-all cursor-pointer text-left ${isSaving ? "opacity-60" : "active:scale-[0.99]"}`}
       >
         {/* U2.2 — Save-state spinner when check-in is saving */}
         {isSaving ? (
           <div className="flex items-center gap-3">
-            <Loader2 className="w-10 h-10 text-[#C784B0] animate-spin shrink-0" aria-hidden="true" />
+            <Loader2 className="w-10 h-10 text-accent animate-spin shrink-0" aria-hidden="true" />
             <div>
               <p className="text-sm font-bold text-ink">Saving your check-in…</p>
               <p className="text-[11px] text-ink-muted mt-0.5">Almost done</p>
@@ -639,7 +639,7 @@ export default function TodayScreen({
               <p className="text-[11px] text-ink-muted mt-0.5">Tap to see your diary</p>
               {/* U1.2 — Week insight merged inline into mood card, collapsible (expandable trend) */}
               {weekInsight && weekInsight.checkinCount > 0 && (
-                <div className="mt-3 pt-3 border-t border-line/20">
+                <div className="mt-3 pt-3 border-t border-line/30">
                   <button
                     onClick={(e) => { e.stopPropagation(); setWeekInsightExpanded(!weekInsightExpanded); }}
                     className="flex items-center gap-1.5 text-[10px] uppercase font-mono tracking-wider text-ink-faint hover:text-ink-2 transition-colors cursor-pointer min-h-[22px]"
@@ -656,7 +656,7 @@ export default function TodayScreen({
                       height={28}
                       min={0}
                       max={10}
-                      color="#C784B0"
+                      color="var(--color-accent)"
                       label="Your mood over the last 7 check-ins"
                       className="mt-2"
                     />
@@ -684,9 +684,6 @@ export default function TodayScreen({
           daily-intention prompt (until set) or the check-in prompt. (2026-07-18 QA: hoisted ABOVE the
           "Your week" fold — the time-aware hero is a LEAD element, not something buried below a
           show-more toggle. The daily-intention branch opens the card inline.) */}
-      {/* Distinct HERO treatment (2026-07-18 design review): the lead action was byte-identical to every
-          other glass card, so nothing read as primary. Give it an elevated, accented surface (gradient +
-          accent border + a filled icon chip + larger label) so the eye lands here first. */}
       <button
         onClick={() => {
           if (hero.id === "daily_intention") {
@@ -696,9 +693,9 @@ export default function TodayScreen({
           }
           go(hero.route);
         }}
-        className="w-full bg-gradient-to-br from-[#C784B0]/12 to-[#C784B0]/[0.02] border border-[#C784B0]/30 shadow-sm hover:brightness-110 p-5 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left flex items-center gap-3.5"
+        className="w-full bg-accent/8 border border-accent/20 shadow-sm hover:bg-accent/12 p-5 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left flex items-center gap-3.5"
       >
-        <span className="shrink-0 w-11 h-11 rounded-full bg-[#C784B0]/15 flex items-center justify-center text-[#C784B0]">{hero.icon}</span>
+        <span className="shrink-0 w-11 h-11 rounded-2xl bg-accent/15 flex items-center justify-center text-accent">{hero.icon}</span>
         <span className="flex-1 min-w-0">
           <span className="block text-base font-bold text-ink">{hero.label}</span>
           <span className="block text-xs text-ink-muted mt-0.5">{hero.sub}</span>
@@ -729,7 +726,7 @@ export default function TodayScreen({
       </button>
 
       {showExtraCards && (
-        <div className="space-y-4 animate-fade-in">
+        <div className="space-y-3 animate-fade-in">
           {/* Social rhythm card — anchor tracking alongside mood (Phase 10) */}
       {(() => {
         const rhythmLogged = hasRhythmToday();
@@ -738,8 +735,8 @@ export default function TodayScreen({
         const aBed = anchors?.bed;
         const extraCount = anchors ? Object.keys(anchors).length - (aWake ? 1 : 0) - (aBed ? 1 : 0) : 0;
         return (
-          <button onClick={() => go("social_rhythm")} className="w-full bg-fill/80 hover:bg-fill border border-line/30 shadow-sm p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left flex items-center gap-3">
-            <span className="shrink-0 text-[#C784B0]"><Clock3 className="w-5 h-5" aria-hidden="true" /></span>
+          <button onClick={() => go("social_rhythm")} className="w-full bg-card border border-line hover:border-line-strong shadow-sm p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left flex items-center gap-3">
+            <span className="shrink-0 text-accent"><Clock3 className="w-5 h-5" aria-hidden="true" /></span>
             <span className="flex-1 min-w-0">
               {rhythmLogged ? (
                 <>
@@ -767,10 +764,10 @@ export default function TodayScreen({
       {nilaReflection && (
         <button
           onClick={() => go("nila")}
-          className="w-full bg-fill/80 border border-line/30 shadow-sm p-4 rounded-2xl border-l-4 border-l-[#C784B0] hover:border-line-strong transition-all cursor-pointer text-left"
+          className="w-full bg-card border border-line hover:border-line-strong shadow-sm p-4 rounded-2xl border-l-[3px] border-l-accent transition-all cursor-pointer text-left"
         >
           <div className="flex items-start gap-3">
-            <Sparkle className="w-5 h-5 text-[#C784B0] shrink-0 mt-0.5" aria-hidden="true" />
+            <Sparkle className="w-5 h-5 text-accent shrink-0 mt-0.5" aria-hidden="true" />
             <p className="text-xs text-ink-2 leading-relaxed flex-1">
               <span className="text-ink font-semibold">Nila noticed:</span> {nilaReflection}
             </p>

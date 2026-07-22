@@ -642,27 +642,31 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
 
   return (
     <div className="flex flex-col h-full bg-page">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-line/50" style={{ paddingTop: 'var(--safe-top)' }}>
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-ink">{greeting}</span>
+      {/* Header — refined with subtle depth and brand warmth */}
+      <header
+        className="flex items-center justify-between px-5 border-b border-line/40 bg-page/80 backdrop-blur-sm shrink-0"
+        style={{ paddingTop: 'var(--safe-top)', paddingBottom: '12px' }}
+      >
+        <div className="flex items-center gap-3">
+          <NilaDot size={10} />
+          <span className="text-[15px] font-semibold text-ink tracking-tight">{greeting}</span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <button
             onClick={onOpenSettings}
-            className="p-2 rounded-full hover:bg-fill text-ink-muted hover:text-ink-2 transition-colors cursor-pointer focus-ring min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className="p-2.5 rounded-xl hover:bg-fill text-ink-muted hover:text-ink transition-colors cursor-pointer focus-ring min-w-[44px] min-h-[44px] flex items-center justify-center"
             aria-label={t("settings")}
           >
-            <Settings className="w-4 h-4" />
+            <Settings className="w-[18px] h-[18px]" />
           </button>
           <CrisisHeaderButton onClick={() => openCrisis()} />
         </div>
-      </div>
+      </header>
 
       {/* New-conversation confirm — clearing a mental-health chat is destructive, so gate it behind a gentle ask */}
       {confirmNewChat && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-6"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-6"
           role="dialog"
           aria-modal="true"
           aria-label="Start a new conversation"
@@ -671,24 +675,23 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           <div
             ref={newChatConfirmRef}
             tabIndex={-1}
-            className="w-full max-w-xs rounded-2xl bg-slate-900 border border-line-strong p-5 space-y-3 outline-none"
+            className="w-full max-w-xs rounded-2xl bg-card border border-line-strong p-6 space-y-4 outline-none shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <p className="text-sm font-semibold text-ink">Start a new conversation?</p>
-            <p className="text-xs text-ink-muted">
+            <p className="text-xs text-ink-muted leading-relaxed">
               This clears the current chat from your device. Nila won't carry what was said here into the new one.
             </p>
-            <div className="flex gap-2 pt-1">
+            <div className="flex gap-3 pt-1">
               <button
                 onClick={() => setConfirmNewChat(false)}
-                className="flex-1 py-3 rounded-xl bg-fill text-ink-2 text-sm cursor-pointer hover:bg-line-strong transition-colors min-h-[44px] focus-ring"
+                className="flex-1 py-3 rounded-xl bg-fill text-ink-2 text-sm font-medium cursor-pointer hover:bg-line-strong transition-colors min-h-[44px] focus-ring"
               >
                 Keep it
               </button>
               <button
                 onClick={startNewConversation}
-                className="flex-1 py-3 rounded-xl text-white text-sm cursor-pointer transition-opacity hover:opacity-90 min-h-[44px] focus-ring"
-                style={{ backgroundColor: "#C784B0" }}
+                className="flex-1 py-3 rounded-xl sun-cta text-sm font-medium cursor-pointer transition-opacity hover:opacity-90 min-h-[44px] focus-ring"
               >
                 Start fresh
               </button>
@@ -698,13 +701,13 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
       )}
 
       {/* Main content — scrollable for chat messages */}
-      <div className="flex-1 min-h-0 overflow-y-auto flex flex-col items-center gap-4 p-4 pt-8">
+      <div className="flex-1 min-h-0 overflow-y-auto flex flex-col items-center gap-5 px-4 pt-6 pb-4">
         {/* Check-in card — dismissable, sits above the chat */}
         {showCheckin && (
-          <div className="w-full max-w-sm relative">
+          <div className="w-full max-w-sm relative animate-fade-up">
             <button
               onClick={handleCheckinSkip}
-              className="absolute top-2 right-2 z-10 p-1.5 rounded-lg text-ink-faint hover:text-ink-2 hover:bg-fill/50 transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center"
+              className="absolute top-2 right-2 z-10 p-2 rounded-lg text-ink-faint hover:text-ink-2 hover:bg-fill/50 transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center"
               aria-label="Skip check-in"
             >
               <X className="w-4 h-4" />
@@ -713,8 +716,8 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           </div>
         )}
 
-        {/* Compact Nila presence — orb (100px) + question side by side */}
-        <div className="w-full max-w-sm flex items-start gap-4">
+        {/* Nila presence — orb + question, centered and welcoming */}
+        <div className="w-full max-w-sm flex flex-col items-center text-center gap-3 animate-fade-up">
           <NilaFace
             state={mode.userState}
             onClick={handleVoice}
@@ -723,10 +726,10 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
             isListening={listening}
             affectAccent={affectAccent}
           />
-          <div className="flex-1 min-w-0 pt-2">
-            <p className="text-base text-ink-2 font-display leading-snug">{question}</p>
+          <div className="max-w-xs">
+            <p className="text-[15px] text-ink-2 font-display leading-relaxed">{question}</p>
             {mode.userState && mode.userState !== "calm" && (
-              <p className="text-xs text-ink-muted mt-1">
+              <p className="text-xs text-ink-muted mt-1.5 leading-relaxed">
                 {mode.userState === "anxious" && STATE_MESSAGES.anxious}
                 {mode.userState === "low" && STATE_MESSAGES.low}
                 {mode.userState === "elevated" && STATE_MESSAGES.elevated}
@@ -735,37 +738,38 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           </div>
         </div>
 
-        {/* Quick actions — always visible, no toggle */}
-        <div className="w-full max-w-sm">
+        {/* Quick actions — refined grid with better spacing */}
+        <div className="w-full max-w-sm animate-fade-up" style={{ animationDelay: '60ms' }}>
           <QuickActions onAction={handleQuickAction} timeMode={mode.timeMode} userState={mode.userState} />
         </div>
 
         {/* Messages — full conversation with warm bubbles, timestamps, avatar, inline thumbs */}
         {messages.length > 0 && (
-          <div className="w-full max-w-sm space-y-4" role="log" aria-live="polite">
+          <div className="w-full max-w-sm space-y-3" role="log" aria-live="polite">
             {messages.map((m, i) => {
               const ts = m.timestamp
                 ? new Date(m.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
                 : null;
+              const isUser = m.role === "user";
               return (
-                <div key={i} className={`flex items-end gap-2 ${m.role === "user" ? "flex-row-reverse" : "flex-row"}`}>
+                <div key={i} className={`flex items-end gap-2 ${isUser ? "flex-row-reverse" : "flex-row"}`}>
                   {m.role === "assistant" && (
-                    <div className="mb-4" aria-label="Nila">
-                      <NilaDot size={14} />
+                    <div className="mb-3" aria-label="Nila">
+                      <NilaDot size={12} />
                     </div>
                   )}
-                  <div className={`max-w-[78%] ${m.role === "user" ? "items-end" : "items-start"} flex flex-col`}>
+                  <div className={`max-w-[80%] ${isUser ? "items-end" : "items-start"} flex flex-col`}>
                     <div
-                      className={`rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap break-words shadow-sm ${
-                        m.role === "user"
-                          ? "bg-gradient-to-br from-purple-500/80 to-violet-600/80 text-white rounded-br-md"
-                          : "bg-[#C784B0]/5 text-ink-2 border border-[#C784B0]/15 border-l-[3px] border-l-[#C784B0] rounded-bl-md"
+                      className={`rounded-2xl px-4 py-3 text-[13px] leading-relaxed whitespace-pre-wrap break-words ${
+                        isUser
+                          ? "bg-accent/90 text-white rounded-br-md"
+                          : "bg-card border border-line-strong/60 text-ink-2 rounded-bl-md"
                       }`}
                     >
-                      {m.role === "user" ? m.content : ensureListBreaks(stripChatMarkdown(m.content))}
+                      {isUser ? m.content : ensureListBreaks(stripChatMarkdown(m.content))}
                     </div>
-                    <div className={`flex items-center gap-2 mt-1 ${m.role === "user" ? "justify-end" : ""}`}>
-                      {ts && <span className="text-[10px] text-ink-faint">{ts}</span>}
+                    <div className={`flex items-center gap-2 mt-1.5 ${isUser ? "justify-end" : ""}`}>
+                      {ts && <span className="text-[10px] text-ink-faint tabular-nums">{ts}</span>}
                       {m.role === "assistant" && (
                         <button
                           onClick={() => setExpandedFeedbackIndices((prev) => {
@@ -773,7 +777,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                             if (next.has(i)) next.delete(i); else next.add(i);
                             return next;
                           })}
-                          className="text-[11px] text-ink-faint hover:text-ink-2 underline transition-colors cursor-pointer min-h-[32px] focus-ring"
+                          className="text-[11px] text-ink-faint hover:text-ink-2 transition-colors cursor-pointer min-h-[32px] focus-ring"
                           aria-label={expandedFeedbackIndices.has(i) ? "Hide feedback" : "Show feedback"}
                         >
                           {expandedFeedbackIndices.has(i) ? "−Feedback" : "+Feedback"}
@@ -820,7 +824,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                         {suggestionPrompt?.index === i && (
                           <div
                             id="feedback-suggestion-prompt"
-                            className="mt-1.5 p-2.5 rounded-lg bg-fill/50 border border-line-strong text-xs space-y-2"
+                            className="mt-1.5 p-3 rounded-xl bg-card border border-line-strong text-xs space-y-2"
                           >
                             <p className="text-ink-2">What would've helped?</p>
                             <input
@@ -828,19 +832,19 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                               value={suggestionText}
                               onChange={(e) => feedback.setSuggestionText(e.target.value)}
                               placeholder="What would've helped? (optional)"
-                              className="w-full px-2.5 py-2 rounded-md bg-slate-900/70 border border-line-strong text-ink-2 placeholder:text-ink-faint focus-ring"
+                              className="w-full px-3 py-2 rounded-lg bg-fill border border-line text-ink-2 placeholder:text-ink-faint focus:outline-none focus:border-accent text-xs"
                             />
                             <div className="flex gap-2 justify-end">
                               <button
                                 onClick={() => feedback.cancelSuggestion()}
-                                className="px-3 py-2 rounded-md text-ink-muted hover:text-ink-2 hover:bg-line-strong/50 transition-colors cursor-pointer min-h-[44px] focus-ring"
+                                className="px-3 py-2 rounded-lg text-ink-muted hover:text-ink-2 hover:bg-fill transition-colors cursor-pointer min-h-[44px] focus-ring"
                                 aria-label="Not now"
                               >
                                 Not now
                               </button>
                               <button
                                 onClick={() => feedback.submitSuggestion()}
-                                className="px-3 py-2 rounded-md bg-violet-500/20 hover:bg-violet-500/30 text-violet-200 font-medium transition-colors cursor-pointer min-h-[44px] focus-ring"
+                                className="px-3 py-2 rounded-lg bg-accent/15 hover:bg-accent/25 text-accent font-medium transition-colors cursor-pointer min-h-[44px] focus-ring"
                                 aria-label="Share what would help"
                               >
                                 Share
@@ -860,17 +864,27 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
         {/* Chat loading — skeleton shimmer + typing dots */}
         {loading && <ChatLoading onCancel={handleCancelGeneration} />}
 
-        {/* U7.5: "Remove from history" toast — shows for 5s after a successful send */}
+        {/* U7.5: "Hide from this view" toast — shows for 5s after a successful send.
+            IMPORTANT: Nila has already seen this message (it was sent to the model). This
+            only removes it from the visible chat view — the LLM's context window is unchanged.
+            Renamed from "Remove from history" to prevent false privacy assumptions. */}
         {removableToastIndex !== null && (
-          <div className="w-full max-w-sm flex items-center justify-between px-4 py-2.5 rounded-xl bg-slate-800 border border-line-strong shadow text-xs">
-            <span className="text-ink-muted">Nila already saw this — remove from view only</span>
-            <button
-              onClick={() => handleRemoveFromHistory(removableToastIndex)}
-              className="px-3 py-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 font-medium transition-colors cursor-pointer min-h-[44px] focus-ring"
-              aria-label="Remove from history"
-            >
-              Remove from history
-            </button>
+          <div className="w-full max-w-sm flex flex-col gap-2 px-4 py-3 rounded-xl glass border border-line-strong shadow-lg text-xs animate-fade-up">
+            <span className="text-ink-muted">Hiding from view — Nila has already seen this message.</span>
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-ink-faint">This only hides it from your view.</span>
+              <button
+                onClick={() => handleRemoveFromHistory(removableToastIndex)}
+                className="px-3 py-1.5 rounded-lg bg-danger/15 hover:bg-danger/25 text-rose-300 font-medium transition-all cursor-pointer min-h-[44px] focus-ring active:scale-95"
+                aria-label="Hide this message from view"
+                aria-describedby="hide-from-view-desc"
+              >
+                Hide from view
+              </button>
+            </div>
+            <span id="hide-from-view-desc" className="sr-only">
+              Nila has already processed this message. Hiding it only removes it from your visible chat history.
+            </span>
           </div>
         )}
 
@@ -881,9 +895,12 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
         <div ref={bottomRef} />
       </div>
 
-      {/* Input bar — always visible, unified voice+text */}
-      <div className="px-4 py-3 border-t border-line/50 bg-page/95 backdrop-blur-sm space-y-2">
-        {/* Soft crisis card — inline surface for classifier-only §9 hit */}
+      {/* Input bar — capacity-adaptive (UX gap C-1 fix).
+          When userState is anxious/elevated/low: hide nudge rail, protocol card, welcome/pact.
+          Show only: SoftCrisisCard + Suggestion chips (max 4) + unified input.
+          This matches the "Architecture of Calm" principle: secondary features fade away in distress. */}
+      <div className="px-4 py-3 border-t border-line/40 bg-page/95 backdrop-blur-sm space-y-2.5 shrink-0">
+        {/* Soft crisis card — inline surface for classifier-only §9 hit — ALWAYS visible */}
         {softCrisisCard && (
           <SoftCrisisCard
             onEscalate={() => { setSoftCrisisCard(false); onOpenCrisis?.(); }}
@@ -891,93 +908,121 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           />
         )}
 
-        {/* Nudge rail + protocol card + welcome/pact — priority-collapsed */}
-        <NudgeRail
-          visibleNudgeIds={visibleNudgeIds}
-          safetyPlanCard={safetyPlanCard}
-          totalNudges={totalNudges}
-          calmSafetyNudge={calmSafetyNudge}
-          sleepProdromeNudge={sleepProdromeNudge}
-          jitaiNudge={jitaiNudge}
-          onOpenSafetyPlan={handleOpenSafetyPlan}
-          onCompleteReview={handleMarkSafetyPlanReviewed}
-          onCompleteFollowUp={handleMarkSafetyPlanFollowUpDone}
-          onDismissCalm={() => nudges.dismissCalm()}
-          onDismissSleep={() => nudges.dismissSleep()}
-          onOpenWindDown={onOpenWindDown}
-          onQuickAction={handleQuickAction}
-        />
+        {/* LOW-CAPACITY MODE: show simplified bar — nudge rail + nudge items hidden */}
+        {mode.userState === "calm" || mode.userState === null ? (
+          <>
+            {/* FULL MODE — Nudge rail + protocol card + welcome/pact (only when calm) */}
+            <NudgeRail
+              visibleNudgeIds={visibleNudgeIds}
+              safetyPlanCard={safetyPlanCard}
+              totalNudges={totalNudges}
+              calmSafetyNudge={calmSafetyNudge}
+              sleepProdromeNudge={sleepProdromeNudge}
+              jitaiNudge={jitaiNudge}
+              onOpenSafetyPlan={handleOpenSafetyPlan}
+              onCompleteReview={handleMarkSafetyPlanReviewed}
+              onCompleteFollowUp={handleMarkSafetyPlanFollowUpDone}
+              onDismissCalm={() => nudges.dismissCalm()}
+              onDismissSleep={() => nudges.dismissSleep()}
+              onOpenWindDown={onOpenWindDown}
+              onQuickAction={handleQuickAction}
+            />
 
-        {(() => {
-          const nudgeItems: { key: string; el: React.ReactNode }[] = [];
-          if (protocolCard) nudgeItems.push({ key: "protocol", el: (
-            <button
-              onClick={handleProtocolTap}
-              className="w-full text-left px-4 py-3 rounded-xl bg-[#C784B0]/10 border border-[#C784B0]/30 text-[#C784B0] text-xs font-medium hover:bg-[#C784B0]/20 transition-colors cursor-pointer min-h-[44px] focus-ring"
-              id="protocol-card"
-            >
-              <span className="block">{protocolCard.label}</span>
-              <span className="block mt-1 text-[10px] font-normal text-[#C784B0]/70">{protocolCard.basis}</span>
-            </button>
-          )});
-          if (visibleNudgeIds.has("welcome") && welcomeBack) nudgeItems.push({ key: "welcome", el: (
-            <WelcomeBackCard lastVisitDate={welcomeBack} onDismiss={() => nudges.dismissWelcome()} />
-          )});
-          if (visibleNudgeIds.has("pact") && pactNotice) nudgeItems.push({ key: "pact", el: (
-            <PactNoticeCard notice={pactNotice} onDismiss={() => nudges.dismissPact()} />
-          )});
-          const collapsed = nudgeItems.length >= 2;
-          const visible = collapsed ? showNudgePanel : true;
-          return nudgeItems.length > 0 ? (
-            <div className="space-y-2">
-              {collapsed && (
+            {/* Protocol card + welcome/pact */}
+            {(() => {
+              const nudgeItems: { key: string; el: React.ReactNode }[] = [];
+              if (protocolCard) nudgeItems.push({ key: "protocol", el: (
                 <button
-                  onClick={() => setShowNudgePanel(!showNudgePanel)}
-                  className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-fill/50 text-xs text-ink-muted hover:text-ink-2 transition-colors cursor-pointer min-h-[44px] focus-ring"
+                  onClick={handleProtocolTap}
+                  className="w-full text-left px-4 py-3 rounded-xl bg-accent/10 border border-accent/25 text-accent text-xs font-medium hover:bg-accent/20 transition-colors cursor-pointer min-h-[44px] focus-ring"
+                  id="protocol-card"
                 >
-                  <span>{nudgeItems.length} notification{nudgeItems.length > 1 ? "s" : ""}</span>
-                  <span className={`transition-transform duration-200 ${visible ? "rotate-180" : ""}`}>▾</span>
+                  <span className="block">{protocolCard.label}</span>
+                  <span className="block mt-1 text-[10px] font-normal text-ink-muted">{protocolCard.basis}</span>
+                </button>
+              )});
+              if (visibleNudgeIds.has("welcome") && welcomeBack) nudgeItems.push({ key: "welcome", el: (
+                <WelcomeBackCard lastVisitDate={welcomeBack} onDismiss={() => nudges.dismissWelcome()} />
+              )});
+              if (visibleNudgeIds.has("pact") && pactNotice) nudgeItems.push({ key: "pact", el: (
+                <PactNoticeCard notice={pactNotice} onDismiss={() => nudges.dismissPact()} />
+              )});
+              const collapsed = nudgeItems.length >= 2;
+              const visible = collapsed ? showNudgePanel : true;
+              return nudgeItems.length > 0 ? (
+                <div className="space-y-2">
+                  {collapsed && (
+                    <button
+                      onClick={() => setShowNudgePanel(!showNudgePanel)}
+                      className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-fill/50 text-xs text-ink-muted hover:text-ink-2 transition-colors cursor-pointer min-h-[44px] focus-ring"
+                    >
+                      <span>{nudgeItems.length} notification{nudgeItems.length > 1 ? "s" : ""}</span>
+                      <span className={`transition-transform duration-200 ${visible ? "rotate-180" : ""}`}>▾</span>
+                    </button>
+                  )}
+                  {visible && nudgeItems.map((item) => <div key={item.key}>{item.el}</div>)}
+                </div>
+              ) : null;
+            })()}
+
+            {/* Suggestion chips — capped at 4 total (matching QuickActions MAX=4, Hick's Law) */}
+            <div className={`flex flex-wrap gap-2 transition-opacity duration-200 ${inputText.length > 0 || loading ? "opacity-30 pointer-events-none" : ""}`} id="chat-suggestions">
+              {(suggestionChipsExpanded ? suggestions.slice(0, 4) : suggestions.slice(0, 2)).map((chip) => (
+                <button
+                  key={chip.id}
+                  onClick={() => handleSendMessage(chip.text)}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-card border border-line text-xs text-ink-2 hover:bg-fill hover:border-line-strong transition-colors cursor-pointer min-h-[44px] focus-ring active:scale-95"
+                >
+                  <chip.Icon className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                  {chip.text}
+                </button>
+              ))}
+              {suggestions.length > 2 && (
+                <button
+                  onClick={() => setSuggestionChipsExpanded(!suggestionChipsExpanded)}
+                  className="px-3 py-2 rounded-full bg-card border border-dashed border-line text-xs text-ink-faint hover:text-ink-2 hover:border-line-strong transition-colors cursor-pointer min-h-[44px] focus-ring"
+                  aria-label={suggestionChipsExpanded ? "Show fewer suggestions" : `Show ${Math.min(suggestions.length - 2, 2)} more suggestions`}
+                >
+                  {suggestionChipsExpanded ? `−Show fewer` : `+${Math.min(suggestions.length - 2, 2)} more`}
                 </button>
               )}
-              {visible && nudgeItems.map((item) => <div key={item.key}>{item.el}</div>)}
             </div>
-          ) : null;
-        })()}
+          </>
+        ) : (
+          <>
+            {/* LOW-CAPACITY MODE: only essential elements — voice/text input. No nudges, no chips expanded. */}
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-[10px] text-ink-faint italic">Taking things one step at a time — that's enough.</span>
+            </div>
+            {/* Suggestion chips — max 2 in low-capacity mode (reduced choices) */}
+            {suggestions.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-1">
+                {suggestions.slice(0, 2).map((chip) => (
+                  <button
+                    key={chip.id}
+                    onClick={() => handleSendMessage(chip.text)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card border border-line text-xs text-ink-2 hover:bg-fill transition-colors cursor-pointer min-h-[36px] focus-ring active:scale-95"
+                  >
+                    <chip.Icon className="w-3 h-3 shrink-0" aria-hidden="true" />
+                    {chip.text}
+                  </button>
+                ))}
+              </div>
+            )}
+          </>
+        )}
 
-        {/* Suggestion chips — capped at 2 with "+N more" toggle (U7.7, Mohr's ≤4 limit) */}
-        <div className={`flex flex-wrap gap-2 transition-opacity duration-200 ${inputText.length > 0 || loading ? "opacity-30 pointer-events-none" : ""}`} id="chat-suggestions">
-          {(suggestionChipsExpanded ? suggestions : suggestions.slice(0, 2)).map((chip) => (
-            <button
-              key={chip.id}
-              onClick={() => handleSendMessage(chip.text)}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-fill border border-line-strong text-xs text-ink-2 hover:bg-line-strong hover:text-ink transition-colors cursor-pointer min-h-[44px] focus-ring"
-            >
-              <chip.Icon className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
-              {chip.text}
-            </button>
-          ))}
-          {suggestions.length > 2 && (
-            <button
-              onClick={() => setSuggestionChipsExpanded(!suggestionChipsExpanded)}
-              className="px-3 py-2 rounded-full bg-fill border border-dashed border-line-strong text-xs text-ink-faint hover:text-ink-2 hover:border-slate-600 transition-colors cursor-pointer min-h-[44px] focus-ring"
-              aria-label={suggestionChipsExpanded ? "Show fewer suggestions" : `Show ${suggestions.length - 2} more suggestions`}
-            >
-              {suggestionChipsExpanded ? `−Show fewer` : `+${suggestions.length - 2} more`}
-            </button>
-          )}
-        </div>
-
-        {/* Unified input: always-visible voice button + optional text input */}
-        <div className="flex items-center gap-2">
+        {/* Unified input: always-visible — voice + text. In low-capacity mode this is the primary interface. */}
+        <div className="flex items-center gap-2.5">
           <button
             onClick={handleVoice}
             disabled={loading}
-            className={`p-3 rounded-full transition-colors cursor-pointer shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center focus-ring ${
+            className={`p-3 rounded-2xl transition-all cursor-pointer shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center focus-ring ${
               listening
-                ? "bg-rose-500/20 text-rose-400 animate-pulse"
+                ? "bg-danger/20 text-rose-400 animate-pulse"
                 : loading
                 ? "bg-fill text-ink-faint opacity-40 cursor-not-allowed"
-                : "bg-fill text-ink-muted hover:text-ink-2"
+                : "bg-card border border-line text-ink-muted hover:text-ink-2 hover:border-line-strong active:scale-95"
             }`}
             aria-label={listening ? "Stop listening" : "Tap to talk"}
           >
@@ -999,17 +1044,17 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                 onFocus={chatTyping.start}
                 placeholder={loading ? "Waiting for Nila…" : "Type a message..."}
                 disabled={loading}
-                className="flex-1 bg-fill border border-line-strong rounded-xl px-4 py-2.5 text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus:border-[#C784B0] disabled:opacity-40"
+                className="flex-1 bg-card border border-line rounded-2xl px-4 py-3 text-[13px] text-ink-2 placeholder-ink-faint focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 disabled:opacity-40 transition-colors"
               />
               <button
                 onClick={loading ? handleCancelGeneration : () => handleSendMessage()}
                 disabled={!loading && (!inputText.trim() || loading)}
-                className={`p-3 rounded-xl transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center focus-ring ${
+                className={`p-3 rounded-2xl transition-all cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center focus-ring active:scale-95 ${
                   loading
-                    ? "bg-rose-500/20 text-rose-400 hover:bg-rose-500/30"
+                    ? "bg-danger/20 text-rose-400 hover:bg-danger/30"
                     : inputText.trim()
-                    ? "bg-[#C784B0]/20 text-[#C784B0] hover:bg-[#C784B0]/30"
-                    : "bg-fill text-ink-faint"
+                    ? "bg-accent/20 text-accent hover:bg-accent/30"
+                    : "bg-card border border-line text-ink-faint"
                 }`}
                 aria-label={loading ? "Stop generating" : "Send"}
               >
@@ -1020,7 +1065,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
             <button
               onClick={() => { setShowTextInput(true); }}
               disabled={loading}
-              className="flex-1 flex items-center justify-center gap-3 py-4 rounded-2xl bg-fill border border-dashed border-line-strong text-ink-muted hover:text-ink-2 hover:border-slate-600 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed min-h-[44px] focus-ring"
+              className="flex-1 flex items-center justify-center gap-3 py-3.5 rounded-2xl bg-card border border-dashed border-line text-ink-muted hover:text-ink-2 hover:border-line-strong transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed min-h-[44px] focus-ring"
               aria-label="Tap to type"
             >
               <Keyboard className="w-5 h-5" />

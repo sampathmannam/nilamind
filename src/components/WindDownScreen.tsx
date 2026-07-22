@@ -130,7 +130,7 @@ export default function WindDownScreen() {
             aria-label={park.title}
             value={worry}
             onChange={(e) => setWorry(e.target.value)}
-            className="w-full h-28 bg-page border border-line rounded-xl px-3 py-2 text-xs text-ink-2 placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-all resize-none"
+            className="w-full h-28 bg-page border border-line rounded-xl px-3 py-2 text-xs text-ink-2 placeholder-ink-faint focus:outline-none focus:border-indigo-500 transition-all resize-none"
             placeholder="e.g. The email I'm dreading → I'll draft two lines after coffee."
           />
           <div className="flex gap-2">

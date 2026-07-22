@@ -129,10 +129,10 @@ const DailyIntentionCard = forwardRef<DailyIntentionCardHandle, DailyIntentionCa
             aria-label="If"
             // Matches the canonical `glass` input pattern used codebase-wide (10+ occurrences) instead
             // of this file's own one-off bg-page/border-line styling. Switched the focus indicator
-            // from focus:border-blue-500/50 to a ring, since .glass sets its own unlayered border which
+            // from focus:border-accent/50 to a ring, since .glass sets its own unlayered border which
             // would otherwise silently defeat a border-color focus utility (same hazard fixed in
             // NilaMemoryScreen/CaregiverSettingsScreen).
-            className="w-full glass rounded-lg p-2.5 text-sm text-ink-2 placeholder-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            className="w-full glass rounded-lg p-2.5 text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           />
           <input
             type="text"
@@ -142,10 +142,10 @@ const DailyIntentionCard = forwardRef<DailyIntentionCardHandle, DailyIntentionCa
             aria-label="Then"
             // Matches the canonical `glass` input pattern used codebase-wide (10+ occurrences) instead
             // of this file's own one-off bg-page/border-line styling. Switched the focus indicator
-            // from focus:border-blue-500/50 to a ring, since .glass sets its own unlayered border which
+            // from focus:border-accent/50 to a ring, since .glass sets its own unlayered border which
             // would otherwise silently defeat a border-color focus utility (same hazard fixed in
             // NilaMemoryScreen/CaregiverSettingsScreen).
-            className="w-full glass rounded-lg p-2.5 text-sm text-ink-2 placeholder-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            className="w-full glass rounded-lg p-2.5 text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           />
         </div>
         <button

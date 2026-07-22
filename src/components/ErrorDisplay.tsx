@@ -55,7 +55,7 @@ export default function ErrorDisplay({
     },
     info: {
       icon: Info,
-      className: "bg-blue-500/10 border-blue-500/20 text-blue-300",
+      className: "bg-blue-500/10 border-accent/20 text-blue-300",
       label: t("info_default_title", lang) || "Information",
     },
   }[type];

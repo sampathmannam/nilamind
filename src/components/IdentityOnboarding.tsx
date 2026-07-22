@@ -62,7 +62,7 @@ export default function IdentityOnboarding({ onDone }: { onDone: () => void }) {
     return (
       <Shell>
         <div className="text-center space-y-2">
-          <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center mx-auto">
+          <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-accent/30 flex items-center justify-center mx-auto">
             <Anchor className="w-7 h-7 text-blue-400" />
           </div>
           <h1 className="text-xl font-bold text-ink">Welcome to NilaMind</h1>
@@ -134,7 +134,7 @@ export default function IdentityOnboarding({ onDone }: { onDone: () => void }) {
         placeholder="word1 word2 word3 …"
         aria-label="Recovery phrase"
         id="identity-restore-input"
-        className="w-full h-24 bg-page border border-line rounded-xl p-3 text-sm text-ink-2 placeholder-slate-600 focus:outline-none focus:border-blue-500/50 resize-none"
+        className="w-full h-24 bg-page border border-line rounded-xl p-3 text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus:border-accent/50 resize-none"
       />
       <button onClick={() => setShowBackupBox((v) => !v)} className="text-[11px] font-semibold text-blue-300 hover:text-blue-200 flex items-center gap-1 cursor-pointer">
         <Download className="w-3.5 h-3.5" /> {showBackupBox ? "Hide" : "Also restore data from a backup (optional)"}
@@ -146,7 +146,7 @@ export default function IdentityOnboarding({ onDone }: { onDone: () => void }) {
           placeholder="Paste your encrypted backup text here…"
           aria-label="Encrypted backup"
           id="identity-backup-input"
-          className="w-full h-20 bg-page border border-line rounded-xl p-3 text-[11px] font-mono text-ink-2 placeholder-slate-600 focus:outline-none focus:border-blue-500/50 resize-none"
+          className="w-full h-20 bg-page border border-line rounded-xl p-3 text-[11px] font-mono text-ink-2 placeholder-ink-faint focus:outline-none focus:border-accent/50 resize-none"
         />
       )}
       {error && <p className="text-[11px] text-rose-400">{error}</p>}

@@ -200,7 +200,7 @@ export default function ModelSetupScreen({ onReady }: { onReady: () => void }) {
             type="button"
             onClick={() => setMode("device")}
             id="model-setup-choose-device"
-            className="w-full text-left rounded-2xl border border-line-strong hover:border-purple-500/60 active:scale-[0.99] bg-slate-900/40 p-4 transition-all min-h-[44px]"
+            className="w-full text-left rounded-2xl border border-line-strong hover:border-purple-500/60 active:scale-[0.99] bg-card/40 p-4 transition-all min-h-[44px]"
           >
             <div className="flex items-center gap-2">
               <Lock className="w-4 h-4 text-purple-300 shrink-0" />
@@ -220,7 +220,7 @@ export default function ModelSetupScreen({ onReady }: { onReady: () => void }) {
             type="button"
             onClick={() => setMode("api")}
             id="model-setup-choose-api"
-            className="w-full text-left rounded-2xl border border-line-strong hover:border-purple-500/60 active:scale-[0.99] bg-slate-900/40 p-4 transition-all min-h-[44px]"
+            className="w-full text-left rounded-2xl border border-line-strong hover:border-purple-500/60 active:scale-[0.99] bg-card/40 p-4 transition-all min-h-[44px]"
           >
             <div className="flex items-center gap-2">
               <Cloud className="w-4 h-4 text-blue-300 shrink-0" />
@@ -288,7 +288,7 @@ export default function ModelSetupScreen({ onReady }: { onReady: () => void }) {
                   ? `Verifying the download is complete and safe · ${Math.round(progress?.pct ?? 0)}%`
                   : `${Math.round(progress?.receivedMB ?? 0)} / ${Math.round(progress?.totalMB ?? totalMB)} MB · keep the app open on Wi-Fi`}
              </div>
-              <div className="mt-5 rounded-2xl border border-line bg-slate-900/40 p-4 min-h-[5.5rem] flex items-center">
+              <div className="mt-5 rounded-2xl border border-line bg-card/40 p-4 min-h-[5.5rem] flex items-center">
                 <p key={tip} className="text-[12px] text-ink-2 leading-relaxed">
                   {TIPS[tip]}
                </p>
@@ -333,7 +333,7 @@ export default function ModelSetupScreen({ onReady }: { onReady: () => void }) {
               <button
                 type="button"
                 onClick={() => setConfirming(true)}
-                className="w-full text-left rounded-2xl border border-line-strong hover:border-purple-500/60 active:scale-[0.99] bg-slate-900/40 p-4 transition-all min-h-[44px]"
+                className="w-full text-left rounded-2xl border border-line-strong hover:border-purple-500/60 active:scale-[0.99] bg-card/40 p-4 transition-all min-h-[44px]"
               >
                 <div className="flex items-center gap-2">
                   <span className="font-semibold text-ink">{model.label}</span>

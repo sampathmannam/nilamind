@@ -177,7 +177,7 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
           </p>
         </header>
 
-        <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl p-3 flex gap-2.5">
+        <div className="bg-blue-500/5 border border-accent/20 rounded-xl p-3 flex gap-2.5">
           <Info className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
           <p className="text-[11px] text-ink-muted leading-relaxed">
             These are <span className="text-ink-2 font-semibold">screening tools, not a diagnosis</span>.
@@ -359,7 +359,7 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
                         onClick={() => answer(idx, val)}
                         className={`min-h-[44px] px-1 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
                           selected
-                            ? "bg-blue-600 border-blue-500 text-white"
+                            ? "bg-blue-600 border-accent text-white"
                             : "bg-page border-line text-ink-muted hover:border-line-strong hover:text-ink-2"
                         }`}
                         aria-label={opt}

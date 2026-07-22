@@ -149,11 +149,11 @@ export default function ToolsScreen({ go, onEpisode, phoneEnabled, onOpenCrisis 
   };
 
   return (
-    <div className="space-y-5 max-w-md mx-auto" id="tools-hub">
+    <div className="space-y-4 max-w-md mx-auto px-4" id="tools-hub">
       {/* Header */}
-      <header className="space-y-1">
-        <h1 className="editorial text-2xl text-ink tracking-tight">Tools</h1>
-        <p className="text-xs text-ink-muted">Skills, trackers, and practices — here whenever you need them.</p>
+      <header className="space-y-1 pt-2">
+        <h1 className="editorial text-[26px] text-ink tracking-tight">Tools</h1>
+        <p className="text-[12px] text-ink-muted">Skills, trackers, and practices — here whenever you need them.</p>
       </header>
 
       {/* Context-aware tool chips — tap to go directly */}
@@ -163,7 +163,7 @@ export default function ToolsScreen({ go, onEpisode, phoneEnabled, onOpenCrisis 
             <button
               key={chip.id}
               onClick={() => handleToolTap(chip.id, () => go(chip.id))}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#C784B0]/10 border border-[#C784B0]/25 text-sm text-[#C784B0] hover:bg-[#C784B0]/20 transition-colors whitespace-nowrap shrink-0 min-h-[44px] focus-ring"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-accent/10 border border-accent/25 text-sm text-accent hover:bg-accent/20 transition-colors whitespace-nowrap shrink-0 min-h-[44px] focus-ring"
             >
               <chip.icon className="w-4 h-4" aria-hidden="true" />
               <span className="font-medium">{chip.label}</span>
@@ -180,8 +180,8 @@ export default function ToolsScreen({ go, onEpisode, phoneEnabled, onOpenCrisis 
             onClick={() => setActiveCategory(cat.id)}
             className={`flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap shrink-0 min-h-[36px] focus-ring ${
               activeCategory === cat.id
-                ? "bg-[#C784B0]/15 text-[#C784B0] border border-[#C784B0]/30"
-                : "bg-fill/50 text-ink-muted border border-line/30 hover:text-ink-2 hover:border-line-strong"
+                ? "bg-accent/15 text-accent border border-accent/30"
+                : "bg-fill text-ink-muted border border-line hover:text-ink-2 hover:border-line-strong"
             }`}
           >
             <cat.icon className="w-3.5 h-3.5" aria-hidden="true" />
@@ -194,7 +194,7 @@ export default function ToolsScreen({ go, onEpisode, phoneEnabled, onOpenCrisis 
       <div className="flex items-center gap-2">
         <button
           onClick={onOpenCrisis}
-          className="shrink-0 w-9 h-9 rounded-lg bg-rose-500/10 border border-rose-500/25 flex items-center justify-center text-rose-400/70 hover:text-rose-400 hover:bg-rose-500/15 transition-all cursor-pointer focus-ring"
+          className="shrink-0 w-9 h-9 rounded-xl bg-danger/10 border border-danger/20 flex items-center justify-center text-rose-400 hover:text-rose-400 hover:bg-danger/15 transition-all cursor-pointer focus-ring"
           aria-label="Crisis resources"
         >
           <ShieldAlert className="w-4 h-4" aria-hidden="true" />
@@ -206,7 +206,7 @@ export default function ToolsScreen({ go, onEpisode, phoneEnabled, onOpenCrisis 
             value={toolSearch}
             onChange={(e) => setToolSearch(e.target.value)}
             placeholder="Find a tool by name..."
-            className="w-full pl-8 pr-8 py-2 rounded-lg bg-fill border border-line/50 text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus:border-[#C784B0]/40 focus:ring-1 focus:ring-[#C784B0]/20 transition-all"
+            className="w-full pl-8 pr-8 py-2.5 rounded-xl bg-card border border-line text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus:border-accent/40 focus:ring-1 focus:ring-accent/20 transition-all"
             aria-label="Search tools"
           />
           {toolSearch && (
@@ -224,7 +224,7 @@ export default function ToolsScreen({ go, onEpisode, phoneEnabled, onOpenCrisis 
       {/* Recently used — personal relevance, only shows after first tap */}
       {recentTools.length > 0 && !toolSearch && (
         <section className="space-y-2">
-          <div className="flex items-center gap-2 pl-3 border-l-2 border-[#C784B0] py-0.5">
+          <div className="flex items-center gap-2 pl-3 border-l-2 border-accent py-0.5">
             <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-faint">Recent</h2>
           </div>
           <div className="flex gap-2 flex-wrap">
@@ -232,7 +232,7 @@ export default function ToolsScreen({ go, onEpisode, phoneEnabled, onOpenCrisis 
               <button
                 key={r.id}
                 onClick={() => handleToolTap(r.id, r.onTap)}
-                className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-fill/60 border border-line/20 hover:border-line-strong text-sm text-ink-2 hover:text-ink transition-all cursor-pointer min-h-[44px] focus-ring"
+                className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-card border border-line hover:border-line-strong text-sm text-ink-2 hover:text-ink transition-all cursor-pointer min-h-[44px] focus-ring"
               >
                 <r.Icon className="w-4 h-4" aria-hidden="true" />
                 <span className="font-medium text-xs">{r.label}</span>
@@ -250,7 +250,7 @@ export default function ToolsScreen({ go, onEpisode, phoneEnabled, onOpenCrisis 
 
         return (
           <section key={g.title} className="space-y-2">
-            <div className="flex items-center gap-2 pl-3 border-l-2 border-[#C784B0] py-0.5">
+            <div className="flex items-center gap-2 pl-3 border-l-2 border-accent py-0.5">
               <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-faint">{g.title}</h2>
               {g.more && !isExpanded && (
                 <span className="text-[10px] text-ink-faint ml-auto">{g.rows.length} tools</span>
@@ -262,10 +262,10 @@ export default function ToolsScreen({ go, onEpisode, phoneEnabled, onOpenCrisis 
                   key={r.id}
                   onClick={() => handleToolTap(r.id, r.onTap)}
                   id={`tools-${r.id}`}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl border border-line/20 bg-fill/50 hover:border-line-strong hover:bg-fill/70 transition-all active:scale-[0.99] cursor-pointer text-left focus-ring"
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl border border-line bg-card hover:border-line-strong hover:bg-fill transition-all active:scale-[0.99] cursor-pointer text-left focus-ring"
                 >
-                  <span className="shrink-0 flex items-center justify-center w-9 h-9 rounded-xl bg-[#C784B0]/10">
-                    <r.Icon className="w-5 h-5" aria-hidden="true" />
+                  <span className="shrink-0 flex items-center justify-center w-9 h-9 rounded-xl bg-accent/10">
+                    <r.Icon className="w-5 h-5 text-accent" aria-hidden="true" />
                   </span>
                   <span className="flex-1 min-w-0">
                     <span className="block text-sm font-semibold text-ink">{r.label}</span>
@@ -280,7 +280,7 @@ export default function ToolsScreen({ go, onEpisode, phoneEnabled, onOpenCrisis 
               {g.more && hiddenCount > 0 && !toolSearch && (
                 <button
                   onClick={() => toggleGroup(g.title)}
-                  className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-dashed border-line/40 hover:border-line-strong text-ink-muted hover:text-ink text-xs font-medium transition-all cursor-pointer min-h-[44px]"
+                  className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-dashed border-line hover:border-line-strong text-ink-muted hover:text-ink text-xs font-medium transition-all cursor-pointer min-h-[44px]"
                 >
                   {isExpanded
                     ? "Show fewer"
@@ -304,7 +304,7 @@ export default function ToolsScreen({ go, onEpisode, phoneEnabled, onOpenCrisis 
           {(activeCategory !== "all" || toolSearch) && (
             <button
               onClick={clearFilters}
-              className="text-xs text-[#C784B0] hover:underline cursor-pointer min-h-[44px] flex items-center"
+              className="text-xs text-accent hover:underline cursor-pointer min-h-[44px] flex items-center"
             >
               Clear filters
             </button>

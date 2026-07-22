@@ -580,7 +580,7 @@ export default function DashboardScreen({ onOpenView }: { onOpenView?: (target: 
       <HeroCard onOpenView={onOpenView} />
 
 {/* This-week summary */}
-       <div className="bg-blue-500/5 border border-blue-500/20 rounded-2xl p-4">
+       <div className="bg-blue-500/5 border border-accent/20 rounded-2xl p-4">
           <div className="text-xs uppercase font-mono tracking-widest text-blue-400 mb-1">{t("this_week")}</div>
          <p className="text-sm text-slate-200 leading-relaxed">{moodSummary}</p>
        </div>
@@ -753,7 +753,7 @@ export default function DashboardScreen({ onOpenView }: { onOpenView?: (target: 
           </h2>
           <ul className="space-y-3">
             {observations.slice(0, showAllObservations ? observations.length : 3).map((ins, i) => (
-              <li key={i} className="text-xs text-slate-300 leading-relaxed flex items-start gap-2 bg-page p-3 rounded-xl border border-slate-850">
+              <li key={i} className="text-xs text-slate-300 leading-relaxed flex items-start gap-2 bg-page p-3 rounded-xl border border-line">
                 <span className="text-emerald-400 font-bold">●</span><span>{ins}</span>
               </li>
             ))}
@@ -787,7 +787,7 @@ export default function DashboardScreen({ onOpenView }: { onOpenView?: (target: 
           <ul className="space-y-3">
             {behaviourInsights.slice(0, showAllBehaviour ? behaviourInsights.length : 3).map((ins) => (
               <li key={ins.id} className={`text-xs leading-relaxed flex items-start gap-2 bg-page p-3 rounded-xl border ${
-                ins.direction === "risk" ? "border-amber-500/30" : ins.direction === "protective" ? "border-emerald-500/30" : "border-slate-850"
+                ins.direction === "risk" ? "border-amber-500/30" : ins.direction === "protective" ? "border-emerald-500/30" : "border-line"
               }`}>
                 <span className={`font-bold ${ins.direction === "risk" ? "text-amber-400" : ins.direction === "protective" ? "text-emerald-400" : "text-slate-400"}`}>●</span>
                 <span className="text-slate-300">{ins.finding}</span>
@@ -813,9 +813,9 @@ export default function DashboardScreen({ onOpenView }: { onOpenView?: (target: 
           </h2>
           <div className="flex flex-wrap gap-2">
             {topTags.map(([tag, count]) => (
-              <div key={tag} className="flex items-center bg-page border border-blue-900/50 rounded-lg px-2.5 py-1.5 overflow-hidden">
+              <div key={tag} className="flex items-center bg-page border border-accent/30 rounded-lg px-2.5 py-1.5 overflow-hidden">
                 <span className="text-xs font-medium text-blue-300 mr-2">{tag}</span>
-                <span className="text-xs text-slate-500 font-mono bg-slate-900 px-1.5 rounded">{count}</span>
+                <span className="text-xs text-slate-500 font-mono bg-card px-1.5 rounded">{count}</span>
               </div>
             ))}
           </div>

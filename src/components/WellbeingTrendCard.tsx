@@ -28,7 +28,7 @@ function WellbeingTrendCard({ onTakeCheck }: { onTakeCheck?: () => void }) {
   const bgTone =
     trendKey === "improving" ? "bg-emerald-500/10 border-emerald-500/40"
     : trendKey === "deteriorating" ? "bg-rose-500/10 border-rose-500/40"
-    : "bg-blue-500/10 border-blue-500/40";
+    : "bg-blue-500/10 border-accent/40";
   const stroke = trendKey === "improving" ? "var(--color-success)" : trendKey === "deteriorating" ? "var(--color-danger)" : "var(--color-accent)";
   const trendLabel = t(trendKey === "improving" ? "wellbeing_improving" : trendKey === "deteriorating" ? "wellbeing_deteriorating" : "wellbeing_steady");
   const cadence = wb.isDue ? t("wellbeing_due_now") : `${t("wellbeing_next_due_prefix")} ${wb.dueInDays} ${t("wellbeing_days")}`;

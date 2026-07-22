@@ -153,7 +153,7 @@ export default function SafetyPlanScreen({ draft }: { draft?: Partial<Pick<Safet
         </div>
       </div>
 
-      <div className="text-sm text-ink-2 leading-relaxed bg-card border-l-4 border-blue-500 p-4 rounded-r-xl border-y border-r border-line/80">
+      <div className="text-sm text-ink-2 leading-relaxed bg-card border-l-4 border-accent p-4 rounded-r-xl border-y border-r border-line/80">
         This plan stores everything strictly 100% locally on your phone. Fill this out during a calm moment so you have instant strategies when distress surges.
       </div>
 
@@ -180,7 +180,7 @@ export default function SafetyPlanScreen({ draft }: { draft?: Partial<Pick<Safet
           <textarea
             value={safetyPlan.warningSigns}
             onChange={(e) => updateSection("warningSigns", e.target.value)}
-            className="w-full h-24 bg-card border border-line rounded-xl px-4 py-3 text-sm text-ink-2 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-all resize-none"
+            className="w-full h-24 bg-card border border-line rounded-xl px-4 py-3 text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus:border-accent transition-all resize-none"
             placeholder="e.g. Staying up late scrolling, feeling minor comments hold extreme weight, withdrawing from text messages..."
             aria-label="1. Warning signs I notice:"
             id="sp-warningsigns-input"
@@ -198,7 +198,7 @@ export default function SafetyPlanScreen({ draft }: { draft?: Partial<Pick<Safet
           <textarea
             value={safetyPlan.internalCoping}
             onChange={(e) => updateSection("internalCoping", e.target.value)}
-            className="w-full h-24 bg-card border border-line rounded-xl px-4 py-3 text-sm text-ink-2 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-all resize-none"
+            className="w-full h-24 bg-card border border-line rounded-xl px-4 py-3 text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus:border-accent transition-all resize-none"
             placeholder="e.g. Splash ice cold water on face for 10 seconds, or put on Fira Mono font, or do box breathing 4 counts..."
             aria-label="2. Things I can do on my own to cope:"
             id="sp-internalcoping-input"
@@ -216,7 +216,7 @@ export default function SafetyPlanScreen({ draft }: { draft?: Partial<Pick<Safet
           <textarea
             value={safetyPlan.socialDistractors}
             onChange={(e) => updateSection("socialDistractors", e.target.value)}
-            className="w-full h-24 bg-card border border-line rounded-xl px-4 py-3 text-sm text-ink-2 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-all resize-none"
+            className="w-full h-24 bg-card border border-line rounded-xl px-4 py-3 text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus:border-accent transition-all resize-none"
             placeholder="e.g. Taking a walk down the high-contrast street, going to a busy local botanical park, or listening to ambient audio loops..."
             aria-label="3. People and places that distract me:"
             id="sp-distractors-input"
@@ -234,7 +234,7 @@ export default function SafetyPlanScreen({ draft }: { draft?: Partial<Pick<Safet
           <textarea
             value={safetyPlan.trustedPeople}
             onChange={(e) => updateSection("trustedPeople", e.target.value)}
-            className="w-full h-24 bg-card border border-line rounded-xl px-4 py-3 text-sm text-ink-2 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-all resize-none"
+            className="w-full h-24 bg-card border border-line rounded-xl px-4 py-3 text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus:border-accent transition-all resize-none"
             placeholder="e.g. Maya (+91 xxxxxxxxxx) - call anytime. John - text if feeling numb..."
             aria-label="4. People I can reach out to for help:"
             id="sp-trustedpeople-input"
@@ -252,7 +252,7 @@ export default function SafetyPlanScreen({ draft }: { draft?: Partial<Pick<Safet
           <textarea
             value={safetyPlan.professionals}
             onChange={(e) => updateSection("professionals", e.target.value)}
-            className="w-full h-24 bg-card border border-line rounded-xl px-4 py-3 text-sm text-ink-2 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-all resize-none font-mono text-xs"
+            className="w-full h-24 bg-card border border-line rounded-xl px-4 py-3 text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus:border-accent transition-all resize-none font-mono text-xs"
             placeholder="e.g. a local crisis line, your doctor, or therapist…"
             aria-label="5. Professionals and crisis lines:"
             id="sp-professionals-input"
@@ -270,7 +270,7 @@ export default function SafetyPlanScreen({ draft }: { draft?: Partial<Pick<Safet
           <textarea
             value={safetyPlan.safeEnvironment}
             onChange={(e) => updateSection("safeEnvironment", e.target.value)}
-            className="w-full h-24 bg-card border border-line rounded-xl px-4 py-3 text-sm text-ink-2 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-all resize-none"
+            className="w-full h-24 bg-card border border-line rounded-xl px-4 py-3 text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus:border-accent transition-all resize-none"
             placeholder="e.g. Locking medications away, deleting social media venting apps, throwing out blades or cleaning instruments..."
             aria-label="6. Making my space safer:"
             id="sp-safeenvironment-input"
@@ -365,7 +365,7 @@ export default function SafetyPlanScreen({ draft }: { draft?: Partial<Pick<Safet
               <textarea
                 value={commitmentInput || meansProgress.commitmentText}
                 onChange={(e) => setCommitmentInput(e.target.value)}
-                className="w-full h-16 bg-card border border-line rounded-xl px-3 py-2 text-sm text-ink-2 placeholder-slate-600 focus:outline-none focus:border-violet-500 transition-all resize-none"
+                className="w-full h-16 bg-card border border-line rounded-xl px-3 py-2 text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus:border-violet-500 transition-all resize-none"
                 placeholder="e.g. I'll ask my brother to hold my medication and give me a weekly supply."
               />
             </div>

@@ -14,7 +14,7 @@ import TIPPTool from "./TIPPTool";
 // §9-gated: a crisis query surfaces help instead of library content. Pure, on-device; no model, no network.
 
 const SOURCE_BADGE: Record<LearnSource, { label: string; cls: string }> = {
-  skill: { label: "Skill", cls: "bg-blue-500/20 border-blue-500/50 text-blue-200" },
+  skill: { label: "Skill", cls: "bg-blue-500/20 border-accent/50 text-blue-200" },
   understand: { label: "Explainer", cls: "bg-indigo-500/20 border-indigo-500/50 text-indigo-200" },
   why: { label: "Research", cls: "bg-ink-faint/20 border-line-strong/50 text-ink-2" },
 };
@@ -152,7 +152,7 @@ export default function LearnScreen() {
 
           {/* Emotion-based recommendation from last check-in */}
           {recommended && !dismissedRec && (
-            <div className="bg-card border border-blue-500/30 rounded-2xl p-4 space-y-2.5" id="learn-recommended">
+            <div className="bg-card border border-accent/30 rounded-2xl p-4 space-y-2.5" id="learn-recommended">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-mono uppercase tracking-widest text-blue-300 flex items-center gap-1.5"><Sparkles className="w-3 h-3" /> For how you've been feeling</span>
                 <button onClick={() => setDismissedRec(true)} aria-label="Dismiss recommendation" className="flex items-center justify-center w-8 h-8 -m-1.5 text-ink-faint hover:text-ink-2 cursor-pointer"><X className="w-3.5 h-3.5" /></button>
@@ -174,7 +174,7 @@ export default function LearnScreen() {
               onChange={(e) => onQueryChange(e.target.value)}
               placeholder="Search skills, explainers & research…"
               id="learn-search"
-              className="w-full glass rounded-xl pl-9 pr-9 py-2.5 text-xs text-ink-2 placeholder-slate-600 focus:outline-none focus:border-blue-500/50"
+              className="w-full glass rounded-xl pl-9 pr-9 py-2.5 text-xs text-ink-2 placeholder-ink-faint focus:outline-none focus:border-accent/50"
             />
             {query && (
               <button onClick={() => setQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-faint hover:text-ink-2 cursor-pointer" aria-label="Clear search">
@@ -214,7 +214,7 @@ export default function LearnScreen() {
                 <button
                   key={g.id}
                   onClick={() => setGroupFilter(groupFilter === g.id ? null : g.id)}
-                  className={`px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all cursor-pointer ${groupFilter === g.id ? "bg-blue-500/20 border-blue-500/50 text-blue-200" : "bg-page border-line text-ink-muted hover:text-ink-2"}`}
+                  className={`px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all cursor-pointer ${groupFilter === g.id ? "bg-blue-500/20 border-accent/50 text-blue-200" : "bg-page border-line text-ink-muted hover:text-ink-2"}`}
                 >
                   {g.label}
                 </button>

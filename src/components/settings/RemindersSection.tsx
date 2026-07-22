@@ -23,7 +23,7 @@ export default function RemindersSection() {
     });
   };
   const TimeInput = ({ value, on }: { value: string; on: (v: string) => void }) => (
-    <input type="time" value={value} onChange={(e) => on(e.target.value)} aria-label="Time" className="glass rounded-lg px-2 py-1.5 text-xs text-ink-2 focus:outline-none focus:border-blue-500/50" />
+    <input type="time" value={value} onChange={(e) => on(e.target.value)} aria-label="Time" className="glass rounded-lg px-2 py-1.5 text-xs text-ink-2 focus:outline-none focus:border-accent/50" />
   );
   return (
     <div className="glass p-5 rounded-2xl space-y-4 shadow-lg" id="settings-reminders">

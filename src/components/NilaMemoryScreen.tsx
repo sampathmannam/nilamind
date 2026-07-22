@@ -231,7 +231,7 @@ export default function NilaMemoryScreen() {
                 You have <strong>{pendings.length}</strong> {pendings.length === 1 ? "reply" : "replies"} where you suggested a better wording — each can be donated to help train Nila.
               </p>
               {pendings.map((p) => (
-                <div key={p.id} className="bg-slate-900/40 rounded-xl p-3 space-y-2">
+                <div key={p.id} className="bg-card/40 rounded-xl p-3 space-y-2">
                   <p className="text-xs text-ink-2 line-clamp-2">{p.suggestion}</p>
                   <div className="flex items-center gap-2">
                     {previewId === p.id && preview ? (

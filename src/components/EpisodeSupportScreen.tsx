@@ -359,7 +359,7 @@ export default function EpisodeSupportScreen({
               aria-label="Message Nila"
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
-              className="w-full h-36 bg-page border border-line rounded-xl px-4 py-3 text-sm text-ink-2 placeholder-slate-600 focus:outline-none focus:border-amber-500 transition-all resize-none"
+              className="w-full h-36 bg-page border border-line rounded-xl px-4 py-3 text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus:border-amber-500 transition-all resize-none"
               placeholder="Explain how you feel, what triggered you, or what unwanted urge you have... (text is 100% secure/private)"
               id="episode-starter-input"
             />
@@ -418,7 +418,7 @@ export default function EpisodeSupportScreen({
                     className={`max-w-[85%] rounded-2xl px-4 py-3.5 text-sm leading-relaxed whitespace-pre-wrap ${
                       isUser
                         ? "bg-card text-ink-2 border border-line"
-                        : "bg-card text-ink-2 border-y border-r border-slate-850 border-l-4 border-l-amber-500 rounded-bl-none"
+                        : "bg-card text-ink-2 border-y border-r border-line border-l-4 border-l-amber-500 rounded-bl-none"
                     }`}
                   >
                     {m.content}
@@ -471,7 +471,7 @@ export default function EpisodeSupportScreen({
                     <button
                       key={num}
                       onClick={() => registerIntensityAndTriggerAI(num)}
-                      className="bg-page border border-slate-850 border-line text-ink hover:border-amber-500 font-bold py-2.5 rounded-xl transition-all cursor-pointer text-center text-sm"
+                      className="bg-page border border-line border-line text-ink hover:border-amber-500 font-bold py-2.5 rounded-xl transition-all cursor-pointer text-center text-sm"
                     >
                       {num}
                     </button>
@@ -491,7 +491,7 @@ export default function EpisodeSupportScreen({
                   aria-label="Message Nila"
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
-                  className="flex-1 bg-page border border-slate-850 border-line text-xs text-ink rounded-xl px-4 py-3 focus:outline-none focus:border-amber-500"
+                  className="flex-1 bg-page border border-line border-line text-xs text-ink rounded-xl px-4 py-3 focus:outline-none focus:border-amber-500"
                   placeholder="Express how you feel..."
                   disabled={loading}
                 />
@@ -561,7 +561,7 @@ export default function EpisodeSupportScreen({
               longer skipped entirely — 2026-07-12 Wave 3, Group E). */}
           {guidedStep === "extreme_tipp" && (
             <div className="space-y-4" id="tipp-step-guided">
-              <div className="p-4 bg-amber-500/10 border-y border-r border-slate-850 border-l-4 border-l-amber-500 rounded-r-xl">
+              <div className="p-4 bg-amber-500/10 border-y border-r border-line border-l-4 border-l-amber-500 rounded-r-xl">
                 <h4 className="text-sm font-bold text-ink mb-1 font-sans">Biological shock reset</h4>
                 <p className="text-xs text-ink-2 leading-relaxed">
                   Your intensity is extreme. This means your thinking brain is offline. This is biology, not weakness. Try whichever of these fits right now.
@@ -697,7 +697,7 @@ export default function EpisodeSupportScreen({
               aria-label="What triggered this acute episode? (Optional)"
               value={triggerExplanation}
               onChange={(e) => setTriggerExplanation(e.target.value)}
-              className="w-full h-32 bg-page border border-slate-850 rounded-xl px-4 py-3 text-sm text-slate-350 placeholder-slate-600 focus:outline-none focus:border-amber-500 transition-all resize-none"
+              className="w-full h-32 bg-page border border-line rounded-xl px-4 py-3 text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus:border-amber-500 transition-all resize-none"
               placeholder="e.g. Perceived rejection, severe work disappointment, lack of sleep..."
             />
           </div>
@@ -745,7 +745,7 @@ export default function EpisodeSupportScreen({
                     className={`flex items-center gap-2 p-3 text-xs rounded-xl border text-left transition-all cursor-pointer ${
                       checked
                         ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 font-bold"
-                        : "bg-page border-slate-850 text-ink-faint hover:border-line-strong"
+                        : "bg-page border-line text-ink-faint hover:border-line-strong"
                     }`}
                   >
                     <span>{s}</span>
@@ -773,7 +773,7 @@ export default function EpisodeSupportScreen({
           </div>
 
           {/* Intenisty Side-by-Side comparator mapping */}
-          <div className="grid grid-cols-2 gap-4 bg-page p-4 rounded-xl border border-slate-850">
+          <div className="grid grid-cols-2 gap-4 bg-page p-4 rounded-xl border border-line">
             <div className="text-center space-y-1">
               <span className="text-xs text-ink-faint uppercase tracking-wide">When you started</span>
               <p className="text-4xl font-extrabold text-amber-500 font-mono">
@@ -818,7 +818,7 @@ export default function EpisodeSupportScreen({
           
           <div className="space-y-2">
             <h2 className="text-lg font-bold text-ink">Session Saved Offline</h2>
-            <p className="text-sm text-slate-350">
+            <p className="text-sm text-ink-2">
               You got through it. That matters more than it might feel right now.
             </p>
           </div>

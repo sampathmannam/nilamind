@@ -10,7 +10,7 @@ interface SkeletonCardProps {
 export default function SkeletonCard({ lines = 3, className = "" }: SkeletonCardProps) {
   return (
     <div
-      className={`bg-page border border-slate-850 rounded-2xl p-4 space-y-3 ${className}`}
+      className={`bg-page border border-line rounded-2xl p-4 space-y-3 ${className}`}
       aria-hidden="true"
       data-testid="skeleton-card"
     >

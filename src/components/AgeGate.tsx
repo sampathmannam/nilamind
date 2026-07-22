@@ -16,7 +16,7 @@ export default function AgeGate({ children }: { children: React.ReactNode }) {
     return (
       <div className="min-h-screen bg-page flex flex-col items-center justify-center px-6">
         <div className="w-full max-w-xs space-y-6 text-center">
-          <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center mx-auto">
+          <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-accent/30 flex items-center justify-center mx-auto">
             <Heart className="w-6 h-6 text-blue-400" />
           </div>
           <div className="space-y-1">
@@ -38,7 +38,7 @@ export default function AgeGate({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-page flex flex-col items-center justify-center px-6">
       <div className="w-full max-w-xs space-y-6 text-center">
-        <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center mx-auto">
+        <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-accent/30 flex items-center justify-center mx-auto">
           <Shield className="w-6 h-6 text-blue-400" />
         </div>
         <div className="space-y-1">

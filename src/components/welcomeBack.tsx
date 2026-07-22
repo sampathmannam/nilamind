@@ -44,7 +44,7 @@ export default function WelcomeBackCard({ lastVisitDate, onDismiss }: WelcomeBac
   const message = getWelcomeMessage(days);
 
   return (
-    <div className="w-full px-3 py-2.5 rounded-xl bg-blue-500/10 border border-blue-500/30">
+    <div className="w-full px-3 py-2.5 rounded-xl bg-blue-500/10 border border-accent/30">
       <div className="flex items-start gap-2">
         <MessageCircle className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" />
         <div className="flex-1">

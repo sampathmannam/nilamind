@@ -1,5 +1,6 @@
 import { LifeBuoy } from "lucide-react";
 import { useState, useEffect } from "react";
+import { hapticMedium } from "../hooks/useHaptics";
 
 // One consistent, always-visible crisis affordance for every top-level surface (all four tabs + the
 // assessment). Design review (2026-07-18) found the crisis control was missing on the Nila + Tools tabs
@@ -30,10 +31,10 @@ export default function CrisisHeaderButton({ onClick, className = "" }: { onClic
         </span>
       )}
       <button
-        onClick={onClick}
-        aria-label="Get help now"
-        title="Get help now"
-        className="flex items-center gap-1.5 rounded-full border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 px-3 min-w-[44px] min-h-[44px] text-xs font-semibold transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-rose-400 focus-visible:outline-offset-2"
+        onClick={() => { hapticMedium(); onClick(); }}
+        aria-label="Get help now — crisis resources and support"
+        title="Get help now — crisis resources and support"
+        className="flex items-center gap-1.5 rounded-full border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 px-3 min-w-[44px] min-h-[44px] text-xs font-semibold transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-rose-400 focus-visible:outline-offset-2 active:scale-95 active:brightness-90"
       >
         <LifeBuoy className="w-4 h-4 shrink-0" aria-hidden="true" />
         Help

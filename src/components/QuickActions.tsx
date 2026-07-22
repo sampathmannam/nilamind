@@ -74,16 +74,16 @@ export default function QuickActions({ onAction, timeMode, userState }: QuickAct
 
   return (
     <div className="w-full" id="quick-actions">
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 gap-2.5">
         {displayActions.map((action) => (
           <button
             key={action.id}
             onClick={() => onAction(action.id)}
-            className="flex flex-col items-center gap-1.5 p-3 rounded-xl glass hover:brightness-125 transition-all cursor-pointer active:scale-95"
+            className="flex items-center gap-3 p-3.5 rounded-2xl bg-card border border-line hover:border-line-strong hover:bg-fill transition-all cursor-pointer active:scale-[0.97] group"
             aria-label={action.label}
           >
-            <span className={action.color}>{action.icon}</span>
-            <span className="text-[11px] text-ink-2 font-medium">{action.label}</span>
+            <span className={`${action.color} transition-transform group-hover:scale-110`}>{action.icon}</span>
+            <span className="text-[12px] text-ink-2 font-medium leading-tight">{action.label}</span>
           </button>
         ))}
       </div>

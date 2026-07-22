@@ -420,13 +420,13 @@ export default function DiaryCardScreen() {
             onBlur={() => diaryTyping.onBlur(quickNotes.length)}
             placeholder="e.g., Felt a bit annoyed this morning before my meeting, but then practiced deep breathing. After lunch, I felt much more grounded."
             aria-label="Quick Notes"
-            className="w-full bg-page border border-line rounded-xl p-3 text-sm text-ink-2 placeholder-slate-600 focus:outline-none focus:border-blue-500/50 min-h-[100px] resize-y"
+            className="w-full bg-page border border-line rounded-xl p-3 text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus:border-accent/50 min-h-[100px] resize-y"
           />
           
           {quickNoteTags.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mt-2">
               {quickNoteTags.map((tag, idx) => (
-                <span key={idx} className="bg-blue-900/40 text-blue-300 px-2 py-0.5 rounded-full text-xs font-medium border border-blue-900/50">
+                <span key={idx} className="bg-blue-900/40 text-blue-300 px-2 py-0.5 rounded-full text-xs font-medium border border-accent/30">
                   {tag}
                 </span>
               ))}
@@ -437,7 +437,7 @@ export default function DiaryCardScreen() {
             <button
               onClick={handleAnalyze}
               disabled={isAnalyzing || !quickNotes.trim()}
-              className="px-4 py-2 bg-blue-900/40 hover:bg-blue-800/60 text-blue-300 rounded-lg text-xs font-medium flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer border border-blue-900/50"
+              className="px-4 py-2 bg-blue-900/40 hover:bg-blue-800/60 text-blue-300 rounded-lg text-xs font-medium flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer border border-accent/30"
             >
               {isAnalyzing ? (
                 <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Asking Nila...</>
@@ -452,7 +452,7 @@ export default function DiaryCardScreen() {
           )}
 
           {aiAnalysis && !crisis && (
-            <div className="mt-4 bg-slate-900/50 border border-blue-900/30 rounded-xl p-4">
+            <div className="mt-4 bg-card/50 border border-accent/15 rounded-xl p-4">
               <div className="flex items-center gap-2 mb-2 text-blue-400">
                 <MessageSquare className="w-4 h-4" />
                 <span className="text-xs font-bold uppercase tracking-wider font-mono">Nila's Insights ✨</span>

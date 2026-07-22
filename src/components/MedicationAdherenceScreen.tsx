@@ -97,7 +97,7 @@ export default function MedicationAdherenceScreen() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Lamotrigine"
-                className="w-full mt-1 bg-slate-900 border border-line-strong rounded-xl px-3 py-2 text-sm text-ink-2 focus:outline-none focus:border-blue-500"
+                className="w-full mt-1 bg-card border border-line-strong rounded-xl px-3 py-2 text-sm text-ink-2 focus:outline-none focus:border-accent"
               />
             </div>
             <div>
@@ -106,7 +106,7 @@ export default function MedicationAdherenceScreen() {
                 value={dose}
                 onChange={(e) => setDose(e.target.value)}
                 placeholder="e.g. 200mg"
-                className="w-full mt-1 bg-slate-900 border border-line-strong rounded-xl px-3 py-2 text-sm text-ink-2 focus:outline-none focus:border-blue-500"
+                className="w-full mt-1 bg-card border border-line-strong rounded-xl px-3 py-2 text-sm text-ink-2 focus:outline-none focus:border-accent"
               />
             </div>
           </div>
@@ -117,7 +117,7 @@ export default function MedicationAdherenceScreen() {
                 type="time"
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
-                className="w-full mt-1 bg-slate-900 border border-line-strong rounded-xl px-3 py-2 text-sm text-ink-2 focus:outline-none focus:border-blue-500"
+                className="w-full mt-1 bg-card border border-line-strong rounded-xl px-3 py-2 text-sm text-ink-2 focus:outline-none focus:border-accent"
               />
             </div>
             <div>
@@ -125,7 +125,7 @@ export default function MedicationAdherenceScreen() {
               <select
                 value={schedule}
                 onChange={(e) => setSchedule(e.target.value as Medication["schedule"])}
-                className="w-full mt-1 bg-slate-900 border border-line-strong rounded-xl px-3 py-2 text-sm text-ink-2 focus:outline-none focus:border-blue-500 cursor-pointer"
+                className="w-full mt-1 bg-card border border-line-strong rounded-xl px-3 py-2 text-sm text-ink-2 focus:outline-none focus:border-accent cursor-pointer"
               >
                 <option value="daily">Daily</option>
                 <option value="twice_daily">Twice daily</option>

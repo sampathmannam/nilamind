@@ -170,9 +170,9 @@ describe("TodayScreen — structured-tool lead, phase-aware rendering", () => {
     store.set("nilamind_checkins", JSON.stringify([{ date: "2026-07-20", emotion: "okay", intensity: 5 }]));
     const go = vi.fn();
     render(<TodayScreen go={go} phoneEnabled={false} onEpisode={noop} onOpenCrisis={noop} />);
-    // The hero button has a gradient bg class. Find it and verify the label
+    // The hero button has an accent bg class. Find it and verify the label
     const btns = screen.getAllByRole("button");
-    const heroBtn = btns.find((b) => b.className.includes("bg-gradient-to-br"));
+    const heroBtn = btns.find((b) => b.className.includes("bg-accent/8"));
     expect(heroBtn).toBeTruthy();
     expect(heroBtn!.textContent).toMatch(/Talk to Nila/);
     expect(heroBtn!.textContent).toMatch(/A conversation/);

@@ -20,10 +20,10 @@ export default function GroundingLibraryScreen({ autoExpand }: Props) {
   };
 
   return (
-    <div className="space-y-6 max-w-md mx-auto" id="grounding-library-screen">
+    <div className="space-y-4 max-w-md mx-auto px-4" id="grounding-library-screen">
       <div>
-        <h1 className="text-xl font-semibold text-ink">Grounding Library</h1>
-        <p className="text-xs text-ink-faint">6 somatic anchors - 100% offline-ready</p>
+        <h1 className="text-xl font-semibold text-ink tracking-tight">Grounding Library</h1>
+        <p className="text-xs text-ink-muted mt-1">6 somatic anchors — 100% offline-ready</p>
       </div>
 
       <div className="space-y-4">
@@ -38,7 +38,7 @@ export default function GroundingLibraryScreen({ autoExpand }: Props) {
             <div
               key={idx}
               className={`bg-card rounded-xl border transition-all overflow-hidden ${
-                isExpanded ? "border-blue-500" : "border-line"
+                isExpanded ? "border-accent" : "border-line"
               }`}
               id={`grounding-card-${idx}`}
             >
@@ -56,7 +56,7 @@ export default function GroundingLibraryScreen({ autoExpand }: Props) {
               </button>
 
               {isExpanded && (
-                <div className="px-4 pb-5 border-t border-line/80 pt-4 space-y-4">
+                <div className="px-4 pb-5 border-t border-line pt-4 space-y-4">
                   {!isTipp && (
                     <p className="text-sm text-ink-2 leading-relaxed whitespace-pre-wrap">
                       {ex.steps}

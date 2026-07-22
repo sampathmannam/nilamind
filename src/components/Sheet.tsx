@@ -28,6 +28,8 @@ export interface SheetProps {
   faultIsolated?: boolean;
   /** Extra classes for the scrollable body (e.g. "p-4" for padded sheets). */
   bodyClassName?: string;
+  /** Optional footer slot — used by CaptureSheets for the no-guilt "Take a Break" exit. */
+  footer?: React.ReactNode;
   /** Provide a custom Suspense fallback (aux views reuse ScreenFallback by default). */
   children: React.ReactNode;
 }
@@ -46,6 +48,7 @@ export default function Sheet({
   closing,
   faultIsolated,
   bodyClassName,
+  footer,
   children,
 }: SheetProps) {
   // Focus-trap + scoped Escape + focus restore, shared with every other modal (crisis overlay, pickers).
@@ -97,6 +100,14 @@ export default function Sheet({
       >
         {body}
       </div>
+      {footer && (
+        <div
+          className="shrink-0 px-4 pb-safe border-t border-line"
+          style={{ paddingBottom: "max(20px, env(safe-area-inset-bottom))" }}
+        >
+          {footer}
+        </div>
+      )}
     </div>
   );
 }

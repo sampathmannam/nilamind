@@ -70,7 +70,7 @@ function InsightCard({ insight, index }: { insight: Insight; index: number }) {
         <summary className="text-xs text-ink-faint hover:text-ink-muted cursor-pointer flex items-center gap-1">
           Show research citation
         </summary>
-        <div className="mt-2 p-3 bg-slate-900/50 rounded-xl text-xs text-ink-muted leading-relaxed border border-line">
+        <div className="mt-2 p-3 bg-card/50 rounded-xl text-xs text-ink-muted leading-relaxed border border-line">
           {insight.basis}
         </div>
       </details>

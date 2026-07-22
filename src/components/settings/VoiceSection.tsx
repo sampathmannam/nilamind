@@ -173,7 +173,7 @@ function VoiceRow({ label, sub, selected, onClick }: { label: string; sub: strin
       onClick={onClick}
       role="radio"
       aria-checked={selected}
-      className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg border text-left cursor-pointer transition-all ${selected ? "bg-blue-500/15 border-blue-500/50" : "bg-card border-line hover:border-line-strong"}`}
+      className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg border text-left cursor-pointer transition-all ${selected ? "bg-blue-500/15 border-accent/50" : "bg-card border-line hover:border-line-strong"}`}
     >
       <span className="min-w-0">
         <span className="block text-xs font-medium text-ink-2 truncate">{label}</span>

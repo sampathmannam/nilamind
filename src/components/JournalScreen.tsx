@@ -159,7 +159,7 @@ export default function JournalScreen() {
           onChange={(e) => setText(e.target.value)}
           placeholder={MODE_PLACEHOLDER[mode]}
           aria-label="Journal entry text"
-          className="w-full bg-page border border-line rounded-xl p-3 text-sm text-ink-2 placeholder-slate-600 focus:outline-none focus:border-blue-500/50 min-h-[80px] resize-y"
+          className="w-full bg-page border border-line rounded-xl p-3 text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus:border-accent/50 min-h-[80px] resize-y"
         />
 
         <div className="flex gap-1.5" role="group" aria-label="Mood">
