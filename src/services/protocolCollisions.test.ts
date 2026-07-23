@@ -40,7 +40,6 @@ describe("protocol forConcerns cue collisions", () => {
   });
 
   it("all 21 protocols are present in the registry", () => {
-    // Pins the count found during the 2026-07-19 design review so a future add/remove is deliberate.
     expect(PROTOCOLS.length).toBe(21);
   });
 });
