@@ -98,6 +98,13 @@ vi.mock("../services/nilaFeedback", () => ({
   attachSuggestion: (...args: unknown[]) => attachSuggestionMock(...(args as [string, string])),
 }));
 
+// V1.3: mock localLlmLoadState to return "ready" so the cold-start loading screen doesn't hide the normal UI
+vi.mock("../services/localLlm", () => ({
+  localLlmLoadState: () => "ready",
+  localLlmId: () => "test-model",
+  isLocalLlmReady: () => true,
+}));
+
 import ModeScreen from "./ModeScreen";
 
 afterEach(() => {
