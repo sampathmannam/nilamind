@@ -27,6 +27,7 @@ import type { CheckInEntry } from "../types";
 import { NilaUiMessage } from "../services/nilaSend";
 import SoftCrisisCard from "./SoftCrisisCard";
 import { getSessionChat, clearSessionChat } from "../services/sessionChat";
+import { localLlmLoadState } from "../services/localLlm";
 import { safeDraftThoughtRecord, type ThoughtRecordDraft } from "../services/thoughtRecordDraft";
 import { safeDraftProblem } from "../services/problemSolvingDraft";
 import { safeDraftValueDomains } from "../services/valuesDraft";
