@@ -22,6 +22,11 @@ interface ActionDef {
   modes: string[];
 }
 
+/** ActionDef with an `active` flag — true when the tool is appropriate for the current time/state. */
+interface ActiveActionDef extends ActionDef {
+  active: boolean;
+}
+
 export const ACTIONS: ActionDef[] = [
   { id: "grounding", label: "Grounding", icon: <Cloud className="w-5 h-5" />, color: "text-emerald-400", modes: ["day", "evening"] },
   { id: "breathing", label: "Breathing", icon: <Wind className="w-5 h-5" />, color: "text-blue-400", modes: ["day", "evening", "night"] },
@@ -47,26 +52,32 @@ const CALMING_WHEN_ELEVATED = ["grounding", "breathing", "wind_down", "reach_out
  * "let's slow things down" copy (Østergaard 2023 — don't feed an elevated state with more stimulation).
  * Otherwise: the existing time-of-day filter, capped at 9.
  */
-/** Cap for the home quick-actions grid (Mohr's ≤4 visible choices). */
-const MAX_QUICK_ACTIONS = 4;
-
-export function selectQuickActions(timeMode: TimeMode, userState?: UserState | null): ActionDef[] {
+export function selectQuickActions(timeMode: TimeMode, userState?: UserState | null): ActiveActionDef[] {
   if (userState === "elevated") {
-    return ACTIONS.filter((a) => CALMING_WHEN_ELEVATED.includes(a.id));
+    return ACTIONS.filter((a) => CALMING_WHEN_ELEVATED.includes(a.id)).map((a) => ({ ...a, active: true }));
   }
-  const base = ACTIONS.filter((a) => a.modes.includes(timeMode));
-  // 2026-07-12 de-emphasis (user directive): the crisis shortcut is NOT a permanent home-grid tile —
-  // it must not be constantly visible. The real §9 safety net is the input gate (fires on any crisis
-  // message regardless of button), so this only changes prominence, not reachability. The shortcut
-  // re-surfaces precisely when the user is `low`/distressed (visible when needed).
+  // C-3 fix: dim-not-hide — show all time-appropriate actions, dim the ones that don't match
+  const base = ACTIONS.filter((a) => a.modes.includes(timeMode) && a.id !== "crisis");
   const crisisVisible = userState === "low";
-  if (!crisisVisible) {
-    return base.filter((a) => a.id !== "crisis").slice(0, MAX_QUICK_ACTIONS);
+  const crisisAction = crisisVisible ? ACTIONS.find((a) => a.id === "crisis") : null;
+
+  const result: ActiveActionDef[] = [
+    ...base.map((a) => ({ ...a, active: true })),
+  ];
+
+  // Add time-inappropriate actions as dimmed (active: false) — user can still tap, but they're nudged
+  const dimmed = ACTIONS.filter(
+    (a) => a.id !== "crisis" && !base.some((b) => b.id === a.id) && a.modes.length > 0,
+  );
+  for (const a of dimmed) {
+    result.push({ ...a, active: false });
   }
-  const withoutCrisis = base.filter((a) => a.id !== "crisis");
-  const crisisAction = ACTIONS.find((a) => a.id === "crisis");
-  if (!crisisAction) return withoutCrisis.slice(0, MAX_QUICK_ACTIONS);
-  return [...withoutCrisis.slice(0, MAX_QUICK_ACTIONS - 1), crisisAction];
+
+  if (crisisAction) {
+    result.push({ ...crisisAction, active: true });
+  }
+
+  return result;
 }
 
 export default function QuickActions({ onAction, timeMode, userState }: QuickActionsProps) {
@@ -79,8 +90,9 @@ export default function QuickActions({ onAction, timeMode, userState }: QuickAct
           <button
             key={action.id}
             onClick={() => onAction(action.id)}
-            className="flex items-center gap-3 p-3.5 rounded-2xl bg-card border border-line hover:border-line-strong hover:bg-fill transition-all cursor-pointer active:scale-[0.97] group"
+            className={`flex items-center gap-3 p-3.5 rounded-2xl bg-card border border-line hover:border-line-strong hover:bg-fill transition-all cursor-pointer active:scale-[0.97] group${action.active ? "" : " opacity-35 pointer-events-none"}`}
             aria-label={action.label}
+            aria-disabled={!action.active}
           >
             <span className={`${action.color} transition-transform group-hover:scale-110`}>{action.icon}</span>
             <span className="text-[12px] text-ink-2 font-medium leading-tight">{action.label}</span>

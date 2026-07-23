@@ -6,22 +6,28 @@ import { selectQuickActions } from "./QuickActions";
 // Everything stays reachable via the Tools tab; this only calms the home surface (mirrors the settling orb
 // + "let's slow things down" copy). The four calming tiles are all verified to route to real handlers.
 describe("selectQuickActions — home actions quiet down when elevated", () => {
-  it("non-elevated (calm) → the time-filtered set, capped at 4 (Mohr), incl. activating tools", () => {
+  it("non-elevated (calm) → all time-appropriate actions shown (C-3 dim-not-hide), incl. activating tools", () => {
     const day = selectQuickActions("day", "calm");
     expect(day.length).toBeGreaterThan(0);
-    expect(day.length).toBeLessThanOrEqual(4);
-    expect(day.every((a) => a.modes.includes("day"))).toBe(true);
+    // C-3: no cap — all time-appropriate actions shown, dimmed ones too
+    expect(day.every((a) => a.modes.includes("day") || !a.active)).toBe(true);
     expect(day.map((a) => a.id)).toContain("diary"); // accessible when not elevated
+    // All active actions have active=true, dimmed have active=false
+    const active = day.filter((a) => a.active);
+    expect(active.length).toBeGreaterThan(0);
   });
 
-  it("elevated → only the down-regulating / co-regulating tools", () => {
-    const ids = selectQuickActions("day", "elevated").map((a) => a.id);
+  it("elevated → only the down-regulating / co-regulating tools, all active", () => {
+    const elevated = selectQuickActions("day", "elevated");
+    const ids = elevated.map((a) => a.id);
     for (const calming of ["grounding", "breathing", "reach_out", "wind_down"]) {
       expect(ids).toContain(calming);
     }
     for (const dropped of ["learn", "dashboard", "thought_record", "values_to_action", "diary", "medication"]) {
       expect(ids).not.toContain(dropped);
     }
+    // All elevated actions are active
+    expect(elevated.every((a) => a.active)).toBe(true);
   });
 
   it("elevated surfaces at most as many as the calm set (quieter or equal with Mohr cap)", () => {
@@ -37,7 +43,26 @@ describe("selectQuickActions — home actions quiet down when elevated", () => {
   });
 
   it("null/unknown state behaves like the normal time-filtered set", () => {
-    expect(selectQuickActions("day", null).map((a) => a.id)).toContain("diary");
+    const result = selectQuickActions("day", null);
+    expect(result.map((a) => a.id)).toContain("diary");
+    // C-3: includes dimmed actions too
+    expect(result.length).toBeGreaterThan(0);
+  });
+
+  it("C-3: all time-appropriate actions shown, inactive ones dimmed (active=false)", () => {
+    const day = selectQuickActions("day", "calm");
+    const activeIds = day.filter((a) => a.active).map((a) => a.id);
+    const dimmedIds = day.filter((a) => !a.active).map((a) => a.id);
+    // Active actions should include time-appropriate tools
+    expect(activeIds).toContain("diary");
+    // Dimmed actions may exist (time-inappropriate but still shown)
+    if (dimmedIds.length > 0) {
+      // Dimmed actions should NOT be in the current time mode
+      for (const id of dimmedIds) {
+        const action = day.find((a) => a.id === id);
+        expect(action?.modes).not.toContain("day");
+      }
+    }
   });
 
   // 2026-07-12 de-emphasis (user directive): the crisis shortcut is NOT a permanent fixture of the

@@ -26,7 +26,8 @@ const noop = () => {};
 
 function goToHowNilaHelpsSlide() {
   render(<OnboardingGate onComplete={noop} onOpenCrisis={noop} />);
-  // Simplified flow: nila_intro -> mood_check -> region -> how_nila_helps (3 "Next" taps)
+  // nila_intro -> privacy -> mood_check -> region -> how_nila_helps (4 "Next" taps)
+  fireEvent.click(screen.getByText(/next/i));
   fireEvent.click(screen.getByText(/next/i));
   fireEvent.click(screen.getByText(/next/i));
   fireEvent.click(screen.getByText(/next/i));
@@ -58,7 +59,8 @@ describe("OnboardingGate — how Nila helps slide (expectancy-setting copy)", ()
 describe("OnboardingGate — simplified flow", () => {
   it("completes onboarding with default notification settings", () => {
     render(<OnboardingGate onComplete={noop} onOpenCrisis={noop} />);
-    // nila_intro -> mood_check -> region -> how_nila_helps -> ready (4 "Next" taps)
+    // nila_intro -> privacy -> mood_check -> region -> how_nila_helps -> ready (5 "Next" taps)
+    fireEvent.click(screen.getByText(/next/i));
     fireEvent.click(screen.getByText(/next/i));
     fireEvent.click(screen.getByText(/next/i));
     fireEvent.click(screen.getByText(/next/i));
@@ -70,6 +72,7 @@ describe("OnboardingGate — simplified flow", () => {
 
   it("saves mood baseline when selected", () => {
     render(<OnboardingGate onComplete={noop} onOpenCrisis={noop} />);
+    fireEvent.click(screen.getByText(/next/i)); // -> privacy
     fireEvent.click(screen.getByText(/next/i)); // -> mood_check
     // Select a mood
     const moodButton = screen.getByText("😊");

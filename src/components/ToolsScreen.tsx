@@ -16,44 +16,6 @@ interface Props {
   onOpenCrisis: () => void;
 }
 
-// ── Context-aware tool chips ──────────────────────────────────────
-interface ToolChip {
-  id: string;
-  label: string;
-  icon: LucideIcon;
-}
-
-function contextToolChips(timeMode: string, state: string | null): ToolChip[] {
-  if (state === "crisis") return [];
-  if (state === "elevated")
-    return [
-      { id: "plan", label: "Grounding", icon: Wind },
-      { id: "winddown", label: "Wind-down", icon: Moon },
-    ];
-  if (state === "anxious")
-    return [
-      { id: "plan", label: "Grounding", icon: Wind },
-      { id: "reach_out", label: "Reach out", icon: Heart },
-    ];
-  if (state === "low")
-    return [
-      { id: "ema_checkin", label: "Check-in", icon: Heart },
-      { id: "reach_out", label: "Reach out", icon: Heart },
-    ];
-  if (timeMode === "night" || timeMode === "evening")
-    return [
-      { id: "winddown", label: "Wind-down", icon: Moon },
-      { id: "plan", label: "Grounding", icon: Wind },
-      { id: "diary", label: "Diary", icon: Lightbulb },
-    ];
-  if (timeMode === "morning")
-    return [
-      { id: "medication", label: "Medication", icon: Heart },
-      { id: "ema_checkin", label: "Check-in", icon: Heart },
-    ];
-  return [];
-}
-
 // ── Category filter ────────────────────────────────────────────────
 const CATEGORIES = [
   { id: "all", label: "All", icon: Sparkles },
@@ -103,7 +65,8 @@ export default function ToolsScreen({ go, onEpisode, phoneEnabled, onOpenCrisis 
     [go, onEpisode, phoneEnabled, timeMode, state],
   );
 
-  const chips = useMemo(() => contextToolChips(timeMode, state), [timeMode, state]);
+  // C-4 fix: context chips removed — they were redundant with QuickActions on ModeScreen.
+  // Recent tools + category filter provide sufficient navigation without cognitive overload.
 
   const filteredGroups = useMemo(() => {
     let result = groups;
@@ -155,22 +118,6 @@ export default function ToolsScreen({ go, onEpisode, phoneEnabled, onOpenCrisis 
         <h1 className="editorial text-[26px] text-ink tracking-tight">Tools</h1>
         <p className="text-[12px] text-ink-muted">Skills, trackers, and practices — here whenever you need them.</p>
       </header>
-
-      {/* Context-aware tool chips — tap to go directly */}
-      {chips.length > 0 && (
-        <div className="flex gap-2 overflow-x-auto -mx-4 px-4">
-          {chips.map((chip) => (
-            <button
-              key={chip.id}
-              onClick={() => handleToolTap(chip.id, () => go(chip.id))}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-accent/10 border border-accent/25 text-sm text-accent hover:bg-accent/20 transition-colors whitespace-nowrap shrink-0 min-h-[44px] focus-ring"
-            >
-              <chip.icon className="w-4 h-4" aria-hidden="true" />
-              <span className="font-medium">{chip.label}</span>
-            </button>
-          ))}
-        </div>
-      )}
 
       {/* Category filter chips — primary navigation */}
       <div className="flex gap-1.5 overflow-x-auto -mx-4 px-4">

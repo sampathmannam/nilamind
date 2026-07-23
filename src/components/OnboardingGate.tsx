@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { LifeBuoy, ChevronRight, ChevronLeft, Globe, HeartHandshake, MessageCircle, Check } from "lucide-react";
+import { LifeBuoy, ChevronRight, ChevronLeft, Globe, HeartHandshake, MessageCircle, Check, Shield } from "lucide-react";
 import { LocalNotifications } from "@capacitor/local-notifications";
 import {
   completeOnboarding,
@@ -291,8 +291,14 @@ function getSlides(baselineMood: number | null) {
     {
       id: "nila_intro",
       title: "Hi, I'm Nila",
-      body: "I'm here with you. Not a therapist, not a doctor — a companion. Everything stays on your phone. Nothing ever leaves this device.",
+      body: "I'm here with you. Not a therapist, not a doctor — just a companion who listens.",
       icon: <HeartHandshake className="w-10 h-10 text-blue-400" />,
+    },
+    {
+      id: "privacy",
+      title: "Your data stays on your phone",
+      body: "Nila runs entirely on-device. No cloud. No analytics. No tracking. You can delete everything anytime in Settings.",
+      icon: <Shield className="w-10 h-10 text-emerald-400" />,
     },
     {
       id: "mood_check",
