@@ -173,10 +173,17 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
     clearProtocol: () => setProtocolCard(null),
   });
   const bottomRef = useRef<HTMLDivElement>(null); // #23: scroll-to-newest anchor
+  const prevAssistantCountRef = useRef(0); // Gap E-9: track new assistant messages for haptic
 
   // #23 (audit): keep the newest reply in view (ModeScreen had no scroll-to-bottom, unlike EpisodeSupportScreen).
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    // Gap E-9: gentle haptic when Nila's reply arrives — "I heard you" tactile confirmation.
+    // Only fire for NEW assistant messages, not on every message list change (avoids duplicate fire
+    // during user message send or draft restore).
+    const assistantCount = messages.filter((m) => m.role === "assistant").length;
+    if (assistantCount > prevAssistantCountRef.current) hapticLight();
+    prevAssistantCountRef.current = assistantCount;
   }, [messages, loading]);
 
   // #22 (audit): mirror the in-progress draft to the module cache so a tab-switch remount doesn't lose it.
@@ -786,18 +793,22 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                     </div>
                     {m.role === "assistant" && expandedFeedbackIndices.has(i) && (
                       <>
-                        {!ratedMessages.has(i) && (
+                        {ratedMessages.has(i) ? (
+                          <span className="text-[11px] text-accent mt-1" aria-live="polite">
+                            Thanks for your feedback
+                          </span>
+                        ) : (
                           <div className="flex gap-1 mt-1">
                             <button
                               onClick={() => feedback.rateUp(m.content, i)}
-                              className="p-2 rounded text-ink-faint hover:text-ink-2 hover:bg-fill/50 transition-colors cursor-pointer min-w-[32px] min-h-[32px] flex items-center justify-center"
+                              className="p-2 rounded text-ink-faint hover:text-ink-2 hover:bg-fill/50 active:scale-90 transition-all cursor-pointer min-w-[32px] min-h-[32px] flex items-center justify-center"
                               aria-label="Mark as helpful"
                             >
                               <ThumbsUp className="w-3 h-3" />
                             </button>
                             <button
                               onClick={() => feedback.rateDown(m.content, i)}
-                              className="p-2 rounded text-ink-faint hover:text-ink-2 hover:bg-fill/50 transition-colors cursor-pointer min-w-[32px] min-h-[32px] flex items-center justify-center"
+                              className="p-2 rounded text-ink-faint hover:text-ink-2 hover:bg-fill/50 active:scale-90 transition-all cursor-pointer min-w-[32px] min-h-[32px] flex items-center justify-center"
                               aria-label="Mark as not helpful"
                             >
                               <ThumbsDown className="w-3 h-3" />
@@ -980,7 +991,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
               {suggestions.length > 2 && (
                 <button
                   onClick={() => setSuggestionChipsExpanded(!suggestionChipsExpanded)}
-                  className="px-3 py-2 rounded-full bg-card border border-dashed border-line text-xs text-ink-faint hover:text-ink-2 hover:border-line-strong transition-colors cursor-pointer min-h-[44px] focus-ring"
+                  className="px-3 py-2 rounded-full bg-card border border-dashed border-line text-xs text-ink-faint hover:text-ink-2 hover:border-line-strong transition-colors cursor-pointer min-h-[44px] focus-ring active:scale-95"
                   aria-label={suggestionChipsExpanded ? "Show fewer suggestions" : `Show ${Math.min(suggestions.length - 2, 2)} more suggestions`}
                 >
                   {suggestionChipsExpanded ? `−Show fewer` : `+${Math.min(suggestions.length - 2, 2)} more`}
