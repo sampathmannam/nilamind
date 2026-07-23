@@ -707,6 +707,19 @@ export default function TodayScreen({
       {vis.intention && (
         <DailyIntentionCard ref={intentionCardRef} promptWhenClosed={hero.id !== "daily_intention"} />
       )}
+
+      {/* Guided Programs — direct entry to the protocol hub (Task 6). */}
+      <button
+        onClick={() => go("guided_programs")}
+        className="w-full glass hover:brightness-125 p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left flex items-center gap-3"
+      >
+        <span className="shrink-0 text-violet-400"><Sparkle className="w-5 h-5" aria-hidden="true" /></span>
+        <span className="flex-1 min-w-0">
+          <span className="block text-sm font-bold text-slate-100">Guided Programs</span>
+          <span className="block text-[11px] text-slate-400">Real, evidence-based programs you can start any time</span>
+        </span>
+        <ChevronRight className="w-5 h-5 text-slate-500 shrink-0" aria-hidden="true" />
+      </button>
       </>}
       </div>
       )}
