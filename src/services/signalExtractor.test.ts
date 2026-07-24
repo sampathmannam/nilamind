@@ -174,6 +174,87 @@ describe("signalExtractor (Phase 21)", () => {
     });
   });
 
+  describe("circadian disruption via extractAllFeatures", () => {
+    it("detects disruption when both anchors deviate ≥ 90 min from 7-day median", () => {
+      const today = localDateKey();
+      const anchors: Record<string, { firstOpen: string; lastClose: string }> = {};
+      // 6 days of stable baseline: first open 07:30, last close 23:00
+      for (let i = 1; i <= 6; i++) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        anchors[localDateKey(d)] = { firstOpen: "07:30", lastClose: "23:00" };
+      }
+      // Today: first open shifted to 04:45 (−165 min from median), last close shifted to 19:30 (−210 min)
+      anchors[today] = { firstOpen: "04:45", lastClose: "19:30" };
+      secureLocal.setItem("nilamind_auto_anchors", JSON.stringify(anchors));
+
+      const features = extractAllFeatures(today);
+      expect(features.composite.circadianDisruption).toBe(true);
+    });
+
+    it("does NOT flag disruption when only one anchor deviates", () => {
+      const today = localDateKey();
+      const anchors: Record<string, { firstOpen: string; lastClose: string }> = {};
+      for (let i = 1; i <= 6; i++) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        anchors[localDateKey(d)] = { firstOpen: "07:30", lastClose: "23:00" };
+      }
+      // Only first open deviates; last close is normal
+      anchors[today] = { firstOpen: "04:45", lastClose: "23:00" };
+      secureLocal.setItem("nilamind_auto_anchors", JSON.stringify(anchors));
+
+      const features = extractAllFeatures(today);
+      expect(features.composite.circadianDisruption).toBe(false);
+    });
+
+    it("does NOT flag disruption with fewer than 4 days of data", () => {
+      const today = localDateKey();
+      const anchors: Record<string, { firstOpen: string; lastClose: string }> = {};
+      // Only 2 prior days — not enough for a meaningful median
+      for (let i = 1; i <= 2; i++) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        anchors[localDateKey(d)] = { firstOpen: "07:30", lastClose: "23:00" };
+      }
+      anchors[today] = { firstOpen: "04:45", lastClose: "19:30" };
+      secureLocal.setItem("nilamind_auto_anchors", JSON.stringify(anchors));
+
+      const features = extractAllFeatures(today);
+      expect(features.composite.circadianDisruption).toBe(false);
+    });
+
+    it("does NOT flag disruption when today's anchors are missing", () => {
+      const anchors: Record<string, { firstOpen: string; lastClose: string }> = {};
+      for (let i = 1; i <= 6; i++) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        anchors[localDateKey(d)] = { firstOpen: "07:30", lastClose: "23:00" };
+      }
+      // No entry for today
+      secureLocal.setItem("nilamind_auto_anchors", JSON.stringify(anchors));
+
+      const features = extractAllFeatures(localDateKey());
+      expect(features.composite.circadianDisruption).toBe(false);
+    });
+
+    it("does NOT flag disruption with a minor shift (both < 90 min)", () => {
+      const today = localDateKey();
+      const anchors: Record<string, { firstOpen: string; lastClose: string }> = {};
+      for (let i = 1; i <= 6; i++) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        anchors[localDateKey(d)] = { firstOpen: "07:30", lastClose: "23:00" };
+      }
+      // Small shift: 07:50 (+20 min) and 23:15 (+15 min) — both under 90 min threshold
+      anchors[today] = { firstOpen: "07:50", lastClose: "23:15" };
+      secureLocal.setItem("nilamind_auto_anchors", JSON.stringify(anchors));
+
+      const features = extractAllFeatures(today);
+      expect(features.composite.circadianDisruption).toBe(false);
+    });
+  });
+
   describe("extractFeatureWindow", () => {
     it("returns oldest-first array of features", () => {
       const today = new Date().toISOString().split("T")[0];

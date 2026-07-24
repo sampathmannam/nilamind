@@ -179,8 +179,62 @@ function extractHeartRate(): DailyFeatureSet["heartRate"] {
   };
 }
 
+/** Parse a HH:MM time string to minutes since midnight. Returns null on invalid input. */
+function parseTimeToMinutes(time: string | null): number | null {
+  if (!time) return null;
+  const match = time.match(/^(\d{1,2}):(\d{2})$/);
+  if (!match) return null;
+  const h = parseInt(match[1], 10);
+  const m = parseInt(match[2], 10);
+  if (isNaN(h) || isNaN(m) || h < 0 || h > 23 || m < 0 || m > 59) return null;
+  return h * 60 + m;
+}
+
+/** Compute median of a numeric array (ignoring nulls). Returns null if insufficient data. */
+function median(values: number[]): number | null {
+  const sorted = values.filter((v) => !isNaN(v)).sort((a, b) => a - b);
+  if (sorted.length === 0) return null;
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
+/**
+ * Detect circadian disruption via deviation-from-median of first-open and last-close times.
+ * A day is "disrupted" when BOTH anchor times deviate ≥ 90 minutes from the user's own 7-day median.
+ * Missing anchors = insufficient data (not disruption). Only fires when real anchor data exists.
+ * Research: BiAffect 2018 (phone usage as behavioral clock proxy).
+ */
+function detectCircadianDisruption(
+  window: Pick<DailyFeatureSet["circadian"], "firstOpenTime" | "lastCloseTime">[],
+  todayIndex: number,
+): boolean {
+  // Need at least 4 days with data to compute a meaningful median + detect deviation
+  const openMinutes = window.map((d) => parseTimeToMinutes(d.firstOpenTime)).filter((v): v is number => v != null);
+  const closeMinutes = window.map((d) => parseTimeToMinutes(d.lastCloseTime)).filter((v): v is number => v != null);
+  if (openMinutes.length < 4 || closeMinutes.length < 4) return false;
+
+  const openMedian = median(openMinutes);
+  const closeMedian = median(closeMinutes);
+  if (openMedian == null || closeMedian == null) return false;
+
+  const today = window[todayIndex];
+  const todayOpen = parseTimeToMinutes(today.firstOpenTime);
+  const todayClose = parseTimeToMinutes(today.lastCloseTime);
+  if (todayOpen == null || todayClose == null) return false;
+
+  const DEVIATION_THRESHOLD_MIN = 90; // 90 minutes ≈ 1.5 hours — clinically meaningful shift
+  const openDeviation = Math.abs(todayOpen - openMedian);
+  const closeDeviation = Math.abs(todayClose - closeMedian);
+
+  // Both anchors must deviate — a single late night is routine; BOTH shifting means the clock is drifting
+  return openDeviation >= DEVIATION_THRESHOLD_MIN && closeDeviation >= DEVIATION_THRESHOLD_MIN;
+}
+
 /** Compute composite boolean flags from raw features. */
-export function computeComposites(features: Omit<DailyFeatureSet, "composite" | "date">): DailyFeatureSet["composite"] {
+export function computeComposites(
+  features: Omit<DailyFeatureSet, "composite" | "date">,
+  circadianDisruption = false,
+): DailyFeatureSet["composite"] {
   // Activity spike: screen time > 150% of the 7-day baseline (the comment always said 150%, but the code
   // was `delta > 0` — i.e. any above-average day, ~half of all days by chance). avg = today − delta.
   const screenToday = features.activity.screenTimeMinutes;
@@ -188,11 +242,8 @@ export function computeComposites(features: Omit<DailyFeatureSet, "composite" | 
   const avg7d = screenToday != null && screenDelta != null ? screenToday - screenDelta : null;
   const activitySpike = screenToday != null && avg7d != null && avg7d > 0 && screenToday > 1.5 * avg7d;
 
-  // Circadian disruption: only meaningful once real anchor data exists. Missing anchors are INSUFFICIENT
-  // DATA, not disruption — the old `any null anchor` flagged every anchor-less user as disrupted daily,
-  // firing "Routine disruption" and forcing an `elevated` mood state for everyone. Deviation-from-median
-  // detection is not implemented yet, so with data present we do not (yet) assert disruption.
-  const circadianDisruption = false;
+  // Circadian disruption: deviation-from-median detection (see detectCircadianDisruption).
+  // Missing anchors = insufficient data, not disruption. Caller computes the deviation and passes it in.
 
   // Typing elevation signal
   const typingElevationSignal = features.typing.moodSignal === "mania";
@@ -215,12 +266,17 @@ export function extractAllFeatures(targetDate: string): DailyFeatureSet {
 
   // Sleep CV from 7-day window
   const sleepNights: (number | null)[] = [];
+  const circadianWindow: DailyFeatureSet["circadian"][] = [];
   const d = new Date(targetDate + "T12:00:00");
   for (let i = 0; i < 7; i++) {
-    sleepNights.push(extractSleepHours(dateKey(d)));
+    const dk = dateKey(d);
+    sleepNights.push(extractSleepHours(dk));
+    circadianWindow.push(extractCircadian(dk));
     d.setDate(d.getDate() - 1);
   }
   const sleepCv = computeSleepCv(sleepNights);
+  // circadianWindow is newest-first; today is at index 0
+  const circadianDisruption = detectCircadianDisruption(circadianWindow, 0);
 
   const features = {
     sleep: {
@@ -239,7 +295,7 @@ export function extractAllFeatures(targetDate: string): DailyFeatureSet {
   return {
     date: targetDate,
     ...features,
-    composite: computeComposites(features),
+    composite: computeComposites(features, circadianDisruption),
   };
 }
 

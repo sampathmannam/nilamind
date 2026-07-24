@@ -11,7 +11,7 @@ import {
 } from "./signalStore";
 import { computeTrends } from "./trendAggregator";
 
-/** Placeholder for proactive cards — fully implemented in Phase 22. */
+/** Proactive surface card rendered by PassiveInsightCard in the Dashboard. */
 export interface ProactiveSurfaceCard {
   id: string;
   type: string;
