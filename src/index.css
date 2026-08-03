@@ -150,7 +150,9 @@
   --color-accent-hi: var(--color-blue-400);   /* brighter accent */
   --color-danger: var(--color-rose-500);      /* crisis / destructive (terracotta, never bright red) */
   --color-success: var(--color-emerald-500);  /* success */
+  --color-success-hi: var(--color-emerald-400); /* brighter success */
   --color-warn: var(--color-amber-500);       /* warning (honey) */
+  --color-warn-hi: var(--color-amber-400);    /* brighter warn */
   --color-hero: var(--color-peach-400);       /* special hero highlight (dark text pairing) */
 
   /* Status-bar-safe top inset. The app is edge-to-edge (viewport-fit=cover), so the WebView draws under
