@@ -2,7 +2,7 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 import React from "react";
-import SkeletonCard from "./SkeletonCard";
+import { SkeletonCard } from "./Skeleton";
 
 describe("SkeletonCard", () => {
   it("renders the requested number of shimmer lines and is aria-hidden", () => {
