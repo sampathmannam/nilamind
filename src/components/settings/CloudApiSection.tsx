@@ -50,7 +50,7 @@ export default function CloudApiSection() {
   const statusNode = enabled
     ? (
         <>
-          <span className="text-emerald-400">{t("cloud_api_status_active")}</span>
+          <span className="text-success">{t("cloud_api_status_active")}</span>
           {" · "}
           {summary}
         </>
@@ -84,14 +84,14 @@ export default function CloudApiSection() {
     <div className="glass p-5 rounded-2xl space-y-4 shadow-lg" id="settings-cloud-api">
       <div>
         <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-2 font-mono flex items-center gap-2">
-          <Cloud className="w-4 h-4 text-blue-400" /> {t("sec_cloud_api")}
+          <Cloud className="w-4 h-4 text-accent" /> {t("sec_cloud_api")}
        </h2>
         <p className="text-[11px] text-ink-muted mt-1 leading-relaxed">{t("sec_cloud_apiSub")}</p>
      </div>
 
-      <div className="border border-amber-500/30 bg-amber-500/10 rounded-xl p-3">
-        <p className="text-[11px] text-amber-200/90 leading-relaxed flex gap-2">
-          <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5 text-amber-400" />
+      <div className="border border-warn/30 bg-warn/10 rounded-xl p-3">
+        <p className="text-[11px] text-warn/90 leading-relaxed flex gap-2">
+          <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5 text-warn" />
           <span>
             <strong>Privacy notice</strong>{" "}
             {isGroq ? (
@@ -101,7 +101,7 @@ export default function CloudApiSection() {
                   href={GROQ_PRIVACY_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="underline hover:text-amber-100"
+                  className="underline hover:text-warn"
                 >
                   Groq&apos;s privacy notice
                </a>

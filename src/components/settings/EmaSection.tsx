@@ -17,7 +17,7 @@ export default function EmaSection() {
     <div className="glass p-5 rounded-2xl space-y-4 shadow-lg" id="settings-ema">
       <div>
         <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-2 font-mono flex items-center gap-2">
-          <Bell className="w-4 h-4 text-purple-400" /> {t("sec_ema")}
+          <Bell className="w-4 h-4 text-accent" /> {t("sec_ema")}
         </h2>
         <p className="text-[11px] text-ink-muted mt-1 leading-relaxed">
           Micro-check-ins throughout the day (&lt;10s each). Helps capture mood shifts that a single daily
@@ -29,7 +29,7 @@ export default function EmaSection() {
         <button
           onClick={toggle}
           id="settings-ema-toggle"
-          className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors ${enabled ? "bg-purple-500" : "bg-line-strong"}`}
+          className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors ${enabled ? "bg-accent" : "bg-line-strong"}`}
           role="switch" aria-checked={enabled}
         >
           <span aria-hidden="true" className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200 ease-in-out ${enabled ? "translate-x-2.5" : "-translate-x-2.5"}`} />
@@ -45,7 +45,7 @@ export default function EmaSection() {
                 onClick={() => setFreqVal(n)}
                 className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                   freq === n
-                    ? "bg-purple-500/20 text-purple-300 border border-purple-500/40"
+                    ? "bg-accent/20 text-accent-hi border border-accent/40"
                     : "bg-fill text-ink-muted border border-line-strong hover:border-line-strong"
                 }`}
               >

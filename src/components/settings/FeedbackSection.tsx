@@ -26,7 +26,7 @@ export default function FeedbackSection() {
     <div className="glass p-5 rounded-2xl space-y-3 shadow-lg" id="settings-feedback">
       <div>
         <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-2 font-mono flex items-center gap-2">
-          <MessageSquare className="w-4 h-4 text-purple-400" /> {t("sec_feedback")}
+          <MessageSquare className="w-4 h-4 text-accent" /> {t("sec_feedback")}
         </h2>
         <p className="text-[11px] text-ink-muted mt-1 leading-relaxed">
           NilaMind is an open-source research preview, and your feedback shapes it. Nothing is sent
@@ -35,11 +35,11 @@ export default function FeedbackSection() {
       </div>
 
       {pending.length > 0 && (
-        <div className="border border-purple-500/30 bg-purple-500/10 rounded-xl p-3 space-y-2">
-          <div className="text-[12px] text-purple-200/90 font-medium">
+        <div className="border border-accent/30 bg-accent/10 rounded-xl p-3 space-y-2">
+          <div className="text-[12px] text-accent-hi/90 font-medium">
             {pending.length} improvement suggestion{pending.length !== 1 ? "s" : ""} ready
           </div>
-          <p className="text-xs text-purple-300/70 leading-relaxed">
+          <p className="text-xs text-accent-hi/70 leading-relaxed">
             You typed {pending.length} suggestion{pending.length !== 1 ? "s" : ""} for how Nila could have replied better.
             These stay on your device — tap Copy to save them, then paste into a GitHub issue.
           </p>
@@ -57,7 +57,7 @@ export default function FeedbackSection() {
         href={`${REPO}/issues/new`}
         target="_blank"
         rel="noreferrer"
-        className="flex items-center justify-between border border-line rounded-xl p-3 bg-page hover:border-purple-500/50 transition-colors min-h-[44px]"
+        className="flex items-center justify-between border border-line rounded-xl p-3 bg-page hover:border-accent/50 transition-colors min-h-[44px]"
       >
         <div className="space-y-0.5">
           <div className="text-sm font-medium text-ink-2">Report a problem or suggest an idea</div>
@@ -69,7 +69,7 @@ export default function FeedbackSection() {
         href={REPO}
         target="_blank"
         rel="noreferrer"
-        className="flex items-center justify-between border border-line rounded-xl p-3 bg-page hover:border-purple-500/50 transition-colors min-h-[44px]"
+        className="flex items-center justify-between border border-line rounded-xl p-3 bg-page hover:border-accent/50 transition-colors min-h-[44px]"
       >
         <div className="space-y-0.5">
           <div className="text-sm font-medium text-ink-2">Source code &amp; docs</div>

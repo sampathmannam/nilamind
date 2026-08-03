@@ -20,7 +20,7 @@ export default function RegionSection() {
     <div className="glass p-5 rounded-2xl space-y-4 shadow-lg" id="region-section">
       <div>
         <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-2 font-mono flex items-center gap-2">
-          <Globe2 className="w-4 h-4 text-blue-400" /> {t("sec_region")}
+          <Globe2 className="w-4 h-4 text-accent" /> {t("sec_region")}
         </h2>
         <p className="text-[11px] text-ink-muted mt-1 leading-relaxed">
           These are the helplines shown if you ever need them.
@@ -36,7 +36,7 @@ export default function RegionSection() {
           aria-label="Region"
           value={code}
           onChange={(e) => handleChange(e.target.value as RegionCode)}
-          className="w-full px-3 py-2.5 rounded-xl border text-sm bg-page border-line text-ink-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2.5 rounded-xl border text-sm bg-page border-line text-ink-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent"
         >
           {allRegions().map((r) => (
             <option key={r.code} value={r.code}>

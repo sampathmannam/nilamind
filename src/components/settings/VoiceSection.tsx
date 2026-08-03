@@ -34,7 +34,7 @@ export default function VoiceSection() {
     <div className="glass p-5 rounded-2xl space-y-4 shadow-lg" id="settings-voice">
       <div>
         <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-2 font-mono flex items-center gap-2">
-          <Volume2 className="w-4 h-4 text-blue-400" /> {t("sec_voice")}
+          <Volume2 className="w-4 h-4 text-accent" /> {t("sec_voice")}
         </h2>
         <p className="text-[11px] text-ink-muted mt-1 leading-relaxed">
           A calm voice can read Nila and your check-ins aloud, so you don't have to read — and you can speak instead of type.
@@ -49,7 +49,7 @@ export default function VoiceSection() {
         <button
           onClick={() => update({ enabled: !prefs.enabled })}
           id="settings-voice-toggle"
-          className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors ${prefs.enabled ? "bg-blue-500" : "bg-line-strong"}`}
+          className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors ${prefs.enabled ? "bg-accent" : "bg-line-strong"}`}
           role="switch"
           aria-checked={prefs.enabled}
         >
@@ -86,7 +86,7 @@ export default function VoiceSection() {
                 wakePending.current = false;
               }
             }}
-            className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors ${wake ? "bg-blue-500" : "bg-line-strong"}`}
+            className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors ${wake ? "bg-accent" : "bg-line-strong"}`}
           >
             <span aria-hidden="true" className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200 ease-in-out ${wake ? "translate-x-2.5" : "-translate-x-2.5"}`} />
           </button>
@@ -106,7 +106,7 @@ export default function VoiceSection() {
         <button
           onClick={() => update({ onDeviceStt: prefs.onDeviceStt === false })}
           id="settings-ondevice-stt-toggle"
-          className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors ${prefs.onDeviceStt !== false ? "bg-blue-500" : "bg-line-strong"}`}
+          className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors ${prefs.onDeviceStt !== false ? "bg-accent" : "bg-line-strong"}`}
           role="switch"
           aria-checked={prefs.onDeviceStt !== false}
           aria-label="On-device voice"
@@ -145,18 +145,18 @@ export default function VoiceSection() {
           <div className="border border-line rounded-xl p-3 bg-page space-y-2">
             <div className="flex justify-between text-xs">
               <span className="text-ink-muted">Speed</span>
-              <span className="font-mono text-blue-400">{prefs.rate.toFixed(2)}×</span>
+              <span className="font-mono text-accent">{prefs.rate.toFixed(2)}×</span>
             </div>
             <input
               type="range" min={0.6} max={1.2} step={0.05} value={prefs.rate}
               onChange={(e) => update({ rate: parseFloat(e.target.value) })}
               aria-label="Speed"
-              className="w-full h-1.5 rounded-lg bg-card accent-blue-500 cursor-pointer"
+              className="w-full h-1.5 rounded-lg bg-card accent-accent cursor-pointer"
             />
             <button
               onClick={() => speak(VOICE_SAMPLE)}
               id="settings-voice-preview"
-              className="text-[11px] text-blue-300 hover:text-blue-200 cursor-pointer flex items-center gap-1 pt-1"
+              className="text-[11px] text-accent-hi hover:text-accent-hi cursor-pointer flex items-center gap-1 pt-1"
             >
               <Play className="w-3 h-3" /> Preview voice
             </button>
@@ -173,13 +173,13 @@ function VoiceRow({ label, sub, selected, onClick }: { label: string; sub: strin
       onClick={onClick}
       role="radio"
       aria-checked={selected}
-      className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg border text-left cursor-pointer transition-all ${selected ? "bg-blue-500/15 border-accent/50" : "bg-card border-line hover:border-line-strong"}`}
+      className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg border text-left cursor-pointer transition-all ${selected ? "bg-accent/15 border-accent/50" : "bg-card border-line hover:border-line-strong"}`}
     >
       <span className="min-w-0">
         <span className="block text-xs font-medium text-ink-2 truncate">{label}</span>
         <span className="block text-xs text-ink-faint">{sub}</span>
       </span>
-      {selected ? <Check className="w-3.5 h-3.5 text-blue-400 shrink-0" /> : <Play className="w-3 h-3 text-ink-faint shrink-0" />}
+      {selected ? <Check className="w-3.5 h-3.5 text-accent shrink-0" /> : <Play className="w-3 h-3 text-ink-faint shrink-0" />}
     </button>
   );
 }

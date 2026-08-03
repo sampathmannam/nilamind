@@ -154,7 +154,7 @@ export default function ProblemSolvingScreen({ draft }: { draft?: { problem: str
     <div className="space-y-4 max-w-md mx-auto" id="problem-solving-screen">
       <h2 className="text-xl font-semibold text-ink flex items-center gap-2"><Lightbulb className="w-5 h-5 text-warn" /> Problem-Solving</h2>
       <p className="text-xs text-ink-muted leading-relaxed">Break a problem into steps: define it, brainstorm solutions, pick one, and try it.</p>
-      <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-3">
+      <div className="bg-warn/5 border border-warn/20 rounded-xl p-3">
         <p className="text-xs text-ink-faint leading-relaxed">
           Having a problem is a normal part of life, not a sign something's wrong with you — and most problems
           have more than one workable solution. Coming at it with curiosity, rather than dread, is itself part
