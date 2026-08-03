@@ -48,7 +48,7 @@ export default function HealthConnectSection() {
     <div className="glass p-5 rounded-2xl space-y-4 shadow-lg" id="settings-health-connect">
       <div>
         <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-2 font-mono flex items-center gap-2">
-          <Activity className="w-4 h-4 text-indigo-400" /> {t("sec_health_connect")}
+          <Activity className="w-4 h-4 text-accent" /> {t("sec_health_connect")}
         </h2>
         <p className="text-[11px] text-ink-muted mt-1 leading-relaxed">
           Optional: let Nila read sleep hours from Health Connect (e.g. COROS, Fitbit, Garmin) instead of relying only on self-report.
@@ -66,7 +66,7 @@ export default function HealthConnectSection() {
         <button
           onClick={toggleEnabled}
           id="settings-healthconnect-toggle"
-          className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors ${status.enabled ? "bg-indigo-500" : "bg-line-strong"}`}
+          className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors ${status.enabled ? "bg-accent" : "bg-line-strong"}`}
           role="switch" aria-checked={status.enabled}
         >
           <span aria-hidden="true" className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200 ease-in-out ${status.enabled ? "translate-x-2.5" : "-translate-x-2.5"}`} />
@@ -77,7 +77,7 @@ export default function HealthConnectSection() {
         <button
           onClick={connect}
           disabled={busy}
-          className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:bg-line-strong text-white text-sm font-semibold transition-colors cursor-pointer"
+          className="w-full py-2.5 rounded-xl bg-accent hover:bg-accent disabled:bg-line-strong text-white text-sm font-semibold transition-colors cursor-pointer"
         >
           {busy ? "Requesting…" : "Connect Health Connect"}
         </button>

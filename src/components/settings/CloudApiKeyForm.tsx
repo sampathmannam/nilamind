@@ -54,7 +54,7 @@ export default function CloudApiKeyForm(props: CloudApiKeyFormProps) {
             aria-pressed={isGroq}
             className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-medium transition-colors ${
               isGroq
-                ? "bg-emerald-600 border-emerald-400 text-white"
+                ? "bg-success border-success text-white"
                 : "bg-fill border-line-strong text-ink-2 hover:bg-line-strong"
             }`}
           >
@@ -66,7 +66,7 @@ export default function CloudApiKeyForm(props: CloudApiKeyFormProps) {
             aria-pressed={!isGroq}
             className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-medium transition-colors ${
               !isGroq
-                ? "bg-emerald-600 border-emerald-400 text-white"
+                ? "bg-success border-success text-white"
                 : "bg-fill border-line-strong text-ink-2 hover:bg-line-strong"
             }`}
           >
@@ -130,8 +130,8 @@ function GroqPanel(props: {
   const keyHintColor = !props.apiKey
     ? "text-ink-faint"
     : props.keyValidation.ok
-      ? "text-emerald-400"
-      : "text-amber-300";
+      ? "text-success"
+      : "text-warn";
 
   return (
     <>
@@ -140,11 +140,11 @@ function GroqPanel(props: {
         target="_blank"
         rel="noopener noreferrer"
         id="cloud-api-groq-getkey"
-        className="flex items-center justify-between w-full bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 rounded-xl px-3 py-2.5 transition-colors"
+        className="flex items-center justify-between w-full bg-success/20 hover:bg-success/30 border border-success/40 rounded-xl px-3 py-2.5 transition-colors"
       >
         <span className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-emerald-400" />
-          <span className="text-xs font-medium text-emerald-100">
+          <Sparkles className="w-4 h-4 text-success" />
+          <span className="text-xs font-medium text-success-hi">
             {t("cloud_api_get_key_label")}
          </span>
        </span>
@@ -259,11 +259,11 @@ function OpenAiCompatiblePanel(props: {
         target="_blank"
         rel="noopener noreferrer"
         id="cloud-api-google-getkey"
-        className="flex items-center justify-between w-full bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 rounded-xl px-3 py-2.5 transition-colors"
+        className="flex items-center justify-between w-full bg-success/20 hover:bg-success/30 border border-success/40 rounded-xl px-3 py-2.5 transition-colors"
       >
         <span className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-emerald-400" />
-          <span className="text-xs font-medium text-emerald-100">
+          <Sparkles className="w-4 h-4 text-success" />
+          <span className="text-xs font-medium text-success-hi">
             {t("cloud_api_get_key_label_custom")}
          </span>
        </span>
