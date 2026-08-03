@@ -85,7 +85,7 @@ export default function ProblemSolvingScreen({ draft }: { draft?: { problem: str
         <h2 className="text-lg font-semibold text-ink">Problem-Solving</h2>
         <p className="text-sm text-ink-2 glass rounded-xl p-3">{activeSession.problem}</p>
 
-        <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-3">
+        <div className="bg-warn/5 border border-warn/20 rounded-xl p-3">
           <p className="text-xs text-ink-faint leading-relaxed">
             Aim for at least 3 ideas before judging any of them — quantity first, evaluate later. Even ideas
             that feel silly or unlikely can spark a better one. (Bell & D'Zurilla, 2009)
@@ -100,17 +100,17 @@ export default function ProblemSolvingScreen({ draft }: { draft?: { problem: str
             <div key={sol.id} className="glass rounded-xl p-3 space-y-2">
               <div className="flex items-center justify-between">
                 <p className="text-xs text-ink-2 flex-1">{sol.text}</p>
-                {!sol.chosen && <button onClick={() => handleChoose(sol.id)} className="text-xs text-blue-400 cursor-pointer ml-2">Choose</button>}
-                {sol.chosen && <span className="text-xs text-emerald-400 font-semibold">✓ Chosen</span>}
+                {!sol.chosen && <button onClick={() => handleChoose(sol.id)} className="text-xs text-accent-hi cursor-pointer ml-2">Choose</button>}
+                {sol.chosen && <span className="text-xs text-accent-hi font-semibold">✓ Chosen</span>}
               </div>
-              {sol.pros.length > 0 && <p className="text-xs text-emerald-400">Pros: {sol.pros.join(", ")}</p>}
+              {sol.pros.length > 0 && <p className="text-xs text-accent-hi">Pros: {sol.pros.join(", ")}</p>}
               {sol.cons.length > 0 && <p className="text-xs text-rose-400">Cons: {sol.cons.join(", ")}</p>}
               {editingSolution === sol.id ? (
                 <div className="space-y-2">
                   <input value={prosText} onChange={(e) => setProsText(e.target.value)} placeholder="Pros (comma-separated)" className="w-full glass rounded-xl px-3 py-1.5 text-[11px] text-ink-2 placeholder-ink-faint" />
                   <input value={consText} onChange={(e) => setConsText(e.target.value)} placeholder="Cons (comma-separated)" className="w-full glass rounded-xl px-3 py-1.5 text-[11px] text-ink-2 placeholder-ink-faint" />
                   <div className="flex gap-2">
-                    <button onClick={() => handleSaveProsCons(sol.id)} className="text-xs text-blue-300 cursor-pointer">Save</button>
+                    <button onClick={() => handleSaveProsCons(sol.id)} className="text-xs text-accent-hi cursor-pointer">Save</button>
                     <button onClick={() => setEditingSolution(null)} className="text-xs text-ink-faint cursor-pointer">Cancel</button>
                   </div>
                 </div>
@@ -123,7 +123,7 @@ export default function ProblemSolvingScreen({ draft }: { draft?: { problem: str
 
         <div className="flex gap-2">
           <input value={solutionText} onChange={(e) => setSolutionText(e.target.value)} placeholder="Add a solution idea..." className="flex-1 glass rounded-xl px-3 py-2 text-xs text-ink-2 placeholder-ink-faint" />
-          <button onClick={handleAddSolution} aria-label="Add solution" className="glass rounded-xl px-3 py-2 text-xs text-blue-300 cursor-pointer"><Plus className="w-4 h-4" /></button>
+          <button onClick={handleAddSolution} aria-label="Add solution" className="glass rounded-xl px-3 py-2 text-xs text-accent-hi cursor-pointer"><Plus className="w-4 h-4" /></button>
         </div>
 
         {activeSession.solutions.some((s) => s.chosen) && (
@@ -138,12 +138,12 @@ export default function ProblemSolvingScreen({ draft }: { draft?: { problem: str
               <label htmlFor="pst-barrier" className="text-xs text-ink-faint">What might get in the way — and your backup move (optional)</label>
               <input id="pst-barrier" value={barrierPlan} onChange={(e) => setBarrierPlan(e.target.value)} placeholder="What might get in the way, and what will you do?" className="w-full glass rounded-xl px-3 py-2 text-xs text-ink-2 placeholder-ink-faint" />
             </div>
-            <button onClick={handleActionPlan} className="w-full glass rounded-xl py-2 text-xs text-blue-300 cursor-pointer">Save action plan</button>
+            <button onClick={handleActionPlan} className="w-full glass rounded-xl py-2 text-xs text-accent-hi cursor-pointer">Save action plan</button>
           </div>
         )}
 
         <div className="flex gap-2">
-          <button onClick={() => handleComplete(true)} className="flex-1 glass rounded-xl py-2 text-xs text-emerald-300 cursor-pointer">Solved ✓</button>
+          <button onClick={() => handleComplete(true)} className="flex-1 glass rounded-xl py-2 text-xs text-accent-hi cursor-pointer">Solved ✓</button>
           <button onClick={() => handleComplete(false)} className="flex-1 glass rounded-xl py-2 text-xs text-ink-muted cursor-pointer">Not solved</button>
         </div>
       </div>
@@ -152,7 +152,7 @@ export default function ProblemSolvingScreen({ draft }: { draft?: { problem: str
 
   return (
     <div className="space-y-4 max-w-md mx-auto" id="problem-solving-screen">
-      <h2 className="text-xl font-semibold text-ink flex items-center gap-2"><Lightbulb className="w-5 h-5 text-amber-400" /> Problem-Solving</h2>
+      <h2 className="text-xl font-semibold text-ink flex items-center gap-2"><Lightbulb className="w-5 h-5 text-warn" /> Problem-Solving</h2>
       <p className="text-xs text-ink-muted leading-relaxed">Break a problem into steps: define it, brainstorm solutions, pick one, and try it.</p>
       <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-3">
         <p className="text-xs text-ink-faint leading-relaxed">
@@ -164,12 +164,12 @@ export default function ProblemSolvingScreen({ draft }: { draft?: { problem: str
 
       <div className="glass rounded-2xl p-4 space-y-3">
         <input value={problem} onChange={(e) => setProblem(e.target.value)} placeholder="What's the problem?" className="w-full glass rounded-xl px-3 py-2 text-sm text-ink-2 placeholder-ink-faint" />
-        <button onClick={handleCreate} className="w-full glass rounded-xl py-2 text-xs text-blue-300 cursor-pointer">Start problem-solving</button>
+        <button onClick={handleCreate} className="w-full glass rounded-xl py-2 text-xs text-accent-hi cursor-pointer">Start problem-solving</button>
       </div>
 
       <div className="space-y-2">
         {sessions.map((s) => (
-          <button key={s.id} onClick={() => setActive(s.id)} className="w-full glass border-l-4 border-l-amber-500 rounded-r-2xl p-4 text-left cursor-pointer hover:border-amber-400/70 transition-colors">
+          <button key={s.id} onClick={() => setActive(s.id)} className="w-full glass border-l-4 border-l-warn rounded-r-2xl p-4 text-left cursor-pointer hover:border-warn/70 transition-colors">
             <span className="text-sm font-semibold text-ink">{s.problem}</span>
             <p className="text-xs text-ink-faint mt-1">{s.solutions.length} solution{s.solutions.length === 1 ? "" : "s"} · {s.completed ? "Completed" : "In progress"}</p>
           </button>

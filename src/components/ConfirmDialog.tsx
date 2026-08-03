@@ -27,12 +27,12 @@ export default function ConfirmDialog({
     variant === "danger"
       ? "bg-rose-600 hover:bg-rose-500 text-white"
       : variant === "warning"
-      ? "bg-amber-600 hover:bg-amber-500 text-white"
-      : "bg-blue-600 hover:bg-blue-500 text-white";
+      ? "bg-warn hover:opacity-90 text-white"
+      : "bg-accent hover:opacity-90 text-white";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" role="dialog" aria-modal="true" aria-label={title}>
-      <div className="bg-slate-800 border border-slate-600 rounded-2xl p-5 max-w-sm w-full shadow-xl space-y-4 animate-fade-in">
+      <div className="bg-fill border border-line-strong rounded-2xl p-5 max-w-sm w-full shadow-xl space-y-4 animate-fade-in">
         <h2 className="text-base font-semibold text-ink">{title}</h2>
         <p className="text-sm text-ink-muted leading-relaxed">{message}</p>
         <div className="flex gap-3 justify-end">

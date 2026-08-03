@@ -62,10 +62,10 @@ const DailyIntentionCard = forwardRef<DailyIntentionCardHandle, DailyIntentionCa
       return (
         <div
           id="today-daily-intention"
-          className="glass p-4 rounded-2xl border-l-4 border-l-amber-500/50 space-y-2 scroll-mt-24"
+          className="glass p-4 rounded-2xl border-l-4 border-l-warn/50 space-y-2 scroll-mt-24"
         >
           <div className="flex items-center gap-2">
-            <Target className="w-4 h-4 text-amber-400 shrink-0" aria-hidden="true" />
+            <Target className="w-4 h-4 text-warn shrink-0" aria-hidden="true" />
             <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">Today's intention</p>
           </div>
           <p className="text-sm text-ink-2">
@@ -74,7 +74,7 @@ const DailyIntentionCard = forwardRef<DailyIntentionCardHandle, DailyIntentionCa
           </p>
           <button
             onClick={openForm}
-            className="text-[11px] text-blue-400 hover:text-blue-300 cursor-pointer"
+            className="text-[11px] text-accent hover:text-accent-hi cursor-pointer"
           >
             Edit
           </button>
@@ -94,9 +94,9 @@ const DailyIntentionCard = forwardRef<DailyIntentionCardHandle, DailyIntentionCa
           id="today-daily-intention"
           onClick={openForm}
           aria-expanded={false}
-          className="w-full glass hover:brightness-125 p-4 rounded-2xl border-l-4 border-l-amber-500/50 transition-all active:scale-[0.99] cursor-pointer text-left flex items-center gap-3 scroll-mt-24"
+          className="w-full glass hover:brightness-125 p-4 rounded-2xl border-l-4 border-l-warn/50 transition-all active:scale-[0.99] cursor-pointer text-left flex items-center gap-3 scroll-mt-24"
         >
-          <Target className="w-5 h-5 text-amber-400 shrink-0" aria-hidden="true" />
+          <Target className="w-5 h-5 text-warn shrink-0" aria-hidden="true" />
           <span className="flex-1 min-w-0">
             <span className="block text-sm font-bold text-ink">Set today's intention</span>
             <span className="block text-[11px] text-ink-muted">A tiny if-then plan — no pressure, just a nudge.</span>
@@ -111,10 +111,10 @@ const DailyIntentionCard = forwardRef<DailyIntentionCardHandle, DailyIntentionCa
     return (
       <div
         id="today-daily-intention"
-        className="glass p-4 rounded-2xl border-l-4 border-l-amber-500/50 space-y-3 scroll-mt-24"
+        className="glass p-4 rounded-2xl border-l-4 border-l-warn/50 space-y-3 scroll-mt-24"
       >
         <div className="flex items-center gap-2">
-          <Target className="w-4 h-4 text-amber-400 shrink-0" aria-hidden="true" />
+          <Target className="w-4 h-4 text-warn shrink-0" aria-hidden="true" />
           <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">Set today's intention</p>
         </div>
         <p className="text-[11px] text-ink-faint">

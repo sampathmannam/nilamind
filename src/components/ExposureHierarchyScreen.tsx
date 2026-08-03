@@ -104,7 +104,7 @@ export default function ExposureHierarchyScreen() {
           </div>
           {sudReduction != null && (
             <div className="glass rounded-xl p-3 flex-1">
-              <div className="text-lg font-bold text-blue-300">-{Math.round(sudReduction)}</div>
+              <div className="text-lg font-bold text-accent-hi">-{Math.round(sudReduction)}</div>
               <div className="text-xs text-ink-faint">Avg SUDS drop</div>
             </div>
           )}
@@ -112,10 +112,10 @@ export default function ExposureHierarchyScreen() {
 
         {/* Celebration message after step completion */}
         {celebratedStep && (
-          <div className="glass rounded-2xl p-4 border-l-4 border-l-emerald-500 flex items-center gap-3">
-            <CheckCircle className="w-5 h-5 text-emerald-400 shrink-0" />
+          <div className="glass rounded-2xl p-4 border-l-4 border-l-success flex items-center gap-3">
+            <CheckCircle className="w-5 h-5 text-success shrink-0" />
             <p className="text-xs text-ink-2 leading-relaxed">
-              <span className="text-emerald-300 font-semibold">Step completed</span> — {celebratedStep}.
+              <span className="text-accent-hi font-semibold">Step completed</span> — {celebratedStep}.
               That takes courage, even when it's hard.
             </p>
           </div>
@@ -140,10 +140,10 @@ export default function ExposureHierarchyScreen() {
             </div>
             <textarea value={learning} onChange={(e) => setLearning(e.target.value)} placeholder="What did you learn? (optional)" rows={2} className="w-full glass rounded-xl px-3 py-2 text-xs text-ink-2 placeholder-ink-faint" />
             <div className="flex gap-2">
-              <button onClick={() => handleCompleteStep(completingStep)} className="flex-1 glass rounded-xl py-2 text-xs text-emerald-300 cursor-pointer">Save</button>
+              <button onClick={() => handleCompleteStep(completingStep)} className="flex-1 glass rounded-xl py-2 text-xs text-accent-hi cursor-pointer">Save</button>
               <button onClick={() => setCompletingStep(null)} className="glass rounded-xl px-3 py-2 text-xs text-ink-muted cursor-pointer">Cancel</button>
             </div>
-            <p className="text-xs text-slate-600 leading-relaxed">
+            <p className="text-xs text-ink-faint leading-relaxed">
               Reflection prompts based on the inhibitory-learning model (Craske, Treanor, Conway, Zbozinek &amp; Vervliet, 2014) —
               noticing what actually happened, versus what you predicted, is what research suggests makes exposure learning last.
             </p>
@@ -163,9 +163,9 @@ export default function ExposureHierarchyScreen() {
                   </p>
                 </div>
                 {!step.completed && (
-                  <button onClick={() => setCompletingStep(step.id)} className="text-xs text-emerald-400 cursor-pointer shrink-0">Complete</button>
+                  <button onClick={() => setCompletingStep(step.id)} className="text-xs text-accent-hi cursor-pointer shrink-0">Complete</button>
                 )}
-                {!step.completed && <button onClick={() => handleRemoveStep(step.id)} className="text-slate-600 hover:text-ink-muted cursor-pointer shrink-0"><X className="w-3 h-3" /></button>}
+                {!step.completed && <button onClick={() => handleRemoveStep(step.id)} className="text-ink-faint hover:text-ink-muted cursor-pointer shrink-0"><X className="w-3 h-3" /></button>}
               </div>
             ))}
             {sorted.length === 0 && <p className="text-xs text-ink-faint text-center py-6">No steps yet. Add your first one below.</p>}
@@ -179,7 +179,7 @@ export default function ExposureHierarchyScreen() {
               <label className="text-xs text-ink-faint shrink-0">SUDS: {suds}</label>
               <input type="range" min={0} max={100} value={suds} onChange={(e) => setSuds(+e.target.value)} className="flex-1" />
             </div>
-            <button onClick={handleAddStep} className="w-full glass rounded-xl py-2 text-xs text-blue-300 cursor-pointer">Add step</button>
+            <button onClick={handleAddStep} className="w-full glass rounded-xl py-2 text-xs text-accent-hi cursor-pointer">Add step</button>
           </div>
         )}
       </div>

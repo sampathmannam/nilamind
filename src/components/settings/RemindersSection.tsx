@@ -29,11 +29,11 @@ export default function RemindersSection() {
     <div className="glass p-5 rounded-2xl space-y-4 shadow-lg" id="settings-reminders">
       <div>
         <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-2 font-mono flex items-center gap-2">
-          <Bell className="w-4 h-4 text-blue-400" /> {t("sec_reminders")}
+          <Bell className="w-4 h-4 text-accent" /> {t("sec_reminders")}
         </h2>
         <p className="text-[11px] text-ink-muted mt-1 leading-relaxed">
           One gentle nudge a day — inside your window, never during quiet hours. No streak guilt, ever.
-          {status && <span className="block text-blue-300 mt-1" id="settings-reminders-status">{status}</span>}
+          {status && <span className="block text-accent-hi mt-1" id="settings-reminders-status">{status}</span>}
         </p>
       </div>
       <div className="border border-line rounded-xl p-3 flex items-center justify-between bg-page">
@@ -41,7 +41,7 @@ export default function RemindersSection() {
         <button
           onClick={() => up({ enabled: !p.enabled })}
           id="settings-reminders-toggle"
-          className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors ${p.enabled ? "bg-blue-500" : "bg-line-strong"}`}
+          className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors ${p.enabled ? "bg-accent" : "bg-line-strong"}`}
           role="switch" aria-checked={p.enabled}
         >
           <span aria-hidden="true" className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200 ease-in-out ${p.enabled ? "translate-x-2.5" : "-translate-x-2.5"}`} />
@@ -62,7 +62,7 @@ export default function RemindersSection() {
             <button
               onClick={() => up({ weeklyDigest: !p.weeklyDigest })}
               id="settings-weekly-digest-toggle"
-              className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors ${p.weeklyDigest ? "bg-blue-500" : "bg-line-strong"}`}
+              className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors ${p.weeklyDigest ? "bg-accent" : "bg-line-strong"}`}
               role="switch" aria-checked={p.weeklyDigest}
             >
               <span aria-hidden="true" className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200 ease-in-out ${p.weeklyDigest ? "translate-x-2.5" : "-translate-x-2.5"}`} />

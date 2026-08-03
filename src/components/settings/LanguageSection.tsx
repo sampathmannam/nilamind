@@ -14,7 +14,7 @@ export default function LanguageSection() {
     <div className="glass p-5 rounded-2xl space-y-4 shadow-lg" id="language-section">
       <div>
         <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-2 font-mono flex items-center gap-2">
-          <Globe className="w-4 h-4 text-blue-400" /> {t("language")}
+          <Globe className="w-4 h-4 text-accent" /> {t("language")}
         </h2>
         <p className="text-[11px] text-ink-muted mt-1 leading-relaxed">
           Choose the language for the app interface. More languages coming soon.
@@ -28,7 +28,7 @@ export default function LanguageSection() {
             onClick={() => handleChange(l.code)}
             className={`text-left px-3 py-2.5 rounded-xl border text-sm transition-colors cursor-pointer ${
               lang === l.code
-                ? "bg-blue-500/20 border-accent/40 text-blue-200"
+                ? "bg-accent/20 border-accent/40 text-accent-hi"
                 : "bg-page border-line text-ink-2 hover:border-slate-600"
             }`}
           >
