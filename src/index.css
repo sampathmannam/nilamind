@@ -554,24 +554,192 @@ html.sensory-comfort body::after {
   border-radius: 9999px;
 }
 
-/* Accessibility: skip-link for keyboard-only users to bypass ~40 elements and reach the chat. */
-.skip-link {
-  position: absolute;
-  top: -100%;
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--color-violet-600, #7c3aed);
-  color: white;
-  padding: 8px 16px;
-  border-radius: 8px;
-  z-index: 100;
-  font-size: 13px;
-  font-weight: 600;
-  text-decoration: none;
-  transition: top 0.2s;
+/* ── Page transitions (UX-5 Phase 1) ─────────────────────────────────────────────────────────────
+   Smooth tab switches and overlay entrances. Uses @starting-style for entry animations without JS. */
+@keyframes page-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
-.skip-link:focus {
-  top: 8px;
+@keyframes page-fade-out {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-8px); }
+}
+.animate-page-in { animation: page-fade-in 280ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-page-out { animation: page-fade-out 200ms ease-in both; }
+
+/* Shared layout transitions for list items and cards */
+@keyframes fade-up-stagger { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+.animate-fade-up { animation: fade-up-stagger 0.34s cubic-bezier(0.22, 1, 0.36, 1) both; }
+@media (prefers-reduced-motion: reduce) { .animate-fade-up { animation: none; transform: none; } }
+
+/* Button press/tap feedback */
+@keyframes tap-press { 0% { transform: scale(1); } 50% { transform: scale(0.97); } 100% { transform: scale(1); } }
+.tap-feedback:active { animation: tap-press 100ms ease-out; }
+
+/* Focus ring animation */
+@keyframes focus-ring-pulse { 0%, 100% { box-shadow: 0 0 0 0 var(--color-accent); } 50% { box-shadow: 0 0 0 4px transparent; } }
+.focus-ring-animated:focus-visible { animation: focus-ring-pulse 1.5s ease-in-out infinite; outline: none; }
+
+/* Shimmer loading for skeleton states */
+@keyframes shimmer-wave { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+.skeleton-shimmer { background: linear-gradient(90deg, var(--color-fill) 25%, color-mix(in srgb, var(--color-fill) 60%, transparent) 50%, var(--color-fill) 75%); background-size: 200% 100%; animation: shimmer-wave 1.2s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .skeleton-shimmer { animation: none; } }
+
+/* Stagger delay utilities */
+.stagger-1 { animation-delay: 40ms; } .stagger-2 { animation-delay: 80ms; } .stagger-3 { animation-delay: 120ms; }
+.stagger-4 { animation-delay: 160ms; } .stagger-5 { animation-delay: 200ms; } .stagger-6 { animation-delay: 240ms; }
+
+/* Toast/snackbar animations */
+@keyframes toast-slide-in { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
+@keyframes toast-slide-out { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(100%); } }
+.animate-toast-in { animation: toast-slide-in 300ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-toast-out { animation: toast-slide-out 200ms ease-in both; }
+
+/* Modal/overlay backdrop */
+@keyframes backdrop-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes backdrop-fade-out { from { opacity: 1; } to { opacity: 0; } }
+.animate-backdrop-in { animation: backdrop-fade-in 200ms ease-out both; }
+.animate-backdrop-out { animation: backdrop-fade-out 150ms ease-in both; }
+
+/* Floating action button entrance */
+@keyframes fab-pop-in { from { opacity: 0; transform: scale(0.8) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+.animate-fab-in { animation: fab-pop-in 300ms cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+/* Progress ring animation */
+@keyframes progress-ring-draw { from { stroke-dashoffset: 251; } to { stroke-dashoffset: 0; } }
+.animate-progress-ring { animation: progress-ring-draw 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards; stroke-linecap: round; }
+@media (prefers-reduced-motion: reduce) { .animate-progress-ring { animation: none; stroke-dashoffset: 0; } }
+
+/* Pulse for live indicators */
+@keyframes pulse-soft { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+.animate-pulse-soft { animation: pulse-soft 2s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .animate-pulse-soft { animation: none; opacity: 1; } }
+
+/* Slide from side (for side sheets, drawers) */
+@keyframes slide-from-right { from { transform: translateX(100%); } to { transform: translateX(0); } }
+@keyframes slide-from-left { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+@keyframes slide-to-right { from { transform: translateX(0); } to { transform: translateX(100%); } }
+@keyframes slide-to-left { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+.animate-slide-from-right { animation: slide-from-right 280ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-slide-from-left { animation: slide-from-left 280ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-slide-to-right { animation: slide-to-right 200ms ease-in both; }
+.animate-slide-to-left { animation: slide-to-left 200ms ease-in both; }
+
+/* Scale in/out for popovers, dropdowns */
+@keyframes scale-in { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+@keyframes scale-out { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.95); } }
+.animate-scale-in { animation: scale-in 180ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-scale-out { animation: scale-out 140ms ease-in both; }
+
+/* Dynamic type support — respect user's font size preference */
+@media (prefers-reduced-motion: no-preference) {
+  :root { --motion-scale: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root { --motion-scale: 0; }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: more) {
+  :root {
+    --color-line: var(--color-line-strong);
+    --color-ink-muted: var(--color-ink);
+    --color-ink-faint: var(--color-ink-2);
+  }
+  .focus-ring:focus-visible { outline-width: 3px; outline-offset: 3px; }
+}
+
+/* Reduced transparency */
+@media (prefers-reduced-transparency: reduce) {
+  .glass { background: var(--color-card); backdrop-filter: none; -webkit-backdrop-filter: none; }
+}
+
+/* ── Motion Utilities (Design System) ────────────────────────────────────────────────────────────
+   Purposeful, consistent animations. All respect prefers-reduced-motion. */
+
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+.animate-fade-in { animation: fade-in 200ms ease-out both; }
+
+@keyframes fade-out { from { opacity: 1; } to { opacity: 0; } }
+.animate-fade-out { animation: fade-out 150ms ease-in forwards; }
+
+@keyframes slide-up { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+.animate-slide-up { animation: slide-up 280ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+@keyframes slide-down { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: translateY(0); } }
+.animate-slide-down { animation: slide-down 280ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+@keyframes scale-in { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+.animate-scale-in { animation: scale-in 180ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+@keyframes scale-out { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.95); } }
+.animate-scale-out { animation: scale-out 140ms ease-in forwards; }
+
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+.shimmer { background: linear-gradient(90deg, var(--color-fill) 25%, var(--color-line) 50%, var(--color-fill) 75%); background-size: 200% 100%; animation: shimmer 1.5s ease-in-out infinite; }
+
+@keyframes pulse-soft { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+.animate-pulse-soft { animation: pulse-soft 2s ease-in-out infinite; }
+
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.animate-spin { animation: spin 1s linear infinite; }
+
+@keyframes bounce-in { 0% { transform: scale(0.3); opacity: 0; } 50% { transform: scale(1.05); } 70% { transform: scale(0.9); } 100% { transform: scale(1); opacity: 1; } }
+.animate-bounce-in { animation: bounce-in 400ms cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+@keyframes wiggle { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+.animate-wiggle { animation: wiggle 0.4s ease-in-out; }
+
+@keyframes tab-fade-enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.animate-tab-fade { animation: tab-fade-enter 240ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* Staggered children animation */
+.stagger-children > * { opacity: 0; animation: fade-up 340ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 40ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 80ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 120ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 160ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 200ms; }
+
+/* Hover lift for cards */
+.hover-lift { transition: transform 200ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow 200ms cubic-bezier(0.23, 1, 0.32, 1); }
+.hover-lift:hover { transform: translateY(-4px); box-shadow: 0 12px 24px -12px rgba(0,0,0,0.4), 0 4px 8px -4px rgba(0,0,0,0.2); }
+
+/* Press feedback */
+.press-scale { transition: transform 100ms ease-out; }
+.press-scale:active { transform: scale(0.97); }
+
+/* Interactive states */
+.interactive { transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease; }
+.interactive:hover { background-color: var(--color-fill); }
+.interactive:active { background-color: var(--color-line); }
+
+/* Reduced motion overrides */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in, .animate-fade-out, .animate-slide-up, .animate-slide-down,
+  .animate-scale-in, .animate-scale-out, .animate-slide-in, .animate-slide-out,
+  .animate-tab-fade, .animate-bounce-in, .stagger-children > *,
+  .hover-lift, .press-scale, .animate-pulse-soft, .animate-spin,
+  .animate-wiggle, .shimmer, .breathe-478, .nila-orb, .orb-aura,
+  .blob-badge--breathe, .aurora-field::before, .aurora-field::after,
+  .soft-register, .confetti-particle, .animate-fade-up {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root { --color-line: var(--color-line-strong); --color-fill: var(--color-line); }
+  .focus-ring:focus-visible { outline-width: 3px; }
+}
+
+/* Print styles */
+@media print {
+  .aurora-field, .nila-orb, .orb-aura, .confetti-particle, .skip-link, .crisis-header-button, button, .sheet { display: none !important; }
+  .hero-numeral { -webkit-text-stroke: 1px var(--color-accent); }
 }
 
 /* Screen-reader-only text (visible to SR, hidden visually). */
@@ -586,6 +754,28 @@ html.sensory-comfort body::after {
   white-space: nowrap;
   border: 0;
 }
+
+/* Accessibility: skip-link for keyboard-only users to bypass ~40 elements and reach the chat. */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-accent);
+  color: var(--color-page);
+  padding: 8px 16px;
+  border-radius: 8px;
+  z-index: 100;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: top 0.2s;
+}
+.skip-link:focus { top: 8px; }
+
+/* Touch-friendly tap targets + focus rings (reinforced) */
+.tap-target { min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center; }
+.focus-ring:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
 
 /* ── Phase 9: Episode-adaptive UI ──
    Subtle visual toning based on user state. Elevated → muted, desaturated

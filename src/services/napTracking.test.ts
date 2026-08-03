@@ -51,7 +51,9 @@ describe("napTracking — P8.4", () => {
 
   it("signal fires and notes the disruption when a late-long nap is logged", () => {
     logNap("2026-07-08", "16:00", 60);
-    const sig = napDisruptionSignal();
+    // Explicit `now` pins the 14-day lookback window — the default (real wall clock) drifts
+    // as time passes, which would push this nap outside the window and falsely flip the signal.
+    const sig = napDisruptionSignal(new Date("2026-07-10"));
     expect(sig.firing).toBe(true);
     expect(sig.note.toLowerCase()).toContain("nap");
   });

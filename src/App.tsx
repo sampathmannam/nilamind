@@ -468,6 +468,7 @@ function AppShell() {
 
       {/* Main content area — each tab isolated in its own ErrorBoundary */}
       <main className="flex-1 min-h-0 relative flex flex-col animate-tab-fade" key={state.tab} aria-label="Content">
+        <a href="#today-hub" className="skip-link">Skip to main content</a>
         {state.tab === "nila" && (
           <ErrorBoundary name="nila" onError={(err: Error, info: React.ErrorInfo) => console.error("[ErrorBoundary:nila] caught:", err, info)}>
             <ModeScreen

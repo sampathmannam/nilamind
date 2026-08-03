@@ -191,6 +191,16 @@ export default function TodayScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   useLanguage();
+  const [todayWidgets, setTodayWidgets] = useState<typeof import("./TodayWidgets").TodayWidgets | null>(null);
+
+  // Lazy-load TodayWidgets to avoid circular deps in tests
+  useEffect(() => {
+    let cancelled = false;
+    import("./TodayWidgets").then((mod) => {
+      if (!cancelled) setTodayWidgets(mod.TodayWidgets);
+    }).catch(() => { /* ignore */ });
+    return () => { cancelled = true; };
+  }, []);
   const { timeOfDay } = useTimeOfDay();
   const timeMode = getTimeMode();
   const userState = getUserState();
@@ -723,6 +733,27 @@ export default function TodayScreen({
       </>}
       </div>
       )}
+
+      {/* TodayWidgets — glanceable data cards (sleep, mood, protocol, rhythm, streak, insight) */}
+      {vis.patterns && todayWidgets && (() => {
+        const {
+          Sleep: SleepWidget, MoodTrend: MoodTrendWidget, NextProtocol: NextProtocolWidget,
+          QuickActions: QuickActionsWidget, Rhythm: RhythmWidget, WeeklyInsight: WeeklyInsightWidget,
+          Streak: StreakWidget, Assessment: AssessmentWidget,
+        } = todayWidgets;
+        return (
+          <div className="space-y-3 animate-fade-in stagger-children">
+            <SleepWidget />
+            <MoodTrendWidget />
+            <NextProtocolWidget />
+            <QuickActionsWidget onAction={go} />
+            <RhythmWidget />
+            <WeeklyInsightWidget />
+            <StreakWidget />
+            <AssessmentWidget />
+          </div>
+        );
+      })()}
 
       {/* Patterns section — toggle + extra content, phase-gated by vis.patterns (U1.1).
           Only Data phase shows patterns. */}
