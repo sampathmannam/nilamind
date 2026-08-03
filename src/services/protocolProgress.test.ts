@@ -116,6 +116,21 @@ describe("protocolOffer — offer only when nothing active + a concern matches",
   });
 });
 
+describe("protocolOffer — B6 gratitude gate during elevation (2026-08-03)", () => {
+  it("offers gratitude normally when the message has NO elevation markers", async () => {
+    const m = await load();
+    expect(m.protocolOffer("three good things today")?.id).toBe("gratitude");
+  });
+  it("suppresses the gratitude offer when the message ALSO trips elevation markers (manic inflation)", async () => {
+    const m = await load();
+    expect(m.protocolOffer("i haven't slept and i feel amazing and so grateful for everything")).toBeNull();
+  });
+  it("still offers OTHER protocols when the message has no elevation markers", async () => {
+    const m = await load();
+    expect(m.protocolOffer("i can't stop worrying about everything")?.id).toBe("worry-postponement");
+  });
+});
+
 describe("BA protocol integration — BA engine wired to protocol steps", () => {
   it("BA protocol advances through all 5 steps correctly", async () => {
     const m = await load();

@@ -9,21 +9,23 @@ import { hapticSuccess } from "../hooks/useHaptics";
 import CrisisCard from "./CrisisCard";
 import { type ThoughtRecordDraft, mapDraftToWizard } from "../services/thoughtRecordDraft";
 import { safeSpotDistortions, distortionSteer } from "../services/distortionSpotter";
+import { useLanguage, t } from "../services/i18n";
 
 const THINKING_TRAPS = [
-  { name: "All-or-Nothing", desc: '"If it\'s not perfect, it\'s a complete failure"' },
-  { name: "Catastrophising", desc: '"This is going to be an absolute disaster"' },
-  { name: "Mind-Reading", desc: '"I already know they think I\'m incompetent"' },
-  { name: "Fortune-Telling", desc: '"I know for a fact it will go wrong"' },
-  { name: "Emotional Reasoning", desc: '"I feel worthless, so I must genuinely be so"' },
-  { name: "Should Statements", desc: '"I should be doing better than this"' },
-  { name: "Labelling", desc: '"I\'m a failure / bad person"' },
-  { name: "Personalisation", desc: '"It is all entirely my fault"' },
-  { name: "Mental Filter", desc: '"Only focus on the negative, screen out positive context"' },
-  { name: "Magnification", desc: '"Blowing everything out of proportion"' }
-];
+  { name: "tr_trap_all_or_nothing", desc: "tr_trap_all_or_nothing_desc" },
+  { name: "tr_trap_catastrophising", desc: "tr_trap_catastrophising_desc" },
+  { name: "tr_trap_mind_reading", desc: "tr_trap_mind_reading_desc" },
+  { name: "tr_trap_fortune_telling", desc: "tr_trap_fortune_telling_desc" },
+  { name: "tr_trap_emotional_reasoning", desc: "tr_trap_emotional_reasoning_desc" },
+  { name: "tr_trap_should_statements", desc: "tr_trap_should_statements_desc" },
+  { name: "tr_trap_labelling", desc: "tr_trap_labelling_desc" },
+  { name: "tr_trap_personalisation", desc: "tr_trap_personalisation_desc" },
+  { name: "tr_trap_mental_filter", desc: "tr_trap_mental_filter_desc" },
+  { name: "tr_trap_magnification", desc: "tr_trap_magnification_desc" }
+] as const;
 
 export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDraft } = {}) {
+  useLanguage();
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [savedStatus, setSavedStatus] = useState<boolean>(false);
   
@@ -70,7 +72,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
     if (!result.ok) {
       setCrisis(true);
     } else if (result.matches.length === 0) {
-      setDistortionNotice("No obvious thinking traps spotted — that's okay, this isn't a verdict.");
+      setDistortionNotice(t("tr_no_traps"));
     } else {
       setDistortionNotice(distortionSteer(result.matches));
     }
@@ -80,7 +82,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
   // §9-gated assist via coachAssist: crisis text never reaches the model (see coachAssist.ts).
   const fetchBalancedThoughtFromCoach = async () => {
     if (!situation || !automaticThought) {
-      setAiError("Please explain what happened and what automatic thoughts arose first.");
+      setAiError(t("tr_empty_error"));
       return;
     }
 
@@ -103,7 +105,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
       }
     } catch (err: any) {
       console.error("Failed to generate balanced thought");
-      setAiError("I couldn't reach Nila right now. Please draft your own balanced thought or retry.");
+      setAiError(t("tr_nil_fail"));
     } finally {
       setAiLoading(false);
     }
@@ -151,11 +153,11 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
     <div className="space-y-6 max-w-md mx-auto" id="thought-record-screen">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-xl font-semibold text-ink">CBT Thought Record</h1>
-          <p className="text-xs text-ink-faint">Challenging automatic cognitive filters</p>
+          <h1 className="text-xl font-semibold text-ink">{t("tr_title")}</h1>
+          <p className="text-xs text-ink-faint">{t("tr_subtitle")}</p>
         </div>
         <span className="text-xs font-mono px-3 py-1 bg-card text-ink-muted border border-line rounded-full">
-          Step {currentPage} of 5
+          Step {currentPage}{t("tr_step_of")}
         </span>
       </div>
 
@@ -164,18 +166,18 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
         {currentPage === 1 && (
           <div className="space-y-4" id="tr-step-1">
             <h3 className="text-sm font-semibold text-accent uppercase tracking-wider font-mono">
-              Step 1: The Situation
+              {t("tr_step1_title")}
             </h3>
             <div className="space-y-2">
               <label className="text-sm font-semibold text-ink-2 block">
-                What happened?
+                {t("tr_step1_question")}
               </label>
               <textarea
-                aria-label="What happened?"
+                aria-label={t("tr_step1_question")}
                 value={situation}
                 onChange={(e) => setSituation(e.target.value)}
                 className="w-full h-32 bg-page border border-line rounded-xl px-4 py-3 text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus:border-accent text-left transition-all resize-none"
-                placeholder="Explain the triggering event objective: e.g., 'An argument with a friend at noon about dinner plans...'"
+                placeholder={t("tr_step1_placeholder")}
               />
             </div>
           </div>
@@ -185,27 +187,27 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
         {currentPage === 2 && (
           <div className="space-y-4" id="tr-step-2">
             <h3 className="text-sm font-semibold text-accent uppercase tracking-wider font-mono">
-              Step 2: Core Feeling
+              {t("tr_step2_title")}
             </h3>
             <div className="space-y-4">
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-ink-2 block">
-                  What did you feel?
+                  {t("tr_step2_question")}
                 </label>
                 <input
                   type="text"
-                  aria-label="What did you feel?"
+                  aria-label={t("tr_step2_question")}
                   value={feeling}
                   onChange={(e) => setFeeling(e.target.value)}
                   className="w-full bg-page border border-line rounded-xl px-4 py-3.5 text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus:border-accent transition-all"
-                  placeholder="e.g. Shame, intense anger, abandonment, panic"
+                  placeholder={t("tr_step2_placeholder")}
                 />
               </div>
 
               <div className="space-y-2 pt-2">
                 <div className="flex justify-between items-center">
                   <label className="text-sm font-semibold text-ink-2">
-                    Feeling Intensity?
+                    {t("tr_step2_intensity")}
                   </label>
                   <span className="text-xs font-mono font-bold text-accent">
                     {initialIntensity}%
@@ -213,7 +215,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
                 </div>
                 <input
                   type="range"
-                  aria-label="Feeling Intensity?"
+                  aria-label={t("tr_step2_intensity")}
                   min="1"
                   max="100"
                   value={initialIntensity}
@@ -229,13 +231,13 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
         {currentPage === 3 && (
           <div className="space-y-4" id="tr-step-3">
             <h3 className="text-sm font-semibold text-accent uppercase tracking-wider font-mono">
-              Step 3: Unwanted Thought
+              {t("tr_step3_title")}
             </h3>
             <div className="space-y-4">
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <label className="text-sm font-semibold text-ink-2 block">
-                    What automatic thoughts went through your mind?
+                    {t("tr_step3_question")}
                   </label>
                   <button
                     type="button"
@@ -244,15 +246,15 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
                     className="text-xs bg-warn/10 hover:bg-warn/20 border border-warn/30 text-warn rounded-lg px-2.5 py-1.5 flex items-center gap-1 cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Brain className="w-3.5 h-3.5" />
-                    <span>{spotting ? "Looking..." : "Spot traps"}</span>
+                    <span>{spotting ? t("tr_spot_looking") : t("tr_spot_traps")}</span>
                   </button>
                 </div>
                 <textarea
-                  aria-label="What automatic thoughts went through your mind?"
+                  aria-label={t("tr_step3_question")}
                   value={automaticThought}
                   onChange={(e) => setAutomaticThought(e.target.value)}
                   className="w-full h-24 bg-page border border-line rounded-xl px-4 py-3 text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus:border-accent transition-all resize-none"
-                  placeholder="e.g. 'They are leaving me because I am totally toxic and unlovable...'"
+                  placeholder={t("tr_step3_placeholder")}
                 />
                 {distortionNotice && (
                   <div className="bg-warn/5 border border-warn/20 rounded-lg px-3 py-2 text-[11px] text-warn-hi/90 leading-relaxed whitespace-pre-line">
@@ -264,7 +266,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <label className="text-sm font-semibold text-ink-2">
-                    How strongly do you believe this thought?
+                    {t("tr_step3_belief")}
                   </label>
                   <span className="text-xs font-mono font-bold text-accent">
                     {beliefPercent}%
@@ -272,7 +274,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
                 </div>
                 <input
                   type="range"
-                  aria-label="How strongly do you believe this thought?"
+                  aria-label={t("tr_step3_belief")}
                   min="0"
                   max="100"
                   value={beliefPercent}
@@ -288,19 +290,19 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
         {currentPage === 4 && (
           <div className="space-y-4" id="tr-step-4">
             <h3 className="text-sm font-semibold text-accent uppercase tracking-wider font-mono">
-              Step 4: Identify Trap Cards
+              {t("tr_step4_title")}
             </h3>
             <label className="text-xs text-ink-faint block">
-              Which cognitive distortions apply in this moment? Tap all that align:
+              {t("tr_step4_instruction")}
             </label>
             <div className="space-y-2 max-h-64 overflow-y-auto pr-1" id="traps-selector">
-              {THINKING_TRAPS.map((t) => {
-                const isSelected = selectedTraps.includes(t.name);
+              {THINKING_TRAPS.map((trap) => {
+                const isSelected = selectedTraps.includes(trap.name);
                 return (
                   <button
-                    key={t.name}
+                    key={trap.name}
                     type="button"
-                    onClick={() => toggleTrap(t.name)}
+                    onClick={() => toggleTrap(trap.name)}
                     className={`w-full text-left p-3 rounded-xl border text-xs transition-all cursor-pointer flex justify-between items-center ${
                       isSelected
                         ? "bg-accent/10 border-accent text-ink"
@@ -308,12 +310,12 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
                     }`}
                   >
                     <div>
-                      <span className="font-semibold text-ink-2">{t.name}:</span>{" "}
-                      <span className="opacity-80 block mt-0.5">{t.desc}</span>
+                      <span className="font-semibold text-ink-2">{t(trap.name)}:</span>{" "}
+                      <span className="opacity-80 block mt-0.5">{t(trap.desc)}</span>
                     </div>
                     {isSelected && (
                       <span className="bg-accent text-white text-xs px-2 py-0.5 rounded font-bold font-mono">
-                        Active
+                        {t("tr_step4_active")}
                       </span>
                     )}
                   </button>
@@ -327,14 +329,14 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
         {currentPage === 5 && (
           <div className="space-y-4" id="tr-step-5">
             <h3 className="text-sm font-semibold text-accent uppercase tracking-wider font-mono">
-              Step 5: Reframed Mindset
+              {t("tr_step5_title")}
             </h3>
             
             <div className="space-y-4">
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <label className="text-sm font-semibold text-ink-2">
-                    What is a more balanced thought?
+                    {t("tr_step5_question")}
                   </label>
                   <button
                     type="button"
@@ -343,21 +345,21 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
                     className="text-xs bg-accent/10 hover:opacity-90/25 border border-accent/30 text-accent rounded-lg px-2.5 py-1.5 flex items-center gap-1 cursor-pointer transition-colors"
                   >
                     <BrainCircuit className="w-3.5 h-3.5" />
-                    <span>{aiLoading ? "Asking Nila..." : "Ask Nila"}</span>
+                    <span>{aiLoading ? t("tr_step5_asking") : t("tr_step5_ask_nila")}</span>
                   </button>
                 </div>
 
                 {/* ── §9 CRISIS surface (deterministic; no reframe shown) ── */}
                 {crisis && (
-                  <CrisisCard id="tr-crisis" heading="What you wrote matters more than this exercise right now" />
+                  <CrisisCard id="tr-crisis" heading={t("tr_step5_crisis_heading")} />
                 )}
 
                 <textarea
-                  aria-label="What is a more balanced thought?"
+                  aria-label={t("tr_step5_question")}
                   value={balancedThought}
                   onChange={(e) => setBalancedThought(e.target.value)}
                   className="w-full h-24 bg-page border border-line rounded-xl px-4 py-3 text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus:border-accent transition-all resize-none"
-                  placeholder="Draft an objective re-evaluation or let the assistant generate one for you..."
+                  placeholder={t("tr_step5_placeholder")}
                 />
               </div>
 
@@ -372,7 +374,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
                 <div className="space-y-1.5">
                   <div className="flex justify-between items-center">
                     <label className="text-xs font-semibold text-ink-2">
-                      Re-rate original emotion intensity now:
+                      {t("tr_step5_reenable")}
                     </label>
                     <span className="text-xs font-mono font-bold text-success">
                       {reRatedIntensity}%
@@ -380,7 +382,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
                   </div>
                   <input
                     type="range"
-                    aria-label="Re-rate original emotion intensity now:"
+                    aria-label={t("tr_step5_reenable")}
                     min="1"
                     max="100"
                     value={reRatedIntensity}
@@ -392,7 +394,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
                 {reRatedIntensity < initialIntensity && (
                   <div className="text-xs text-success font-sans flex items-center gap-1 bg-success/10 p-2 border border-success/20 rounded-lg">
                     <Check className="w-3.5 h-3.5" />
-                    <span>Your feeling intensity reduced by <span className="font-bold">{initialIntensity - reRatedIntensity}%</span> (from {initialIntensity}% to {reRatedIntensity}%)! Reframing thoughts helps calm physical pathways.</span>
+                    <span>Your feeling intensity reduced by <span className="font-bold">{initialIntensity - reRatedIntensity}</span>{t("tr_success_message")}</span>
                   </div>
                 )}
               </div>
@@ -411,7 +413,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
                 : "text-ink-faint hover:text-ink-2"
             }`}
           >
-            <ChevronLeft className="w-4 h-4" /> Back
+            <ChevronLeft className="w-4 h-4" /> {t("tr_btn_back")}
           </button>
 
           {currentPage < 5 ? (
@@ -419,7 +421,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
               onClick={() => setCurrentPage(currentPage + 1)}
               className="flex items-center gap-1 text-xs font-bold text-ink bg-accent hover:opacity-90 px-4 py-2 rounded-lg cursor-pointer transition-all"
             >
-              Continue <ChevronRight className="w-4 h-4" />
+              {t("tr_btn_continue")} <ChevronRight className="w-4 h-4" />
             </button>
           ) : (
             <button
@@ -430,7 +432,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
                   : "bg-accent hover:opacity-90 text-white"
               }`}
             >
-              {savedStatus ? "Log Saved!" : "Complete Record"}
+              {savedStatus ? t("tr_btn_saved") : t("tr_btn_complete")}
             </button>
           )}
         </div>

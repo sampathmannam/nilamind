@@ -94,10 +94,10 @@ function getActiveDaysInRange(): string[] {
 }
 
 function greeting(timeMode: string): string {
-  if (timeMode === "morning") return "Good morning";
-  if (timeMode === "evening") return "Good evening";
-  if (timeMode === "night") return "Hey";
-  return "Hey";
+  if (timeMode === "morning") return t("greeting_morning");
+  if (timeMode === "evening") return t("greeting_evening");
+  if (timeMode === "night") return t("greeting_night");
+  return t("greeting_night");
 }
 
 interface Suggestion {
@@ -108,11 +108,11 @@ interface Suggestion {
 
 function contextSuggestion(timeMode: string, state: string | null): Suggestion | null {
   if (state === "crisis") return null;
-  if (state === "elevated") return { hint: "High energy — check your patterns or review your dashboard.", label: "Dashboard", target: "dashboard" };
-  if (state === "anxious") return { hint: "Feeling anxious? Your insights or a thought record might help.", label: "Insights", target: "insights" };
-  if (state === "low") return { hint: "Even a small step counts. Check your progress or dashboard.", label: "Progress", target: "progress" };
-  if (timeMode === "night") return { hint: "Quiet time — review how your week went.", label: "Dashboard", target: "dashboard" };
-  if (timeMode === "evening") return { hint: "Evening reflection — check your week's patterns.", label: "Dashboard", target: "dashboard" };
+  if (state === "elevated") return { hint: t("you_elevated_hint"), label: t("you_elevated_label"), target: "dashboard" };
+  if (state === "anxious") return { hint: t("you_anxious_hint"), label: t("you_anxious_label"), target: "insights" };
+  if (state === "low") return { hint: t("you_low_hint"), label: t("you_low_label"), target: "progress" };
+  if (timeMode === "night") return { hint: t("you_night_hint"), label: t("you_night_label"), target: "dashboard" };
+  if (timeMode === "evening") return { hint: t("you_evening_hint"), label: t("you_evening_label"), target: "dashboard" };
   return null;
 }
 
@@ -122,9 +122,9 @@ function WelcomeCard({
   greet: string; onCheckin: () => void; onIntention: () => void; onDashboard: () => void;
 }) {
   const steps = [
-    { icon: Heart, label: "First check-in", sub: "Tell Nila how you're feeling right now", action: onCheckin },
-    { icon: Target, label: "Set an intention", sub: "One small thing you'd like to try this week", action: onIntention },
-    { icon: Sparkles, label: "Explore your dashboard", sub: "See your progress take shape", action: onDashboard },
+    { icon: Heart, label: t("you_welcome_checkin_step"), sub: t("you_welcome_checkin_desc"), action: onCheckin },
+    { icon: Target, label: t("you_welcome_intention_step"), sub: t("you_welcome_intention_desc"), action: onIntention },
+    { icon: Sparkles, label: t("you_welcome_dashboard_step"), sub: t("you_welcome_dashboard_desc"), action: onDashboard },
   ] as const;
   return (
     <div className="bg-card rounded-2xl border border-line shadow-sm p-5">
@@ -134,11 +134,11 @@ function WelcomeCard({
         </div>
         <div>
           <h1 className="editorial text-2xl text-ink">{greet}</h1>
-          <p className="text-xs text-ink-muted mt-0.5">Welcome to NilaMind</p>
+          <p className="text-xs text-ink-muted mt-0.5">{t("you_welcome_title")}</p>
         </div>
       </div>
       <p className="text-xs text-ink-muted leading-relaxed mb-4">
-        Your private wellness companion. Everything stays on your device — nothing leaves your phone.
+        {t("you_welcome_body")}
       </p>
       <div className="space-y-2">
         {steps.map((s) => (
@@ -239,8 +239,8 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
       {/* U5.2 — Error banner for corrupted storage */}
       {dataErrors.length > 0 && (
         <div className="bg-warn/10 border border-warn/30 rounded-2xl p-3 text-xs text-ink-muted flex items-center gap-2" role="alert">
-          <span className="shrink-0">⚠️</span>
-          <span>Some data couldn&apos;t load. Pull down to refresh.</span>
+          <span>⚠️</span>
+          <span>{t("you_data_error")}</span>
         </div>
       )}
 
@@ -266,8 +266,8 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
               <p className="text-xs text-ink-muted mt-0.5">{streak.message}</p>
               {/* U9.1 + U9.2 — Privacy + crisis-awareness badges */}
               <p className="text-[10px] text-ink-faint mt-1 flex items-center gap-3">
-                <span className="flex items-center gap-1"><span aria-hidden="true">🔒</span> On-device</span>
-                <span className="flex items-center gap-1 text-rose-400/70"><span aria-hidden="true">🛡</span> Crisis support always here</span>
+                <span className="flex items-center gap-1"><span aria-hidden="true">🔒</span> {t("you_badge_on_device")}</span>
+                <span className="flex items-center gap-1 text-rose-400/70"><span aria-hidden="true">🛡</span> {t("you_badge_crisis")}</span>
               </p>
             </div>
           </div>
@@ -276,20 +276,20 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
           </div>
           <div className="flex items-center justify-center gap-1.5 mt-1.5">
             <span className="text-xs text-ink-faint">
-              {activeDays.length} day{activeDays.length !== 1 ? "s" : ""} this week
+              {activeDays.length}{t("you_streak_this_week")}
             </span>
             {weekSnapshot && weekSnapshot.checkinDays > 0 && (
               <>
                 <span className="text-xs text-ink-faint">·</span>
                 <span className="text-xs text-ink-faint">
-                  mostly <span className="text-ink-2 font-medium capitalize">{weekSnapshot.topEmotion || "checking in"}</span>
+                  {t("you_mostly")}<span className="text-ink-2 font-medium capitalize">{weekSnapshot.topEmotion || t("you_fallback_emotion")}</span>
                 </span>
               </>
             )}
           </div>
           {capacity === "low" && (
             <p className="text-xs text-ink-faint mt-2 text-center italic">
-              Today might feel heavy — that's okay. Just being here is enough.
+              {t("you_heavy_encouragement")}
             </p>
           )}
         </div>
@@ -321,20 +321,20 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
           <div className="flex items-start gap-3">
             <Target className="w-5 h-5 text-warn shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-ink-muted">This week's intention</p>
+              <p className="text-xs text-ink-muted">{t("you_intention_title")}</p>
               <p className="text-sm text-ink-2 font-medium mt-0.5">{intention.text}</p>
               <div className="flex gap-2 mt-3">
                 <button
                   onClick={handleComplete}
                   className="px-4 min-h-[44px] inline-flex items-center rounded-lg bg-success/15 hover:bg-success/25 text-accent-hi text-xs font-medium transition-colors cursor-pointer"
                 >
-                  Mark done
+                  {t("you_intention_done")}
                 </button>
                 <button
                   onClick={handleClear}
                   className="px-4 min-h-[44px] inline-flex items-center rounded-lg hover:bg-fill text-ink-faint text-xs font-medium transition-colors cursor-pointer"
                 >
-                  Clear
+                  {t("you_intention_clear")}
                 </button>
               </div>
             </div>
@@ -350,8 +350,8 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
             <Target className="w-5 h-5 text-accent" aria-hidden="true" />
           </span>
           <span className="flex-1 min-w-0">
-            <span className="block text-sm font-bold text-ink">Set a gentle intention</span>
-            <span className="block text-[11px] text-ink-muted">One small thing you'd like to try this week</span>
+            <span className="block text-sm font-bold text-ink">{t("you_intention_set_label")}</span>
+            <span className="block text-[11px] text-ink-muted">{t("you_intention_set_desc")}</span>
           </span>
           <ChevronRight className="w-5 h-5 text-ink-faint shrink-0" />
         </button>
@@ -370,12 +370,12 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
             aria-labelledby="intention-picker-title"
           >
             <div className="flex items-center justify-between mb-4">
-              <h2 id="intention-picker-title" className="text-lg font-semibold text-ink">Set an intention</h2>
-              <button onClick={() => setShowPicker(false)} aria-label="Close" className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-ink-muted hover:text-ink-2 hover:bg-fill">
+              <h2 id="intention-picker-title" className="text-lg font-semibold text-ink">{t("you_intention_picker_title")}</h2>
+              <button onClick={() => setShowPicker(false)} aria-label={t("close")} className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-ink-muted hover:text-ink-2 hover:bg-fill">
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <p className="text-xs text-ink-muted mb-4">Pick one, or write your own. No pressure — just a gentle nudge.</p>
+            <p className="text-xs text-ink-muted mb-4">{t("you_intention_picker_helper")}</p>
             <div className="space-y-2 max-h-60 overflow-y-auto">
               {INTENTION_OPTIONS.map((opt) => (
                 <button
@@ -389,7 +389,7 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
               <div className="pt-2 border-t border-line">
                 <input
                   type="text"
-                  placeholder="Or write your own…"
+                  placeholder={t("you_intention_placeholder")}
                   className="w-full bg-card border border-line rounded-xl px-3 py-2.5 text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30"
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && e.currentTarget.value.trim()) {
@@ -407,21 +407,21 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
       {/* Early-user nudge — habit-building prompt for < 3 check-in days */}
       {isEarlyUser && (
         <div className="bg-accent/8 border border-accent/20 rounded-2xl p-4">
-          <p className="text-xs text-ink-muted mb-3">Building a habit? Try another:</p>
+          <p className="text-xs text-ink-muted mb-3">{t("you_nudge_title")}</p>
           <div className="flex gap-2">
             <button
               onClick={() => go("ema_checkin")}
               className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-card border border-line hover:border-line-strong text-xs font-medium text-ink-2 transition-all cursor-pointer min-h-[44px]"
             >
               <Heart className="w-3.5 h-3.5" aria-hidden="true" />
-              Check-in
+              {t("you_nudge_checkin")}
             </button>
             <button
               onClick={() => go("diary")}
               className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-card border border-line hover:border-line-strong text-xs font-medium text-ink-2 transition-all cursor-pointer min-h-[44px]"
             >
               <Wind className="w-3.5 h-3.5" aria-hidden="true" />
-              Diary
+              {t("you_nudge_diary")}
             </button>
           </div>
         </div>
@@ -474,13 +474,13 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
           className="w-full flex items-center justify-center gap-2 py-3 min-h-[44px] rounded-xl bg-card border border-dashed border-line hover:border-line-strong text-ink-muted hover:text-ink text-xs font-medium transition-all cursor-pointer"
         >
           <Lightbulb className="w-3.5 h-3.5 text-warn/70" aria-hidden="true" />
-          {showMoreResources ? "Show fewer resources" : `${groups.flatMap((g) => g.rows).filter((r) => r.more).length} more resources`}
+          {showMoreResources ? t("you_fewer_resources") : `${groups.flatMap((g) => g.rows).filter((r) => r.more).length}${t("you_more_resources")}`}
           <ChevronRight className={`w-3 h-3 transition-transform duration-200 ${showMoreResources ? "rotate-90" : ""}`} aria-hidden="true" />
         </button>
       )}
 
       <p className="text-[11px] text-ink-faint text-center leading-relaxed px-4">
-        NilaMind is a support alongside — not a substitute for — professional care.
+        {t("you_footer_disclaimer")}
       </p>
 
       <ConfettiBurst

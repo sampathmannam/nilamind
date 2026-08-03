@@ -594,9 +594,12 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
             </span>
           </div>
         )}
-
-        <RatingPromptCard />
       </div>
+
+      {/* Rating prompt lives OUTSIDE the chat scroll area (Gap A-3) and only before the conversation
+          starts (no user-authored message yet — the welcome seed doesn't count) so it never interrupts
+          an active conversation. */}
+      {!messages.some((m) => m.role === "user") && <RatingPromptCard />}
 
       {/* Input bar */}
       <div className="px-4 py-3 border-t border-line/40 bg-page/95 backdrop-blur-sm space-y-2.5 shrink-0">

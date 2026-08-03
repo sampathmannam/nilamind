@@ -90,13 +90,13 @@ export default function NilaFace({ state, onClick, onLongPress, size = 160, isLi
   const palette = useMemo(() => getPalette(state), [state]);
   // Motion is state- and reduced-motion-aware: 'elevated' SLOWS the orb (settles it), and
   // prefers-reduced-motion stops all ambient motion (see nilaFaceMotion — manic-first + a11y).
-  // Listening state overrides with a faster pulse (halved breathe/shimmer) so the orb signals
-  // active attention.
+  // Listening state deliberately does NOT speed the orb up (Gap E-3): a faster pulse during voice
+  // input would signal arousal, not calm. The orb keeps its state-driven pace so it reads as
+  // "I'm right here with you," not "I'm excited you're talking."
   const prefersReduced = useReducedMotion();
   const [sensoryComfort] = useSensoryComfort();
   const reduced = prefersReduced || sensoryComfort;
-  const baseMotion = useMemo(() => faceMotion(state, reduced), [state, reduced]);
-  const motion = baseMotion;
+  const motion = useMemo(() => faceMotion(state, reduced), [state, reduced]);
   // Per-turn affect accent — see nilaFaceAccent.ts for the dead-zone/cooldown/elevated-crisis-dormancy/
   // anxious-damping logic. `reduced` (prefers-reduced-motion OR sensory-comfort) suppresses this the
   // same way it suppresses ambient motion above.

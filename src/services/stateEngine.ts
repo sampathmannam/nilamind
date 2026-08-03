@@ -440,7 +440,7 @@ function convertInsightsToSignals(
         label: "BA engagement",
         detail: `${done.length} activities completed recently — behavioural activation is active`,
         strength: done.length >= 5 ? "strong" : "moderate",
-        basis: "Behavioural activation (activity scheduling + mastery/pleasure rating) is the best-evidenced behavioural treatment for depression (SMD ≈ −0.51; meta-analyses).",
+        basis: "Behavioural activation (activity scheduling + mastery/pleasure rating) is one of the best-evidenced behavioural approaches for low mood; guided internet-delivered BA shows post-treatment effects around g≈−0.49 (apps ≈−0.39; unguided not significant; gains not always maintained at follow-up) — Alber et al. 2023; Jia et al. 2025, JMIR.",
         direction: "improvement",
         dataPoints: done.length,
       });

@@ -4,7 +4,7 @@ import type { UserState } from "../types/modes";
 
 describe("faceMotion — orb settles when elevated, stills under reduced-motion", () => {
   it("calm / default → baseline speeds, animated", () => {
-    expect(faceMotion("calm", false)).toEqual({ breatheSec: 3, spinSec: 20, shimmerSec: 6, animate: true });
+    expect(faceMotion("calm", false)).toEqual({ breatheSec: 12, spinSec: 20, shimmerSec: 6, animate: true });
     expect(faceMotion(null, false).animate).toBe(true);
   });
 

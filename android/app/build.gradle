@@ -18,8 +18,8 @@ android {
         applicationId "com.nilamind.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 88
-        versionName "1.25.1"
+        versionCode 89
+        versionName "1.26.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -63,6 +63,10 @@ dependencies {
     implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
     implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
     implementation project(':capacitor-android')
+    // Health Connect (HealthConnectPlugin) — reads sleep sessions on-device. 1.1.0 is the latest
+    // stable; the 1.2.x line is still alpha. It declares minSdk 26 vs our 24, overridden in the
+    // manifest (tools:overrideLibrary) and gated by getSdkStatus() so Android 7.x degrades safely.
+    implementation "androidx.health.connect:connect-client:1.1.0"
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"

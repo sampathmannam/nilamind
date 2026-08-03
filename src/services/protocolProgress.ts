@@ -5,6 +5,7 @@
 import { localDateKey } from "./storageUtils";
 import { secureLocal } from "./secureLocal";
 import { getProtocol, routeToProtocol, type Protocol, type ProtocolStep } from "./protocols";
+import { detectElevationRisk } from "./elevationGuard";
 import { recordProtocolCompletion, completionCountFor } from "./nOf1";
 
 export { completionCountFor } from "./nOf1";
@@ -127,5 +128,13 @@ export function abandonProtocol(): void {
  */
 export function protocolOffer(userMessage: string): Protocol | null {
   if (getActiveProgress()) return null;
-  return routeToProtocol(userMessage);
+  const match = routeToProtocol(userMessage);
+  if (!match) return null;
+  // B6 (2026-08-03): gratitude gate during elevation. A message that trips BOTH a gratitude/positive-
+  // reframing cue AND the deterministic elevation markers (grandiosity, euphoric sleep-denial, pressured
+  // speech, …) must NOT be answered with an offer to practice gratitude — positive-reframing can feed the
+  // inflated, pressured positivity of a manic state (the gratitude protocol's own basis string flags this).
+  // The elevationGuard steer (slow down, protect sleep, reality-anchor) should own that turn instead.
+  if (match.id === "gratitude" && detectElevationRisk(userMessage).level !== "none") return null;
+  return match;
 }

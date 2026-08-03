@@ -425,7 +425,288 @@ export type I18nKey =
   | "error_default_title"
   | "warning_default_title"
   | "info_default_title"
-  | "dismiss_error";
+  | "dismiss_error"
+  // EMA
+  | "ema_how_are_you"
+  | "ema_energy"
+  | "ema_valence_very_bad"
+  | "ema_valence_bad"
+  | "ema_valence_neutral"
+  | "ema_valence_good"
+  | "ema_valence_very_good"
+  | "ema_energy_very_low"
+  | "ema_energy_low"
+  | "ema_energy_moderate"
+  | "ema_energy_high"
+  | "ema_note_placeholder"
+  // Secure gate
+  | "gate_error_title"
+  | "gate_error_body"
+  | "gate_try_again"
+  | "gate_securing"
+  | "gate_pin_error"
+  | "gate_welcome_back"
+  | "gate_unlock_body"
+  | "gate_pin_placeholder"
+  | "gate_unlock"
+  | "gate_privacy_note"
+  // Message feedback
+  | "msg_feedback_toggle"
+  | "msg_thanks_feedback"
+  | "msg_feedback_prompt"
+  | "msg_feedback_placeholder"
+  | "msg_not_now"
+  | "msg_share"
+  // Learn
+  | "learn_badge_skill"
+  | "learn_badge_explainer"
+  | "learn_badge_research"
+  | "learn_title"
+  | "learn_subtitle"
+  | "learn_crisis_heading"
+  | "learn_crisis_dismiss"
+  | "learn_support_cta"
+  | "learn_hard_moment"
+  | "learn_hard_moment_sub"
+  | "learn_for_feeling"
+  | "learn_search_placeholder"
+  | "learn_filter_all"
+  | "learn_filter_all_skills"
+  | "learn_results_count"
+  | "learn_loading"
+  | "learn_no_results"
+  | "learn_footer_disclaimer"
+  | "learn_what_it_is"
+  | "learn_why_it_helps"
+  | "learn_the_research"
+  | "learn_reference_verifying"
+  | "learn_reference_verifying_hint"
+  // Reach out
+  | "reach_title"
+  | "reach_subtitle"
+  | "reach_crisis_heading"
+  | "reach_crisis_body"
+  | "reach_your_kept_message"
+  | "reach_send_anyway"
+  | "reach_copy"
+  | "reach_back_to_writing"
+  | "reach_need_support"
+  | "reach_start_with"
+  | "reach_write_own"
+  | "reach_message_placeholder"
+  | "reach_send"
+  | "reach_footer_advice"
+  // Identity onboarding
+  | "id_welcome_title"
+  | "id_welcome_body"
+  | "id_create_new"
+  | "id_restore_phrase"
+  | "id_save_phrase_title"
+  | "id_save_phrase_body"
+  | "id_copy_phrase"
+  | "id_copied"
+  | "id_phrase_warning"
+  | "id_phrase_confirmed"
+  | "id_enter_nila"
+  | "id_restore_title"
+  | "id_restore_body"
+  | "id_restore_placeholder"
+  | "id_restore_backup_label"
+  | "id_restore_backup_placeholder"
+  | "id_restore_button"
+  | "id_error_create"
+  | "id_error_invalid_phrase"
+  | "id_error_backup_read"
+  | "id_error_restore"
+  // You screen
+  | "you_elevated_hint"
+  | "you_elevated_label"
+  | "you_anxious_hint"
+  | "you_anxious_label"
+  | "you_low_hint"
+  | "you_low_label"
+  | "you_night_hint"
+  | "you_night_label"
+  | "you_evening_hint"
+  | "you_evening_label"
+  | "you_welcome_checkin_step"
+  | "you_welcome_checkin_desc"
+  | "you_welcome_intention_step"
+  | "you_welcome_intention_desc"
+  | "you_welcome_dashboard_step"
+  | "you_welcome_dashboard_desc"
+  | "you_welcome_title"
+  | "you_welcome_body"
+  | "you_badge_on_device"
+  | "you_badge_crisis"
+  | "you_streak_this_week"
+  | "you_mostly"
+  | "you_fallback_emotion"
+  | "you_heavy_encouragement"
+  | "you_data_error"
+  | "you_intention_title"
+  | "you_intention_done"
+  | "you_intention_clear"
+  | "you_intention_set_label"
+  | "you_intention_set_desc"
+  | "you_intention_picker_title"
+  | "you_intention_picker_helper"
+  | "you_intention_placeholder"
+  | "you_nudge_title"
+  | "you_nudge_checkin"
+  | "you_nudge_diary"
+  | "you_fewer_resources"
+  | "you_more_resources"
+  | "you_footer_disclaimer"
+  // Thought record
+  | "tr_title"
+  | "tr_subtitle"
+  | "tr_step_of"
+  | "tr_step1_title"
+  | "tr_step1_question"
+  | "tr_step1_placeholder"
+  | "tr_step2_title"
+  | "tr_step2_question"
+  | "tr_step2_placeholder"
+  | "tr_step2_intensity"
+  | "tr_step3_title"
+  | "tr_step3_question"
+  | "tr_step3_placeholder"
+  | "tr_step3_belief"
+  | "tr_spot_looking"
+  | "tr_spot_traps"
+  | "tr_step4_title"
+  | "tr_step4_instruction"
+  | "tr_step4_active"
+  | "tr_step5_title"
+  | "tr_step5_question"
+  | "tr_step5_placeholder"
+  | "tr_step5_reenable"
+  | "tr_step5_asking"
+  | "tr_step5_ask_nila"
+  | "tr_step5_crisis_heading"
+  | "tr_step5_rerate"
+  | "tr_success_message"
+  | "tr_btn_back"
+  | "tr_btn_continue"
+  | "tr_btn_saved"
+  | "tr_btn_complete"
+  | "tr_no_traps"
+  | "tr_empty_error"
+  | "tr_nil_fail"
+  | "tr_trap_all_or_nothing"
+  | "tr_trap_all_or_nothing_desc"
+  | "tr_trap_catastrophising"
+  | "tr_trap_catastrophising_desc"
+  | "tr_trap_mind_reading"
+  | "tr_trap_mind_reading_desc"
+  | "tr_trap_fortune_telling"
+  | "tr_trap_fortune_telling_desc"
+  | "tr_trap_emotional_reasoning"
+  | "tr_trap_emotional_reasoning_desc"
+  | "tr_trap_should_statements"
+  | "tr_trap_should_statements_desc"
+  | "tr_trap_labelling"
+  | "tr_trap_labelling_desc"
+  | "tr_trap_personalisation"
+  | "tr_trap_personalisation_desc"
+  | "tr_trap_mental_filter"
+  | "tr_trap_mental_filter_desc"
+  | "tr_trap_magnification"
+  | "tr_trap_magnification_desc"
+  // Episode Support
+  | "ep_here"
+  | "ep_opening_body"
+  | "ep_opening_question"
+  | "ep_placeholder"
+  | "ep_start"
+  | "ep_offline_note"
+  | "ep_end_session"
+  | "ep_live_badge"
+  | "ep_not_therapist"
+  | "ep_crisis_tap"
+  | "ep_shielding"
+  | "ep_return_home"
+  | "ep_intensity_prompt"
+  | "ep_chat_placeholder"
+  | "ep_send"
+  | "ep_escalation_title"
+  | "ep_escalation_body"
+  | "ep_escalation_keep"
+  | "ep_guided_title"
+  | "ep_guided_badge"
+  | "ep_guided_init_body"
+  | "ep_guided_intensity"
+  | "ep_tipp_title"
+  | "ep_tipp_body"
+  | "ep_tipp_done"
+  | "ep_medium_question"
+  | "ep_medium_racing"
+  | "ep_medium_harm"
+  | "ep_medium_shame"
+  | "ep_panic_title"
+  | "ep_panic_body"
+  | "ep_panic_done"
+  | "ep_harm_title"
+  | "ep_harm_body"
+  | "ep_harm_done"
+  | "ep_shame_title"
+  | "ep_shame_body"
+  | "ep_shame_proceed"
+  | "ep_low_body"
+  | "ep_low_done"
+  | "ep_debrief1_title"
+  | "ep_debrief1_sub"
+  | "ep_debrief1_trigger"
+  | "ep_debrief1_placeholder"
+  | "ep_debrief1_skip"
+  | "ep_debrief1_save"
+  | "ep_debrief2_title"
+  | "ep_debrief2_sub"
+  | "ep_debrief2_prompt"
+  | "ep_debrief2_continue"
+  | "ep_debrief3_title"
+  | "ep_debrief3_sub"
+  | "ep_debrief3_when_started"
+  | "ep_debrief3_highest"
+  | "ep_debrief3_final"
+  | "ep_saved_title"
+  | "ep_saved_body"
+  | "ep_saved_done"
+  | "ep_synthetic_logged"
+  | "ep_synthetic_user"
+  | "ep_synthetic_initial"
+  | "ep_synthetic_reprompt"
+  // Exposure Hierarchy
+  | "ex_crisis_title"
+  | "ex_crisis_body"
+  | "ex_crisis_back"
+  | "ex_close"
+  | "ex_subtitle"
+  | "ex_completed"
+  | "ex_avg_suds"
+  | "ex_celebrate"
+  | "ex_complete_step"
+  | "ex_suds_after"
+  | "ex_reflect_prompt"
+  | "ex_learned_placeholder"
+  | "ex_save"
+  | "ex_cancel"
+  | "ex_reflection_note"
+  | "ex_suds_label"
+  | "ex_complete_btn"
+  | "ex_no_steps"
+  | "ex_step_placeholder"
+  | "ex_suds_slider"
+  | "ex_add_step"
+  | "ex_title"
+  | "ex_body"
+  | "ex_hierarchy_name"
+  | "ex_confirm_remove"
+  | "ex_confirm_message"
+  | "ex_remove"
+  | "ex_keep"
+  ;
 
 export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
   en: {
@@ -823,6 +1104,284 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     pi_action_assessment: "Take a screen",
     pi_action_protocol: "Try a protocol",
     pi_dismiss: "Not now",
+    // EMA
+    ema_how_are_you: "How are you right now?",
+    ema_energy: "Energy level",
+    ema_valence_very_bad: "Very bad",
+    ema_valence_bad: "Bad",
+    ema_valence_neutral: "Neutral",
+    ema_valence_good: "Good",
+    ema_valence_very_good: "Very good",
+    ema_energy_very_low: "Very low",
+    ema_energy_low: "Low",
+    ema_energy_moderate: "Moderate",
+    ema_energy_high: "High",
+    ema_note_placeholder: "Add a note — what's on your mind?",
+    // Secure gate
+    gate_error_title: "Authentication error",
+    gate_error_body: "Your data stayed on device, but we couldn't read it securely. Try again.",
+    gate_try_again: "Try again",
+    gate_securing: "Securing your data…",
+    gate_pin_error: "Wrong PIN — try again.",
+    gate_welcome_back: "Welcome back",
+    gate_unlock_body: "Enter your PIN to unlock NilaMind.",
+    gate_pin_placeholder: "Enter PIN",
+    gate_unlock: "Unlock",
+    gate_privacy_note: "Your PIN never leaves this device.",
+    // Message feedback
+    msg_feedback_toggle: "Was this helpful?",
+    msg_thanks_feedback: "Thanks for the feedback!",
+    msg_feedback_prompt: "Help Nila learn what works for you",
+    msg_feedback_placeholder: "Tell Nila what helped or didn't…",
+    msg_not_now: "Not now",
+    msg_share: "Share",
+    // Learn
+    learn_badge_skill: "Skill",
+    learn_badge_explainer: "Explainer",
+    learn_badge_research: "Research",
+    learn_title: "Learn",
+    learn_subtitle: "Evidence-based skills and plain-language explainers",
+    learn_crisis_heading: "Crisis right now?",
+    learn_crisis_dismiss: "Not in crisis",
+    learn_support_cta: "Reach out for support",
+    learn_hard_moment: "In a hard moment right now?",
+    learn_hard_moment_sub: "You're not alone. Help is available.",
+    learn_for_feeling: "You might be looking for",
+    learn_search_placeholder: "Search skills…",
+    learn_filter_all: "All",
+    learn_filter_all_skills: "All skills",
+    learn_results_count: "{n} skills",
+    learn_loading: "Loading…",
+    learn_no_results: "No skills match that search.",
+    learn_footer_disclaimer: "NilaMind is educational support — not therapy, diagnosis, or a crisis service.",
+    learn_what_it_is: "What it is",
+    learn_why_it_helps: "Why it helps",
+    learn_the_research: "The research",
+    learn_reference_verifying: "Verifying references",
+    learn_reference_verifying_hint: "Checking that cited studies are accurate…",
+    // Reach out
+    reach_title: "Reach out",
+    reach_subtitle: "A message you can send to someone you trust",
+    reach_crisis_heading: "Right now — crisis support",
+    reach_crisis_body: "If you're in immediate danger, please call your local emergency number or a crisis helpline.",
+    reach_your_kept_message: "Your saved message",
+    reach_send_anyway: "Send anyway",
+    reach_copy: "Copy message",
+    reach_back_to_writing: "Back to writing",
+    reach_need_support: "Need support right now?",
+    reach_start_with: "Start with",
+    reach_write_own: "Write my own",
+    reach_message_placeholder: "Write a message to someone you trust…",
+    reach_send: "Send",
+    reach_footer_advice: "Sending is always your choice. NilaMind never sends anything on your behalf.",
+    // Identity onboarding
+    id_welcome_title: "Welcome to NilaMind",
+    id_welcome_body: "Your private wellness companion. Everything stays on your device.",
+    id_create_new: "Create a new space",
+    id_restore_phrase: "Restore from recovery phrase",
+    id_save_phrase_title: "Save your recovery phrase",
+    id_save_phrase_body: "Write these 12 words down and keep them somewhere safe. This is the only way to restore your data if you reinstall.",
+    id_copy_phrase: "Copy phrase",
+    id_copied: "Copied",
+    id_phrase_warning: "Write it down before continuing. If you lose this phrase, your data cannot be recovered.",
+    id_phrase_confirmed: "I've written it down",
+    id_enter_nila: "Enter NilaMind",
+    id_restore_title: "Restore your space",
+    id_restore_body: "Enter your 12-word recovery phrase to restore your data.",
+    id_restore_placeholder: "word word word …",
+    id_restore_backup_label: "Optional: paste your backup code",
+    id_restore_backup_placeholder: "Backup code",
+    id_restore_button: "Restore",
+    id_error_create: "Something went wrong creating your space. Please try again.",
+    id_error_invalid_phrase: "That doesn't look like a valid 12-word phrase.",
+    id_error_backup_read: "Your phrase worked, but that backup couldn't be read.",
+    id_error_restore: "Couldn't restore from that phrase. Please try again.",
+    // You screen
+    you_elevated_hint: "High energy \u2014 check your patterns or review your dashboard.",
+    you_elevated_label: "Dashboard",
+    you_anxious_hint: "Feeling anxious? Your insights or a thought record might help.",
+    you_anxious_label: "Insights",
+    you_low_hint: "Even a small step counts. Check your progress or dashboard.",
+    you_low_label: "Progress",
+    you_night_hint: "Quiet time \u2014 review how your week went.",
+    you_night_label: "Dashboard",
+    you_evening_hint: "Evening reflection \u2014 check your week's patterns.",
+    you_evening_label: "Dashboard",
+    you_welcome_checkin_step: "First check-in",
+    you_welcome_checkin_desc: "Tell Nila how you're feeling right now",
+    you_welcome_intention_step: "Set an intention",
+    you_welcome_intention_desc: "One small thing you'd like to try this week",
+    you_welcome_dashboard_step: "Explore your dashboard",
+    you_welcome_dashboard_desc: "See your progress take shape",
+    you_welcome_title: "Welcome to NilaMind",
+    you_welcome_body: "Your private wellness companion. Everything stays on your device \u2014 nothing leaves your phone.",
+    you_badge_on_device: "On-device",
+    you_badge_crisis: "Crisis support always here",
+    you_streak_this_week: " day(s) this week",
+    you_mostly: "mostly ",
+    you_fallback_emotion: "checking in",
+    you_heavy_encouragement: "Today might feel heavy \u2014 that's okay. Just being here is enough.",
+    you_data_error: "Some data couldn't load. Pull down to refresh.",
+    you_intention_title: "This week's intention",
+    you_intention_done: "Mark done",
+    you_intention_clear: "Clear",
+    you_intention_set_label: "Set a gentle intention",
+    you_intention_set_desc: "One small thing you'd like to try this week",
+    you_intention_picker_title: "Set an intention",
+    you_intention_picker_helper: "Pick one, or write your own. No pressure \u2014 just a gentle nudge.",
+    you_intention_placeholder: "Or write your own\u2026",
+    you_nudge_title: "Building a habit? Try another:",
+    you_nudge_checkin: "Check-in",
+    you_nudge_diary: "Diary",
+    you_fewer_resources: "Show fewer resources",
+    you_more_resources: " more resources",
+    you_footer_disclaimer: "NilaMind is a support alongside \u2014 not a substitute for \u2014 professional care.",
+    tr_title: "CBT Thought Record",
+    tr_subtitle: "Challenging automatic cognitive filters",
+    tr_step_of: " of 5",
+    tr_step1_title: "Step 1: The Situation",
+    tr_step1_question: "What happened?",
+    tr_step1_placeholder: "Explain the triggering event objective: e.g., 'An argument with a friend at noon about dinner plans...'",
+    tr_step2_title: "Step 2: Core Feeling",
+    tr_step2_question: "What did you feel?",
+    tr_step2_placeholder: "e.g. Shame, intense anger, abandonment, panic",
+    tr_step2_intensity: "Feeling Intensity?",
+    tr_step3_title: "Step 3: Unwanted Thought",
+    tr_step3_question: "What automatic thoughts went through your mind?",
+    tr_step3_placeholder: "e.g. 'They are leaving me because I am totally toxic and unlovable...'",
+    tr_step3_belief: "How strongly do you believe this thought?",
+    tr_spot_looking: "Looking...",
+    tr_spot_traps: "Spot traps",
+    tr_step4_title: "Step 4: Identify Trap Cards",
+    tr_step4_instruction: "Which cognitive distortions apply in this moment? Tap all that align:",
+    tr_step4_active: "Active",
+    tr_step5_title: "Step 5: Reframed Mindset",
+    tr_step5_question: "What is a more balanced thought?",
+    tr_step5_placeholder: "Draft an objective re-evaluation or let the assistant generate one for you...",
+    tr_step5_reenable: "Re-rate original emotion intensity now:",
+    tr_step5_asking: "Asking Nila...",
+    tr_step5_ask_nila: "Ask Nila",
+    tr_step5_crisis_heading: "What you wrote matters more than this exercise right now",
+    tr_success_message: "% (from % to %)! Reframing thoughts helps calm physical pathways.",
+    tr_btn_back: "Back",
+    tr_btn_continue: "Continue",
+    tr_btn_saved: "Log Saved!",
+    tr_btn_complete: "Complete Record",
+    tr_no_traps: "No obvious thinking traps spotted \u2014 that's okay, this isn't a verdict.",
+    tr_empty_error: "Please explain what happened and what automatic thoughts arose first.",
+    tr_nil_fail: "I couldn't reach Nila right now. Please draft your own balanced thought or retry.",
+    tr_trap_all_or_nothing: "All-or-Nothing",
+    tr_trap_all_or_nothing_desc: "If it's not perfect, it's a complete failure",
+    tr_trap_catastrophising: "Catastrophising",
+    tr_trap_catastrophising_desc: "This is going to be an absolute disaster",
+    tr_trap_mind_reading: "Mind-Reading",
+    tr_trap_mind_reading_desc: "I already know they think I'm incompetent",
+    tr_trap_fortune_telling: "Fortune-Telling",
+    tr_trap_fortune_telling_desc: "I know for a fact it will go wrong",
+    tr_trap_emotional_reasoning: "Emotional Reasoning",
+    tr_trap_emotional_reasoning_desc: "I feel worthless, so I must genuinely be so",
+    tr_trap_should_statements: "Should Statements",
+    tr_trap_should_statements_desc: "I should be doing better than this",
+    tr_trap_labelling: "Labelling",
+    tr_trap_labelling_desc: "I'm a failure / bad person",
+    tr_trap_personalisation: "Personalisation",
+    tr_trap_personalisation_desc: "It is all entirely my fault",
+    tr_trap_mental_filter: "Mental Filter",
+    tr_trap_mental_filter_desc: "Only focus on the negative, screen out positive context",
+    tr_trap_magnification: "Magnification",
+    tr_trap_magnification_desc: "Blowing everything out of proportion",
+    // Episode Support
+    ep_here: "I'm here.",
+    ep_opening_body: "This is your episode support tool \u2014 an AI, not a person. I cannot replace a human but I can help you secure grounded thoughts to navigate the next few minutes.",
+    ep_opening_question: "What is happening right now?",
+    ep_placeholder: "Explain how you feel, what triggered you, or what unwanted urge you have... (text is 100% secure/private)",
+    ep_start: "Start Episode Support",
+    ep_offline_note: "Nila runs entirely on your device \u2014 no connection needed. If the model is still loading, the secure Guided Mode runs automatically.",
+    ep_end_session: "End Session",
+    ep_live_badge: "Nila \u00b7 on-device",
+    ep_not_therapist: "Not a therapist. Not a diagnosis tool.",
+    ep_crisis_tap: "In crisis? Tap to call now:",
+    ep_shielding: "Safety shielding active",
+    ep_return_home: "Return to Home",
+    ep_intensity_prompt: "Select your current intensity (1 is calm, 10 is crisis limit):",
+    ep_chat_placeholder: "Express how you feel...",
+    ep_send: "Send",
+    ep_escalation_title: "You've been in this for 20 minutes and you're still at high intensity.",
+    ep_escalation_body: "This is the moment for a human. Not because I can't help \u2014 because humans can do something I genuinely cannot: exist with you physically and hear your voice.",
+    ep_escalation_keep: "Keep talking with Nila",
+    ep_guided_title: "Guided Offline Mode",
+    ep_guided_badge: "No Connection Needed",
+    ep_guided_init_body: "The AI companion isn't reachable right now, but I can still walk you through this. Let's go step by step.",
+    ep_guided_intensity: "How intense is what you're feeling right now?",
+    ep_tipp_title: "Biological shock reset",
+    ep_tipp_body: "Your intensity is extreme. This means your thinking brain is offline. This is biology, not weakness. Try whichever of these fits right now.",
+    ep_tipp_done: "I'm ready to close out",
+    ep_medium_question: "What is the strongest unwanted filter right now?",
+    ep_medium_racing: "Racing, chaotic thoughts spinning",
+    ep_medium_harm: "An intense urge to hurt myself or act impulsively",
+    ep_medium_shame: "Intense shame or hating myself",
+    ep_panic_title: "Box Breathing",
+    ep_panic_body: "Slow, even breathing steadies your body and helps calm a racing mind. Let's do 4-4-4-4 cycles: breathe in 4s, hold 4s, out 4s, hold 4s.",
+    ep_panic_done: "Done",
+    ep_harm_title: "Wave Surfing Script",
+    ep_harm_body: "Urges are like waves. They rise, peak, and inevitably fall if you do not feed them. Picture yourself on a secure surfboard. Press your feet down and stay steady \u2014 do not fight the urge. Just ride it out for 10 minutes.",
+    ep_harm_done: "Done",
+    ep_shame_title: "Neff's Self-Compassion script",
+    ep_shame_body: "Take a self-compassion break. Read slowly: \"This is hard. This pain is part of life. May I give myself the same kindness I'd offer to a dear friend in tears.\"",
+    ep_shame_proceed: "Proceed to debrief",
+    ep_low_body: "You're in a steadier place. Let's calm our systems down and proceed to a gentle closure.",
+    ep_low_done: "Safe Close",
+    ep_debrief1_title: "Closing Recovery Debrief",
+    ep_debrief1_sub: "Step 1 of 3: Tracking trigger context",
+    ep_debrief1_trigger: "What triggered this acute episode? (Optional)",
+    ep_debrief1_placeholder: "e.g. Perceived rejection, severe work disappointment, lack of sleep...",
+    ep_debrief1_skip: "Skip",
+    ep_debrief1_save: "Save & Next",
+    ep_debrief2_title: "Debrief: Coping Verification",
+    ep_debrief2_sub: "Step 2 of 3: Check which skills helped you",
+    ep_debrief2_prompt: "What helped most during this session? Toggle helpers:",
+    ep_debrief2_continue: "Continue",
+    ep_debrief3_title: "Debrief: Intensity Journey",
+    ep_debrief3_sub: "Step 3 of 3: Rate your final current state",
+    ep_debrief3_when_started: "When you started",
+    ep_debrief3_highest: "Highest point",
+    ep_debrief3_final: "Where is your intensity rating ending up right now?",
+    ep_saved_title: "Session Saved Offline",
+    ep_saved_body: "You got through it. That matters more than it might feel right now.",
+    ep_saved_done: "I'm done for now",
+    ep_synthetic_logged: "Logged current intensity: {n}/10.",
+    ep_synthetic_user: "My current intensity is {n}/10. Acknowledge it and guide me through one matching distress-resolution skill.",
+    ep_synthetic_initial: "To help me guide you safely, let's lock in: how intense is what you are experiencing right now on a scale of 1 to 10?",
+    ep_synthetic_reprompt: "Let's pause and come back to right now: what is your intensity rating from 1 to 10?",
+    // Exposure Hierarchy
+    ex_crisis_title: "You matter \u2014 support is here right now",
+    ex_crisis_body: "What you just wrote sounds like more than an exposure step. This is a moment for a person, not an exercise \u2014 please reach out right now. You're not alone.",
+    ex_crisis_back: "Back to the exercise",
+    ex_close: "Close",
+    ex_subtitle: "Steps ranked by SUDS (0\u2013100). Work from bottom up \u2014 start with the easiest.",
+    ex_completed: "Completed",
+    ex_avg_suds: "Avg SUDS drop",
+    ex_celebrate: "Step completed \u2014 {step}. That takes courage, even when it's hard.",
+    ex_complete_step: "Complete this step",
+    ex_suds_after: "SUDS after exposure: {n}",
+    ex_reflect_prompt: "A few things worth reflecting on:",
+    ex_learned_placeholder: "What did you learn? (optional)",
+    ex_save: "Save",
+    ex_cancel: "Cancel",
+    ex_reflection_note: "Reflection prompts based on the inhibitory-learning model (Craske, Treanor, Conway, Zbozinek & Vervliet, 2014) \u2014 noticing what actually happened, versus what you predicted, is what research suggests makes exposure learning last.",
+    ex_suds_label: "SUDS: {n}",
+    ex_complete_btn: "Complete",
+    ex_no_steps: "No steps yet. Add your first one below.",
+    ex_step_placeholder: "Exposure step...",
+    ex_suds_slider: "SUDS: {n}",
+    ex_add_step: "Add step",
+    ex_title: "Exposure Hierarchy",
+    ex_body: "Build a ladder of fears. Work from the bottom up \u2014 start where it's easiest, not hardest.",
+    ex_hierarchy_name: "Hierarchy name (e.g. Social anxiety)",
+    ex_confirm_remove: "Remove step?",
+    ex_confirm_message: "This step will be deleted from your hierarchy. Progress for this step will be lost.",
+    ex_remove: "Remove",
+    ex_keep: "Keep",
   },
   hi: {
     appName: "NilaMind",
@@ -1213,6 +1772,275 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     pi_action_assessment: "स्क्रीन लें",
     pi_action_protocol: "प्रोटोकॉल आज़माएं",
     pi_dismiss: "अभी नहीं",
+    ema_how_are_you: "अभी आप कैसा महसूस कर रहे हैं?",
+    ema_energy: "ऊर्जा स्तर",
+    ema_valence_very_bad: "बहुत बुरा",
+    ema_valence_bad: "बुरा",
+    ema_valence_neutral: "सामान्य",
+    ema_valence_good: "अच्छा",
+    ema_valence_very_good: "बहुत अच्छा",
+    ema_energy_very_low: "बहुत कम",
+    ema_energy_low: "कम",
+    ema_energy_moderate: "सामान्य",
+    ema_energy_high: "उच्च",
+    ema_note_placeholder: "नोट जोड़ें — क्या मन में है?",
+    gate_error_title: "प्रमाणीकरण त्रुटि",
+    gate_error_body: "आपका डेटा डिवाइस पर ही रहा, लेकिन हम इसे सुरक्षित रूप से नहीं पढ़ सके। फिर से प्रयास करें।",
+    gate_try_again: "फिर से प्रयास करें",
+    gate_securing: "आपका डेटा सुरक्षित हो रहा है…",
+    gate_pin_error: "गलत PIN — फिर से प्रयास करें।",
+    gate_welcome_back: "वापसी पर स्वागत",
+    gate_unlock_body: "NilaMind अनलॉक करने के लिए PIN दर्ज करें।",
+    gate_pin_placeholder: "PIN दर्ज करें",
+    gate_unlock: "अनलॉक",
+    gate_privacy_note: "आपका PIN इस डिवाइस से बाहर नहीं जाता।",
+    msg_feedback_toggle: "क्या यह मददगार था?",
+    msg_thanks_feedback: "प्रतिक्रिया के लिए धन्यवाद!",
+    msg_feedback_prompt: "Nila को सिखाएं कि आपके लिए क्या काम करता है",
+    msg_feedback_placeholder: "Nila को बताएं कि क्या मदद किया या नहीं…",
+    msg_not_now: "अभी नहीं",
+    msg_share: "साझा करें",
+    learn_badge_skill: "कौशल",
+    learn_badge_explainer: "स्पष्टीकरण",
+    learn_badge_research: "अनुसंधान",
+    learn_title: "सीखें",
+    learn_subtitle: "साक्ष्य-आधारित कौशल और सरल भाषा में स्पष्टीकरण",
+    learn_crisis_heading: "अभी संकट में हैं?",
+    learn_crisis_dismiss: "संकट में नहीं",
+    learn_support_cta: "सहायता के लिए पहुंचें",
+    learn_hard_moment: "अभी कठिन समय चल रहा है?",
+    learn_hard_moment_sub: "आप अकेले नहीं हैं। मदद उपलब्ध है।",
+    learn_for_feeling: "आप शायद यह ढूंढ रहे हैं",
+    learn_search_placeholder: "कौशल खोजें…",
+    learn_filter_all: "सभी",
+    learn_filter_all_skills: "सभी कौशल",
+    learn_results_count: "{n} कौशल",
+    learn_loading: "लोड हो रहा है…",
+    learn_no_results: "कोई कौशल मेल नहीं खाता।",
+    learn_footer_disclaimer: "NilaMind शैक्षिक सहायता है — चिकित्सा, निदान या संकट सेवा नहीं।",
+    learn_what_it_is: "यह क्या है",
+    learn_why_it_helps: "यह क्यों मदद करता है",
+    learn_the_research: "अनुसंधान",
+    learn_reference_verifying: "संदर्भ सत्यापित कर रहे हैं",
+    learn_reference_verifying_hint: "उद्धृत अध्ययन सटीक हैं यह जांच रहे हैं…",
+    reach_title: "संपर्क करें",
+    reach_subtitle: "किसी विश्वसनीय व्यक्ति को भेजने के लिए संदेश",
+    reach_crisis_heading: "अभी — संकट सहायता",
+    reach_crisis_body: "यदि आप तत्काल खतरे में हैं, तो कृपया अपना स्थानीय आपातकालीन नंबर या संकट हेल्पलाइन कॉल करें।",
+    reach_your_kept_message: "आपका सहेजा गया संदेश",
+    reach_send_anyway: "फिर भी भेजें",
+    reach_copy: "संदेश कॉपी करें",
+    reach_back_to_writing: "लेखन पर वापस",
+    reach_need_support: "अभी सहायता चाहिए?",
+    reach_start_with: "इससे शुरू करें",
+    reach_write_own: "अपना लिखें",
+    reach_message_placeholder: "किसी विश्वसनीय व्यक्ति को संदेश लिखें…",
+    reach_send: "भेजें",
+    reach_footer_advice: "भेजना हमेशा आपकी पसंद है। NilaMind आपकी ओर से कुछ नहीं भेजता।",
+    id_welcome_title: "NilaMind में आपका स्वागत है",
+    id_welcome_body: "आपका निजी कल्याण साथी। सब कुछ आपके डिवाइस पर ही रहता है।",
+    id_create_new: "नई जगह बनाएं",
+    id_restore_phrase: "रिकवरी फ्रेज़ से पुनर्स्थापित करें",
+    id_save_phrase_title: "अपनी रिकवरी फ्रेज़ सहेजें",
+    id_save_phrase_body: "इन 12 शब्दों को लिखकर कहीं सुरक्षित रखें। यही एकमात्र तरीका है अपना डेटा पुनर्स्थापित करने का।",
+    id_copy_phrase: "फ्रेज़ कॉपी करें",
+    id_copied: "कॉपी हो गया",
+    id_phrase_warning: "इसे लिखकर रखें। यह फ्रेज़ खो गई तो डेटा पुनर्स्थापित नहीं हो सकता।",
+    id_phrase_confirmed: "मैंने लिख लिया है",
+    id_enter_nila: "NilaMind में प्रवेश करें",
+    id_restore_title: "अपनी जगह पुनर्स्थापित करें",
+    id_restore_body: "अपना डेटा पुनर्स्थापित करने के लिए 12-शब्द रिकवरी फ्रेज़ दर्ज करें।",
+    id_restore_placeholder: "शब्द शब्द शब्द…",
+    id_restore_backup_label: "वैकल्पिक: बैकअप कोड पेस्ट करें",
+    id_restore_backup_placeholder: "बैकअप कोड",
+    id_restore_button: "पुनर्स्थापित करें",
+    id_error_create: "आपकी जगह बनाने में कुछ गड़बड़ हुई। फिर से प्रयास करें।",
+    id_error_invalid_phrase: "यह 12-शब्द फ्रेज़ सही नहीं लगती।",
+    id_error_backup_read: "आपकी फ्रेज़ सही थी, लेकिन बैकअप नहीं पढ़ा जा सका।",
+    id_error_restore: "उस फ्रेज़ से पुनर्स्थापित नहीं हो सका। फिर से प्रयास करें।",
+    you_elevated_hint: "उच्च ऊर्जा — अपने पैटर्न देखें या डैशबोर्ड देखें।",
+    you_elevated_label: "डैशबोर्ड",
+    you_anxious_hint: "चिंता महसूस हो रही है? इनसाइट्स या थॉट रिकॉर्ड मदद कर सकता है।",
+    you_anxious_label: "इनसाइट्स",
+    you_low_hint: "छोटा कदम भी मायने रखता है। प्रगति या डैशबोर्ड देखें।",
+    you_low_label: "प्रगति",
+    you_night_hint: "शांत समय — अपना हफ्ता कैसा रहा देखें।",
+    you_night_label: "डैशबोर्ड",
+    you_evening_hint: "शाम का चिंतन — हफ्ते के पैटर्न देखें।",
+    you_evening_label: "डैशबोर्ड",
+    you_welcome_checkin_step: "पहली जांच",
+    you_welcome_checkin_desc: "Nila को बताएं अभी कैसा महसूस हो रहा है",
+    you_welcome_intention_step: "इरादा रखें",
+    you_welcome_intention_desc: "इस हफ्ते एक छोटी सी चीज़ जो आप आज़माना चाहते हैं",
+    you_welcome_dashboard_step: "अपना डैशबोर्ड देखें",
+    you_welcome_dashboard_desc: "अपनी प्रगति बनते देखें",
+    you_welcome_title: "NilaMind में आपका स्वागत है",
+    you_welcome_body: "आपका निजी कल्याण साथी। सब कुछ आपके डिवाइस पर ही रहता है।",
+    you_badge_on_device: "डिवाइस पर",
+    you_badge_crisis: "संकट सहायता हमेशा यहां",
+    you_streak_this_week: " दिन इस हफ्ते",
+    you_mostly: "मुख्य रूप से ",
+    you_fallback_emotion: "जांच कर रहे हैं",
+    you_heavy_encouragement: "आज भारी लग सकता है — ठीक है। यहां होना ही काफी है।",
+    you_data_error: "कुछ डेटा लोड नहीं हो पाया। नीचे खींचें।",
+    you_intention_title: "इस हफ्ते का इरादा",
+    you_intention_done: "पूरा किया",
+    you_intention_clear: "हटाएं",
+    you_intention_set_label: "एक इरादा रखें",
+    you_intention_set_desc: "इस हफ्ते एक छोटी सी चीज़ जो आप आज़माना चाहते हैं",
+    you_intention_picker_title: "इरादा रखें",
+    you_intention_picker_helper: "कोई चुनें, या अपना लिखें। कोई दबाव नहीं।",
+    you_intention_placeholder: "या अपना लिखें…",
+    you_nudge_title: "आदत बना रहे हैं? और आज़माएं:",
+    you_nudge_checkin: "जांच",
+    you_nudge_diary: "डायरी",
+    you_fewer_resources: "कम संसाधन दिखाएं",
+    you_more_resources: " और संसाधन",
+    you_footer_disclaimer: "NilaMind पेशेवर देखभाल के साथ सहायता है — विकल्प नहीं।",
+    tr_title: "CBT विचार रिकॉर्ड",
+    tr_subtitle: "स्वचालित संज्ञानात्मक फ़िल्टरों को चुनौती देना",
+    tr_step_of: " / 5",
+    tr_step1_title: "चरण 1: स्थिति",
+    tr_step1_question: "क्या हुआ?",
+    tr_step1_placeholder: "ट्रिगरिंग घटना का वर्णन करें: जैसे, 'दोपहर में दोस्त के साथ डिनर प्लान को लेकर बहस...'",
+    tr_step2_title: "चरण 2: मूल भावना",
+    tr_step2_question: "आपने क्या महसूस किया?",
+    tr_step2_placeholder: "जैसे शर्म, तीव्र क्रोध, त्याग, घबराहट",
+    tr_step2_intensity: "भावना तीव्रता?",
+    tr_step3_title: "चरण 3: अनचाहा विचार",
+    tr_step3_question: "आपके मन में कौन से स्वचालित विचार आए?",
+    tr_step3_placeholder: "जैसे, 'वे मुझे छोड़ रहे हैं क्योंकि मैं पूरी तरह विषैला और अप्रेमणीय हूं...'",
+    tr_step3_belief: "आप इस विचार पर कितना विश्वास करते हैं?",
+    tr_spot_looking: "देख रहे हैं...",
+    tr_spot_traps: "फंदे खोजें",
+    tr_step4_title: "चरण 4: फंदा कार्ड पहचानें",
+    tr_step4_instruction: "इस समय कौन से संज्ञानात्मक विकृतियां लागू होती हैं?",
+    tr_step4_active: "सक्रिय",
+    tr_step5_title: "चरण 5: पुनर्गठित मानसिकता",
+    tr_step5_question: "अधिक संतुलित विचार क्या है?",
+    tr_step5_placeholder: "एक वस्तुनिष्ठ पुनर्मूल्यांकन का मसौदा तैयार करें...",
+    tr_step5_reenable: "मूल भावना तीव्रता फिर से रेट करें:",
+    tr_step5_asking: "Nila से पूछ रहे हैं...",
+    tr_step5_ask_nila: "Nila से पूछें",
+    tr_step5_crisis_heading: "आपने जो लिखा वह इस अभ्यास से अधिक महत्वपूर्ण है",
+    tr_success_message: "% (from % to %)! विचारों को पुनर्गठित करना शारीरिक मार्गों को शांत करने में मदद करता है।",
+    tr_btn_back: "पीछे",
+    tr_btn_continue: "जारी रखें",
+    tr_btn_saved: "लॉग सहेजा गया!",
+    tr_btn_complete: "रिकॉर्ड पूरा करें",
+    tr_no_traps: "कोई स्पष्ट सोच फंदे नहीं मिले — ठीक है, यह फैसला नहीं है।",
+    tr_empty_error: "कृपया बताएं कि क्या हुआ और कौन से स्वचालित विचार आए।",
+    tr_nil_fail: "अभी Nila तक नहीं पहुंच सके। कृपया अपना संतुलित विचार लिखें या पुनः प्रयास करें।",
+    tr_trap_all_or_nothing: "सब-या-कुछ नहीं",
+    tr_trap_all_or_nothing_desc: "अगर परफेक्ट नहीं, तो पूरी तरह असफल",
+    tr_trap_catastrophising: "विपद्कल्पना",
+    tr_trap_catastrophising_desc: "यह बिल्कुल आपदा होने वाली है",
+    tr_trap_mind_reading: "मन-पठन",
+    tr_trap_mind_reading_desc: "मुझे पहले से पता है वे सोचते हैं मैं अक्षम हूं",
+    tr_trap_fortune_telling: "भविष्यवाणी",
+    tr_trap_fortune_telling_desc: "मुझे पक्का पता है यह गलत होगा",
+    tr_trap_emotional_reasoning: "भावनात्मक तर्क",
+    tr_trap_emotional_reasoning_desc: "मैं बेकार महसूस करता हूं, तो सच में हूं",
+    tr_trap_should_statements: "करना चाहिए कथन",
+    tr_trap_should_statements_desc: "मुझे इससे बेहतर करना चाहिए",
+    tr_trap_labelling: "लेबल लगाना",
+    tr_trap_labelling_desc: "मैं असफल / बुरा व्यक्ति हूं",
+    tr_trap_personalisation: "व्यक्तिगतकरण",
+    tr_trap_personalisation_desc: "यह पूरी तरह मेरी गलती है",
+    tr_trap_mental_filter: "मानसिक फ़िल्टर",
+    tr_trap_mental_filter_desc: "केवल नकारात्मक पर ध्यान दें, सकारात्मक को अनदेखा करें",
+    tr_trap_magnification: "आवर्धन",
+    tr_trap_magnification_desc: "सब कुछ बढ़ा-चढ़ाकर पेश करना",
+    ep_here: "मैं यहाँ हूँ।",
+    ep_opening_body: "यह आपका एपिसोड सपोर्ट टूल है — एक AI, कोई व्यक्ति नहीं। मैं इंसान की जगह नहीं ले सकता लेकिन अगले कुछ मिनटों में जमीन पर टिके विचारों से नेविगेट करने में मदद कर सकता हूँ।",
+    ep_opening_question: "अभी क्या हो रहा है?",
+    ep_placeholder: "बताएं आप कैसा महसूस कर रहे हैं, क्या ट्रिगर किया, या कौन सी अनचाही इच्छा है... (टेक्स्ट 100% सुरक्षित/निजी)",
+    ep_start: "एपिसोड सपोर्ट शुरू करें",
+    ep_offline_note: "Nila पूरी तरह आपके डिवाइस पर चलती है — कनेक्शन की जरूरत नहीं। अगर मॉडल अभी लोड हो रहा है, तो सिक्योर गाइडेड मोड अपने आप चलता है।",
+    ep_end_session: "सत्र समाप्त करें",
+    ep_live_badge: "Nila · डिवाइस पर",
+    ep_not_therapist: "थेरेपिस्ट नहीं। निदान टूल नहीं।",
+    ep_crisis_tap: "संकट में हैं? कॉल करने के लिए टैप करें:",
+    ep_shielding: "सुरक्षा शील्डिंग सक्रिय",
+    ep_return_home: "होम पर लौटें",
+    ep_intensity_prompt: "अपनी वर्तमान तीव्रता चुनें (1 शांत है, 10 संकट सीमा है):",
+    ep_chat_placeholder: "अभिव्यक्त करें आप कैसा महसूस कर रहे हैं...",
+    ep_send: "भेजें",
+    ep_escalation_title: "आप इसमें 20 मिनट से हैं और अभी भी उच्च तीव्रता पर हैं।",
+    ep_escalation_body: "यह इंसान का पल है। इसलिए नहीं कि मैं मदद नहीं कर सकता — क्योंकि इंसान वह कर सकते हैं जो मैं सच में नहीं कर सकता: आपके साथ शारीरिक रूप से मौजूद रहें और आपकी आवाज़ सुनें।",
+    ep_escalation_keep: "Nila से बात जारी रखें",
+    ep_guided_title: "गाइडेड ऑफलाइन मोड",
+    ep_guided_badge: "कनेक्शन की जरूरत नहीं",
+    ep_guided_init_body: "AI साथी अभी पहुँच योग्य नहीं है, लेकिन मैं अभी भी आपको इसके माध्यम से चला सकता हूँ। आइए कदम दर कदम चलें।",
+    ep_guided_intensity: "अभी आप जो महसूस कर रहे हैं वह कितना तीव्र है?",
+    ep_tipp_title: "जैविक शॉक रीसेट",
+    ep_tipp_body: "आपकी तीव्रता चरम पर है। इसका मतलब है आपका सोचने वाला मस्तिष्क ऑफलाइन है। यह जीव विज्ञान है, कमजोरी नहीं। जो अभी फिट बैठता है उसे आज़माएँ।",
+    ep_tipp_done: "मैं समाप्त करने के लिए तैयार हूँ",
+    ep_medium_question: "अभी सबसे मजबूत अनचाहा फ़िल्टर क्या है?",
+    ep_medium_racing: "दौड़ते, अराजक विचार घूम रहे हैं",
+    ep_medium_harm: "मुझे चोट पहुँचाने या आवेग में काम करने की तीव्र इच्छा",
+    ep_medium_shame: "तीव्र शर्म या खुद से नफरत",
+    ep_panic_title: "बॉक्स ब्रीदिंग",
+    ep_panic_body: "धीमी, सम साँस आपके शरीर को स्थिर करती है और दौड़ते मन को शांत करने में मदद करती है। आइए 4-4-4-4 चक्र करें: 4 सेकंड साँस लें, 4 सेकंड रोकें, 4 सेकंड छोड़ें, 4 सेकंड रोकें।",
+    ep_panic_done: "हो गया",
+    ep_harm_title: "वेव सर्फिंग स्क्रिप्ट",
+    ep_harm_body: "इच्छाएँ लहरों की तरह होती हैं। वे उठती हैं, चरम पर पहुँचती हैं, और अनिवार्य रूप से गिर जाती हैं अगर आप उन्हें खाद न दें। खुद को एक सुरक्षित सर्फबोर्ड पर देखें। पैर दबाएँ और स्थिर रहें — इच्छा से न लड़ें। बस 10 मिनट तक इसे झेलें।",
+    ep_harm_done: "हो गया",
+    ep_shame_title: "नेफ का सेल्फ-कम्पैशन स्क्रिप्ट",
+    ep_shame_body: "एक सेल्फ-कम्पैशन ब्रेक लें। धीरे पढ़ें: \"यह कठिन है। यह दर्द जीवन का हिस्सा है। क्या मैं खुद को वही दयालुता दूँ जो किसी प्रिय रोते दोस्त को दूँगा।\"",
+    ep_shame_proceed: "डीब्रीफ पर जाएँ",
+    ep_low_body: "आप एक स्थिर जगह पर हैं। आइए अपने सिस्टम को शांत करें और धीरे से समाप्त करें।",
+    ep_low_done: "सेफ क्लोज़",
+    ep_debrief1_title: "क्लोजिंग रिकवरी डीब्रीफ",
+    ep_debrief1_sub: "चरण 1 ऑफ 3: ट्रिगर संदर्भ ट्रैक करना",
+    ep_debrief1_trigger: "इस तीव्र एपिसोड को क्या ट्रिगर किया? (वैकल्पिक)",
+    ep_debrief1_placeholder: "जैसे कथित अस्वीकृति, गंभीर कार्य निराशा, नींद की कमी...",
+    ep_debrief1_skip: "स्किप करें",
+    ep_debrief1_save: "सेव करें और अगला",
+    ep_debrief2_title: "डीब्रीफ: कॉपिंग वेरिफिकेशन",
+    ep_debrief2_sub: "चरण 2 ऑफ 3: जांचें कौन से कौशल मदद किए",
+    ep_debrief2_prompt: "इस सत्र में सबसे ज्यादा क्या मदद किया? हेल्पर्स टॉगल करें:",
+    ep_debrief2_continue: "जारी रखें",
+    ep_debrief3_title: "डीब्रीफ: इंटेंसिटी जर्नी",
+    ep_debrief3_sub: "चरण 3 ऑफ 3: अपनी अंतिम वर्तमान स्थिति रेट करें",
+    ep_debrief3_when_started: "जब आपने शुरू किया",
+    ep_debrief3_highest: "उच्चतम बिंदु",
+    ep_debrief3_final: "आपकी तीव्रता रेटिंग अभी कहाँ खत्म हो रही है?",
+    ep_saved_title: "सत्र ऑफलाइन सेव हुआ",
+    ep_saved_body: "आप इससे निकल गए। यह उससे ज्यादा मायने रखता है जितना अभी महसूस हो रहा है।",
+    ep_saved_done: "अभी के लिए मेरा काम हो गया",
+    ep_synthetic_logged: "वर्तमान तीव्रता लॉग की गई: {n}/10।",
+    ep_synthetic_user: "मेरी वर्तमान तीव्रता {n}/10 है। इसे स्वीकार करें और मुझे एक मेल खाने वाले डिस्ट्रेस-रिज़ॉल्यूशन कौशल के माध्यम से मार्गदर्शन करें।",
+    ep_synthetic_initial: "मुझे सुरक्षित रूप से मार्गदर्शन करने में मदद करने के लिए, आइए लॉक इन करें: अभी आप जो अनुभव कर रहे हैं वह 1 से 10 के पैमाने पर कितना तीव्र है?",
+    ep_synthetic_reprompt: "आइए रुकें और अभी वापस आएँ: 1 से 10 तक आपकी तीव्रता रेटिंग क्या है?",
+    ex_crisis_title: "आप मायने रखते हैं — सहायता अभी यहाँ है",
+    ex_crisis_body: "आपने जो लिखा वह एक एक्सपोज़र स्टेप से अधिक लगता है। यह एक व्यक्ति का पल है, अभ्यास नहीं — कृपया अभी संपर्क करें। आप अकेले नहीं हैं।",
+    ex_crisis_back: "अभ्यास पर वापस",
+    ex_close: "बंद करें",
+    ex_subtitle: "स्टेप्स SUDS (0–100) द्वारा रैंक किए गए। नीचे से ऊपर काम करें — सबसे आसान से शुरू करें।",
+    ex_completed: "पूर्ण",
+    ex_avg_suds: "औसत SUDS गिरावट",
+    ex_celebrate: "स्टेप पूर्ण — {step}। यह साहस लेता है, तब भी जब यह कठिन हो।",
+    ex_complete_step: "इस स्टेप को पूरा करें",
+    ex_suds_after: "एक्सपोज़र के बाद SUDS: {n}",
+    ex_reflect_prompt: "कुछ चीज़ें जिन पर विचार करना उचित है:",
+    ex_learned_placeholder: "आपने क्या सीखा? (वैकल्पिक)",
+    ex_save: "सेव करें",
+    ex_cancel: "रद्द करें",
+    ex_reflection_note: "इन्हिबिटरी-लर्निंग मॉडल पर आधारित रिफ्लेक्शन प्रॉम्प्ट्स (क्रास्के, ट्रीनर, कॉनवे, ज़्बोज़िनेक और वर्व्लिएट, 2014) — यह देखना कि वास्तव में क्या हुआ बनाम आपने क्या भविष्यवाणी की, शोध सुझाता है कि एक्सपोज़र लर्निंग को टिकाऊ बनाता है।",
+    ex_suds_label: "SUDS: {n}",
+    ex_complete_btn: "पूर्ण करें",
+    ex_no_steps: "अभी तक कोई स्टेप नहीं। नीचे पहला जोड़ें।",
+    ex_step_placeholder: "एक्सपोज़र स्टेप...",
+    ex_suds_slider: "SUDS: {n}",
+    ex_add_step: "स्टेप जोड़ें",
+    ex_title: "एक्सपोज़र हायरार्की",
+    ex_body: "डर की सीढ़ी बनाएं। नीचे से ऊपर काम करें — जहाँ सबसे आसान हो वहाँ से शुरू करें, सबसे कठिन से नहीं।",
+    ex_hierarchy_name: "हायरार्की नाम (जैसे सामाजिक चिंता)",
+    ex_confirm_remove: "स्टेप हटाएँ?",
+    ex_confirm_message: "यह स्टेप आपकी हायरार्की से हटा दिया जाएगा। इस स्टेप की प्रगति खो जाएगी।",
+    ex_remove: "हटाएँ",
+    ex_keep: "रखें",
   },
   ta: {
     appName: "NilaMind",
@@ -1603,6 +2431,275 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     pi_action_assessment: "திரையிடு",
     pi_action_protocol: "நெறிமுறையைப் பробை செய்",
     pi_dismiss: "இப்போது இல்லை",
+    ema_how_are_you: "இப்போது எப்படி உணர்கிறீர்கள்?",
+    ema_energy: "ஆற்றல் நிலை",
+    ema_valence_very_bad: "மிகவும் மோசம்",
+    ema_valence_bad: "மோசம்",
+    ema_valence_neutral: "சாதாரணம்",
+    ema_valence_good: "நல்லது",
+    ema_valence_very_good: "மிகவும் நல்லது",
+    ema_energy_very_low: "மிகவும் குறைவு",
+    ema_energy_low: "குறைவு",
+    ema_energy_moderate: "சராசரி",
+    ema_energy_high: "அதிகம்",
+    ema_note_placeholder: "குறிப்பு சேர்க்கவும் — மனதில் என்ன இருக்கிறது?",
+    gate_error_title: "சரிபார்ப்பு பிழை",
+    gate_error_body: "உங்கள் தரவு சாதனத்திலேயே இருந்தது, ஆனால் பாதுகாப்பாக படிக்க முடியவில்லை. மீண்டும் முயற்சிக்கவும்.",
+    gate_try_again: "மீண்டும் முயற்சிக்கவும்",
+    gate_securing: "உங்கள் தரவு பாதுகாக்கப்படுகிறது…",
+    gate_pin_error: "தவறான PIN — மீண்டும் முயற்சிக்கவும்.",
+    gate_welcome_back: "மீண்டும் வரவேற்கிறோம்",
+    gate_unlock_body: "NilaMind திறக்க PIN உள்ளிடவும்.",
+    gate_pin_placeholder: "PIN உள்ளிடவும்",
+    gate_unlock: "திற",
+    gate_privacy_note: "உங்கள் PIN இந்த சாதனத்தை விட்டு வெளியேறாது.",
+    msg_feedback_toggle: "இது உதவியாக இருந்ததா?",
+    msg_thanks_feedback: "கருத்துக்கு நன்றி!",
+    msg_feedback_prompt: "Nila க்கு எது வேலை செய்கிறது என்று கற்றுக்கொடுங்கள்",
+    msg_feedback_placeholder: "Nila க்கு எது உதவியது அல்லது உதவவில்லை என்று சொல்லுங்கள்…",
+    msg_not_now: "இப்போது இல்லை",
+    msg_share: "பகிர்",
+    learn_badge_skill: "திறன்",
+    learn_badge_explainer: "விளக்கம்",
+    learn_badge_research: "ஆய்வு",
+    learn_title: "கற்றல்",
+    learn_subtitle: "ஆதார அடிப்படையிலான திறன்கள் மற்றும் எளிய விளக்கங்கள்",
+    learn_crisis_heading: "இப்போது நெருக்கடியில் உள்ளீர்களா?",
+    learn_crisis_dismiss: "நெருக்கடியில் இல்லை",
+    learn_support_cta: "ஆதரவுக்கு தொடர்பு கொள்ளுங்கள்",
+    learn_hard_moment: "இப்போது கடினமான நேரம்?",
+    learn_hard_moment_sub: "நீங்கள் தனியாக இல்லை. உதவி கிடைக்கும்.",
+    learn_for_feeling: "நீங்கள் தேடுவது இது",
+    learn_search_placeholder: "திறன்களைத் தேடுங்கள்…",
+    learn_filter_all: "அனைத்தும்",
+    learn_filter_all_skills: "அனைத்து திறன்கள்",
+    learn_results_count: "{n} திறன்கள்",
+    learn_loading: "ஏற்றுகிறது…",
+    learn_no_results: "திறன்கள் பொருந்தவில்லை.",
+    learn_footer_disclaimer: "NilaMind கல்வி ஆதரவு — சிகிச்சை, நோயறிதல் அல்லது நெருக்கடி சேவை அல்ல.",
+    learn_what_it_is: "இது என்ன",
+    learn_why_it_helps: "ஏன் உதவுகிறது",
+    learn_the_research: "ஆய்வு",
+    learn_reference_verifying: "குறிப்புகளை சரிபார்க்கிறது",
+    learn_reference_verifying_hint: "மேற்கோள் ஆய்வுகள் துல்லியமா என்று சரிபார்க்கிறது…",
+    reach_title: "தொடர்பு கொள்ளுங்கள்",
+    reach_subtitle: "நம்பகமான நபருக்கு அனுப்பும் செய்தி",
+    reach_crisis_heading: "இப்போது — நெருக்கடி ஆதரவு",
+    reach_crisis_body: "உடனடி ஆபத்தில் இருந்தால், உள்ளூர் அவசர எண் அல்லது நெருக்கடி ஹெல்ப்லைனை அழைக்கவும்.",
+    reach_your_kept_message: "சேமித்த செய்தி",
+    reach_send_anyway: "இருப்பினும் அனுப்பு",
+    reach_copy: "செய்தியை நகலெடு",
+    reach_back_to_writing: "எழுத்துக்கு திரும்பு",
+    reach_need_support: "இப்போது ஆதரவு வேண்டுமா?",
+    reach_start_with: "இதில் தொடங்குங்கள்",
+    reach_write_own: "சொந்தமாக எழுதுங்கள்",
+    reach_message_placeholder: "நம்பகமான நபருக்கு செய்தி எழுதுங்கள்…",
+    reach_send: "அனுப்பு",
+    reach_footer_advice: "அனுப்புவது எப்போதும் உங்கள் தேர்வு. NilaMind உங்கள் சார்பாக ஒன்றும் அனுப்பாது.",
+    id_welcome_title: "NilaMind க்கு வரவேற்கிறோம்",
+    id_welcome_body: "உங்கள் தனிப்பட்ட நல்வாழ்வு துணை. எல்லாம் உங்கள் சாதனத்திலேயே இருக்கும்.",
+    id_create_new: "புதிய இடம் உருவாக்கு",
+    id_restore_phrase: "மீட்பு வாக்கியத்திலிருந்து மீட்டெடு",
+    id_save_phrase_title: "உங்கள் மீட்பு வாக்கியத்தை சேமியுங்கள்",
+    id_save_phrase_body: "இந்த 12 வார்த்தைகளை எழுதி பாதுகாப்பான இடத்தில் வையுங்கள். மீட்டெடுக்க இதுவே ஒரே வழி.",
+    id_copy_phrase: "வாக்கியம் நகலெடு",
+    id_copied: "நகலெடுக்கப்பட்டது",
+    id_phrase_warning: "எழுதி வையுங்கள். இந்த வாக்கியம் தொலைந்தால் தரவை மீட்டெடுக்க முடியாது.",
+    id_phrase_confirmed: "நான் எழுதிவிட்டேன்",
+    id_enter_nila: "NilaMind உள்ளே செல்",
+    id_restore_title: "உங்கள் இடத்தை மீட்டெடு",
+    id_restore_body: "தரவை மீட்டெடுக்க 12-வார்த்தை மீட்பு வாக்கியத்தை உள்ளிடவும்.",
+    id_restore_placeholder: "வார்த்தை வார்த்தை வார்த்தை…",
+    id_restore_backup_label: "விருப்பம்: காப்பு குறியீட்டை ஒட்டவும்",
+    id_restore_backup_placeholder: "காப்பு குறியீடு",
+    id_restore_button: "மீட்டெடு",
+    id_error_create: "உங்கள் இடம் உருவாக்க பிழை. மீண்டும் முயற்சிக்கவும்.",
+    id_error_invalid_phrase: "இது 12-வார்த்தை வாக்கியம் போல் தெரியவில்லை.",
+    id_error_backup_read: "உங்கள் வாக்கியம் சரி, ஆனால் காப்பு படிக்க முடியவில்லை.",
+    id_error_restore: "அந்த வாக்கியத்திலிருந்து மீட்டெடுக்க முடியவில்லை. மீண்டும் முயற்சிக்கவும்.",
+    you_elevated_hint: "அதிக ஆற்றல் — உங்கள் முறைகளைப் பாருங்கள் அல்லது டாஷ்போர்டைப் பாருங்கள்.",
+    you_elevated_label: "டாஷ்போர்டு",
+    you_anxious_hint: "கவலை உணர்கிறீர்களா? நுண்ணறிவு அல்லது எண்ணப் பதிவு உதவலாம்.",
+    you_anxious_label: "நுண்ணறிவு",
+    you_low_hint: "சிறிய படியும் முக்கியம். முன்னேற்றம் அல்லது டாஷ்போர்டைப் பாருங்கள்.",
+    you_low_label: "முன்னேற்றம்",
+    you_night_hint: "அமைதியான நேரம் — உங்கள் வாரம் எப்படி இருந்தது பாருங்கள்.",
+    you_night_label: "டாஷ்போர்டு",
+    you_evening_hint: "மாலை சிந்தனை — வார முறைகளைப் பாருங்கள்.",
+    you_evening_label: "டாஷ்போர்டு",
+    you_welcome_checkin_step: "முதல் சரிபார்ப்பு",
+    you_welcome_checkin_desc: "Nila க்கு இப்போது எப்படி உணர்கிறீர்கள் என்று சொல்லுங்கள்",
+    you_welcome_intention_step: "நோக்கம் நிலுவை",
+    you_welcome_intention_desc: "இந்த வாரம் முயற்சிக்க விரும்பும் சிறிய விஷயம்",
+    you_welcome_dashboard_step: "டாஷ்போர்டைப் பாருங்கள்",
+    you_welcome_dashboard_desc: "உங்கள் முன்னேற்றத்தை உருவாக்குவதைப் பாருங்கள்",
+    you_welcome_title: "NilaMind க்கு வரவேற்கிறோம்",
+    you_welcome_body: "உங்கள் தனிப்பட்ட நல்வாழ்வு துணை. எல்லாம் உங்கள் சாதனத்திலேயே இருக்கும்.",
+    you_badge_on_device: "சாதனத்தில்",
+    you_badge_crisis: "நெருக்கடி ஆதரவு எப்போதும் இங்கே",
+    you_streak_this_week: " நாட்கள் இந்த வாரம்",
+    you_mostly: "முக்கியமாக ",
+    you_fallback_emotion: "சரிபார்க்கிறது",
+    you_heavy_encouragement: "இன்று கனமாக இருக்கலாம் — சரி. இங்கே இருப்பதே போதும்.",
+    you_data_error: "சில தரவு ஏற்ற முடியவில்லை. கீழே இழுக்கவும்.",
+    you_intention_title: "இந்த வாரத்தின் நோக்கம்",
+    you_intention_done: "முடிந்தது",
+    you_intention_clear: "அழி",
+    you_intention_set_label: "நோக்கம் நிலுவை",
+    you_intention_set_desc: "இந்த வாரம் முயற்சிக்க விரும்பும் சிறிய விஷயம்",
+    you_intention_picker_title: "நோக்கம் நிலுவை",
+    you_intention_picker_helper: "ஒன்றைத் தேர்ந்தெடுங்கள், அல்லது உங்களுடையதை எழுதுங்கள்.",
+    you_intention_placeholder: "அல்லது உங்களுடையதை எழுதுங்கள்…",
+    you_nudge_title: "பழக்கம் உருவாக்குகிறீர்களா? மேலும் முயற்சிக்கவும்:",
+    you_nudge_checkin: "சரிபார்ப்பு",
+    you_nudge_diary: "நாட்குறிப்பு",
+    you_fewer_resources: "குறைவான வளங்களைக் காட்டு",
+    you_more_resources: " மேலும் வளங்கள்",
+    you_footer_disclaimer: "NilaMind தொழில்முறை பரிவுடன் ஆதரவு — மாற்று அல்ல.",
+    tr_title: "CBT எண்ணப் பதிவு",
+    tr_subtitle: "தானியங்கு அறிவாற்றல் வடிகட்டிகளை எதிர்கொள்ளுதல்",
+    tr_step_of: " / 5",
+    tr_step1_title: "படி 1: சூழ்நிலை",
+    tr_step1_question: "என்ன நடந்தது?",
+    tr_step1_placeholder: "தூண்டுதல் நிகழ்வை விவரிக்கவும்: எ.கா., 'நண்பருடன் மதிய உணவு திட்டம் பற்றி வாக்குவாதம்...'",
+    tr_step2_title: "படி 2: அடிப்படை உணர்வு",
+    tr_step2_question: "நீங்கள் என்ன உணர்ந்தீர்கள்?",
+    tr_step2_placeholder: "எ.கா. வெட்கம், தீவிர கோபம், கைவிடுதல், பீதி",
+    tr_step2_intensity: "உணர்வு தீவிரம்?",
+    tr_step3_title: "படி 3: விரும்பத்தகாத எண்ணம்",
+    tr_step3_question: "உங்கள் மனதில் என்ன தானியங்கு எண்ணங்கள் வந்தன?",
+    tr_step3_placeholder: "எ.கா. 'அவர்கள் என்னை விட்டு விலகுகிறார்கள் ஏனெனில் நான் முற்றிலும் நச்சு மற்றும் அன்பற்றவன்...'",
+    tr_step3_belief: "இந்த எண்ணத்தை எவ்வளவு நம்புகிறீர்கள்?",
+    tr_spot_looking: "தேடுகிறது...",
+    tr_spot_traps: "கண்டறியவும்",
+    tr_step4_title: "படி 4: பிடிப்பு அட்டைகளை அடையாளம் காணுங்கள்",
+    tr_step4_instruction: "இந்த நேரத்தில் எந்த அறிவாற்றல் கோளாறுகள் பொருந்தும்?",
+    tr_step4_active: "செயலில்",
+    tr_step5_title: "படி 5: மறுகட்டமைக்கப்பட்ட மனநிலை",
+    tr_step5_question: "மிகவும் சமநிலையான எண்ணம் என்ன?",
+    tr_step5_placeholder: "ஒரு புள்ளிவிவர மறுமதிப்பீட்டை தயாரிக்கவும்...",
+    tr_step5_reenable: "அசல் உணர்வு தீவிரத்தை மீண்டும் மதிப்பிடுங்கள்:",
+    tr_step5_asking: "Nila கிடம் கேட்கிறது...",
+    tr_step5_ask_nila: "Nila கிடம் கேளுங்கள்",
+    tr_step5_crisis_heading: "நீங்கள் எழுதியது இந்த பயிற்சியை விட முக்கியமானது",
+    tr_success_message: "% (from % to %)! எண்ணங்களை மறுகட்டமைப்பது உடல் பாதைகளை அமைதிப்படுத்த உதவுகிறது.",
+    tr_btn_back: "பின்",
+    tr_btn_continue: "தொடர்",
+    tr_btn_saved: "பதிவு சேமிக்கப்பட்டது!",
+    tr_btn_complete: "பதிவை முடி",
+    tr_no_traps: "வெளிப்படையான எண்ண பிடிப்புகள் இல்லை — சரி, இது தீர்ப்பு அல்ல.",
+    tr_empty_error: "என்ன நடந்தது மற்றும் என்ன தானியங்கு எண்ணங்கள் எழுந்தன என்று விவரிக்கவும்.",
+    tr_nil_fail: "இப்போது Nila ஐ அணுக முடியவில்லை. உங்கள் சமநிலை எண்ணத்தை எழுதுங்கள் அல்லது மீண்டும் முயற்சிக்கவும்.",
+    tr_trap_all_or_nothing: "அனைத்தும் அல்லது ஒன்றும் இல்லை",
+    tr_trap_all_or_nothing_desc: "சரியாக இல்லாவிட்டால், முற்றிலும் தோல்வி",
+    tr_trap_catastrophising: "பேரழிவு கற்பனை",
+    tr_trap_catastrophising_desc: "இது முற்றிலும் பேரழிவாக இருக்கும்",
+    tr_trap_mind_reading: "மனம் படித்தல்",
+    tr_trap_mind_reading_desc: "அவர்கள் நான் திறமையற்றவன் என்று நினைக்கிறார்கள் என்று ஏற்கனவே தெரியும்",
+    tr_trap_fortune_telling: "எதிர்கால கணிப்பு",
+    tr_trap_fortune_telling_desc: "இது தவறாகும் என்று உறுதியாக தெரியும்",
+    tr_trap_emotional_reasoning: "உணர்வு காரணம்",
+    tr_trap_emotional_reasoning_desc: "நான் பயனற்றவனாக உணர்கிறேன், அதனால் உண்மையிலேயே அப்படித்தான்",
+    tr_trap_should_statements: "செய்ய வேண்டும் கூற்றுகள்",
+    tr_trap_should_statements_desc: "நான் இதை விட நன்றாக செய்ய வேண்டும்",
+    tr_trap_labelling: "பெயரிடுதல்",
+    tr_trap_labelling_desc: "நான் தோல்வியடைந்த / மோசமான நபர்",
+    tr_trap_personalisation: "தனிப்படுத்தல்",
+    tr_trap_personalisation_desc: "இது முற்றிலும் என் தவறு",
+    tr_trap_mental_filter: "மன வடிகட்டி",
+    tr_trap_mental_filter_desc: "எதிர்மறையில் மட்டுமே கவனம் செலுத்துங்கள்",
+    tr_trap_magnification: "பெருக்கம்",
+    tr_trap_magnification_desc: "எல்லாவற்றையும் பெரிதாக்குதல்",
+    ep_here: "நான் இங்கே இருக்கிறேன்.",
+    ep_opening_body: "இது உங்கள் எபிசோட் ஆதரவு கருவி — ஒரு AI, ஒரு மனிதர் அல்ல. நான் ஒரு மனிதரை மாற்ற முடியாது, ஆனால் அடுத்த சில நிமிடங்களை நெறியாகக் கடக்க தரையிறங்கிய எண்ணங்களைப் பெற உங்களுக்கு உதவலாம்.",
+    ep_opening_question: "இப்போது என்ன நடக்கிறது?",
+    ep_placeholder: "நீங்கள் எப்படி உணர்கிறீர்கள், உங்களை எது தூண்டியது, அல்லது உங்களுக்கு என்ன தேவையற்ற ஆசை உள்ளது என்பதை விளக்குங்கள்... (உரை 100% பாதுகாப்பானது/தனிப்பட்டது)",
+    ep_start: "எபிசோட் ஆதரவைத் தொடங்கு",
+    ep_offline_note: "Nila முழுவதும் உங்கள் சாதனத்தில் இயங்குகிறது — இணைப்பு தேவையில்லை. மாதிரி இன்னும் ஏற்றப்படுகிறது என்றால், பாதுகாப்பான வழிகாட்டப்பட்ட முறை தானாகவே இயங்கும்.",
+    ep_end_session: "அமர்வை முடி",
+    ep_live_badge: "Nila · சாதனத்தில்",
+    ep_not_therapist: "சிகிச்சையாளர் அல்ல. நோயறிதல் கருவி அல்ல.",
+    ep_crisis_tap: "நெருக்கடியில் உள்ளீர்களா? இப்போது அழைக்க தட்டவும்:",
+    ep_shielding: "பாதுகாப்பு கவசம் இயக்கத்தில்",
+    ep_return_home: "முகப்புக்குத் திரும்பு",
+    ep_intensity_prompt: "உங்கள் தற்போதைய தீவிரத்தைத் தேர்ந்தெடுக்கவும் (1 அமைதி, 10 நெருக்கடி வரம்பு):",
+    ep_chat_placeholder: "நீங்கள் எப்படி உணர்கிறீர்கள் என்பதை வெளிப்படுத்துங்கள்...",
+    ep_send: "அனுப்பு",
+    ep_escalation_title: "நீங்கள் 20 நிமிடங்களாக இதில் இருக்கிறீர்கள், இன்னும் உயர் தீவிரத்தில் இருக்கிறீர்கள்.",
+    ep_escalation_body: "இது ஒரு மனிதரின் தருணம். நான் உதவ முடியாததால் அல்ல — மனிதர்களால் நான் உண்மையிலேயே செய்ய முடியாத ஒன்றைச் செய்ய முடியும் என்பதால்: உங்களுடன் உடல் ரீதியாக இருந்து உங்கள் குரலைக் கேட்பது.",
+    ep_escalation_keep: "Nila உடன் பேசுவதைத் தொடருங்கள்",
+    ep_guided_title: "வழிகாட்டப்பட்ட ஆஃப்லைன் முறை",
+    ep_guided_badge: "இணைப்பு தேவையில்லை",
+    ep_guided_init_body: "AI துணை இப்போது அணுக முடியாத நிலையில் உள்ளது, ஆனால் நான் இன்னும் உங்களை இதன் வழியாக அழைத்துச் செல்ல முடியும். படிப்படியாகச் செல்லலாம்.",
+    ep_guided_intensity: "இப்போது நீங்கள் உணர்வது எவ்வளவு தீவிரம்?",
+    ep_tipp_title: "உயிரியல் அதிர்ச்சி மீட்டமைப்பு",
+    ep_tipp_body: "உங்கள் தீவிரம் கடுமையானது. அதாவது உங்கள் சிந்திக்கும் மூளை ஆஃப்லைனில் உள்ளது. இது உயிரியல், பலவீனம் அல்ல. இப்போது பொருந்தக்கூடிய ஒன்றை முயற்சிக்கவும்.",
+    ep_tipp_done: "முடிக்கத் தயாராக இருக்கிறேன்",
+    ep_medium_question: "இப்போது மிகவும் வலுவான தேவையற்ற சிந்தனை எது?",
+    ep_medium_racing: "வேகமாகச் சுழலும் குழப்பமான எண்ணங்கள்",
+    ep_medium_harm: "என்னை காயப்படுத்த அல்லது மனக்கிளர்ச்சியாகச் செயல்பட ஒரு தீவிர ஆசை",
+    ep_medium_shame: "கடுமையான அவமானம் அல்லது தன்னை வெறுத்தல்",
+    ep_panic_title: "பாக்ஸ் பிரீதிங்",
+    ep_panic_body: "மெதுவான, சீரான சுவாசம் உங்கள் உடலை நிலைப்படுத்தி விரைந்து செல்லும் மனதை அமைதிப்படுத்த உதவுகிறது. 4-4-4-4 சுழற்சிகளைச் செய்வோம்: 4 விநாடி உள்ளே சுவாசிக்கவும், 4 விநாடி நிறுத்தவும், 4 விநாடி வெளியே விடவும், 4 விநாடி நிறுத்தவும்.",
+    ep_panic_done: "முடிந்தது",
+    ep_harm_title: "அலை சர்ஃபிங் ஸ்கிரிப்ட்",
+    ep_harm_body: "ஆசைகள் அலைகளைப் போன்றவை. அவை எழுகின்றன, உச்சத்தை அடைகின்றன, நீங்கள் அவற்றுக்கு உணவளிக்காவிட்டால் அவசியம் வீழ்கின்றன. பாதுகாப்பான சர்ஃப்போர்டில் உங்களைக் கற்பனை செய்யுங்கள். கால்களை ஊன்றி நிலையாக இருங்கள் — ஆசையுடன் போராடாதீர்கள். 10 நிமிடங்களுக்கு அதைத் தாங்கிச் செல்லுங்கள்.",
+    ep_harm_done: "முடிந்தது",
+    ep_shame_title: "Neff-ன் சுய-கரிசனை ஸ்கிரிப்ட்",
+    ep_shame_body: "ஒரு சுய-கரிசனை இடைவெளி எடுத்துக் கொள்ளுங்கள். மெதுவாகப் படியுங்கள்: \"இது கடினம். இந்த வலி வாழ்க்கையின் பகுதி. கண்ணீருடன் இருக்கும் அன்பான நண்பருக்கு நான் அளிக்கும் அதே கருணையை எனக்கும் அளிக்கட்டும்.\"",
+    ep_shame_proceed: "டிப்ரீப்பிற்குச் செல்லவும்",
+    ep_low_body: "நீங்கள் நிலையான இடத்தில் இருக்கிறீர்கள். நமது அமைப்புகளை அமைதிப்படுத்தி மென்மையான முடிவை நோக்கிச் செல்லலாம்.",
+    ep_low_done: "பாதுகாப்பான முடிவு",
+    ep_debrief1_title: "மூடும் மீட்பு டிப்ரீப்",
+    ep_debrief1_sub: "படி 1/3: தூண்டுதல் சூழலைப் பதிவு செய்தல்",
+    ep_debrief1_trigger: "இந்த தீவிர எபிசோடை எது தூண்டியது? (விருப்பத்தேர்வு)",
+    ep_debrief1_placeholder: "எ.கா. உணரப்பட்ட நிராகரிப்பு, கடுமையான பணி ஏமாற்றம், தூக்கமின்மை...",
+    ep_debrief1_skip: "தவிர்க்கவும்",
+    ep_debrief1_save: "சேமித்து அடுத்து",
+    ep_debrief2_title: "டிப்ரீப்: சமாளிப்பு சரிபார்ப்பு",
+    ep_debrief2_sub: "படி 2/3: எந்த திறன்கள் உங்களுக்கு உதவின என்பதைச் சரிபார்க்கவும்",
+    ep_debrief2_prompt: "இந்த அமர்வில் எது அதிகம் உதவியது? உதவும் கருவிகளைத் தேர்ந்தெடுக்கவும்:",
+    ep_debrief2_continue: "தொடரவும்",
+    ep_debrief3_title: "டிப்ரீப்: தீவிர பயணம்",
+    ep_debrief3_sub: "படி 3/3: உங்கள் இறுதி தற்போதைய நிலையை மதிப்பிடவும்",
+    ep_debrief3_when_started: "நீங்கள் தொடங்கியபோது",
+    ep_debrief3_highest: "மிக உயர்ந்த புள்ளி",
+    ep_debrief3_final: "உங்கள் தீவிர மதிப்பீடு இப்போது எங்கு முடிகிறது?",
+    ep_saved_title: "அமர்வு ஆஃப்லைனில் சேமிக்கப்பட்டது",
+    ep_saved_body: "நீங்கள் அதைத் தாண்டி வந்தீர்கள். அது இப்போது உணர்வதை விட அதிக முக்கியத்துவம் வாய்ந்தது.",
+    ep_saved_done: "இப்போதைக்கு முடித்துவிட்டேன்",
+    ep_synthetic_logged: "தற்போதைய தீவிரம் பதிவு செய்யப்பட்டது: {n}/10.",
+    ep_synthetic_user: "என் தற்போதைய தீவிரம் {n}/10. அதை ஏற்றுக்கொண்டு, ஒரு பொருத்தமான துயர-தீர்வு திறனின் வழியே என்னை வழிநடத்துங்கள்.",
+    ep_synthetic_initial: "என்னைப் பாதுகாப்பாக வழிநடத்த உதவ, உறுதி செய்வோம்: நீங்கள் இப்போது அனுபவிப்பது 1 முதல் 10 வரையிலான அளவில் எவ்வளவு தீவிரம்?",
+    ep_synthetic_reprompt: "இப்போது சற்று நிறுத்தி இங்கே திரும்புவோம்: 1 முதல் 10 வரை உங்கள் தீவிர மதிப்பீடு என்ன?",
+    ex_crisis_title: "நீங்கள் முக்கியம் — ஆதரவு இப்போதே இங்கே உள்ளது",
+    ex_crisis_body: "நீங்கள் எழுதியது ஒரு வெளிப்பாடு படியை விட அதிகமாகத் தெரிகிறது. இது ஒரு மனிதருக்கான தருணம், பயிற்சி அல்ல — தயவுசெய்து இப்போதே தொடர்பு கொள்ளுங்கள். நீங்கள் தனியாக இல்லை.",
+    ex_crisis_back: "பயிற்சிக்குத் திரும்பு",
+    ex_close: "மூடு",
+    ex_subtitle: "படிகள் SUDS (0–100) மூலம் வரிசைப்படுத்தப்படுகின்றன. கீழிருந்து மேலே வேலை செய்யுங்கள் — எளிதானதிலிருந்து தொடங்குங்கள்.",
+    ex_completed: "நிறைவு",
+    ex_avg_suds: "சராசரி SUDS குறைவு",
+    ex_celebrate: "படி நிறைவடைந்தது — {step}. அது கடினமாக இருந்தாலும் தைரியம் தேவை.",
+    ex_complete_step: "இந்தப் படியை நிறைவு செய்யுங்கள்",
+    ex_suds_after: "வெளிப்பாட்டிற்குப் பின் SUDS: {n}",
+    ex_reflect_prompt: "சிந்திக்கத் தகுந்த சில விஷயங்கள்:",
+    ex_learned_placeholder: "நீங்கள் என்ன கற்றீர்கள்? (விருப்பத்தேர்வு)",
+    ex_save: "சேமி",
+    ex_cancel: "ரத்து",
+    ex_reflection_note: "தடுப்பு-கற்றல் மாதிரியை அடிப்படையாகக் கொண்ட பிரதிபலிப்பு வழிகாட்டிகள் (Craske, Treanor, Conway, Zbozinek & Vervliet, 2014) — நீங்கள் கணித்ததற்கு மாறாக உண்மையில் என்ன நடந்தது என்பதைக் கவனிப்பது, வெளிப்பாட்டுக் கற்றல் நிலைத்திருக்க ஆராய்ச்சி பரிந்துரைக்கும் விஷயம்.",
+    ex_suds_label: "SUDS: {n}",
+    ex_complete_btn: "நிறைவு",
+    ex_no_steps: "இன்னும் படிகள் இல்லை. கீழே உங்கள் முதல் படியைச் சேர்க்கவும்.",
+    ex_step_placeholder: "வெளிப்பாட்டு படி...",
+    ex_suds_slider: "SUDS: {n}",
+    ex_add_step: "படி சேர்க்கவும்",
+    ex_title: "வெளிப்பாட்டு படிநிலை",
+    ex_body: "பயத்தின் ஏணியைக் கட்டுங்கள். கீழிருந்து மேலே வேலை செய்யுங்கள் — மிகக் கடினமான இடத்திலிருந்து அல்ல, எளிதான இடத்திலிருந்து தொடங்குங்கள்.",
+    ex_hierarchy_name: "படிநிலை பெயர் (எ.கா. சமூக கவலை)",
+    ex_confirm_remove: "படியை நீக்கவா?",
+    ex_confirm_message: "இந்தப் படி உங்கள் படிநிலையிலிருந்து நீக்கப்படும். இந்தப் படியின் முன்னேற்றம் இழக்கப்படும்.",
+    ex_remove: "நீக்கு",
+    ex_keep: "வை",
   },
   te: {
     appName: "NilaMind",
@@ -1993,6 +3090,276 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     pi_action_assessment: "స్క్రీన్ తీసుకోండి",
     pi_action_protocol: "ప్రొటోకాల్ ప్రయత్నించండి",
     pi_dismiss: "ఇప్పుడు కాదు",
+    ema_how_are_you: "ఇప్పుడు ఎలా అనిపిస్తోంది?",
+    ema_energy: "శక్తి స్థాయి",
+    ema_valence_very_bad: "చాలా చెడు",
+    ema_valence_bad: "చెడు",
+    ema_valence_neutral: "సాధారణం",
+    ema_valence_good: "మంచి",
+    ema_valence_very_good: "చాలా మంచి",
+    ema_energy_very_low: "చాలా తక్కువ",
+    ema_energy_low: "తక్కువ",
+    ema_energy_moderate: "సగటు",
+    ema_energy_high: "ఎక్కువ",
+    ema_note_placeholder: "గమనిక చేర్చండి — మనసులో ఏముంది?",
+    gate_error_title: "ధృవీకరణ లోపం",
+    gate_error_body: "మీ డేటా పరికరంలోనే ఉంది, కానీ సురక్షితంగా చదవలేకపోయాము. మళ్ళీ ప్రయత్నించండి.",
+    gate_try_again: "మళ్ళీ ప్రయత్నించండి",
+    gate_securing: "మీ డేటా సురక్షితం చేయబడుతోంది…",
+    gate_pin_error: "తప్పు PIN — మళ్ళీ ప్రయత్నించండి.",
+    gate_welcome_back: "తిరిగి స్వాగతం",
+    gate_unlock_body: "NilaMind అన్‌లాక్ చేయడానికి PIN నమోదు చేయండి.",
+    gate_pin_placeholder: "PIN నమోదు చేయండి",
+    gate_unlock: "అన్‌లాక్",
+    gate_privacy_note: "మీ PIN ఈ పరికరం నుండి బయటకు వెళ్ళదు.",
+    msg_feedback_toggle: "ఇది సహాయకరంగా ఉందా?",
+    msg_thanks_feedback: "అభిప్రాయానికి ధన్యవాదాలు!",
+    msg_feedback_prompt: "Nila కు ఏది పని చేస్తుందో నేర్పించండి",
+    msg_feedback_placeholder: "Nila కు ఏది సహాయపడిందో లేదా సహాయపడలేదో చెప్పండి…",
+    msg_not_now: "ఇప్పుడు కాదు",
+    msg_share: "షేర్ చేయండి",
+    learn_badge_skill: "నైపుణ్యం",
+    learn_badge_explainer: "వివరణ",
+    learn_badge_research: "పరిశోధన",
+    learn_title: "నేర్చుకోండి",
+    learn_subtitle: "ఆధారిత నైపుణ్యాలు మరియు సరళమైన వివరణలు",
+    learn_crisis_heading: "ఇప్పుడు సంక్షోభంలో ఉన్నారా?",
+    learn_crisis_dismiss: "సంక్షోభంలో లేను",
+    learn_support_cta: "మద్దతు కోసం సంప్రదించండి",
+    learn_hard_moment: "ఇప్పుడు కష్టమైన సమయం?",
+    learn_hard_moment_sub: "మీరు ఒంటరిగా లేరు. సహాయం అందుబాటులో ఉంది.",
+    learn_for_feeling: "మీరు వెతుకుతున్నది ఇది",
+    learn_search_placeholder: "నైపుణ్యాలను వెతకండి…",
+    learn_filter_all: "అన్నీ",
+    learn_filter_all_skills: "అన్ని నైపుణ్యాలు",
+    learn_results_count: "{n} నైపుణ్యాలు",
+    learn_loading: "లోడ్ అవుతోంది…",
+    learn_no_results: "నైపుణ్యాలు సరిపోలడం లేదు.",
+    learn_footer_disclaimer: "NilaMind విద్యా మద్దతు — చికిత్స, నిర్ధారణ లేదా సంక్షోభ సేవ కాదు.",
+    learn_what_it_is: "ఇది ఏమిటి",
+    learn_why_it_helps: "ఎందుకు సహాయపడుతుంది",
+    learn_the_research: "పరిశోధన",
+    learn_reference_verifying: "సూచనలను ధృవీకరిస్తోంది",
+    learn_reference_verifying_hint: "ఉల్లేఖించబడిన అధ్యయనాలు ఖచ్చితమైనవా అని ధృవీకరిస్తోంది…",
+    reach_title: "సంప్రదించండి",
+    reach_subtitle: "నమ్మకమైన వ్యక్తికి పంపగల సందేశం",
+    reach_crisis_heading: "ఇప్పుడు — సంక్షోభ మద్దతు",
+    reach_crisis_body: "మీరు తక్షణ ప్రమాదంలో ఉంటే, స్థానిక అత్యవసర నంబర్ లేదా సంక్షోభ హెల్ప్‌లైన్‌ను కాల్ చేయండి.",
+    reach_your_kept_message: "సేవ్ చేసిన సందేశం",
+    reach_send_anyway: "అయినా పంపండి",
+    reach_copy: "సందేశం కాపీ చేయండి",
+    reach_back_to_writing: "రాయడానికి తిరిగి",
+    reach_need_support: "ఇప్పుడు మద్దతు కావాలా?",
+    reach_start_with: "దీనితో ప్రారంభించండి",
+    reach_write_own: "సొంతంగా రాయండి",
+    reach_message_placeholder: "నమ్మకమైన వ్యక్తికి సందేశం రాయండి…",
+    reach_send: "పంపండి",
+    reach_footer_advice: "పంపడం ఎల్లప్పుడూ మీ ఎంపిక. NilaMind మీ తరపున ఏమీ పంపదు.",
+    id_welcome_title: "NilaMind కు స్వాగతం",
+    id_welcome_body: "మీ వ్యక్తిగత ఆరోగ్య సహచరుడు. ప్రతిదీ మీ పరికరంలోనే ఉంటుంది.",
+    id_create_new: "కొత్త స్థలం సృష్టించండి",
+    id_restore_phrase: "రికవరీ వాక్యం నుండి పునరుద్ధరించండి",
+    id_save_phrase_title: "మీ రికవరీ వాక్యాన్ని సేవ్ చేయండి",
+    id_save_phrase_body: "ఈ 12 పదాలను రాసి సురక్షితమైన చోట ఉంచండి. పునరుద్ధరించడానికి ఇదే ఏకైక మార్గం.",
+    id_copy_phrase: "వాక్యం కాపీ చేయండి",
+    id_copied: "కాపీ చేయబడింది",
+    id_phrase_warning: "రాసి ఉంచండి. ఈ వాక్యం పోతే డేటా పునరుద్ధరించబడదు.",
+    id_phrase_confirmed: "నేను రాసేశాను",
+    id_enter_nila: "NilaMind లోకి ప్రవేశించండి",
+    id_restore_title: "మీ స్థలాన్ని పునరుద్ధరించండి",
+    id_restore_body: "డేటా పునరుద్ధరించడానికి 12-పద రికవరీ వాక్యాన్ని నమోదు చేయండి.",
+    id_restore_placeholder: "పదం పదం పదం…",
+    id_restore_backup_label: "ఐచ్ఛికం: బ్యాకప్ కోడ్ పేస్ట్ చేయండి",
+    id_restore_backup_placeholder: "బ్యాకప్ కోడ్",
+    id_restore_button: "పునరుద్ధరించండి",
+    id_error_create: "మీ స్థలం సృష్టించడంలో లోపం. మళ్ళీ ప్రయత్నించండి.",
+    id_error_invalid_phrase: "ఇది 12-పద వాక్యంలా అనిపించలేదు.",
+    id_error_backup_read: "మీ వాక్యం సరైనది, కానీ బ్యాకప్ చదవలేకపోయింది.",
+    id_error_restore: "ఆ వాక్యం నుండి పునరుద్ధరించలేకపోయాము. మళ్ళీ ప్రయత్నించండి.",
+    you_elevated_hint: "ఎక్కువ శక్తి — మీ నమూనాలు చూడండి లేదా డాష్‌బోర్డ్ చూడండి.",
+    you_elevated_label: "డాష్‌బోర్డ్",
+    you_anxious_hint: "ఆందోళనగా ఉందా? అంతర్దృష్టి లేదా ఆలోచన రికార్డు సహాయపడవచ్చు.",
+    you_anxious_label: "అంతర్దృష్టి",
+    you_low_hint: "చిన్న అడుగు కూడా ముఖ్యం. పురోగతి లేదా డాష్‌బోర్డ్ చూడండి.",
+    you_low_label: "పురోగతి",
+    you_night_hint: "ప్రశాంత సమయం — మీ వారం ఎలా ఉందో చూడండి.",
+    you_night_label: "డాష్‌బోర్డ్",
+    you_evening_hint: "సాయంత్రం చింతన — వారం నమూనాలు చూడండి.",
+    you_evening_label: "డాష్‌బోర్డ్",
+    you_welcome_checkin_step: "మొదటి తనిఖీ",
+    you_welcome_checkin_desc: "Nila కు ఇప్పుడు ఎలా అనిపిస్తోందో చెప్పండి",
+    you_welcome_intention_step: "ఉద్దేశ్యం నిర్ణయించండి",
+    you_welcome_intention_desc: "ఈ వారం ప్రయత్నించాలనుకుంటున్న చిన్న విషయం",
+    you_welcome_dashboard_step: "మీ డాష్‌బోర్డ్ చూడండి",
+    you_welcome_dashboard_desc: "మీ పురోగతి రూపొందడం చూడండి",
+    you_welcome_title: "NilaMind కు స్వాగతం",
+    you_welcome_body: "మీ వ్యక్తిగత ఆరోగ్య సహచరుడు. ప్రతిదీ మీ పరికరంలోనే ఉంటుంది.",
+    you_badge_on_device: "పరికరంలో",
+    you_badge_crisis: "సంక్షోభ మద్దతు ఎల్లప్పుడూ ఇక్కడ",
+    you_streak_this_week: " రోజులు ఈ వారం",
+    you_mostly: "ప్రధానంగా ",
+    you_fallback_emotion: "తనిఖీ చేస్తోంది",
+    you_heavy_encouragement: "ఈ రోజు భారంగా అనిపించవచ్చు — సరే. ఇక్కడ ఉండటమే చాలు.",
+    you_data_error: "కొంత డేటా లోడ్ కాలేదు. క్రిందికి లాగండి.",
+    you_intention_title: "ఈ వారం ఉద్దేశ్యం",
+    you_intention_done: "పూర్తయింది",
+    you_intention_clear: "తొలగించు",
+    you_intention_set_label: "ఉద్దేశ్యం నిర్ణయించండి",
+    you_intention_set_desc: "ఈ వారం ప్రయత్నించాలనుకుంటున్న చిన్న విషయం",
+    you_intention_picker_title: "ఉద్దేశ్యం నిర్ణయించండి",
+    you_intention_picker_helper: "ఒకటి ఎంచుకోండి, లేదా మీ సొంతంగా రాయండి.",
+    you_intention_placeholder: "లేదా మీ సొంతంగా రాయండి…",
+    you_nudge_title: "అలవాటు చేస్తున్నారా? మరింత ప్రయత్నించండి:",
+    you_nudge_checkin: "తనిఖీ",
+    you_nudge_diary: "డైరీ",
+    you_fewer_resources: "తక్కువ వనరులు చూపించు",
+    you_more_resources: " మరిన్ని వనరులు",
+    you_footer_disclaimer: "NilaMind వృత్తిపరమైన సంరక్షణతో పాటు మద్దతు — ప్రత్యామ్నాయం కాదు.",
+    tr_title: "CBT ఆలోచన రికార్డు",
+    tr_subtitle: "స్వయంచాలిత అంతర్జ్ఞాన ఫిల్టర్లను సవాలు చేయడం",
+    tr_step_of: " / 5",
+    tr_step1_title: "దశ 1: పరిస్థితి",
+    tr_step1_question: "ఏమి జరిగింది?",
+    tr_step1_placeholder: "ట్రిగ్గరింగ్ సంఘటనను వివరించండి: ఉదా., 'మధ్యాహ్నం స్నేహితుడితో డిన్నర్ ప్లాన్ల గురించి వాదన...'",
+    tr_step2_title: "దశ 2: ప్రాథమిక భావన",
+    tr_step2_question: "మీరు ఏమి అనుభవించారు?",
+    tr_step2_placeholder: "ఉదా. సిగ్గు, తీవ్ర కోపం, విడిచిపెట్టడం, భయం",
+    tr_step2_intensity: "భావన తీవ్రత?",
+    tr_step3_title: "దశ 3: అవాంఛిత ఆలోచన",
+    tr_step3_question: "మీ మనసులో ఏ స్వయంచాలిత ఆలోచనలు వచ్చాయి?",
+    tr_step3_placeholder: "ఉదా. 'వారు నన్ను విడిచిపెడుతున్నారు ఎందుకంటే నేను పూర్తిగా విషపూరితమైన మరియు ప్రేమలేనివాడిని...'",
+    tr_step3_belief: "ఈ ఆలోచనను మీరు ఎంత నమ్ముతున్నారు?",
+    tr_spot_looking: "చూస్తోంది...",
+    tr_spot_traps: "ఉచ్చులు కనుగొనండి",
+    tr_step4_title: "దశ 4: ఉచ్చు కార్డులను గుర్తించండి",
+    tr_step4_instruction: "ఈ సమయంలో ఏ అంతర్జ్ఞాన వికృతులు వర్తిస్తాయి?",
+    tr_step4_active: "సక్రియం",
+    tr_step5_title: "దశ 5: పునర్నిర్మాణ మానసిక స్థితి",
+    tr_step5_question: "మరింత సమతుల్య ఆలోచన ఏమిటి?",
+    tr_step5_placeholder: "ఒక వస్తునిష్ఠ పునర్మూల్యాంకనం తయారు చేయండి...",
+    tr_step5_reenable: "అసలు భావన తీవ్రతను మళ్ళీ రేట్ చేయండి:",
+    tr_step5_asking: "Nila ని అడుగుతోంది...",
+    tr_step5_ask_nila: "Nila ని అడగండి",
+    tr_step5_crisis_heading: "మీరు రాసింది ఈ వ్యాయామం కంటే ముఖ్యమైనది",
+    tr_success_message: "% (from % to %)! ఆలోచనలను పునర్నిర్మాణం చేయడం శారీరక మార్గాలను శాంతపరచడంలో సహాయపడుతుంది.",
+    tr_btn_back: "వెనుకకు",
+    tr_btn_continue: "కొనసాగించు",
+    tr_btn_saved: "లాగ్ సేవ్ చేయబడింది!",
+    tr_btn_complete: "రికార్డు పూర్తి చేయండి",
+    tr_no_traps: "స్పష్టమైన ఆలోచన ఉచ్చులు కనుగొనబడలేదు — సరే, ఇది తీర్పు కాదు.",
+    tr_empty_error: "ఏమి జరిగింది మరియు ఏ స్వయంచాలిత ఆలోచనలు వచ్చాయో వివరించండి.",
+    tr_nil_fail: "ఇప్పుడు Nila ని చేరుకోలేకపోయాము. మీ సమతుల్య ఆలోచన రాయండి లేదా మళ్ళీ ప్రయత్నించండి.",
+    tr_trap_all_or_nothing: "అన్నీ లేదా ఏమీ లేదు",
+    tr_trap_all_or_nothing_desc: "పరిపూర్ణంగా లేకపోతే, పూర్తిగా విఫలమైంది",
+    tr_trap_catastrophising: "విపత్తు ఊహ",
+    tr_trap_catastrophising_desc: "ఇది ఖచ్చితంగా విపత్తు అవుతుంది",
+    tr_trap_mind_reading: "మనసు చదవడం",
+    tr_trap_mind_reading_desc: "వారు నేను అసమర్థుడని అనుకుంటున్నారని ఇప్పటికే తెలుసు",
+    tr_trap_fortune_telling: "భవిష్యత్ చెప్పడం",
+    tr_trap_fortune_telling_desc: "ఇది తప్పు అవుతుందని ఖచ్చితంగా తెలుసు",
+    tr_trap_emotional_reasoning: "భావన కారణం",
+    tr_trap_emotional_reasoning_desc: "నేను విలువలేనివాడిగా భావిస్తున్నాను, కాబట్టి నిజంగా అలానే",
+    tr_trap_should_statements: "చేయాలి ప్రకటనలు",
+    tr_trap_should_statements_desc: "నేను దీని కంటే బాగా చేయాలి",
+    tr_trap_labelling: "లేబుల్ చేయడం",
+    tr_trap_labelling_desc: "నేను విఫలమైన / చెడు వ్యక్తి",
+    tr_trap_personalisation: "వ్యక్తిగతీకరణ",
+    tr_trap_personalisation_desc: "ఇది పూర్తిగా నా తప్పు",
+    tr_trap_mental_filter: "మానసిక ఫిల్టర్",
+    tr_trap_mental_filter_desc: "ఋణాత్మకంపై మాత్రమే దృష్టి పెట్టండి",
+    tr_trap_magnification: "పెద్దది చేయడం",
+    tr_trap_magnification_desc: "ప్రతిదీ పెద్దదిగా చేయడం",
+    // Episode Support (ep_*) — 2026-08-03
+    ep_here: "నేను ఇక్కడ ఉన్నాను.",
+    ep_opening_body: "ఇది మీ ఎపిసోడ్ మద్దతు సాధనం — ఒక AI, మానవుడు కాదు. నేను మానవుని స్థానంలో ఉండలేను, కానీ తర్వాతి కొన్ని నిమిషాలను నావిగేట్ చేయడానికి స్థిరమైన ఆలోచనలను పొందడంలో మీకు సహాయపడగలను.",
+    ep_opening_question: "ఇప్పుడు ఏమి జరుగుతోంది?",
+    ep_placeholder: "మీరు ఎలా భావిస్తున్నారు, మిమ్మల్ని ఏది ట్రిగ్గర్ చేసింది, లేదా మీకు ఏ అవాంఛిత కోరిక ఉందో వివరించండి... (వచనం 100% సురక్షితం/గోప్యం)",
+    ep_start: "ఎపిసోడ్ మద్దతు ప్రారంభించండి",
+    ep_offline_note: "Nila పూర్తిగా మీ పరికరంలో నడుస్తుంది — కనెక్షన్ అవసరం లేదు. మోడల్ ఇంకా లోడ్ అవుతుంటే, సురక్షితమైన గైడెడ్ మోడ్ స్వయంచాలకంగా నడుస్తుంది.",
+    ep_end_session: "సెషన్ ముగించండి",
+    ep_live_badge: "Nila · పరికరంలో",
+    ep_not_therapist: "థెరపిస్ట్ కాదు. నిర్ధారణ సాధనం కాదు.",
+    ep_crisis_tap: "సంక్షోభంలో ఉన్నారా? ఇప్పుడే కాల్ చేయడానికి ట్యాప్ చేయండి:",
+    ep_shielding: "భద్రతా కవచం సక్రియంగా ఉంది",
+    ep_return_home: "హోమ్‌కు తిరిగి వెళ్ళండి",
+    ep_intensity_prompt: "మీ ప్రస్తుత తీవ్రతను ఎంచుకోండి (1 ప్రశాంతం, 10 సంక్షోభ పరిమితి):",
+    ep_chat_placeholder: "మీరు ఎలా భావిస్తున్నారో వ్యక్తపరచండి...",
+    ep_send: "పంపండి",
+    ep_escalation_title: "మీరు 20 నిమిషాలుగా ఇందులో ఉన్నారు, ఇంకా అధిక తీవ్రతలో ఉన్నారు.",
+    ep_escalation_body: "ఇది మానవుని క్షణం. నేను సహాయం చేయలేనందువల్ల కాదు — మానవులు నేను నిజంగా చేయలేని పని చేయగలరు: మీతో శారీరకంగా ఉండి మీ గొంతు వినడం.",
+    ep_escalation_keep: "Nila తో మాట్లాడటం కొనసాగించండి",
+    ep_guided_title: "గైడెడ్ ఆఫ్‌లైన్ మోడ్",
+    ep_guided_badge: "కనెక్షన్ అవసరం లేదు",
+    ep_guided_init_body: "AI సహచరుడు ప్రస్తుతం అందుబాటులో లేడు, కానీ నేను మిమ్మల్ని ఇందులో నడిపించగలను. దశలవారీగా ముందుకు వెళ్దాం.",
+    ep_guided_intensity: "మీరు ఇప్పుడు భావిస్తున్నది ఎంత తీవ్రం?",
+    ep_tipp_title: "జీవశాస్త్ర షాక్ రీసెట్",
+    ep_tipp_body: "మీ తీవ్రత అత్యంతం. అంటే మీ ఆలోచించే మెదడు ఆఫ్‌లైన్లో ఉంది. ఇది జీవశాస్త్రం, బలహీనత కాదు. ఇప్పుడు సరిపోయేదాన్ని ప్రయత్నించండి.",
+    ep_tipp_done: "నేను ముగించడానికి సిద్ధంగా ఉన్నాను",
+    ep_medium_question: "ఇప్పుడు బలమైన అవాంఛిత ఆలోచన ఏది?",
+    ep_medium_racing: "వేగంగా, గందరగోళంగా తిరుగుతున్న ఆలోచనలు",
+    ep_medium_harm: "నాకు హాని చేసుకోవాలనే లేదా హఠాత్తుగా ప్రవర్తించాలనే తీవ్రమైన కోరిక",
+    ep_medium_shame: "తీవ్రమైన అవమానం లేదా నన్ను నేను ద్వేషించడం",
+    ep_panic_title: "బాక్స్ బ్రీతింగ్",
+    ep_panic_body: "నెమ్మదైన, స్థిరమైన శ్వాస మీ శరీరాన్ని స్థిరపరుస్తుంది మరియు వేగవంతమైన మనస్సును శాంతింపజేయడంలో సహాయపడుతుంది. 4-4-4-4 చక్రాలు చేద్దాం: 4 సెకన్లు లోపలికి ఊపిరి తీసుకోండి, 4 సెకన్లు ఆపండి, 4 సెకన్లు బయటకు వదలండి, 4 సెకన్లు ఆపండి.",
+    ep_panic_done: "అయిపోయింది",
+    ep_harm_title: "వేవ్ సర్ఫింగ్ స్క్రిప్ట్",
+    ep_harm_body: "కోరికలు అలల లాంటివి. మీరు వాటిని పోషించకపోతే అవి లేచి, శిఖరాన్ని చేరి, అనివార్యంగా పడిపోతాయి. మిమ్మల్ని సురక్షితమైన సర్ఫ్‌బోర్డ్‌పై ఉన్నట్లు ఊహించుకోండి. పాదాలను నొక్కి స్థిరంగా ఉండండి — కోరికతో పోరాడకండి. కేవలం 10 నిమిషాలు దాన్ని భరించండి.",
+    ep_harm_done: "అయిపోయింది",
+    ep_shame_title: "Neff సెల్ఫ్-కంపాషన్ స్క్రిప్ట్",
+    ep_shame_body: "సెల్ఫ్-కంపాషన్ విరామం తీసుకోండి. నెమ్మదిగా చదవండి: \"ఇది కష్టం. ఈ బాధ జీవితంలో భాగం. కన్నీళ్లలో ఉన్న ప్రియమైన స్నేహితుడికి నేను ఇచ్చే దయను నాకు కూడా ఇస్తాను.\"",
+    ep_shame_proceed: "డిబ్రీఫ్‌కు వెళ్ళండి",
+    ep_low_body: "మీరు స్థిరమైన స్థానంలో ఉన్నారు. మన వ్యవస్థలను శాంతింపజేసి, సున్నితమైన ముగింపుకు వెళ్దాం.",
+    ep_low_done: "సురక్షిత ముగింపు",
+    ep_debrief1_title: "ముగింపు రికవరీ డిబ్రీఫ్",
+    ep_debrief1_sub: "దశ 1/3: ట్రిగ్గర్ సందర్భాన్ని ట్రాక్ చేయడం",
+    ep_debrief1_trigger: "ఈ తీవ్రమైన ఎపిసోడ్‌ను ఏది ట్రిగ్గర్ చేసింది? (ఐచ్ఛికం)",
+    ep_debrief1_placeholder: "ఉదా. తిరస్కరించబడినట్లు భావించడం, తీవ్రమైన పని నిరాశ, నిద్ర లేకపోవడం...",
+    ep_debrief1_skip: "దాటవేయి",
+    ep_debrief1_save: "సేవ్ & తదుపరి",
+    ep_debrief2_title: "డిబ్రీఫ్: కోపింగ్ ధృవీకరణ",
+    ep_debrief2_sub: "దశ 2/3: ఏ నైపుణ్యాలు మీకు సహాయపడ్డాయో తనిఖీ చేయండి",
+    ep_debrief2_prompt: "ఈ సెషన్‌లో ఏది ఎక్కువగా సహాయపడింది? సహాయకరమైనవాటిని టోగుల్ చేయండి:",
+    ep_debrief2_continue: "కొనసాగించండి",
+    ep_debrief3_title: "డిబ్రీఫ్: తీవ్రత ప్రయాణం",
+    ep_debrief3_sub: "దశ 3/3: మీ చివరి ప్రస్తుత స్థితిని రేట్ చేయండి",
+    ep_debrief3_when_started: "మీరు ప్రారంభించినప్పుడు",
+    ep_debrief3_highest: "అత్యధిక స్థానం",
+    ep_debrief3_final: "మీ తీవ్రత రేటింగ్ ఇప్పుడు ఎక్కడ ముగుస్తోంది?",
+    ep_saved_title: "సెషన్ ఆఫ్‌లైన్‌లో సేవ్ చేయబడింది",
+    ep_saved_body: "మీరు దీన్ని దాటారు. అది ఇప్పుడు అనిపించే దాని కంటే ఎక్కువ ముఖ్యం.",
+    ep_saved_done: "ఇప్పుడు నాకు సరిపోతుంది",
+    ep_synthetic_logged: "ప్రస్తుత తీవ్రత లాగ్ చేయబడింది: {n}/10.",
+    ep_synthetic_user: "నా ప్రస్తుత తీవ్రత {n}/10. దాన్ని గుర్తించి, సరిపోలే ఒక డిస్ట్రెస్-రిజల్యూషన్ నైపుణ్యం ద్వారా నన్ను నడిపించండి.",
+    ep_synthetic_initial: "నన్ను సురక్షితంగా నడిపించడానికి, నిర్ధారించుకుందాం: మీరు ఇప్పుడు అనుభవిస్తున్నది 1 నుండి 10 స్కేల్‌లో ఎంత తీవ్రం?",
+    ep_synthetic_reprompt: "ఆగి ఇప్పుడే ఇక్కడికి తిరిగి వద్దాం: 1 నుండి 10 వరకు మీ తీవ్రత రేటింగ్ ఎంత?",
+    ex_crisis_title: "మీరు ముఖ్యులు — మద్దతు ఇప్పుడే ఇక్కడ ఉంది",
+    ex_crisis_body: "మీరు ఇప్పుడే రాసినది ఒక ఎక్స్పోజర్ దశ కంటే ఎక్కువగా అనిపిస్తుంది. ఇది ఒక వ్యక్తి కోసం క్షణం, వ్యాయామం కాదు — దయచేసి ఇప్పుడే సంప్రదించండి. మీరు ఒంటరిగా లేరు.",
+    ex_crisis_back: "వ్యాయామానికి తిరిగి వెళ్ళండి",
+    ex_close: "మూసివేయి",
+    ex_subtitle: "దశలు SUDS (0–100) ప్రకారం ర్యాంక్ చేయబడతాయి. దిగువ నుండి పైకి పని చేయండి — సులభమైన దానితో ప్రారంభించండి.",
+    ex_completed: "పూర్తయింది",
+    ex_avg_suds: "సగటు SUDS తగ్గుదల",
+    ex_celebrate: "దశ పూర్తయింది — {step}. అది కష్టంగా ఉన్నా ధైర్యం అవసరం.",
+    ex_complete_step: "ఈ దశను పూర్తి చేయండి",
+    ex_suds_after: "ఎక్స్పోజర్ తర్వాత SUDS: {n}",
+    ex_reflect_prompt: "ప్రతిబింబించడానికి విలువైన కొన్ని విషయాలు:",
+    ex_learned_placeholder: "మీరు ఏమి నేర్చుకున్నారు? (ఐచ్ఛికం)",
+    ex_save: "సేవ్ చేయి",
+    ex_cancel: "రద్దు",
+    ex_reflection_note: "ఇన్హిబిటరీ-లెర్నింగ్ మోడల్ ఆధారిత ప్రతిబింబ ప్రాంప్ట్‌లు (Craske, Treanor, Conway, Zbozinek & Vervliet, 2014) — మీరు ఊహించిన దాని కంటే వాస్తవంగా ఏమి జరిగిందో గమనించడం, ఎక్స్పోజర్ అభ్యాసం నిలిచిపోకుండా ఉండటానికి పరిశోధన సూచించేది.",
+    ex_suds_label: "SUDS: {n}",
+    ex_complete_btn: "పూర్తి చేయండి",
+    ex_no_steps: "ఇంకా దశలు లేవు. క్రింద మీ మొదటి దశను జోడించండి.",
+    ex_step_placeholder: "ఎక్స్పోజర్ దశ...",
+    ex_suds_slider: "SUDS: {n}",
+    ex_add_step: "దశను జోడించండి",
+    ex_title: "ఎక్స్పోజర్ హైరార్కీ",
+    ex_body: "భయాల నిచ్చెనను నిర్మించండి. దిగువ నుండి పైకి పని చేయండి — అత్యంత కష్టమైన చోట కాదు, సులభమైన చోట ప్రారంభించండి.",
+    ex_hierarchy_name: "హైరార్కీ పేరు (ఉదా. సామాజిక ఆందోళన)",
+    ex_confirm_remove: "దశను తొలగించాలా?",
+    ex_confirm_message: "ఈ దశ మీ హైరార్కీ నుండి తొలగించబడుతుంది. ఈ దశ యొక్క పురోగతి కోల్పోతారు.",
+    ex_remove: "తొలగించు",
+    ex_keep: "ఉంచుకోండి",
   },
 };
 
