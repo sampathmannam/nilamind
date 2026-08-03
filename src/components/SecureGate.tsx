@@ -32,8 +32,8 @@ export default function SecureGate({ children }: { children: React.ReactNode }) 
       <div className="min-h-screen bg-page flex flex-col items-center justify-center px-6">
         <div className="w-full max-w-xs space-y-6 text-center">
           <div className="flex flex-col items-center gap-3">
-            <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
-              <Lock className="w-6 h-6 text-amber-400" />
+            <div className="w-14 h-14 rounded-2xl bg-warn/10 border border-warn/30 flex items-center justify-center">
+              <Lock className="w-6 h-6 text-warn" />
             </div>
             <div className="space-y-1">
               <h1 className="text-lg font-bold text-ink">We couldn't open your data this time</h1>
@@ -45,7 +45,7 @@ export default function SecureGate({ children }: { children: React.ReactNode }) 
           </div>
           <button
             onClick={() => window.location.reload()}
-            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl text-sm cursor-pointer transition-colors"
+            className="w-full bg-accent hover:opacity-90 text-white font-bold py-3 rounded-xl text-sm cursor-pointer transition-colors"
           >
             Try again
           </button>
@@ -59,7 +59,7 @@ export default function SecureGate({ children }: { children: React.ReactNode }) 
   if (phase === "loading") {
     return (
       <div className="min-h-screen bg-page flex flex-col items-center justify-center gap-3 text-ink-faint">
-        <Anchor className="w-8 h-8 text-blue-500 animate-pulse" />
+        <Anchor className="w-8 h-8 text-accent animate-pulse" />
         <div className="flex items-center gap-2 text-xs">
           <Loader2 className="w-3.5 h-3.5 animate-spin" /> Securing your space…
         </div>
@@ -95,8 +95,8 @@ function UnlockScreen({ onUnlocked }: { onUnlocked: () => void }) {
     <div className="min-h-screen bg-page flex flex-col items-center justify-center px-6">
       <div className="w-full max-w-xs space-y-6 text-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-accent/30 flex items-center justify-center">
-            <Lock className="w-6 h-6 text-blue-400" />
+          <div className="w-14 h-14 rounded-2xl bg-accent/10 border border-accent/30 flex items-center justify-center">
+            <Lock className="w-6 h-6 text-accent" />
           </div>
           <div className="space-y-1">
             <h1 className="text-lg font-bold text-ink">Welcome back</h1>
@@ -124,7 +124,7 @@ function UnlockScreen({ onUnlocked }: { onUnlocked: () => void }) {
             onClick={submit}
             disabled={!pin || busy}
             id="unlock-submit"
-            className="w-full bg-blue-600 hover:bg-blue-500 disabled:bg-fill disabled:text-ink-faint text-white font-bold py-3 rounded-xl text-sm cursor-pointer transition-colors flex items-center justify-center gap-2"
+            className="w-full bg-accent hover:opacity-90 disabled:bg-fill disabled:text-ink-faint text-white font-bold py-3 rounded-xl text-sm cursor-pointer transition-colors flex items-center justify-center gap-2"
           >
             {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : "Unlock"}
           </button>

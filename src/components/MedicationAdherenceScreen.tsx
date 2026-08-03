@@ -82,7 +82,7 @@ export default function MedicationAdherenceScreen() {
         <h2 className="text-lg font-semibold text-ink">Medications</h2>
         <button
           onClick={() => setShowForm((s) => !s)}
-          className="flex items-center gap-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-full transition-colors cursor-pointer"
+          className="flex items-center gap-1.5 text-xs font-semibold bg-accent hover:opacity-90 text-white px-3 py-1.5 rounded-full transition-colors cursor-pointer"
         >
           {showForm ? <X className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />} {showForm ? "Cancel" : "Add"}
         </button>
@@ -137,7 +137,7 @@ export default function MedicationAdherenceScreen() {
           <button
             onClick={handleAdd}
             disabled={!name.trim()}
-            className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:bg-line-strong disabled:text-ink-faint text-white text-sm font-bold transition-colors cursor-pointer"
+            className="w-full py-2.5 rounded-xl bg-success hover:opacity-90 disabled:bg-line-strong disabled:text-ink-faint text-white text-sm font-bold transition-colors cursor-pointer"
           >
             Save medication
           </button>
@@ -159,7 +159,7 @@ export default function MedicationAdherenceScreen() {
             <div key={med.id} className={`bg-fill/60 border rounded-2xl p-4 space-y-3 ${med.active ? "border-line-strong" : "border-line-strong/40 opacity-70"}`}>
               <div className="flex items-start justify-between">
                 <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-xl bg-blue-500/10 text-blue-400">
+                  <div className="p-2 rounded-xl bg-accent/10 text-accent">
                     <Pill className="w-5 h-5" />
                   </div>
                   <div>
@@ -179,7 +179,7 @@ export default function MedicationAdherenceScreen() {
                       onChange={() => toggleActive(med.id)}
                       className="sr-only peer"
                     />
-                    <div className="w-9 h-5 bg-line-strong peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600" />
+                    <div className="w-9 h-5 bg-line-strong peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-accent" />
                   </label>
                   <button
                     onClick={() => handleDelete(med.id)}
@@ -195,7 +195,7 @@ export default function MedicationAdherenceScreen() {
                 <button
                   onClick={() => markTaken(med.id)}
                   disabled={takenToday}
-                  className={`flex-1 py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1 transition-colors cursor-pointer ${takenToday ? "bg-emerald-500/20 text-emerald-300" : "bg-line-strong hover:bg-emerald-600 hover:text-white text-ink-2"}`}
+                  className={`flex-1 py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1 transition-colors cursor-pointer ${takenToday ? "bg-success/20 text-success-hi" : "bg-line-strong hover:opacity-90 hover:text-white text-ink-2"}`}
                 >
                   <Check className="w-3.5 h-3.5" /> {takenToday ? "Taken today" : "Take now"}
                 </button>

@@ -27,7 +27,7 @@ const MOOD_TO_CHECKIN: Record<string, [string, number]> = {
 const MOOD_OPTIONS = [
   { label: "Good", emoji: "😊", value: "good", color: "bg-green-500/20 text-green-300 border-green-500/30 hover:bg-green-500/30" },
   { label: "Okay", emoji: "😐", value: "okay", color: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30 hover:bg-yellow-500/30" },
-  { label: "Low", emoji: "😔", value: "low", color: "bg-blue-500/20 text-blue-300 border-accent/30 hover:bg-blue-500/30" },
+  { label: "Low", emoji: "😔", value: "low", color: "bg-accent/20 text-accent-hi border-accent/30 hover:bg-accent/30" },
   // Fable review (2026-07-19): this was raw Tailwind bg-red-500/text-red-300 — unmapped, the one color
   // in this exact 4-chip array that hadn't been folded into the warm palette (green/blue/yellow all
   // were). Rose is this app's actual "warm red" family (muted terracotta, never bright red) — using its
@@ -62,9 +62,9 @@ export default function LowFrictionReCheckIn({ onMoodSelect, onSkip, daysSinceLa
   };
 
   return (
-    <div className="glass p-4 rounded-2xl space-y-3 border border-blue-400/10">
+    <div className="glass p-4 rounded-2xl space-y-3 border border-accent/10">
       <div className="flex items-center gap-2">
-        <Sparkle className="w-4 h-4 text-blue-400" />
+        <Sparkle className="w-4 h-4 text-accent" />
         <p className="text-sm font-semibold text-ink-2">How are you right now?</p>
       </div>
       <p className="text-[11px] text-ink-muted leading-relaxed">

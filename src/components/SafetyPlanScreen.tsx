@@ -139,10 +139,10 @@ export default function SafetyPlanScreen({ draft }: { draft?: Partial<Pick<Safet
           <h1 className="text-xl font-semibold text-ink">My Safety Plan</h1>
           <p className="text-xs text-ink-faint">Your secure emergency dashboard</p>
         </div>
-        <div className="flex items-center gap-1.5 text-xs font-medium text-emerald-400" role="status" aria-live="polite">
+        <div className="flex items-center gap-1.5 text-xs font-medium text-success" role="status" aria-live="polite">
           {savedStatus ? (
             <>
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+              <CheckCircle2 className="w-4 h-4 text-success" />
               <span>Autosaved</span>
             </>
           ) : (
@@ -158,9 +158,9 @@ export default function SafetyPlanScreen({ draft }: { draft?: Partial<Pick<Safet
       </div>
 
       {draftApplied && (
-        <div className="bg-amber-500/5 border border-amber-500/25 rounded-xl p-3" id="safety-plan-draft-note">
+        <div className="bg-warn/5 border border-warn/25 rounded-xl p-3" id="safety-plan-draft-note">
           <p className="text-xs text-ink-2 leading-relaxed">
-            <span className="font-semibold text-amber-300">Started from our chat.</span> I filled in a few
+            <span className="font-semibold text-warn-hi">Started from our chat.</span> I filled in a few
             fields from what you told me — please read each one, change anything that isn't right, and add the
             people you'd reach out to yourself. Nothing is saved until you edit or save it.
           </p>
@@ -286,10 +286,10 @@ export default function SafetyPlanScreen({ draft }: { draft?: Partial<Pick<Safet
           id="sp-means-coaching-toggle"
         >
           {showCoaching ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-          <Sparkles className="w-4 h-4 text-violet-400" />
+          <Sparkles className="w-4 h-4 text-accent" />
           Means safety coaching (optional)
           {meansProgress.completedCategories.length > 0 && (
-            <span className="ml-auto text-xs text-emerald-400">
+            <span className="ml-auto text-xs text-success">
               {meansProgress.completedCategories.length} explored
             </span>
           )}
@@ -320,7 +320,7 @@ export default function SafetyPlanScreen({ draft }: { draft?: Partial<Pick<Safet
                     >
                       {isExpanded ? <ChevronDown className="w-3.5 h-3.5 shrink-0" /> : <ChevronRight className="w-3.5 h-3.5 shrink-0" />}
                       <span className="flex-1">{cat.label}</span>
-                      {isDone && <span className="text-xs text-emerald-400">Done</span>}
+                      {isDone && <span className="text-xs text-success">Done</span>}
                     </button>
 
                     {isExpanded && (
@@ -365,7 +365,7 @@ export default function SafetyPlanScreen({ draft }: { draft?: Partial<Pick<Safet
               <textarea
                 value={commitmentInput || meansProgress.commitmentText}
                 onChange={(e) => setCommitmentInput(e.target.value)}
-                className="w-full h-16 bg-card border border-line rounded-xl px-3 py-2 text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus:border-violet-500 transition-all resize-none"
+                className="w-full h-16 bg-card border border-line rounded-xl px-3 py-2 text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus:border-accent transition-all resize-none"
                 placeholder="e.g. I'll ask my brother to hold my medication and give me a weekly supply."
               />
             </div>
@@ -373,7 +373,7 @@ export default function SafetyPlanScreen({ draft }: { draft?: Partial<Pick<Safet
             {/* Generate section 6 block */}
             <button
               onClick={handleGenerateSafeEnvironment}
-              className="w-full px-3 py-2 rounded-xl bg-violet-500/20 hover:bg-violet-500/30 text-violet-200 text-sm font-medium transition-colors cursor-pointer"
+              className="w-full px-3 py-2 rounded-xl bg-accent/20 hover:opacity-90/30 text-accent-hi text-sm font-medium transition-colors cursor-pointer"
               id="sp-generate-safeenv-btn"
             >
               Add to section 6 above

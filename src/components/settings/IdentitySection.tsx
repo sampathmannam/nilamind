@@ -32,7 +32,7 @@ export default function IdentitySection() {
     <div className="glass p-5 rounded-2xl space-y-4 shadow-lg" id="settings-identity">
       <div>
         <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-2 font-mono flex items-center gap-2">
-          <KeyRound className="w-4 h-4 text-blue-400" /> {t("sec_identity")}
+          <KeyRound className="w-4 h-4 text-accent" /> {t("sec_identity")}
         </h2>
         <p className="text-[11px] text-ink-muted mt-1 leading-relaxed">
           No email or password — your space is recovered with a 12-word phrase only you hold.
@@ -48,7 +48,7 @@ export default function IdentitySection() {
               if (!revealed && !(await requireAuth("Confirm it's you to show your recovery phrase."))) return;
               setRevealed((v) => !v);
             }}
-            className="text-[11px] text-blue-300 hover:text-blue-200 cursor-pointer flex items-center gap-1"
+            className="text-[11px] text-accent-hi hover:text-accent-hi cursor-pointer flex items-center gap-1"
           >
             {revealed ? <><EyeOff className="w-3 h-3" /> Hide</> : <><Eye className="w-3 h-3" /> Reveal</>}
           </button>
@@ -57,9 +57,9 @@ export default function IdentitySection() {
           <>
             <p className="text-xs text-ink-2 font-mono leading-relaxed break-words">{id.mnemonic}</p>
             <button onClick={copyPhrase} className="text-[11px] text-ink-2 hover:text-ink cursor-pointer flex items-center gap-1">
-              {copied ? <><Check className="w-3 h-3 text-emerald-400" /> Copied</> : <><Copy className="w-3 h-3" /> Copy</>}
+              {copied ? <><Check className="w-3 h-3 text-success" /> Copied</> : <><Copy className="w-3 h-3" /> Copy</>}
             </button>
-            <p className="text-xs text-amber-300/80">Keep it private — anyone with it can restore your data.</p>
+            <p className="text-xs text-warn-hi/80">Keep it private — anyone with it can restore your data.</p>
           </>
         ) : (
           <p className="text-[11px] text-ink-faint">Hidden. Tap Reveal only when no one's looking.</p>
@@ -76,7 +76,7 @@ export default function IdentitySection() {
           </button>
         ) : (
           <div className="flex gap-2">
-            <button onClick={download} className="flex-1 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2.5 rounded-lg cursor-pointer">Download .txt</button>
+            <button onClick={download} className="flex-1 bg-accent hover:opacity-90 text-white text-xs font-bold py-2.5 rounded-lg cursor-pointer">Download .txt</button>
             <button onClick={() => navigator.clipboard.writeText(backup)} className="glass text-ink-2 text-xs px-3 py-2.5 rounded-lg cursor-pointer">Copy</button>
           </div>
         )}

@@ -92,13 +92,13 @@ export default function PerformanceDashboard() {
   for (const m of vitals) latestVitals[m.name.toLowerCase()] = m.value;
 
   const ratingColor = (r: string) =>
-    r === "good" ? "text-emerald-400" : r === "needs-improvement" ? "text-amber-400" : "text-rose-400";
+    r === "good" ? "text-success" : r === "needs-improvement" ? "text-warn" : "text-rose-400";
 
   return (
     <div className="glass rounded-2xl p-4 space-y-4" id="perf-dashboard">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-bold text-ink uppercase tracking-wider flex items-center gap-1.5">
-          <Gauge className="w-4 h-4 text-blue-400" /> Performance
+          <Gauge className="w-4 h-4 text-accent" /> Performance
         </h3>
         <div className="flex gap-2">
           <button onClick={handleClear} className="text-[11px] text-ink-muted hover:text-ink-2 flex items-center gap-1">
@@ -159,7 +159,7 @@ export default function PerformanceDashboard() {
       {tab === "errors" && (
         <div className="space-y-2">
           {errors.length === 0 ? (
-            <div className="flex items-center gap-2 text-xs text-emerald-400">
+            <div className="flex items-center gap-2 text-xs text-success">
               <CheckCircle className="w-4 h-4" /> No errors logged — nice.
             </div>
           ) : (
@@ -186,7 +186,7 @@ export default function PerformanceDashboard() {
                   setAxisScores(computeAxisScores(results));
                   hapticLight();
                 }}
-                className="text-[11px] px-3 py-1.5 rounded-lg bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 transition"
+                className="text-[11px] px-3 py-1.5 rounded-lg bg-accent/20 text-accent-hi hover:bg-accent/30 transition"
               >
                 Run evaluation
               </button>
@@ -196,7 +196,7 @@ export default function PerformanceDashboard() {
               {(Object.entries(axisScores) as [string, { pass: number; fail: number; total: number }][]).map(([axis, s]) => (
                 <div key={axis} className="flex items-center justify-between text-xs">
                   <span className="text-ink-2 font-mono text-[11px]">{axis.replace(/_/g, " ")}</span>
-                  <span className={s.fail === 0 ? "text-emerald-400" : "text-rose-400"}>
+                  <span className={s.fail === 0 ? "text-success" : "text-rose-400"}>
                     {s.pass}/{s.total} pass
                   </span>
                 </div>

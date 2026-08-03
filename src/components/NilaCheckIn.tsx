@@ -225,9 +225,9 @@ export default function NilaCheckIn({ onLogged, onSkip }: NilaCheckInProps) {
           const i = steps.indexOf(s as (typeof steps)[number]);
           const cls =
             i === stepIdx
-              ? "w-6 h-1.5 bg-violet-500" // current mandatory step
+              ? "w-6 h-1.5 bg-accent" // current mandatory step
               : i < stepIdx
-              ? "w-4 h-1.5 bg-emerald-500" // completed
+              ? "w-4 h-1.5 bg-success" // completed
               : "w-4 h-1.5 bg-line-strong"; // upcoming
           return <span key={s} className={`rounded-full transition-all ${cls}`} />;
         })}
@@ -248,7 +248,7 @@ export default function NilaCheckIn({ onLogged, onSkip }: NilaCheckInProps) {
                 onClick={() => handleMood(m)}
                 className={`py-3 rounded-xl text-sm font-medium border cursor-pointer transition-all active:scale-95 ${
                   draft.label === m
-                    ? "bg-violet-600/20 border-violet-500/50 text-violet-200"
+                    ? "bg-accent/20 border-accent/50 text-accent-hi"
                     : "bg-page border-line text-ink-2 hover:border-line-strong hover:text-ink"
                 }`}
               >
@@ -267,7 +267,7 @@ export default function NilaCheckIn({ onLogged, onSkip }: NilaCheckInProps) {
                 onClick={() => handleIntensity(chip.value)}
                 className={`py-3 rounded-xl text-sm font-medium border cursor-pointer transition-all active:scale-95 ${
                   draft.intensity === chip.value
-                    ? "bg-violet-600/20 border-violet-500/50 text-violet-200"
+                    ? "bg-accent/20 border-accent/50 text-accent-hi"
                     : "bg-page border-line text-ink-2 hover:border-line-strong hover:text-ink"
                 }`}
               >
@@ -287,7 +287,7 @@ export default function NilaCheckIn({ onLogged, onSkip }: NilaCheckInProps) {
                  onClick={() => handleSleep(chip.value)}
                  className={`py-3 rounded-xl text-sm font-medium border cursor-pointer transition-all active:scale-95 ${
                    draft.sleepHours === chip.value
-                     ? "bg-indigo-600/20 border-indigo-500/50 text-indigo-200"
+                     ? "bg-accent/20 border-accent/50 text-accent-hi"
                      : "bg-page border-line text-ink-2 hover:border-line-strong hover:text-ink"
                  }`}
                >
@@ -306,7 +306,7 @@ export default function NilaCheckIn({ onLogged, onSkip }: NilaCheckInProps) {
                 onClick={() => handleEnergy(chip.value)}
                 className={`py-3 rounded-xl text-sm font-medium border cursor-pointer transition-all active:scale-95 ${
                   draft.energy === chip.value
-                    ? "bg-violet-600/20 border-violet-500/50 text-violet-200"
+                    ? "bg-accent/20 border-accent/50 text-accent-hi"
                     : "bg-page border-line text-ink-2 hover:border-line-strong hover:text-ink"
                 }`}
               >
@@ -340,7 +340,7 @@ export default function NilaCheckIn({ onLogged, onSkip }: NilaCheckInProps) {
           <button
             onClick={finishNow}
             id="nila-checkin-done"
-            className="w-full mt-1 py-3 rounded-xl text-sm font-bold bg-violet-600 hover:bg-violet-500 text-white cursor-pointer transition-colors active:scale-95"
+            className="w-full mt-1 py-3 rounded-xl text-sm font-bold bg-accent hover:opacity-90 text-white cursor-pointer transition-colors active:scale-95"
           >
             Done — that's enough
           </button>
@@ -357,7 +357,7 @@ export default function NilaCheckIn({ onLogged, onSkip }: NilaCheckInProps) {
                 <button
                   key={word}
                   onClick={() => handleGranular(word)}
-                  className="py-3 rounded-xl text-sm font-medium border border-line bg-page text-ink-2 hover:border-violet-500/50 hover:text-violet-200 cursor-pointer transition-all active:scale-95"
+                  className="py-3 rounded-xl text-sm font-medium border border-line bg-page text-ink-2 hover:border-accent/50 hover:text-accent-hi cursor-pointer transition-all active:scale-95"
                 >
                   {word}
                 </button>

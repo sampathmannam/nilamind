@@ -51,39 +51,39 @@ export function buildToolGroups({ go, onEpisode, phoneEnabled }: ToolRowDeps): T
     {
       title: t("tool_group_moment"),
       rows: [
-        { id: "plan", label: t("tool_plan_label"), sub: t("tool_plan_sub"), Icon: Wind, iconClass: "w-5 h-5 text-blue-400", onTap: () => go("plan") },
-        { id: "winddown", label: t("tool_winddown_label"), sub: t("tool_winddown_sub"), Icon: Moon, iconClass: "w-5 h-5 text-indigo-400", onTap: () => go("winddown") },
-        { id: "sounds", label: "Ambient sounds", sub: "White/brown/pink noise for focus, sleep, or calm", Icon: Volume2, iconClass: "w-5 h-5 text-emerald-400", onTap: () => go("sounds") },
-        { id: "reach_out", label: t("tool_reach_out_label"), sub: t("tool_reach_out_sub"), Icon: MessageCircle, iconClass: "w-5 h-5 text-emerald-400", onTap: () => go("reach_out") },
+        { id: "plan", label: t("tool_plan_label"), sub: t("tool_plan_sub"), Icon: Wind, iconClass: "w-5 h-5 text-accent", onTap: () => go("plan") },
+        { id: "winddown", label: t("tool_winddown_label"), sub: t("tool_winddown_sub"), Icon: Moon, iconClass: "w-5 h-5 text-accent", onTap: () => go("winddown") },
+        { id: "sounds", label: "Ambient sounds", sub: "White/brown/pink noise for focus, sleep, or calm", Icon: Volume2, iconClass: "w-5 h-5 text-success", onTap: () => go("sounds") },
+        { id: "reach_out", label: t("tool_reach_out_label"), sub: t("tool_reach_out_sub"), Icon: MessageCircle, iconClass: "w-5 h-5 text-success", onTap: () => go("reach_out") },
         { id: "episode", label: t("tool_episode_label"), sub: t("tool_episode_sub"), Icon: LifeBuoy, iconClass: "w-5 h-5 text-rose-400", onTap: onEpisode },
       ],
     },
     {
       title: t("tool_group_log"),
       rows: [
-        { id: "ema_checkin", label: t("tool_ema_label"), sub: t("tool_ema_sub"), Icon: Smile, iconClass: "w-5 h-5 text-purple-400", onTap: () => go("ema_checkin") },
-        { id: "diary", label: t("tool_diary_label"), sub: t("tool_diary_sub"), Icon: NotebookPen, iconClass: "w-5 h-5 text-blue-400", onTap: () => go("diary") },
-        { id: "dbt_diary_card", label: "DBT diary card", sub: "Emotion ratings, skills checklist, today's intention", Icon: Sliders, iconClass: "w-5 h-5 text-indigo-400", onTap: () => go("dbt_diary_card"), help: "DBT = Dialectical Behaviour Therapy — a skill-based approach." },
-        { id: "medication", label: t("tool_medication_label"), sub: t("tool_medication_sub"), Icon: Pill, iconClass: "w-5 h-5 text-blue-400", onTap: () => go("medication") },
+        { id: "ema_checkin", label: t("tool_ema_label"), sub: t("tool_ema_sub"), Icon: Smile, iconClass: "w-5 h-5 text-accent", onTap: () => go("ema_checkin") },
+        { id: "diary", label: t("tool_diary_label"), sub: t("tool_diary_sub"), Icon: NotebookPen, iconClass: "w-5 h-5 text-accent", onTap: () => go("diary") },
+        { id: "dbt_diary_card", label: "DBT diary card", sub: "Emotion ratings, skills checklist, today's intention", Icon: Sliders, iconClass: "w-5 h-5 text-accent", onTap: () => go("dbt_diary_card"), help: "DBT = Dialectical Behaviour Therapy — a skill-based approach." },
+        { id: "medication", label: t("tool_medication_label"), sub: t("tool_medication_sub"), Icon: Pill, iconClass: "w-5 h-5 text-accent", onTap: () => go("medication") },
       ],
     },
     {
       title: t("tool_group_skills"),
       more: true,
       rows: [
-        { id: "problem_solving", label: t("tool_problem_solving_label"), sub: t("tool_problem_solving_sub"), Icon: Lightbulb, iconClass: "w-5 h-5 text-amber-400", onTap: () => go("problem_solving"), help: "A structured way to work through a challenge." },
-        { id: "values_to_action", label: t("tool_values_work_label"), sub: t("tool_values_work_sub"), Icon: Compass, iconClass: "w-5 h-5 text-violet-400", onTap: () => go("values_to_action") },
-        { id: "assessment", label: t("tool_assessment_label"), sub: t("tool_assessment_sub"), Icon: Activity, iconClass: "w-5 h-5 text-blue-400", onTap: () => go("assessment") },
-        { id: "social_rhythm", label: t("tool_social_rhythm_label"), sub: t("tool_social_rhythm_sub"), Icon: Clock3, iconClass: "w-5 h-5 text-indigo-400", onTap: () => go("social_rhythm") },
+        { id: "problem_solving", label: t("tool_problem_solving_label"), sub: t("tool_problem_solving_sub"), Icon: Lightbulb, iconClass: "w-5 h-5 text-warn", onTap: () => go("problem_solving"), help: "A structured way to work through a challenge." },
+        { id: "values_to_action", label: t("tool_values_work_label"), sub: t("tool_values_work_sub"), Icon: Compass, iconClass: "w-5 h-5 text-accent", onTap: () => go("values_to_action") },
+        { id: "assessment", label: t("tool_assessment_label"), sub: t("tool_assessment_sub"), Icon: Activity, iconClass: "w-5 h-5 text-accent", onTap: () => go("assessment") },
+        { id: "social_rhythm", label: t("tool_social_rhythm_label"), sub: t("tool_social_rhythm_sub"), Icon: Clock3, iconClass: "w-5 h-5 text-accent", onTap: () => go("social_rhythm") },
         { id: "exposure", label: t("tool_exposure_label"), sub: t("tool_exposure_sub"), Icon: Mountain, iconClass: "w-5 h-5 text-orange-400", onTap: () => go("exposure"), help: "Gentle step-by-step practice, building at your pace." },
-        { id: "relapse_plan", label: t("tool_relapse_label"), sub: t("tool_relapse_sub"), Icon: AlertTriangle, iconClass: "w-5 h-5 text-amber-400", onTap: () => go("relapse_plan") },
+        { id: "relapse_plan", label: t("tool_relapse_label"), sub: t("tool_relapse_sub"), Icon: AlertTriangle, iconClass: "w-5 h-5 text-warn", onTap: () => go("relapse_plan") },
       ],
     },
     ...(phoneEnabled
       ? [{
           title: t("tool_group_patterns"),
           rows: [
-            { id: "behaviour", label: t("tool_behaviour_label"), sub: t("tool_behaviour_sub"), Icon: TrendingUp, iconClass: "w-5 h-5 text-blue-400", onTap: () => go("behaviour") },
+            { id: "behaviour", label: t("tool_behaviour_label"), sub: t("tool_behaviour_sub"), Icon: TrendingUp, iconClass: "w-5 h-5 text-accent", onTap: () => go("behaviour") },
           ],
         }]
       : []),

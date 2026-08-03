@@ -22,7 +22,7 @@ export default function PilotSection() {
     <div className="glass p-5 rounded-2xl space-y-4 shadow-lg">
       <div>
         <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-2 font-mono flex items-center gap-2">
-          <FlaskConical className="w-4 h-4 text-emerald-400" /> {t("sec_pilot")}
+          <FlaskConical className="w-4 h-4 text-success" /> {t("sec_pilot")}
           <span className="text-ink-faint normal-case font-sans text-[11px]">(optional)</span>
         </h2>
         <p className="text-[11px] text-ink-muted mt-1 leading-relaxed">
@@ -43,7 +43,7 @@ export default function PilotSection() {
           <button
             onClick={enroll}
             id="pilot-enroll"
-            className="w-full py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-page"
+            className="w-full py-2 rounded-xl bg-success hover:opacity-90 text-white text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-success focus:ring-offset-2 focus:ring-offset-page"
           >
             I understand — join the pilot
           </button>

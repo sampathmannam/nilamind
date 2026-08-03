@@ -21,7 +21,7 @@ import { scanForCrisis } from "../safety";
 
 
 const VALENCE_OPTIONS = [
-  { key: -3, label: "Very bad", icon: Frown, class: "text-amber-400" },
+  { key: -3, label: "Very bad", icon: Frown, class: "text-warn" },
   { key: -1, label: "Bad", icon: Frown, class: "text-orange-400" },
   { key: 0, label: "Neutral", icon: Meh, class: "text-ink-muted" },
   { key: 1, label: "Good", icon: Smile, class: "text-green-400" },
@@ -55,7 +55,7 @@ export default function EmaCheckIn({ onLogged, onCrisis }: { onLogged?: () => vo
                   setStep("energy");
                 }}
                 className={`flex flex-col items-center justify-center aspect-square rounded-2xl cursor-pointer transition-colors ${
-                  valence === o.key ? "bg-purple-500/20 border border-purple-400" : "bg-card hover:bg-raised"
+                  valence === o.key ? "bg-accent/20 border border-accent" : "bg-card hover:bg-raised"
                 }`}
                 id={`ema-valence-${o.key}`}
               >
@@ -78,15 +78,15 @@ export default function EmaCheckIn({ onLogged, onCrisis }: { onLogged?: () => vo
                     setStep("note");
                   }}
                   className={`flex flex-col items-center justify-center aspect-square rounded-2xl cursor-pointer transition-colors ${
-                    energy === e ? "bg-purple-500/20 border border-purple-400" : "bg-card hover:bg-raised"
+                    energy === e ? "bg-accent/20 border border-accent" : "bg-card hover:bg-raised"
                   }`}
                 >
                   <div className="flex items-center gap-0.5">
                     {[...Array(e)].map((_, i) => (
                       <Sparkle key={i} className={`w-4 h-4 ${
                         e === 1 ? "text-rose-400" : 
-                        e === 2 ? "text-emerald-400" :
-                        e === 3 ? "text-blue-400" :
+                        e === 2 ? "text-success" :
+                        e === 3 ? "text-accent" :
                         
                          "text-cyan-400"
                       }`} />
@@ -110,9 +110,9 @@ export default function EmaCheckIn({ onLogged, onCrisis }: { onLogged?: () => vo
               onChange={(e) => setNote(e.target.value)}
               placeholder="Two-word note..."
               // Matches the canonical `glass` input pattern (see DailyIntentionCard). Its existing
-              // ring-based focus (focus:ring-1 focus:ring-purple-400) is unaffected - a box-shadow ring
+              // ring-based focus (focus:ring-1 focus:ring-accent) is unaffected - a box-shadow ring
               // doesn't compete with .glass's unlayered border the way a border-color utility would.
-              className="glass text-sm text-ink-2 rounded-2xl px-4 py-2.5 focus:outline-none focus:ring-1 focus:ring-purple-400 placeholder-ink-faint"
+              className="glass text-sm text-ink-2 rounded-2xl px-4 py-2.5 focus:outline-none focus:ring-1 focus:ring-accent placeholder-ink-faint"
               maxLength={30}
             />
             <button

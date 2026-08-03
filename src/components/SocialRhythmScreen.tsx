@@ -37,8 +37,8 @@ const moodDot = (intensity: number | null): string =>
         : "#fbbf24";
 
 const BAND_COPY: Record<RhythmBand, { label: string; cls: string }> = {
-  regular: { label: "Steady rhythm", cls: "text-emerald-400" },
-  variable: { label: "Somewhat variable", cls: "text-amber-400" },
+  regular: { label: "Steady rhythm", cls: "text-success" },
+  variable: { label: "Somewhat variable", cls: "text-warn" },
   irregular: { label: "Quite variable", cls: "text-rose-300" },
   insufficient: { label: "Keep logging", cls: "text-ink-muted" },
 };
@@ -103,7 +103,7 @@ export default function SocialRhythmScreen() {
     <div className="space-y-6 max-w-md mx-auto" id="social-rhythm-screen">
       <div>
         <h1 className="text-xl font-semibold text-ink flex items-center gap-2">
-          <Clock3 className="w-5 h-5 text-indigo-400" /> Social rhythm
+          <Clock3 className="w-5 h-5 text-accent" /> Social rhythm
         </h1>
         <p className="text-xs text-ink-faint mt-1">
           Keeping daily routines at steady times can help steady mood. Log when a few everyday anchors
@@ -121,7 +121,7 @@ export default function SocialRhythmScreen() {
               type="time"
               value={anchors[key] ?? ""}
               onChange={(e) => setAnchor(key, e.target.value)}
-              className="bg-page border border-line-strong rounded-lg px-2.5 py-1.5 text-sm text-ink focus:outline-none focus:border-indigo-500"
+              className="bg-page border border-line-strong rounded-lg px-2.5 py-1.5 text-sm text-ink focus:outline-none focus:border-accent"
               aria-label={label}
             />
           </label>
@@ -129,7 +129,7 @@ export default function SocialRhythmScreen() {
         <button
           onClick={save}
           id="rhythm-save"
-          className="w-full mt-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-page"
+          className="w-full mt-1 py-2.5 rounded-xl bg-accent hover:opacity-90 text-white text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-page"
         >
           {saved ? "Saved" : "Save today's rhythm"}
         </button>
@@ -137,9 +137,9 @@ export default function SocialRhythmScreen() {
 
       {/* Wake-time-lever insight — right at the point of logging */}
       {wakeInsight && (
-        <div className="glass rounded-2xl p-4 space-y-2 border border-indigo-500/20" id="wake-time-insight">
+        <div className="glass rounded-2xl p-4 space-y-2 border border-accent/20" id="wake-time-insight">
           <div className="text-sm font-semibold text-ink-2 flex items-center gap-2">
-            <Sunrise className="w-4 h-4 text-indigo-400" /> Wake-time insight
+            <Sunrise className="w-4 h-4 text-accent" /> Wake-time insight
           </div>
           <p className="text-xs text-ink-muted leading-relaxed">{wakeInsight.guidance}</p>
           <p className="text-xs text-ink-faint leading-relaxed">
@@ -227,7 +227,7 @@ export default function SocialRhythmScreen() {
                   m === null ? null : (
                     <span
                       key={i}
-                      className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 h-2.5 w-2.5 rounded-full bg-indigo-400 ring-2 ring-page"
+                      className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 h-2.5 w-2.5 rounded-full bg-accent ring-2 ring-page"
                       style={{ left: `${(m / 1440) * 100}%` }}
                       title={`${timeline.days[i]} ${fmtMin(m)}`}
                       aria-label={`${a.label} at ${fmtMin(m)}`}

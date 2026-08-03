@@ -200,19 +200,19 @@ export default function ModelSetupScreen({ onReady }: { onReady: () => void }) {
             type="button"
             onClick={() => setMode("device")}
             id="model-setup-choose-device"
-            className="w-full text-left rounded-2xl border border-line-strong hover:border-purple-500/60 active:scale-[0.99] bg-card/40 p-4 transition-all min-h-[44px]"
+            className="w-full text-left rounded-2xl border border-line-strong hover:border-accent/60 active:scale-[0.99] bg-card/40 p-4 transition-all min-h-[44px]"
           >
             <div className="flex items-center gap-2">
-              <Lock className="w-4 h-4 text-purple-300 shrink-0" />
+              <Lock className="w-4 h-4 text-accent-hi shrink-0" />
               <span className="font-semibold text-ink">On-device</span>
               <span className="text-[11px] text-ink-faint ml-auto">{formatSize(model.sizeBytes)}</span>
            </div>
             <ul className="text-[12px] text-ink-muted mt-2 space-y-1 leading-snug">
-              <li className="flex gap-1.5"><span className="text-emerald-400 shrink-0">✓</span> Private — nothing you say ever leaves your phone</li>
-              <li className="flex gap-1.5"><span className="text-emerald-400 shrink-0">✓</span> Works fully offline once downloaded</li>
-              <li className="flex gap-1.5"><span className="text-emerald-400 shrink-0">✓</span> No account, no API key, no ongoing cost</li>
-              <li className="flex gap-1.5"><span className="text-amber-400 shrink-0">!</span> One-time ~1.1GB download (Wi-Fi recommended)</li>
-              <li className="flex gap-1.5"><span className="text-amber-400 shrink-0">!</span> Slower, less nuanced than a large cloud model</li>
+              <li className="flex gap-1.5"><span className="text-success shrink-0">✓</span> Private — nothing you say ever leaves your phone</li>
+              <li className="flex gap-1.5"><span className="text-success shrink-0">✓</span> Works fully offline once downloaded</li>
+              <li className="flex gap-1.5"><span className="text-success shrink-0">✓</span> No account, no API key, no ongoing cost</li>
+              <li className="flex gap-1.5"><span className="text-warn shrink-0">!</span> One-time ~1.1GB download (Wi-Fi recommended)</li>
+              <li className="flex gap-1.5"><span className="text-warn shrink-0">!</span> Slower, less nuanced than a large cloud model</li>
            </ul>
           </button>
 
@@ -220,18 +220,18 @@ export default function ModelSetupScreen({ onReady }: { onReady: () => void }) {
             type="button"
             onClick={() => setMode("api")}
             id="model-setup-choose-api"
-            className="w-full text-left rounded-2xl border border-line-strong hover:border-purple-500/60 active:scale-[0.99] bg-card/40 p-4 transition-all min-h-[44px]"
+            className="w-full text-left rounded-2xl border border-line-strong hover:border-accent/60 active:scale-[0.99] bg-card/40 p-4 transition-all min-h-[44px]"
           >
             <div className="flex items-center gap-2">
-              <Cloud className="w-4 h-4 text-blue-300 shrink-0" />
+              <Cloud className="w-4 h-4 text-accent-hi shrink-0" />
               <span className="font-semibold text-ink">Cloud API key</span>
            </div>
             <ul className="text-[12px] text-ink-muted mt-2 space-y-1 leading-snug">
-              <li className="flex gap-1.5"><span className="text-emerald-400 shrink-0">✓</span> No download — ready the moment you paste a key</li>
-              <li className="flex gap-1.5"><span className="text-emerald-400 shrink-0">✓</span> Faster, more capable replies (e.g. Groq's Llama 3.3 70B)</li>
-              <li className="flex gap-1.5"><span className="text-amber-400 shrink-0">!</span> Your messages leave the device and go to the provider you choose</li>
-              <li className="flex gap-1.5"><span className="text-amber-400 shrink-0">!</span> Requires your own free API key and an internet connection</li>
-              <li className="flex gap-1.5"><span className="text-amber-400 shrink-0">!</span> Subject to that provider's own privacy policy, not NilaMind's</li>
+              <li className="flex gap-1.5"><span className="text-success shrink-0">✓</span> No download — ready the moment you paste a key</li>
+              <li className="flex gap-1.5"><span className="text-success shrink-0">✓</span> Faster, more capable replies (e.g. Groq's Llama 3.3 70B)</li>
+              <li className="flex gap-1.5"><span className="text-warn shrink-0">!</span> Your messages leave the device and go to the provider you choose</li>
+              <li className="flex gap-1.5"><span className="text-warn shrink-0">!</span> Requires your own free API key and an internet connection</li>
+              <li className="flex gap-1.5"><span className="text-warn shrink-0">!</span> Subject to that provider's own privacy policy, not NilaMind's</li>
            </ul>
           </button>
 
@@ -261,9 +261,9 @@ export default function ModelSetupScreen({ onReady }: { onReady: () => void }) {
           )}
 
           {offline && !busy && (
-            <div className="w-full max-w-[18rem] mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 flex gap-2" role="status">
-              <WifiOff className="w-4 h-4 text-amber-300 shrink-0 mt-0.5" />
-              <p className="text-[12px] text-amber-200/90 leading-relaxed">
+            <div className="w-full max-w-[18rem] mt-4 rounded-xl border border-warn/30 bg-warn/10 p-3 flex gap-2" role="status">
+              <WifiOff className="w-4 h-4 text-warn-hi shrink-0 mt-0.5" />
+              <p className="text-[12px] text-warn-hi/90 leading-relaxed">
                 You're offline — connect to Wi-Fi to download Nila. Your tools and crisis help work offline right now.
               </p>
            </div>
@@ -279,7 +279,7 @@ export default function ModelSetupScreen({ onReady }: { onReady: () => void }) {
              </div>
               <div className="h-2.5 rounded-full bg-fill overflow-hidden">
                 <div
-                  className="h-full bg-purple-500 transition-all duration-300"
+                  className="h-full bg-accent transition-all duration-300"
                   style={{ width: `${progress?.pct ?? 0}%` }}
                 />
              </div>
@@ -303,9 +303,9 @@ export default function ModelSetupScreen({ onReady }: { onReady: () => void }) {
            </div>
           ) : confirming ? (
             <div className="w-full max-w-[18rem] mt-4">
-              <div className="rounded-2xl border border-purple-500/30 bg-purple-500/[0.06] p-4">
+              <div className="rounded-2xl border border-accent/30 bg-accent/[0.06] p-4">
                 <div className="flex items-center gap-2 text-ink font-semibold">
-                  <Lock className="w-4 h-4 text-purple-300 shrink-0" /> One-time {formatSize(model.sizeBytes)} — here's why
+                  <Lock className="w-4 h-4 text-accent-hi shrink-0" /> One-time {formatSize(model.sizeBytes)} — here's why
                </div>
                 <p className="text-[12px] text-ink-muted mt-2 leading-relaxed">
                   It's large because the <b className="text-ink-2">entire AI lives on your phone</b> — that's
@@ -333,7 +333,7 @@ export default function ModelSetupScreen({ onReady }: { onReady: () => void }) {
               <button
                 type="button"
                 onClick={() => setConfirming(true)}
-                className="w-full text-left rounded-2xl border border-line-strong hover:border-purple-500/60 active:scale-[0.99] bg-card/40 p-4 transition-all min-h-[44px]"
+                className="w-full text-left rounded-2xl border border-line-strong hover:border-accent/60 active:scale-[0.99] bg-card/40 p-4 transition-all min-h-[44px]"
               >
                 <div className="flex items-center gap-2">
                   <span className="font-semibold text-ink">{model.label}</span>

@@ -6,7 +6,7 @@ import { getCrisisLines } from "../services/crisisResources";
 // region-correct. Always renders ≥1 line (registry guarantees a non-empty International fallback).
 const TONES: Record<string, string> = {
   rose: "text-rose-200 bg-rose-500/10 border-rose-500/30 hover:bg-rose-500/20",
-  amber: "text-amber-100 bg-amber-500/15 border-amber-500/30 hover:bg-amber-500/25",
+  amber: "text-warn-hi bg-warn/15 border-warn/30 hover:opacity-90/25",
 };
 
 export default function CrisisLines({ tone = "rose", compact = false }: { tone?: "rose" | "amber"; compact?: boolean }) {

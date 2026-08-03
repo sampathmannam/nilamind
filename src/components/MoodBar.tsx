@@ -29,7 +29,7 @@ export default function MoodBar({ value, max = 10, label, showValue = false, cla
         className="flex-1 h-2 bg-white/5 rounded-full overflow-hidden"
       >
         <div
-          className="h-full rounded-full bg-blue-400 transition-all duration-500"
+          className="h-full rounded-full bg-accent transition-all duration-500"
           style={{ width: `${pct}%` }}
         />
       </div>

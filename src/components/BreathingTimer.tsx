@@ -72,7 +72,7 @@ export default function BreathingTimer({ defaultPattern = "box" }: BreathingTime
             onClick={() => { reset(); setPattern(p); }}
             disabled={playing}
             className={`text-[11px] px-3 py-1.5 rounded-lg font-medium transition-colors cursor-pointer disabled:opacity-50 ${
-              pattern === p ? "bg-blue-500/20 text-blue-300" : "text-ink-muted hover:text-ink-2"
+              pattern === p ? "bg-accent/20 text-accent-hi" : "text-ink-muted hover:text-ink-2"
             }`}
           >
             {getBreathPattern(p).label}
@@ -96,7 +96,7 @@ export default function BreathingTimer({ defaultPattern = "box" }: BreathingTime
         {/* Soft ~5-minute session-target completion cue — a gentle stopping point, not a hard cutoff
             (You, Laborde, Zammit, Iskra & Borges et al. 2021). */}
         {targetReached && (
-          <p className="flex items-center gap-1.5 text-[11px] text-emerald-400" role="status">
+          <p className="flex items-center gap-1.5 text-[11px] text-success" role="status">
             <CheckCircle2 className="w-3.5 h-3.5" />
             You've reached the ~5-minute mark — a good stopping point if you'd like, or keep going.
           </p>
@@ -115,7 +115,7 @@ export default function BreathingTimer({ defaultPattern = "box" }: BreathingTime
         <button
           onClick={toggle}
           className={`p-4 rounded-full transition-colors cursor-pointer ${
-            playing ? "bg-amber-500/20 text-amber-400 hover:bg-amber-500/30" : "bg-blue-500/20 text-blue-400 hover:bg-blue-500/30"
+            playing ? "bg-warn/20 text-warn hover:bg-warn/30" : "bg-accent/20 text-accent hover:bg-accent/30"
           }`}
           aria-label={playing ? "Pause" : "Play"}
         >

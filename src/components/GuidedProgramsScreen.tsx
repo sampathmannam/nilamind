@@ -41,11 +41,11 @@ export default function GuidedProgramsScreen({ onStart }: Props) {
       </p>
 
       {pendingSwitch && (
-        <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-sm space-y-3">
+        <div className="p-4 rounded-xl bg-warn/10 border border-warn/30 text-sm space-y-3">
           <p>Switch from {active?.protocol.title}? You'll restart it from the beginning next time.</p>
           <div className="flex gap-2">
             <button
-              className="px-3 py-2 rounded-lg bg-amber-500/20 text-amber-200 text-xs font-medium min-h-[44px]"
+              className="px-3 py-2 rounded-lg bg-warn/20 text-warn-hi text-xs font-medium min-h-[44px]"
               onClick={() => {
                 const id = pendingSwitch.id;
                 setPendingSwitch(null);

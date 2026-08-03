@@ -94,7 +94,7 @@ export default function WindDownScreen() {
     <div className="space-y-5 max-w-md mx-auto" id="winddown-section">
       <div className="bg-card p-4 rounded-xl border border-line">
         <h1 className="text-xl font-semibold text-ink flex items-center gap-2">
-          <Moon className="text-indigo-400 w-5 h-5" />
+          <Moon className="text-accent w-5 h-5" />
           <span>Wind down</span>
         </h1>
         <p className="text-xs text-ink-faint">A calm few minutes before sleep — gentle, never medical.</p>
@@ -122,7 +122,7 @@ export default function WindDownScreen() {
         <div className="glass p-5 rounded-2xl space-y-4">
           <div className="space-y-1">
             <h3 className="text-sm font-semibold text-ink-2 flex items-center gap-1.5">
-              <Moon className="text-indigo-400 w-4 h-4" /> {park.title}
+              <Moon className="text-accent w-4 h-4" /> {park.title}
             </h3>
             <p className="text-[11px] text-ink-faint leading-relaxed">{park.body}</p>
           </div>
@@ -130,13 +130,13 @@ export default function WindDownScreen() {
             aria-label={park.title}
             value={worry}
             onChange={(e) => setWorry(e.target.value)}
-            className="w-full h-28 bg-page border border-line rounded-xl px-3 py-2 text-xs text-ink-2 placeholder-ink-faint focus:outline-none focus:border-indigo-500 transition-all resize-none"
+            className="w-full h-28 bg-page border border-line rounded-xl px-3 py-2 text-xs text-ink-2 placeholder-ink-faint focus:outline-none focus:border-accent transition-all resize-none"
             placeholder="e.g. The email I'm dreading → I'll draft two lines after coffee."
           />
           <div className="flex gap-2">
             <button
               onClick={submitWorry}
-              className="flex-1 py-3 rounded-xl font-semibold text-xs bg-indigo-600 hover:bg-indigo-500 text-white transition-all cursor-pointer flex items-center justify-center gap-1"
+              className="flex-1 py-3 rounded-xl font-semibold text-xs bg-accent hover:opacity-90 text-white transition-all cursor-pointer flex items-center justify-center gap-1"
             >
               Set it down <ChevronRight className="w-4 h-4" />
             </button>
@@ -158,7 +158,7 @@ export default function WindDownScreen() {
         <div className="glass p-5 rounded-2xl space-y-5">
           <div className="space-y-1">
             <h3 className="text-sm font-semibold text-ink-2 flex items-center gap-1.5">
-              <Wind className="text-sky-400 w-4 h-4" /> Settle your body
+              <Wind className="text-accent w-4 h-4" /> Settle your body
             </h3>
             <p className="text-[11px] text-ink-faint leading-relaxed">
               Breathe in for 4, out for 6 — the longer out-breath calms the nervous system.
@@ -182,7 +182,7 @@ export default function WindDownScreen() {
               onClick={() => setBreathing((b) => !b)}
               className="flex items-center gap-1.5 text-xs font-semibold bg-card text-ink-2 hover:bg-fill border border-line px-4 py-2 rounded-lg cursor-pointer transition-all"
             >
-              {breathing ? <Pause className="w-4 h-4 text-amber-500" /> : <Play className="w-4 h-4 text-sky-400" />}
+              {breathing ? <Pause className="w-4 h-4 text-warn" /> : <Play className="w-4 h-4 text-accent" />}
               <span>{breathing ? "Pause" : "Begin"}</span>
             </button>
           </div>
@@ -191,7 +191,7 @@ export default function WindDownScreen() {
               setBreathing(false);
               setStage("close");
             }}
-            className="w-full py-3 rounded-xl font-semibold text-xs bg-indigo-600 hover:bg-indigo-500 text-white transition-all cursor-pointer flex items-center justify-center gap-1"
+            className="w-full py-3 rounded-xl font-semibold text-xs bg-accent hover:opacity-90 text-white transition-all cursor-pointer flex items-center justify-center gap-1"
           >
             Done <ChevronRight className="w-4 h-4" />
           </button>
@@ -203,12 +203,12 @@ export default function WindDownScreen() {
         <>
           <div className="glass p-5 rounded-2xl space-y-2">
             <h3 className="text-sm font-semibold text-ink-2 flex items-center gap-1.5">
-              <Heart className="text-indigo-400 w-4 h-4" /> {close.title}
+              <Heart className="text-accent w-4 h-4" /> {close.title}
             </h3>
             <p className="text-xs text-ink-2 leading-relaxed">{close.body}</p>
           </div>
 
-          <div className="p-4 rounded-r-xl bg-indigo-500/5 border-l-4 border-indigo-500 border-y border-r border-line/40 space-y-1">
+          <div className="p-4 rounded-r-xl bg-accent/5 border-l-4 border-accent border-y border-r border-line/40 space-y-1">
             <p className="text-xs uppercase tracking-wider text-ink-faint font-semibold">One gentle habit</p>
             <p className="text-xs text-ink-2 leading-relaxed">{tip.text}</p>
             <p className="text-xs text-ink-faint italic">{tip.basis}</p>
@@ -217,14 +217,14 @@ export default function WindDownScreen() {
           <div className="glass p-4 rounded-2xl space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                {reminder.enabled ? <Bell className="w-4 h-4 text-indigo-400" /> : <BellOff className="w-4 h-4 text-ink-faint" />}
+                {reminder.enabled ? <Bell className="w-4 h-4 text-accent" /> : <BellOff className="w-4 h-4 text-ink-faint" />}
                 <span className="text-xs font-semibold text-ink-2">Nightly wind-down nudge</span>
               </div>
               <button
                 onClick={toggleReminder}
                 className={`text-[11px] px-3 py-1.5 rounded-lg font-semibold border transition-all cursor-pointer ${
                   reminder.enabled
-                    ? "bg-indigo-600 border-indigo-500 text-white"
+                    ? "bg-accent border-accent text-white"
                     : "bg-page border-line text-ink-muted hover:text-ink-2"
                 }`}
               >
@@ -239,7 +239,7 @@ export default function WindDownScreen() {
                   aria-label="Reminder time"
                   value={reminder.time}
                   onChange={(e) => setTime(e.target.value)}
-                  className="bg-page border border-line rounded-lg px-2 py-1 text-xs text-ink-2 focus:outline-none focus:border-indigo-500"
+                  className="bg-page border border-line rounded-lg px-2 py-1 text-xs text-ink-2 focus:outline-none focus:border-accent"
                 />
                 {reminderMsg && <span className="text-xs text-ink-faint">{reminderMsg}</span>}
               </div>

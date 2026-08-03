@@ -148,7 +148,7 @@ function GroqPanel(props: {
             {t("cloud_api_get_key_label")}
          </span>
        </span>
-        <ExternalLink className="w-3.5 h-3.5 text-emerald-300" />
+        <ExternalLink className="w-3.5 h-3.5 text-success-hi" />
      </a>
 
       <div className="border border-line rounded-xl p-3 bg-page space-y-2" id="cloud-api-key">
@@ -163,7 +163,7 @@ function GroqPanel(props: {
             placeholder={`${GROQ_KEY_PREFIX}…`}
             autoComplete="off"
             spellCheck={false}
-            className="flex-1 bg-fill border border-line-strong rounded-lg px-3 py-2 text-xs text-ink-2 font-mono focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            className="flex-1 bg-fill border border-line-strong rounded-lg px-3 py-2 text-xs text-ink-2 font-mono focus:outline-none focus:ring-1 focus:ring-success"
           />
           <button
             type="button"
@@ -189,7 +189,7 @@ function GroqPanel(props: {
             if (e.target.value !== "custom") props.setApiModel(e.target.value);
             else props.setApiModel("");
           }}
-          className="w-full bg-fill border border-line-strong rounded-lg px-3 py-2 text-xs text-ink-2 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+          className="w-full bg-fill border border-line-strong rounded-lg px-3 py-2 text-xs text-ink-2 focus:outline-none focus:ring-1 focus:ring-success"
         >
           {GROQ_RECOMMENDED_MODELS.map((m) => (
             <option key={m.id} value={m.id}>
@@ -204,7 +204,7 @@ function GroqPanel(props: {
             value={props.apiModel}
             onChange={(e) => props.setApiModel(e.target.value)}
             placeholder="llama-3.1-8b-instant"
-            className="w-full bg-fill border border-line-strong rounded-lg px-3 py-2 text-xs text-ink-2 font-mono focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            className="w-full bg-fill border border-line-strong rounded-lg px-3 py-2 text-xs text-ink-2 font-mono focus:outline-none focus:ring-1 focus:ring-success"
           />
         ) : null}
         <p className="text-[11px] text-ink-faint">{modelHint}</p>
@@ -231,7 +231,7 @@ function GroqPanel(props: {
             value={props.advancedUrl}
             onChange={(e) => props.setAdvancedUrl(e.target.value)}
             placeholder={GROQ_DEFAULT_URL}
-            className="w-full bg-fill border border-line-strong rounded-lg px-3 py-2 text-xs text-ink-2 font-mono focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            className="w-full bg-fill border border-line-strong rounded-lg px-3 py-2 text-xs text-ink-2 font-mono focus:outline-none focus:ring-1 focus:ring-success"
           />
           <p className="text-[11px] text-ink-faint">
             {t("cloud_api_endpoint_hint_groq")}
@@ -267,7 +267,7 @@ function OpenAiCompatiblePanel(props: {
             {t("cloud_api_get_key_label_custom")}
          </span>
        </span>
-        <ExternalLink className="w-3.5 h-3.5 text-emerald-300" />
+        <ExternalLink className="w-3.5 h-3.5 text-success-hi" />
      </a>
 
       <div className="border border-line rounded-xl p-3 bg-page space-y-2" id="cloud-api-url">
@@ -279,7 +279,7 @@ function OpenAiCompatiblePanel(props: {
           value={props.apiUrl}
           onChange={(e) => props.setApiUrl(e.target.value)}
           placeholder="https://api.openai.com/v1/chat/completions"
-          className="w-full bg-fill border border-line-strong rounded-lg px-3 py-2 text-xs text-ink-2 font-mono focus:outline-none focus:ring-1 focus:ring-purple-500"
+          className="w-full bg-fill border border-line-strong rounded-lg px-3 py-2 text-xs text-ink-2 font-mono focus:outline-none focus:ring-1 focus:ring-accent"
         />
         <p className="text-[11px] text-ink-faint">{t("cloud_api_endpoint_hint_custom")}</p>
      </div>
@@ -296,7 +296,7 @@ function OpenAiCompatiblePanel(props: {
             placeholder="sk-... or your provider's key"
             autoComplete="off"
             spellCheck={false}
-            className="flex-1 bg-fill border border-line-strong rounded-lg px-3 py-2 text-xs text-ink-2 font-mono focus:outline-none focus:ring-1 focus:ring-purple-500"
+            className="flex-1 bg-fill border border-line-strong rounded-lg px-3 py-2 text-xs text-ink-2 font-mono focus:outline-none focus:ring-1 focus:ring-accent"
           />
           <button
             type="button"
@@ -319,7 +319,7 @@ function OpenAiCompatiblePanel(props: {
           value={props.apiModel}
           onChange={(e) => props.setApiModel(e.target.value)}
           placeholder="gpt-4o-mini"
-          className="w-full bg-fill border border-line-strong rounded-lg px-3 py-2 text-xs text-ink-2 focus:outline-none focus:ring-1 focus:ring-purple-500"
+          className="w-full bg-fill border border-line-strong rounded-lg px-3 py-2 text-xs text-ink-2 focus:outline-none focus:ring-1 focus:ring-accent"
         />
         <p className="text-[11px] text-ink-faint">{t("cloud_api_model_hint_custom")}</p>
      </div>

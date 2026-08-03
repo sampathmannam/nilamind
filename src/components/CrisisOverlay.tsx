@@ -101,7 +101,7 @@ export default function CrisisOverlay({
               onClose();
               onNavigateToGrounding();
             }}
-            className="flex items-center gap-3 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-medium p-5 rounded-xl transition-all cursor-pointer w-full text-left shadow-lg shadow-emerald-500/5"
+            className="flex items-center gap-3 bg-success/10 hover:bg-success/20 border border-success/30 text-success font-medium p-5 rounded-xl transition-all cursor-pointer w-full text-left shadow-lg shadow-emerald-500/5"
             id="grounding-shortcut-btn"
           >
             <Heart className="w-6 h-6" />
@@ -116,7 +116,7 @@ export default function CrisisOverlay({
               onClose();
               onNavigateToBreathing();
             }}
-            className="flex items-center gap-3 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-medium p-5 rounded-xl transition-all cursor-pointer w-full text-left shadow-lg shadow-emerald-500/5"
+            className="flex items-center gap-3 bg-success/10 hover:bg-success/20 border border-success/30 text-success font-medium p-5 rounded-xl transition-all cursor-pointer w-full text-left shadow-lg shadow-emerald-500/5"
             id="breathing-shortcut-btn"
           >
             <Wind className="w-6 h-6" />

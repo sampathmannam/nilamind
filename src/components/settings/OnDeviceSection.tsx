@@ -27,7 +27,7 @@ export default function OnDeviceSection() {
     <div className="glass p-5 rounded-2xl space-y-4 shadow-lg" id="settings-ondevice">
       <div>
         <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-2 font-mono flex items-center gap-2">
-          <Cpu className="w-4 h-4 text-violet-400" /> {t("sec_on_device")}
+          <Cpu className="w-4 h-4 text-accent" /> {t("sec_on_device")}
         </h2>
         <p className="text-[11px] text-ink-muted mt-1 leading-relaxed">
           {isNative ? (
@@ -49,21 +49,21 @@ export default function OnDeviceSection() {
         </div>
         <div
           aria-label={modelId ? "On-device model active" : "On-device model loading"}
-          className={`inline-flex items-center gap-1.5 text-xs font-mono px-2 py-1 rounded-full ${modelId ? "bg-violet-500/15 text-violet-300" : "bg-line-strong/50 text-ink-muted"}`}
+          className={`inline-flex items-center gap-1.5 text-xs font-mono px-2 py-1 rounded-full ${modelId ? "bg-accent/15 text-accent-hi" : "bg-line-strong/50 text-ink-muted"}`}
         >
-          <span aria-hidden="true" className={`w-1.5 h-1.5 rounded-full ${modelId ? "bg-violet-400" : "bg-ink-faint"}`} />
+          <span aria-hidden="true" className={`w-1.5 h-1.5 rounded-full ${modelId ? "bg-accent" : "bg-ink-faint"}`} />
           {modelId ? "Active" : "Loading"}
         </div>
       </div>
 
       {!modelId && (
-        <div className="border border-amber-500/30 bg-amber-500/10 rounded-xl p-3">
-          <p className="text-[11px] text-amber-200/90 leading-relaxed">
+        <div className="border border-warn/30 bg-warn/10 rounded-xl p-3">
+          <p className="text-[11px] text-warn-hi/90 leading-relaxed">
             {isNative ? (
               "The model downloads on first open."
             ) : (
               <>
-                Desktop: run <span className="font-mono text-amber-100">ollama serve</span> then refresh this page.
+                Desktop: run <span className="font-mono text-warn-hi">ollama serve</span> then refresh this page.
                 Android: the model downloads on first open.
               </>
             )}

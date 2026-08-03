@@ -82,7 +82,7 @@ export default function SettingsScreen({ onOpenCaregiver, onOpenLegal }: Setting
       </div>
 
       <SearchFilter query={searchQuery} text="preferences appearance language region theme font calm mode">
-        <SettingsGroup icon={<Sun className="w-3 h-3 text-amber-400" />} title="Preferences">
+        <SettingsGroup icon={<Sun className="w-3 h-3 text-warn" />} title="Preferences">
           <AppearanceSection />
           <LanguageSection />
           <RegionSection />
@@ -90,13 +90,13 @@ export default function SettingsScreen({ onOpenCaregiver, onOpenLegal }: Setting
       </SearchFilter>
 
       <SearchFilter query={searchQuery} text="audio voice speech stt text to speech tts">
-        <SettingsGroup icon={<Volume2 className="w-3 h-3 text-blue-400" />} title="Audio">
+        <SettingsGroup icon={<Volume2 className="w-3 h-3 text-accent" />} title="Audio">
           <VoiceSection />
         </SettingsGroup>
       </SearchFilter>
 
       <SearchFilter query={searchQuery} text="notifications reminders ema check-in schedule">
-        <SettingsGroup icon={<Bell className="w-3 h-3 text-purple-400" />} title="Notifications">
+        <SettingsGroup icon={<Bell className="w-3 h-3 text-accent" />} title="Notifications">
           <RemindersSection />
           <EmaSection />
           <NotificationCategoriesSection />
@@ -104,7 +104,7 @@ export default function SettingsScreen({ onOpenCaregiver, onOpenLegal }: Setting
       </SearchFilter>
 
       <SearchFilter query={searchQuery} text="privacy security identity recovery phrase pin lock passcode caregiver share trusted legal policy terms">
-        <SettingsGroup icon={<Shield className="w-3 h-3 text-emerald-400" />} title="Privacy & Security">
+        <SettingsGroup icon={<Shield className="w-3 h-3 text-success" />} title="Privacy & Security">
           <IdentitySection />
           <PrivacyLockSection />
           <PassiveSensingSection />
@@ -114,7 +114,7 @@ export default function SettingsScreen({ onOpenCaregiver, onOpenLegal }: Setting
               className="w-full flex items-center gap-3 glass hover:brightness-125 p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left"
               id="open-caregiver"
             >
-              <span className="shrink-0 text-emerald-400"><Users className="w-5 h-5" /></span>
+              <span className="shrink-0 text-success"><Users className="w-5 h-5" /></span>
                 <span className="flex-1 min-w-0">
                   <span className="block text-sm font-bold text-ink">{t("shareTrustedTitle")}</span>
                   <span className="block text-[11px] text-ink-muted">{t("shareTrustedSub")}</span>
@@ -126,7 +126,7 @@ export default function SettingsScreen({ onOpenCaregiver, onOpenLegal }: Setting
             className="w-full flex items-center gap-3 glass hover:brightness-125 p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left"
             id="privacy-policy-link"
           >
-            <span className="shrink-0 text-blue-400"><Shield className="w-5 h-5" /></span>
+            <span className="shrink-0 text-accent"><Shield className="w-5 h-5" /></span>
               <span className="flex-1 min-w-0">
                 <span className="block text-sm font-bold text-ink">{t("privacyPolicy")}</span>
                 <span className="block text-[11px] text-ink-muted">{t("privacyPolicySub")}</span>
@@ -137,7 +137,7 @@ export default function SettingsScreen({ onOpenCaregiver, onOpenLegal }: Setting
             className="w-full flex items-center gap-3 glass hover:brightness-125 p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left"
             id="terms-of-service-link"
           >
-            <span className="shrink-0 text-blue-400"><Shield className="w-5 h-5" /></span>
+            <span className="shrink-0 text-accent"><Shield className="w-5 h-5" /></span>
               <span className="flex-1 min-w-0">
                 <span className="block text-sm font-bold text-ink">{t("sec_legal")}</span>
                 <span className="block text-[11px] text-ink-muted">{t("sec_legalSub")}</span>
@@ -147,7 +147,7 @@ export default function SettingsScreen({ onOpenCaregiver, onOpenLegal }: Setting
       </SearchFilter>
 
       <SearchFilter query={searchQuery} text="help feedback pilot research study">
-        <SettingsGroup icon={<MessageSquare className="w-3 h-3 text-purple-400" />} title="Help & Feedback">
+        <SettingsGroup icon={<MessageSquare className="w-3 h-3 text-accent" />} title="Help & Feedback">
           <FeedbackSection />
           <PilotSection />
         </SettingsGroup>
@@ -173,7 +173,7 @@ export default function SettingsScreen({ onOpenCaregiver, onOpenLegal }: Setting
               className="w-full flex items-center gap-3 glass hover:brightness-125 p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left"
               id="toggle-perf-dashboard"
             >
-              <span className="shrink-0 text-blue-400"><Gauge className="w-5 h-5" /></span>
+              <span className="shrink-0 text-accent"><Gauge className="w-5 h-5" /></span>
                 <span className="flex-1 min-w-0">
                   <span className="block text-sm font-bold text-ink">{t("perfTitle")}</span>
                   <span className="block text-[11px] text-ink-muted">{t("perfSub")}</span>
@@ -182,7 +182,7 @@ export default function SettingsScreen({ onOpenCaregiver, onOpenLegal }: Setting
             <div className="glass p-5 rounded-2xl space-y-4 shadow-lg" id="settings-auto-update">
             <div>
               <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-2 font-mono flex items-center gap-2">
-                <Gauge className="w-4 h-4 text-amber-400" /> Auto-update
+                <Gauge className="w-4 h-4 text-warn" /> Auto-update
               </h2>
               <p className="text-[11px] text-ink-muted mt-1 leading-relaxed">
                 When enabled, the app periodically checks the GitHub releases page for a newer APK and offers to install it.
@@ -204,7 +204,7 @@ export default function SettingsScreen({ onOpenCaregiver, onOpenLegal }: Setting
                   setAutoUpdateOn(next);
                   setAutoUpdateEnabled(next);
                 }}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full cursor-pointer transition-colors focus-visible:ring-2 focus-visible:ring-blue-500 ${
+                className={`relative inline-flex h-6 w-11 items-center rounded-full cursor-pointer transition-colors focus-visible:ring-2 focus-visible:ring-accent ${
                   autoUpdateOn ? "bg-accent" : "bg-line-strong"
                 }`}
               >

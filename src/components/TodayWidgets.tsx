@@ -85,8 +85,8 @@ export function SleepWidget({ className = "" }) {
         aria-label="Sleep tracking — log last night's sleep to see it here"
       >
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl bg-blue-500/15 flex items-center justify-center">
-            <Moon className="w-5 h-5 text-blue-400" aria-hidden="true" />
+          <div className="w-11 h-11 rounded-xl bg-accent/15 flex items-center justify-center">
+            <Moon className="w-5 h-5 text-accent" aria-hidden="true" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-ink">Sleep</p>
@@ -100,13 +100,13 @@ export function SleepWidget({ className = "" }) {
 
   const quality = Math.min(100, Math.round((sleep.hours / 9) * 100));
   const qualityLabel = sleep.hours >= 7.5 ? "Great" : sleep.hours >= 6 ? "Fair" : "Low";
-  const qualityColor = sleep.hours >= 7.5 ? "text-emerald-400" : sleep.hours >= 6 ? "text-amber-400" : "text-rose-400";
+  const qualityColor = sleep.hours >= 7.5 ? "text-success" : sleep.hours >= 6 ? "text-warn" : "text-rose-400";
 
   return (
     <button className={`${cardStyle} ${className} w-full text-left hover:brightness-105 transition-colors active:scale-[0.99]`}>
       <div className="flex items-center gap-3">
-        <div className="w-11 h-11 rounded-xl bg-emerald-500/15 flex items-center justify-center">
-          <Moon className="w-5 h-5 text-emerald-400" aria-hidden="true" />
+        <div className="w-11 h-11 rounded-xl bg-success/15 flex items-center justify-center">
+          <Moon className="w-5 h-5 text-success" aria-hidden="true" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
@@ -150,8 +150,8 @@ export function MoodTrendWidget({ className = "" }) {
     return (
       <button className={`${cardStyle} ${className} w-full text-left animate-fade-up`}>
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl bg-purple-500/15 flex items-center justify-center">
-            <Heart className="w-5 h-5 text-purple-400" aria-hidden="true" />
+          <div className="w-11 h-11 rounded-xl bg-accent/15 flex items-center justify-center">
+            <Heart className="w-5 h-5 text-accent" aria-hidden="true" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-ink">Mood Trend</p>
@@ -169,8 +169,8 @@ export function MoodTrendWidget({ className = "" }) {
   return (
     <button className={`${cardStyle} ${className} w-full text-left hover:brightness-105 transition-colors active:scale-[0.99]`}>
       <div className="flex items-center gap-3">
-        <div className="w-11 h-11 rounded-xl bg-purple-500/15 flex items-center justify-center">
-          <Heart className="w-5 h-5 text-purple-400" aria-hidden="true" />
+        <div className="w-11 h-11 rounded-xl bg-accent/15 flex items-center justify-center">
+          <Heart className="w-5 h-5 text-accent" aria-hidden="true" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
@@ -236,8 +236,8 @@ export function NextProtocolWidget({ className = "" }) {
     return (
       <button className={`${cardStyle} ${className} w-full text-left animate-fade-up`}>
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl bg-amber-500/15 flex items-center justify-center">
-            <Target className="w-5 h-5 text-amber-400" aria-hidden="true" />
+          <div className="w-11 h-11 rounded-xl bg-warn/15 flex items-center justify-center">
+            <Target className="w-5 h-5 text-warn" aria-hidden="true" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-ink">Guided Programs</p>
@@ -252,8 +252,8 @@ export function NextProtocolWidget({ className = "" }) {
   return (
     <button className={`${cardStyle} ${className} w-full text-left hover:brightness-105 transition-colors active:scale-[0.99]`}>
       <div className="flex items-start gap-3">
-        <div className="w-11 h-11 rounded-xl bg-amber-500/15 flex items-center justify-center shrink-0">
-          <Target className="w-5 h-5 text-amber-400" aria-hidden="true" />
+        <div className="w-11 h-11 rounded-xl bg-warn/15 flex items-center justify-center shrink-0">
+          <Target className="w-5 h-5 text-warn" aria-hidden="true" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
@@ -265,7 +265,7 @@ export function NextProtocolWidget({ className = "" }) {
           <p className="text-[12px] text-ink-muted mt-1 line-clamp-2">{activeProtocol.nextPrompt}</p>
           <div className="mt-2 h-1.5 bg-line rounded-full overflow-hidden">
             <div
-              className="h-full rounded-full bg-amber-400 transition-all duration-500 ease-out"
+              className="h-full rounded-full bg-warn transition-all duration-500 ease-out"
               style={{ width: `${(activeProtocol.step / activeProtocol.total) * 100}%` }}
             />
           </div>
@@ -287,9 +287,9 @@ interface QuickAction {
 
 const QUICK_ACTIONS: QuickAction[] = [
   { id: "ema_checkin", label: "Check In", icon: <Heart className="w-5 h-5" />, color: "text-rose-400", route: "ema_checkin" },
-  { id: "grounding", label: "Grounding", icon: <Wind className="w-5 h-5" />, color: "text-emerald-400", route: "grounding" },
-  { id: "breathing", label: "Breathing", icon: <Zap className="w-5 h-5" />, color: "text-blue-400", route: "breathing" },
-  { id: "wind_down", label: "Wind Down", icon: <Moon className="w-5 h-5" />, color: "text-indigo-400", route: "wind_down" },
+  { id: "grounding", label: "Grounding", icon: <Wind className="w-5 h-5" />, color: "text-success", route: "grounding" },
+  { id: "breathing", label: "Breathing", icon: <Zap className="w-5 h-5" />, color: "text-accent", route: "breathing" },
+  { id: "wind_down", label: "Wind Down", icon: <Moon className="w-5 h-5" />, color: "text-accent", route: "wind_down" },
 ];
 
 export function QuickActionsWidget({ onAction, className = "" }: { onAction: (id: string) => void; className?: string }) {
@@ -341,8 +341,8 @@ export function WeeklyInsightWidget({ className = "" }) {
     return (
       <button className={`${cardStyle} ${className} w-full text-left animate-fade-up`}>
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl bg-purple-500/15 flex items-center justify-center">
-            <Brain className="w-5 h-5 text-purple-400" aria-hidden="true" />
+          <div className="w-11 h-11 rounded-xl bg-accent/15 flex items-center justify-center">
+            <Brain className="w-5 h-5 text-accent" aria-hidden="true" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-ink">Weekly Insight</p>
@@ -361,8 +361,8 @@ export function WeeklyInsightWidget({ className = "" }) {
       aria-expanded={expanded}
     >
       <div className="flex items-start gap-3">
-        <div className="w-11 h-11 rounded-xl bg-purple-500/15 flex items-center justify-center shrink-0 mt-0.5">
-          <Brain className="w-5 h-5 text-purple-400" aria-hidden="true" />
+        <div className="w-11 h-11 rounded-xl bg-accent/15 flex items-center justify-center shrink-0 mt-0.5">
+          <Brain className="w-5 h-5 text-accent" aria-hidden="true" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-ink">Weekly Insight</p>
@@ -404,8 +404,8 @@ export function RhythmWidget({ className = "" }) {
     return (
       <button className={`${cardStyle} ${className} w-full text-left animate-fade-up`}>
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl bg-blue-500/15 flex items-center justify-center">
-            <Clock className="w-5 h-5 text-blue-400" aria-hidden="true" />
+          <div className="w-11 h-11 rounded-xl bg-accent/15 flex items-center justify-center">
+            <Clock className="w-5 h-5 text-accent" aria-hidden="true" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-ink">Daily Rhythm</p>
@@ -420,21 +420,21 @@ export function RhythmWidget({ className = "" }) {
   return (
     <button className={`${cardStyle} ${className} w-full text-left hover:brightness-105 transition-colors active:scale-[0.99]`}>
       <div className="flex items-center gap-3">
-        <div className="w-11 h-11 rounded-xl bg-blue-500/15 flex items-center justify-center">
-          <Clock className="w-5 h-5 text-blue-400" aria-hidden="true" />
+        <div className="w-11 h-11 rounded-xl bg-accent/15 flex items-center justify-center">
+          <Clock className="w-5 h-5 text-accent" aria-hidden="true" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-ink">Daily Rhythm</p>
           <div className="flex items-center gap-3 mt-1 text-[12px]">
             {rhythm.wake && (
               <span className="flex items-center gap-1 text-ink-2 bg-fill px-2 py-0.5 rounded-lg">
-                <Sun className="w-3 h-3 text-amber-400" aria-hidden="true" />
+                <Sun className="w-3 h-3 text-warn" aria-hidden="true" />
                 {rhythm.wake}
               </span>
             )}
             {rhythm.bed && (
               <span className="flex items-center gap-1 text-ink-2 bg-fill px-2 py-0.5 rounded-lg">
-                <Moon className="w-3 h-3 text-indigo-400" aria-hidden="true" />
+                <Moon className="w-3 h-3 text-accent" aria-hidden="true" />
                 {rhythm.bed}
               </span>
             )}
@@ -464,7 +464,7 @@ export function StreakWidget({ className = "" }) {
   return (
     <div className={`${raisedStyle} ${className} w-full text-center py-4 animate-fade-up`}>
       <div className="flex items-center justify-center gap-2 mb-1">
-        <TrendingUp className="w-5 h-5 text-amber-400" aria-hidden="true" />
+        <TrendingUp className="w-5 h-5 text-warn" aria-hidden="true" />
         <span className="text-xs font-medium text-ink-muted uppercase tracking-wider">Current Streak</span>
       </div>
       <p className="text-4xl font-bold text-ink tabular-nums leading-none">{streak.current}</p>
@@ -509,17 +509,17 @@ export function AssessmentWidget({ className = "" }) {
   return (
     <button className={`${cardStyle} ${className} w-full text-left hover:brightness-105 transition-colors active:scale-[0.99]`}>
       <div className="flex items-center gap-3">
-        <div className="w-11 h-11 rounded-xl bg-emerald-500/15 flex items-center justify-center">
-          <Activity className="w-5 h-5 text-emerald-400" aria-hidden="true" />
+        <div className="w-11 h-11 rounded-xl bg-success/15 flex items-center justify-center">
+          <Activity className="w-5 h-5 text-success" aria-hidden="true" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <p className="text-sm font-semibold text-ink">{assessment.measures} Check</p>
             {assessment.due && (
-              <span className="text-[10px] font-medium text-emerald-400 px-2 py-0.5 rounded-full bg-emerald-400/15">Due</span>
+              <span className="text-[10px] font-medium text-success px-2 py-0.5 rounded-full bg-success/15">Due</span>
             )}
             {assessment.firstTime && !assessment.due && (
-              <span className="text-[10px] font-medium text-amber-400 px-2 py-0.5 rounded-full bg-amber-400/15">Baseline</span>
+              <span className="text-[10px] font-medium text-warn px-2 py-0.5 rounded-full bg-warn/15">Baseline</span>
             )}
           </div>
           <p className="text-[11px] text-ink-muted mt-0.5">

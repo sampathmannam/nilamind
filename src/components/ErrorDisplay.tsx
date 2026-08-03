@@ -50,12 +50,12 @@ export default function ErrorDisplay({
     },
     warning: {
       icon: AlertCircle,
-      className: "bg-amber-500/10 border-amber-500/20 text-amber-300",
+      className: "bg-warn/10 border-warn/20 text-warn-hi",
       label: t("warning_default_title", lang) || "Heads up",
     },
     info: {
       icon: Info,
-      className: "bg-blue-500/10 border-accent/20 text-blue-300",
+      className: "bg-accent/10 border-accent/20 text-accent-hi",
       label: t("info_default_title", lang) || "Information",
     },
   }[type];

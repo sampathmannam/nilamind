@@ -21,7 +21,7 @@ export default function BreathingCircle({ size = 160, className = "", showLabel 
       aria-hidden="true"
     >
       <div
-        className="breathe-478 rounded-full bg-gradient-to-br from-blue-400/20 via-indigo-400/15 to-transparent border border-blue-400/30"
+        className="breathe-478 rounded-full bg-gradient-to-br from-blue-400/20 via-indigo-400/15 to-transparent border border-accent/30"
         style={{ width: size, height: size }}
       />
       {showLabel && (

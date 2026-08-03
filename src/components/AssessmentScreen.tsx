@@ -52,9 +52,9 @@ const TONE: Record<
   string,
   { text: string; bg: string; border: string; bar: string; stroke: string }
 > = {
-  emerald: { text: "text-emerald-300", bg: "bg-emerald-500/10", border: "border-emerald-500/40", bar: "bg-emerald-500", stroke: "#10b981" },
+  emerald: { text: "text-success-hi", bg: "bg-success/10", border: "border-success/40", bar: "bg-success", stroke: "#10b981" },
   sky: { text: "text-sky-300", bg: "bg-sky-500/10", border: "border-sky-500/40", bar: "bg-sky-500", stroke: "#38bdf8" },
-  amber: { text: "text-amber-300", bg: "bg-amber-500/10", border: "border-amber-500/40", bar: "bg-amber-500", stroke: "#CE9A3A" },
+  amber: { text: "text-warn-hi", bg: "bg-warn/10", border: "border-warn/40", bar: "bg-warn", stroke: "#CE9A3A" },
   orange: { text: "text-orange-300", bg: "bg-orange-500/10", border: "border-orange-500/40", bar: "bg-orange-500", stroke: "#E3A57D" },
   rose: { text: "text-rose-300", bg: "bg-rose-500/10", border: "border-rose-500/40", bar: "bg-rose-500", stroke: "#B5614E" },
 };
@@ -168,7 +168,7 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
       <div className="space-y-5 max-w-md mx-auto" id="assessment-screen">
         <header className="space-y-1">
           <h1 className="text-xl font-semibold text-ink flex items-center gap-2">
-            <ClipboardCheck className="w-5 h-5 text-blue-400" /> Validated Check-Ins
+            <ClipboardCheck className="w-5 h-5 text-accent" /> Validated Check-Ins
           </h1>
           <p className="text-xs text-ink-muted leading-relaxed">
             Short, research-validated check-ins — depression (<span className="text-ink-faint">PHQ-9 / quick PHQ-2</span>), anxiety (<span className="text-ink-faint">GAD-7</span>),
@@ -177,8 +177,8 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
           </p>
         </header>
 
-        <div className="bg-blue-500/5 border border-accent/20 rounded-xl p-3 flex gap-2.5">
-          <Info className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
+        <div className="bg-accent/5 border border-accent/20 rounded-xl p-3 flex gap-2.5">
+          <Info className="w-4 h-4 text-accent shrink-0 mt-0.5" />
           <p className="text-[11px] text-ink-muted leading-relaxed">
             These are <span className="text-ink-2 font-semibold">screening tools, not a diagnosis</span>.
             A high score is a reason to talk to a professional — not a verdict about who you are. They
@@ -250,13 +250,13 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
                   N-of-1 combined · {result.dataPoints} data points
                 </h4>
                 <div className={`flex items-center gap-1.5 text-[11px] ${
-                  result.status === "improving" ? "text-emerald-400"
+                  result.status === "improving" ? "text-success"
                   : result.status === "deteriorating" ? "text-rose-400"
                   : "text-ink-muted"
                 }`}>
                   <span className="font-semibold capitalize">{result.status}</span>
                   {result.reliableChange && (
-                    <span className={result.reliableChange.reliableImprovement ? "text-emerald-400" : "text-ink-faint"}>
+                    <span className={result.reliableChange.reliableImprovement ? "text-success" : "text-ink-faint"}>
                       · {result.reliableChange.reliableImprovement ? "reliable improvement" : "no reliable change"}
                     </span>
                   )}
@@ -283,7 +283,7 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
         {/* Confirm before discarding partly-answered check-ins (2026-07-18 design review: Cancel dropped
             in-progress answers with no warning). Only shown once at least one item is answered. */}
         {confirmCancel && (
-          <div role="alertdialog" aria-label="Cancel check-in?" className="glass rounded-xl p-3 space-y-2 border border-amber-500/30">
+          <div role="alertdialog" aria-label="Cancel check-in?" className="glass rounded-xl p-3 space-y-2 border border-warn/30">
             <p className="text-xs text-ink-2">Cancel this check-in? Your {answeredCount} answer{answeredCount !== 1 ? "s" : ""} won't be saved.</p>
             <div className="flex gap-2">
               <button
@@ -294,7 +294,7 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
               </button>
               <button
                 onClick={() => { setConfirmCancel(false); setPhase("menu"); setActive(null); }}
-                className="flex-1 min-h-[44px] rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 text-sm font-semibold cursor-pointer"
+                className="flex-1 min-h-[44px] rounded-lg bg-warn/20 hover:bg-warn/30 text-warn-hi text-sm font-semibold cursor-pointer"
               >
                 Discard
               </button>
@@ -359,7 +359,7 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
                         onClick={() => answer(idx, val)}
                         className={`min-h-[44px] px-1 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
                           selected
-                            ? "bg-blue-600 border-accent text-white"
+                            ? "bg-accent border-accent text-white"
                             : "bg-page border-line text-ink-muted hover:border-line-strong hover:text-ink-2"
                         }`}
                         aria-label={opt}
@@ -380,7 +380,7 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
             onClick={submit}
             disabled={!allAnswered}
             id="assessment-submit"
-            className="w-full font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed bg-blue-600 hover:bg-blue-500 text-white disabled:bg-fill disabled:text-ink-faint"
+            className="w-full font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed bg-accent hover:opacity-90 text-white disabled:bg-fill disabled:text-ink-faint"
           >
             {allAnswered ? (
               <><Check className="w-4 h-4" /> See my result</>
@@ -476,7 +476,7 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
         <div className="glass rounded-xl p-4 space-y-2">
           {overCut && (
             <div className="flex items-start gap-2">
-              <Activity className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+              <Activity className="w-4 h-4 text-warn shrink-0 mt-0.5" />
               <p className="text-[11px] text-ink-2 leading-relaxed">{inst.cutPoint.note}</p>
             </div>
           )}
@@ -499,7 +499,7 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
           <button
             onClick={() => startInstrument("PHQ-9")}
             id="phq2-escalate-phq9"
-            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-xl text-sm cursor-pointer transition-colors"
+            className="w-full bg-accent hover:opacity-90 text-white font-bold py-3.5 rounded-xl text-sm cursor-pointer transition-colors"
           >
             Take the full <span className="text-white/80">PHQ-9</span> now →
           </button>
@@ -567,7 +567,7 @@ function TrendBlock({ instrumentId, history }: { instrumentId: InstrumentId; his
       {/* RCI outcome feedback (Jacobson-Truax reliable change) */}
       {status.current && (
         <div className={`flex items-center gap-1.5 text-[11px] ${
-          status.current.trend === "reliably_improved" ? "text-emerald-400"
+          status.current.trend === "reliably_improved" ? "text-success"
           : status.current.trend === "reliably_deteriorated" ? "text-rose-400"
           : "text-ink-muted"
         }`}>
@@ -581,7 +581,7 @@ function TrendBlock({ instrumentId, history }: { instrumentId: InstrumentId; his
             }
           </span>
           {status.recovery === "recovered" && (
-            <span className="flex items-center gap-1 text-emerald-400 ml-auto text-xs">
+            <span className="flex items-center gap-1 text-success ml-auto text-xs">
               <ShieldCheck className="w-3 h-3" /> Below threshold
             </span>
           )}

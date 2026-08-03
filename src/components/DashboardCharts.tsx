@@ -51,13 +51,13 @@ export default function DashboardCharts(props: DashboardChartsProps) {
             </div>
             <div className="flex bg-page border border-slate-800 rounded-lg overflow-hidden p-0.5 self-start">
               <button onClick={() => setChartTab("emotion")} aria-label="Show emotion trend" aria-pressed={chartTab === "emotion"}
-                className={`text-xs px-3 min-h-[44px] inline-flex items-center justify-center rounded-md font-medium transition-colors ${chartTab === "emotion" ? "bg-purple-500/20 text-purple-400" : "text-slate-500 hover:text-slate-300"}`}>Emotion</button>
+                className={`text-xs px-3 min-h-[44px] inline-flex items-center justify-center rounded-md font-medium transition-colors ${chartTab === "emotion" ? "bg-accent/20 text-accent" : "text-slate-500 hover:text-slate-300"}`}>Emotion</button>
               <button onClick={() => setChartTab("context")} aria-label="Show sleep and social context" aria-pressed={chartTab === "context"}
-                className={`text-xs px-3 min-h-[44px] inline-flex items-center justify-center rounded-md font-medium transition-colors ${chartTab === "context" ? "bg-blue-500/20 text-blue-400" : "text-slate-500 hover:text-slate-300"}`}>Context</button>
+                className={`text-xs px-3 min-h-[44px] inline-flex items-center justify-center rounded-md font-medium transition-colors ${chartTab === "context" ? "bg-accent/20 text-accent" : "text-slate-500 hover:text-slate-300"}`}>Context</button>
               <button onClick={() => setChartTab("energy")} aria-label="Show mood vs energy scatter" aria-pressed={chartTab === "energy"}
-                className={`text-xs px-3 min-h-[44px] inline-flex items-center justify-center rounded-md font-medium transition-colors ${chartTab === "energy" ? "bg-amber-500/20 text-amber-400" : "text-slate-500 hover:text-slate-300"}`}>Energy</button>
+                className={`text-xs px-3 min-h-[44px] inline-flex items-center justify-center rounded-md font-medium transition-colors ${chartTab === "energy" ? "bg-warn/20 text-warn" : "text-slate-500 hover:text-slate-300"}`}>Energy</button>
               <button onClick={() => setChartTab("sleep-mood")} aria-label="Show sleep vs mood correlation" aria-pressed={chartTab === "sleep-mood"}
-                className={`text-xs px-3 min-h-[44px] inline-flex items-center justify-center rounded-md font-medium transition-colors ${chartTab === "sleep-mood" ? "bg-emerald-500/20 text-emerald-400" : "text-slate-500 hover:text-slate-300"}`}>Sleep-Mood</button>
+                className={`text-xs px-3 min-h-[44px] inline-flex items-center justify-center rounded-md font-medium transition-colors ${chartTab === "sleep-mood" ? "bg-success/20 text-success" : "text-slate-500 hover:text-slate-300"}`}>Sleep-Mood</button>
             </div>
           </div>
           <div className="w-full h-48" role="img" aria-label={chartTab === "emotion" ? "Line chart showing emotional intensity trend over time. Lower values indicate calmer states." : chartTab === "energy" ? "Scatter plot of mood intensity vs energy level. Each dot is one check-in." : chartTab === "sleep-mood" ? "Dual-axis line chart showing sleep hours and mood intensity over time." : "Line chart showing sleep hours and social connection over time."}>

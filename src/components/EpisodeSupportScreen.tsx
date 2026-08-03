@@ -321,7 +321,7 @@ export default function EpisodeSupportScreen({
       
       {/* 20-Minute inline Amber Warning */}
       {escalationShown && stage === "chat" && (
-        <div className="bg-amber-500/10 border-y border-r border-line border-l-4 border-l-amber-500 p-4 rounded-r-xl space-y-4" id="escalation-alert-panel">
+        <div className="bg-warn/10 border-y border-r border-line border-l-4 border-l-amber-500 p-4 rounded-r-xl space-y-4" id="escalation-alert-panel">
           <p className="text-sm font-semibold text-ink">
             You've been in this for 20 minutes and you're still at high intensity.
           </p>
@@ -359,7 +359,7 @@ export default function EpisodeSupportScreen({
               aria-label="Message Nila"
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
-              className="w-full h-36 bg-page border border-line rounded-xl px-4 py-3 text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus:border-amber-500 transition-all resize-none"
+              className="w-full h-36 bg-page border border-line rounded-xl px-4 py-3 text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus:border-warn transition-all resize-none"
               placeholder="Explain how you feel, what triggered you, or what unwanted urge you have... (text is 100% secure/private)"
               id="episode-starter-input"
             />
@@ -369,7 +369,7 @@ export default function EpisodeSupportScreen({
               disabled={!chatInput.trim()}
               className={`w-full py-4 rounded-xl font-bold transition-all text-sm cursor-pointer flex items-center justify-center gap-2 ${
                 chatInput.trim()
-                  ? "bg-amber-500 hover:bg-amber-450 hover:bg-amber-400 text-slate-950 font-extrabold"
+                  ? "bg-warn hover:opacity-90 text-slate-950 font-extrabold"
                   : "bg-page text-ink-faint border border-line cursor-not-allowed"
               }`}
               id="start-episode-btn"
@@ -397,13 +397,13 @@ export default function EpisodeSupportScreen({
               <LogOut className="w-3.5 h-3.5" /> End Session
             </button>
             {connectedLive && (
-              <div className="flex items-center gap-1 text-xs font-medium text-emerald-400" id="episode-live-badge" title="Nila is running on-device">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              <div className="flex items-center gap-1 text-xs font-medium text-success" id="episode-live-badge" title="Nila is running on-device">
+                <span className="w-1.5 h-1.5 rounded-full bg-success" />
                 <span>Nila · on-device</span>
               </div>
             )}
             <div className="flex items-center gap-2 font-mono text-xs font-bold text-ink-muted">
-              <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
+              <span className="w-2 h-2 rounded-full bg-warn animate-ping" />
               <span>{formatTimer(elapsedSeconds)}</span>
             </div>
           </div>
@@ -456,7 +456,7 @@ export default function EpisodeSupportScreen({
                     setStage("opening");
                     setChatInput("");
                   }}
-                  className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold py-3 rounded-xl cursor-pointer transition-all"
+                  className="w-full bg-success hover:opacity-90 text-slate-950 text-xs font-bold py-3 rounded-xl cursor-pointer transition-all"
                 >
                   Return to Home
                 </button>
@@ -471,7 +471,7 @@ export default function EpisodeSupportScreen({
                     <button
                       key={num}
                       onClick={() => registerIntensityAndTriggerAI(num)}
-                      className="bg-page border border-line border-line text-ink hover:border-amber-500 font-bold py-2.5 rounded-xl transition-all cursor-pointer text-center text-sm"
+                      className="bg-page border border-line border-line text-ink hover:border-warn font-bold py-2.5 rounded-xl transition-all cursor-pointer text-center text-sm"
                     >
                       {num}
                     </button>
@@ -491,14 +491,14 @@ export default function EpisodeSupportScreen({
                   aria-label="Message Nila"
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
-                  className="flex-1 bg-page border border-line border-line text-xs text-ink rounded-xl px-4 py-3 focus:outline-none focus:border-amber-500"
+                  className="flex-1 bg-page border border-line border-line text-xs text-ink rounded-xl px-4 py-3 focus:outline-none focus:border-warn"
                   placeholder="Express how you feel..."
                   disabled={loading}
                 />
                 <button
                   type="submit"
                   disabled={!chatInput.trim() || loading}
-                  className={`bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 rounded-xl flex items-center justify-center cursor-pointer transition-all ${
+                  className={`bg-warn hover:opacity-90 text-slate-950 font-bold px-4 rounded-xl flex items-center justify-center cursor-pointer transition-all ${
                     chatInput.trim() && !loading ? "opacity-100" : "opacity-40 cursor-not-allowed"
                   }`}
                 >
@@ -515,9 +515,9 @@ export default function EpisodeSupportScreen({
         <div className="bg-card border border-line p-6 rounded-2xl space-y-6" id="offline-guided-container">
           <div className="flex justify-between items-center border-b border-line pb-3">
             <h2 className="text-base font-semibold text-ink flex items-center gap-1.5 font-sans">
-              <Shield className="w-5 h-5 text-amber-500" /> Guided Offline Mode
+              <Shield className="w-5 h-5 text-warn" /> Guided Offline Mode
             </h2>
-            <span className="text-xs bg-amber-500/10 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full font-sans">
+            <span className="text-xs bg-warn/10 text-warn border border-warn/30 px-2 py-0.5 rounded-full font-sans">
               No Connection Needed
             </span>
           </div>
@@ -546,7 +546,7 @@ export default function EpisodeSupportScreen({
                         setGuidedStep("low_end");
                       }
                     }}
-                    className="bg-page border border-line hover:bg-amber-500 hover:text-slate-950 py-3.5 rounded-xl font-mono text-sm cursor-pointer font-bold text-center text-ink-2 transition-colors"
+                    className="bg-page border border-line hover:opacity-90 hover:text-slate-950 py-3.5 rounded-xl font-mono text-sm cursor-pointer font-bold text-center text-ink-2 transition-colors"
                   >
                     {num}
                   </button>
@@ -561,7 +561,7 @@ export default function EpisodeSupportScreen({
               longer skipped entirely — 2026-07-12 Wave 3, Group E). */}
           {guidedStep === "extreme_tipp" && (
             <div className="space-y-4" id="tipp-step-guided">
-              <div className="p-4 bg-amber-500/10 border-y border-r border-line border-l-4 border-l-amber-500 rounded-r-xl">
+              <div className="p-4 bg-warn/10 border-y border-r border-line border-l-4 border-l-amber-500 rounded-r-xl">
                 <h4 className="text-sm font-bold text-ink mb-1 font-sans">Biological shock reset</h4>
                 <p className="text-xs text-ink-2 leading-relaxed">
                   Your intensity is extreme. This means your thinking brain is offline. This is biology, not weakness. Try whichever of these fits right now.
@@ -577,7 +577,7 @@ export default function EpisodeSupportScreen({
 
               <button
                 onClick={() => setStage("debrief_1")}
-                className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-xl transition-all text-xs uppercase tracking-wider cursor-pointer text-center font-extrabold"
+                className="w-full bg-warn hover:opacity-90 text-slate-950 font-bold py-3 rounded-xl transition-all text-xs uppercase tracking-wider cursor-pointer text-center font-extrabold"
               >
                 I'm ready to close out
               </button>
@@ -594,19 +594,19 @@ export default function EpisodeSupportScreen({
               <div className="space-y-2">
                 <button
                   onClick={() => setGuidedStep("medium_panic")}
-                  className="w-full text-left bg-page border border-line p-3.5 rounded-xl text-xs font-semibold text-ink-2 cursor-pointer hover:border-amber-500 transition-colors"
+                  className="w-full text-left bg-page border border-line p-3.5 rounded-xl text-xs font-semibold text-ink-2 cursor-pointer hover:border-warn transition-colors"
                 >
                   Racing, chaotic thoughts spinning
                 </button>
                 <button
                   onClick={() => setGuidedStep("medium_harm")}
-                  className="w-full text-left bg-page border border-line p-3.5 rounded-xl text-xs font-semibold text-ink-2 cursor-pointer hover:border-amber-500 transition-colors"
+                  className="w-full text-left bg-page border border-line p-3.5 rounded-xl text-xs font-semibold text-ink-2 cursor-pointer hover:border-warn transition-colors"
                 >
                   An intense urge to hurt myself or act impulsively
                 </button>
                 <button
                   onClick={() => setGuidedStep("medium_shame")}
-                  className="w-full text-left bg-page border border-line p-3.5 rounded-xl text-xs font-semibold text-ink-2 cursor-pointer hover:border-amber-500 transition-colors"
+                  className="w-full text-left bg-page border border-line p-3.5 rounded-xl text-xs font-semibold text-ink-2 cursor-pointer hover:border-warn transition-colors"
                 >
                   Intense shame or hating myself
                 </button>
@@ -624,7 +624,7 @@ export default function EpisodeSupportScreen({
               </div>
               <button
                 onClick={() => setStage("debrief_1")}
-                className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-lg text-xs cursor-pointer font-extrabold uppercase transition-all"
+                className="w-full bg-warn hover:opacity-90 text-slate-950 font-bold py-3 rounded-lg text-xs cursor-pointer font-extrabold uppercase transition-all"
               >
                 Done
               </button>
@@ -641,7 +641,7 @@ export default function EpisodeSupportScreen({
               </div>
               <button
                 onClick={() => setStage("debrief_1")}
-                className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-lg text-xs cursor-pointer font-extrabold uppercase transition-all"
+                className="w-full bg-warn hover:opacity-90 text-slate-950 font-bold py-3 rounded-lg text-xs cursor-pointer font-extrabold uppercase transition-all"
               >
                 Done
               </button>
@@ -658,7 +658,7 @@ export default function EpisodeSupportScreen({
               </div>
               <button
                 onClick={() => setStage("debrief_1")}
-                className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-lg text-xs cursor-pointer font-extrabold uppercase transition-all"
+                className="w-full bg-warn hover:opacity-90 text-slate-950 font-bold py-3 rounded-lg text-xs cursor-pointer font-extrabold uppercase transition-all"
               >
                 Proceed to debrief
               </button>
@@ -672,7 +672,7 @@ export default function EpisodeSupportScreen({
               </p>
               <button
                 onClick={() => setStage("debrief_1")}
-                className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-lg text-xs cursor-pointer font-extrabold uppercase transition-all"
+                className="w-full bg-warn hover:opacity-90 text-slate-950 font-bold py-3 rounded-lg text-xs cursor-pointer font-extrabold uppercase transition-all"
               >
                 Safe Close
               </button>
@@ -697,7 +697,7 @@ export default function EpisodeSupportScreen({
               aria-label="What triggered this acute episode? (Optional)"
               value={triggerExplanation}
               onChange={(e) => setTriggerExplanation(e.target.value)}
-              className="w-full h-32 bg-page border border-line rounded-xl px-4 py-3 text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus:border-amber-500 transition-all resize-none"
+              className="w-full h-32 bg-page border border-line rounded-xl px-4 py-3 text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus:border-warn transition-all resize-none"
               placeholder="e.g. Perceived rejection, severe work disappointment, lack of sleep..."
             />
           </div>
@@ -714,7 +714,7 @@ export default function EpisodeSupportScreen({
             </button>
             <button
               onClick={handleSaveDebrief1}
-              className="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black py-3 rounded-xl cursor-pointer font-extrabold transition-all"
+              className="bg-warn hover:opacity-90 text-slate-950 text-xs font-black py-3 rounded-xl cursor-pointer font-extrabold transition-all"
             >
               Save & Next
             </button>
@@ -744,7 +744,7 @@ export default function EpisodeSupportScreen({
                     onClick={() => handleToggleDebriefSkill(s)}
                     className={`flex items-center gap-2 p-3 text-xs rounded-xl border text-left transition-all cursor-pointer ${
                       checked
-                        ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 font-bold"
+                        ? "bg-success/10 border-success/30 text-success font-bold"
                         : "bg-page border-line text-ink-faint hover:border-line-strong"
                     }`}
                   >
@@ -757,7 +757,7 @@ export default function EpisodeSupportScreen({
 
           <button
             onClick={() => setStage("debrief_3")}
-            className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold py-3.5 rounded-xl text-center text-xs transition-all cursor-pointer uppercase font-black"
+            className="w-full bg-warn hover:opacity-90 text-slate-950 font-extrabold py-3.5 rounded-xl text-center text-xs transition-all cursor-pointer uppercase font-black"
           >
             Continue
           </button>
@@ -776,7 +776,7 @@ export default function EpisodeSupportScreen({
           <div className="grid grid-cols-2 gap-4 bg-page p-4 rounded-xl border border-line">
             <div className="text-center space-y-1">
               <span className="text-xs text-ink-faint uppercase tracking-wide">When you started</span>
-              <p className="text-4xl font-extrabold text-amber-500 font-mono">
+              <p className="text-4xl font-extrabold text-warn font-mono">
                 {intensityList[0] || 8}/10
               </p>
             </div>
@@ -799,7 +799,7 @@ export default function EpisodeSupportScreen({
                 <button
                   key={num}
                   onClick={() => saveEpisodeRecord(num)}
-                  className="bg-page border border-line text-ink-2 hover:bg-amber-500 hover:text-slate-950 font-bold py-3 rounded-xl transition-all font-mono cursor-pointer text-center text-sm"
+                  className="bg-page border border-line text-ink-2 hover:opacity-90 hover:text-slate-950 font-bold py-3 rounded-xl transition-all font-mono cursor-pointer text-center text-sm"
                 >
                   {num}
                 </button>
@@ -811,8 +811,8 @@ export default function EpisodeSupportScreen({
 
       {/* FINALIZED CONFIRMATION SHEET */}
       {stage === "saved" && (
-        <div className="bg-card border border-emerald-500 p-6 rounded-2xl text-center space-y-6" id="debrief-saved-sheet">
-          <div className="w-12 h-12 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-full flex items-center justify-center mx-auto">
+        <div className="bg-card border border-success p-6 rounded-2xl text-center space-y-6" id="debrief-saved-sheet">
+          <div className="w-12 h-12 bg-success/10 border border-success/30 text-success rounded-full flex items-center justify-center mx-auto">
             <Save className="w-6 h-6" />
           </div>
           
@@ -833,7 +833,7 @@ export default function EpisodeSupportScreen({
               setElapsedSeconds(0);
               onSessionEnded();
             }}
-            className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-3.5 rounded-xl text-xs uppercase tracking-wider cursor-pointer transition-all font-extrabold"
+            className="w-full bg-success hover:opacity-90 text-slate-950 font-bold py-3.5 rounded-xl text-xs uppercase tracking-wider cursor-pointer transition-all font-extrabold"
           >
             I'm done for now
           </button>

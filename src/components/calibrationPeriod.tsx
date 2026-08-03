@@ -46,20 +46,20 @@ function CalibrationPeriodCard({ startDate }: CalibrationPeriodCardProps) {
 
   return (
     <div className="glass rounded-2xl p-4 flex items-start gap-3">
-      <div className="p-2 rounded-xl bg-violet-500/10 text-violet-400">
+      <div className="p-2 rounded-xl bg-accent/10 text-accent">
         <Sparkles className="w-5 h-5" />
       </div>
       <div className="flex-1">
         <div className="flex items-center justify-between">
           <p className="text-sm font-semibold text-ink">Learning your patterns</p>
-          <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-300">
+          <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-accent/20 text-accent-hi">
             {progress}%
           </span>
         </div>
         <p className="text-[11px] text-ink-muted leading-relaxed mt-1">{message}</p>
         <div className="mt-2 w-full bg-line-strong rounded-full h-1.5">
           <div
-            className="bg-violet-500 h-1.5 rounded-full transition-all"
+            className="bg-accent h-1.5 rounded-full transition-all"
             style={{ width: `${progress}%` }}
           />
         </div>

@@ -14,8 +14,8 @@ import TIPPTool from "./TIPPTool";
 // §9-gated: a crisis query surfaces help instead of library content. Pure, on-device; no model, no network.
 
 const SOURCE_BADGE: Record<LearnSource, { label: string; cls: string }> = {
-  skill: { label: "Skill", cls: "bg-blue-500/20 border-accent/50 text-blue-200" },
-  understand: { label: "Explainer", cls: "bg-indigo-500/20 border-indigo-500/50 text-indigo-200" },
+  skill: { label: "Skill", cls: "bg-accent/20 border-accent/50 text-accent-hi" },
+  understand: { label: "Explainer", cls: "bg-accent/20 border-accent/50 text-accent-hi" },
   why: { label: "Research", cls: "bg-ink-faint/20 border-line-strong/50 text-ink-2" },
 };
 
@@ -107,7 +107,7 @@ export default function LearnScreen() {
     <div className="space-y-4 max-w-md mx-auto" id="learn-screen">
       <header className="space-y-1">
         <h1 className="text-xl font-semibold text-ink flex items-center gap-2">
-          <BookOpen className="w-5 h-5 text-blue-400" /> Learn
+          <BookOpen className="w-5 h-5 text-accent" /> Learn
         </h1>
         <p className="text-xs text-ink-muted leading-relaxed">
           Skills, explainers &amp; research — one library. A reference, not advice.
@@ -154,7 +154,7 @@ export default function LearnScreen() {
           {recommended && !dismissedRec && (
             <div className="bg-card border border-accent/30 rounded-2xl p-4 space-y-2.5" id="learn-recommended">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-mono uppercase tracking-widest text-blue-300 flex items-center gap-1.5"><Sparkles className="w-3 h-3" /> For how you've been feeling</span>
+                <span className="text-xs font-mono uppercase tracking-widest text-accent-hi flex items-center gap-1.5"><Sparkles className="w-3 h-3" /> For how you've been feeling</span>
                 <button onClick={() => setDismissedRec(true)} aria-label="Dismiss recommendation" className="flex items-center justify-center w-8 h-8 -m-1.5 text-ink-faint hover:text-ink-2 cursor-pointer"><X className="w-3.5 h-3.5" /></button>
               </div>
               <button onClick={() => { setSourceFilter("skill"); setGroupFilter(null); setQuery(recommended.name); setExpanded((prev) => new Set(prev).add(`skill:${recommended.id}`)); }} className="w-full flex items-center gap-3 text-left cursor-pointer" id="learn-rec-open">
@@ -162,7 +162,7 @@ export default function LearnScreen() {
                   <span className="block text-sm font-bold text-ink">{recommended.name}</span>
                   <span className="block text-[11px] text-ink-muted leading-snug">{recommended.purpose}</span>
                 </span>
-                <ChevronRight className="w-5 h-5 text-blue-400 shrink-0" />
+                <ChevronRight className="w-5 h-5 text-accent shrink-0" />
               </button>
             </div>
           )}
@@ -214,7 +214,7 @@ export default function LearnScreen() {
                 <button
                   key={g.id}
                   onClick={() => setGroupFilter(groupFilter === g.id ? null : g.id)}
-                  className={`px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all cursor-pointer ${groupFilter === g.id ? "bg-blue-500/20 border-accent/50 text-blue-200" : "bg-page border-line text-ink-muted hover:text-ink-2"}`}
+                  className={`px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all cursor-pointer ${groupFilter === g.id ? "bg-accent/20 border-accent/50 text-accent-hi" : "bg-page border-line text-ink-muted hover:text-ink-2"}`}
                 >
                   {g.label}
                 </button>
@@ -269,7 +269,7 @@ function LearnCard({ result, open, onToggle }: { result: LearnResult; open: bool
               <ol className="space-y-1.5">
                 {detail.steps.map((step, i) => (
                   <li key={i} className="flex gap-2 text-xs text-ink-2 leading-relaxed">
-                    <span className="shrink-0 w-4 h-4 rounded-full bg-blue-500 text-xs font-bold text-[#171311] flex items-center justify-center mt-0.5">{i + 1}</span>
+                    <span className="shrink-0 w-4 h-4 rounded-full bg-accent text-xs font-bold text-[#171311] flex items-center justify-center mt-0.5">{i + 1}</span>
                     <span>{step}</span>
                   </li>
                 ))}
@@ -306,7 +306,7 @@ function LearnCard({ result, open, onToggle }: { result: LearnResult; open: bool
                     <p key={i} className="text-[11px] text-ink-muted leading-relaxed pl-1">
                       {r.citation}
                       {!r.verified && (
-                        <span className="inline-flex items-center gap-1 ml-1 text-amber-300/90 font-medium" title="We're double-checking this reference's exact details.">
+                        <span className="inline-flex items-center gap-1 ml-1 text-warn-hi/90 font-medium" title="We're double-checking this reference's exact details.">
                           <AlertTriangle className="w-3 h-3" /> reference being verified
                         </span>
                       )}

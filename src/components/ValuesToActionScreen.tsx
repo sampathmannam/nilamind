@@ -46,10 +46,10 @@ import { hapticLight, hapticSuccess } from "../hooks/useHaptics";
 // nilamind_ba_activities (ba_ activities). This screen only composes them into one Why→Do flow.
 
 const TONE: Record<string, { text: string; bg: string; border: string; bar: string; chipOn: string }> = {
-  emerald: { text: "text-emerald-300", bg: "bg-emerald-500/10", border: "border-emerald-500/40", bar: "bg-emerald-500", chipOn: "bg-emerald-500/20 border-emerald-500/50 text-emerald-200" },
+  emerald: { text: "text-success-hi", bg: "bg-success/10", border: "border-success/40", bar: "bg-success", chipOn: "bg-success/20 border-success/50 text-success-hi" },
   sky: { text: "text-sky-300", bg: "bg-sky-500/10", border: "border-sky-500/40", bar: "bg-sky-500", chipOn: "bg-sky-500/20 border-sky-500/50 text-sky-200" },
-  amber: { text: "text-amber-300", bg: "bg-amber-500/10", border: "border-amber-500/40", bar: "bg-amber-500", chipOn: "bg-amber-500/20 border-amber-500/50 text-amber-200" },
-  purple: { text: "text-purple-300", bg: "bg-purple-500/10", border: "border-purple-500/40", bar: "bg-purple-500", chipOn: "bg-purple-500/20 border-purple-500/50 text-purple-200" },
+  amber: { text: "text-warn-hi", bg: "bg-warn/10", border: "border-warn/40", bar: "bg-warn", chipOn: "bg-warn/20 border-warn/50 text-warn-hi" },
+  purple: { text: "text-accent-hi", bg: "bg-accent/10", border: "border-accent/40", bar: "bg-accent", chipOn: "bg-accent/20 border-accent/50 text-accent-hi" },
   rose: { text: "text-rose-300", bg: "bg-rose-500/10", border: "border-rose-500/40", bar: "bg-rose-500", chipOn: "bg-rose-500/20 border-rose-500/50 text-rose-200" },
 };
 
@@ -233,7 +233,7 @@ export default function ValuesToActionScreen({ highlightDomains = [] }: { highli
         </div>
         <div className="flex gap-2">
           <button onClick={() => setRating(null)} className="flex-1 glass hover:bg-raised text-ink-2 font-semibold py-3 rounded-xl text-sm cursor-pointer">Cancel</button>
-          <button onClick={saveRating} id="vta-save-rating" className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl text-sm cursor-pointer flex items-center justify-center gap-2"><Check className="w-4 h-4" /> Log it</button>
+          <button onClick={saveRating} id="vta-save-rating" className="flex-1 bg-accent hover:opacity-90 text-white font-bold py-3 rounded-xl text-sm cursor-pointer flex items-center justify-center gap-2"><Check className="w-4 h-4" /> Log it</button>
         </div>
       </div>
     );
@@ -267,7 +267,7 @@ export default function ValuesToActionScreen({ highlightDomains = [] }: { highli
               </div>
             )}
             {highlightDomains.length > 0 && (
-              <div className="bg-blue-500/5 border border-accent/20 rounded-xl p-3" id="vta-highlight-note">
+              <div className="bg-accent/5 border border-accent/20 rounded-xl p-3" id="vta-highlight-note">
                 <p className="text-xs text-ink-muted leading-relaxed">
                   These came up when we talked:{" "}
                   <span className="text-ink-2 font-semibold">
@@ -331,7 +331,7 @@ export default function ValuesToActionScreen({ highlightDomains = [] }: { highli
                   {VALUE_DOMAINS.filter((d) => selectedDomains.includes(d.id)).map((dom) => {
                     const r = draft[dom.id];
                     return (
-                      <div key={dom.id} className={`glass rounded-2xl p-4 space-y-3 ${highlightDomains.includes(dom.id) ? "ring-1 ring-blue-400/40" : ""}`} id={`vta-domain-${dom.id}`}>
+                      <div key={dom.id} className={`glass rounded-2xl p-4 space-y-3 ${highlightDomains.includes(dom.id) ? "ring-1 ring-accent/40" : ""}`} id={`vta-domain-${dom.id}`}>
                         <div>
                           <h3 className="text-sm font-bold text-ink">{dom.label}</h3>
                           <p className="text-xs text-ink-faint italic">{dom.examples}</p>
@@ -375,7 +375,7 @@ export default function ValuesToActionScreen({ highlightDomains = [] }: { highli
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-bold text-ink">{g.label}</span>
                       {g.gap > 0 && (
-                        <span className="text-xs font-bold text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded-full px-2 py-0.5">gap {g.gap}</span>
+                        <span className="text-xs font-bold text-warn-hi bg-warn/10 border border-warn/30 rounded-full px-2 py-0.5">gap {g.gap}</span>
                       )}
                     </div>
                     <div className="space-y-1.5">
@@ -406,9 +406,9 @@ export default function ValuesToActionScreen({ highlightDomains = [] }: { highli
       {/* ═══ DO — pick an activity ═══ */}
       <section className="space-y-3" id="vta-do">
         <h3 className="text-xs uppercase font-mono tracking-widest text-ink-muted flex items-center gap-1.5">
-          <Footprints className="w-3.5 h-3.5 text-emerald-400" /> Do — one small thing
+          <Footprints className="w-3.5 h-3.5 text-success" /> Do — one small thing
         </h3>
-        <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-3">
+        <div className="bg-success/5 border border-success/20 rounded-xl p-3">
           <p className="text-xs text-ink-faint leading-relaxed">
             Acting on a plan rather than a mood is the core of Behavioural Activation, which on its own
             matches full CBT and antidepressants for depression. (Jacobson et al., 1996; Dimidjian et
@@ -454,10 +454,10 @@ export default function ValuesToActionScreen({ highlightDomains = [] }: { highli
             {menu.map((idea) => {
               const on = picked?.title === idea.title;
               return (
-                <button key={idea.title} onClick={() => { setPicked(on ? null : idea); setCustomTitle(""); }} className={`w-full text-left px-3 py-2.5 rounded-xl border transition-all cursor-pointer ${on ? "bg-blue-600/20 border-accent/50" : "bg-page border-line hover:border-line-strong"}`}>
+                <button key={idea.title} onClick={() => { setPicked(on ? null : idea); setCustomTitle(""); }} className={`w-full text-left px-3 py-2.5 rounded-xl border transition-all cursor-pointer ${on ? "bg-accent/20 border-accent/50" : "bg-page border-line hover:border-line-strong"}`}>
                   <div className="flex items-center justify-between gap-2">
-                    <span className={`text-xs font-medium ${on ? "text-blue-200" : "text-ink-2"}`}>{idea.title}</span>
-                    {on && <Check className="w-3.5 h-3.5 text-blue-300 shrink-0" />}
+                    <span className={`text-xs font-medium ${on ? "text-accent-hi" : "text-ink-2"}`}>{idea.title}</span>
+                    {on && <Check className="w-3.5 h-3.5 text-accent-hi shrink-0" />}
                   </div>
                   <span className="text-xs text-ink-faint">Tiny version: {idea.tiny}</span>
                 </button>
@@ -476,7 +476,7 @@ export default function ValuesToActionScreen({ highlightDomains = [] }: { highli
               </div>
               <div className="flex gap-2">
                 <button onClick={planForLater} id="vta-plan-btn" className="flex-1 bg-raised border border-line-strong hover:bg-fill text-ink-2 font-semibold py-2.5 rounded-xl text-xs cursor-pointer flex items-center justify-center gap-1.5"><CalendarClock className="w-3.5 h-3.5" /> Plan for later</button>
-                <button onClick={() => startRating(chosenTitle, chosenCategory)} id="vta-did-btn" className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-xs cursor-pointer flex items-center justify-center gap-1.5"><Check className="w-3.5 h-3.5" /> I did this</button>
+                <button onClick={() => startRating(chosenTitle, chosenCategory)} id="vta-did-btn" className="flex-1 bg-success hover:opacity-90 text-white font-bold py-2.5 rounded-xl text-xs cursor-pointer flex items-center justify-center gap-1.5"><Check className="w-3.5 h-3.5" /> I did this</button>
               </div>
             </div>
           )}
@@ -495,7 +495,7 @@ export default function ValuesToActionScreen({ highlightDomains = [] }: { highli
                   <span className={`block text-xs ${TONE[categoryMeta(item.activity.category).tone].text}`}>{categoryMeta(item.activity.category).label}</span>
                 </div>
                 <div className="flex gap-1.5 shrink-0">
-                  <button onClick={() => startRating(item.activity!.title, item.activity!.category, item.id)} className="bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold px-3 py-1.5 rounded-lg cursor-pointer">Done</button>
+                  <button onClick={() => startRating(item.activity!.title, item.activity!.category, item.id)} className="bg-success hover:opacity-90 text-white text-[11px] font-bold px-3 py-1.5 rounded-lg cursor-pointer">Done</button>
                   <button aria-label="Skip this activity" onClick={() => skipPlanned(item.id)} className="bg-page border border-line text-ink-faint hover:text-ink-2 text-[11px] px-2.5 py-1.5 rounded-lg cursor-pointer"><X className="w-3.5 h-3.5" /></button>
                 </div>
               </div>
@@ -505,7 +505,7 @@ export default function ValuesToActionScreen({ highlightDomains = [] }: { highli
                   <span className="text-xs text-ink-2">{item.title}</span>
                   <span className="block text-xs text-rose-300 flex items-center gap-1"><ArrowRight className="w-3 h-3" /> {domainLabel(item.step.domainId)}</span>
                 </div>
-                <button onClick={() => markStepDone(item.step!)} className="shrink-0 bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold px-3 py-1.5 rounded-lg cursor-pointer flex items-center gap-1"><Check className="w-3.5 h-3.5" /> Done</button>
+                <button onClick={() => markStepDone(item.step!)} className="shrink-0 bg-success hover:opacity-90 text-white text-[11px] font-bold px-3 py-1.5 rounded-lg cursor-pointer flex items-center gap-1"><Check className="w-3.5 h-3.5" /> Done</button>
               </div>
             ) : null,
           )}
@@ -524,19 +524,19 @@ export default function ValuesToActionScreen({ highlightDomains = [] }: { highli
                   <span className="text-xs text-ink-faint">{item.date.slice(5)}</span>
                 </div>
                 <div className="flex gap-3 mt-1.5 text-xs">
-                  <span className="text-amber-300">Mastery {item.activity.mastery ?? "–"}/10</span>
-                  <span className="text-purple-300">Pleasure {item.activity.pleasure ?? "–"}/10</span>
+                  <span className="text-warn-hi">Mastery {item.activity.mastery ?? "–"}/10</span>
+                  <span className="text-accent-hi">Pleasure {item.activity.pleasure ?? "–"}/10</span>
                   {typeof item.activity.moodBefore === "number" && typeof item.activity.moodAfter === "number" && (
-                    <span className="text-blue-300">Mood {item.activity.moodBefore}→{item.activity.moodAfter}</span>
+                    <span className="text-accent-hi">Mood {item.activity.moodBefore}→{item.activity.moodAfter}</span>
                   )}
                 </div>
                 {item.activity.note && <p className="text-[11px] text-ink-muted mt-1.5 italic">"{item.activity.note}"</p>}
               </div>
             ) : item.kind === "step" && item.step ? (
-              <div key={item.id} className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-2.5 flex items-center gap-2">
-                <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <div key={item.id} className="bg-success/5 border border-success/20 rounded-xl p-2.5 flex items-center gap-2">
+                <Check className="w-3.5 h-3.5 text-success shrink-0" />
                 <span className="text-[11px] text-ink-2 line-through decoration-slate-600">{item.title}</span>
-                <span className="ml-auto text-xs text-emerald-400/70">{domainLabel(item.step.domainId)}</span>
+                <span className="ml-auto text-xs text-success/70">{domainLabel(item.step.domainId)}</span>
               </div>
             ) : null,
           )}
@@ -551,7 +551,7 @@ function RatingSlider({ label, help, value, onChange }: { label: string; help: s
     <div className="glass rounded-2xl p-4 space-y-2">
       <div className="flex justify-between items-baseline">
         <span className="text-sm font-bold text-ink">{label}</span>
-        <span className="font-mono text-blue-400 text-sm">{value} / 10</span>
+        <span className="font-mono text-accent text-sm">{value} / 10</span>
       </div>
       <p className="text-[11px] text-ink-faint">{help}</p>
       <input aria-label={label} type="range" min={0} max={10} value={value} onChange={(e) => onChange(parseInt(e.target.value))} className="w-full h-1.5 rounded-lg bg-page accent-blue-500 cursor-pointer" />

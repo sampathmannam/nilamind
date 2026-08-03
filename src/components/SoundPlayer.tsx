@@ -121,7 +121,7 @@ export default function SoundPlayer({ compact = false }: Props) {
           onClick={togglePlay}
           className={`p-3 rounded-full transition-all cursor-pointer ${
             playing
-              ? "bg-emerald-500/20 text-emerald-400"
+              ? "bg-success/20 text-success"
               : "bg-fill text-ink-muted hover:text-ink-2"
           }`}
           aria-label={playing ? "Pause ambient sound" : "Play ambient sound"}
@@ -137,7 +137,7 @@ export default function SoundPlayer({ compact = false }: Props) {
                 onClick={() => selectType(type)}
                 className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
                   selectedType === type
-                    ? "bg-blue-500/20 text-blue-300"
+                    ? "bg-accent/20 text-accent-hi"
                     : "bg-fill/50 text-ink-faint hover:text-ink-2"
                 }`}
                 title={info.description}
@@ -169,13 +169,13 @@ export default function SoundPlayer({ compact = false }: Props) {
               key={type}
               onClick={() => selectType(type)}
               className={`glass p-3 rounded-xl text-left transition-all cursor-pointer ${
-                isSelected ? "ring-1 ring-blue-500/50 bg-blue-500/5" : "hover:brightness-110"
+                isSelected ? "ring-1 ring-accent/50 bg-accent/5" : "hover:brightness-110"
               }`}
             >
               <div className="flex items-center gap-2">
                 <span className="text-lg">{info.icon}</span>
                 <div className="min-w-0">
-                  <p className={`text-xs font-semibold ${isSelected ? "text-blue-300" : "text-ink-2"}`}>
+                  <p className={`text-xs font-semibold ${isSelected ? "text-accent-hi" : "text-ink-2"}`}>
                     {info.name}
                   </p>
                   <p className="text-xs text-ink-faint truncate">{info.description}</p>
@@ -192,8 +192,8 @@ export default function SoundPlayer({ compact = false }: Props) {
           onClick={togglePlay}
           className={`p-4 rounded-full transition-all cursor-pointer ${
             playing
-              ? "bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30"
-              : "bg-blue-500/20 text-blue-400 hover:bg-blue-500/30"
+              ? "bg-success/20 text-success hover:opacity-90/30"
+              : "bg-accent/20 text-accent hover:bg-accent/30"
           }`}
           aria-label={playing ? "Pause" : "Play"}
         >
@@ -228,7 +228,7 @@ export default function SoundPlayer({ compact = false }: Props) {
           <Timer className="w-3.5 h-3.5 text-ink-faint" />
           <span className="text-xs text-ink-faint">Auto-stop</span>
           {timerRemaining > 0 && (
-            <span className="text-xs text-amber-400 font-mono ml-auto">{formatTime(timerRemaining)}</span>
+            <span className="text-xs text-warn font-mono ml-auto">{formatTime(timerRemaining)}</span>
           )}
         </div>
         <div className="flex gap-1.5">
@@ -238,7 +238,7 @@ export default function SoundPlayer({ compact = false }: Props) {
               onClick={() => { setTimerMinutes(opt.minutes); hapticLight(); }}
               className={`flex-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
                 timerMinutes === opt.minutes
-                  ? "bg-blue-500/20 text-blue-300"
+                  ? "bg-accent/20 text-accent-hi"
                   : "bg-fill/50 text-ink-faint hover:text-ink-2"
               }`}
             >

@@ -44,16 +44,16 @@ export default function WelcomeBackCard({ lastVisitDate, onDismiss }: WelcomeBac
   const message = getWelcomeMessage(days);
 
   return (
-    <div className="w-full px-3 py-2.5 rounded-xl bg-blue-500/10 border border-accent/30">
+    <div className="w-full px-3 py-2.5 rounded-xl bg-accent/10 border border-accent/30">
       <div className="flex items-start gap-2">
-        <MessageCircle className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" />
+        <MessageCircle className="w-4 h-4 text-accent mt-0.5 shrink-0" />
         <div className="flex-1">
           <p className="text-[13px] text-ink-2 leading-relaxed">{message}</p>
           <p className="text-[11px] text-ink-muted mt-1">Welcome back — {days} day{days === 1 ? "" : "s"} away.</p>
           <div className="flex gap-2 mt-2">
             <button
               onClick={onDismiss}
-              className="text-[11px] px-3 py-1 rounded-lg bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 transition"
+              className="text-[11px] px-3 py-1 rounded-lg bg-accent/20 text-accent-hi hover:bg-accent/30 transition"
             >
               Got it
             </button>

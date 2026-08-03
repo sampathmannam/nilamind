@@ -82,7 +82,7 @@ export default function PMRTimer({ onComplete }: PMRTimerProps = {}) {
         </p>
 
         {state.done && (
-          <p className="flex items-center gap-1.5 text-[11px] text-emerald-400" role="status">
+          <p className="flex items-center gap-1.5 text-[11px] text-success" role="status">
             <CheckCircle2 className="w-3.5 h-3.5" />
             All done — you've worked through every muscle group.
           </p>
@@ -101,7 +101,7 @@ export default function PMRTimer({ onComplete }: PMRTimerProps = {}) {
           onClick={toggle}
           disabled={state.done}
           className={`p-4 rounded-full transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
-            playing ? "bg-amber-500/20 text-amber-400 hover:bg-amber-500/30" : "bg-blue-500/20 text-blue-400 hover:bg-blue-500/30"
+            playing ? "bg-warn/20 text-warn hover:bg-warn/30" : "bg-accent/20 text-accent hover:bg-accent/30"
           }`}
           aria-label={playing ? "Pause" : "Play"}
         >

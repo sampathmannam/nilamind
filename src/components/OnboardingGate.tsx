@@ -16,11 +16,11 @@ import { setReminderPrefs } from "../services/reminders";
 import { setEmaEnabled } from "../services/emaPrefs";
 
 const MOOD_OPTIONS = [
-  { value: 1, emoji: "😔", label: "Very low", color: "text-blue-400" },
+  { value: 1, emoji: "😔", label: "Very low", color: "text-accent" },
   { value: 3, emoji: "😐", label: "A bit low", color: "text-ink-muted" },
-  { value: 5, emoji: "🙂", label: "Okay", color: "text-amber-400" },
-  { value: 7, emoji: "😊", label: "Good", color: "text-emerald-400" },
-  { value: 9, emoji: "😄", label: "Great", color: "text-emerald-300" },
+  { value: 5, emoji: "🙂", label: "Okay", color: "text-warn" },
+  { value: 7, emoji: "😊", label: "Good", color: "text-success" },
+  { value: 9, emoji: "😄", label: "Great", color: "text-success-hi" },
 ] as const;
 
 // Soft Wellness register: same coarse 3-bucket valence mapping used for the Today mood display,
@@ -275,9 +275,9 @@ function NilaOrbIntro() {
     <div className={`transition-all duration-1000 ${visible ? "opacity-100 scale-100" : "opacity-0 scale-75"}`}>
       <div className="relative">
         {/* Outer glow */}
-        <div className="absolute inset-0 rounded-full bg-blue-400/10 blur-xl animate-pulse" style={{ width: 120, height: 120, margin: "auto" }} />
+        <div className="absolute inset-0 rounded-full bg-accent/10 blur-xl animate-pulse" style={{ width: 120, height: 120, margin: "auto" }} />
         {/* Orb */}
-        <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-blue-400/30 to-purple-400/20 border border-blue-400/30 flex items-center justify-center nila-orb">
+        <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-blue-400/30 to-purple-400/20 border border-accent/30 flex items-center justify-center nila-orb">
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-400 opacity-60" />
         </div>
       </div>

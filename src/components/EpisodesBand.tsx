@@ -47,22 +47,22 @@ export default function EpisodesBand({
       {epPatterns && (
         <div className="bg-card border-y border-r border-slate-800 border-l-4 border-l-amber-500 p-5 rounded-r-2xl space-y-4">
           <h2 className="text-xs font-semibold text-slate-100 flex items-center gap-1.5 uppercase tracking-wider font-mono">
-            <ShieldAlert className="w-4 h-4 text-amber-500" /> Episode insights
+            <ShieldAlert className="w-4 h-4 text-warn" /> Episode insights
           </h2>
           <div className="grid grid-cols-2 gap-3" id="episode-stat-cards">
             <div className="bg-page p-3 rounded-xl border border-line text-center space-y-1">
               <span className="text-xs uppercase font-mono tracking-widest text-slate-500">Peak spikes</span>
-              <p className="text-2xl font-bold text-amber-500 capitalize flex items-center justify-center gap-1 font-mono">
+              <p className="text-2xl font-bold text-warn capitalize flex items-center justify-center gap-1 font-mono">
                 <Clock className="w-4 h-4 text-slate-500" /> {epPatterns.mostCommonTime || "Night"}
               </p>
             </div>
             <div className="bg-page p-3 rounded-xl border border-line text-center space-y-1">
               <span className="text-xs uppercase font-mono tracking-widest text-slate-500">Avg duration</span>
-              <p className="text-2xl font-bold text-purple-400 font-mono">{epPatterns.avgDuration} min</p>
+              <p className="text-2xl font-bold text-accent font-mono">{epPatterns.avgDuration} min</p>
             </div>
             <div className="bg-page col-span-2 p-3.5 rounded-xl border border-line text-center space-y-1">
               <span className="text-xs uppercase font-mono tracking-widest text-slate-500">Avg intensity drop per episode</span>
-              <p className="text-base text-emerald-400 font-extrabold font-sans">{epPatterns.avgDrop} points</p>
+              <p className="text-base text-success font-extrabold font-sans">{epPatterns.avgDrop} points</p>
             </div>
           </div>
         </div>

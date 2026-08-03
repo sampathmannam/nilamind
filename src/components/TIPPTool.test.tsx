@@ -82,7 +82,7 @@ describe("TIPPTool — 4-tab strip", () => {
     render(<TIPPTool />);
     fireEvent.click(screen.getByRole("tab", { name: /Paced breathing/i }));
     const cyclicBtn = screen.getByText("Cyclic sighing");
-    expect(cyclicBtn.className).toMatch(/bg-blue-500\/20/); // selected
+    expect(cyclicBtn.className).toMatch(/bg-accent\/20/); // selected
   });
 
   it("mounts PMRTimer on the Paired-muscle-relaxation tab", () => {

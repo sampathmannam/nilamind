@@ -99,13 +99,13 @@ export default function SignalsBand({
       {/* Engagement disengagement risk — early warning when usage declines */}
       {showDisengagement && (
         <Card variant="raised" gap="none" className="flex items-start gap-3">
-          <div className={`p-2 rounded-xl ${disengagementRisk!.riskLevel === "high" ? "bg-rose-500/10 text-rose-400" : disengagementRisk!.riskLevel === "elevated" ? "bg-amber-500/10 text-amber-400" : "bg-blue-500/10 text-blue-400"}`}>
+          <div className={`p-2 rounded-xl ${disengagementRisk!.riskLevel === "high" ? "bg-rose-500/10 text-rose-400" : disengagementRisk!.riskLevel === "elevated" ? "bg-warn/10 text-warn" : "bg-accent/10 text-accent"}`}>
             <Activity className="w-5 h-5" />
           </div>
           <div className="flex-1">
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-slate-100">Engagement trend</p>
-              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${disengagementRisk!.riskLevel === "high" ? "bg-rose-500/20 text-rose-300" : disengagementRisk!.riskLevel === "elevated" ? "bg-amber-500/20 text-amber-300" : "bg-blue-500/20 text-blue-300"}`}>
+              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${disengagementRisk!.riskLevel === "high" ? "bg-rose-500/20 text-rose-300" : disengagementRisk!.riskLevel === "elevated" ? "bg-warn/20 text-warn-hi" : "bg-accent/20 text-accent-hi"}`}>
                 {disengagementRisk!.score}/100
               </span>
             </div>
@@ -125,7 +125,7 @@ export default function SignalsBand({
       {/* Dependency signal — when usage suggests over-reliance */}
       {showDependency && (
         <Card variant="raised" gap="none" className="flex items-start gap-3">
-          <div className={`p-2 rounded-xl ${depLevel === "severe" ? "bg-rose-500/10 text-rose-400" : depLevel === "moderate" ? "bg-amber-500/10 text-amber-400" : "bg-blue-500/10 text-blue-400"}`}>
+          <div className={`p-2 rounded-xl ${depLevel === "severe" ? "bg-rose-500/10 text-rose-400" : depLevel === "moderate" ? "bg-warn/10 text-warn" : "bg-accent/10 text-accent"}`}>
             <Activity className="w-5 h-5" />
           </div>
           <div className="flex-1">
@@ -139,7 +139,7 @@ export default function SignalsBand({
       {/* Usage ceiling — daily turn limit reached */}
       {showCeiling && (
         <Card variant="raised" gap="none" className="flex items-start gap-3">
-          <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400">
+          <div className="p-2 rounded-xl bg-warn/10 text-warn">
             <Clock className="w-5 h-5" />
           </div>
           <div className="flex-1">
@@ -153,7 +153,7 @@ export default function SignalsBand({
       {/* Human connection — social interaction metric */}
       {showConnection && (
         <Card variant="raised" gap="none" className="flex items-start gap-3">
-          <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400">
+          <div className="p-2 rounded-xl bg-success/10 text-success">
             <MessageSquare className="w-5 h-5" />
           </div>
           <div className="flex-1">
@@ -168,7 +168,7 @@ export default function SignalsBand({
       {medSummary.activeMeds > 0 && (
         <Card variant="raised" gap="none" className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-blue-500/10 text-blue-400">
+            <div className="p-2 rounded-xl bg-accent/10 text-accent">
               <Pill className="w-5 h-5" />
             </div>
             <div>
@@ -186,7 +186,7 @@ export default function SignalsBand({
       {/* Typing pattern signal */}
       {showTyping && (
         <Card variant="raised" gap="none" className="flex items-start gap-3">
-          <div className="p-2 rounded-xl bg-violet-500/10 text-violet-400">
+          <div className="p-2 rounded-xl bg-accent/10 text-accent">
             <BrainCircuit className="w-5 h-5" />
           </div>
           <div>
@@ -222,13 +222,13 @@ export default function SignalsBand({
       {/* Circadian rhythm regularity */}
       {showCircadian && (
         <Card variant="raised" gap="none" className="flex items-start gap-3">
-          <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-400">
+          <div className="p-2 rounded-xl bg-accent/10 text-accent">
             <Moon className="w-5 h-5" />
           </div>
           <div className="flex-1">
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-slate-100">Sleep regularity</p>
-              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${circadian!.irregular ? "bg-amber-500/20 text-amber-300" : "bg-emerald-500/20 text-emerald-300"}`}>
+              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${circadian!.irregular ? "bg-warn/20 text-warn-hi" : "bg-success/20 text-success-hi"}`}>
                 {circadian!.regularityScore}/100
               </span>
             </div>
@@ -241,13 +241,13 @@ export default function SignalsBand({
       {/* Fused circadian + social rhythm feedback loop */}
       {showCircadianFeedback && (
         <Card variant="raised" gap="none" className="flex items-start gap-3">
-          <div className={`p-2 rounded-xl ${circadianFeedback!.needsAttention ? "bg-amber-500/10 text-amber-400" : "bg-emerald-500/10 text-emerald-400"}`}>
+          <div className={`p-2 rounded-xl ${circadianFeedback!.needsAttention ? "bg-warn/10 text-warn" : "bg-success/10 text-success"}`}>
             <Moon className="w-5 h-5" />
           </div>
           <div className="flex-1">
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-slate-100">Rhythm stability</p>
-              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${circadianFeedback!.needsAttention ? "bg-amber-500/20 text-amber-300" : "bg-emerald-500/20 text-emerald-300"}`}>
+              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${circadianFeedback!.needsAttention ? "bg-warn/20 text-warn-hi" : "bg-success/20 text-success-hi"}`}>
                 {circadianFeedback!.combinedScore}/100
               </span>
             </div>
@@ -260,7 +260,7 @@ export default function SignalsBand({
       {rhythmReg && rhythmReg.daysLogged >= 3 && rhythmReg.anchors.some((a) => a.meanTime) && (
         <Card variant="raised">
           <p className="text-sm font-semibold text-slate-100 flex items-center gap-2">
-            <Clock3 className="w-4 h-4 text-blue-400" /> Anchor timing
+            <Clock3 className="w-4 h-4 text-accent" /> Anchor timing
           </p>
           <div className="space-y-1">
             {rhythmReg.anchors.filter((a) => a.meanTime).map((a) => (
@@ -285,14 +285,14 @@ export default function SignalsBand({
       {nOf1.length > 0 && (
         <Card variant="raised">
           <p className="text-sm font-semibold text-slate-100 flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-amber-400" /> What's been helping you
+            <Sparkles className="w-4 h-4 text-warn" /> What's been helping you
           </p>
           {nOf1.slice(0, 3).map((r) => {
             const title = PROTOCOLS.find((p) => p.id === r.protocolId)?.title ?? r.protocolId;
             return (
               <div key={r.protocolId} className="flex items-center justify-between text-[11px]">
                 <span className="text-slate-300">{title}</span>
-                <span className={r.avgDelta < 0 ? "text-emerald-300" : "text-slate-400"}>
+                <span className={r.avgDelta < 0 ? "text-success-hi" : "text-slate-400"}>
                   {r.avgDelta < 0 ? "↘ steadier after" : "↗ more distress after"} · {r.completions}×
                 </span>
               </div>

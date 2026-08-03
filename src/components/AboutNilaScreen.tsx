@@ -6,8 +6,8 @@ export default function AboutNilaScreen() {
     <div className="space-y-5 max-w-md mx-auto px-4 pb-8" id="about-nila-screen">
       {/* Header */}
       <div className="glass rounded-2xl p-5 text-center space-y-2">
-        <div className="w-14 h-14 rounded-full bg-blue-500/20 flex items-center justify-center mx-auto">
-          <Sparkles className="w-7 h-7 text-blue-400" />
+        <div className="w-14 h-14 rounded-full bg-accent/20 flex items-center justify-center mx-auto">
+          <Sparkles className="w-7 h-7 text-accent" />
         </div>
         <h1 className="editorial text-xl text-ink">About Nila</h1>
         <p className="text-xs text-ink-muted">Your on-device AI companion</p>
@@ -16,7 +16,7 @@ export default function AboutNilaScreen() {
       {/* What Nila is */}
       <div className="glass rounded-2xl p-4 space-y-2">
         <h2 className="text-sm font-semibold text-ink flex items-center gap-2">
-          <HeartHandshake className="w-4 h-4 text-blue-400" /> What Nila is
+          <HeartHandshake className="w-4 h-4 text-accent" /> What Nila is
         </h2>
         <p className="text-xs text-ink-muted leading-relaxed">
           Nila is a private, on-device AI companion designed for the harder moments. She listens, suggests
@@ -28,7 +28,7 @@ export default function AboutNilaScreen() {
       {/* Origin story */}
       <div className="glass rounded-2xl p-4 space-y-2">
         <h2 className="text-sm font-semibold text-ink flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-purple-400" /> Nila's story
+          <Sparkles className="w-4 h-4 text-accent" /> Nila's story
         </h2>
         <p className="text-xs text-ink-muted leading-relaxed italic">
           "{NILA_ORIGIN}"
@@ -38,7 +38,7 @@ export default function AboutNilaScreen() {
       {/* How it works */}
       <div className="glass rounded-2xl p-4 space-y-2">
         <h2 className="text-sm font-semibold text-ink flex items-center gap-2">
-          <Cpu className="w-4 h-4 text-emerald-400" /> How it works
+          <Cpu className="w-4 h-4 text-success" /> How it works
         </h2>
         <p className="text-xs text-ink-muted leading-relaxed">
           Nila's brain is an on-device language model (Qwen2.5-1.5B) that runs entirely on your phone — there is no cloud,
@@ -50,7 +50,7 @@ export default function AboutNilaScreen() {
       {/* What Nila can do */}
       <div className="glass rounded-2xl p-4 space-y-2">
         <h2 className="text-sm font-semibold text-ink flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-amber-400" /> What Nila can do
+          <Sparkles className="w-4 h-4 text-warn" /> What Nila can do
         </h2>
         <ul className="text-xs text-ink-muted leading-relaxed space-y-1.5 list-disc list-inside">
           <li>Listen and respond with empathy, anytime</li>
@@ -78,7 +78,7 @@ export default function AboutNilaScreen() {
       {/* Anti-sycophancy: Nila won't always agree */}
       <div className="glass rounded-2xl p-4 border-l-4 border-l-amber-500 space-y-2">
         <h2 className="text-sm font-semibold text-ink flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-amber-400" /> Nila won't always agree with you
+          <Sparkles className="w-4 h-4 text-warn" /> Nila won't always agree with you
         </h2>
         <p className="text-xs text-ink-muted leading-relaxed">
           This is by design. If you're in a manic or elevated state — feeling like you don't need sleep,
@@ -94,7 +94,7 @@ export default function AboutNilaScreen() {
       {/* Privacy */}
       <div className="glass rounded-2xl p-4 space-y-2">
         <h2 className="text-sm font-semibold text-ink flex items-center gap-2">
-          <Shield className="w-4 h-4 text-emerald-400" /> Privacy
+          <Shield className="w-4 h-4 text-success" /> Privacy
         </h2>
         <p className="text-xs text-ink-muted leading-relaxed">
           NilaMind is designed so <strong className="text-ink-2">nothing leaves your phone</strong>.
@@ -106,7 +106,7 @@ export default function AboutNilaScreen() {
       {/* Research basis */}
       <div className="glass rounded-2xl p-4 space-y-2">
         <h2 className="text-sm font-semibold text-ink flex items-center gap-2">
-          <BookOpen className="w-4 h-4 text-indigo-400" /> Research basis
+          <BookOpen className="w-4 h-4 text-accent" /> Research basis
         </h2>
         <p className="text-xs text-ink-muted leading-relaxed">
           Every tool and feature in NilaMind is grounded in peer-reviewed research — CBT, DBT, behavioural

@@ -74,7 +74,7 @@ export default function EpisodeMarkerScreen({ onClose }: Props) {
 
       <header className="space-y-2">
         <h1 className="text-xl font-semibold text-ink flex items-center gap-2">
-          <CalendarRange className="w-5 h-5 text-amber-400" /> {t("you_episode_marker_label")}
+          <CalendarRange className="w-5 h-5 text-warn" /> {t("you_episode_marker_label")}
         </h1>
         <p className="text-xs text-ink-muted leading-relaxed">{t("em_intro")}</p>
       </header>
@@ -90,7 +90,7 @@ export default function EpisodeMarkerScreen({ onClose }: Props) {
               onClick={() => setPhase(p)}
               className={`py-2.5 rounded-xl text-sm font-medium border cursor-pointer transition-all active:scale-95 ${
                 phase === p
-                  ? "bg-amber-600/20 border-amber-500/50 text-amber-200"
+                  ? "bg-warn/20 border-warn/50 text-warn-hi"
                   : "bg-page border-line text-ink-2 hover:border-line-strong hover:text-ink"
               }`}
             >
@@ -137,7 +137,7 @@ export default function EpisodeMarkerScreen({ onClose }: Props) {
         <button
           onClick={save}
           id="episode-marker-save"
-          className="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-2.5 rounded-xl text-sm cursor-pointer transition-colors flex items-center justify-center gap-2"
+          className="w-full bg-warn hover:opacity-90 text-white font-bold py-2.5 rounded-xl text-sm cursor-pointer transition-colors flex items-center justify-center gap-2"
         >
           <Check className="w-4 h-4" /> {t("em_save")}
         </button>

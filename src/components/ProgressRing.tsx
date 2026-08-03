@@ -57,7 +57,7 @@ export default function ProgressRing({
           r={radius}
           fill="none"
           stroke="currentColor"
-          className="text-blue-400"
+          className="text-accent"
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           strokeDasharray={circumference}

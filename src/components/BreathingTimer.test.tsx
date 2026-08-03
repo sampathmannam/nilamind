@@ -24,13 +24,13 @@ describe("BreathingTimer defaultPattern prop (2026-07-12 Wave 3, Group E — TIP
   it("defaults to Box when no defaultPattern is given (zero behavior change for existing callers)", () => {
     render(<BreathingTimer />);
     const boxBtn = screen.getByText("Box");
-    expect(boxBtn.className).toMatch(/bg-blue-500\/20/);
+    expect(boxBtn.className).toMatch(/bg-accent\/20/);
   });
 
   it("opens on the given defaultPattern (e.g. cyclicSighing for TIPP)", () => {
     render(<BreathingTimer defaultPattern="cyclicSighing" />);
     const cyclicBtn = screen.getByText("Cyclic sighing");
-    expect(cyclicBtn.className).toMatch(/bg-blue-500\/20/);
+    expect(cyclicBtn.className).toMatch(/bg-accent\/20/);
   });
 });
 

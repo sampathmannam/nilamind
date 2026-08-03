@@ -13,19 +13,19 @@ interface InsightsScreenProps {
 
 const ICON_MAP: Record<string, React.ReactNode> = {
   'sleep-short': <Moon className="w-5 h-5 text-rose-400" />,
-  'sleep-long': <Moon className="w-5 h-5 text-indigo-400" />,
+  'sleep-long': <Moon className="w-5 h-5 text-accent" />,
   'night-phone': <Smartphone className="w-5 h-5 text-orange-400" />,
-  'screen-time': <Activity className="w-5 h-5 text-amber-400" />,
-  'social-shame': <Heart className="w-5 h-5 text-violet-400" />,
-  'movement': <Footprints className="w-5 h-5 text-emerald-400" />,
-  'left-home': <Footprints className="w-5 h-5 text-sky-400" />,
+  'screen-time': <Activity className="w-5 h-5 text-warn" />,
+  'social-shame': <Heart className="w-5 h-5 text-accent" />,
+  'movement': <Footprints className="w-5 h-5 text-success" />,
+  'left-home': <Footprints className="w-5 h-5 text-accent" />,
   'steps': <Activity className="w-5 h-5 text-lime-400" />,
   'social-connection': <Users className="w-5 h-5 text-rose-400" />,
 };
 
 const DIRECTION_COLORS = {
   risk: { bg: "bg-rose-500/10", border: "border-rose-500/30", text: "text-rose-300", icon: "text-rose-400" },
-  protective: { bg: "bg-emerald-500/10", border: "border-emerald-500/30", text: "text-emerald-300", icon: "text-emerald-400" },
+  protective: { bg: "bg-success/10", border: "border-success/30", text: "text-success-hi", icon: "text-success" },
   neutral: { bg: "bg-ink-faint/10", border: "border-line-strong/30", text: "text-ink-2", icon: "text-ink-muted" },
 };
 
@@ -56,7 +56,7 @@ function InsightCard({ insight, index }: { insight: Insight; index: number }) {
               <ShieldCheck className="w-3 h-3" /> {insight.dataPoints} days of data
             </span>
             <button
-              className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 underline"
+              className="text-xs text-accent hover:text-accent-hi flex items-center gap-1 underline"
               aria-label={`View research basis for ${insight.title}`}
             >
               <HelpCircle className="w-3 h-3" /> Research
@@ -182,7 +182,7 @@ export default function InsightsScreen({ onClose }: InsightsScreenProps) {
               {behaviourInsights.length > 0 && (
                 <section className="space-y-2">
                   <h2 className="text-[11px] font-mono uppercase tracking-widest text-ink-faint px-1 flex items-center gap-2">
-                    <Sparkles className="w-3.5 h-3.5 text-blue-400" /> Phone behaviour patterns
+                    <Sparkles className="w-3.5 h-3.5 text-accent" /> Phone behaviour patterns
                   </h2>
                   <div className="space-y-3">
                     {behaviourInsights.map((insight, i) => (
@@ -195,7 +195,7 @@ export default function InsightsScreen({ onClose }: InsightsScreenProps) {
               {assessmentInsightsList.length > 0 && (
                 <section className="space-y-2 pt-2 border-t border-line/50">
                   <h2 className="text-[11px] font-mono uppercase tracking-widest text-ink-faint px-1 flex items-center gap-2">
-                    <TrendingUp className="w-3.5 h-3.5 text-emerald-400" /> Assessment trends
+                    <TrendingUp className="w-3.5 h-3.5 text-success" /> Assessment trends
                   </h2>
                   <div className="space-y-3">
                     {assessmentInsightsList.map((insight, i) => (
@@ -209,15 +209,15 @@ export default function InsightsScreen({ onClose }: InsightsScreenProps) {
               {no1Insights.length > 0 && (
                 <section className="space-y-2 pt-2 border-t border-line/50">
                   <h2 className="text-[11px] font-mono uppercase tracking-widest text-ink-faint px-1 flex items-center gap-2">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-400" /> What affects you most
+                    <Sparkles className="w-3.5 h-3.5 text-warn" /> What affects you most
                   </h2>
                   <p className="text-[11px] text-ink-faint italic px-1">
                     Patterns from your protocol completions — may not always hold, but worth noticing.
                   </p>
                   <div className="space-y-3">
                     {no1Insights.map((insight, i) => (
-                      <div key={insight.protocolId} className="glass rounded-2xl p-4 border border-amber-500/20 space-y-1.5">
-                        <p className="text-xs font-medium text-amber-300">{insight.protocolName}</p>
+                      <div key={insight.protocolId} className="glass rounded-2xl p-4 border border-warn/20 space-y-1.5">
+                        <p className="text-xs font-medium text-warn-hi">{insight.protocolName}</p>
                         <p className="text-xs text-ink-2">{insight.description}</p>
                       </div>
                     ))}
@@ -241,10 +241,10 @@ export default function InsightsScreen({ onClose }: InsightsScreenProps) {
 
           {/* Phone data permission hint */}
           {!phoneDataAvailable && (
-            <div className="glass rounded-2xl p-4 border border-amber-500/30 bg-amber-500/10 space-y-3">
+            <div className="glass rounded-2xl p-4 border border-warn/30 bg-warn/10 space-y-3">
               <div className="flex items-center gap-2">
-                <Shield className="w-5 h-5 text-amber-400" />
-                <span className="text-sm font-semibold text-amber-300">Phone behaviour insights unavailable</span>
+                <Shield className="w-5 h-5 text-warn" />
+                <span className="text-sm font-semibold text-warn-hi">Phone behaviour insights unavailable</span>
               </div>
               <p className="text-xs text-ink-muted">
                 Android usage-stats permission is needed for screen-time, sleep, and movement patterns.

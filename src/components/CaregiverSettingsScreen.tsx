@@ -123,7 +123,7 @@ export default function CaregiverSettingsScreen({ onClose, onOpenCaregiverShare 
 
       <header className="space-y-2">
         <h1 className="text-xl font-semibold text-ink flex items-center gap-2">
-          <Users className="w-5 h-5 text-emerald-400" /> {t("you_caregiver_settings_label") || "Caregiver settings"}
+          <Users className="w-5 h-5 text-success" /> {t("you_caregiver_settings_label") || "Caregiver settings"}
         </h1>
         <p className="text-xs text-ink-muted leading-relaxed">{t("you_caregiver_settings_sub")}</p>
       </header>
@@ -142,7 +142,7 @@ export default function CaregiverSettingsScreen({ onClose, onOpenCaregiverShare 
               key={c.id}
               onClick={() => { setSelectedId(c.id); setEditId(null); setAdding(false); }}
               className={`w-full text-left p-3 rounded-xl border transition-all cursor-pointer ${
-                selectedId === c.id ? "bg-emerald-600/10 border-emerald-500/40" : "glass hover:brightness-125"
+                selectedId === c.id ? "bg-success/10 border-success/40" : "glass hover:brightness-125"
               }`}
             >
               <div className="flex items-center justify-between">
@@ -194,7 +194,7 @@ export default function CaregiverSettingsScreen({ onClose, onOpenCaregiverShare 
             <button onClick={() => { setAdding(false); setEditId(null); }} className="flex-1 py-2 rounded-xl bg-line-strong text-xs text-ink-2 cursor-pointer">
               Cancel
             </button>
-            <button onClick={saveContact} className="flex-1 py-2 rounded-xl bg-emerald-600 text-xs text-white font-bold cursor-pointer">
+            <button onClick={saveContact} className="flex-1 py-2 rounded-xl bg-success text-xs text-white font-bold cursor-pointer">
               {t("cg_save")}
             </button>
           </div>
@@ -212,7 +212,7 @@ export default function CaregiverSettingsScreen({ onClose, onOpenCaregiverShare 
               <button
                 onClick={() => toggleCategory(key)}
                 className={`w-8 h-4 rounded-full relative transition-colors cursor-pointer ${
-                  selectedPrefs.shareCategories[key] ? "bg-emerald-500" : "bg-slate-600"
+                  selectedPrefs.shareCategories[key] ? "bg-success" : "bg-slate-600"
                 }`}
               >
                 <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-transform ${
@@ -230,7 +230,7 @@ export default function CaregiverSettingsScreen({ onClose, onOpenCaregiverShare 
               <button
                 onClick={() => updateAutoAlert(!selectedPrefs.autoAlert.enabled)}
                 className={`w-8 h-4 rounded-full relative transition-colors cursor-pointer ${
-                  selectedPrefs.autoAlert.enabled ? "bg-emerald-500" : "bg-slate-600"
+                  selectedPrefs.autoAlert.enabled ? "bg-success" : "bg-slate-600"
                 }`}
               >
                 <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-transform ${

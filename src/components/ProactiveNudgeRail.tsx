@@ -36,7 +36,7 @@ export default function ProactiveNudgeRail({
       tabIndex={0}
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onTap?.(); }}
     >
-      <Icon className="w-4 h-4 text-amber-400 shrink-0" />
+      <Icon className="w-4 h-4 text-warn shrink-0" />
       <p className="text-[12px] text-ink-2 leading-snug flex-1">{text}</p>
       <ChevronRight className="w-3 h-3 text-ink-faint shrink-0" />
       {onDismiss && (

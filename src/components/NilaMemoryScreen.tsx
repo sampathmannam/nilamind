@@ -159,7 +159,7 @@ export default function NilaMemoryScreen() {
                         <button onClick={cancelEdit} aria-label="Cancel" className="p-1.5 text-ink-muted hover:text-ink-2 cursor-pointer">
                           <X className="w-4 h-4" />
                         </button>
-                        <button onClick={() => saveEdit(i.id)} aria-label="Save" className="p-1.5 text-emerald-400 hover:text-emerald-300 cursor-pointer">
+                        <button onClick={() => saveEdit(i.id)} aria-label="Save" className="p-1.5 text-success hover:text-success-hi cursor-pointer">
                           <Check className="w-4 h-4" />
                         </button>
                       </div>
@@ -191,8 +191,8 @@ export default function NilaMemoryScreen() {
             {noticed.map((n) => (
               <div key={n.id} className="px-4 py-3 flex items-start gap-2">
                 {n.direction === "deterioration"
-                  ? <TrendingUp className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                  : <TrendingDown className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />}
+                  ? <TrendingUp className="w-4 h-4 text-warn shrink-0 mt-0.5" />
+                  : <TrendingDown className="w-4 h-4 text-success shrink-0 mt-0.5" />}
                 <span className="flex-1 min-w-0">
                   <span className="block text-sm text-ink-2 leading-relaxed">{n.detail}</span>
                   <span className="block text-xs text-ink-faint mt-0.5">{n.basis}</span>
@@ -247,7 +247,7 @@ export default function NilaMemoryScreen() {
                         ) : (
                           <div className="flex gap-2 justify-end">
                             <button onClick={closePreview} className="text-[11px] text-ink-muted hover:text-ink-2 cursor-pointer px-2 py-1">Cancel</button>
-                            <button onClick={() => handleDonate(p)} className="text-[11px] font-semibold text-emerald-400 hover:text-emerald-300 cursor-pointer px-2 py-1">Confirm donate</button>
+                            <button onClick={() => handleDonate(p)} className="text-[11px] font-semibold text-success hover:text-success-hi cursor-pointer px-2 py-1">Confirm donate</button>
                           </div>
                         )}
                       </div>

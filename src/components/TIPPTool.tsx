@@ -105,7 +105,7 @@ export default function TIPPTool({ onSubSkillComplete, onIntensityChange }: TIPP
       <p className="text-[11px] text-ink-faint leading-relaxed">{HONESTY_GAP_COPY}</p>
 
       {!showTemperature && activeTab === "exercise" && (
-        <p className="text-[11px] text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded-lg px-3 py-2" id="tipp-temp-skipped-notice">
+        <p className="text-[11px] text-warn-hi bg-warn/10 border border-warn/30 rounded-lg px-3 py-2" id="tipp-temp-skipped-notice">
           Cold water skipped for your safety — try one of these instead.
         </p>
       )}
@@ -122,11 +122,11 @@ export default function TIPPTool({ onSubSkillComplete, onIntensityChange }: TIPP
               aria-label={t.label}
               onClick={() => { setTab(t.id); setIntensityPromptFor(null); }}
               className={`flex items-center gap-1 text-[11px] px-3 py-1.5 rounded-lg font-medium transition-colors cursor-pointer ${
-                selected ? "bg-blue-500/20 text-blue-300" : "text-ink-muted hover:text-ink-2"
+                selected ? "bg-accent/20 text-accent-hi" : "text-ink-muted hover:text-ink-2"
               }`}
             >
               <span className="font-bold">{t.letter}</span>
-              {wasTried && <CheckCircle2 className="w-3 h-3 text-emerald-400" />}
+              {wasTried && <CheckCircle2 className="w-3 h-3 text-success" />}
             </button>
           );
         })}
@@ -188,7 +188,7 @@ function MarkTriedButton({ tried, onClick }: { tried: boolean; onClick: () => vo
     <button
       onClick={onClick}
       className={`w-full py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-        tried ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30" : "bg-page border border-line text-ink-2 hover:border-slate-600"
+        tried ? "bg-success/10 text-success border border-success/30" : "bg-page border border-line text-ink-2 hover:border-slate-600"
       }`}
     >
       <CheckCircle2 className="w-3.5 h-3.5" />
@@ -224,7 +224,7 @@ function TimedSubSkill({
     <div className="space-y-3">
       <CountdownRing progress={0} label={label} color={color} ariaLabel={ariaLabel} durationMs={durationMs} />
       <p className="text-xs text-ink-2 leading-relaxed">{description}</p>
-      <p className="text-[11px] text-amber-300/90 leading-relaxed">{caution}</p>
+      <p className="text-[11px] text-warn-hi/90 leading-relaxed">{caution}</p>
       <MarkTriedButton tried={tried} onClick={onMarkTried} />
       {intensityPromptOpen && (
         <div className="space-y-2 pt-1" id="tipp-intensity-recheck">
@@ -254,7 +254,7 @@ function TippSafetyChecklist({ onSubmit }: { onSubmit: (flags: TippSafetyFlags) 
   return (
     <div className="space-y-4" id="tipp-safety-checklist">
       <div className="flex items-start gap-2">
-        <ShieldAlert className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
+        <ShieldAlert className="w-4 h-4 text-warn mt-0.5 shrink-0" />
         <div>
           <p className="text-sm font-semibold text-ink">Before we start — quick safety check</p>
           <p className="text-xs text-ink-muted leading-relaxed">
@@ -281,7 +281,7 @@ function TippSafetyChecklist({ onSubmit }: { onSubmit: (flags: TippSafetyFlags) 
 
       <button
         onClick={() => onSubmit(flags)}
-        className="w-full bg-blue-500 hover:bg-blue-400 text-slate-950 font-bold py-3 rounded-xl text-xs cursor-pointer transition-all"
+        className="w-full bg-accent hover:bg-accent text-slate-950 font-bold py-3 rounded-xl text-xs cursor-pointer transition-all"
       >
         Continue
       </button>

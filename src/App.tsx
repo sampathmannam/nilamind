@@ -446,10 +446,10 @@ function AppShell() {
 
       {/* Confidentiality notice */}
       {saveWarning && (
-        <div className="bg-amber-500/10 border-b border-amber-500/25 px-4 py-2.5 flex items-start gap-2 text-[11px] text-amber-200/90 z-40 shrink-0" id="save-warning">
-          <span className="font-semibold text-amber-300">Save issue:</span>
+        <div className="bg-warn/10 border-b border-warn/25 px-4 py-2.5 flex items-start gap-2 text-[11px] text-warn-hi/90 z-40 shrink-0" id="save-warning">
+          <span className="font-semibold text-warn-hi">Save issue:</span>
           <span>Some changes couldn't be saved.</span>
-          <button onClick={() => setSaveWarning(false)} className="ml-auto text-amber-400 hover:text-amber-200 cursor-pointer">Dismiss</button>
+          <button onClick={() => setSaveWarning(false)} className="ml-auto text-warn hover:text-warn-hi cursor-pointer">Dismiss</button>
         </div>
       )}
 

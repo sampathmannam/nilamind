@@ -238,7 +238,7 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
     <div className="space-y-4 max-w-md mx-auto animate-fade-in px-4" id="you-hub">
       {/* U5.2 — Error banner for corrupted storage */}
       {dataErrors.length > 0 && (
-        <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-3 text-xs text-ink-muted flex items-center gap-2" role="alert">
+        <div className="bg-warn/10 border border-warn/30 rounded-2xl p-3 text-xs text-ink-muted flex items-center gap-2" role="alert">
           <span className="shrink-0">⚠️</span>
           <span>Some data couldn&apos;t load. Pull down to refresh.</span>
         </div>

@@ -163,7 +163,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
         {/* Step 1: What happened? */}
         {currentPage === 1 && (
           <div className="space-y-4" id="tr-step-1">
-            <h3 className="text-sm font-semibold text-blue-400 uppercase tracking-wider font-mono">
+            <h3 className="text-sm font-semibold text-accent uppercase tracking-wider font-mono">
               Step 1: The Situation
             </h3>
             <div className="space-y-2">
@@ -184,7 +184,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
         {/* Step 2: Unwanted Feelings */}
         {currentPage === 2 && (
           <div className="space-y-4" id="tr-step-2">
-            <h3 className="text-sm font-semibold text-blue-400 uppercase tracking-wider font-mono">
+            <h3 className="text-sm font-semibold text-accent uppercase tracking-wider font-mono">
               Step 2: Core Feeling
             </h3>
             <div className="space-y-4">
@@ -207,7 +207,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
                   <label className="text-sm font-semibold text-ink-2">
                     Feeling Intensity?
                   </label>
-                  <span className="text-xs font-mono font-bold text-blue-400">
+                  <span className="text-xs font-mono font-bold text-accent">
                     {initialIntensity}%
                   </span>
                 </div>
@@ -228,7 +228,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
         {/* Step 3: Automatic thought */}
         {currentPage === 3 && (
           <div className="space-y-4" id="tr-step-3">
-            <h3 className="text-sm font-semibold text-blue-400 uppercase tracking-wider font-mono">
+            <h3 className="text-sm font-semibold text-accent uppercase tracking-wider font-mono">
               Step 3: Unwanted Thought
             </h3>
             <div className="space-y-4">
@@ -241,7 +241,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
                     type="button"
                     onClick={handleSpotDistortions}
                     disabled={spotting || !automaticThought.trim()}
-                    className="text-xs bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 rounded-lg px-2.5 py-1.5 flex items-center gap-1 cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="text-xs bg-warn/10 hover:bg-warn/20 border border-warn/30 text-warn rounded-lg px-2.5 py-1.5 flex items-center gap-1 cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Brain className="w-3.5 h-3.5" />
                     <span>{spotting ? "Looking..." : "Spot traps"}</span>
@@ -255,7 +255,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
                   placeholder="e.g. 'They are leaving me because I am totally toxic and unlovable...'"
                 />
                 {distortionNotice && (
-                  <div className="bg-amber-500/5 border border-amber-500/20 rounded-lg px-3 py-2 text-[11px] text-amber-200/90 leading-relaxed whitespace-pre-line">
+                  <div className="bg-warn/5 border border-warn/20 rounded-lg px-3 py-2 text-[11px] text-warn-hi/90 leading-relaxed whitespace-pre-line">
                     {distortionNotice}
                   </div>
                 )}
@@ -266,7 +266,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
                   <label className="text-sm font-semibold text-ink-2">
                     How strongly do you believe this thought?
                   </label>
-                  <span className="text-xs font-mono font-bold text-blue-400">
+                  <span className="text-xs font-mono font-bold text-accent">
                     {beliefPercent}%
                   </span>
                 </div>
@@ -287,7 +287,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
         {/* Step 4: Thinking traps selector */}
         {currentPage === 4 && (
           <div className="space-y-4" id="tr-step-4">
-            <h3 className="text-sm font-semibold text-blue-400 uppercase tracking-wider font-mono">
+            <h3 className="text-sm font-semibold text-accent uppercase tracking-wider font-mono">
               Step 4: Identify Trap Cards
             </h3>
             <label className="text-xs text-ink-faint block">
@@ -303,7 +303,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
                     onClick={() => toggleTrap(t.name)}
                     className={`w-full text-left p-3 rounded-xl border text-xs transition-all cursor-pointer flex justify-between items-center ${
                       isSelected
-                        ? "bg-blue-500/10 border-accent text-ink"
+                        ? "bg-accent/10 border-accent text-ink"
                         : "bg-page border-line text-ink-faint"
                     }`}
                   >
@@ -312,7 +312,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
                       <span className="opacity-80 block mt-0.5">{t.desc}</span>
                     </div>
                     {isSelected && (
-                      <span className="bg-blue-600 text-white text-xs px-2 py-0.5 rounded font-bold font-mono">
+                      <span className="bg-accent text-white text-xs px-2 py-0.5 rounded font-bold font-mono">
                         Active
                       </span>
                     )}
@@ -326,7 +326,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
         {/* Step 5: Balanced Thinking */}
         {currentPage === 5 && (
           <div className="space-y-4" id="tr-step-5">
-            <h3 className="text-sm font-semibold text-blue-400 uppercase tracking-wider font-mono">
+            <h3 className="text-sm font-semibold text-accent uppercase tracking-wider font-mono">
               Step 5: Reframed Mindset
             </h3>
             
@@ -340,7 +340,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
                     type="button"
                     onClick={fetchBalancedThoughtFromCoach}
                     disabled={aiLoading}
-                    className="text-xs bg-blue-500/10 hover:bg-blue-500/25 border border-accent/30 text-blue-400 rounded-lg px-2.5 py-1.5 flex items-center gap-1 cursor-pointer transition-colors"
+                    className="text-xs bg-accent/10 hover:opacity-90/25 border border-accent/30 text-accent rounded-lg px-2.5 py-1.5 flex items-center gap-1 cursor-pointer transition-colors"
                   >
                     <BrainCircuit className="w-3.5 h-3.5" />
                     <span>{aiLoading ? "Asking Nila..." : "Ask Nila"}</span>
@@ -374,7 +374,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
                     <label className="text-xs font-semibold text-ink-2">
                       Re-rate original emotion intensity now:
                     </label>
-                    <span className="text-xs font-mono font-bold text-emerald-400">
+                    <span className="text-xs font-mono font-bold text-success">
                       {reRatedIntensity}%
                     </span>
                   </div>
@@ -390,7 +390,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
                 </div>
 
                 {reRatedIntensity < initialIntensity && (
-                  <div className="text-xs text-emerald-400 font-sans flex items-center gap-1 bg-emerald-500/10 p-2 border border-emerald-500/20 rounded-lg">
+                  <div className="text-xs text-success font-sans flex items-center gap-1 bg-success/10 p-2 border border-success/20 rounded-lg">
                     <Check className="w-3.5 h-3.5" />
                     <span>Your feeling intensity reduced by <span className="font-bold">{initialIntensity - reRatedIntensity}%</span> (from {initialIntensity}% to {reRatedIntensity}%)! Reframing thoughts helps calm physical pathways.</span>
                   </div>
@@ -417,7 +417,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
           {currentPage < 5 ? (
             <button
               onClick={() => setCurrentPage(currentPage + 1)}
-              className="flex items-center gap-1 text-xs font-bold text-ink bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg cursor-pointer transition-all"
+              className="flex items-center gap-1 text-xs font-bold text-ink bg-accent hover:opacity-90 px-4 py-2 rounded-lg cursor-pointer transition-all"
             >
               Continue <ChevronRight className="w-4 h-4" />
             </button>
@@ -426,8 +426,8 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
               onClick={saveRecord}
               className={`text-xs font-bold py-2 px-6 rounded-lg transition-all cursor-pointer ${
                 savedStatus
-                  ? "bg-emerald-500 text-[#171311] font-extrabold"
-                  : "bg-blue-600 hover:bg-blue-500 text-white"
+                  ? "bg-success text-[#171311] font-extrabold"
+                  : "bg-accent hover:opacity-90 text-white"
               }`}
             >
               {savedStatus ? "Log Saved!" : "Complete Record"}

@@ -21,7 +21,7 @@ export default function NotificationCategoriesSection() {
     <div className="glass p-5 rounded-2xl space-y-4 shadow-lg" id="settings-notif-categories">
       <div>
         <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-2 font-mono flex items-center gap-2">
-          <BellRing className="w-4 h-4 text-purple-400" /> {t("sec_notif_types")}
+          <BellRing className="w-4 h-4 text-accent" /> {t("sec_notif_types")}
         </h2>
         <p className="text-[11px] text-ink-muted mt-1 leading-relaxed">
           Choose which kinds of nudges Nila may send. Turn any off and she'll stay quiet in that category.
@@ -40,7 +40,7 @@ export default function NotificationCategoriesSection() {
               <button
                 onClick={() => toggle(c.id)}
                 id={`notif-cat-${c.id}`}
-                className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors ${on ? "bg-purple-500" : "bg-line-strong"}`}
+                className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors ${on ? "bg-accent" : "bg-line-strong"}`}
                 role="switch"
                 aria-checked={on}
                 aria-label={c.label}

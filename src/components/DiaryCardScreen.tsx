@@ -175,7 +175,7 @@ export default function DiaryCardScreen() {
           <p className="text-xs text-ink-faint">Your daily tracking metrics</p>
         </div>
         <div className="flex items-center gap-1.5 relative bg-page p-2 rounded-xl border border-line">
-          <Calendar className="w-4 h-4 text-blue-400" />
+          <Calendar className="w-4 h-4 text-accent" />
           <input
             type="date"
             value={selectedDate}
@@ -203,7 +203,7 @@ export default function DiaryCardScreen() {
             <div key={urge.key} className="space-y-1.5" id={`diary-urge-row-${urge.key}`}>
               <div className="flex justify-between text-xs font-semibold text-ink-2">
                 <span>{urge.label}</span>
-                <span className="font-mono text-blue-400">{urge.intensity} / 5</span>
+                <span className="font-mono text-accent">{urge.intensity} / 5</span>
               </div>
 
               <div className="flex items-center gap-2">
@@ -269,7 +269,7 @@ export default function DiaryCardScreen() {
             <div key={key} className="space-y-1.5" id={`diary-slider-row-${key}`}>
               <div className="flex justify-between text-xs font-semibold capitalize text-ink-2">
                 <span>{key}</span>
-                <span className="font-mono text-blue-400">{val} / 5</span>
+                <span className="font-mono text-accent">{val} / 5</span>
               </div>
               
               <div className="flex items-center gap-2">
@@ -293,7 +293,7 @@ export default function DiaryCardScreen() {
                       onClick={() => handleEmotionChange(key as keyof typeof emotions, num)}
                       className={`w-11 h-11 rounded-full text-xs font-bold flex items-center justify-center cursor-pointer transition-all ${
                         val === num
-                          ? "bg-blue-600 text-white"
+                          ? "bg-accent text-white"
                           : "bg-page text-ink-faint border border-line/80 hover:border-line-strong"
                       }`}
                       aria-label={`${key} rating ${num}`}
@@ -329,17 +329,17 @@ export default function DiaryCardScreen() {
                   aria-pressed={isEngaged}
                   className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-xs text-left transition-all cursor-pointer ${
                     helped
-                      ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-300 font-semibold"
+                      ? "bg-success/10 border-success/50 text-success-hi font-semibold"
                       : isEngaged
-                      ? "bg-amber-500/10 border-amber-500/50 text-amber-300 font-semibold"
+                      ? "bg-warn/10 border-warn/50 text-warn-hi font-semibold"
                       : "bg-page border-line text-ink-faint hover:text-ink-2 hover:border-line-strong"
                   }`}
                 >
                   <div className={`w-4.5 h-4.5 rounded-md flex items-center justify-center border shrink-0 transition-all ${
                     helped
-                      ? "bg-emerald-500 border-emerald-500 text-[#171311]"
+                      ? "bg-success border-success text-[#171311]"
                       : isEngaged
-                      ? "bg-amber-500 border-amber-500 text-[#171311]"
+                      ? "bg-warn border-warn text-[#171311]"
                       : "border-line"
                   }`}>
                     {isEngaged && <Check className="w-3.5 h-3.5 stroke-[3]" />}
@@ -426,7 +426,7 @@ export default function DiaryCardScreen() {
           {quickNoteTags.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mt-2">
               {quickNoteTags.map((tag, idx) => (
-                <span key={idx} className="bg-blue-900/40 text-blue-300 px-2 py-0.5 rounded-full text-xs font-medium border border-accent/30">
+                <span key={idx} className="bg-accent/40 text-accent-hi px-2 py-0.5 rounded-full text-xs font-medium border border-accent/30">
                   {tag}
                 </span>
               ))}
@@ -437,7 +437,7 @@ export default function DiaryCardScreen() {
             <button
               onClick={handleAnalyze}
               disabled={isAnalyzing || !quickNotes.trim()}
-              className="px-4 py-2 bg-blue-900/40 hover:bg-blue-800/60 text-blue-300 rounded-lg text-xs font-medium flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer border border-accent/30"
+              className="px-4 py-2 bg-accent/40 hover:bg-accent/60 text-accent-hi rounded-lg text-xs font-medium flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer border border-accent/30"
             >
               {isAnalyzing ? (
                 <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Asking Nila...</>
@@ -453,7 +453,7 @@ export default function DiaryCardScreen() {
 
           {aiAnalysis && !crisis && (
             <div className="mt-4 bg-card/50 border border-accent/15 rounded-xl p-4">
-              <div className="flex items-center gap-2 mb-2 text-blue-400">
+              <div className="flex items-center gap-2 mb-2 text-accent">
                 <MessageSquare className="w-4 h-4" />
                 <span className="text-xs font-bold uppercase tracking-wider font-mono">Nila's Insights ✨</span>
               </div>
@@ -469,8 +469,8 @@ export default function DiaryCardScreen() {
           onClick={handleSave}
           className={`w-full font-semibold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer ${
             isSaved
-              ? "bg-emerald-500 text-[#171311] font-bold"
-              : "bg-blue-600 hover:bg-blue-500 text-white font-bold"
+              ? "bg-success text-[#171311] font-bold"
+              : "bg-accent hover:opacity-90 text-white font-bold"
           }`}
           id="save-diary-btn"
         >

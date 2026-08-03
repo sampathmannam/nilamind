@@ -28,15 +28,15 @@ interface ActiveActionDef extends ActionDef {
 }
 
 export const ACTIONS: ActionDef[] = [
-  { id: "grounding", label: "Grounding", icon: <Cloud className="w-5 h-5" />, color: "text-emerald-400", modes: ["day", "evening"] },
-  { id: "breathing", label: "Breathing", icon: <Wind className="w-5 h-5" />, color: "text-blue-400", modes: ["day", "evening", "night"] },
-  { id: "diary", label: "Log feeling", icon: <Smile className="w-5 h-5" />, color: "text-violet-400", modes: ["day", "evening"] },
-  { id: "problem_solving", label: "Make a plan", icon: <Lightbulb className="w-5 h-5" />, color: "text-amber-400", modes: ["morning", "day", "evening"] },
+  { id: "grounding", label: "Grounding", icon: <Cloud className="w-5 h-5" />, color: "text-success", modes: ["day", "evening"] },
+  { id: "breathing", label: "Breathing", icon: <Wind className="w-5 h-5" />, color: "text-accent", modes: ["day", "evening", "night"] },
+  { id: "diary", label: "Log feeling", icon: <Smile className="w-5 h-5" />, color: "text-accent", modes: ["day", "evening"] },
+  { id: "problem_solving", label: "Make a plan", icon: <Lightbulb className="w-5 h-5" />, color: "text-warn", modes: ["morning", "day", "evening"] },
   { id: "values_to_action", label: "What matters", icon: <Compass className="w-5 h-5" />, color: "text-rose-400", modes: ["morning", "day", "evening"] },
   { id: "safety_plan", label: "Safety plan", icon: <Shield className="w-5 h-5" />, color: "text-teal-400", modes: ["morning", "day", "evening", "night"] },
-  { id: "reach_out", label: "Reach out", icon: <Phone className="w-5 h-5" />, color: "text-sky-400", modes: ["day", "evening"] },
-  { id: "medication", label: "Medication", icon: <Pill className="w-5 h-5" />, color: "text-purple-400", modes: ["morning", "day"] },
-  { id: "wind_down", label: "Wind down", icon: <Moon className="w-5 h-5" />, color: "text-indigo-400", modes: ["evening", "night"] },
+  { id: "reach_out", label: "Reach out", icon: <Phone className="w-5 h-5" />, color: "text-accent", modes: ["day", "evening"] },
+  { id: "medication", label: "Medication", icon: <Pill className="w-5 h-5" />, color: "text-accent", modes: ["morning", "day"] },
+  { id: "wind_down", label: "Wind down", icon: <Moon className="w-5 h-5" />, color: "text-accent", modes: ["evening", "night"] },
   { id: "crisis", label: "Need help now", icon: <AlertTriangle className="w-5 h-5" />, color: "text-rose-400", modes: ["morning", "day", "evening", "night"] },
 ];
 

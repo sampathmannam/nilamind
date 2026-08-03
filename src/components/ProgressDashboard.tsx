@@ -56,7 +56,7 @@ export default function ProgressDashboard({ onClose }: ProgressDashboardProps) {
           celebrate={atMilestone}
         />
         {atMilestone && (
-          <div className="flex items-center justify-center gap-2 text-xs text-amber-300">
+          <div className="flex items-center justify-center gap-2 text-xs text-warn-hi">
             <Trophy className="w-4 h-4" aria-hidden="true" />
             <span>{t("streak_milestone_reached")}</span>
           </div>
@@ -81,7 +81,7 @@ export default function ProgressDashboard({ onClose }: ProgressDashboardProps) {
         {/* Milestones legend */}
         <Section title={t("milestones_title")}>
           <div className="flex flex-wrap items-center gap-2 text-xs text-ink-muted">
-            <Flame className="w-4 h-4 text-amber-400" aria-hidden="true" />
+            <Flame className="w-4 h-4 text-warn" aria-hidden="true" />
             <span>{t("milestones_body")}</span>
           </div>
         </Section>

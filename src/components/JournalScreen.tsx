@@ -129,7 +129,7 @@ export default function JournalScreen() {
               key={m}
               onClick={() => setMode(m)}
               className={`px-4 min-h-[44px] inline-flex items-center rounded-full text-xs font-medium border cursor-pointer transition-all ${
-                mode === m ? "bg-blue-900/40 border-blue-700/50 text-blue-300" : "border-line text-ink-faint hover:text-ink-2 hover:border-line-strong"
+                mode === m ? "bg-accent/40 border-accent/50 text-accent-hi" : "border-line text-ink-faint hover:text-ink-2 hover:border-line-strong"
               }`}
               aria-pressed={mode === m}
             >
@@ -140,13 +140,13 @@ export default function JournalScreen() {
 
         {promptLoading && !dailyPrompt && !promptDismissed && (
           <div className="flex items-start gap-2 bg-page border border-line rounded-xl p-3 text-xs text-ink-muted">
-            <Sparkles className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />
+            <Sparkles className="w-3.5 h-3.5 text-accent shrink-0 mt-0.5" />
             <span className="flex-1 text-ink-faint italic">Finding a prompt for you…</span>
           </div>
         )}
         {dailyPrompt && !promptDismissed && (
           <div className="flex items-start gap-2 bg-page border border-line rounded-xl p-3 text-xs text-ink-muted">
-            <Sparkles className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />
+            <Sparkles className="w-3.5 h-3.5 text-accent shrink-0 mt-0.5" />
             <span className="flex-1">Try writing about: {dailyPrompt}</span>
             <button onClick={() => setPromptDismissed(true)} aria-label="Dismiss prompt" className="text-slate-600 hover:text-ink-muted cursor-pointer shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center -m-2">
               <X className="w-3.5 h-3.5" />
@@ -170,7 +170,7 @@ export default function JournalScreen() {
               aria-label={`Mood: ${o.label}`}
               aria-pressed={valence === o.valence}
               className={`flex-1 min-h-[44px] inline-flex items-center justify-center rounded-lg text-lg cursor-pointer border transition-all ${
-                valence === o.valence ? "bg-blue-900/40 border-blue-700/50" : "border-line hover:border-line-strong"
+                valence === o.valence ? "bg-accent/40 border-accent/50" : "border-line hover:border-line-strong"
               }`}
             >
               {o.glyph}
@@ -183,7 +183,7 @@ export default function JournalScreen() {
         <button
           onClick={handleSave}
           disabled={!text.trim()}
-          className="w-full font-semibold py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          className="w-full font-semibold py-3 rounded-xl bg-accent hover:opacity-90 text-white disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
         >
           Save entry
         </button>
@@ -207,7 +207,7 @@ export default function JournalScreen() {
               aria-checked={reminderPrefs.enabled}
               aria-label="Toggle journal reminder"
               onClick={() => handleReminderToggle(!reminderPrefs.enabled)}
-              className={`w-10 h-5.5 rounded-full relative transition-all cursor-pointer ${reminderPrefs.enabled ? "bg-blue-600" : "bg-fill"}`}
+              className={`w-10 h-5.5 rounded-full relative transition-all cursor-pointer ${reminderPrefs.enabled ? "bg-accent" : "bg-fill"}`}
             >
               <span className={`absolute top-0.5 w-4.5 h-4.5 rounded-full bg-white transition-all ${reminderPrefs.enabled ? "left-[22px]" : "left-0.5"}`} />
             </button>

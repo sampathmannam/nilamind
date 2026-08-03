@@ -34,10 +34,10 @@ export default function PullToRefresh({
           style={{ height: Math.max(0, pullDistance), opacity: Math.min(1, pullDistance / 60) }}
         >
           {refreshing ? (
-            <Loader2 className="w-5 h-5 text-blue-400 animate-spin" />
+            <Loader2 className="w-5 h-5 text-accent animate-spin" />
           ) : (
             <div
-              className="w-5 h-5 rounded-full border-2 border-blue-400 border-t-transparent"
+              className="w-5 h-5 rounded-full border-2 border-accent border-t-transparent"
               style={{ transform: `rotate(${pullDistance * 3}deg)` }}
             />
           )}

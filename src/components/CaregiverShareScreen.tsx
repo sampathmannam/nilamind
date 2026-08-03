@@ -40,7 +40,7 @@ export default function CaregiverShareScreen({ selectedContactId }: Props) {
     <div className="space-y-5 max-w-md mx-auto" id="caregiver-share-screen">
       <header className="space-y-1">
         <h1 className="text-xl font-semibold text-ink flex items-center gap-2">
-          <Users className="w-5 h-5 text-emerald-400" /> {t("shareTrustedTitle")}
+          <Users className="w-5 h-5 text-success" /> {t("shareTrustedTitle")}
           {contact ? <span className="text-sm font-normal text-ink-muted">— {contact.name}</span> : null}
         </h1>
         <p className="text-xs text-ink-muted leading-relaxed">
@@ -54,7 +54,7 @@ export default function CaregiverShareScreen({ selectedContactId }: Props) {
         </div>
         <ul className="space-y-1.5 text-[11px] text-ink-2 leading-relaxed">
           {snapshot.lines.map((l, i) => (
-            <li key={i} className="flex gap-2"><span className="text-emerald-400">•</span><span>{l}</span></li>
+            <li key={i} className="flex gap-2"><span className="text-success">•</span><span>{l}</span></li>
           ))}
         </ul>
         <div className="pt-2 border-t border-line-strong">
@@ -76,7 +76,7 @@ export default function CaregiverShareScreen({ selectedContactId }: Props) {
         </button>
         <button
           onClick={share}
-          className="flex-1 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+          className="flex-1 py-3 rounded-xl bg-success hover:opacity-90 text-white text-sm font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5"
         >
           <Share2 className="w-4 h-4" /> Share
         </button>

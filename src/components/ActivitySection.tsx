@@ -62,12 +62,12 @@ function ActivitySection({
 
       {/* Top stats */}
       <div className="grid grid-cols-2 gap-2">
-        <StatCard icon={<CalendarCheck className="w-4 h-4 text-emerald-400" />} value={`${freq14}/14`} label={t("days_logged")} />
-        <StatCard icon={<MessageSquare className="w-4 h-4 text-purple-400" />} value={String(nilaChats7d)} label={t("nila_chats_7d")} />
+        <StatCard icon={<CalendarCheck className="w-4 h-4 text-success" />} value={`${freq14}/14`} label={t("days_logged")} />
+        <StatCard icon={<MessageSquare className="w-4 h-4 text-accent" />} value={String(nilaChats7d)} label={t("nila_chats_7d")} />
       </div>
       {streak.longest > 0 && (
         <p className="text-[11px] text-ink-muted -mt-2 text-center flex items-center justify-center gap-1">
-          <Flame className="w-3 h-3 text-amber-400/70" aria-hidden="true" />
+          <Flame className="w-3 h-3 text-warn/70" aria-hidden="true" />
           {streak.current}-day streak · Longest: {streak.longest} days · {streak.totalActiveDays} active days all-time
         </p>
       )}
@@ -97,14 +97,14 @@ function ActivitySection({
             <p className="text-xs text-ink-muted text-center">
               Avg mood: <span className="font-mono text-ink">{usageSummary.avgMood.toFixed(1)}/10</span>
               {usageSummary.topEmotion && <> · Top: <span className="text-ink capitalize">{usageSummary.topEmotion}</span></>}
-              {usageSummary.features.includes("values_snapshot") && <> · <span className="text-emerald-400">Values set ✓</span></>}
+              {usageSummary.features.includes("values_snapshot") && <> · <span className="text-success">Values set ✓</span></>}
             </p>
           )}
           {usageSummary.moodSleepCorrelation && (
             <p className="text-xs text-ink-muted text-center">
               Sleep: {usageSummary.moodSleepCorrelation.highSleepMood.toFixed(1)}/10 with ≥7h sleep · {usageSummary.moodSleepCorrelation.lowSleepMood.toFixed(1)}/10 with &lt;7h
               {usageSummary.sleepTrend && (
-                <> · Last 3-check-in avg: <span className={usageSummary.sleepTrend.recentAvg >= usageSummary.sleepTrend.olderAvg ? "text-emerald-400" : "text-amber-400"}>{usageSummary.sleepTrend.recentAvg.toFixed(1)}h</span></>
+                <> · Last 3-check-in avg: <span className={usageSummary.sleepTrend.recentAvg >= usageSummary.sleepTrend.olderAvg ? "text-success" : "text-warn"}>{usageSummary.sleepTrend.recentAvg.toFixed(1)}h</span></>
               )}
             </p>
           )}

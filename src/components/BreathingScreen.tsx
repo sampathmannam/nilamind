@@ -138,7 +138,7 @@ export default function BreathingScreen({ onClose, defaultPattern = "box" }: Pro
               onClick={() => { reset(); setPattern(p); }}
               disabled={playing}
               className={`text-xs px-2 py-1 rounded-lg font-medium transition-colors cursor-pointer disabled:opacity-40 ${
-                pattern === p ? "bg-blue-500/20 text-blue-300" : "text-ink-faint hover:text-ink-2"
+                pattern === p ? "bg-accent/20 text-accent-hi" : "text-ink-faint hover:text-ink-2"
               }`}
             >
               {getBreathPattern(p).label}
@@ -227,7 +227,7 @@ export default function BreathingScreen({ onClose, defaultPattern = "box" }: Pro
 
       {/* Session target */}
       {targetReached && (
-        <div className="mt-4 flex items-center gap-2 text-sm text-emerald-400 animate-fade-in">
+        <div className="mt-4 flex items-center gap-2 text-sm text-success animate-fade-in">
           <CheckCircle2 className="w-4 h-4" />
           <span>5 minutes — a good stopping point, or keep going.</span>
         </div>
@@ -246,8 +246,8 @@ export default function BreathingScreen({ onClose, defaultPattern = "box" }: Pro
           onClick={toggle}
           className={`p-5 rounded-full transition-all cursor-pointer ${
             playing
-              ? "bg-amber-500/20 text-amber-400 hover:bg-amber-500/30"
-              : "bg-blue-500/20 text-blue-400 hover:bg-blue-500/30"
+              ? "bg-warn/20 text-warn hover:bg-warn/30"
+              : "bg-accent/20 text-accent hover:bg-accent/30"
           }`}
           aria-label={playing ? "Pause" : "Play"}
         >

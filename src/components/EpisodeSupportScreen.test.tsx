@@ -109,6 +109,6 @@ describe("EpisodeSupportScreen — offline-guided extreme path mounts TIPPTool",
 
     // debrief_2's skill checklist should already show TIPP checked.
     const tippChip = screen.getByText("TIPP").closest("button")!;
-    expect(tippChip.className).toMatch(/emerald/);
+    expect(tippChip.className).toMatch(/success/);
   });
 });

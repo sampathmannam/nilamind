@@ -17,7 +17,7 @@ describe("HeroMetric", () => {
 
   it("shows trend arrow up for positive trend", () => {
     const { container } = render(<HeroMetric value={7} label="score" trend={12} />);
-    const trendEl = container.querySelector(".text-emerald-400");
+    const trendEl = container.querySelector(".text-success");
     expect(trendEl).toBeTruthy();
     expect(trendEl?.textContent).toContain("12%");
   });

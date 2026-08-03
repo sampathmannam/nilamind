@@ -16,8 +16,8 @@ export default function AgeGate({ children }: { children: React.ReactNode }) {
     return (
       <div className="min-h-screen bg-page flex flex-col items-center justify-center px-6">
         <div className="w-full max-w-xs space-y-6 text-center">
-          <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-accent/30 flex items-center justify-center mx-auto">
-            <Heart className="w-6 h-6 text-blue-400" />
+          <div className="w-14 h-14 rounded-2xl bg-accent/10 border border-accent/30 flex items-center justify-center mx-auto">
+            <Heart className="w-6 h-6 text-accent" />
           </div>
           <div className="space-y-1">
             <h1 className="text-lg font-bold text-ink">NilaMind is made for adults</h1>
@@ -38,8 +38,8 @@ export default function AgeGate({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-page flex flex-col items-center justify-center px-6">
       <div className="w-full max-w-xs space-y-6 text-center">
-        <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-accent/30 flex items-center justify-center mx-auto">
-          <Shield className="w-6 h-6 text-blue-400" />
+        <div className="w-14 h-14 rounded-2xl bg-accent/10 border border-accent/30 flex items-center justify-center mx-auto">
+          <Shield className="w-6 h-6 text-accent" />
         </div>
         <div className="space-y-1">
           <h1 className="text-lg font-bold text-ink">A quick check first</h1>
@@ -52,7 +52,7 @@ export default function AgeGate({ children }: { children: React.ReactNode }) {
           <button
             onClick={() => { confirmAdult(); setConfirmed(true); }}
             id="age-gate-adult"
-            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl text-sm cursor-pointer transition-colors"
+            className="w-full bg-accent hover:opacity-90 text-white font-bold py-3 rounded-xl text-sm cursor-pointer transition-colors"
           >
             I'm 18 or older
           </button>

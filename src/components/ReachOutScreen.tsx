@@ -81,7 +81,7 @@ export default function ReachOutScreen() {
     <div className="space-y-4 max-w-md mx-auto" id="reachout-screen">
       <header className="space-y-1">
         <h1 className="text-xl font-semibold text-ink flex items-center gap-2">
-          <MessageCircle className="w-5 h-5 text-emerald-400" /> Reach out
+          <MessageCircle className="w-5 h-5 text-success" /> Reach out
         </h1>
         <p className="text-xs text-ink-muted leading-relaxed">
           Telling one person you trust can help. Here's a gentle way to start — you send it yourself, your way.
@@ -121,7 +121,7 @@ export default function ReachOutScreen() {
               onClick={copy}
               className="px-4 py-2.5 rounded-xl font-medium text-xs bg-page text-ink-muted border border-line hover:text-ink-2 transition-all cursor-pointer flex items-center gap-1.5"
             >
-              {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />} Copy
+              {copied ? <Check className="w-4 h-4 text-success" /> : <Copy className="w-4 h-4" />} Copy
             </button>
           </div>
           <button
@@ -147,7 +147,7 @@ export default function ReachOutScreen() {
           <div className="bg-card border border-line rounded-2xl p-4 space-y-2">
             {REACH_FRAMING.map((f) => (
               <p key={f.id} className="text-xs text-ink-2 leading-relaxed flex gap-2">
-                <Sparkles className="w-3.5 h-3.5 text-emerald-400/80 shrink-0 mt-0.5" />
+                <Sparkles className="w-3.5 h-3.5 text-success/80 shrink-0 mt-0.5" />
                 <span>{f.text}</span>
               </p>
             ))}
@@ -160,7 +160,7 @@ export default function ReachOutScreen() {
               <button
                 key={o.id}
                 onClick={() => setDraft(o.text)}
-                className="w-full text-left bg-card border border-line hover:border-emerald-500/40 rounded-xl p-3 text-xs text-ink-2 leading-relaxed transition-all cursor-pointer"
+                className="w-full text-left bg-card border border-line hover:border-success/40 rounded-xl p-3 text-xs text-ink-2 leading-relaxed transition-all cursor-pointer"
               >
                 “{o.text}”
               </button>
@@ -179,7 +179,7 @@ export default function ReachOutScreen() {
             onChange={(e) => onDraftChange(e.target.value)}
             placeholder="Your message — edit it however feels right."
             id="reachout-draft"
-            className="w-full h-28 bg-page border border-line rounded-xl px-3 py-2 text-xs text-ink-2 placeholder-ink-faint focus:outline-none focus:border-emerald-500 transition-all resize-none"
+            className="w-full h-28 bg-page border border-line rounded-xl px-3 py-2 text-xs text-ink-2 placeholder-ink-faint focus:outline-none focus:border-success transition-all resize-none"
           />
 
           {/* send (primary) + copy (always co-equal) */}
@@ -189,7 +189,7 @@ export default function ReachOutScreen() {
               /* Dark text on the green (matching the crisis-button contrast pattern): white was 4.15:1 /
                  2.97:1 on hover in the dark theme (fails WCAG AA). text-slate-950 clears AA in both themes
                  (dark 4.5/6.3:1, light 5.3/4.85:1 — light emerald-500 darkened a touch in index.css). */
-              className="flex-1 py-3 rounded-xl font-semibold text-xs bg-emerald-600 hover:bg-emerald-500 text-slate-950 transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-40"
+              className="flex-1 py-3 rounded-xl font-semibold text-xs bg-success hover:opacity-90 text-slate-950 transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-40"
               disabled={!draft.trim()}
             >
               <Send className="w-4 h-4" /> Send it myself
@@ -199,7 +199,7 @@ export default function ReachOutScreen() {
               disabled={!draft.trim()}
               className="px-4 py-3 rounded-xl font-semibold text-xs bg-page text-ink-2 border border-line hover:bg-fill transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-40"
             >
-              {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />} Copy
+              {copied ? <Check className="w-4 h-4 text-success" /> : <Copy className="w-4 h-4" />} Copy
             </button>
           </div>
 

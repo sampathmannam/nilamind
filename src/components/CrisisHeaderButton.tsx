@@ -26,7 +26,7 @@ export default function CrisisHeaderButton({ onClick, className = "" }: { onClic
   return (
     <div className={`flex items-center gap-1.5 ${className}`}>
       {isOffline && (
-        <span className="text-[10px] text-amber-400/80 whitespace-nowrap" role="status" aria-live="polite">
+        <span className="text-[10px] text-warn/80 whitespace-nowrap" role="status" aria-live="polite">
           Offline — crisis resources available
         </span>
       )}

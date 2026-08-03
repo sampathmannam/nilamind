@@ -814,12 +814,12 @@ valuesClarified: []
   return (
     <div className="space-y-5 max-w-md mx-auto" id="your-data-screen">
       <header className="space-y-1">
-        <h1 className="text-xl font-semibold text-ink flex items-center gap-2"><Database className="w-5 h-5 text-blue-400" /> Your Data</h1>
+        <h1 className="text-xl font-semibold text-ink flex items-center gap-2"><Database className="w-5 h-5 text-accent" /> Your Data</h1>
         <p className="text-xs text-ink-muted leading-relaxed">Everything NilaMind stores about you, on this device only. You can take it with you or erase it — your call, always.</p>
       </header>
 
-      <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-2xl p-3 flex gap-2.5">
-        <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+      <div className="bg-success/5 border border-success/20 rounded-2xl p-3 flex gap-2.5">
+        <ShieldCheck className="w-4 h-4 text-success shrink-0 mt-0.5" />
         <p className="text-[11px] text-ink-muted leading-relaxed">Encrypted at rest and never uploaded. There is no server copy — if you wipe it here, it's gone.</p>
       </div>
 
@@ -846,7 +846,7 @@ valuesClarified: []
           </button>
         ) : (
           <div className="flex gap-2">
-            <button onClick={download} className="flex-1 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5"><Check className="w-3.5 h-3.5" /> Download .txt</button>
+            <button onClick={download} className="flex-1 bg-accent hover:opacity-90 text-white text-xs font-bold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5"><Check className="w-3.5 h-3.5" /> Download .txt</button>
             <button onClick={() => { navigator.clipboard.writeText(backup); pushAudit({ kind: "clipboard", scope: "Full encrypted backup", destination: "clipboard" }); }} className="bg-page border border-line text-ink-2 text-xs px-3 py-2.5 rounded-xl cursor-pointer">Copy</button>
           </div>
         )}
@@ -871,7 +871,7 @@ valuesClarified: []
           </button>
         </div>
         {lastExport && (
-          <div className="flex items-center gap-2 text-[11px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-3 py-2">
+          <div className="flex items-center gap-2 text-[11px] text-success bg-success/10 border border-success/20 rounded-lg px-3 py-2">
             <Check className="w-3.5 h-3.5 shrink-0" />
             <span className="truncate">Saved as <span className="font-mono">{lastExport.filename}</span> — tap it in Export history below to open or share</span>
           </div>
@@ -890,7 +890,7 @@ valuesClarified: []
               aria-pressed={reportPeriod === d}
               className={`flex-1 text-xs font-semibold py-1.5 rounded-lg cursor-pointer transition-colors ${
                 reportPeriod === d
-                  ? "bg-blue-600/30 text-blue-200 border border-accent/40"
+                  ? "bg-accent/30 text-accent-hi border border-accent/40"
                   : "bg-page border border-line text-ink-muted hover:bg-raised"
               }`}
             >
@@ -917,7 +917,7 @@ valuesClarified: []
           </div>
         )}
         <div className="flex flex-wrap gap-2">
-          <button onClick={handleExportClinicianPdf} disabled={reportBusy} id="export-clinician-pdf" className="flex-1 min-w-[64px] bg-blue-600/10 border border-accent/30 hover:bg-blue-600/20 text-blue-300 text-xs font-semibold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50">
+          <button onClick={handleExportClinicianPdf} disabled={reportBusy} id="export-clinician-pdf" className="flex-1 min-w-[64px] bg-accent/10 border border-accent/30 hover:opacity-90/20 text-accent-hi text-xs font-semibold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50">
             {reportBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />} Generate report PDF
           </button>
         </div>
@@ -928,7 +928,7 @@ valuesClarified: []
         <h3 className="text-xs font-bold text-ink uppercase tracking-wider flex items-center gap-1.5"><FileText className="w-3.5 h-3.5" /> Export history</h3>
         <p className="text-[11px] text-ink-faint leading-relaxed">A private log of every export you've made on this device. Nothing here is ever sent anywhere.</p>
         {shareErr && (
-          <div className="flex items-start gap-2 text-[11px] text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2">
+          <div className="flex items-start gap-2 text-[11px] text-warn-hi bg-warn/10 border border-warn/20 rounded-lg px-3 py-2">
             <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
             <span>{shareErr}</span>
           </div>

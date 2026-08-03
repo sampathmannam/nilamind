@@ -498,7 +498,7 @@ export default function TodayScreen({
 
       {/* Data load error feedback — visible when storage errors occur */}
       {dataErrors.length > 0 && (
-        <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-3 text-xs text-ink-muted flex items-center gap-2" role="alert">
+        <div className="bg-warn/10 border border-warn/30 rounded-2xl p-3 text-xs text-ink-muted flex items-center gap-2" role="alert">
           <span className="shrink-0">⚠️</span>
           <span>Some data couldn&apos;t load. Pull down to refresh.</span>
         </div>
@@ -723,7 +723,7 @@ export default function TodayScreen({
         onClick={() => go("guided_programs")}
         className="w-full glass hover:brightness-125 p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left flex items-center gap-3"
       >
-        <span className="shrink-0 text-violet-400"><Sparkle className="w-5 h-5" aria-hidden="true" /></span>
+        <span className="shrink-0 text-accent"><Sparkle className="w-5 h-5" aria-hidden="true" /></span>
         <span className="flex-1 min-w-0">
           <span className="block text-sm font-bold text-ink">Guided Programs</span>
           <span className="block text-[11px] text-ink-muted">Real, evidence-based programs you can start any time</span>

@@ -125,7 +125,7 @@ export default function LegalScreen() {
             onClick={() => setTab(id)}
             className={`flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-t-lg transition-colors cursor-pointer ${
               tab === id
-                ? "text-blue-400 border-b-2 border-blue-400 bg-blue-500/5"
+                ? "text-accent border-b-2 border-accent bg-accent/5"
                 : "text-ink-faint hover:text-ink-2"
             }`}
           >

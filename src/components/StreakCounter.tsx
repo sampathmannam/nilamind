@@ -38,10 +38,10 @@ function StreakCounter({ current, longest, totalActiveDays, celebrate = false }:
       <Card className={`transition-all ${showCelebration ? "ring-2 ring-amber-400/50" : ""}`}>
         <div className="flex items-center gap-2">
           <div className="relative">
-            <Flame className={`w-5 h-5 transition-all ${current > 0 ? "text-amber-400" : "text-slate-600"} ${showCelebration ? "scale-125" : ""}`} />
+            <Flame className={`w-5 h-5 transition-all ${current > 0 ? "text-warn" : "text-slate-600"} ${showCelebration ? "scale-125" : ""}`} />
             {showCelebration && (
               <div className="absolute inset-0 animate-ping">
-                <Flame className="w-5 h-5 text-amber-400/50" />
+                <Flame className="w-5 h-5 text-warn/50" />
               </div>
             )}
           </div>
