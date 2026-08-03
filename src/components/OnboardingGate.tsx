@@ -149,7 +149,7 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
               id="region-select"
               value={region}
               onChange={(e) => handleRegionChange(e.target.value as RegionCode)}
-              className="w-full bg-fill border border-line-strong rounded-xl px-3 py-2.5 text-sm text-ink-2 focus:outline-none focus:border-indigo-500 cursor-pointer"
+              className="w-full bg-fill border border-line-strong rounded-xl px-3 py-2.5 text-sm text-ink-2 focus:outline-none focus:border-accent cursor-pointer"
             >
               {allRegions().map((r) => (
                 <option key={r.code} value={r.code}>{r.label}</option>
@@ -169,8 +169,8 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
                   onClick={() => selectMood(opt.value)}
                   className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all cursor-pointer ${
                     baselineMood === opt.value
-                      ? "bg-blue-500/15 border-accent/50 scale-110"
-                      : "bg-fill/50 border-line-strong/50 hover:border-slate-600"
+                      ? "bg-accent/15 border-accent/50 scale-110"
+                      : "bg-fill/50 border-line-strong/50 hover:border-line-strong"
                   }`}
                 >
                   {/* Fable review: fixed-size wrapper on every option (not just the selected one)
@@ -179,7 +179,7 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
                   <span className={`w-10 h-10 grid place-items-center ${baselineMood === opt.value ? `blob-badge blob-badge--${onboardingMoodBlobVariant(opt.value)}` : ""}`}>
                     <span className={baselineMood === opt.value ? "blob-badge__value text-xl" : "text-2xl"} aria-hidden="true">{opt.emoji}</span>
                   </span>
-                  <span className={`text-xs ${baselineMood === opt.value ? "text-blue-300" : "text-ink-faint"}`}>{opt.label}</span>
+                  <span className={`text-xs ${baselineMood === opt.value ? "text-accent-hi" : "text-ink-faint"}`}>{opt.label}</span>
                 </button>
               ))}
             </div>
@@ -208,7 +208,7 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
           {slides.map((_, i) => (
             <div
               key={i}
-              className={`h-1.5 rounded-full transition-all ${i === step ? "w-6 bg-blue-500" : "w-1.5 bg-line-strong"}`}
+              className={`h-1.5 rounded-full transition-all ${i === step ? "w-6 bg-accent" : "w-1.5 bg-line-strong"}`}
             />
           ))}
         </div>
@@ -233,14 +233,14 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
           {isLast ? (
             <button
               onClick={finish}
-              className="flex-[2] py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold transition-colors cursor-pointer flex items-center justify-center gap-1"
+              className="flex-[2] py-3 rounded-xl bg-accent hover:opacity-90 text-white text-sm font-bold transition-colors cursor-pointer flex items-center justify-center gap-1"
             >
               {t("start")} <ChevronRight className="w-4 h-4" />
             </button>
           ) : (
             <button
               onClick={() => { setStep((s) => s + 1); hapticLight(); }}
-              className="flex-[2] py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold transition-colors cursor-pointer flex items-center justify-center gap-1"
+              className="flex-[2] py-3 rounded-xl bg-accent hover:opacity-90 text-white text-sm font-bold transition-colors cursor-pointer flex items-center justify-center gap-1"
             >
               {t("next")} <ChevronRight className="w-4 h-4" />
             </button>
@@ -292,37 +292,37 @@ function getSlides(baselineMood: number | null) {
       id: "nila_intro",
       title: "Hi, I'm Nila",
       body: "I'm here with you. Not a therapist, not a doctor — just a companion who listens.",
-      icon: <HeartHandshake className="w-10 h-10 text-blue-400" />,
+      icon: <HeartHandshake className="w-10 h-10 text-accent-hi" />,
     },
     {
       id: "privacy",
       title: "Your data stays on your phone",
       body: "Nila runs entirely on-device. No cloud. No analytics. No tracking. You can delete everything anytime in Settings.",
-      icon: <Shield className="w-10 h-10 text-emerald-400" />,
+      icon: <Shield className="w-10 h-10 text-success" />,
     },
     {
       id: "mood_check",
       title: "How are you feeling right now?",
       body: "There's no wrong answer. Pick what fits — I'll use this to personalize your experience. You can change this anytime.",
-      icon: <HeartHandshake className="w-10 h-10 text-amber-400" />,
+      icon: <HeartHandshake className="w-10 h-10 text-warn" />,
     },
     {
       id: "region",
       title: "Choose your region",
       body: "This sets the crisis helplines shown if you ever need them. Pick your region, then we'll get you started.",
-      icon: <Globe className="w-10 h-10 text-indigo-400" />,
+      icon: <Globe className="w-10 h-10 text-accent" />,
     },
     {
       id: "how_nila_helps",
       title: "How Nila helps",
       body: "I can listen, suggest tools, and help you notice patterns — all based on what you share. I'm not a therapist and I don't diagnose — I'm a companion, not a replacement for care.",
-      icon: <MessageCircle className="w-10 h-10 text-blue-400" />,
+      icon: <MessageCircle className="w-10 h-10 text-accent-hi" />,
     },
     {
       id: "ready",
       title: "You're all set",
       body: "Let's begin, at your pace. A check-in can be as quick as a single tap — or as long as you like.",
-      icon: <HeartHandshake className="w-10 h-10 text-emerald-400" />,
+      icon: <HeartHandshake className="w-10 h-10 text-success" />,
     },
   ];
 }

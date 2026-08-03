@@ -117,7 +117,7 @@ export default function EmaCheckIn({ onLogged, onCrisis }: { onLogged?: () => vo
             />
             <button
               onClick={saveAndClose}
-              className="bg-purple-600 hover:bg-purple-500 mt-auto text-ink font-semibold py-3 rounded-2xl transition-colors"
+              className="bg-accent hover:opacity-90 mt-auto text-ink font-semibold py-3 rounded-2xl transition-colors"
               id="ema-save"
             >
               Done

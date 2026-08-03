@@ -64,7 +64,7 @@ interface ModeScreenProps {
   onCloseCapture?: () => void;
 }
 
-let modeDraftCache = "";
+const modeDraftRef = { current: "" };
 
 function msg(role: "user" | "assistant", content: string, extra: Partial<Pick<NilaUiMessage, "insight" | "synthetic">> = {}): NilaUiMessage {
   return { role, content, timestamp: Date.now(), ...extra };
@@ -80,7 +80,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
     if (saved.length) return saved;
     return [msg("assistant", WELCOME_SEED)];
   });
-  const [inputText, setInputText] = useState(() => modeDraftCache);
+  const [inputText, setInputText] = useState(() => modeDraftRef.current);
   const [loading, setLoading] = useState(false);
   const [listening, setListening] = useState(false);
   const [showTextInput, setShowTextInput] = useState(false);
@@ -149,7 +149,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
     clearProtocol: () => setProtocolCard(null),
   });
 
-  useEffect(() => { modeDraftCache = inputText; }, [inputText]);
+  useEffect(() => { modeDraftRef.current = inputText; }, [inputText]);
 
   useEffect(() => {
     const interval = setInterval(() => {

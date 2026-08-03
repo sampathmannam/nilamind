@@ -68,8 +68,8 @@ export default function CloudApiSection() {
         setEnabled(next);
         setCloudApiEnabled(next);
       }}
-      className={`relative inline-flex h-6 w-11 items-center rounded-full cursor-pointer transition-colors focus-visible:ring-2 focus-visible:ring-blue-500 ${
-        enabled ? "bg-purple-600" : "bg-line-strong"
+      className={`relative inline-flex h-6 w-11 items-center rounded-full cursor-pointer transition-colors focus-visible:ring-2 focus-visible:ring-accent ${
+        enabled ? "bg-accent" : "bg-line-strong"
       }`}
     >
       <span

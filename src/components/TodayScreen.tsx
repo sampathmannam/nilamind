@@ -29,7 +29,7 @@ import { getFeatureWindow } from "../services/signalStore";
 import { getPassiveSensingEnabled } from "../services/passiveSensingPrefs";
 import ProactiveNudgeRail from "./ProactiveNudgeRail";
 import IntentFlowBar, { suggestPhase, type IntentPhase } from "./IntentFlowBar";
-import SkeletonCard from "./SkeletonCard";
+import { SkeletonCard } from "./Skeleton";
 import OnboardingMomentum from "./OnboardingMomentum";
 import { usePullToRefresh } from "../hooks/usePullToRefresh";
 import PullToRefresh from "./PullToRefresh";
@@ -98,13 +98,13 @@ interface HeroAction {
 export function getHeroAction(timeMode: TimeMode, userState: UserState | null, dailyIntentionSet: boolean): HeroAction {
   const hour = new Date().getHours();
   if (hour >= 20 || hour < 5) {
-    return { id: "winddown", label: "Wind down for sleep", sub: "A calm bedtime routine", icon: <Moon className="w-5 h-5" aria-hidden="true" />, color: "text-indigo-400", route: "winddown" };
+    return { id: "winddown", label: "Wind down for sleep", sub: "A calm bedtime routine", icon: <Moon className="w-5 h-5" aria-hidden="true" />, color: "text-accent", route: "winddown" };
   }
   if (userState === "anxious" || userState === "elevated") {
-    return { id: "plan", label: "Grounding & breathing", sub: "Calm your body in a hard minute", icon: <Wind className="w-5 h-5" aria-hidden="true" />, color: "text-emerald-400", route: "plan" };
+    return { id: "plan", label: "Grounding & breathing", sub: "Calm your body in a hard minute", icon: <Wind className="w-5 h-5" aria-hidden="true" />, color: "text-success", route: "plan" };
   }
 if (!dailyIntentionSet) {
-    return { id: "daily_intention", label: "Set today's intention", sub: "A 30-second if-then plan — research-backed", icon: <Target className="w-5 h-5" aria-hidden="true" />, color: "text-amber-400", route: "" };
+    return { id: "daily_intention", label: "Set today's intention", sub: "A 30-second if-then plan — research-backed", icon: <Target className="w-5 h-5" aria-hidden="true" />, color: "text-warn", route: "" };
   }
   // Intention already set → promote Talk to Nila (not a duplicate check-in prompt — the mood
   // card directly below already handles that, and stacking two check-in CTAs is confusing).
@@ -542,14 +542,14 @@ export default function TodayScreen({
       {wellbeingDue && earnedBaselinePrompts && (nudgeCascadeExpanded || topNudge === "wellbeing_due") && (
         <div className="bg-success/8 border border-success/20 rounded-2xl p-4 space-y-2.5">
           <div className="flex items-center gap-2">
-            <LineChart className="w-4 h-4 text-emerald-400" />
+            <LineChart className="w-4 h-4 text-success" />
             <p className="text-sm font-semibold text-ink">{t(wellbeingFirstTime ? "wellbeing_baseline_title" : "wellbeing_due_title")}</p>
           </div>
           <p className="text-[11px] text-ink-muted leading-relaxed">{t(wellbeingFirstTime ? "wellbeing_baseline_sub" : "wellbeing_due_sub")}</p>
           <button
             onClick={() => go("assessment")}
             id="today-wellbeing-due"
-            className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-sm cursor-pointer transition-colors"
+            className="w-full bg-success hover:opacity-90 text-white font-bold py-2.5 rounded-xl text-sm cursor-pointer transition-colors"
           >
             {t("wellbeing_take")}
           </button>
@@ -725,10 +725,10 @@ export default function TodayScreen({
       >
         <span className="shrink-0 text-violet-400"><Sparkle className="w-5 h-5" aria-hidden="true" /></span>
         <span className="flex-1 min-w-0">
-          <span className="block text-sm font-bold text-slate-100">Guided Programs</span>
-          <span className="block text-[11px] text-slate-400">Real, evidence-based programs you can start any time</span>
+          <span className="block text-sm font-bold text-ink">Guided Programs</span>
+          <span className="block text-[11px] text-ink-muted">Real, evidence-based programs you can start any time</span>
         </span>
-        <ChevronRight className="w-5 h-5 text-slate-500 shrink-0" aria-hidden="true" />
+        <ChevronRight className="w-5 h-5 text-ink-faint shrink-0" aria-hidden="true" />
       </button>
       </>}
       </div>

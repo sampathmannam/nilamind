@@ -96,7 +96,7 @@ export default function ChatLoading({ onCancel }: { onCancel?: () => void }) {
             Syncs to a 4-second cycle (in 4s, out 4s) that matches box-breathing. */}
         <div className="flex flex-col items-center gap-2 py-2">
           <div
-            className="breathing-orb w-12 h-12 rounded-full bg-gradient-to-br from-purple-400/40 to-purple-600/30 border border-purple-400/20 flex items-center justify-center"
+            className="breathing-orb w-12 h-12 rounded-full bg-gradient-to-br from-accent/40 to-accent/30 border border-accent/20 flex items-center justify-center"
             aria-hidden="true"
           />
           <p className="text-xs text-ink-faint leading-relaxed text-center max-w-[16rem] transition-all duration-500" key={tipIndex}>

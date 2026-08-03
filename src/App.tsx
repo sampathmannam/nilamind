@@ -469,6 +469,7 @@ function AppShell() {
       {/* Main content area — each tab isolated in its own ErrorBoundary */}
       <main className="flex-1 min-h-0 relative flex flex-col animate-tab-fade" key={state.tab} aria-label="Content">
         <a href="#today-hub" className="skip-link">Skip to main content</a>
+        <div id={`tabpanel-${state.tab}`} role="tabpanel" aria-labelledby={`tab-${state.tab}`}>
         {state.tab === "nila" && (
           <ErrorBoundary name="nila" onError={(err: Error, info: React.ErrorInfo) => console.error("[ErrorBoundary:nila] caught:", err, info)}>
             <ModeScreen
@@ -489,11 +490,6 @@ function AppShell() {
         {state.tab === "today" && (
           <ErrorBoundary name="today" onError={(err: Error, info: React.ErrorInfo) => console.error("[ErrorBoundary:today] caught:", err, info)}>
             <div className="flex-1 min-h-0 flex flex-col">
-              {/* Opaque status-bar mask. The app is edge-to-edge (viewport-fit=cover), so the WebView
-                  draws under the status bar. Previously this tab put the safe-area padding INSIDE the
-                  transparent scroll container, so scrolled content bled up into the status bar
-                  (device screenshot 2026-07-15). The Nila tab avoids this via ModeScreen's own opaque
-                  header; Today/You had none. A non-scrolling bg-page bar now masks the inset zone. */}
               <div className="shrink-0 bg-page" style={{ height: 'var(--safe-top)' }} />
               <div className="flex-1 min-h-0 overflow-y-auto px-4 pt-2 pb-12">
                 <TodayScreen go={go} phoneEnabled={phoneEnabled} onEpisode={onEpisode} onOpenCrisis={activateCrisis} />
@@ -504,7 +500,6 @@ function AppShell() {
         {state.tab === "tools" && (
           <ErrorBoundary name="tools" onError={(err: Error, info: React.ErrorInfo) => console.error("[ErrorBoundary:tools] caught:", err, info)}>
             <div className="flex-1 min-h-0 flex flex-col">
-              {/* Opaque status-bar mask — same fix as the Today/You tabs. */}
               <div className="shrink-0 bg-page" style={{ height: 'var(--safe-top)' }} />
               <div className="flex-1 min-h-0 overflow-y-auto px-4 pt-2 pb-12">
                 <ToolsScreen go={go} phoneEnabled={phoneEnabled} onEpisode={onEpisode} onOpenCrisis={activateCrisis} />
@@ -515,8 +510,6 @@ function AppShell() {
         {state.tab === "you" && (
           <ErrorBoundary name="you" onError={(err: Error, info: React.ErrorInfo) => console.error("[ErrorBoundary:you] caught:", err, info)}>
             <div className="flex-1 min-h-0 flex flex-col">
-              {/* Opaque status-bar mask — same fix as the Today tab above. Non-scrolling bg-page bar
-                  keeps scrolled content from bleeding into the edge-to-edge status bar. */}
               <div className="shrink-0 bg-page" style={{ height: 'var(--safe-top)' }} />
               <div className="flex-1 min-h-0 overflow-y-auto px-4 pt-2 pb-12">
                 <YouScreen go={go} onOpenCrisis={activateCrisis} />
@@ -524,6 +517,7 @@ function AppShell() {
             </div>
           </ErrorBoundary>
         )}
+        </div>
       </main>
 
       {/* Bottom tab bar */}
@@ -536,13 +530,15 @@ function AppShell() {
         ]).map(({ id, label, Icon }) => (
           <button
             key={id}
+            id={`tab-${id}`}
             role="tab"
             onClick={() => { setTab(id); hapticLight(); }}
-            className={`flex flex-col items-center gap-0.5 py-2 px-4 rounded-lg transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[44px] min-h-[44px] ${
-              state.tab === id ? "text-blue-400" : "text-ink-faint hover:text-ink-2"
+            className={`flex flex-col items-center gap-0.5 py-2 px-4 rounded-lg transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-accent min-w-[44px] min-h-[44px] ${
+              state.tab === id ? "text-accent" : "text-ink-faint hover:text-ink-2"
             }`}
             aria-label={label}
             aria-selected={state.tab === id}
+            aria-controls={`tabpanel-${id}`}
           >
             <Icon className="w-5 h-5" aria-hidden="true" />
             <span className="text-xs font-medium">{label}</span>

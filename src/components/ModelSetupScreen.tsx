@@ -316,7 +316,7 @@ export default function ModelSetupScreen({ onReady }: { onReady: () => void }) {
               <button
                 type="button"
                 onClick={start}
-                className="w-full mt-3 rounded-2xl bg-purple-600 hover:bg-purple-500 active:scale-[0.99] text-white font-semibold py-3 min-h-[44px] transition-all"
+                className="w-full mt-3 rounded-2xl bg-accent hover:opacity-90 active:scale-[0.99] text-white font-semibold py-3 min-h-[44px] transition-all"
               >
                 Download &amp; begin
               </button>
@@ -381,7 +381,7 @@ export default function ModelSetupScreen({ onReady }: { onReady: () => void }) {
             onClick={continueWithApi}
             disabled={!apiKeyInput.trim()}
             id="model-setup-api-continue"
-            className="w-full mt-1 rounded-2xl bg-purple-600 hover:bg-purple-500 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold py-3 min-h-[44px] transition-all"
+            className="w-full mt-1 rounded-2xl bg-accent hover:opacity-90 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold py-3 min-h-[44px] transition-all"
           >
             Continue
           </button>

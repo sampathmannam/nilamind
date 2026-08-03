@@ -511,37 +511,37 @@ export default function DashboardScreen({ onOpenView }: { onOpenView?: (target: 
   return (
     <div className="space-y-5 max-w-md mx-auto" id="dashboard-screen">
       <header className="space-y-1">
-        <h1 className="text-2xl font-semibold text-slate-100 flex items-center gap-2">
-          <Activity className="w-5 h-5 text-blue-400" /> {t("dashboard")}
+        <h1 className="text-2xl font-semibold text-ink flex items-center gap-2">
+          <Activity className="w-5 h-5 text-accent" /> {t("dashboard")}
           <div className="relative ml-auto">
             <button
               onClick={() => setShowExportMenu((v) => !v)}
               disabled={exportBusy || checkins.length === 0}
-              className="p-1.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-slate-700/50 text-slate-400 hover:text-slate-200 disabled:opacity-30"
+              className="p-1.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-line-strong/50 text-ink-muted hover:text-ink-2 disabled:opacity-30"
               aria-label={t("exportTitle")}
               id="dashboard-export-btn"
             >
               {exportBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
             </button>
             {showExportMenu && (
-              <div className="absolute right-0 top-full mt-1 z-20 bg-slate-800 border border-slate-600 rounded-xl shadow-xl overflow-hidden min-w-[160px]">
-                <button onClick={handleExportCsv} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-200 hover:bg-slate-700 text-left">
-                  <FileText className="w-4 h-4 text-emerald-400" />
+              <div className="absolute right-0 top-full mt-1 z-20 bg-fill border border-line-strong rounded-xl shadow-xl overflow-hidden min-w-[160px]">
+                <button onClick={handleExportCsv} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-ink-2 hover:bg-line-strong text-left">
+                  <FileText className="w-4 h-4 text-success" />
                   <span>{t("exportCsv")}</span>
                 </button>
-                <button onClick={handleExportPdf} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-200 hover:bg-slate-700 text-left">
-                  <FileText className="w-4 h-4 text-amber-400" />
+                <button onClick={handleExportPdf} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-ink-2 hover:bg-line-strong text-left">
+                  <FileText className="w-4 h-4 text-warn" />
                   <span>{t("exportPdf")}</span>
                 </button>
-                <button onClick={handleWeeklyReport} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-200 hover:bg-slate-700 text-left">
-                  <FileText className="w-4 h-4 text-blue-400" />
+                <button onClick={handleWeeklyReport} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-ink-2 hover:bg-line-strong text-left">
+                  <FileText className="w-4 h-4 text-accent" />
                   <span>{t("weekly_report")}</span>
                 </button>
               </div>
             )}
           </div>
         </h1>
-        <p className="text-xs text-slate-400 leading-relaxed">{t("dash_privacy")}</p>
+        <p className="text-xs text-ink-muted leading-relaxed">{t("dash_privacy")}</p>
       </header>
 
       {/* Level 1: Hero metric + stat pills — answers "How am I doing?" in 2 seconds */}
@@ -580,9 +580,9 @@ export default function DashboardScreen({ onOpenView }: { onOpenView?: (target: 
       <HeroCard onOpenView={onOpenView} />
 
 {/* This-week summary */}
-       <div className="bg-blue-500/5 border border-accent/20 rounded-2xl p-4">
-          <div className="text-xs uppercase font-mono tracking-widest text-blue-400 mb-1">{t("this_week")}</div>
-         <p className="text-sm text-slate-200 leading-relaxed">{moodSummary}</p>
+       <div className="bg-accent/5 border border-accent/20 rounded-2xl p-4">
+          <div className="text-xs uppercase font-mono tracking-widest text-accent mb-1">{t("this_week")}</div>
+         <p className="text-sm text-ink-2 leading-relaxed">{moodSummary}</p>
        </div>
 
         {/* Monthly narrative */}
@@ -704,7 +704,7 @@ export default function DashboardScreen({ onOpenView }: { onOpenView?: (target: 
           primitive replaced Recharts only where it was safe — the single-series WHO-5 sparkline in
           WellbeingTrendCard. MiniBar was deleted as orphaned (no consumer). See AGENTS.md "wire what
           you build". */}
-      <Suspense fallback={<div className="glass rounded-2xl p-8 text-center text-slate-500 text-sm">Loading charts…</div>}>
+        <Suspense fallback={<div className="glass rounded-2xl p-8 text-center text-ink-faint text-sm">Loading charts…</div>}>
         <LazyDashboardCharts
           timeRange={timeRange}
           setTimeRange={setTimeRange}
@@ -722,21 +722,21 @@ export default function DashboardScreen({ onOpenView }: { onOpenView?: (target: 
 
       {/* Validated assessments (unchanged Dashboard section) */}
       <div className="space-y-2">
-        <div className="text-xs uppercase font-mono tracking-widest text-slate-400 flex items-center gap-1.5"><ClipboardCheck className="w-3.5 h-3.5" /> Validated check-ins</div>
+        <div className="text-xs uppercase font-mono tracking-widest text-ink-muted flex items-center gap-1.5"><ClipboardCheck className="w-3.5 h-3.5" /> Validated check-ins</div>
         {(["PHQ-9", "GAD-7"] as InstrumentId[]).some((id) => latestFor(id, assessments)) ? (
           (["PHQ-9", "GAD-7"] as InstrumentId[]).map((id) => {
             const last = latestFor(id, assessments);
             if (!last) return null;
             const inst = INSTRUMENTS[id];
             const traj = trajectories.find((t) => t.id === `assessment-${id}`);
-            const dirIcon = traj?.direction === "protective" ? <TrendingDown className="w-3.5 h-3.5 text-emerald-400" /> : traj?.direction === "risk" ? <TrendUpIcon className="w-3.5 h-3.5 text-amber-400" /> : <Minus className="w-3.5 h-3.5 text-slate-500" />;
+            const dirIcon = traj?.direction === "protective" ? <TrendingDown className="w-3.5 h-3.5 text-success" /> : traj?.direction === "risk" ? <TrendUpIcon className="w-3.5 h-3.5 text-warn" /> : <Minus className="w-3.5 h-3.5 text-ink-faint" />;
             return (
               <div key={id} className="glass rounded-xl p-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-100">{inst.measures.split(" ")[0]} · <span className="text-slate-500 font-normal">{id}</span></span>
-                  <span className="text-xs text-slate-300">{last.total}/{inst.maxScore} <span className="text-slate-500">{last.severity}</span></span>
+                  <span className="text-xs font-bold text-ink">{inst.measures.split(" ")[0]} · <span className="text-ink-faint font-normal">{id}</span></span>
+                  <span className="text-xs text-ink-2">{last.total}/{inst.maxScore} <span className="text-ink-faint">{last.severity}</span></span>
                 </div>
-                {traj && <p className="text-[11px] text-slate-400 mt-1 flex items-start gap-1">{dirIcon}<span>{traj.finding.split(" — ").slice(1).join(" — ") || traj.finding}</span></p>}
+                {traj && <p className="text-[11px] text-ink-muted mt-1 flex items-start gap-1">{dirIcon}<span>{traj.finding.split(" — ").slice(1).join(" — ") || traj.finding}</span></p>}
               </div>
             );
           })
@@ -748,20 +748,20 @@ export default function DashboardScreen({ onOpenView }: { onOpenView?: (target: 
       {/* Derived observations */}
       {observations.length > 0 && (
         <div className="glass p-5 rounded-2xl space-y-3">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400 font-mono flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-emerald-400" /> Patterns from your data
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-ink-muted font-mono flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-success" /> Patterns from your data
           </h2>
           <ul className="space-y-3">
             {observations.slice(0, showAllObservations ? observations.length : 3).map((ins, i) => (
-              <li key={i} className="text-xs text-slate-300 leading-relaxed flex items-start gap-2 bg-page p-3 rounded-xl border border-line">
-                <span className="text-emerald-400 font-bold">●</span><span>{ins}</span>
+              <li key={i} className="text-xs text-ink-2 leading-relaxed flex items-start gap-2 bg-page p-3 rounded-xl border border-line">
+                <span className="text-success font-bold">●</span><span>{ins}</span>
               </li>
             ))}
           </ul>
           {observations.length > 3 && (
             <button
               onClick={() => setShowAllObservations((v) => !v)}
-              className="text-xs font-semibold text-blue-400 hover:text-blue-300 cursor-pointer transition-colors"
+              className="text-xs font-semibold text-accent hover:text-accent-hi cursor-pointer transition-colors"
             >
               {showAllObservations ? `Show less` : `See all ${observations.length} patterns`}
             </button>
@@ -772,32 +772,32 @@ export default function DashboardScreen({ onOpenView }: { onOpenView?: (target: 
       {/* Daily-behaviour insights (sleep, screen time, steps, etc.) */}
       {behaviourLoading && behaviourInsights.length === 0 && (
         <div className="glass p-5 rounded-2xl space-y-3">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400 font-mono flex items-center gap-1.5">
-            <Lightbulb className="w-3.5 h-3.5 text-amber-400" /> Behaviour insights
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-ink-muted font-mono flex items-center gap-1.5">
+            <Lightbulb className="w-3.5 h-3.5 text-warn" /> Behaviour insights
           </h2>
           <p className="text-xs text-ink-faint italic">Analysing your patterns…</p>
         </div>
       )}
       {behaviourInsights.length > 0 && (
         <div className="glass p-5 rounded-2xl space-y-3">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400 font-mono flex items-center gap-1.5">
-            <Lightbulb className="w-3.5 h-3.5 text-amber-400" /> Behaviour insights
-            {behaviourDays > 0 && <span className="text-xs text-slate-600 normal-case tracking-normal ml-1">({behaviourDays} days of paired data)</span>}
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-ink-muted font-mono flex items-center gap-1.5">
+            <Lightbulb className="w-3.5 h-3.5 text-warn" /> Behaviour insights
+            {behaviourDays > 0 && <span className="text-xs text-ink-faint normal-case tracking-normal ml-1">({behaviourDays} days of paired data)</span>}
           </h2>
           <ul className="space-y-3">
             {behaviourInsights.slice(0, showAllBehaviour ? behaviourInsights.length : 3).map((ins) => (
               <li key={ins.id} className={`text-xs leading-relaxed flex items-start gap-2 bg-page p-3 rounded-xl border ${
-                ins.direction === "risk" ? "border-amber-500/30" : ins.direction === "protective" ? "border-emerald-500/30" : "border-line"
+                ins.direction === "risk" ? "border-warn/30" : ins.direction === "protective" ? "border-success/30" : "border-line"
               }`}>
-                <span className={`font-bold ${ins.direction === "risk" ? "text-amber-400" : ins.direction === "protective" ? "text-emerald-400" : "text-slate-400"}`}>●</span>
-                <span className="text-slate-300">{ins.finding}</span>
+                <span className={`font-bold ${ins.direction === "risk" ? "text-warn" : ins.direction === "protective" ? "text-success" : "text-ink-muted"}`}>●</span>
+                <span className="text-ink-2">{ins.finding}</span>
               </li>
             ))}
           </ul>
           {behaviourInsights.length > 3 && (
             <button
               onClick={() => setShowAllBehaviour((v) => !v)}
-              className="text-xs font-semibold text-blue-400 hover:text-blue-300 cursor-pointer transition-colors"
+              className="text-xs font-semibold text-accent hover:text-accent-hi cursor-pointer transition-colors"
             >
               {showAllBehaviour ? `Show less` : `See all ${behaviourInsights.length} insights`}
             </button>
@@ -840,12 +840,12 @@ export default function DashboardScreen({ onOpenView }: { onOpenView?: (target: 
             <h2 className="text-xs font-semibold uppercase tracking-wider text-purple-400 font-mono flex items-center gap-1.5 mb-1">
               <BrainCircuit className="w-4 h-4" /> Nila's Deep Evaluation ✨
             </h2>
-            <p className="text-[11px] text-slate-400 leading-relaxed">
+            <p className="text-[11px] text-ink-muted leading-relaxed">
               This asks Nila to analyze your recent check-ins, diary notes, and episode records — all on your device, using the same local AI that powers your conversations. Nothing leaves your phone.
             </p>
           </div>
           <button onClick={runDeepAssessment} disabled={isAssessing}
-            className="w-full bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            className="w-full bg-accent hover:opacity-90 text-white text-xs font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
             {isAssessing ? (<><Loader2 className="w-4 h-4 animate-spin" /> Nila is evaluating patterns...</>) : ("Ask Nila for Deep Evaluation ✨")}
           </button>
           {assessmentCrisis && (

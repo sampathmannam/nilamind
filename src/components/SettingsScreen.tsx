@@ -205,7 +205,7 @@ export default function SettingsScreen({ onOpenCaregiver, onOpenLegal }: Setting
                   setAutoUpdateEnabled(next);
                 }}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full cursor-pointer transition-colors focus-visible:ring-2 focus-visible:ring-blue-500 ${
-                  autoUpdateOn ? "bg-purple-600" : "bg-line-strong"
+                  autoUpdateOn ? "bg-accent" : "bg-line-strong"
                 }`}
               >
                 <span

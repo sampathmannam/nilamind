@@ -45,7 +45,7 @@ export default function FeedbackSection() {
           </p>
           <button
             onClick={handleCopySuggestions}
-            className="flex items-center gap-1.5 text-[11px] font-medium rounded-lg py-1.5 px-3 bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 transition-colors cursor-pointer min-h-[44px] min-w-[44px]"
+            className="flex items-center gap-1.5 text-[11px] font-medium rounded-lg py-1.5 px-3 bg-accent/30 hover:bg-accent/50 text-accent-hi transition-colors cursor-pointer min-h-[44px] min-w-[44px]"
           >
             {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
             {copied ? "Copied" : "Copy your suggestions"}

@@ -1,5 +1,5 @@
 import { localDateKey } from "../services/storageUtils";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { ChevronRight, Sparkles, Target, CheckCircle, X, Lightbulb, Heart, Wind } from "lucide-react";
 import CrisisHeaderButton from "./CrisisHeaderButton";
 import ConfettiBurst from "./ConfettiBurst";
@@ -57,8 +57,8 @@ function StreakConstellation({ activeDays }: { activeDays: string[] }) {
     const active = activeDays.includes(dateStr);
     dots.push(
       <div key={i} className="flex flex-col items-center gap-1" title={dateStr}>
-        <div className={`w-4 h-4 rounded-full ${active ? "bg-emerald-400/70 shadow-sm shadow-emerald-400/30" : "bg-slate-700/50"}`} aria-hidden="true" />
-        <span className="text-[10px] font-mono text-slate-600">{dayLabels[i]}</span>
+        <div className={`w-4 h-4 rounded-full ${active ? "bg-success/70 shadow-sm shadow-success/30" : "bg-line-strong/50"}`} aria-hidden="true" />
+        <span className="text-[10px] font-mono text-ink-faint">{dayLabels[i]}</span>
       </div>
     );
   }
@@ -230,9 +230,9 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
   };
 
   const ack = getCompletionAck();
-  if (ack) {
-    setTimeout(() => markAckShown(), 0);
-  }
+  useEffect(() => {
+    if (ack) markAckShown();
+  }, [ack]);
 
   return (
     <div className="space-y-4 max-w-md mx-auto animate-fade-in px-4" id="you-hub">
@@ -311,7 +311,7 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
       {ack && (
         <div className="bg-card rounded-2xl border border-line shadow-sm p-4 border-l-[3px] border-l-success">
           <div className="flex items-center gap-3">
-            <CheckCircle className="w-5 h-5 text-emerald-400 shrink-0" />
+            <CheckCircle className="w-5 h-5 text-success shrink-0" />
             <p className="text-xs text-ink-2 leading-relaxed">{ack}</p>
           </div>
         </div>
@@ -319,14 +319,14 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
       {intention && !intention.completed && (
         <div className="bg-card rounded-2xl border border-line shadow-sm p-4">
           <div className="flex items-start gap-3">
-            <Target className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+            <Target className="w-5 h-5 text-warn shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
               <p className="text-xs text-ink-muted">This week's intention</p>
               <p className="text-sm text-ink-2 font-medium mt-0.5">{intention.text}</p>
               <div className="flex gap-2 mt-3">
                 <button
                   onClick={handleComplete}
-                  className="px-4 min-h-[44px] inline-flex items-center rounded-lg bg-success/15 hover:bg-success/25 text-emerald-300 text-xs font-medium transition-colors cursor-pointer"
+                  className="px-4 min-h-[44px] inline-flex items-center rounded-lg bg-success/15 hover:bg-success/25 text-accent-hi text-xs font-medium transition-colors cursor-pointer"
                 >
                   Mark done
                 </button>
@@ -473,7 +473,7 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
           aria-expanded={showMoreResources}
           className="w-full flex items-center justify-center gap-2 py-3 min-h-[44px] rounded-xl bg-card border border-dashed border-line hover:border-line-strong text-ink-muted hover:text-ink text-xs font-medium transition-all cursor-pointer"
         >
-          <Lightbulb className="w-3.5 h-3.5 text-amber-400/70" aria-hidden="true" />
+          <Lightbulb className="w-3.5 h-3.5 text-warn/70" aria-hidden="true" />
           {showMoreResources ? "Show fewer resources" : `${groups.flatMap((g) => g.rows).filter((r) => r.more).length} more resources`}
           <ChevronRight className={`w-3 h-3 transition-transform duration-200 ${showMoreResources ? "rotate-90" : ""}`} aria-hidden="true" />
         </button>

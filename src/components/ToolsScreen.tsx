@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import {
   Search, X, ChevronRight, Heart, Sparkles, Wind, Moon,
   Lightbulb, Activity, SearchX, ShieldAlert, type LucideIcon,
@@ -35,25 +35,22 @@ function matchesCategory(group: ToolGroup, cat: CatId): boolean {
   return true;
 }
 
-// ── Recent-tool tracker (module-level, survives tab-switch remount) ──
+// ── Recent-tool tracker (persists across tab-switch remount via useRef) ──
 const RECENT_MAX = 3;
-let _recentToolIds: string[] = [];
+const recentToolIdsRef: { current: string[] } = { current: [] };
 
 function trackRecent(id: string) {
-  _recentToolIds = [id, ..._recentToolIds.filter((x) => x !== id)].slice(0, RECENT_MAX);
+  recentToolIdsRef.current = [id, ...recentToolIdsRef.current.filter((x) => x !== id)].slice(0, RECENT_MAX);
 }
-
-// U8.1 — Category filter persistence (survives remount, resets on page refresh)
-let _lastActiveCategory: CatId = "all";
 
 // ── Component ──────────────────────────────────────────────────────
 export default function ToolsScreen({ go, onEpisode, phoneEnabled, onOpenCrisis }: Props) {
-  const [activeCategory, setActiveCategory] = useState<CatId>(() => _lastActiveCategory);
-  // U8.1 — persist active category across remounts
-  useEffect(() => { _lastActiveCategory = activeCategory; }, [activeCategory]);
+  const lastCategoryRef = useRef<CatId>("all");
+  const [activeCategory, setActiveCategory] = useState<CatId>(() => lastCategoryRef.current);
+  useEffect(() => { lastCategoryRef.current = activeCategory; }, [activeCategory]);
   const [toolSearch, setToolSearch] = useState("");
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
-  const [recentIds, setRecentIds] = useState<string[]>(_recentToolIds);
+  const [recentIds, setRecentIds] = useState<string[]>(recentToolIdsRef.current);
   const { timeMode, state } = useUserContext();
 
   const groups = useMemo(
@@ -93,7 +90,7 @@ export default function ToolsScreen({ go, onEpisode, phoneEnabled, onOpenCrisis 
 
   const handleToolTap = (id: string, onTap: () => void) => {
     trackRecent(id);
-    setRecentIds([..._recentToolIds]);
+    setRecentIds([...recentToolIdsRef.current]);
     onTap();
   };
 

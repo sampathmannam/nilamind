@@ -23,6 +23,34 @@ import { getCrisisLines, crisisDigits } from "./services/crisisResources";
 import { recordRule6Fire, recordRule6Pass } from "./services/antiSycophancyMetrics";
 import { spotDistortions } from "./services/distortionSpotter";
 
+/**
+ * THE single text normalizer for this module — input gate, output gate, and every isBenign* guard.
+ *
+ * Lowercase; strip zero-width chars FIRST (U+200B–200D, U+FEFF) so an injected zero-width space cannot
+ * split a keyword; unify the typographic apostrophe U+2019 to ASCII "'"; collapse all internal whitespace
+ * so a multi-word phrase still matches across a line break.
+ *
+ * Introduced 2026-08-03 (audit OG-3 / OG-5) because this normalization had been COPY-PASTED nine times and
+ * had drifted, which produced two confirmed defects:
+ *   - checkResponse Rules 3/5/6/7 normalized nothing at all, so a reply using U+2019 ("You’re worthless",
+ *     "You don’t need your meds", "The rules don’t apply to you") bypassed every apostrophe-bearing entry
+ *     in DISTORTION_AGREEMENTS / SYCOPHANTIC_AFFIRMATIONS / MANIC_VALIDATION. On-device models emit the
+ *     typographic apostrophe constantly, so this was a live output-gate MISS, not a theoretical one.
+ *   - isBenignHeartbreakIdiom and isBenignHelpSeeking had `/['']/g` — two ASCII quotes in the character
+ *     class, a typo for `/['’]/g`. Both guards silently never fired on text from a phone keyboard (iOS and
+ *     Gboard substitute U+2019 by default), so "i can’t go on without her" opened a full crisis takeover
+ *     on a breakup message — the exact false-positive class those guards exist to prevent.
+ * Routing every call site through one function is what stops that drift recurring.
+ */
+function normalizeText(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[\u200B-\u200D\uFEFF]/g, "")
+    .replace(/['’]/g, "'")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export const SUICIDAL_KEYWORDS = [
   "kill myself", "killing myself", "killed myself", // gerund/past: "thinking about KILLING myself" must trip
   // NOTE: the split spelling "kill my self" is matched by SUICIDAL_SPLIT_RE (below), NOT as a bare substring —
@@ -248,7 +276,7 @@ function hasExistentialHopelessness(normalized: string): boolean {
  */
 export function isBenignExistentialReferent(message: string): boolean {
   if (!message) return false;
-  const normalized = message.toLowerCase().replace(/[\u200B-\u200D\uFEFF]/g, "").replace(/['’]/g, "'").replace(/\s+/g, " ").trim();
+  const normalized = normalizeText(message);
   const familyPresent =
     EXISTENTIAL_GOING_ON_PREFIXES.some((p) => normalized.includes(p)) ||
     EXISTENTIAL_NO_POINT_PREFIXES.some((p) => normalized.includes(p)) ||
@@ -423,6 +451,34 @@ export const EUPHEMISM_DEATH_PHRASES = [
 export const UNSAFE_METHOD_KEYWORDS = [
   "razor", "blade", "pill", "slit", "overdose", "hang", "rope", "poison", "suffocate"
 ];
+
+/**
+ * Word-boundary-anchored matcher for the method lexicon above (2026-08-03 audit, OG-1/OG-2).
+ *
+ * The output gate previously matched UNSAFE_METHOD_KEYWORDS as BARE SUBSTRINGS, which is wrong in BOTH
+ * directions and was confirmed by execution:
+ *   - FALSE POSITIVES (warm replies rejected → replaced by the cold crisis fallback): "hang" ⊂ change /
+ *     changing / hanging, "pill" ⊂ pillow, "rope" ⊂ properly, "slit" ⊂ slither. "Let's try changing one
+ *     small thing" and "how to change your wind-down routine" both tripped the gate.
+ *   - FALSE NEGATIVES: the bare stems never covered natural inflections — "overdosing" does not contain
+ *     "overdose", "suffocating" does not contain "suffocate", so genuine instruction phrasings passed.
+ * Inflections are enumerated explicitly, so this strictly INCREASES recall while removing the collisions.
+ * Shared by checkResponse Rule 2 and isStreamingHarm so the two gates cannot drift apart.
+ */
+// "hang" additionally excludes its PARTICLE-VERB idioms ("hang out", "hang on", "hang in there", "hang
+// back", "hang around", "hang tight"). Those are ordinary — and for this app, therapeutic — phrasings:
+// "hang out with a friend" is textbook behavioural-activation copy and "hang in there" already appears in
+// the live-tripwire suite. A particle can never be the object of a self-harm instruction, so excluding them
+// costs no recall: "hang myself" / "hanging myself" / "how to hang yourself" all still match.
+const UNSAFE_METHOD_RE =
+  /\b(?:razors?|blades?|pills?|slit(?:s|ting|ted)?|overdos(?:e|es|ed|ing)|hang(?:s|ed|ing)?\b(?!\s+(?:out|on|in|into|around|up|tight|back)\b)|ropes?|poison(?:s|ed|ing|ous)?|suffocat(?:e|es|ed|ing|ion))\b/;
+
+/**
+ * Instruction cues for Rule 2, word-boundary anchored. "try" as a bare substring collided with ordinary
+ * vocabulary ("pantry", "poetry", "country", "carpentry") — the reverted broadening noted in
+ * isStreamingHarm's docstring was blamed on the cue set, but the real defect was the missing boundaries.
+ */
+const INSTRUCTION_CUE_SOURCE = "\\b(?:how to|instructions?|try(?:ing)?)\\b";
 
 export const DISTORTION_AGREEMENTS = [
   "you're right that nobody", "youre right that nobody",
@@ -619,7 +675,7 @@ export function scanForCrisis(message: string): boolean {
   // or when fields/records were concatenated. Keyword phrases below use single internal spaces.
   // #14 (2026-07-09 audit): strip zero-width chars (U+200B–200D, U+FEFF) FIRST so an injected zero-width
   // space (U+200B) can't split a keyword; stripping it first means an injected zero-width space cannot evade a match.
-  const normalized = message.toLowerCase().replace(/[\u200B-\u200D\uFEFF]/g, "").replace(/['’]/g, "'").replace(/\s+/g, " ").trim();
+  const normalized = normalizeText(message);
 
   // ── HARD crisis floor (unsuppressible) ───────────────────────────────────────────────
   // Genuine suicide / self-harm / method / overdose / stockpiling / veiled-euphemism /
@@ -712,7 +768,7 @@ const STOCKPILE_VETO = /\b(saved up|saving up|been saving|stockpil|hoard)\b/;
  */
 export function isBenignMedicationAdherence(message: string): boolean {
   if (!message) return false;
-  const t = message.toLowerCase().replace(/['’]/g, "'").replace(/\s+/g, " ").trim();
+  const t = normalizeText(message);
   return MEDICATION_NOUN.test(t) && ADHERENCE_MARKER.test(t) && !LETHAL_COSIGNAL.test(t) && !STOCKPILE_VETO.test(t);
 }
 
@@ -729,7 +785,7 @@ const HYPERBOLE_PATTERNS =
   /\bsleep (for )?(a|an|the|another|a whole|an entire) (week|month|year|century|decade|weekend|day)\b|\bcould (murder|kill for|kill|die for) (a|an|some|the|this|that)\b|\bdying (to|for)\b|\bdying of (laughter|boredom|embarrassment|thirst|hunger)\b|\b(dead tired|dead serious|scared to death|bored to death|worked to death)\b|\b(killed|crushed|nailed|smashed|aced) it\b|\bto die for\b/;
 export function isBenignHyperbole(message: string): boolean {
   if (!message) return false;
-  const t = message.toLowerCase().replace(/['’]/g, "'").replace(/\s+/g, " ").trim();
+  const t = normalizeText(message);
   return HYPERBOLE_PATTERNS.test(t) && !LETHAL_COSIGNAL.test(t);
 }
 
@@ -780,7 +836,7 @@ const WEARY_DESPAIR_PATTERNS = new RegExp([
  */
 export function isBenignExhaustion(message: string): boolean {
   if (!message) return false;
-  const t = message.toLowerCase().replace(/['’]/g, "'").replace(/\s+/g, " ").trim();
+  const t = normalizeText(message);
   if (!(FATIGUE_PATTERNS.test(t) || BAD_DAY_PATTERNS.test(t))) return false;
   return !LETHAL_COSIGNAL.test(t) && !WEARY_DESPAIR_PATTERNS.test(t);
 }
@@ -814,7 +870,7 @@ const HEARTBREAK_IDIOM_PATTERNS = new RegExp([
 ].join("|"));
 export function isBenignHeartbreakIdiom(message: string): boolean {
   if (!message) return false;
-  const t = message.toLowerCase().replace(/['']/g, "'").replace(/\s+/g, " ").trim();
+  const t = normalizeText(message);
   if (!HEARTBREAK_IDIOM_PATTERNS.test(t)) return false;
   // Attachment distress exception: "can't go on without [person]" and "don't want to live without [person]"
   // contain "can't go on" / "don't want to live" (LETHAL_COSIGNAL matches) but are relationship-specific
@@ -852,7 +908,7 @@ const HELPFUL_SEEKING_PATTERNS = new RegExp([
 ].join("|"));
 export function isBenignHelpSeeking(message: string): boolean {
   if (!message) return false;
-  const t = message.toLowerCase().replace(/['']/g, "'").replace(/\s+/g, " ").trim();
+  const t = normalizeText(message);
   return HELPFUL_SEEKING_PATTERNS.test(t) && !LETHAL_COSIGNAL.test(t);
 }
 
@@ -882,7 +938,7 @@ const MINIMIZATION_PATTERNS =
  */
 export function isBenignOkayReassurance(message: string): boolean {
   if (!message) return false;
-  const t = message.toLowerCase().replace(/['’]/g, "'").replace(/\s+/g, " ").trim();
+  const t = normalizeText(message);
   if (!REASSURANCE_PATTERNS.test(t)) return false;
   return !LETHAL_COSIGNAL.test(t) && !WEARY_DESPAIR_PATTERNS.test(t) && !MINIMIZATION_PATTERNS.test(t);
 }
@@ -913,7 +969,7 @@ const SLEEP_DEATH_VETO =
  */
 export function isBenignSleepRequest(message: string): boolean {
   if (!message) return false;
-  const t = message.toLowerCase().replace(/['’]/g, "'").replace(/\s+/g, " ").trim();
+  const t = normalizeText(message);
   if (!SLEEP_HELP_PATTERNS.test(t)) return false;
   return !LETHAL_COSIGNAL.test(t) && !WEARY_DESPAIR_PATTERNS.test(t) && !MINIMIZATION_PATTERNS.test(t) && !SLEEP_DEATH_VETO.test(t);
 }
@@ -1005,7 +1061,7 @@ const BENIGN_GROOMING_RE =
  */
 export function isBenignEverydayActivity(message: string): boolean {
   if (!message) return false;
-  const t = message.toLowerCase().replace(/['’]/g, "'").replace(/\s+/g, " ").trim();
+  const t = normalizeText(message);
   let matched = false;
   const frame = ACTIVITY_INTENT_FRAME.exec(t);
   if (frame) {
@@ -1051,7 +1107,7 @@ function hasNearbyContrast(text: string, matchStart: number, matchEnd: number): 
  */
 export function checkResponse(aiReply: string, userMessage: string, userInCrisis?: boolean): boolean {
   if (!aiReply) return false;
-  const replyNorm = aiReply.toLowerCase();
+  const replyNorm = normalizeText(aiReply);
 
   // Rule 1: If user was in a crisis, the AI reply MUST surface a crisis resource (region's number or
   // recognisable crisis-line language). If it doesn't, flag as unsafe.
@@ -1073,19 +1129,25 @@ export function checkResponse(aiReply: string, userMessage: string, userInCrisis
   // the cue keeps "let's try one small step" / "end of your rope, let's try" safe (the method idiom sits BEFORE
   // the cue, or there's no method) while re-closing that gap. isStreamingHarm stays "how to"-only — it cuts
   // LIVE mid-stream so it must not over-fire; this broad FINAL gate can afford the directional cue set.
-  const INSTRUCTION_CUES = ["how to", "instruction", "try"];
-  for (const cue of INSTRUCTION_CUES) {
-    for (let i = replyNorm.indexOf(cue); i !== -1; i = replyNorm.indexOf(cue, i + 1)) {
-      const after = replyNorm.slice(i, i + cue.length + 40); // cue + ~40 chars: the method as the cue's object
-      if (UNSAFE_METHOD_KEYWORDS.some((m) => after.includes(m))) return false;
-    }
+  // 2026-08-03 audit (OG-1): cue and method are now WORD-BOUNDARY anchored (see UNSAFE_METHOD_RE /
+  // INSTRUCTION_CUE_SOURCE). The old bare-substring form rejected ordinary therapeutic replies — "try
+  // changing one small thing" ("hang" ⊂ changing), "try a pillow" ("pill" ⊂ pillow) — while simultaneously
+  // MISSING inflected instructions ("how to overdosing"), because the stems were neither anchored nor
+  // inflected. The window arithmetic is unchanged.
+  const cueRe = new RegExp(INSTRUCTION_CUE_SOURCE, "g");
+  for (let cue = cueRe.exec(replyNorm); cue !== null; cue = cueRe.exec(replyNorm)) {
+    const after = replyNorm.slice(cue.index, cue.index + cue[0].length + 40); // cue + ~40 chars: the method as the cue's object
+    if (UNSAFE_METHOD_RE.test(after)) return false;
   }
 
   // Rule 3: Validates cognitive distortions as objective facts — UNLESS the reply is refuting/reframing the
   // agreement (a contrast marker appears near the match), see hasNearbyContrast above.
+  // 2026-08-03 audit (OG-4): checks EVERY occurrence, not just the first. The previous `indexOf` form
+  // examined only the earliest match, so a reply that reframed once and then agreed outright later
+  // ("...but that doesn't make you a failure as a person. Honestly though, you are a failure.") passed the
+  // gate on the strength of the first, rescued match. Rule 7 below already looped correctly; this aligns them.
   for (const agreement of DISTORTION_AGREEMENTS) {
-    if (replyNorm.includes(agreement)) {
-      const idx = replyNorm.indexOf(agreement);
+    for (let idx = replyNorm.indexOf(agreement); idx !== -1; idx = replyNorm.indexOf(agreement, idx + 1)) {
       if (!hasNearbyContrast(replyNorm, idx, idx + agreement.length)) return false;
     }
   }
@@ -1094,9 +1156,10 @@ export function checkResponse(aiReply: string, userMessage: string, userInCrisis
   // on-device failure mode where the model validates a euphemistic disclosure ("...a sense of peace with
   // dying") even when the input phrasing slipped the euphemism gate. Phrase-tight so ordinary warm replies
   // about "peace" are untouched; on a hit the caller substitutes the crisis fallback (a safe failure here).
-  const replyNormApos = replyNorm.replace(/['’]/g, "'");
+  // (replyNorm is already apostrophe-normalized by normalizeText — the local re-normalization this rule used
+  // to do is what made the gap in Rules 3/5/6 visible: Rule 4 alone had it.)
   for (const phrase of EUPHEMISM_DEATH_PHRASES) {
-    if (replyNormApos.includes(phrase)) {
+    if (replyNorm.includes(phrase)) {
       return false;
     }
   }
@@ -1150,11 +1213,13 @@ export function checkResponse(aiReply: string, userMessage: string, userInCrisis
  */
 export function isStreamingHarm(text: string): boolean {
   if (!text) return false;
-  const norm = text.toLowerCase();
-  for (const method of UNSAFE_METHOD_KEYWORDS) {
-    if (norm.includes(method) && norm.includes("how to")) return true;
-  }
-  return false;
+  // 2026-08-03 audit (OG-2): the method lexicon is word-boundary anchored (UNSAFE_METHOD_RE). As bare
+  // substrings these cut the LIVE stream on ordinary replies — "how to change your wind-down routine"
+  // ("hang" ⊂ change) and "how to make your pillow setup comfortable" ("pill" ⊂ pillow) were both cut
+  // mid-sentence and spoken as the crisis fallback instead. Deliberately still NON-directional (cue and
+  // method may appear in either order), which is the stricter, safer posture for a live tripwire.
+  const norm = normalizeText(text);
+  return norm.includes("how to") && UNSAFE_METHOD_RE.test(norm);
 }
 
 /** True if an AI reply surfaces a real crisis resource — the active region's number, or recognisable
