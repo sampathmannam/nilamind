@@ -45,7 +45,7 @@ export default function EmptyState({ illustration, nilaState = "calm", title, bo
         {cta && (
           <button
             onClick={cta.onClick}
-            className="shrink-0 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold cursor-pointer transition-colors"
+            className="shrink-0 px-3 py-1.5 rounded-lg bg-accent hover:opacity-90 text-white text-xs font-bold cursor-pointer transition-colors"
           >
             {cta.label}
           </button>
@@ -64,7 +64,7 @@ export default function EmptyState({ illustration, nilaState = "calm", title, bo
       {cta && (
         <button
           onClick={cta.onClick}
-          className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold cursor-pointer transition-colors"
+          className="px-5 py-2.5 rounded-xl bg-accent hover:opacity-90 text-white text-xs font-bold cursor-pointer transition-colors"
         >
           {cta.label}
         </button>

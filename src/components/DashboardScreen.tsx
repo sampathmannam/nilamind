@@ -704,7 +704,7 @@ export default function DashboardScreen({ onOpenView }: { onOpenView?: (target: 
           primitive replaced Recharts only where it was safe — the single-series WHO-5 sparkline in
           WellbeingTrendCard. MiniBar was deleted as orphaned (no consumer). See AGENTS.md "wire what
           you build". */}
-        <Suspense fallback={<div className="glass rounded-2xl p-8 text-center text-ink-faint text-sm">Loading charts…</div>}>
+        <Suspense fallback={<Card variant="glass" padding="lg" gap="none" className="text-center text-ink-faint text-sm">Loading charts…</Card>}>
         <LazyDashboardCharts
           timeRange={timeRange}
           setTimeRange={setTimeRange}
@@ -731,23 +731,28 @@ export default function DashboardScreen({ onOpenView }: { onOpenView?: (target: 
             const traj = trajectories.find((t) => t.id === `assessment-${id}`);
             const dirIcon = traj?.direction === "protective" ? <TrendingDown className="w-3.5 h-3.5 text-success" /> : traj?.direction === "risk" ? <TrendUpIcon className="w-3.5 h-3.5 text-warn" /> : <Minus className="w-3.5 h-3.5 text-ink-faint" />;
             return (
-              <div key={id} className="glass rounded-xl p-3">
+              <Card key={id} variant="glass" padding="sm" gap="none">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-ink">{inst.measures.split(" ")[0]} · <span className="text-ink-faint font-normal">{id}</span></span>
                   <span className="text-xs text-ink-2">{last.total}/{inst.maxScore} <span className="text-ink-faint">{last.severity}</span></span>
                 </div>
                 {traj && <p className="text-[11px] text-ink-muted mt-1 flex items-start gap-1">{dirIcon}<span>{traj.finding.split(" — ").slice(1).join(" — ") || traj.finding}</span></p>}
-              </div>
+              </Card>
             );
           })
         ) : (
-          <EmptyCard illustration="📝" text="Take a screening (PHQ-9 or GAD-7) to track depression and anxiety over time." />
+          <EmptyStateShared
+            nilaState={EMPTY_STATES.noMoodData.nilaState}
+            title="No screenings yet"
+            body="Take a screening (PHQ-9 or GAD-7) to track depression and anxiety over time."
+            compact
+          />
         )}
       </div>
 
       {/* Derived observations */}
       {observations.length > 0 && (
-        <div className="glass p-5 rounded-2xl space-y-3">
+        <Card variant="glass" padding="lg" gap="md">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-ink-muted font-mono flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5 text-success" /> Patterns from your data
           </h2>
@@ -766,20 +771,20 @@ export default function DashboardScreen({ onOpenView }: { onOpenView?: (target: 
               {showAllObservations ? `Show less` : `See all ${observations.length} patterns`}
             </button>
           )}
-        </div>
+        </Card>
       )}
 
       {/* Daily-behaviour insights (sleep, screen time, steps, etc.) */}
       {behaviourLoading && behaviourInsights.length === 0 && (
-        <div className="glass p-5 rounded-2xl space-y-3">
+        <Card variant="glass" padding="lg" gap="md">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-ink-muted font-mono flex items-center gap-1.5">
             <Lightbulb className="w-3.5 h-3.5 text-warn" /> Behaviour insights
           </h2>
           <p className="text-xs text-ink-faint italic">Analysing your patterns…</p>
-        </div>
+        </Card>
       )}
       {behaviourInsights.length > 0 && (
-        <div className="glass p-5 rounded-2xl space-y-3">
+        <Card variant="glass" padding="lg" gap="md">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-ink-muted font-mono flex items-center gap-1.5">
             <Lightbulb className="w-3.5 h-3.5 text-warn" /> Behaviour insights
             {behaviourDays > 0 && <span className="text-xs text-ink-faint normal-case tracking-normal ml-1">({behaviourDays} days of paired data)</span>}
@@ -802,24 +807,24 @@ export default function DashboardScreen({ onOpenView }: { onOpenView?: (target: 
               {showAllBehaviour ? `Show less` : `See all ${behaviourInsights.length} insights`}
             </button>
           )}
-        </div>
+        </Card>
       )}
 
       {/* Quick-note tag cloud */}
       {topTags.length > 0 && (
-        <div className="glass p-5 rounded-2xl space-y-3">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400 font-mono flex items-center gap-1.5">
-            <Tag className="w-3.5 h-3.5 text-blue-400" /> Frequent quick-note subjects
+        <Card variant="glass" padding="lg" gap="md">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-ink-muted font-mono flex items-center gap-1.5">
+            <Tag className="w-3.5 h-3.5 text-accent" /> Frequent quick-note subjects
           </h2>
           <div className="flex flex-wrap gap-2">
             {topTags.map(([tag, count]) => (
               <div key={tag} className="flex items-center bg-page border border-accent/30 rounded-lg px-2.5 py-1.5 overflow-hidden">
-                <span className="text-xs font-medium text-blue-300 mr-2">{tag}</span>
-                <span className="text-xs text-slate-500 font-mono bg-card px-1.5 rounded">{count}</span>
+                <span className="text-xs font-medium text-accent-hi mr-2">{tag}</span>
+                <span className="text-xs text-ink-faint font-mono bg-card px-1.5 rounded">{count}</span>
               </div>
             ))}
           </div>
-        </div>
+        </Card>
       )}
        </CollapsibleSection>
        </AnimatedCard>
@@ -835,9 +840,9 @@ export default function DashboardScreen({ onOpenView }: { onOpenView?: (target: 
        >
         {/* Nila's Deep Evaluation — runs fully on-device via the same local AI that powers your conversations.
             User-initiated + disclosed. Kept in the dashboard because it owns the crisis-gated state. */}
-        <div className="bg-card border border-purple-500/20 p-5 rounded-2xl space-y-4 shadow-[0_0_15px_rgba(168,85,247,0.05)]">
+        <Card variant="raised" padding="lg" gap="md" className="shadow-[0_0_15px_rgba(168,85,247,0.05)]">
           <div>
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-purple-400 font-mono flex items-center gap-1.5 mb-1">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-accent font-mono flex items-center gap-1.5 mb-1">
               <BrainCircuit className="w-4 h-4" /> Nila's Deep Evaluation ✨
             </h2>
             <p className="text-[11px] text-ink-muted leading-relaxed">
@@ -852,13 +857,13 @@ export default function DashboardScreen({ onOpenView }: { onOpenView?: (target: 
             <CrisisCard id="dashboard-crisis" className="mt-4" heading="Something in your recent notes matters more than this evaluation" />
           )}
           {assessmentResult && !assessmentCrisis && (
-            <div className="mt-4 p-4 bg-page border border-slate-800 rounded-xl">
-              <div className="text-xs text-slate-300 leading-relaxed space-y-2 markdown-body font-sans">
+            <div className="mt-4 p-4 bg-page border border-line rounded-xl">
+              <div className="text-xs text-ink-2 leading-relaxed space-y-2 markdown-body font-sans">
                 <Markdown>{assessmentResult}</Markdown>
               </div>
             </div>
           )}
-        </div>
+        </Card>
       </EpisodesBand>
       </AnimatedCard>
       </CollapsibleGroup>
