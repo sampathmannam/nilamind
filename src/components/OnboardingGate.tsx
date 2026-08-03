@@ -297,7 +297,7 @@ function getSlides(baselineMood: number | null) {
     {
       id: "privacy",
       title: "Your data stays on your phone",
-      body: "Nila runs entirely on-device. No cloud. No analytics. No tracking. You can delete everything anytime in Settings.",
+      body: "Nila runs on your phone by default. No analytics. No tracking. You can delete everything anytime in Settings. An optional cloud AI tier is available if you choose to enable it.",
       icon: <Shield className="w-10 h-10 text-success" />,
     },
     {

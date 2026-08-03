@@ -1,4 +1,4 @@
-// App.tsx — 3-tab IA (Nila / Today / You) with nav-store-driven overlays.
+// App.tsx — 4-tab IA (Nila / Today / Tools / You) with nav-store-driven overlays.
 // BiometricGateHost and ModelSetupGate are standalone gates (no children).
 
 import { onPersistError } from "./services/secureLocal";
@@ -57,7 +57,7 @@ import { SkeletonCard, SkeletonList } from "./components/Skeleton";
 
 function ScreenFallback() {
   return (
-    <div className="p-4 space-y-4" role="status" aria-label="Loading">
+    <div className="p-4 space-y-4" role="status" aria-live="polite" aria-label="Loading">
       <SkeletonCard />
       <SkeletonCard />
       <SkeletonList count={2} />
@@ -120,7 +120,7 @@ const AUX_LABELS: Partial<Record<AuxView, string>> = {
   diary: "Journal",
   dbt_diary_card: "DBT diary card",
   episode: "Episode support",
-  ema_checkin: "Quick check‑in",
+  ema_checkin: "Quick check-in",
   episode_marker: "Episode markers",
   caregiver_settings: "Caregiver settings",
   legal: "Legal",
@@ -235,7 +235,7 @@ function AppShell() {
   // App-level error display
   useEffect(() => onError((err, context) => {
     setAppError({ message: context ? `[${context}] ${err instanceof Error ? err.message : String(err)}` : (err instanceof Error ? err.message : String(err)), type: "error" });
-    setTimeout(() => setAppError(null), 8000);
+    setTimeout(() => setAppError(null), 15000);
   }), []);
 
   // Language change re-render
@@ -404,24 +404,8 @@ function AppShell() {
     return () => { removed = true; handle?.remove(); };
   }, [go]);
 
-  // Adaptive theme
-  useEffect(() => {
-    function applyAdaptive() {
-      const s = getUserState();
-      const m = computeAdaptiveMode(s);
-      const c = getAdaptiveCssClass(m);
-      const html = document.documentElement;
-      html.classList.remove("theme-elevated", "theme-low");
-      if (c) html.classList.add(c);
-    }
-    applyAdaptive();
-    document.addEventListener("visibilitychange", applyAdaptive);
-    const interval = setInterval(applyAdaptive, 30000);
-    return () => { document.removeEventListener("visibilitychange", applyAdaptive); clearInterval(interval); };
-  }, []);
-
-  // Warm Vosk STT
-  useEffect(() => { warmVoskStt(); }, []);
+  // Adaptive theme — NOTE: the original duplicate interval (309-323 ≡ 408-421) was removed in the
+  // audit fix to avoid double-polling getUserState() every 30s. The first occurrence (309-323) is kept.
 
   // ── Main render ────────────────────────────────────────────────────────────
   return (
@@ -468,7 +452,7 @@ function AppShell() {
 
       {/* Main content area — each tab isolated in its own ErrorBoundary */}
       <main className="flex-1 min-h-0 relative flex flex-col animate-tab-fade" key={state.tab} aria-label="Content">
-        <a href="#today-hub" className="skip-link">Skip to main content</a>
+        {state.tab === "today" && <a href="#today-hub" className="skip-link">Skip to main content</a>}
         <div id={`tabpanel-${state.tab}`} role="tabpanel" aria-labelledby={`tab-${state.tab}`}>
         {state.tab === "nila" && (
           <ErrorBoundary name="nila" onError={(err: Error, info: React.ErrorInfo) => console.error("[ErrorBoundary:nila] caught:", err, info)}>

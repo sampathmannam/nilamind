@@ -21,7 +21,7 @@ Core promise: **nothing leaves your phone.**
    delusion/mania validation, method disclosure) enters. Anti-sycophancy is a hard gate, not a hope.
 
 ## Build / test / verify
-- **Tests (keep green):** `npx vitest run` — ~**693 tests**. One file: `npx vitest run src/services/X.test.ts`.
+- **Tests (keep green):** `npx vitest run` — ~**3,815 tests**. One file: `npx vitest run src/services/X.test.ts`.
 - **Typecheck (must be exit 0):** `npx tsc --noEmit`
 - **Build:** `npm run build` (vite)
 - **TDD is mandatory.** RED (write a failing test, *watch it fail for the right reason*) → GREEN (minimal code) →
@@ -53,7 +53,7 @@ safety hole. So, non-negotiable:
   `moodHistory.ts`, `nilaInsights.ts` (compounding memory).
 - **Protocols:** `protocols.ts`, `behaviouralActivation.ts`, `protocolProgress.ts`, `values.ts`.
 - **Persistence:** `secureLocal.ts` (encrypted; IndexedDB + in-memory cache; passthrough fallback), `secureStore.ts`.
-- **IA:** 3 tabs (Nila / Tools / You) in `App.tsx`; `nav.ts` router; `toolsRows.ts` / `youRows.ts` hubs.
+- **IA:** 4 tabs (Nila / Today / Tools / You) in `App.tsx`; `nav.ts` router; `toolsRows.ts` / `youRows.ts` hubs.
 
 ## Strategy thesis (2026-07-06 audit)
 A 4-agent audit found NilaMind is **feature-complete and well-engineered**; the real problems are **dead wiring**
@@ -62,7 +62,7 @@ A 4-agent audit found NilaMind is **feature-complete and well-engineered**; the 
 the deliberate on-device decision and costs money, and the audit shows it wouldn't fix the felt quality gap.
 
 ## Current work — branch `feat/vision-p0-reality-guard`
-Shipped (TDD, 699 green, tsc clean):
+Shipped (TDD, ~3,815 green, tsc clean):
 - anti-sycophancy **Rule 6** (manic grandiosity/impulsivity/paranoia validation)
 - `elevationGuard` **racing-thoughts**
 - **sleep + inflection signals fed into `nilaContext`** (#1a/#1b)

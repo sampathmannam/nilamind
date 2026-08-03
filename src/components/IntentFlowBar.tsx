@@ -69,7 +69,7 @@ export default function IntentFlowBar({
   return (
     <div>
     <nav
-      className={`flex items-center justify-between rounded-xl bg-[var(--gray-100)] p-1 dark:bg-[var(--gray-800)] ${className}`}
+      className={`flex items-center justify-between rounded-xl bg-[var(--color-slate-100)] p-1 dark:bg-[var(--color-slate-800)] ${className}`}
       aria-label="Intent phase navigation"
     >
       {PHASES.map((phase) => {
@@ -80,8 +80,8 @@ export default function IntentFlowBar({
             onClick={() => onPhaseChange(phase.id)}
             className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
               ${active
-                ? "bg-white text-[var(--text-main)] shadow-sm dark:bg-[var(--gray-700)] dark:text-white"
-                : "text-[var(--gray-500)] hover:text-[var(--text-main)] dark:text-[var(--gray-400)]"
+                ? "bg-white text-[var(--color-ink)] shadow-sm dark:bg-[var(--color-slate-700)] dark:text-white"
+                : "text-[var(--color-slate-500)] hover:text-[var(--color-ink)] dark:text-[var(--color-slate-400)]"
               }`}
             aria-current={active ? "step" : undefined}
           >

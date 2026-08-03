@@ -36,12 +36,12 @@ export default function OnboardingMomentum({ onComplete }: OnboardingMomentumPro
             value={goal}
             onChange={(e) => setGoal(e.target.value)}
             placeholder="e.g., Reduce anxiety, improve sleep, manage stress"
-            className="w-full rounded-lg border-(--gray-300) border p-3 focus:border-[var(--coral)] focus:outline-none dark:border-(--gray-400)"
+            className="w-full rounded-lg border-[var(--color-slate-300)] border p-3 focus:border-[var(--color-peach-400)] focus:outline-none dark:border-[var(--color-slate-400)]"
           />
           <button
             onClick={handleStartGoal}
             disabled={!goal.trim()}
-            className="w-full rounded-lg bg-[var(--coral)] py-3 text-white font-medium hover:bg-[var(--coral)]/90 disabled:opacity-50"
+            className="w-full rounded-lg bg-[var(--color-peach-400)] py-3 text-[var(--color-slate-900)] font-medium hover:bg-[var(--color-peach-500)] disabled:opacity-50"
           >
             Begin Journey
           </button>
@@ -55,12 +55,12 @@ export default function OnboardingMomentum({ onComplete }: OnboardingMomentumPro
             value={journalEntry}
             onChange={(e) => setJournalEntry(e.target.value)}
             placeholder="Describe your mood, energy, and any standout moments..."
-            className="w-full rounded-lg border-(--gray-300) border p-3 h-32 focus:border-[var(--coral)] focus:outline-none dark:border-(--gray-400)"
+            className="w-full rounded-lg border-[var(--color-slate-300)] border p-3 h-32 focus:border-[var(--color-peach-400)] focus:outline-none dark:border-[var(--color-slate-400)]"
           />
           <button
             onClick={handleNext}
             disabled={!journalEntry.trim()}
-            className="w-full rounded-lg bg-[var(--sky-blue)] py-3 text-white font-medium hover:bg-[var(--sky-blue)]/90 disabled:opacity-50"
+            className="w-full rounded-lg bg-[var(--color-blue-400)] py-3 text-[var(--color-slate-900)] font-medium hover:bg-[var(--color-blue-500)] disabled:opacity-50"
           >
             Get Insight
           </button>
@@ -69,13 +69,13 @@ export default function OnboardingMomentum({ onComplete }: OnboardingMomentumPro
 
       {step === "insight" && insight && (
         <div className="space-y-4">
-          <div className="rounded-lg bg-[var(--mint)] bg-opacity-30 p-4">
-            <h4 className="font-semibold text-[var(--sage-green)] mb-2">💡 Your Personalized Insight</h4>
-            <p className="text-[var(--text-main)] leading-relaxed">{insight}</p>
+          <div className="rounded-lg bg-[var(--color-emerald-300)]/10 p-4">
+            <h4 className="font-semibold text-[var(--color-emerald-400)] mb-2">💡 Your Personalized Insight</h4>
+            <p className="text-[var(--color-ink)] leading-relaxed">{insight}</p>
           </div>
           <button
             onClick={() => onComplete?.()}
-            className="w-full rounded-lg bg-[var(--sage-green)] py-3 text-white font-medium hover:bg-[var(--sage-green)]/90"
+            className="w-full rounded-lg bg-[var(--color-emerald-400)] py-3 text-white font-medium hover:bg-[var(--color-emerald-500)]"
           >
             Start Your Daily Journey
           </button>

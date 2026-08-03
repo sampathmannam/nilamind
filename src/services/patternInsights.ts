@@ -306,7 +306,6 @@ export function seasonalMoodPattern(mood: MoodPoint[]): Insight | null {
       };
     }
   }
-  void overall;
   return null;
 }
 

@@ -122,7 +122,7 @@ export default function ToolsScreen({ go, onEpisode, phoneEnabled, onOpenCrisis 
           <button
             key={cat.id}
             onClick={() => setActiveCategory(cat.id)}
-            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap shrink-0 min-h-[36px] focus-ring ${
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap shrink-0 min-h-[44px] focus-ring ${
               activeCategory === cat.id
                 ? "bg-accent/15 text-accent border border-accent/30"
                 : "bg-fill text-ink-muted border border-line hover:text-ink-2 hover:border-line-strong"
@@ -150,13 +150,13 @@ export default function ToolsScreen({ go, onEpisode, phoneEnabled, onOpenCrisis 
             value={toolSearch}
             onChange={(e) => setToolSearch(e.target.value)}
             placeholder="Find a tool by name..."
-            className="w-full pl-8 pr-8 py-2.5 rounded-xl bg-card border border-line text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus:border-accent/40 focus:ring-1 focus:ring-accent/20 transition-all"
+            className="w-full pl-8 pr-8 py-3 rounded-xl bg-card border border-line text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus:border-accent/40 focus:ring-1 focus:ring-accent/20 transition-all"
             aria-label="Search tools"
           />
           {toolSearch && (
             <button
               onClick={() => setToolSearch("")}
-              className="absolute right-1 top-1/2 -translate-y-1/2 min-w-[36px] min-h-[36px] flex items-center justify-center text-ink-faint hover:text-ink-2 cursor-pointer"
+              className="absolute right-1 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] flex items-center justify-center text-ink-faint hover:text-ink-2 cursor-pointer"
               aria-label="Clear search"
             >
               <X className="w-3.5 h-3.5" />

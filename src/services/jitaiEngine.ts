@@ -221,11 +221,66 @@ export function assessJitai(params: {
 // Most JITAIs lack empirical decision rules. These cooldown values should be validated via
 // micro-randomized trial (MRT) in future work.
 // RESEARCH TODO: cooldown durations are provisional — validate via MRT or factorial experiment.
+// Adaptive cooldowns: adjusted based on user engagement history (dismiss/engage ratio).
 const JITAI_SHOWN_PREFIX = "nilamind_jitai_last_shown_";
+const JITAI_ENGAGEMENT_KEY = "nilamind_jitai_engagement";
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS_LOCAL = 24 * HOUR_MS;
 
-const JITAI_COOLDOWN_MS: Record<JitaiTrigger, number | null> = {
+interface JitaiEngagement {
+  shown: number;
+  engaged: number;   // user tapped/opened the nudge
+  dismissed: number; // user swiped away / ignored
+}
+
+function loadEngagement(): JitaiEngagement {
+  try {
+    const raw = secureLocal.getItem(JITAI_ENGAGEMENT_KEY);
+    if (!raw) return { shown: 0, engaged: 0, dismissed: 0 };
+    const parsed = JSON.parse(raw);
+    return { shown: parsed.shown || 0, engaged: parsed.engaged || 0, dismissed: parsed.dismissed || 0 };
+  } catch { return { shown: 0, engaged: 0, dismissed: 0 }; }
+}
+
+function saveEngagement(e: JitaiEngagement): void {
+  try { secureLocal.setItem(JITAI_ENGAGEMENT_KEY, JSON.stringify(e)); } catch { /* ignore */ }
+}
+
+/** Record that a JITAI was shown. */
+export function recordJitaiShown(): void {
+  const e = loadEngagement();
+  e.shown++;
+  saveEngagement(e);
+}
+
+/** Record that a JITAI was engaged (user tapped/opened). */
+export function recordJitaiEngaged(): void {
+  const e = loadEngagement();
+  e.engaged++;
+  saveEngagement(e);
+}
+
+/** Record that a JITAI was dismissed (user ignored/swiped). */
+export function recordJitaiDismissed(): void {
+  const e = loadEngagement();
+  e.dismissed++;
+  saveEngagement(e);
+}
+
+/** Compute adaptive cooldown multiplier based on engagement ratio.
+ *  - High engagement (>50% engage rate) → 0.75× (shorter cooldown, user is receptive)
+ *  - Low engagement (<20% engage rate) → 1.5× (longer cooldown, reduce fatigue)
+ *  - Default → 1.0× (no adjustment) */
+function engagementMultiplier(): number {
+  const e = loadEngagement();
+  if (e.shown < 5) return 1.0; // not enough data, use defaults
+  const engageRate = e.engaged / e.shown;
+  if (engageRate > 0.5) return 0.75;
+  if (engageRate < 0.2) return 1.5;
+  return 1.0;
+}
+
+const BASE_COOLDOWN_MS: Record<JitaiTrigger, number | null> = {
   sleep_prodrome: 24 * HOUR_MS,
   mood_deterioration: 24 * HOUR_MS,
   high_distortion: 24 * HOUR_MS,
@@ -233,9 +288,16 @@ const JITAI_COOLDOWN_MS: Record<JitaiTrigger, number | null> = {
   elevation_risk: null, // exempt — never gated
 };
 
-/** True if `trigger` was shown within its cooldown window (always false for the exempt elevation_risk). */
+/** Get the effective cooldown for a trigger, adjusted by engagement history. */
+export function getJitaiCooldownMs(trigger: JitaiTrigger): number | null {
+  const base = BASE_COOLDOWN_MS[trigger];
+  if (base === null) return null;
+  return Math.round(base * engagementMultiplier());
+}
+
+/** True if `trigger` was shown within its adaptive cooldown window (always false for the exempt elevation_risk). */
 export function isJitaiCooldownActive(trigger: JitaiTrigger): boolean {
-  const cooldownMs = JITAI_COOLDOWN_MS[trigger];
+  const cooldownMs = getJitaiCooldownMs(trigger);
   if (cooldownMs === null) return false;
   try {
     const raw = secureLocal.getItem(JITAI_SHOWN_PREFIX + trigger);

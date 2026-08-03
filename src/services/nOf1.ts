@@ -18,8 +18,12 @@ import { getProtocol } from "./protocols";
 // which is correlational, not causal. The confidence tiers (low/medium/high) reflect completion count,
 // not statistical power.
 // RESEARCH TODO: Consider implementing proper counterbalancing (randomize protocol order) in v2.
+// Counterbalancing: recommend protocol order to reduce carryover effects between different protocols.
+// Uses a deterministic seed-based shuffle so the same user gets consistent ordering across sessions,
+// but different users get different orderings (reduces systematic bias).
 
 const COMPLETIONS_KEY = "nilamind_protocol_completions";
+const COUNTERBALANCE_SEED_KEY = "nilamind_nof1_cb_seed";
 
 export interface ProtocolCompletion {
   protocolId: string;
@@ -255,4 +259,123 @@ export function no1ContextBlock(): string {
     `Their ${top.protocolName} sessions correlate with ${magnitude}-point ${direction} mood the next day (${top.completions} sessions, ${top.confidence} confidence).`,
     "If they mention this protocol, you can gently reflect: \"You've noticed that tends to help.\" Never present as fact.",
   ].join(" ");
+}
+
+// ---------------------------------------------------------------------------
+// Counterbalancing — recommend protocol order to reduce carryover effects
+// ---------------------------------------------------------------------------
+
+/** Deterministic seed-based pseudo-random number generator (mulberry32). */
+function mulberry32(seed: number): () => number {
+  let s = seed | 0;
+  return () => {
+    s = (s + 0x6d2b79f5) | 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** Get or create a persistent seed for this user's counterbalancing. */
+function getCounterbalanceSeed(): number {
+  try {
+    const raw = secureLocal.getItem(COUNTERBALANCE_SEED_KEY);
+    if (raw) return Number(raw);
+  } catch { /* ignore */ }
+  const seed = Math.floor(Math.random() * 2147483647);
+  try { secureLocal.setItem(COUNTERBALANCE_SEED_KEY, String(seed)); } catch { /* ignore */ }
+  return seed;
+}
+
+/** Fisher-Yates shuffle with a seeded PRNG. */
+function seededShuffle<T>(arr: T[], rng: () => number): T[] {
+  const result = [...arr];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+/** All available protocol IDs — used for counterbalancing recommendations. */
+const ALL_PROTOCOL_IDS = [
+  "behavioural-activation",
+  "cbti-sleep",
+  "dbt-skills-training",
+  "act-training",
+  "worry-time",
+  "assertion-training",
+  "self-compassion",
+];
+
+/**
+ * Recommend next protocol(s) using balanced counterbalancing.
+ *
+ * SCED counterbalancing ensures each protocol appears equally often in each
+ * position across the experiment. This implementation:
+ * 1. Uses a seeded shuffle for deterministic-per-user ordering
+ * 2. Rotates through positions based on completion history
+ * 3. Avoids recommending the same protocol twice in a row (minimum washout)
+ *
+ * Returns up to `count` protocol IDs in recommended order, or empty if no
+ * data is available for meaningful recommendation.
+ */
+export function recommendProtocolOrder(count = 3): string[] {
+  const completions = readCompletions();
+  const seed = getCounterbalanceSeed();
+  const rng = mulberry32(seed);
+
+  // Get protocols sorted by completion count (least completed first —平衡)
+  const completionCounts = new Map<string, number>();
+  for (const c of completions) {
+    completionCounts.set(c.protocolId, (completionCounts.get(c.protocolId) || 0) + 1);
+  }
+
+  // Sort: least completed first, then shuffle within equal counts
+  const sorted = [...ALL_PROTOCOL_IDS].sort((a, b) => {
+    const ca = completionCounts.get(a) || 0;
+    const cb = completionCounts.get(b) || 0;
+    if (ca !== cb) return ca - cb;
+    return 0; // equal — will be shuffled
+  });
+
+  // Shuffle groups of equal completion count for randomization within balance
+  const result: string[] = [];
+  let i = 0;
+  while (i < sorted.length && result.length < count) {
+    // Find group with same completion count
+    const currentCount = completionCounts.get(sorted[i]) || 0;
+    let j = i;
+    while (j < sorted.length && (completionCounts.get(sorted[j]) || 0) === currentCount) j++;
+    const group = sorted.slice(i, j);
+    const shuffled = seededShuffle(group, rng);
+    for (const p of shuffled) {
+      if (result.length >= count) break;
+      // Skip if it was the very last completed protocol (minimum washout)
+      const lastCompletion = completions.filter((c) => c.protocolId === p).pop();
+      const veryLast = completions[completions.length - 1];
+      if (lastCompletion && veryLast && lastCompletion.date === veryLast.date && p === veryLast.protocolId) {
+        continue;
+      }
+      result.push(p);
+    }
+    i = j;
+  }
+
+  return result;
+}
+
+/**
+ * Get a human-readable counterbalancing summary for the user.
+ * Explains the recommendation rationale in gentle, non-clinical language.
+ */
+export function counterbalanceSummary(): string | null {
+  const recommended = recommendProtocolOrder(2);
+  if (recommended.length === 0) return null;
+
+  const names = recommended.map(resolveProtocolName);
+  if (names.length === 1) {
+    return `Based on your patterns, ${names[0]} might be worth trying next.`;
+  }
+  return `Based on your patterns, ${names[0]} or ${names[1]} might be worth trying next.`;
 }
