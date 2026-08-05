@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Sparkles, Pencil, Trash2, Check, X, TrendingUp, TrendingDown } from "lucide-react";
+import { Pencil, Trash2, Check, X, TrendingUp, TrendingDown } from "lucide-react";
 import ConfirmDialog from "./ConfirmDialog";
 import {
   loadInsights, editInsight, deleteInsight, INSIGHT_KINDS,
@@ -81,11 +81,10 @@ export default function NilaMemoryScreen() {
 
   return (
     <div className="space-y-5 max-w-md mx-auto" id="nila-memory-screen">
+      {/* 2026-08-05 declutter: in-body "What Nila remembers" h1 removed — the Sheet header
+          (AUX_LABELS.nila_memory) already shows the same title directly above. Description stays. */}
       <header className="space-y-1">
-        <h1 className="text-xl font-semibold text-ink flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-fuchsia-400" /> What Nila remembers
-        </h1>
-        <p className="text-xs text-ink-muted leading-relaxed">
+        <p className="text-base text-ink-muted leading-relaxed">
           The things Nila has come to understand about you over time — kept private on this device. Edit
           anything that's off, or delete what you'd rather she let go. If she notices something again
           later, just delete it again.
@@ -185,7 +184,7 @@ export default function NilaMemoryScreen() {
       <section className="space-y-2">
         <h2 className="text-[11px] font-mono uppercase tracking-widest text-ink-faint px-1">Patterns Nila's noticed lately</h2>
         {noticed.length === 0 ? (
-          <p className="text-[11px] text-ink-faint px-1 leading-relaxed">Nothing notable yet — Nila watches your own trends quietly.</p>
+          <p className="text-base text-ink-faint px-1 leading-relaxed">Nothing notable yet — Nila watches your own trends quietly.</p>
         ) : (
           <div className="glass rounded-2xl divide-y divide-line/70">
             {noticed.map((n) => (
@@ -204,7 +203,7 @@ export default function NilaMemoryScreen() {
             ))}
           </div>
         )}
-        <p className="text-xs text-ink-faint px-1 leading-relaxed">
+        <p className="text-base text-ink-faint px-1 leading-relaxed">
           Computed on your device and never sent anywhere. Nila only mentions these in chat if you turn it on in Settings.
         </p>
       </section>
@@ -217,7 +216,7 @@ export default function NilaMemoryScreen() {
               <p className="text-sm text-ink-2 leading-relaxed">
                 You've rated <strong>{fb.total}</strong> {fb.total === 1 ? "reply" : "replies"} — {fb.up} 👍, {fb.down} 👎{fb.suggestions ? `, and suggested ${fb.suggestions} better ${fb.suggestions === 1 ? "reply" : "replies"}` : ""}.
               </p>
-              <p className="text-xs text-ink-faint leading-relaxed">
+              <p className="text-base text-ink-faint leading-relaxed">
                 It all stays on this device — it's how Nila learns to do better over time, and you can wipe it any time.
               </p>
               <button onClick={clearFb} className="text-[11px] font-semibold text-ink-muted hover:text-rose-400 cursor-pointer">
@@ -263,7 +262,7 @@ export default function NilaMemoryScreen() {
                   </div>
                 </div>
               ))}
-              <p className="text-xs text-ink-faint leading-relaxed">
+              <p className="text-base text-ink-faint leading-relaxed">
                 Each donation is only Nila's reply + your suggested wording — scrubbed of emails, phone numbers, and links. Nothing leaves your phone until a future upload step.
               </p>
             </div>
@@ -273,7 +272,7 @@ export default function NilaMemoryScreen() {
               <p className="text-sm text-ink-2 leading-relaxed">
                 You've chosen to share <strong>{donations}</strong> {donations === 1 ? "example" : "examples"} to help train Nila.
               </p>
-              <p className="text-xs text-ink-faint leading-relaxed">
+              <p className="text-base text-ink-faint leading-relaxed">
                 Nothing has left your phone. You can withdraw any time.
               </p>
               <button onClick={withdrawAll} className="text-[11px] font-semibold text-ink-muted hover:text-rose-400 cursor-pointer">

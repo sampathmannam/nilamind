@@ -53,7 +53,7 @@ export default function ConversationalCheckinCard({
         </span>
         <div className="min-w-0">
           <p className="text-sm font-bold text-ink leading-snug">{summarizeDraft(draft)}</p>
-          <p className="text-[11px] text-ink-muted mt-0.5 leading-relaxed">
+          <p className="text-base text-ink-muted mt-0.5 leading-relaxed">
             From what you shared with me — want me to log that as today's check-in? You can tweak it too.
           </p>
         </div>

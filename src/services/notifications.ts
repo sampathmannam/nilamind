@@ -204,7 +204,7 @@ function nudgeForToday(): string {
   // Retention: check medication adherence
   const medicationMissed = (() => {
     try {
-      const raw = secureLocal.getItem("nilamind_medication_logs");
+      const raw = secureLocal.getItem("nilamind_med_logs");
       if (!raw) return false;
       const logs = JSON.parse(raw);
       const today = localDateKey();

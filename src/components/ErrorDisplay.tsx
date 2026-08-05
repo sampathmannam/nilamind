@@ -72,7 +72,7 @@ export default function ErrorDisplay({
         <Icon className="w-5 h-5 mt-0.5 shrink-0" aria-hidden="true" />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold">{typeConfig.label}</p>
-          <p className="text-xs leading-relaxed mt-0.5">{message}</p>
+          <p className="text-base leading-relaxed mt-0.5">{message}</p>
         </div>
         <button
           onClick={() => {

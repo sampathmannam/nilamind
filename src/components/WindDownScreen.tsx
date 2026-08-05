@@ -92,13 +92,10 @@ export default function WindDownScreen() {
 
   return (
     <div className="space-y-5 max-w-md mx-auto" id="winddown-section">
-      <div className="bg-card p-4 rounded-xl border border-line">
-        <h1 className="text-xl font-semibold text-ink flex items-center gap-2">
-          <Moon className="text-accent w-5 h-5" />
-          <span>Wind down</span>
-        </h1>
-        <p className="text-xs text-ink-faint">A calm few minutes before sleep — gentle, never medical.</p>
-      </div>
+      {/* 2026-08-05 declutter: in-body "Wind down" h1 removed — this screen always renders inside a
+          Sheet whose header already shows the same title (AUX_LABELS.winddown), so the user saw it
+          twice, stacked. Same fix applied across all aux screens; the description line stays. */}
+      <p className="text-base text-ink-muted leading-relaxed">A calm few minutes before sleep — gentle, never medical.</p>
 
       {/* ── CRISIS surface (deterministic; worry text already cleared) ── */}
       {stage === "crisis" && (
@@ -106,7 +103,7 @@ export default function WindDownScreen() {
           <h3 className="text-sm font-semibold text-rose-200 flex items-center gap-1.5">
             <LifeBuoy className="w-4 h-4" /> Your safety matters more than sleep right now
           </h3>
-          <p className="text-xs text-ink-2 whitespace-pre-line leading-relaxed">{getCrisisReply()}</p>
+          <p className="text-base text-ink-2 whitespace-pre-line leading-relaxed">{getCrisisReply()}</p>
           <CrisisLines tone="rose" compact />
           <button
             onClick={() => setStage("settle")}
@@ -124,7 +121,7 @@ export default function WindDownScreen() {
             <h3 className="text-sm font-semibold text-ink-2 flex items-center gap-1.5">
               <Moon className="text-accent w-4 h-4" /> {park.title}
             </h3>
-            <p className="text-[11px] text-ink-faint leading-relaxed">{park.body}</p>
+            <p className="text-base text-ink-faint leading-relaxed">{park.body}</p>
           </div>
           <textarea
             aria-label={park.title}
@@ -160,7 +157,7 @@ export default function WindDownScreen() {
             <h3 className="text-sm font-semibold text-ink-2 flex items-center gap-1.5">
               <Wind className="text-accent w-4 h-4" /> Settle your body
             </h3>
-            <p className="text-[11px] text-ink-faint leading-relaxed">
+            <p className="text-base text-ink-faint leading-relaxed">
               Breathe in for 4, out for 6 — the longer out-breath calms the nervous system.
             </p>
           </div>
@@ -205,12 +202,12 @@ export default function WindDownScreen() {
             <h3 className="text-sm font-semibold text-ink-2 flex items-center gap-1.5">
               <Heart className="text-accent w-4 h-4" /> {close.title}
             </h3>
-            <p className="text-xs text-ink-2 leading-relaxed">{close.body}</p>
+            <p className="text-base text-ink-2 leading-relaxed">{close.body}</p>
           </div>
 
           <div className="p-4 rounded-r-xl bg-accent/5 border-l-4 border-accent border-y border-r border-line/40 space-y-1">
             <p className="text-xs uppercase tracking-wider text-ink-faint font-semibold">One gentle habit</p>
-            <p className="text-xs text-ink-2 leading-relaxed">{tip.text}</p>
+            <p className="text-base text-ink-2 leading-relaxed">{tip.text}</p>
             <p className="text-xs text-ink-faint italic">{tip.basis}</p>
           </div>
 
@@ -246,7 +243,7 @@ export default function WindDownScreen() {
             )}
           </div>
 
-          <p className="text-xs text-slate-600 leading-relaxed px-1">
+          <p className="text-base text-slate-600 leading-relaxed px-1">
             These are gentle habits, not rules. If sleep stays hard for weeks — or your body clock feels far off — a
             GP or sleep clinician can help more than tips can.
           </p>

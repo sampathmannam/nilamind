@@ -342,7 +342,7 @@ export default function ModelSetupScreen({ onReady }: { onReady: () => void }) {
                </div>
                 <div className="text-[12px] text-ink-muted mt-1 leading-snug">{model.detail}</div>
               </button>
-              <p className="text-[11px] text-slate-600 flex items-center gap-1.5 pt-3 leading-relaxed">
+              <p className="text-base text-slate-600 flex items-center gap-1.5 pt-3 leading-relaxed">
                 <ShieldCheck className="w-3 h-3 shrink-0" /> Verified after download — a corrupt file is never
                 loaded.
               </p>

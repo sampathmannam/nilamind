@@ -63,7 +63,7 @@ export default function CrisisHelpButton({ variant = "bar" }: { variant?: "bar" 
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <p className="text-xs text-ink-2 leading-relaxed mb-4">
+            <p className="text-base text-ink-2 leading-relaxed mb-4">
               These lines are free, confidential, and there for you any time — day or night. You don't need
               the app set up to reach them. If you're in immediate danger, call your local emergency number.
             </p>

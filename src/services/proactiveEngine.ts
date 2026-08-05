@@ -134,13 +134,18 @@ export function hasDiaryEntryToday(): boolean {
   return !!loadDiaryMap()[localDateKey()];
 }
 
-function medicationLoggedToday(): boolean {
+/** Whether medication was logged today. Reads the real storage shape medicationAdherence uses — one
+ *  flat JSON array under "nilamind_med_logs", each entry carrying its own `date` — rather than a
+ *  per-date key ("nilamind_med_log_" + today) that is never written anywhere (2026-08-04 audit: the
+ *  morning medication card therefore nagged even after the user logged their dose). Exported for the
+ *  same reason hasDiaryEntryToday is: it's a deterministic, regression-pinned storage-shape reader. */
+export function medicationLoggedToday(): boolean {
   const today = localDateKey();
   try {
-    const raw = secureLocal.getItem("nilamind_med_log_" + today);
+    const raw = secureLocal.getItem("nilamind_med_logs");
     if (!raw) return false;
-    const log = JSON.parse(raw);
-    return Array.isArray(log?.doses) && log.doses.length > 0;
+    const logs = JSON.parse(raw);
+    return Array.isArray(logs) && logs.some((l: any) => l?.date === today);
   } catch {
     return false;
   }

@@ -125,7 +125,7 @@ export default function CaregiverSettingsScreen({ onClose, onOpenCaregiverShare 
         <h1 className="text-xl font-semibold text-ink flex items-center gap-2">
           <Users className="w-5 h-5 text-success" /> {t("you_caregiver_settings_label") || "Caregiver settings"}
         </h1>
-        <p className="text-xs text-ink-muted leading-relaxed">{t("you_caregiver_settings_sub")}</p>
+        <p className="text-base text-ink-muted leading-relaxed">{t("you_caregiver_settings_sub")}</p>
       </header>
 
       {/* Contact list */}
@@ -210,6 +210,8 @@ export default function CaregiverSettingsScreen({ onClose, onOpenCaregiverShare 
             <label key={key} className="flex items-center justify-between cursor-pointer">
               <span className="text-[11px] text-ink-2">{t(label as any)}</span>
               <button
+                role="switch"
+                aria-checked={selectedPrefs.shareCategories[key]}
                 onClick={() => toggleCategory(key)}
                 className={`w-8 h-4 rounded-full relative transition-colors cursor-pointer ${
                   selectedPrefs.shareCategories[key] ? "bg-success" : "bg-slate-600"

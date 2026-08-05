@@ -50,7 +50,7 @@ export default function HealthConnectSection() {
         <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-2 font-mono flex items-center gap-2">
           <Activity className="w-4 h-4 text-accent" /> {t("sec_health_connect")}
         </h2>
-        <p className="text-[11px] text-ink-muted mt-1 leading-relaxed">
+        <p className="text-base text-ink-muted mt-1 leading-relaxed">
           Optional: let Nila read sleep hours from Health Connect (e.g. COROS, Fitbit, Garmin) instead of relying only on self-report.
           Nothing is uploaded — it stays on your phone.
         </p>
@@ -84,7 +84,7 @@ export default function HealthConnectSection() {
       )}
 
       {result && (
-        <p className="text-[11px] text-ink-2 leading-relaxed">{result}</p>
+        <p className="text-base text-ink-2 leading-relaxed">{result}</p>
       )}
     </div>
   );

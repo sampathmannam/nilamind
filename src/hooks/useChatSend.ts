@@ -18,6 +18,7 @@ import { isCloudApiEnabled, getCloudApiKey } from "../services/cloudApi";
 import { offlineBrainMessage } from "../services/nilaReflect";
 import { localLlmLoadState } from "../services/localLlm";
 import { hapticLight } from "./useHaptics";
+import { rememberSession } from "../services/nilaMemory";
 
 function msg(role: "user" | "assistant", content: string, extra: Partial<Pick<NilaUiMessage, "insight" | "synthetic">> = {}): NilaUiMessage {
   return { role, content, timestamp: Date.now(), ...extra };
@@ -148,6 +149,9 @@ export function useChatSend({
         if (result.reachedAI) {
           speakIfEnabled(result.reply);
           if (document.hidden) void notifyReplyReady();
+          // Fire-and-forget: summarise the session into a cross-session memory note.
+          // Runs on-device (generateOnDevice), never blocks the UI or reaches the network.
+          void rememberSession(allMessages).catch(() => {});
         }
       } else if (!result.reachedAI) {
         const content = isCloudApiEnabled() && getCloudApiKey()

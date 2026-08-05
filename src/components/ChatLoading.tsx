@@ -99,7 +99,7 @@ export default function ChatLoading({ onCancel }: { onCancel?: () => void }) {
             className="breathing-orb w-12 h-12 rounded-full bg-gradient-to-br from-accent/40 to-accent/30 border border-accent/20 flex items-center justify-center"
             aria-hidden="true"
           />
-          <p className="text-xs text-ink-faint leading-relaxed text-center max-w-[16rem] transition-all duration-500" key={tipIndex}>
+          <p className="text-base text-ink-faint leading-relaxed text-center max-w-[16rem] transition-all duration-500" key={tipIndex}>
             {WAITING_TIPS[tipIndex]}
           </p>
         </div>

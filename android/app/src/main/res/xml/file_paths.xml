@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
-    <external-path name="my_images" path="." />
+    <!-- Restrict external-path to the app's own files directory instead of the entire external
+         storage root. The previous path="." exposed ALL external storage via FileProvider. 2026-08-05 audit fix. -->
+    <external-files-path name="nilamind_external" path="." />
     <cache-path name="my_cache_images" path="." />
     <!-- Reports are written to the app's internal Documents dir (Capacitor Directory.Documents).
          Exposing it lets FileProvider.resolve the content:// URI the Share sheet needs, so a

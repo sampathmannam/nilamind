@@ -40,7 +40,7 @@ export default function EmptyState({ illustration, nilaState = "calm", title, bo
         {illustration ?? <NilaCharacter state={nilaState} size={32} />}
         <div className="flex-1 min-w-0 space-y-0.5">
           <p className="text-xs font-semibold text-ink-2">{title}</p>
-          <p className="text-xs text-ink-muted leading-relaxed">{body}</p>
+          <p className="text-base text-ink-muted leading-relaxed">{body}</p>
         </div>
         {cta && (
           <button

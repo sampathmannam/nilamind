@@ -174,7 +174,7 @@ function GroqPanel(props: {
             {props.showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
          </button>
        </div>
-        <p id="cloud-api-key-hint" className={`text-[11px] leading-relaxed ${keyHintColor}`}>
+        <p id="cloud-api-key-hint" className={`text-base leading-relaxed ${keyHintColor}`}>
           {keyHint}
        </p>
      </div>

@@ -151,12 +151,12 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
 
   return (
     <div className="space-y-6 max-w-md mx-auto" id="thought-record-screen">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-xl font-semibold text-ink">{t("tr_title")}</h1>
-          <p className="text-xs text-ink-faint">{t("tr_subtitle")}</p>
-        </div>
-        <span className="text-xs font-mono px-3 py-1 bg-card text-ink-muted border border-line rounded-full">
+      {/* 2026-08-05 declutter: in-body h1 (t("tr_title")) removed — both render paths (App.tsx aux Sheet
+          "Thought record", CaptureSheets "Thought Record") already title this screen in the Sheet header
+          directly above. Subtitle + step pill stay. */}
+      <div className="flex justify-between items-center gap-3">
+        <p className="text-base text-ink-muted leading-relaxed">{t("tr_subtitle")}</p>
+        <span className="text-xs font-mono px-3 py-1 bg-card text-ink-muted border border-line rounded-full shrink-0">
           Step {currentPage}{t("tr_step_of")}
         </span>
       </div>
@@ -257,7 +257,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
                   placeholder={t("tr_step3_placeholder")}
                 />
                 {distortionNotice && (
-                  <div className="bg-warn/5 border border-warn/20 rounded-lg px-3 py-2 text-[11px] text-warn-hi/90 leading-relaxed whitespace-pre-line">
+                  <div className="bg-warn/5 border border-warn/20 rounded-lg px-3 py-2 text-base text-warn-hi/90 leading-relaxed whitespace-pre-line">
                     {distortionNotice}
                   </div>
                 )}
@@ -364,7 +364,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
               </div>
 
               {aiError && (
-                <p className="text-xs text-orange-400 leading-relaxed font-mono">
+                <p className="text-base text-orange-400 leading-relaxed font-mono">
                   {aiError}
                 </p>
               )}

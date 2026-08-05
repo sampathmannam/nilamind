@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MessageCircle, Send, Copy, Check, LifeBuoy, Sparkles, ChevronRight } from "lucide-react";
+import { Send, Copy, Check, LifeBuoy, Sparkles, ChevronRight } from "lucide-react";
 import { REACH_OPENERS, REACH_FRAMING, buildSmsHref } from "../services/reachOut";
 import { getCrisisReply, scanForCrisis } from "../safety";
 import { detectCrisis } from "../services/crisisClassifier";
@@ -79,14 +79,11 @@ export default function ReachOutScreen() {
 
   return (
     <div className="space-y-4 max-w-md mx-auto" id="reachout-screen">
-      <header className="space-y-1">
-        <h1 className="text-xl font-semibold text-ink flex items-center gap-2">
-          <MessageCircle className="w-5 h-5 text-success" /> Reach out
-        </h1>
-        <p className="text-xs text-ink-muted leading-relaxed">
-          Telling one person you trust can help. Here's a gentle way to start — you send it yourself, your way.
-        </p>
-      </header>
+      {/* 2026-08-05 declutter: in-body "Reach out" h1 removed — the Sheet header (AUX_LABELS.reach_out)
+          already shows the same title directly above. Description stays. */}
+      <p className="text-base text-ink-muted leading-relaxed">
+        Telling one person you trust can help. Here's a gentle way to start — you send it yourself, your way.
+      </p>
 
       {crisisElevated ? (
         <>
@@ -95,8 +92,8 @@ export default function ReachOutScreen() {
             <h3 className="text-sm font-semibold text-rose-200 flex items-center gap-1.5">
               <LifeBuoy className="w-4 h-4" /> You matter — support is here right now
             </h3>
-            <p className="text-xs text-ink-2 whitespace-pre-line leading-relaxed">{getCrisisReply()}</p>
-            <p className="text-xs text-ink-2 leading-relaxed">
+            <p className="text-base text-ink-2 whitespace-pre-line leading-relaxed">{getCrisisReply()}</p>
+            <p className="text-base text-ink-2 leading-relaxed">
               It's really good you're reaching out. Alongside your message, a crisis line can talk with you
               right now — they're free, confidential, and trained for exactly this.
             </p>
@@ -107,7 +104,7 @@ export default function ReachOutScreen() {
           {draft.trim() && (
             <div className="bg-page border border-line rounded-xl p-3 space-y-1">
               <p className="text-xs uppercase tracking-wider text-ink-faint font-semibold">Your message (kept)</p>
-              <p className="text-xs text-ink-2 leading-relaxed whitespace-pre-wrap">{draft.trim()}</p>
+              <p className="text-base text-ink-2 leading-relaxed whitespace-pre-wrap">{draft.trim()}</p>
             </div>
           )}
           <div className="flex gap-2">
@@ -146,7 +143,7 @@ export default function ReachOutScreen() {
           {/* gentle, cited framing */}
           <div className="bg-card border border-line rounded-2xl p-4 space-y-2">
             {REACH_FRAMING.map((f) => (
-              <p key={f.id} className="text-xs text-ink-2 leading-relaxed flex gap-2">
+              <p key={f.id} className="text-base text-ink-2 leading-relaxed flex gap-2">
                 <Sparkles className="w-3.5 h-3.5 text-success/80 shrink-0 mt-0.5" />
                 <span>{f.text}</span>
               </p>
@@ -160,7 +157,7 @@ export default function ReachOutScreen() {
               <button
                 key={o.id}
                 onClick={() => setDraft(o.text)}
-                className="w-full text-left bg-card border border-line hover:border-success/40 rounded-xl p-3 text-xs text-ink-2 leading-relaxed transition-all cursor-pointer"
+                className="w-full text-left bg-card border border-line hover:border-success/40 rounded-xl p-3 text-base text-ink-2 leading-relaxed transition-all cursor-pointer"
               >
                 “{o.text}”
               </button>
@@ -203,7 +200,7 @@ export default function ReachOutScreen() {
             </button>
           </div>
 
-          <p className="text-[11px] text-ink-faint leading-relaxed px-1 flex gap-1.5">
+          <p className="text-base text-ink-faint leading-relaxed px-1 flex gap-1.5">
             <ChevronRight className="w-3.5 h-3.5 shrink-0 mt-0.5 text-slate-600" />
             A trusted person is a great start — a GP or therapist can help too, whenever you're ready. A crisis
             line or your local emergency number is there for you any time, day or night.

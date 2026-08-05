@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { BookOpen, Search, X, ChevronDown, LifeBuoy, AlertTriangle, FlaskConical, Heart, Sparkles, ChevronRight } from "lucide-react";
+import { Search, X, ChevronDown, LifeBuoy, AlertTriangle, FlaskConical, Heart, Sparkles, ChevronRight } from "lucide-react";
 import { searchLearn, type LearnResult, type LearnSource } from "../services/learnLibrary";
 import { checkPsychoedQuery } from "../services/psychoed";
 import { getCrisisReply } from "../safety";
@@ -105,21 +105,18 @@ export default function LearnScreen() {
 
   return (
     <div className="space-y-4 max-w-md mx-auto" id="learn-screen">
-      <header className="space-y-1">
-        <h1 className="text-xl font-semibold text-ink flex items-center gap-2">
-          <BookOpen className="w-5 h-5 text-accent" /> Learn
-        </h1>
-        <p className="text-xs text-ink-muted leading-relaxed">
-          Skills, explainers &amp; research — one library. A reference, not advice.
-        </p>
-      </header>
+      {/* 2026-08-05 declutter: in-body "Learn" h1 removed — both render paths (aux Sheet + CaptureSheets)
+          already title this screen "Learn" in the Sheet header directly above. Description stays. */}
+      <p className="text-base text-ink-muted leading-relaxed">
+        Skills, explainers &amp; research — one library. A reference, not advice.
+      </p>
 
       {crisis ? (
         <div className="bg-card border border-rose-500/30 p-5 rounded-2xl space-y-3" id="learn-crisis">
           <h3 className="text-sm font-semibold text-rose-200 flex items-center gap-1.5">
             <LifeBuoy className="w-4 h-4" /> You matter — support is here right now
           </h3>
-          <p className="text-xs text-ink-2 whitespace-pre-line leading-relaxed">{getCrisisReply()}</p>
+          <p className="text-base text-ink-2 whitespace-pre-line leading-relaxed">{getCrisisReply()}</p>
           <CrisisLines tone="rose" compact />
           <button onClick={() => setCrisis(false)} className="text-xs text-ink-muted hover:text-ink-2 underline underline-offset-2 cursor-pointer">
             I'm okay — back to reading
@@ -225,7 +222,7 @@ export default function LearnScreen() {
           <div className="space-y-2" id="learn-results">
             <div className="text-xs uppercase font-mono tracking-widest text-ink-faint">{results.length} result{results.length === 1 ? "" : "s"}</div>
             {results.length === 0 ? (
-              <div className="glass rounded-2xl p-5 text-center text-xs text-ink-muted">
+              <div className="glass rounded-2xl p-5 text-center text-base text-ink-muted">
                 {query ? <>Nothing matches "{query}". Try a feeling, a skill name, or a topic.</> : "Loading library…"}
               </div>
             ) : (
@@ -233,7 +230,7 @@ export default function LearnScreen() {
             )}
           </div>
 
-          <p className="text-[11px] text-ink-faint text-center leading-relaxed px-4">
+          <p className="text-base text-ink-faint text-center leading-relaxed px-4">
             Understanding can help — it isn't a substitute for professional care.
           </p>
         </>
@@ -254,7 +251,7 @@ function LearnCard({ result, open, onToggle }: { result: LearnResult; open: bool
             <span className="text-sm font-bold text-ink">{result.title}</span>
             <span className={`text-xs font-mono uppercase tracking-wider px-1.5 py-0.5 rounded border ${badge.cls}`}>{badge.label}</span>
           </div>
-          <p className="text-[11px] text-ink-muted leading-relaxed">{result.snippet}</p>
+          <p className="text-base text-ink-muted leading-relaxed">{result.snippet}</p>
         </div>
         <ChevronDown className={`w-4 h-4 text-ink-faint shrink-0 mt-0.5 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
@@ -268,7 +265,7 @@ function LearnCard({ result, open, onToggle }: { result: LearnResult; open: bool
             if (detail.steps) return (
               <ol className="space-y-1.5">
                 {detail.steps.map((step, i) => (
-                  <li key={i} className="flex gap-2 text-xs text-ink-2 leading-relaxed">
+                  <li key={i} className="flex gap-2 text-base text-ink-2 leading-relaxed">
                     <span className="shrink-0 w-4 h-4 rounded-full bg-accent text-xs font-bold text-[#171311] flex items-center justify-center mt-0.5">{i + 1}</span>
                     <span>{step}</span>
                   </li>
@@ -282,14 +279,14 @@ function LearnCard({ result, open, onToggle }: { result: LearnResult; open: bool
               {detail.emergencyCaveat && (
                 <div className="flex gap-2 items-start bg-rose-500/10 border border-rose-500/30 rounded-lg px-3 py-2">
                   <AlertTriangle className="w-3.5 h-3.5 text-rose-300 shrink-0 mt-0.5" />
-                  <p className="text-xs text-rose-200/90 leading-relaxed">{detail.emergencyCaveat}</p>
+                  <p className="text-base text-rose-200/90 leading-relaxed">{detail.emergencyCaveat}</p>
                 </div>
               )}
-              {detail.body && <p className="text-xs text-ink-2 leading-relaxed">{detail.body}</p>}
+              {detail.body && <p className="text-base text-ink-2 leading-relaxed">{detail.body}</p>}
             </>
           )}
           {result.source === "why" && detail.what && (
-            <div className="space-y-2 text-xs leading-relaxed">
+            <div className="space-y-2 text-base leading-relaxed">
               <p className="text-ink-2"><span className="text-ink-faint font-semibold">What it is — </span>{detail.what}</p>
               {detail.why && (
                 <p className="text-ink-2 flex gap-1.5">
@@ -303,7 +300,7 @@ function LearnCard({ result, open, onToggle }: { result: LearnResult; open: bool
                     <FlaskConical className="w-3 h-3" /> The research
                   </div>
                   {detail.research.map((r, i) => (
-                    <p key={i} className="text-[11px] text-ink-muted leading-relaxed pl-1">
+                    <p key={i} className="text-base text-ink-muted leading-relaxed pl-1">
                       {r.citation}
                       {!r.verified && (
                         <span className="inline-flex items-center gap-1 ml-1 text-warn-hi/90 font-medium" title="We're double-checking this reference's exact details.">
@@ -316,7 +313,7 @@ function LearnCard({ result, open, onToggle }: { result: LearnResult; open: bool
               )}
             </div>
           )}
-          {detail.basis && <p className="text-xs text-ink-faint italic leading-relaxed border-t border-line pt-2">{detail.basis}</p>}
+          {detail.basis && <p className="text-base text-ink-faint italic leading-relaxed border-t border-line pt-2">{detail.basis}</p>}
         </div>
       )}
     </div>

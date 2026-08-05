@@ -33,6 +33,7 @@ export const SECURE_KEYS = {
   diary: "nilamind_diary",
   assessments: "nilamind_assessments",
   baActivities: "nilamind_ba_activities",
+  skillPractice: "nilamind_skill_practice",
   episodeMarkers: "nilamind_episode_markers",
   episodes: "nilamind_episodes",
   thoughtRecords: "nilamind_thought_records",

@@ -453,7 +453,17 @@ function AppShell() {
       {/* Main content area — each tab isolated in its own ErrorBoundary */}
       <main className="flex-1 min-h-0 relative flex flex-col animate-tab-fade" key={state.tab} aria-label="Content">
         {state.tab === "today" && <a href="#today-hub" className="skip-link">Skip to main content</a>}
-        <div id={`tabpanel-${state.tab}`} role="tabpanel" aria-labelledby={`tab-${state.tab}`}>
+        {/* 2026-08-04 audit fix: this wrapper (added in ccfc3fe for role=tabpanel a11y) had no flex-sizing
+            classes, so it fell back to intrinsic content height inside the <main> flex column. That broke
+            the flex-1/min-h-0/overflow-y-auto chain every tab body relies on for its OWN scroll region —
+            content overflowed <main> (which has no overflow handling of its own) and was hard-clipped by
+            the outer shell's `overflow-hidden`, with no scrollbar or gesture able to reach it. Confirmed on
+            two independent surfaces: an installed device build (adb touch/swipe produced zero movement on
+            Today) and this dev server (getComputedStyle showed <main> at scrollHeight 1326 / clientHeight
+            749 with overflow-y: visible — 577px, 43% of Today's content, permanently unreachable). Restoring
+            flex-1/min-h-0/flex/flex-col here re-establishes the bounded box each tab's inner
+            `overflow-y-auto` div needs to actually scroll, exactly like the sibling `<main>` element does. */}
+        <div id={`tabpanel-${state.tab}`} role="tabpanel" aria-labelledby={`tab-${state.tab}`} className="flex-1 min-h-0 flex flex-col">
         {state.tab === "nila" && (
           <ErrorBoundary name="nila" onError={(err: Error, info: React.ErrorInfo) => console.error("[ErrorBoundary:nila] caught:", err, info)}>
             <ModeScreen
@@ -560,29 +570,39 @@ function AppShell() {
         onClose={closeTop}
         id="settings-sheet"
       >
-        <Suspense fallback={<ScreenFallback />}>
-          <SettingsScreen onOpenCaregiver={() => openSheet("caregiver")} onOpenLegal={() => openSheet("legal")} />
-        </Suspense>
+        <ErrorBoundary name="settings-sheet">
+          <Suspense fallback={<ScreenFallback />}>
+            <SettingsScreen onOpenCaregiver={() => openSheet("caregiver")} onOpenLegal={() => openSheet("legal")} />
+          </Suspense>
+        </ErrorBoundary>
       </Sheet>
 
       {/* Dashboard sheet */}
       <Sheet open={hasOverlay(state, (o) => o.kind === "sheet" && o.id === "dashboard")} title={t("dashboard")} onClose={closeTop} id="dashboard-sheet">
-        <Suspense fallback={<ScreenFallback />}><DashboardScreen onOpenView={(target) => { closeTop(); go(target); }} /></Suspense>
+        <ErrorBoundary name="dashboard-sheet">
+          <Suspense fallback={<ScreenFallback />}><DashboardScreen onOpenView={(target) => { closeTop(); go(target); }} /></Suspense>
+        </ErrorBoundary>
       </Sheet>
 
       {/* Medication sheet */}
       <Sheet open={hasOverlay(state, (o) => o.kind === "sheet" && o.id === "medication")} title={t("medications")} onClose={closeTop} id="medication-sheet" bodyClassName="p-4">
-        <Suspense fallback={<ScreenFallback />}><MedicationAdherenceScreen /></Suspense>
+        <ErrorBoundary name="medication-sheet">
+          <Suspense fallback={<ScreenFallback />}><MedicationAdherenceScreen /></Suspense>
+        </ErrorBoundary>
       </Sheet>
 
       {/* Caregiver sheet */}
       <Sheet open={hasOverlay(state, (o) => o.kind === "sheet" && o.id === "caregiver")} title="Share with a trusted person" onClose={closeTop} id="caregiver-sheet" bodyClassName="p-4">
-        <Suspense fallback={<ScreenFallback />}><CaregiverShareScreen selectedContactId={selectedCaregiverContactId} /></Suspense>
+        <ErrorBoundary name="caregiver-sheet">
+          <Suspense fallback={<ScreenFallback />}><CaregiverShareScreen selectedContactId={selectedCaregiverContactId} /></Suspense>
+        </ErrorBoundary>
       </Sheet>
 
       {/* Legal sheet — Privacy Policy, Terms, OSS licenses */}
       <Sheet open={hasOverlay(state, (o) => o.kind === "sheet" && o.id === "legal")} title="Legal" onClose={closeTop} id="legal-sheet">
-        <Suspense fallback={<ScreenFallback />}><LegalScreen /></Suspense>
+        <ErrorBoundary name="legal-sheet">
+          <Suspense fallback={<ScreenFallback />}><LegalScreen /></Suspense>
+        </ErrorBoundary>
       </Sheet>
 
       {/* Generic aux view sheet — all other screens (fault-isolated) */}
@@ -598,16 +618,20 @@ function AppShell() {
             id="aux-view-sheet"
             faultIsolated
           >
-            <Suspense fallback={<ScreenFallback />}>{renderAuxView(aux.view, activateCrisis, closeAuxStart, () => openSheet("grounding"), go, (cid) => { setSelectedCaregiverContactId(cid); openSheet("caregiver"); })}</Suspense>
+            <ErrorBoundary name="aux-view-sheet">
+              <Suspense fallback={<ScreenFallback />}>{renderAuxView(aux.view, activateCrisis, closeAuxStart, () => openSheet("grounding"), go, (cid) => { setSelectedCaregiverContactId(cid); openSheet("caregiver"); })}</Suspense>
+            </ErrorBoundary>
           </Sheet>
         );
       })()}
 
       {/* Full-screen breathing experience */}
       {hasOverlay(state, (o) => o.kind === "sheet" && o.id === "breathing") && (
-        <Suspense fallback={null}>
-          <BreathingScreen onClose={closeTop} />
-        </Suspense>
+        <ErrorBoundary name="breathing-sheet">
+          <Suspense fallback={null}>
+            <BreathingScreen onClose={closeTop} />
+          </Suspense>
+        </ErrorBoundary>
       )}
     </div>
   );

@@ -28,7 +28,7 @@ export default function FeedbackSection() {
         <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-2 font-mono flex items-center gap-2">
           <MessageSquare className="w-4 h-4 text-accent" /> {t("sec_feedback")}
         </h2>
-        <p className="text-[11px] text-ink-muted mt-1 leading-relaxed">
+        <p className="text-base text-ink-muted mt-1 leading-relaxed">
           NilaMind is an open-source research preview, and your feedback shapes it. Nothing is sent
           automatically — these open in your browser, and you choose what to share.
         </p>
@@ -39,7 +39,7 @@ export default function FeedbackSection() {
           <div className="text-[12px] text-accent-hi/90 font-medium">
             {pending.length} improvement suggestion{pending.length !== 1 ? "s" : ""} ready
           </div>
-          <p className="text-xs text-accent-hi/70 leading-relaxed">
+          <p className="text-base text-accent-hi/70 leading-relaxed">
             You typed {pending.length} suggestion{pending.length !== 1 ? "s" : ""} for how Nila could have replied better.
             These stay on your device — tap Copy to save them, then paste into a GitHub issue.
           </p>
@@ -77,7 +77,7 @@ export default function FeedbackSection() {
         </div>
         <ExternalLink className="w-4 h-4 text-ink-faint shrink-0" />
       </a>
-      <p className="text-xs text-ink-faint leading-relaxed">
+      <p className="text-base text-ink-faint leading-relaxed">
         Your in-app reactions and "suggest a better reply" stay on your device. NilaMind has no backend
         and collects nothing — the deeper signal comes from people choosing to share it, never from harvesting.
       </p>

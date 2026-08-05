@@ -78,6 +78,37 @@ describe("protocolProgress — start / advance / complete", () => {
   });
 });
 
+describe("protocolProgress — historical starts log (2026-08-05 audit fix)", () => {
+  it("starting a protocol appends to nilamind_protocol_starts", async () => {
+    const m = await load();
+    m.startProtocol("behavioral-activation");
+    const raw = JSON.parse(store["nilamind_protocol_starts"]);
+    expect(raw).toHaveLength(1);
+    expect(raw[0].protocolId).toBe("behavioral-activation");
+    expect(typeof raw[0].date).toBe("string");
+  });
+
+  it("the starts log keeps accumulating even after the protocol completes and the current-slot pointer clears", async () => {
+    const m = await load();
+    m.startProtocol("behavioral-activation");
+    while (m.getActiveProgress()) m.advanceProtocol();
+    // The single-slot pointer is gone (completed and cleared)...
+    expect(m.getActiveProgress()).toBeNull();
+    // ...but the historical starts log still has the record.
+    const raw = JSON.parse(store["nilamind_protocol_starts"]);
+    expect(raw).toHaveLength(1);
+  });
+
+  it("logs a separate start each time, even for the same protocol restarted after completion", async () => {
+    const m = await load();
+    m.startProtocol("behavioral-activation");
+    while (m.getActiveProgress()) m.advanceProtocol();
+    m.startProtocol("behavioral-activation");
+    const raw = JSON.parse(store["nilamind_protocol_starts"]);
+    expect(raw).toHaveLength(2);
+  });
+});
+
 describe("protocolProgress — encrypted persistence across app restart", () => {
   it("resumes an in-progress program on a fresh app start", async () => {
     const first = await load();

@@ -24,7 +24,7 @@ vi.mock("./modeEngine", () => ({ getUserState: () => modeMocks.userState }));
 const suppressMocks = vi.hoisted(() => ({ suppressed: false }));
 vi.mock("./notificationSuppress", () => ({ isSafetySuppressed: () => suppressMocks.suppressed }));
 
-import { calmSafetyPlanNudge, dismissCalmSafetyPlanNudge, hasDiaryEntryToday } from "./proactiveEngine";
+import { calmSafetyPlanNudge, dismissCalmSafetyPlanNudge, hasDiaryEntryToday, medicationLoggedToday } from "./proactiveEngine";
 
 const BLANK_PLAN = JSON.stringify({
   warningSigns: "", internalCoping: "", socialDistractors: "", trustedPeople: "", professionals: "", safeEnvironment: "",
@@ -58,6 +58,34 @@ describe("hasDiaryEntryToday", () => {
   it("returns true once today's entry has actually been saved (real storage key)", () => {
     store.set("nilamind_diary", JSON.stringify({ [today]: { date: today, emotions: {}, skillsUsed: [] } }));
     expect(hasDiaryEntryToday()).toBe(true);
+  });
+});
+
+// Regression (2026-08-04 audit): medicationLoggedToday read secureLocal key "nilamind_med_log_" + today,
+// which is NEVER written — medicationAdherence.ts stores every dose as one flat array under the single key
+// "nilamind_med_logs", each entry carrying its own `date`. The morning "Did you take your medication today?"
+// card therefore always saw `null` and nagged even after the user logged their dose (a false fire on a calm
+// action is itself harmful). Same fix class as hasDiaryEntryToday above.
+describe("medicationLoggedToday", () => {
+  const today = localDateKey();
+
+  it("returns false when nothing has been logged", () => {
+    expect(medicationLoggedToday()).toBe(false);
+  });
+
+  it("returns false when logs exist only for OTHER dates", () => {
+    store.set("nilamind_med_logs", JSON.stringify([{ id: "l1", medId: "m1", date: "2020-01-01", taken: true }]));
+    expect(medicationLoggedToday()).toBe(false);
+  });
+
+  it("returns true once a log for today exists (real storage key)", () => {
+    store.set("nilamind_med_logs", JSON.stringify([{ id: "l1", medId: "m1", date: today, taken: true }]));
+    expect(medicationLoggedToday()).toBe(true);
+  });
+
+  it("never throws on corrupt/unreadable logs", () => {
+    store.set("nilamind_med_logs", "{not json");
+    expect(medicationLoggedToday()).toBe(false);
   });
 });
 

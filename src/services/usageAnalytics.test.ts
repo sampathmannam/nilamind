@@ -176,10 +176,17 @@ describe("protocolCompletions", () => {
     expect(protocolCompletions()).toEqual({ started: 0, completed: 0, rate: 0 });
   });
 
-  it("parses protocol progress and extracts started/completed counts", () => {
-    store.set("nilamind_protocol_progress", JSON.stringify({ protocolId: "ba", stepIndex: 3 }));
+  it("reads the historical starts log, not the single-slot current-progress flag", () => {
+    store.set(
+      "nilamind_protocol_starts",
+      JSON.stringify([
+        { protocolId: "ba", date: "2026-08-01" },
+        { protocolId: "ba", date: "2026-08-02" },
+        { protocolId: "worry-postponement", date: "2026-08-03" },
+      ]),
+    );
     const result = protocolCompletions();
-    expect(result).toBeTruthy();
+    expect(result.started).toBe(3);
   });
 
   it("reads real counts from the completions log (2026-07-12 QA: stub always returned 0)", () => {
@@ -197,6 +204,34 @@ describe("protocolCompletions", () => {
   it("returns completed: 0 when the completions log is empty/absent", () => {
     const result = protocolCompletions();
     expect(result.completed).toBe(0);
+  });
+
+  it("2026-08-05 audit fix: rate does not collapse to 100% right after a single completion clears the current slot", () => {
+    // 3 historical starts, only 1 ever finished — the single-slot "started" flag from before this fix
+    // would read 0 here (nothing CURRENTLY active), making rate = completed / (0 + completed) = 1.0. The
+    // historical starts log must keep the true denominator.
+    store.set(
+      "nilamind_protocol_starts",
+      JSON.stringify([
+        { protocolId: "ba", date: "2026-08-01" },
+        { protocolId: "ba", date: "2026-08-02" },
+        { protocolId: "ba", date: "2026-08-03" },
+      ]),
+    );
+    store.set("nilamind_protocol_completions", JSON.stringify([{ protocolId: "ba", date: "2026-08-03" }]));
+    const result = protocolCompletions();
+    expect(result.started).toBe(3);
+    expect(result.completed).toBe(1);
+    expect(result.rate).toBeCloseTo(1 / 3, 5);
+  });
+
+  it("guards against a >100% rate when legacy completions predate the starts log", () => {
+    // A user who completed protocols before 2026-08-05 has completions but no matching starts logged yet.
+    store.set("nilamind_protocol_completions", JSON.stringify([{ protocolId: "ba", date: "2026-07-01" }]));
+    const result = protocolCompletions();
+    expect(result.started).toBe(0);
+    expect(result.completed).toBe(1);
+    expect(result.rate).toBeLessThanOrEqual(1);
   });
 });
 

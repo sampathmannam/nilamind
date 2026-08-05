@@ -1,4 +1,5 @@
 import { loadCheckins } from "./checkin";
+import { normalizeText as normalize } from "./textNormalize";
 import type { CheckInEntry } from "../types";
 import { getNaps, isLateLongNap } from "./napTracking";
 
@@ -91,9 +92,10 @@ const INCREASED_ACTIVITY = [
   "multiple projects at once", "on fire with new ideas", "too many plans all at once",
 ];
 
-function normalize(text: string): string {
-  return text.toLowerCase().replace(/['’]/g, "'").replace(/\s+/g, " ").trim();
-}
+// normalize() moved to ./textNormalize.ts (2026-08-05 audit): this local copy was missing the
+// zero-width-char strip AND had a two-ASCII-apostrophe typo (never matched the U+2019 curly quote
+// iOS/Gboard emit by default) -- both silently reduced detection recall. Aliased as `normalize` so
+// every call site below is unchanged.
 
 /** Deterministic detector. Returns the elevation level + which markers matched (for transparency/tests). */
 export function detectElevationRisk(text: string): { level: ElevationLevel; markers: string[] } {

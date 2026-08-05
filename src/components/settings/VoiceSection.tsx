@@ -36,7 +36,7 @@ export default function VoiceSection() {
         <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-2 font-mono flex items-center gap-2">
           <Volume2 className="w-4 h-4 text-accent" /> {t("sec_voice")}
         </h2>
-        <p className="text-[11px] text-ink-muted mt-1 leading-relaxed">
+        <p className="text-base text-ink-muted mt-1 leading-relaxed">
           A calm voice can read Nila and your check-ins aloud, so you don't have to read — and you can speak instead of type.
         </p>
       </div>
@@ -91,7 +91,7 @@ export default function VoiceSection() {
             <span aria-hidden="true" className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200 ease-in-out ${wake ? "translate-x-2.5" : "-translate-x-2.5"}`} />
           </button>
         </div>
-        <p className="text-[11px] text-ink-faint leading-relaxed">
+        <p className="text-base text-ink-faint leading-relaxed">
           Say "Nila" to start a call. Listens only while the app is open, matches the word entirely on your device, and records nothing. A dot shows whenever the mic is on. Off by default.
         </p>
       </div>
@@ -99,7 +99,7 @@ export default function VoiceSection() {
       <div className="border border-line rounded-xl p-3 flex items-center justify-between bg-page" id="settings-ondevice-stt">
         <div className="space-y-0.5 pr-3">
           <div className="text-sm font-medium text-ink-2">On-device voice (private)</div>
-          <div className="text-xs text-ink-faint leading-relaxed">
+          <div className="text-base text-ink-faint leading-relaxed">
             Turn your speech into text right on the phone, so your voice never leaves it. Turn off to use your device's system voice typing — often more accurate, but it may send your audio to the cloud.
           </div>
         </div>
@@ -135,7 +135,7 @@ export default function VoiceSection() {
                   <VoiceRow key={v.id} label={v.name} sub={`${v.lang} · ${v.local ? "on-device" : "network"}`} selected={prefs.voiceId === v.id} onClick={() => pickVoice(v.id)} />
                 ))}
               </div>
-              <p className="text-xs text-ink-faint leading-relaxed">
+              <p className="text-base text-ink-faint leading-relaxed">
                 Tap one to hear it. <span className="text-ink-muted">af_heart</span> is a warm neural voice synthesised on your own server (private, a touch slower). <span className="text-ink-muted">On-device</span> voices never leave your phone; <span className="text-ink-muted">network</span> ones are richer but fetched by your device's engine.
               </p>
             </div>

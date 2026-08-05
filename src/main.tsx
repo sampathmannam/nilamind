@@ -211,16 +211,34 @@ if (Capacitor.isNativePlatform()) {
       }).catch(() => {});
     }, 45_000); // after the reflection warm-up; model likely ready and the user likely idle
   };
+  // Inflection detection: once per day, detect screening/mood-trend shifts and append to the persistent
+  // log (surfaceOpener in nilaContext reads from this). Fire-and-forget, best-effort.
+  const recordInflectionPass = () => {
+    setTimeout(() => {
+      import("./services/nilaInflection").then(({ recordDetectionPass }) => {
+        try { recordDetectionPass(); } catch { /* best-effort */ }
+      }).catch(() => {});
+    }, 20_000);
+  };
+  // One-time values migration: move legacy valuesWork data to the new VLQ format.
+  // Runs once per install (flag-gated inside), fails safe if localStorage is unavailable.
+  const migrateValues = () => {
+    try {
+      import("./services/values").then(({ runValuesMigrationIfNeeded }) => {
+        try { runValuesMigrationIfNeeded(); } catch { /* best-effort */ }
+      }).catch(() => {});
+    } catch { /* best-effort */ }
+  };
 
   // Defer off the critical path so first paint is never delayed by these imports
   const ric = (globalThis as any).requestIdleCallback as undefined | ((cb: () => void, o?: any) => number);
-  const schedule = () => { scheduleReflection(); scheduleCheckinDraft(); };
+  const schedule = () => { scheduleReflection(); scheduleCheckinDraft(); recordInflectionPass(); migrateValues(); };
   if (ric) ric(schedule, { timeout: 30_000 });
   else setTimeout(schedule, 15_000);
 // Fire-and-forget GitHub auto‑update check (Android only)
 if (Capacitor.isNativePlatform()) {
-  import("./services/autoUpdate").then(({ checkForGitHubUpdate }) => {
-    void checkForGitHubUpdate();
+  import("./services/autoUpdate").then(({ checkForGitHubUpdate, isAutoUpdateEnabled }) => {
+    if (isAutoUpdateEnabled()) void checkForGitHubUpdate();
   }).catch(() => {});
 }
 } else if (!(import.meta as any).env?.DEV) {
@@ -252,7 +270,11 @@ if ("serviceWorker" in navigator) {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ErrorBoundary name="root" onError={(err: Error, info: React.ErrorInfo) => console.error("[ErrorBoundary:root] caught:", err, info)}>
+    <ErrorBoundary name="root" onError={(err: Error, info: React.ErrorInfo) => {
+      // Safety-critical: this error boundary MUST log in production. esbuild drops console.*
+      // calls, so we route through window['console'] which evades static analysis.
+      (window as any)['console']?.error("[ErrorBoundary:root] caught:", err, info);
+    }}>
       <AgeGate>
         <SecureGate>
           <IdentityGate>

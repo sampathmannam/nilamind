@@ -43,7 +43,7 @@ export default function CaregiverShareScreen({ selectedContactId }: Props) {
           <Users className="w-5 h-5 text-success" /> {t("shareTrustedTitle")}
           {contact ? <span className="text-sm font-normal text-ink-muted">— {contact.name}</span> : null}
         </h1>
-        <p className="text-xs text-ink-muted leading-relaxed">
+        <p className="text-base text-ink-muted leading-relaxed">
           {t("cg_consent_body")}
         </p>
       </header>
@@ -52,7 +52,7 @@ export default function CaregiverShareScreen({ selectedContactId }: Props) {
         <div className="flex items-center gap-2 text-sm font-semibold text-ink">
           <HeartHandshake className="w-4 h-4 text-rose-400" /> {snapshot.headline}
         </div>
-        <ul className="space-y-1.5 text-[11px] text-ink-2 leading-relaxed">
+        <ul className="space-y-1.5 text-base text-ink-2 leading-relaxed">
           {snapshot.lines.map((l, i) => (
             <li key={i} className="flex gap-2"><span className="text-success">•</span><span>{l}</span></li>
           ))}
@@ -82,7 +82,7 @@ export default function CaregiverShareScreen({ selectedContactId }: Props) {
         </button>
       </div>
 
-      <p className="text-xs text-ink-faint text-center">
+      <p className="text-base text-ink-faint text-center">
         This is a wellness snapshot, not a clinical summary. NilaMind is not a substitute for professional care.
       </p>
     </div>

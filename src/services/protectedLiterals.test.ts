@@ -23,7 +23,15 @@ function allSourceFiles(dir: string, acc: string[] = []): string[] {
   return acc;
 }
 
-// The 39 protected sensitive keys, in declaration order (src/services/secureLocal.ts).
+// The 50 protected sensitive keys, in declaration order (src/services/secureLocal.ts).
+// FIXTURE UPDATE 2026-08-04: +9 keys (medications/med_logs/means_coaching/voice_sessions/pact/
+// protocol_completions/onboarding_mood/user_goal/error_log) added to SENSITIVE_KEYS by the
+// health/safety-keys audit — this pin mirrors the allowlist exactly (it must never be edited to
+// "fix" a failing test; edit the production list and mirror it here).
+// FIXTURE UPDATE 2026-08-05: +1 key (nilamind_protocol_starts) — the historical protocol-start log
+// added to fix usageAnalytics.protocolCompletions()'s misleading 100%-after-one-completion rate.
+// FIXTURE UPDATE 2026-08-05: +1 key (nilamind_skill_practice) — DBT skills practice log for the
+// skills-use mechanism loop (skillsPractice.ts).
 const SENSITIVE_KEYS = [
   "nilamind_checkins",
   "nilamind_checkin_draft",
@@ -39,6 +47,7 @@ const SENSITIVE_KEYS = [
   "nilamind_values",
   "nilamind_values_actions",
   "nilamind_ba_activities",
+  "nilamind_skill_practice",
   "nilamind_home_coords",
   "nilamind_nila_sessions",
   "nilamind_nila_memory",
@@ -64,6 +73,16 @@ const SENSITIVE_KEYS = [
   "nilamind_signal_features",
   "nilamind_proactive_cards",
   "nilamind_passive_sensing_status",
+  "nilamind_medications",
+  "nilamind_med_logs",
+  "nilamind_means_coaching",
+  "nilamind_voice_sessions",
+  "nilamind_pact",
+  "nilamind_protocol_completions",
+  "nilamind_protocol_starts",
+  "nilamind_onboarding_mood",
+  "nilamind_user_goal",
+  "nilamind_error_log",
 ];
 
 describe("protected literals (privacy/encryption invariants — never change)", () => {
@@ -73,14 +92,14 @@ describe("protected literals (privacy/encryption invariants — never change)", 
   });
 
 
-  it("secureLocal.ts SENSITIVE_KEYS contains exactly the 39 expected entries", () => {
+  it("secureLocal.ts SENSITIVE_KEYS contains exactly the 50 expected entries", () => {
     const src = read("services/secureLocal.ts");
     // Pull the array body out of `export const SENSITIVE_KEYS = [ ... ];`
     const m = src.match(/export const SENSITIVE_KEYS\s*=\s*\[([\s\S]*?)\]/);
     expect(m, "SENSITIVE_KEYS array literal not found").toBeTruthy();
     const found = [...m![1].matchAll(/"([^"]+)"/g)].map((x) => x[1]);
     expect(found).toEqual(SENSITIVE_KEYS);
-    expect(found).toHaveLength(39);
+    expect(found).toHaveLength(50);
     // The reflection throttle flag is a non-sensitive date-only value in plain localStorage.
     expect(found).not.toContain("nilamind_last_reflected");
     // Phase 2 inflection: the toggle + throttle + daily-cap are non-sensitive flag/date values.

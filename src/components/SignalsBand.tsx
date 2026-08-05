@@ -109,7 +109,7 @@ export default function SignalsBand({
                 {disengagementRisk!.score}/100
               </span>
             </div>
-            <p className="text-[11px] text-slate-400 leading-relaxed mt-1">
+            <p className="text-base text-slate-400 leading-relaxed mt-1">
               {disengagementRisk!.daysSinceLastCheckin >= 3
                 ? `It's been ${disengagementRisk!.daysSinceLastCheckin} days since your last check-in. `
                 : ""}
@@ -130,7 +130,7 @@ export default function SignalsBand({
           </div>
           <div className="flex-1">
             <p className="text-sm font-semibold text-slate-100">Usage balance</p>
-            <p className="text-[11px] text-slate-400 leading-relaxed mt-1">{depReason}</p>
+            <p className="text-base text-slate-400 leading-relaxed mt-1">{depReason}</p>
             <p className="text-xs text-slate-500 mt-1">Nila is here when you need her — real connections matter too.</p>
           </div>
         </Card>
@@ -144,7 +144,7 @@ export default function SignalsBand({
           </div>
           <div className="flex-1">
             <p className="text-sm font-semibold text-slate-100">Take a breather</p>
-            <p className="text-[11px] text-slate-400 leading-relaxed mt-1">{ceilingMessage}</p>
+            <p className="text-base text-slate-400 leading-relaxed mt-1">{ceilingMessage}</p>
             <p className="text-xs text-slate-500 mt-1">This resets tomorrow. No pressure.</p>
           </div>
         </Card>
@@ -158,7 +158,7 @@ export default function SignalsBand({
           </div>
           <div className="flex-1">
             <p className="text-sm font-semibold text-slate-100">Social connection</p>
-            <p className="text-[11px] text-slate-400 leading-relaxed mt-1">{connReason}</p>
+            <p className="text-base text-slate-400 leading-relaxed mt-1">{connReason}</p>
             <p className="text-xs text-slate-500 mt-1">Even a quick message counts.</p>
           </div>
         </Card>
@@ -191,7 +191,7 @@ export default function SignalsBand({
           </div>
           <div>
             <p className="text-sm font-semibold text-slate-100">Typing pattern note</p>
-            <p className="text-[11px] text-slate-400 leading-relaxed">
+            <p className="text-base text-slate-400 leading-relaxed">
               {typingSignal === "mania" && "Your recent typing has been unusually fast and bursty — sometimes a sign of elevated energy. A quick check-in might help."}
               {typingSignal === "depression" && "Your recent typing has been slower with more pauses — a gentle check-in could be worth it."}
               {typingSignal === "anxiety" && "Your recent typing shows a lot of starts and stops — maybe take a slow breath when you're ready."}
@@ -209,7 +209,7 @@ export default function SignalsBand({
           </div>
           <div>
             <p className="text-sm font-semibold text-slate-100">Voice pattern note</p>
-            <p className="text-[11px] text-slate-400 leading-relaxed">
+            <p className="text-base text-slate-400 leading-relaxed">
               {voiceSignal === "mania" && "Your recent speech patterns have been faster than usual — sometimes a sign of elevated energy. A quick check-in might help."}
               {voiceSignal === "depression" && "Your recent speech has been slower with shorter responses — a gentle check-in could be worth it."}
               {voiceSignal === "anxiety" && "Your recent speech pattern shows some variability — maybe take a slow breath when you're ready."}
@@ -232,7 +232,7 @@ export default function SignalsBand({
                 {circadian!.regularityScore}/100
               </span>
             </div>
-            <p className="text-[11px] text-slate-400 leading-relaxed mt-1">{circadian!.note}</p>
+            <p className="text-base text-slate-400 leading-relaxed mt-1">{circadian!.note}</p>
             <p className="text-xs text-slate-500 mt-1">From {circadian!.nights} nights of self-reported sleep. Avg {circadian!.avgSleep}h.</p>
           </div>
         </Card>
@@ -251,7 +251,7 @@ export default function SignalsBand({
                 {circadianFeedback!.combinedScore}/100
               </span>
             </div>
-            <p className="text-[11px] text-slate-400 leading-relaxed mt-1">{circadianFeedback!.guidance}</p>
+            <p className="text-base text-slate-400 leading-relaxed mt-1">{circadianFeedback!.guidance}</p>
           </div>
         </Card>
       )}

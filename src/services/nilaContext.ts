@@ -46,8 +46,9 @@ import { runStateEngine } from "./stateEngine";
 // ESM Capacitor WebView bundle and was swallowed by try/catch — so BA + proactive context silently never
 // reached Nila in production. Static ESM imports (no import cycle: neither module imports nilaContext).
 import { computeInsight, loadActivities } from "./behaviouralActivation";
+import { computeInsight as computeSkillInsight } from "./skillsPractice";
 import { computeProactiveMoment, proactiveContextBlock } from "./proactiveEngine";
-import { loadAlliance } from "./allianceSignal";
+import { loadAlliance, refreshAlliance } from "./allianceSignal";
 import { getDisengagementContextBlock } from "./disengagementPredictor";
 import { getAdherenceSummary } from "./protocolAdherence";
 import { dependencyContextBlock } from "./dependencyTracker";
@@ -391,6 +392,29 @@ export function buildPersonalContext(): string {
     /* BA data is best-effort */
   }
 
+  // ── Skills Practice (DBT mechanism loop — skills use mediates outcomes) ────
+  // Neacsiu, Rizvi & Linehan (2010, BRAT 48(9):832-9): DBT skills use prospectively mediated
+  // treatment effects on suicidal behavior, depression, and anger control. This block surfaces
+  // the user's OWN skill-use data — no population norms, no clinical claims.
+  try {
+    const skillInsight = computeSkillInsight();
+    if (skillInsight.totalPractices > 0) {
+      let skillLine = `- In the last two weeks they practiced a DBT skill ${skillInsight.totalPractices} time${skillInsight.totalPractices === 1 ? "" : "s"}.`;
+      const topSkill = Object.entries(skillInsight.skillCounts)
+        .sort(([, a], [, b]) => b - a)[0];
+      if (topSkill) skillLine += ` Most-used: ${topSkill[0]}.`;
+      if (skillInsight.avgUrgeDrop != null && skillInsight.avgUrgeDrop > 0) {
+        skillLine += ` Average urge drop after skill: ~${Math.round(skillInsight.avgUrgeDrop)} points.`;
+      }
+      if (skillInsight.familyBalance === "crisis_dominant") {
+        skillLine += " Mostly crisis skills — they could try emotion-regulation or mindfulness for baseline building.";
+      }
+      lines.push(skillLine);
+    }
+  } catch {
+    /* skills practice data is best-effort */
+  }
+
   // ── Latest screening band (descriptive, NOT a diagnosis) ──────────────────
   const band = latestScreeningBand();
   if (band) lines.push(`- ${band} (from a self-screening they took — context only, never to be quoted back as a label).`);
@@ -523,6 +547,7 @@ export function buildPersonalContext(): string {
   // Only included when there's enough data for a meaningful signal.
   let allianceBlock = "";
   try {
+    refreshAlliance(); // recompute from current behavioral data before loading
     const state = loadAlliance();
     if (state.current && state.trend !== "insufficient_data") {
       allianceBlock = `ALLIANCE SIGNAL: bond ${state.current.bond}, goals ${state.current.goals}, tasks ${state.current.tasks} — trend: ${state.trend}.`;

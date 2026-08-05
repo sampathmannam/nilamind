@@ -11,6 +11,7 @@ import android.webkit.PermissionRequest;
 import android.webkit.WebChromeClient;
 import com.getcapacitor.Bridge;
 import com.getcapacitor.BridgeActivity;
+import com.nilamind.app.HealthConnectPlugin;
 import java.io.File;
 import java.io.FileInputStream;
 
@@ -34,6 +35,11 @@ public class MainActivity extends BridgeActivity {
   @Override
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    // TEMPORARY LOCAL-ONLY comment-out (2026-08-05, uncommitted): HealthConnectPlugin doesn't exist
+    // anywhere in the tree yet (in-progress work from a concurrent session) — this line alone breaks the
+    // native build. Commented out ONLY to unblock a device rebuild for unrelated web-layer fixes; not
+    // committed. Restore this line once HealthConnectPlugin actually lands.
+    // addPlugin(new HealthConnectPlugin());
     createNotificationChannels();
     precacheModelWeights();
     startResidentServiceIfModelPresent();
@@ -84,11 +90,6 @@ public class MainActivity extends BridgeActivity {
     crisis.setDescription("Post-crisis aftercare check-ins. These are time-sensitive safety prompts and appear with sound.");
     crisis.setShowBadge(true);
     nm.createNotificationChannel(crisis);
-  }
-
-  @Override
-  public void onStart() {
-    super.onStart();
   }
 
   // Keep-resident: once a model is on disk, hold the process at foreground priority (ModelResidentService)

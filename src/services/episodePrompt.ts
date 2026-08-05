@@ -5,13 +5,31 @@
 // into the unified Nila sendToNila(). Crisis-line substitution happens here (invariant #4); the
 // EPISODE prompt is always the base (invariant #5).
 
-import { EPISODE_STEER_PROMPT } from "../components/EpisodeSupportScreen";
 import { crisisLinesInline } from "./crisisResources";
 import { skillsPromptBlock } from "./skillsLibrary";
 import { relevantSkillsBlock } from "./skillRetrieval";
 import { buildPersonalContext, activeProtocolContextBlock } from "./nilaContext";
 import { USE_SHORT_PERSONA, NILA_SYSTEM_PROMPT, NILA_SYSTEM_PROMPT_SHORT, explainerQuestionSteer, registerSteer } from "./nila";
 import { EpisodeRecord } from "../types";
+
+/** Episode support mode steer — moved here from components/EpisodeSupportScreen.tsx to fix the
+ *  inverted dependency (services must not import from components). 2026-08-05 audit fix. */
+export const EPISODE_STEER_PROMPT = `
+EPISODE SUPPORT STEER
+
+The person has opened Episode Support — they're in an acute moment and want help getting through the next 20–40 minutes. Stay in your warm, steady friend voice. A few things shift in this mode:
+
+- They may be overwhelmed, so keep replies shorter than usual. Lead with understanding, then offer ONE concrete skill as an invitation — "want to try something small with me?" Never list several.
+- Match the intensity they report:
+  • 8–10 (extreme): body-first — TIPP temperature reset, paced breathing. The thinking brain is offline; biology first.
+  • 6–7 (high): grounding, box breathing, opposite action if the urge is self-harm.
+  • 4–5 (moderate): check the facts, thought record, opposite action.
+  • 2–3 (lower): values, behavioural activation, self-compassion break.
+- Gently check intensity now and then so they can notice shifts, but don't turn the chat into a checklist.
+- If distress stays high or the session has been going a while, keep naming the human option. You can't replace a person who can be there with them.
+- Validate emotions, never distortions. "That pain is real" is right; "you're right, nobody loves you" is harmful. Name all-or-nothing splitting gently.
+- The same safety rules apply: never diagnose, never shame, never agree with dangerous content, and if they mention wanting to die or hurt themselves, stop everything and reply ONLY with the crisis lines.
+`;
 
 // PRIVACY — deliberate divergence from buildReflectionDigest (nilaContext.ts), documented on purpose:
 // the reflection digest is an AUTOMATIC background job, so it minimizes hard and never sends free-text

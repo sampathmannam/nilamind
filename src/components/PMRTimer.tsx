@@ -92,7 +92,7 @@ export default function PMRTimer({ onComplete }: PMRTimerProps = {}) {
       <div className="flex items-center justify-center gap-3">
         <button
           onClick={reset}
-          className="p-2.5 rounded-full bg-line-strong text-ink-2 hover:bg-slate-600 transition-colors cursor-pointer"
+          className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full bg-line-strong text-ink-2 hover:bg-slate-600 transition-colors cursor-pointer"
           aria-label="Reset"
         >
           <RotateCcw className="w-4 h-4" />

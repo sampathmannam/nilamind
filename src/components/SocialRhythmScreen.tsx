@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Clock3, Sunrise } from "lucide-react";
+import { Sunrise } from "lucide-react";
 import {
   RHYTHM_ANCHORS,
   MIN_RHYTHM_DAYS,
@@ -101,15 +101,12 @@ export default function SocialRhythmScreen() {
 
   return (
     <div className="space-y-6 max-w-md mx-auto" id="social-rhythm-screen">
-      <div>
-        <h1 className="text-xl font-semibold text-ink flex items-center gap-2">
-          <Clock3 className="w-5 h-5 text-accent" /> Social rhythm
-        </h1>
-        <p className="text-xs text-ink-faint mt-1">
-          Keeping daily routines at steady times can help steady mood. Log when a few everyday anchors
-          happened today.
-        </p>
-      </div>
+      {/* 2026-08-05 declutter: in-body "Social rhythm" h1 removed — the Sheet header
+          (AUX_LABELS.social_rhythm) already shows the same title directly above. Description stays. */}
+      <p className="text-base text-ink-muted leading-relaxed">
+        Keeping daily routines at steady times can help steady mood. Log when a few everyday anchors
+        happened today.
+      </p>
 
       {/* Today's anchors */}
       <div className="glass rounded-2xl p-4 space-y-3">
@@ -141,8 +138,8 @@ export default function SocialRhythmScreen() {
           <div className="text-sm font-semibold text-ink-2 flex items-center gap-2">
             <Sunrise className="w-4 h-4 text-accent" /> Wake-time insight
           </div>
-          <p className="text-xs text-ink-muted leading-relaxed">{wakeInsight.guidance}</p>
-          <p className="text-xs text-ink-faint leading-relaxed">
+          <p className="text-base text-ink-muted leading-relaxed">{wakeInsight.guidance}</p>
+          <p className="text-base text-ink-faint leading-relaxed">
             Wake time is the anchor most emphasized in Interpersonal &amp; Social Rhythm Therapy (Frank et
             al., 2005; Monk, Frank, Potts &amp; Kupfer, 2002).
           </p>
@@ -156,13 +153,13 @@ export default function SocialRhythmScreen() {
           <span className={`text-sm font-semibold ${band.cls}`}>{band.label}</span>
         </div>
         {reg.band === "insufficient" ? (
-          <p className="text-xs text-ink-muted leading-relaxed">
+          <p className="text-base text-ink-muted leading-relaxed">
             Logged {reg.daysLogged} of {MIN_RHYTHM_DAYS} days needed. Keep going for a few days and a gentle
             read of how steady your timing is will appear here.
           </p>
         ) : (
           <div className="space-y-2">
-            <p className="text-xs text-ink-muted leading-relaxed">
+            <p className="text-base text-ink-muted leading-relaxed">
               Over the last {reg.windowDays} days, your anchor times varied by about{" "}
               <span className="text-ink-2 font-medium">±{reg.overallVariabilityMin} min</span> on average.
               Smaller is steadier — many people aim to keep key anchors within ~45 minutes day to day.
@@ -185,7 +182,7 @@ export default function SocialRhythmScreen() {
       </div>
 
       {/* Honest basis + limit */}
-      <p className="text-xs text-ink-faint leading-relaxed px-1">
+      <p className="text-base text-ink-faint leading-relaxed px-1">
         Based on the Social Rhythm Metric (Monk et al., 1990/1991) as used in Interpersonal &amp; Social
         Rhythm Therapy (Frank et al., 2005). The evidence for rhythm regularity is strongest for bipolar
         disorder and rests on a small number of trials; the bands here are a self-reflection aid, not a
@@ -238,7 +235,7 @@ export default function SocialRhythmScreen() {
             </div>
           );
         })}
-        <p className="text-xs text-ink-faint leading-relaxed">
+        <p className="text-base text-ink-faint leading-relaxed">
           Each dot is when that anchor happened that day. Dots close together = a steady rhythm; spread out = more
           variation. The grey band shows the range across the week. The top row is how your mood averaged that day.
         </p>

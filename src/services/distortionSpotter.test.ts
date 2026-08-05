@@ -177,3 +177,17 @@ describe("safeSpotDistortions — §9 gate", () => {
     if (r.ok) expect(r.matches).toEqual([]);
   });
 });
+
+describe("spotDistortions — zero-width char evasion resistance", () => {
+  it("catches all-or-nothing even with zero-width spaces injected", () => {
+    const matches = spotDistortions("I\u200B always\u200B mess\u200B everything\u200B up");
+    expect(matches.length).toBeGreaterThan(0);
+    expect(matches.some((m) => m.id === "all_or_nothing")).toBe(true);
+  });
+
+  it("catches catastrophizing with zero-width chars", () => {
+    const matches = spotDistortions("it\u200B is\u200B going\u200B to\u200B be\u200B terrible");
+    expect(matches.length).toBeGreaterThan(0);
+    expect(matches.some((m) => m.id === "catastrophizing")).toBe(true);
+  });
+});

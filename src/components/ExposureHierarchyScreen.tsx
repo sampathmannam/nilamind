@@ -71,7 +71,7 @@ export default function ExposureHierarchyScreen() {
       <div className="space-y-4 max-w-md mx-auto" id="exposure-screen">
         <div className="bg-card border border-rose-500/40 p-5 rounded-2xl space-y-3" id="exposure-crisis">
           <h3 className="text-sm font-semibold text-rose-200">You matter — support is here right now</h3>
-          <p className="text-xs text-ink-2 leading-relaxed">
+          <p className="text-base text-ink-2 leading-relaxed">
             What you just wrote sounds like more than an exposure step. This is a moment for a person, not an exercise —
             please reach out right now. You're not alone.
           </p>
@@ -95,7 +95,7 @@ export default function ExposureHierarchyScreen() {
           <X className="w-5 h-5" /> Close
         </button>
         <h2 className="text-lg font-semibold text-ink">{hierarchy.title}</h2>
-        <p className="text-xs text-ink-muted">Steps ranked by SUDS (0–100). Work from bottom up — start with the easiest.</p>
+        <p className="text-base text-ink-muted">Steps ranked by SUDS (0–100). Work from bottom up — start with the easiest.</p>
 
         <div className="flex gap-4 text-center">
           <div className="glass rounded-xl p-3 flex-1">
@@ -114,7 +114,7 @@ export default function ExposureHierarchyScreen() {
         {celebratedStep && (
           <div className="glass rounded-2xl p-4 border-l-4 border-l-success flex items-center gap-3">
             <CheckCircle className="w-5 h-5 text-success shrink-0" />
-            <p className="text-xs text-ink-2 leading-relaxed">
+            <p className="text-base text-ink-2 leading-relaxed">
               <span className="text-accent-hi font-semibold">Step completed</span> — {celebratedStep}.
               That takes courage, even when it's hard.
             </p>
@@ -134,7 +134,7 @@ export default function ExposureHierarchyScreen() {
               <div className="text-xs text-ink-faint">A few things worth reflecting on:</div>
               <ul className="space-y-1 list-disc list-inside">
                 {inhibitoryLearningPrompts().map((prompt) => (
-                  <li key={prompt} className="text-[11px] text-ink-muted leading-relaxed">{prompt}</li>
+                  <li key={prompt} className="text-base text-ink-muted leading-relaxed">{prompt}</li>
                 ))}
               </ul>
             </div>
@@ -143,7 +143,7 @@ export default function ExposureHierarchyScreen() {
               <button onClick={() => handleCompleteStep(completingStep)} className="flex-1 glass rounded-xl py-2 text-xs text-accent-hi cursor-pointer">Save</button>
               <button onClick={() => setCompletingStep(null)} className="glass rounded-xl px-3 py-2 text-xs text-ink-muted cursor-pointer">Cancel</button>
             </div>
-            <p className="text-xs text-ink-faint leading-relaxed">
+            <p className="text-base text-ink-faint leading-relaxed">
               Reflection prompts based on the inhibitory-learning model (Craske, Treanor, Conway, Zbozinek &amp; Vervliet, 2014) —
               noticing what actually happened, versus what you predicted, is what research suggests makes exposure learning last.
             </p>
@@ -168,7 +168,7 @@ export default function ExposureHierarchyScreen() {
                 {!step.completed && <button onClick={() => handleRemoveStep(step.id)} className="text-ink-faint hover:text-ink-muted cursor-pointer shrink-0"><X className="w-3 h-3" /></button>}
               </div>
             ))}
-            {sorted.length === 0 && <p className="text-xs text-ink-faint text-center py-6">No steps yet. Add your first one below.</p>}
+            {sorted.length === 0 && <p className="text-base text-ink-faint text-center py-6">No steps yet. Add your first one below.</p>}
           </div>
         )}
 
@@ -189,11 +189,11 @@ export default function ExposureHierarchyScreen() {
   return (
     <div className="space-y-4 max-w-md mx-auto" id="exposure-screen">
       <h2 className="text-xl font-semibold text-ink flex items-center gap-2"><Mountain className="w-5 h-5 text-orange-400" /> Exposure Hierarchy</h2>
-      <p className="text-xs text-ink-muted leading-relaxed">Build a ladder of fears. Work from the bottom up — start where it's easiest, not hardest.</p>
+      <p className="text-base text-ink-muted leading-relaxed">Build a ladder of fears. Work from the bottom up — start where it's easiest, not hardest.</p>
 
       <div className="glass rounded-2xl p-4 flex gap-2">
         <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Hierarchy name (e.g. Social anxiety)" className="flex-1 glass rounded-xl px-3 py-2 text-xs text-ink-2 placeholder-ink-faint" />
-        <button onClick={handleCreate} className="glass rounded-xl px-3 py-2 text-xs text-orange-300 cursor-pointer"><Plus className="w-4 h-4" /></button>
+        <button onClick={handleCreate} aria-label="Add hierarchy" className="glass rounded-xl px-3 py-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-xs text-orange-300 cursor-pointer"><Plus className="w-4 h-4" /></button>
       </div>
 
       <ConfirmDialog

@@ -18,7 +18,7 @@ export default function AboutNilaScreen() {
         <h2 className="text-sm font-semibold text-ink flex items-center gap-2">
           <HeartHandshake className="w-4 h-4 text-accent" /> What Nila is
         </h2>
-        <p className="text-xs text-ink-muted leading-relaxed">
+        <p className="text-base text-ink-muted leading-relaxed">
           Nila is a private, on-device AI companion designed for the harder moments. She listens, suggests
           evidence-based tools, and helps you notice patterns in how you're doing — all without any data
           leaving your phone.
@@ -30,7 +30,7 @@ export default function AboutNilaScreen() {
         <h2 className="text-sm font-semibold text-ink flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-accent" /> Nila's story
         </h2>
-        <p className="text-xs text-ink-muted leading-relaxed italic">
+        <p className="text-base text-ink-muted leading-relaxed italic">
           "{NILA_ORIGIN}"
         </p>
       </div>
@@ -40,7 +40,7 @@ export default function AboutNilaScreen() {
         <h2 className="text-sm font-semibold text-ink flex items-center gap-2">
           <Cpu className="w-4 h-4 text-success" /> How it works
         </h2>
-        <p className="text-xs text-ink-muted leading-relaxed">
+        <p className="text-base text-ink-muted leading-relaxed">
           Nila's brain is an on-device language model (Qwen2.5-1.5B) that runs entirely on your phone — there is no cloud,
           no server, no internet round-trip. Everything you type is processed locally and stored encrypted.
           Nila adapts her responses to your state, time of day, and what she remembers from past conversations.
@@ -52,7 +52,7 @@ export default function AboutNilaScreen() {
         <h2 className="text-sm font-semibold text-ink flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-warn" /> What Nila can do
         </h2>
-        <ul className="text-xs text-ink-muted leading-relaxed space-y-1.5 list-disc list-inside">
+        <ul className="text-base text-ink-muted leading-relaxed space-y-1.5 list-disc list-inside">
           <li>Listen and respond with empathy, anytime</li>
           <li>Suggest evidence-based coping tools (grounding, breathing, thought records, and more)</li>
           <li>Help you notice patterns in mood, sleep, behaviour, and social rhythm</li>
@@ -67,7 +67,7 @@ export default function AboutNilaScreen() {
         <h2 className="text-sm font-semibold text-ink flex items-center gap-2">
           <Shield className="w-4 h-4 text-rose-400" /> What Nila cannot do
         </h2>
-        <ul className="text-xs text-ink-muted leading-relaxed space-y-1.5 list-disc list-inside">
+        <ul className="text-base text-ink-muted leading-relaxed space-y-1.5 list-disc list-inside">
           <li>Nila is <strong className="text-ink-2">not a therapist, doctor, or crisis service</strong></li>
           <li>She cannot diagnose, treat, or prescribe</li>
           <li>She cannot replace professional mental health care</li>
@@ -80,7 +80,7 @@ export default function AboutNilaScreen() {
         <h2 className="text-sm font-semibold text-ink flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-warn" /> Nila won't always agree with you
         </h2>
-        <p className="text-xs text-ink-muted leading-relaxed">
+        <p className="text-base text-ink-muted leading-relaxed">
           This is by design. If you're in a manic or elevated state — feeling like you don't need sleep,
           that rules don't apply, that everyone is against you, or that you should make big impulsive
           decisions — Nila will gently <strong className="text-ink-2">not validate</strong> those beliefs.
@@ -96,7 +96,7 @@ export default function AboutNilaScreen() {
         <h2 className="text-sm font-semibold text-ink flex items-center gap-2">
           <Shield className="w-4 h-4 text-success" /> Privacy
         </h2>
-        <p className="text-xs text-ink-muted leading-relaxed">
+        <p className="text-base text-ink-muted leading-relaxed">
           NilaMind is designed so <strong className="text-ink-2">nothing leaves your phone</strong>.
           All data — chats, check-ins, diary entries, insights — is stored locally and encrypted at rest.
           There are no accounts, no cloud sync, no analytics SDKs, and no data collection.
@@ -108,14 +108,14 @@ export default function AboutNilaScreen() {
         <h2 className="text-sm font-semibold text-ink flex items-center gap-2">
           <BookOpen className="w-4 h-4 text-accent" /> Research basis
         </h2>
-        <p className="text-xs text-ink-muted leading-relaxed">
+        <p className="text-base text-ink-muted leading-relaxed">
           Every tool and feature in NilaMind is grounded in peer-reviewed research — CBT, DBT, behavioural
           activation, social rhythm therapy, ACT, self-compassion, and more. You can explore the full
           evidence base and citations in the Learn section.
         </p>
       </div>
 
-       <p className="text-[11px] text-ink-faint text-center leading-relaxed px-4">
+       <p className="text-base text-ink-faint text-center leading-relaxed px-4">
          NilaMind is a support alongside — not a substitute for — professional care.
        </p>
        <p className="text-[10px] text-slate-600 text-center">

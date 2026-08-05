@@ -6,7 +6,7 @@ import { localDateKey } from "./storageUtils";
 import { secureLocal } from "./secureLocal";
 import { getProtocol, routeToProtocol, type Protocol, type ProtocolStep } from "./protocols";
 import { detectElevationRisk } from "./elevationGuard";
-import { recordProtocolCompletion, completionCountFor } from "./nOf1";
+import { recordProtocolCompletion, completionCountFor, recordProtocolStart } from "./nOf1";
 
 export { completionCountFor } from "./nOf1";
 
@@ -61,6 +61,7 @@ export function startProtocol(id: string): ActiveStep | null {
   if (!p) return null;
   active = { protocolId: id, stepIndex: 0 };
   persist();
+  recordProtocolStart(id, localDateKey());
   return { protocol: p, step: p.steps[0], stepIndex: 0, total: p.steps.length, priorCompletions: completionCountFor(id) };
 }
 

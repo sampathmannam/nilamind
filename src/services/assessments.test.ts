@@ -1,6 +1,6 @@
 import { localDateKey } from "./storageUtils";
 import { describe, it, expect } from "vitest";
-import { isSameRecallWindowRetake, RECALL_WINDOW_GUARD_DAYS, classifyChange } from "./assessments";
+import { isSameRecallWindowRetake, RECALL_WINDOW_GUARD_DAYS, classifyChange, scoreAssessment } from "./assessments";
 import type { AssessmentEntry } from "./assessments";
 
 // PHQ-9/GAD-7 ask about the last 2 weeks (Kroenke et al., 2001; Spitzer et al., 2006), so a retake
@@ -91,5 +91,42 @@ describe("classifyChange", () => {
   it("returns null for instruments with no established reliable-change threshold (PHQ-2, PSS-4) rather than inventing one", () => {
     expect(classifyChange("PHQ-2", 0, 6)).toBeNull();
     expect(classifyChange("PSS-4", 0, 16)).toBeNull();
+  });
+});
+
+// 2026-08-05 audit: scoreAssessment.safetyFlag had ZERO test coverage — both existing test files only
+// ever referenced `safetyFlag: false` in fixture setup, never asserted the true case. This is THE most
+// safety-critical line in the whole assessments feature (PHQ-9 item 9 = suicidal ideation / self-harm;
+// AssessmentScreen's "You're not alone in this" crisis banner is gated on this flag alone). Verified by
+// direct code read (scoreAssessment: `safetyFlag = responses[safetyItemIndex] > 0`) since an on-device
+// manual tap-through of PHQ-9's last two items was blocked by a device/gesture quirk unrelated to this
+// logic — pinning it here closes the coverage gap regardless.
+describe("scoreAssessment — PHQ-9 item-9 safety flag (2026-08-05 audit)", () => {
+  const allZero = (n: number) => new Array(n).fill(0);
+
+  it("safetyFlag is false when item 9 (index 8) is 0, even with other items elevated", () => {
+    const responses = allZero(9).map((_, i) => (i === 8 ? 0 : 2)); // every OTHER item severe, item 9 clean
+    const result = scoreAssessment("PHQ-9", responses);
+    expect(result.safetyFlag).toBe(false);
+  });
+
+  it.each([1, 2, 3])("safetyFlag is true when item 9 (index 8) is answered %i (any level > 0)", (val) => {
+    const responses = allZero(9);
+    responses[8] = val;
+    const result = scoreAssessment("PHQ-9", responses);
+    expect(result.safetyFlag).toBe(true);
+  });
+
+  it("safetyFlag stays true even when every other item is 0 (minimal total score, safety flag independent of severity band)", () => {
+    const responses = allZero(9);
+    responses[8] = 1;
+    const result = scoreAssessment("PHQ-9", responses);
+    expect(result.total).toBe(1); // near-zero total — would read as "Minimal" depression
+    expect(result.safetyFlag).toBe(true); // but the safety flag must still fire
+  });
+
+  it("instruments with no safetyItemIndex (e.g. GAD-7) never set safetyFlag, regardless of responses", () => {
+    const result = scoreAssessment("GAD-7", allZero(7).map(() => 3));
+    expect(result.safetyFlag).toBe(false);
   });
 });

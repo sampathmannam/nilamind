@@ -12,7 +12,7 @@ export default function InflectionSection() {
         <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-2 font-mono flex items-center gap-2">
           <Activity className="w-4 h-4 text-accent" /> {t("sec_inflection")}
         </h2>
-        <p className="text-[11px] text-ink-muted mt-1 leading-relaxed">
+        <p className="text-base text-ink-muted mt-1 leading-relaxed">
           If you turn this on, Nila may gently mention when she notices a real, lasting shift in how you've been —
           only when you open her, never a notification, always something you can wave off. Off by default.
         </p>

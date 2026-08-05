@@ -78,11 +78,16 @@ export function SleepWidget({ className = "" }) {
   }, []);
 
   if (!sleep) {
+    // 2026-08-04 audit: this previously rendered as a button (hover/active/chevron affordance) with
+    // `onClick={() => {}}` — an explicit no-op. There is currently no sleep-LOGGING surface anywhere in
+    // the app (logSleepNight() in sleepLog.ts has no caller); this card can only ever DISPLAY sleep data
+    // that arrived some other way (e.g. Health Connect), never let the user enter it. Styling this as an
+    // actionable button promised a capability that doesn't exist. Rendered as plain (non-interactive,
+    // non-hover, no chevron) until a real logging flow exists — honest about what it can do today.
     return (
-      <button
+      <div
         className={`${cardStyle} ${className} w-full text-left animate-fade-up`}
-        onClick={() => {}}
-        aria-label="Sleep tracking — log last night's sleep to see it here"
+        aria-label="Sleep tracking — no sleep logged yet"
       >
         <div className="flex items-center gap-3">
           <div className="w-11 h-11 rounded-xl bg-accent/15 flex items-center justify-center">
@@ -90,11 +95,10 @@ export function SleepWidget({ className = "" }) {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-ink">Sleep</p>
-            <p className="text-[11px] text-ink-muted mt-0.5">Log last night's sleep to track it</p>
+            <p className="text-[11px] text-ink-muted mt-0.5">No sleep logged yet</p>
           </div>
-          <ChevronRight className="w-5 h-5 text-ink-faint shrink-0" aria-hidden="true" />
         </div>
-      </button>
+      </div>
     );
   }
 
@@ -103,7 +107,7 @@ export function SleepWidget({ className = "" }) {
   const qualityColor = sleep.hours >= 7.5 ? "text-success" : sleep.hours >= 6 ? "text-warn" : "text-rose-400";
 
   return (
-    <button className={`${cardStyle} ${className} w-full text-left hover:brightness-105 transition-colors active:scale-[0.99]`}>
+    <div className={`${cardStyle} ${className} w-full text-left`} aria-label={`Sleep: ${sleep.hours.toFixed(1)} hours, ${qualityLabel}`}>
       <div className="flex items-center gap-3">
         <div className="w-11 h-11 rounded-xl bg-success/15 flex items-center justify-center">
           <Moon className="w-5 h-5 text-success" aria-hidden="true" />
@@ -134,12 +138,15 @@ export function SleepWidget({ className = "" }) {
           style={{ width: `${quality}%`, backgroundColor: `var(--color-${sleep.hours >= 7.5 ? 'success' : sleep.hours >= 6 ? 'warn' : 'danger'})` }}
         />
       </div>
-    </button>
+    </div>
   );
 }
 
 // ── Mood Trend Widget ──────────────────────────────────────────────────────────────────────────
-export function MoodTrendWidget({ className = "" }) {
+// 2026-08-04 audit: neither branch had an onClick — a fully hover/active/chevron-styled "button" that
+// did nothing on tap. Wired to `go`: the empty state invites the user to check in now; the populated
+// state opens the diary (its check-in history) matching the "Feeling good" hero card's own destination.
+export function MoodTrendWidget({ className = "", go }: { className?: string; go?: (route: string) => void }) {
   const [moodData, setMoodData] = useState<CheckinPoint[]>([]);
 
   useEffect(() => {
@@ -148,7 +155,10 @@ export function MoodTrendWidget({ className = "" }) {
 
   if (moodData.length < 2) {
     return (
-      <button className={`${cardStyle} ${className} w-full text-left animate-fade-up`}>
+      <button
+        onClick={() => go?.("ema_checkin")}
+        className={`${cardStyle} ${className} w-full text-left animate-fade-up`}
+      >
         <div className="flex items-center gap-3">
           <div className="w-11 h-11 rounded-xl bg-accent/15 flex items-center justify-center">
             <Heart className="w-5 h-5 text-accent" aria-hidden="true" />
@@ -167,7 +177,10 @@ export function MoodTrendWidget({ className = "" }) {
   const latest = moodData[moodData.length - 1];
 
   return (
-    <button className={`${cardStyle} ${className} w-full text-left hover:brightness-105 transition-colors active:scale-[0.99]`}>
+    <button
+      onClick={() => go?.("diary")}
+      className={`${cardStyle} ${className} w-full text-left hover:brightness-105 transition-colors active:scale-[0.99]`}
+    >
       <div className="flex items-center gap-3">
         <div className="w-11 h-11 rounded-xl bg-accent/15 flex items-center justify-center">
           <Heart className="w-5 h-5 text-accent" aria-hidden="true" />
@@ -209,7 +222,16 @@ export function MoodTrendWidget({ className = "" }) {
 }
 
 // ── Next Protocol Step Widget ──────────────────────────────────────────────────────────────────
-export function NextProtocolWidget({ className = "" }) {
+// 2026-08-04 audit: TWO defects, confirmed on-device.
+//  (1) No onClick in either branch — a fully hover/active/chevron-styled "button" with a live progress
+//      bar that did nothing on tap, including when a real active protocol ("Step 3 of 7") was shown.
+//  (2) The empty state duplicated TodayScreen's own always-visible "Guided Programs" hero card verbatim
+//      ("Guided Programs" / "...you can start any time" vs "No active program — start one in Guided
+//      Programs") — confirmed rendering simultaneously in the same default (non-expanded) scroll on this
+//      account's Data-phase state. The hero card already fully covers "no program yet, go discover one";
+//      this widget's unique value is showing LIVE PROGRESS once a program exists, so the empty state is
+//      now suppressed (return null) rather than duplicating the hero, and the populated state is wired.
+export function NextProtocolWidget({ className = "", go }: { className?: string; go?: (route: string) => void }) {
   const [activeProtocol, setActiveProtocol] = useState<{ id: string; title: string; step: number; total: number; nextPrompt: string } | null>(null);
 
   useEffect(() => {
@@ -232,25 +254,13 @@ export function NextProtocolWidget({ className = "" }) {
     } catch { setActiveProtocol(null); }
   }, []);
 
-  if (!activeProtocol) {
-    return (
-      <button className={`${cardStyle} ${className} w-full text-left animate-fade-up`}>
-        <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl bg-warn/15 flex items-center justify-center">
-            <Target className="w-5 h-5 text-warn" aria-hidden="true" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-ink">Guided Programs</p>
-            <p className="text-[11px] text-ink-muted mt-0.5">No active program — start one in Guided Programs</p>
-          </div>
-          <ChevronRight className="w-5 h-5 text-ink-faint shrink-0" aria-hidden="true" />
-        </div>
-      </button>
-    );
-  }
+  if (!activeProtocol) return null;
 
   return (
-    <button className={`${cardStyle} ${className} w-full text-left hover:brightness-105 transition-colors active:scale-[0.99]`}>
+    <button
+      onClick={() => go?.("guided_programs")}
+      className={`${cardStyle} ${className} w-full text-left hover:brightness-105 transition-colors active:scale-[0.99]`}
+    >
       <div className="flex items-start gap-3">
         <div className="w-11 h-11 rounded-xl bg-warn/15 flex items-center justify-center shrink-0">
           <Target className="w-5 h-5 text-warn" aria-hidden="true" />
@@ -378,7 +388,12 @@ export function WeeklyInsightWidget({ className = "" }) {
 }
 
 // ── Social Rhythm Widget ────────────────────────────────────────────────────────────────────────
-export function RhythmWidget({ className = "" }) {
+// 2026-08-04 audit: no onClick in either branch. Note for product review (not acted on here — the
+// duplication wasn't independently re-confirmed the way Guided Programs was): TodayScreen's own
+// "Your week" extra-cards section (gated by user-toggled showExtraCards) has an already-wired, near-
+// identical "Daily Rhythm" card at the same "social_rhythm" route — worth a follow-up look at whether
+// they should be consolidated. Wiring this one now regardless, since a dead button is wrong either way.
+export function RhythmWidget({ className = "", go }: { className?: string; go?: (route: string) => void }) {
   const [rhythm, setRhythm] = useState<{ wake?: string; bed?: string; anchors: number } | null>(null);
 
   useEffect(() => {
@@ -402,7 +417,10 @@ export function RhythmWidget({ className = "" }) {
 
   if (!rhythm.wake && !rhythm.bed) {
     return (
-      <button className={`${cardStyle} ${className} w-full text-left animate-fade-up`}>
+      <button
+        onClick={() => go?.("social_rhythm")}
+        className={`${cardStyle} ${className} w-full text-left animate-fade-up`}
+      >
         <div className="flex items-center gap-3">
           <div className="w-11 h-11 rounded-xl bg-accent/15 flex items-center justify-center">
             <Clock className="w-5 h-5 text-accent" aria-hidden="true" />
@@ -418,7 +436,10 @@ export function RhythmWidget({ className = "" }) {
   }
 
   return (
-    <button className={`${cardStyle} ${className} w-full text-left hover:brightness-105 transition-colors active:scale-[0.99]`}>
+    <button
+      onClick={() => go?.("social_rhythm")}
+      className={`${cardStyle} ${className} w-full text-left hover:brightness-105 transition-colors active:scale-[0.99]`}
+    >
       <div className="flex items-center gap-3">
         <div className="w-11 h-11 rounded-xl bg-accent/15 flex items-center justify-center">
           <Clock className="w-5 h-5 text-accent" aria-hidden="true" />
@@ -474,7 +495,10 @@ export function StreakWidget({ className = "" }) {
 }
 
 // ── Upcoming Assessment Widget ──────────────────────────────────────────────────────────────────
-export function AssessmentWidget({ className = "" }) {
+// 2026-08-04 audit: no onClick — dead button despite the "Due"/"Baseline" badges and chevron implying
+// tap-through. Wired to the existing "assessment" route (same one TodayScreen's own inline assessment
+// CTA already uses at `go("assessment")`).
+export function AssessmentWidget({ className = "", go }: { className?: string; go?: (route: string) => void }) {
   const [assessment, setAssessment] = useState<{ instrument: string; measures: string; due: boolean; firstTime: boolean } | null>(null);
 
   useEffect(() => {
@@ -507,7 +531,10 @@ export function AssessmentWidget({ className = "" }) {
   if (!assessment) return null;
 
   return (
-    <button className={`${cardStyle} ${className} w-full text-left hover:brightness-105 transition-colors active:scale-[0.99]`}>
+    <button
+      onClick={() => go?.("assessment")}
+      className={`${cardStyle} ${className} w-full text-left hover:brightness-105 transition-colors active:scale-[0.99]`}
+    >
       <div className="flex items-center gap-3">
         <div className="w-11 h-11 rounded-xl bg-success/15 flex items-center justify-center">
           <Activity className="w-5 h-5 text-success" aria-hidden="true" />

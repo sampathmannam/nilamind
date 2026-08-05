@@ -53,7 +53,7 @@ export default function PrivacyLockSection() {
         <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-2 font-mono flex items-center gap-2">
           <Lock className="w-4 h-4 text-accent" /> {t("sec_privacy_lock")}
         </h2>
-        <p className="text-[11px] text-ink-muted mt-1 leading-relaxed">
+        <p className="text-base text-ink-muted mt-1 leading-relaxed">
           {/* #16 (audit): don't claim "always encrypted" in passthrough mode, where entries are stored in
               plaintext because secure storage is unavailable — the claim must match the actual at-rest state. */}
           {passthrough ? (
@@ -71,7 +71,7 @@ export default function PrivacyLockSection() {
       {passthrough && (
         <div className="bg-warn/10 border border-warn/30 rounded-xl p-3 flex gap-2">
           <AlertTriangle className="w-4 h-4 text-warn shrink-0 mt-0.5" />
-          <p className="text-[11px] text-warn/90 leading-relaxed">
+          <p className="text-base text-warn/90 leading-relaxed">
             Secure storage isn't available in this browser/session, so a PIN can't be added and your data is
             stored <span className="text-warn">unencrypted</span> on this device. It still never leaves your phone.
           </p>
@@ -112,7 +112,7 @@ export default function PrivacyLockSection() {
               id="settings-pin-confirm"
               className="w-full glass rounded-lg px-3 py-2.5 text-sm text-ink tracking-widest placeholder:tracking-normal placeholder:text-ink-faint focus:outline-none focus:border-accent/50"
             />
-            <p id="pin-warning" className="text-xs text-warn/80 leading-relaxed flex items-start gap-1">
+            <p id="pin-warning" className="text-base text-warn/80 leading-relaxed flex items-start gap-1">
               <AlertTriangle className="w-3 h-3 shrink-0 mt-0.5" /> If you forget this PIN, your encrypted entries cannot be recovered. There's no reset.
             </p>
             {error && <p className="text-[11px] text-rose-400">{error}</p>}

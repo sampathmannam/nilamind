@@ -69,7 +69,14 @@ export default function IntentFlowBar({
   return (
     <div>
     <nav
-      className={`flex items-center justify-between rounded-xl bg-[var(--color-slate-100)] p-1 dark:bg-[var(--color-slate-800)] ${className}`}
+      // 2026-08-05 audit: was `bg-[var(--color-slate-100)] dark:bg-[var(--color-slate-800)]` — Tailwind's
+      // BUILT-IN `dark:` variant, which follows the OS `prefers-color-scheme` media query rather than this
+      // app's own in-app theme toggle. Confirmed broken combination on an emulator with system dark mode ON
+      // but the app itself set to Light: the OS-driven `dark:` classes fired on top of an otherwise
+      // light-themed page, producing a low-contrast/inconsistent tab bar. Every other themed surface in the
+      // app uses semantic tokens (bg-fill/bg-card/text-ink/text-ink-muted) that switch on the in-app toggle
+      // instead — same fix as ValuePropBanner.tsx.
+      className={`flex items-center justify-between rounded-xl bg-fill p-1 ${className}`}
       aria-label="Intent phase navigation"
     >
       {PHASES.map((phase) => {
@@ -80,8 +87,8 @@ export default function IntentFlowBar({
             onClick={() => onPhaseChange(phase.id)}
             className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
               ${active
-                ? "bg-white text-[var(--color-ink)] shadow-sm dark:bg-[var(--color-slate-700)] dark:text-white"
-                : "text-[var(--color-slate-500)] hover:text-[var(--color-ink)] dark:text-[var(--color-slate-400)]"
+                ? "bg-card text-ink shadow-sm"
+                : "text-ink-muted hover:text-ink"
               }`}
             aria-current={active ? "step" : undefined}
           >
@@ -99,7 +106,7 @@ export default function IntentFlowBar({
 
     {/* U1.5 — Phase tooltip: one-line description, shown until dismissed */}
     {!tooltipDismissed && (
-      <div className="mt-2 flex items-start gap-2 bg-fill/80 border border-line/30 rounded-xl px-3 py-2 text-[11px] text-ink-muted leading-relaxed animate-fade-in">
+      <div className="mt-2 flex items-start gap-2 bg-fill/80 border border-line/30 rounded-xl px-3 py-2 text-base text-ink-muted leading-relaxed animate-fade-in">
         <span className="flex-1">{PHASE_DESCRIPTIONS[currentPhase]}</span>
         <button
           onClick={() => onDismissTooltip?.()}

@@ -159,7 +159,7 @@ export default function SafetyPlanScreen({ draft }: { draft?: Partial<Pick<Safet
 
       {draftApplied && (
         <div className="bg-warn/5 border border-warn/25 rounded-xl p-3" id="safety-plan-draft-note">
-          <p className="text-xs text-ink-2 leading-relaxed">
+          <p className="text-base text-ink-2 leading-relaxed">
             <span className="font-semibold text-warn-hi">Started from our chat.</span> I filled in a few
             fields from what you told me — please read each one, change anything that isn't right, and add the
             people you'd reach out to yourself. Nothing is saved until you edit or save it.
@@ -297,7 +297,7 @@ export default function SafetyPlanScreen({ draft }: { draft?: Partial<Pick<Safet
 
         {showCoaching && (
           <div className="mt-4 space-y-4">
-            <p className="text-xs text-ink-muted leading-relaxed">
+            <p className="text-base text-ink-muted leading-relaxed">
               A calm, no-pressure look at your home environment. The idea is simple: in a really tough moment,
               having easy access to things that could cause harm can make things harder. This is about small
               adjustments — not getting rid of things you need. Explore the categories below, one at a time.
