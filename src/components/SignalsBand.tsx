@@ -99,13 +99,13 @@ export default function SignalsBand({
       {/* Engagement disengagement risk — early warning when usage declines */}
       {showDisengagement && (
         <Card variant="raised" gap="none" className="flex items-start gap-3">
-          <div className={`p-2 rounded-xl ${disengagementRisk!.riskLevel === "high" ? "bg-rose-500/10 text-rose-400" : disengagementRisk!.riskLevel === "elevated" ? "bg-warn/10 text-warn" : "bg-accent/10 text-accent"}`}>
+          <div className={`p-2 rounded-xl ${disengagementRisk!.riskLevel === "high" ? "bg-danger/10 text-danger" : disengagementRisk!.riskLevel === "elevated" ? "bg-warn/10 text-warn" : "bg-accent/10 text-accent"}`}>
             <Activity className="w-5 h-5" />
           </div>
           <div className="flex-1">
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-slate-100">Engagement trend</p>
-              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${disengagementRisk!.riskLevel === "high" ? "bg-rose-500/20 text-rose-300" : disengagementRisk!.riskLevel === "elevated" ? "bg-warn/20 text-warn-hi" : "bg-accent/20 text-accent-hi"}`}>
+              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${disengagementRisk!.riskLevel === "high" ? "bg-danger/20 text-rose-300" : disengagementRisk!.riskLevel === "elevated" ? "bg-warn/20 text-warn-hi" : "bg-accent/20 text-accent-hi"}`}>
                 {disengagementRisk!.score}/100
               </span>
             </div>
@@ -125,7 +125,7 @@ export default function SignalsBand({
       {/* Dependency signal — when usage suggests over-reliance */}
       {showDependency && (
         <Card variant="raised" gap="none" className="flex items-start gap-3">
-          <div className={`p-2 rounded-xl ${depLevel === "severe" ? "bg-rose-500/10 text-rose-400" : depLevel === "moderate" ? "bg-warn/10 text-warn" : "bg-accent/10 text-accent"}`}>
+          <div className={`p-2 rounded-xl ${depLevel === "severe" ? "bg-danger/10 text-danger" : depLevel === "moderate" ? "bg-warn/10 text-warn" : "bg-accent/10 text-accent"}`}>
             <Activity className="w-5 h-5" />
           </div>
           <div className="flex-1">
@@ -204,7 +204,7 @@ export default function SignalsBand({
       {/* Voice pattern signal */}
       {showVoice && (
         <Card variant="raised" gap="none" className="flex items-start gap-3">
-          <div className="p-2 rounded-xl bg-rose-500/10 text-rose-400">
+          <div className="p-2 rounded-xl bg-danger/10 text-danger">
             <Mic className="w-5 h-5" />
           </div>
           <div>

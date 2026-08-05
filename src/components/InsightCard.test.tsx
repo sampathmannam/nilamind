@@ -37,7 +37,7 @@ describe("InsightCard", () => {
 
   it("renders trend icon for improving", () => {
     const { container } = render(<InsightCard insight={base} />);
-    expect(container.querySelector(".text-emerald-400")).toBeTruthy();
+    expect(container.querySelector(".text-success")).toBeTruthy();
   });
 
   it("renders sparkline when provided", () => {

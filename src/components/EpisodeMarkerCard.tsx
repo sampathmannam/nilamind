@@ -20,7 +20,7 @@ function EpisodeMarkerCard({ onOpen }: { onOpen: () => void }) {
     >
       <div className="space-y-1 min-w-0">
         <div className="flex items-center gap-2">
-          <Activity className="w-4 h-4 text-amber-400" />
+          <Activity className="w-4 h-4 text-warn" />
           <span className="text-sm font-bold text-ink">{t("you_episode_marker_label")}</span>
         </div>
         {cur ? (

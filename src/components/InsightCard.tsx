@@ -25,8 +25,8 @@ const TREND_ICONS = {
 };
 
 const TREND_COLORS = {
-  improving: "text-emerald-400",
-  declining: "text-rose-400",
+  improving: "text-success",
+  declining: "text-danger",
   stable: "text-ink-muted",
 };
 
@@ -40,7 +40,7 @@ function InsightCard({ insight }: Props) {
   return (
     <Card>
       <div className="flex items-center gap-2">
-        <Icon className={`w-4 h-4 ${insight.iconColor ?? "text-amber-400"}`} />
+        <Icon className={`w-4 h-4 ${insight.iconColor ?? "text-warn"}`} />
         <p className="text-sm font-semibold text-ink flex-1">{insight.title}</p>
         {TrendIcon && <TrendIcon className={`w-4 h-4 ${trendColor}`} />}
       </div>

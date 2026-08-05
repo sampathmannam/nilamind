@@ -180,7 +180,7 @@ function TrendBadge({ first, last }: { first: number; last: number }) {
   if (diff < 0) {
     return <span className="text-xs px-2 py-0.5 rounded-full bg-success/20 text-success">Improving ↓</span>;
   }
-  return <span className="text-xs px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400">Worsening ↑</span>;
+  return <span className="text-xs px-2 py-0.5 rounded-full bg-danger/20 text-danger">Worsening ↑</span>;
 }
 
 export default React.memo(TrendChart);

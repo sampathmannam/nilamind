@@ -14,8 +14,8 @@ interface Props {
 
 // ── Section definitions: maps toolsRows group titles → visible section labels ──
 const SECTIONS = [
-  { title: "Calm", groupFilter: (id: string) => ["plan", "breathing", "winddown", "sounds", "reach_out"].includes(id) },
-  { title: "Track", groupFilter: (id: string) => ["ema_checkin", "diary", "dbt_diary_card", "medication"].includes(id) },
+  { title: "Calm", groupFilter: (id: string) => ["plan", "winddown", "sounds", "reach_out"].includes(id) },
+  { title: "Track", groupFilter: (id: string) => ["ema_checkin", "diary", "medication"].includes(id) },
   { title: "Skills", groupFilter: (id: string) =>
     ["problem_solving", "values_to_action", "assessment", "social_rhythm", "exposure", "relapse_plan", "chain_analysis"].includes(id),
   },

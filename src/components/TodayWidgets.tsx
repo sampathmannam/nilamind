@@ -104,7 +104,7 @@ export function SleepWidget({ className = "" }) {
 
   const quality = Math.min(100, Math.round((sleep.hours / 9) * 100));
   const qualityLabel = sleep.hours >= 7.5 ? "Great" : sleep.hours >= 6 ? "Fair" : "Low";
-  const qualityColor = sleep.hours >= 7.5 ? "text-success" : sleep.hours >= 6 ? "text-warn" : "text-rose-400";
+  const qualityColor = sleep.hours >= 7.5 ? "text-success" : sleep.hours >= 6 ? "text-warn" : "text-danger";
 
   return (
     <div className={`${cardStyle} ${className} w-full text-left`} aria-label={`Sleep: ${sleep.hours.toFixed(1)} hours, ${qualityLabel}`}>
@@ -296,7 +296,7 @@ interface QuickAction {
 }
 
 const QUICK_ACTIONS: QuickAction[] = [
-  { id: "ema_checkin", label: "Check In", icon: <Heart className="w-5 h-5" />, color: "text-rose-400", route: "ema_checkin" },
+  { id: "ema_checkin", label: "Check In", icon: <Heart className="w-5 h-5" />, color: "text-danger", route: "ema_checkin" },
   { id: "grounding", label: "Grounding", icon: <Wind className="w-5 h-5" />, color: "text-success", route: "grounding" },
   { id: "breathing", label: "Breathing", icon: <Zap className="w-5 h-5" />, color: "text-accent", route: "breathing" },
   { id: "wind_down", label: "Wind Down", icon: <Moon className="w-5 h-5" />, color: "text-accent", route: "wind_down" },

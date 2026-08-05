@@ -10,7 +10,7 @@ import { useReducedMotion } from "./hooks/useReducedMotion";
 
 // Eager — crisis path must never lazy-load
 import CrisisOverlay from "./components/CrisisOverlay";
-import GroundingLibraryScreen from "./components/GroundingLibraryScreen";
+import BreathingScreen from "./components/BreathingScreen";
 import ModeScreen from "./components/ModeScreen";
 import TodayScreen from "./components/TodayScreen";
 import ToolsScreen from "./components/ToolsScreen";
@@ -32,9 +32,6 @@ const ProgressDashboard = lazy(() => import("./components/ProgressDashboard"));
 const NilaMemoryScreen = lazy(() => import("./components/NilaMemoryScreen"));
 const WindDownScreen = lazy(() => import("./components/WindDownScreen"));
 const SocialRhythmScreen = lazy(() => import("./components/SocialRhythmScreen"));
-// #21 (audit): module-scoped so it isn't re-created on every App render (which remounted DiaryCardScreen,
-// flashed Suspense, and discarded the user's unsaved emotion sliders / notes on any parent state change).
-const DiaryCardScreen = lazy(() => import("./components/DiaryCardScreen"));
 const JournalScreen = lazy(() => import("./components/JournalScreen"));
 const ReachOutScreen = lazy(() => import("./components/ReachOutScreen"));
 const LearnScreen = lazy(() => import("./components/LearnScreen"));
@@ -46,7 +43,7 @@ const EpisodeSupportScreen = lazy(() => import("./components/EpisodeSupportScree
 const EmaCheckInScreen = lazy(() => import("./components/EmaCheckIn"));
 const EpisodeMarkerScreen = lazy(() => import("./components/EpisodeMarkerScreen"));
 const CaregiverSettingsScreen = lazy(() => import("./components/CaregiverSettingsScreen"));
-const BreathingScreen = lazy(() => import("./components/BreathingScreen"));
+// BreathingScreen is now eagerly imported above (used in grounding sheet)
 const ChainAnalysisScreen = lazy(() => import("./components/ChainAnalysisScreen"));
 const SoundPlayer = lazy(() => import("./components/SoundPlayer"));
 const AboutNilaScreen = lazy(() => import("./components/AboutNilaScreen"));
@@ -113,11 +110,9 @@ const AUX_LABELS: Partial<Record<AuxView, string>> = {
   reach_out: "Reach out",
   learn: "Learn",
   problem_solving: "Problem solving",
-  values_work: "Values work",
   values_to_action: "Values work",
   exposure: "Exposure hierarchy",
   relapse_plan: "Relapse prevention",
-  behaviour: "Phone patterns",
   diary: "Journal",
   dbt_diary_card: "DBT diary card",
   episode: "Episode support",
@@ -150,15 +145,13 @@ function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () 
     case "reach_out": return <ReachOutScreen />;
     case "learn": return <LearnScreen />;
     case "problem_solving": return <ProblemSolvingScreen />;
-      case "values_work": // retired alias — renders the active values_to_action screen
       case "values_to_action":
         return <ValuesToActionScreen />;
     case "exposure": return <ExposureHierarchyScreen />;
     case "relapse_plan": return <RelapsePlanScreen />;
-    case "behaviour": return <DashboardScreen onOpenView={onOpenView} />;
     case "progress": return <ProgressDashboard onClose={onClose} />;
     case "diary": return <JournalScreen />;
-    case "dbt_diary_card": return <DiaryCardScreen />;
+    case "dbt_diary_card": return <JournalScreen defaultTab="dbtCard" />;
     case "episode": return <EpisodeSupportScreen onSessionEnded={onClose} onNavigateToGrounding={() => { onClose(); onOpenGrounding(); }} onNavigateToBreathing={() => { onClose(); onOpenGrounding(); }} />;
     case "ema_checkin": return <EmaCheckInScreen onLogged={onClose} onCrisis={() => { onClose(); onActivateCrisis(); }} />;
     case "episode_marker": return <EpisodeMarkerScreen onClose={onClose} />;
@@ -556,14 +549,14 @@ function AppShell() {
         </div>
       )}
 
-      {/* Grounding library */}
+      {/* Breathing & Grounding — unified sheet */}
       <Sheet
         open={hasOverlay(state, (o) => o.kind === "sheet" && o.id === "grounding")}
-        title="Grounding"
+        title="Breathing & Grounding"
         onClose={() => { closeTop(); setGroundingExpandIndex(undefined); }}
         id="grounding-sheet"
       >
-        <GroundingLibraryScreen autoExpand={groundingExpandIndex} />
+        <BreathingScreen onClose={closeTop} defaultTab={groundingExpandIndex !== undefined ? "ground" : "breathe"} />
       </Sheet>
 
       {/* Settings sheet */}
@@ -628,14 +621,7 @@ function AppShell() {
         );
       })()}
 
-      {/* Full-screen breathing experience */}
-      {hasOverlay(state, (o) => o.kind === "sheet" && o.id === "breathing") && (
-        <ErrorBoundary name="breathing-sheet">
-          <Suspense fallback={null}>
-            <BreathingScreen onClose={closeTop} />
-          </Suspense>
-        </ErrorBoundary>
-      )}
+
     </div>
   );
 }

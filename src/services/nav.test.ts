@@ -5,11 +5,10 @@ describe("resolveNavTarget", () => {
   it("maps crisis to the crisis overlay", () => {
     expect(resolveNavTarget("crisis")).toEqual({ kind: "crisis" });
   });
-  it("maps grounding to the plan tab (crisis overlay depends on this); breathing falls through to its sheet", () => {
+  it("maps grounding, breathing, and the legacy plan alias to the unified Breathing & Grounding sheet", () => {
     expect(resolveNavTarget("grounding")).toEqual({ kind: "plan" });
-    // 2026-07-18 design review: breathing no longer maps to the grounding list — it falls through to
-    // navStore's unknown-branch which opens the dedicated BreathingScreen sheet.
-    expect(resolveNavTarget("breathing")).toEqual({ kind: "unknown", target: "breathing" });
+    expect(resolveNavTarget("breathing")).toEqual({ kind: "plan" });
+    expect(resolveNavTarget("plan")).toEqual({ kind: "plan" });
   });
   it("maps each real footer tab to a tab resolution (nila/today/tools/you)", () => {
     expect(resolveNavTarget("nila")).toEqual({ kind: "tab", tab: "nila" });

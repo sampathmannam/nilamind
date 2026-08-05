@@ -431,7 +431,7 @@ export default function EpisodeSupportScreen({
             </div>
             {isCrisisMode ? (
               <div className="space-y-2">
-                <div className="text-xs text-rose-400 font-semibold text-center bg-rose-500/10 border border-rose-500/20 rounded-xl py-2 flex items-center justify-center gap-1.5">
+                <div className="text-xs text-danger font-semibold text-center bg-danger/10 border border-danger/20 rounded-xl py-2 flex items-center justify-center gap-1.5">
                   <Shield className="w-3.5 h-3.5" /> Safety shielding active
                 </div>
                 <button
@@ -455,6 +455,7 @@ export default function EpisodeSupportScreen({
                     <button
                       key={num}
                       onClick={() => registerIntensityAndTriggerAI(num)}
+                      aria-label={`Intensity ${num} out of 10`}
                       className="bg-page border border-line border-line text-ink hover:border-warn font-bold py-2.5 rounded-xl transition-all cursor-pointer text-center text-sm"
                     >
                       {num}
@@ -530,6 +531,7 @@ export default function EpisodeSupportScreen({
                         setGuidedStep("low_end");
                       }
                     }}
+                    aria-label={`Intensity ${num} out of 10`}
                     className="bg-page border border-line hover:opacity-90 hover:text-ink py-3.5 rounded-xl font-mono text-sm cursor-pointer font-bold text-center text-ink-2 transition-colors"
                   >
                     {num}
@@ -767,7 +769,7 @@ export default function EpisodeSupportScreen({
             
             <div className="text-center space-y-1 border-l border-line">
               <span className="text-xs text-ink-faint uppercase tracking-wide">Highest point</span>
-              <p className="text-4xl font-extrabold text-rose-400 font-mono">
+              <p className="text-4xl font-extrabold text-danger font-mono">
                 {Math.max(...intensityList, intensityList[0] || 8)}/10
               </p>
             </div>
@@ -779,10 +781,11 @@ export default function EpisodeSupportScreen({
             </p>
             
             <div className="grid grid-cols-5 gap-2" id="debrief-intensity-selectors">
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
                 <button
                   key={num}
                   onClick={() => saveEpisodeRecord(num)}
+                  aria-label={`Intensity ${num} out of 10`}
                   className="bg-page border border-line text-ink-2 hover:opacity-90 hover:text-ink font-bold py-3 rounded-xl transition-all font-mono cursor-pointer text-center text-sm"
                 >
                   {num}

@@ -115,7 +115,7 @@ export default function PrivacyLockSection() {
             <p id="pin-warning" className="text-base text-warn/80 leading-relaxed flex items-start gap-1">
               <AlertTriangle className="w-3 h-3 shrink-0 mt-0.5" /> If you forget this PIN, your encrypted entries cannot be recovered. There's no reset.
             </p>
-            {error && <p className="text-[11px] text-rose-400">{error}</p>}
+            {error && <p className="text-[11px] text-danger">{error}</p>}
             <div className="flex gap-2">
               <button onClick={reset} className="flex-1 glass text-ink-muted text-xs py-2 rounded-lg cursor-pointer">Cancel</button>
               <button onClick={doSetPin} disabled={busy} id="settings-pin-save" className="flex-1 bg-accent hover:opacity-90 disabled:bg-fill text-white text-xs font-bold py-2 rounded-lg cursor-pointer flex items-center justify-center gap-1.5">
@@ -129,7 +129,7 @@ export default function PrivacyLockSection() {
         {mode === "removing" && (
           <div className="space-y-2 pt-1">
             <p className="text-[11px] text-ink-muted">Turn off the PIN? Your data stays encrypted on the device — it just won't ask for a PIN to open.</p>
-            {error && <p className="text-[11px] text-rose-400">{error}</p>}
+            {error && <p className="text-[11px] text-danger">{error}</p>}
             <div className="flex gap-2">
               <button onClick={reset} className="flex-1 glass text-ink-muted text-xs py-2 rounded-lg cursor-pointer">Keep it on</button>
               <button onClick={doRemovePin} disabled={busy} className="flex-1 bg-rose-600 hover:bg-rose-500 disabled:bg-fill text-white text-xs font-bold py-2 rounded-lg cursor-pointer flex items-center justify-center gap-1.5">

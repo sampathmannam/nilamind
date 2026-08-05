@@ -12,13 +12,24 @@ import { useBreathAnimation } from "../hooks/useBreathAnimation";
 import BreathPatternInfo from "./BreathPatternInfo";
 import { hapticLight, hapticCelebration } from "../hooks/useHaptics";
 import { useLanguage } from "../services/i18n";
+import { GROUNDING_EXERCISES } from "../data";
+import TIPPTool from "./TIPPTool";
+
+export type BreathingTab = "breathe" | "ground" | "tipp";
 
 interface Props {
   onClose: () => void;
   defaultPattern?: BreathPattern;
+  defaultTab?: BreathingTab;
 }
 
 const SESSION_TARGET_MS = 5 * 60 * 1000;
+
+const BREATHING_TABS: { id: BreathingTab; label: string }[] = [
+  { id: "breathe", label: "Breathe" },
+  { id: "ground", label: "Ground" },
+  { id: "tipp", label: "TIPP" },
+];
 
 /** Phase-aware ambient gradient colors. Soft, warm, calming. */
 const PHASE_GRADIENTS: Record<BreathPhase, string> = {
@@ -53,8 +64,9 @@ const PHASE_SCALES: Record<BreathPhase, [number, number]> = {
  * A 5-minute session produces vagal-activity gains statistically indistinguishable
  * from longer sessions (You, Laborde et al. 2021).
  */
-export default function BreathingScreen({ onClose, defaultPattern = "box" }: Props) {
+export default function BreathingScreen({ onClose, defaultPattern = "box", defaultTab = "breathe" }: Props) {
   useLanguage();
+  const [activeTab, setActiveTab] = useState<BreathingTab>(defaultTab);
   const [playing, setPlaying] = useState(false);
   const [pattern, setPattern] = useState<BreathPattern>(defaultPattern);
   const [lastPhase, setLastPhase] = useState<BreathPhase | null>(null);
@@ -131,23 +143,46 @@ export default function BreathingScreen({ onClose, defaultPattern = "box" }: Pro
         >
           <ChevronLeft className="w-3.5 h-3.5" /> Back
         </button>
-        <div className="flex items-center gap-2">
-          {allBreathPatterns().map((p) => (
-            <button
-              key={p}
-              onClick={() => { reset(); setPattern(p); }}
-              disabled={playing}
-              className={`text-xs px-2 py-1 rounded-lg font-medium transition-colors cursor-pointer disabled:opacity-40 ${
-                pattern === p ? "bg-accent/20 text-accent-hi" : "text-ink-faint hover:text-ink-2"
-              }`}
-            >
-              {getBreathPattern(p).label}
-            </button>
-          ))}
-        </div>
       </div>
 
-      {/* Main breathing circle — expands/contracts with breath */}
+      {/* Tab switcher */}
+      <div className="flex bg-fill border border-line-strong rounded-xl overflow-hidden p-0.5 w-fit mt-10" id="breathing-tab-strip">
+        {BREATHING_TABS.map((t) => (
+          <button
+            key={t.id}
+            role="tab"
+            aria-selected={activeTab === t.id}
+            aria-label={t.label}
+            onClick={() => { if (activeTab !== "breathe" || !playing) reset(); setActiveTab(t.id); }}
+            className={`text-xs px-4 py-1.5 rounded-lg font-medium transition-colors cursor-pointer ${
+              activeTab === t.id ? "bg-accent text-white" : "text-ink-muted hover:text-ink-2"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Breathe tab ── */}
+      {activeTab === "breathe" && (
+        <>
+          {/* Pattern picker */}
+          <div className="flex items-center gap-2 mt-6">
+            {allBreathPatterns().map((p) => (
+              <button
+                key={p}
+                onClick={() => { reset(); setPattern(p); }}
+                disabled={playing}
+                className={`text-xs px-2 py-1 rounded-lg font-medium transition-colors cursor-pointer disabled:opacity-40 ${
+                  pattern === p ? "bg-accent/20 text-accent-hi" : "text-ink-faint hover:text-ink-2"
+                }`}
+              >
+                {getBreathPattern(p).label}
+              </button>
+            ))}
+          </div>
+
+          {/* Main breathing circle — expands/contracts with breath */}
       <div className="relative flex items-center justify-center" style={{ width: 280, height: 280 }}>
         {/* Outer glow ring */}
         <div
@@ -257,6 +292,63 @@ export default function BreathingScreen({ onClose, defaultPattern = "box" }: Pro
 
       {/* Pattern info */}
       <BreathPatternInfo pattern={pattern} className="mt-6 text-center text-[11px] text-ink-faint space-y-1" />
+        </>
+      )}
+
+      {/* ── Ground tab ── */}
+      {activeTab === "ground" && (
+        <div className="w-full max-w-md mx-auto px-4 mt-6 space-y-4 overflow-y-auto max-h-[60vh]" id="grounding-tab-content">
+          <p className="text-xs text-ink-muted">Somatic anchors — 100% offline-ready</p>
+          <div className="space-y-3">
+            {GROUNDING_EXERCISES.map((ex, idx) => (
+              <GroundingExerciseCard key={idx} exercise={ex} index={idx} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── TIPP tab ── */}
+      {activeTab === "tipp" && (
+        <div className="w-full max-w-md mx-auto px-4 mt-6 overflow-y-auto max-h-[60vh]" id="tipp-tab-content">
+          <TIPPTool />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function GroundingExerciseCard({ exercise, index }: { exercise: { title: string; subtitle: string; steps: string }; index: number }) {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <div
+      className={`bg-card rounded-xl border transition-all overflow-hidden ${expanded ? "border-accent" : "border-line"}`}
+      id={`grounding-tab-card-${index}`}
+    >
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="w-full text-left p-4 focus:outline-none flex justify-between items-center cursor-pointer"
+      >
+        <div>
+          <h3 className="font-semibold text-base text-ink-2">{exercise.title}</h3>
+          <p className="text-xs text-ink-faint mt-0.5">{exercise.subtitle}</p>
+        </div>
+        <span className="text-xs font-mono px-2.5 py-1 bg-fill/50 rounded text-ink-muted border border-line/30">
+          {expanded ? "Close" : "Open"}
+        </span>
+      </button>
+      {expanded && (
+        <div className="px-4 pb-4 border-t border-line pt-4">
+          <p className="text-sm text-ink-2 leading-relaxed whitespace-pre-wrap">{exercise.steps}</p>
+          <div className="flex justify-end pt-3 border-t border-line/80 mt-3">
+            <button
+              onClick={() => setExpanded(false)}
+              className="glass hover:bg-raised text-slate-250 text-xs px-4 py-2.5 rounded-lg font-medium transition-all cursor-pointer"
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

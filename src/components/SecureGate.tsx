@@ -119,7 +119,7 @@ function UnlockScreen({ onUnlocked }: { onUnlocked: () => void }) {
             className="w-full glass rounded-xl px-4 py-3 text-center text-lg tracking-[0.4em] text-ink placeholder:tracking-normal placeholder:text-ink-faint focus:outline-none focus:border-accent/50"
             id="unlock-pin-input"
           />
-          {error && <p className="text-[11px] text-rose-400">{error}</p>}
+          {error && <p className="text-[11px] text-danger">{error}</p>}
           <button
             onClick={submit}
             disabled={!pin || busy}

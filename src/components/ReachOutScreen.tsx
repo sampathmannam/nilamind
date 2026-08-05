@@ -134,9 +134,9 @@ export default function ReachOutScreen() {
           <button
             onClick={() => setCrisisElevated(true)}
             id="reachout-support"
-            className="w-full flex items-center gap-3 bg-rose-500/10 border border-rose-500/30 hover:border-rose-500/50 rounded-2xl p-3.5 cursor-pointer text-left transition-colors"
-          >
-            <LifeBuoy className="w-5 h-5 text-rose-400 shrink-0" />
+className="w-full flex items-center gap-3 bg-danger/10 border border-danger/30 hover:border-danger/50 rounded-2xl p-3.5 cursor-pointer text-left transition-colors"
+            >
+            <LifeBuoy className="w-5 h-5 text-danger shrink-0" />
             <span className="flex-1 min-w-0 text-[13px] font-semibold text-rose-200">Need support right now?</span>
           </button>
 

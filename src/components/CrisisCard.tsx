@@ -16,7 +16,7 @@ export default function CrisisCard({
   className?: string;
 }) {
   return (
-    <div id={id} className={`bg-card border border-rose-500/30 p-4 rounded-2xl space-y-3 ${className}`.trim()}>
+    <div id={id} className={`bg-card border border-danger/30 p-4 rounded-2xl space-y-3 ${className}`.trim()}>
       <h4 className="text-sm font-semibold text-rose-200 flex items-center gap-1.5">
         <LifeBuoy className="w-4 h-4" /> {heading}
       </h4>

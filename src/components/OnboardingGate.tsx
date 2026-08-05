@@ -107,7 +107,7 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
       <div className="flex items-center justify-end px-4 pb-3" style={{ paddingTop: 'var(--safe-top)' }}>
         <button
           onClick={onOpenCrisis}
-          className="flex items-center gap-1.5 text-xs font-semibold text-rose-300 hover:text-rose-200 px-3 py-1.5 rounded-full border border-rose-500/30 hover:bg-rose-500/10 transition-colors cursor-pointer"
+          className="flex items-center gap-1.5 text-xs font-semibold text-rose-300 hover:text-rose-200 px-3 py-1.5 rounded-full border border-danger/30 hover:bg-danger/10 transition-colors cursor-pointer"
         >
           <LifeBuoy className="w-3.5 h-3.5" /> {t("needHelpNow")}
         </button>

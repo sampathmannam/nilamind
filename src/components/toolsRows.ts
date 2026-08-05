@@ -52,8 +52,7 @@ export function buildToolGroups({ go, onEpisode, phoneEnabled }: ToolRowDeps): T
     {
       title: t("tool_group_moment"),
       rows: [
-        { id: "plan", label: t("tool_plan_label"), sub: t("tool_plan_sub"), Icon: Wind, iconClass: "w-5 h-5 text-accent", onTap: () => go("plan") },
-        { id: "breathing", label: "Paced breathing", sub: "6-bpm resonance or cyclic sigh — device-free calm", Icon: Wind, iconClass: "w-5 h-5 text-sky-400", onTap: () => go("breathing") },
+        { id: "plan", label: "Breathing & Grounding", sub: "Paced breathing, grounding exercises, and TIPP tools", Icon: Wind, iconClass: "w-5 h-5 text-accent", onTap: () => go("plan") },
         { id: "winddown", label: t("tool_winddown_label"), sub: t("tool_winddown_sub"), Icon: Moon, iconClass: "w-5 h-5 text-accent", onTap: () => go("winddown") },
         { id: "sounds", label: "Ambient sounds", sub: "White/brown/pink noise for focus, sleep, or calm", Icon: Volume2, iconClass: "w-5 h-5 text-success", onTap: () => go("sounds") },
         { id: "reach_out", label: t("tool_reach_out_label"), sub: t("tool_reach_out_sub"), Icon: MessageCircle, iconClass: "w-5 h-5 text-success", onTap: () => go("reach_out") },
@@ -65,7 +64,6 @@ export function buildToolGroups({ go, onEpisode, phoneEnabled }: ToolRowDeps): T
       rows: [
         { id: "ema_checkin", label: t("tool_ema_label"), sub: t("tool_ema_sub"), Icon: Smile, iconClass: "w-5 h-5 text-accent", onTap: () => go("ema_checkin") },
         { id: "diary", label: t("tool_diary_label"), sub: t("tool_diary_sub"), Icon: NotebookPen, iconClass: "w-5 h-5 text-accent", onTap: () => go("diary") },
-        { id: "dbt_diary_card", label: "DBT diary card", sub: "Emotion ratings, skills checklist, today's intention", Icon: Sliders, iconClass: "w-5 h-5 text-accent", onTap: () => go("dbt_diary_card"), help: "DBT = Dialectical Behaviour Therapy — a skill-based approach." },
         { id: "medication", label: t("tool_medication_label"), sub: t("tool_medication_sub"), Icon: Pill, iconClass: "w-5 h-5 text-accent", onTap: () => go("medication") },
       ],
     },
@@ -86,7 +84,7 @@ export function buildToolGroups({ go, onEpisode, phoneEnabled }: ToolRowDeps): T
       ? [{
           title: t("tool_group_patterns"),
           rows: [
-            { id: "behaviour", label: t("tool_behaviour_label"), sub: t("tool_behaviour_sub"), Icon: TrendingUp, iconClass: "w-5 h-5 text-accent", onTap: () => go("behaviour") },
+            { id: "dashboard", label: t("tool_behaviour_label"), sub: t("tool_behaviour_sub"), Icon: TrendingUp, iconClass: "w-5 h-5 text-accent", onTap: () => go("dashboard") },
           ],
         }]
       : []),

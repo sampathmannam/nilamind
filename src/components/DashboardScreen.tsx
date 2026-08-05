@@ -521,10 +521,13 @@ export default function DashboardScreen({ onOpenView }: { onOpenView?: (target: 
               aria-label={t("exportTitle")}
               id="dashboard-export-btn"
             >
-              {exportBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+              {exportBusy ? <Loader2 className="w-4 h-4 animate-spin" role="status" aria-label="Loading" /> : <Download className="w-4 h-4" />}
             </button>
             {showExportMenu && (
-              <div className="absolute right-0 top-full mt-1 z-20 bg-fill border border-line-strong rounded-xl shadow-xl overflow-hidden min-w-[160px]">
+              <div
+                className="absolute right-0 top-full mt-1 z-20 bg-fill border border-line-strong rounded-xl shadow-xl overflow-hidden min-w-[160px]"
+                onKeyDown={(e) => { if (e.key === "Escape") setShowExportMenu(false); }}
+              >
                 <button onClick={handleExportCsv} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-ink-2 hover:bg-line-strong text-left">
                   <FileText className="w-4 h-4 text-success" />
                   <span>{t("exportCsv")}</span>
@@ -851,7 +854,7 @@ export default function DashboardScreen({ onOpenView }: { onOpenView?: (target: 
           </div>
           <button onClick={runDeepAssessment} disabled={isAssessing}
             className="w-full bg-accent hover:opacity-90 text-white text-xs font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-            {isAssessing ? (<><Loader2 className="w-4 h-4 animate-spin" /> Nila is evaluating patterns...</>) : ("Ask Nila for Deep Evaluation ✨")}
+            {isAssessing ? (<><Loader2 className="w-4 h-4 animate-spin" role="status" aria-label="Loading" /> Nila is evaluating patterns...</>) : ("Ask Nila for Deep Evaluation ✨")}
           </button>
           {assessmentCrisis && (
             <CrisisCard id="dashboard-crisis" className="mt-4" heading="Something in your recent notes matters more than this evaluation" />
@@ -871,13 +874,4 @@ export default function DashboardScreen({ onOpenView }: { onOpenView?: (target: 
   );
 }
 
-/** A full-width section divider that breaks the long dashboard scroll into labeled bands. */
-function EmptyCard({ text }: { text: string; illustration?: string }) {
-  return (
-    <EmptyStateShared
-      nilaState={EMPTY_STATES.noMoodData.nilaState}
-      title=""
-      body={text}
-    />
-  );
-}
+

@@ -183,7 +183,7 @@ export default function MedicationAdherenceScreen() {
                   </label>
                   <button
                     onClick={() => handleDelete(med.id)}
-                    className="p-1.5 text-ink-faint hover:text-rose-400 transition-colors cursor-pointer"
+                    className="p-1.5 text-ink-faint hover:text-danger transition-colors cursor-pointer"
                     aria-label="Delete medication"
                   >
                     <Trash2 className="w-4 h-4" />

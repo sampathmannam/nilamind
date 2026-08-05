@@ -150,7 +150,7 @@ export default function CaregiverSettingsScreen({ onClose, onOpenCaregiverShare 
                   <span className="text-sm font-semibold text-ink">{c.name}</span>
                   {c.relationship ? <span className="text-xs text-ink-muted ml-2">({c.relationship})</span> : null}
                 </div>
-                <button onClick={(e) => { e.stopPropagation(); remove(c.id); }} className="text-ink-faint hover:text-rose-400 cursor-pointer">
+                <button onClick={(e) => { e.stopPropagation(); remove(c.id); }} className="text-ink-faint hover:text-danger cursor-pointer">
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>

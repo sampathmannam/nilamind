@@ -99,7 +99,7 @@ export default function NilaMemoryScreen() {
             {facts.map((f) => (
               <div key={f.id} className="px-4 py-3 flex items-start gap-2">
                 <span className="flex-1 text-sm text-ink-2 leading-relaxed">{f.text}</span>
-                <button onClick={() => removeF(f.id)} aria-label="Delete" className="p-1 text-ink-faint hover:text-rose-400 shrink-0 cursor-pointer">
+                <button onClick={() => removeF(f.id)} aria-label="Delete" className="p-1 text-ink-faint hover:text-danger shrink-0 cursor-pointer">
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
@@ -118,7 +118,7 @@ export default function NilaMemoryScreen() {
                   <span className="block text-sm text-ink-2 leading-relaxed">{f.text}</span>
                   {f.when && <span className="block text-xs text-ink-faint mt-0.5">{f.when}</span>}
                 </span>
-                <button onClick={() => removeFo(f.id)} aria-label="Delete" className="p-1 text-ink-faint hover:text-rose-400 shrink-0 cursor-pointer">
+                <button onClick={() => removeFo(f.id)} aria-label="Delete" className="p-1 text-ink-faint hover:text-danger shrink-0 cursor-pointer">
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
@@ -169,7 +169,7 @@ export default function NilaMemoryScreen() {
                       <button onClick={() => startEdit(i)} aria-label="Edit" className="p-1 text-ink-faint hover:text-ink-2 shrink-0 cursor-pointer">
                         <Pencil className="w-4 h-4" />
                       </button>
-                      <button onClick={() => remove(i.id)} aria-label="Delete" className="p-1 text-ink-faint hover:text-rose-400 shrink-0 cursor-pointer">
+                      <button onClick={() => remove(i.id)} aria-label="Delete" className="p-1 text-ink-faint hover:text-danger shrink-0 cursor-pointer">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
@@ -196,7 +196,7 @@ export default function NilaMemoryScreen() {
                   <span className="block text-sm text-ink-2 leading-relaxed">{n.detail}</span>
                   <span className="block text-xs text-ink-faint mt-0.5">{n.basis}</span>
                 </span>
-                <button onClick={() => dismissNoticed(n.id)} aria-label="Dismiss" className="p-1 text-ink-faint hover:text-rose-400 shrink-0 cursor-pointer">
+                <button onClick={() => dismissNoticed(n.id)} aria-label="Dismiss" className="p-1 text-ink-faint hover:text-danger shrink-0 cursor-pointer">
                   <X className="w-4 h-4" />
                 </button>
               </div>
@@ -219,7 +219,7 @@ export default function NilaMemoryScreen() {
               <p className="text-base text-ink-faint leading-relaxed">
                 It all stays on this device — it's how Nila learns to do better over time, and you can wipe it any time.
               </p>
-              <button onClick={clearFb} className="text-[11px] font-semibold text-ink-muted hover:text-rose-400 cursor-pointer">
+              <button onClick={clearFb} className="text-[11px] font-semibold text-ink-muted hover:text-danger cursor-pointer">
                 Clear feedback
               </button>
             </div>
@@ -242,7 +242,7 @@ export default function NilaMemoryScreen() {
                           <span className="text-ink-faint">Your suggestion:</span> {preview.betterReply || "(none)"}
                         </div>
                         {preview.blockedByCrisis ? (
-                          <p className="text-xs text-rose-400">This can't be shared — it contains crisis content.</p>
+                          <p className="text-xs text-danger">This can't be shared — it contains crisis content.</p>
                         ) : (
                           <div className="flex gap-2 justify-end">
                             <button onClick={closePreview} className="text-[11px] text-ink-muted hover:text-ink-2 cursor-pointer px-2 py-1">Cancel</button>
@@ -253,7 +253,7 @@ export default function NilaMemoryScreen() {
                     ) : (
                       <>
                         {isDonated(p.id) ? (
-                          <button onClick={() => handleRevoke(p.id)} className="text-[11px] text-ink-muted hover:text-rose-400 cursor-pointer">Withdraw</button>
+                          <button onClick={() => handleRevoke(p.id)} className="text-[11px] text-ink-muted hover:text-danger cursor-pointer">Withdraw</button>
                         ) : (
                           <button onClick={() => openPreview(p)} className="text-[11px] font-semibold text-fuchsia-400 hover:text-fuchsia-300 cursor-pointer">Preview & donate</button>
                         )}
@@ -275,7 +275,7 @@ export default function NilaMemoryScreen() {
               <p className="text-base text-ink-faint leading-relaxed">
                 Nothing has left your phone. You can withdraw any time.
               </p>
-              <button onClick={withdrawAll} className="text-[11px] font-semibold text-ink-muted hover:text-rose-400 cursor-pointer">
+              <button onClick={withdrawAll} className="text-[11px] font-semibold text-ink-muted hover:text-danger cursor-pointer">
                 Withdraw all
               </button>
             </div>

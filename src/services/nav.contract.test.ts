@@ -22,9 +22,9 @@ const GOLDEN_TABS: readonly TabView[] = ["nila", "today", "tools", "you"];
 
 // Frozen golden of the aux allowlist, in declaration order.
 const GOLDEN_AUX: readonly AuxView[] = [
-  "about_nila", "insights", "thought_record", "settings", "behaviour", "reach_out", "assessment",
+  "about_nila", "insights", "thought_record", "settings", "reach_out", "assessment",
   "dashboard", "your_data", "nila_memory", "winddown",
-  "learn", "medication", "problem_solving", "values_work", "exposure", "relapse_plan", "caregiver", "episode",
+  "learn", "medication", "problem_solving", "exposure", "relapse_plan", "caregiver", "episode",
   "diary", "dbt_diary_card", "social_rhythm", "ema_checkin", "episode_marker",
   "caregiver_settings", "legal", "sounds", "safety_plan", "values_to_action",
   "guided_programs", "progress", "chain_analysis",

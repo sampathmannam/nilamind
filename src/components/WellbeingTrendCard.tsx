@@ -26,8 +26,8 @@ function WellbeingTrendCard({ onTakeCheck }: { onTakeCheck?: () => void }) {
   const tone =
     trendKey === "improving" ? "text-emerald-300" : trendKey === "deteriorating" ? "text-rose-300" : "text-blue-300";
   const bgTone =
-    trendKey === "improving" ? "bg-emerald-500/10 border-emerald-500/40"
-    : trendKey === "deteriorating" ? "bg-rose-500/10 border-rose-500/40"
+    trendKey === "improving" ? "bg-success/10 border-success/40"
+    : trendKey === "deteriorating" ? "bg-danger/10 border-danger/40"
     : "bg-blue-500/10 border-accent/40";
   const stroke = trendKey === "improving" ? "var(--color-success)" : trendKey === "deteriorating" ? "var(--color-danger)" : "var(--color-accent)";
   const trendLabel = t(trendKey === "improving" ? "wellbeing_improving" : trendKey === "deteriorating" ? "wellbeing_deteriorating" : "wellbeing_steady");
@@ -40,7 +40,7 @@ function WellbeingTrendCard({ onTakeCheck }: { onTakeCheck?: () => void }) {
       <div className={`rounded-2xl p-4 border ${bgTone} space-y-2`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <LineChartIcon className="w-4 h-4 text-emerald-400" />
+            <LineChartIcon className="w-4 h-4 text-success" />
             <span className="text-sm font-bold text-ink">{t("you_wellbeing_label")}</span>
           </div>
           {wb.taken && <span className="text-xs text-ink-faint">{wb.latest?.date}</span>}

@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import NilaFace from "./NilaFace";
-import QuickActions from "./QuickActions";
+import Button from "./Button";
 import {
   getCurrentMode,
   getGreeting,
@@ -21,8 +21,6 @@ import NilaHeader from "./NilaHeader";
 import MessageList from "./MessageList";
 import { useChatSend } from "../hooks/useChatSend";
 import ChatLoading from "./ChatLoading";
-import PactNoticeCard from "./PactNoticeCard";
-import WelcomeBackCard from "./welcomeBack";
 import type { CheckInEntry } from "../types";
 import { NilaUiMessage } from "../services/nilaSend";
 import SoftCrisisCard from "./SoftCrisisCard";
@@ -34,8 +32,6 @@ import { safeDraftValueDomains } from "../services/valuesDraft";
 import { safeDraftSafetyPlan, type SafetyPlanDraftFields } from "../services/safetyPlanDraft";
 import CaptureSheets from "./CaptureSheets";
 import { type CaptureSheetId } from "../services/navStore";
-import { selectVisibleNudges } from "./nudgeSelection";
-import NudgeRail from "./NudgeRail";
 import { useNudges } from "../hooks/useNudges";
 import { useCheckinGate } from "../hooks/useCheckinGate";
 import { useCrisisGate } from "../hooks/useCrisisGate";
@@ -46,7 +42,7 @@ import { abandonProtocol } from "../services/protocolProgress";
 import { speakIfEnabled, listenOnce, stopSpeaking } from "../services/voice";
 import { startVoiceSession, endVoiceSession } from "../services/voicePatterns";
 import { checkSttCoherence } from "../services/sttCoherenceGate";
-import { Mic, Send, MicOff, Keyboard, X, Square } from "lucide-react";
+import { Mic, Send, MicOff, Keyboard, X, Square, Wind, Snowflake } from "lucide-react";
 import RatingPromptCard from "./RatingPromptCard";
 import { hapticMedium } from "../hooks/useHaptics";
 
@@ -91,7 +87,6 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   const [safetyPlanDraft, setSafetyPlanDraft] = useState<SafetyPlanDraftFields | undefined>();
   const [protocolCard, setProtocolCard] = useState<ProtocolCard | null>(() => protocolOfferCard(""));
   const [confirmNewChat, setConfirmNewChat] = useState(false);
-  const [showNudgePanel, setShowNudgePanel] = useState(true);
   const [removableToastIndex, setRemovableToastIndex] = useState<number | null>(null);
 
   // V1.3 — warm cold-start: show a friendly loading screen while the model boots
@@ -114,25 +109,6 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
 
   const hadCrisisRef = useRef(false);
   const nudges = useNudges({ messages, auxView, hadCrisisRef });
-  const {
-    showSafetyPlanReview,
-    showSafetyPlanFollowUp,
-    sleepProdromeNudge,
-    jitaiNudge,
-    calmSafetyNudge,
-    pactNotice,
-    welcomeBack,
-  } = nudges;
-
-  const { safetyPlanCard, visibleNudgeIds, totalNudges } = selectVisibleNudges({
-    safetyPlanFollowUp: showSafetyPlanFollowUp,
-    safetyPlanReview: showSafetyPlanReview,
-    calmSafetyNudgeShow: !!calmSafetyNudge?.show,
-    sleepProdrome: !!sleepProdromeNudge,
-    jitaiShouldNudge: !!jitaiNudge?.shouldNudge,
-    pact: !!pactNotice,
-    welcome: !!welcomeBack,
-  });
 
   const feedback = useMessageFeedback();
   const { ratedMessages, dismissedSkillMessages, suggestionPrompt, suggestionText } = feedback;
@@ -298,10 +274,6 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   const handleOpenSafetyPlan = () => {
     onOpenCapture?.("safety_plan");
   };
-
-  const handleMarkSafetyPlanReviewed = () => nudges.completeSafetyPlanReview();
-
-  const handleMarkSafetyPlanFollowUpDone = () => nudges.completeSafetyPlanFollowUp();
 
   const handleProtocolTap = () => {
     if (!protocolCard) return;
@@ -542,9 +514,14 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           </div>
         </div>
 
-        {/* Quick actions */}
-        <div className="w-full max-w-sm animate-fade-up" style={{ animationDelay: '60ms' }}>
-          <QuickActions onAction={handleQuickAction} timeMode={mode.timeMode} userState={mode.userState} />
+        {/* Quick Calm — two fast-regulate buttons */}
+        <div className="w-full max-w-sm flex gap-2 animate-fade-up" style={{ animationDelay: '60ms' }}>
+          <Button variant="secondary" size="sm" onClick={() => onOpenGrounding?.(1)} className="flex-1 gap-1.5">
+            <Wind className="w-3.5 h-3.5" /> Breathe
+          </Button>
+          <Button variant="secondary" size="sm" onClick={() => onOpenGrounding?.()} className="flex-1 gap-1.5">
+            <Snowflake className="w-3.5 h-3.5" /> Ground
+          </Button>
         </div>
 
         {/* Messages */}
@@ -612,57 +589,16 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
 
         {mode.userState === "calm" || mode.userState === null ? (
           <>
-            <NudgeRail
-              visibleNudgeIds={visibleNudgeIds}
-              safetyPlanCard={safetyPlanCard}
-              totalNudges={totalNudges}
-              calmSafetyNudge={calmSafetyNudge}
-              sleepProdromeNudge={sleepProdromeNudge}
-              jitaiNudge={jitaiNudge}
-              onOpenSafetyPlan={handleOpenSafetyPlan}
-              onCompleteReview={handleMarkSafetyPlanReviewed}
-              onCompleteFollowUp={handleMarkSafetyPlanFollowUpDone}
-              onDismissCalm={() => nudges.dismissCalm()}
-              onDismissSleep={() => nudges.dismissSleep()}
-              onOpenWindDown={onOpenWindDown}
-              onQuickAction={handleQuickAction}
-            />
-
-            {(() => {
-              const nudgeItems: { key: string; el: React.ReactNode }[] = [];
-              if (protocolCard) nudgeItems.push({ key: "protocol", el: (
-                <button
-                  onClick={handleProtocolTap}
-                  className="w-full text-left px-4 py-3 rounded-xl bg-accent/10 border border-accent/25 text-accent text-xs font-medium hover:bg-accent/20 transition-colors cursor-pointer min-h-[44px] focus-ring"
-                  id="protocol-card"
-                >
-                  <span className="block">{protocolCard.label}</span>
-                  <span className="block mt-1 text-[10px] font-normal text-ink-muted">{protocolCard.basis}</span>
-                </button>
-              )});
-              if (visibleNudgeIds.has("welcome") && welcomeBack) nudgeItems.push({ key: "welcome", el: (
-                <WelcomeBackCard lastVisitDate={welcomeBack} onDismiss={() => nudges.dismissWelcome()} />
-              )});
-              if (visibleNudgeIds.has("pact") && pactNotice) nudgeItems.push({ key: "pact", el: (
-                <PactNoticeCard notice={pactNotice} onDismiss={() => nudges.dismissPact()} />
-              )});
-              const collapsed = nudgeItems.length >= 2;
-              const visible = collapsed ? showNudgePanel : true;
-              return nudgeItems.length > 0 ? (
-                <div className="space-y-2">
-                  {collapsed && (
-                    <button
-                      onClick={() => setShowNudgePanel(!showNudgePanel)}
-                      className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-fill/50 text-xs text-ink-muted hover:text-ink-2 transition-colors cursor-pointer min-h-[44px] focus-ring"
-                    >
-                      <span>{nudgeItems.length} notification{nudgeItems.length > 1 ? "s" : ""}</span>
-                      <span className={`transition-transform duration-200 ${visible ? "rotate-180" : ""}`}>▾</span>
-                    </button>
-                  )}
-                  {visible && nudgeItems.map((item) => <div key={item.key}>{item.el}</div>)}
-                </div>
-              ) : null;
-            })()}
+            {protocolCard && (
+              <button
+                onClick={handleProtocolTap}
+                className="w-full text-left px-4 py-3 rounded-xl bg-accent/10 border border-accent/25 text-accent text-xs font-medium hover:bg-accent/20 transition-colors cursor-pointer min-h-[44px] focus-ring"
+                id="protocol-card"
+              >
+                <span className="block">{protocolCard.label}</span>
+                <span className="block mt-1 text-[10px] font-normal text-ink-muted">{protocolCard.basis}</span>
+              </button>
+            )}
 
             <div className={`flex flex-wrap gap-2 transition-opacity duration-200 ${inputText.length > 0 || loading ? "opacity-30 pointer-events-none" : ""}`} id="chat-suggestions">
               {(suggestionChipsExpanded ? suggestions.slice(0, 4) : suggestions.slice(0, 2)).map((chip) => (
@@ -716,7 +652,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
               mode.userState === "anxious" || mode.userState === "low"
                 ? "p-4 min-w-[52px] min-h-[52px] bg-accent/20 text-accent border border-accent/30 hover:bg-accent/30 active:scale-95"
                 : listening
-                ? "p-3 min-w-[44px] min-h-[44px] bg-danger/20 text-rose-400 animate-pulse"
+                ? "p-3 min-w-[44px] min-h-[44px] bg-danger/20 text-danger animate-pulse"
                 : loading
                 ? "p-3 min-w-[44px] min-h-[44px] bg-fill text-ink-faint opacity-40 cursor-not-allowed"
                 : "p-3 min-w-[44px] min-h-[44px] bg-card border border-line text-ink-muted hover:text-ink-2 hover:border-line-strong active:scale-95"
@@ -749,7 +685,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                 disabled={!loading && (!inputText.trim() || loading)}
                 className={`p-3 rounded-2xl transition-all cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center focus-ring active:scale-95 ${
                   loading
-                    ? "bg-danger/20 text-rose-400 hover:bg-danger/30"
+                    ? "bg-danger/20 text-danger hover:bg-danger/30"
                     : inputText.trim()
                     ? "bg-accent/20 text-accent hover:bg-accent/30"
                     : "bg-card border border-line text-ink-faint"
@@ -782,7 +718,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                 disabled={!loading && (!inputText.trim() || loading)}
                 className={`p-3 rounded-2xl transition-all cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center focus-ring active:scale-95 ${
                   loading
-                    ? "bg-danger/20 text-rose-400 hover:bg-danger/30"
+                    ? "bg-danger/20 text-danger hover:bg-danger/30"
                     : inputText.trim()
                     ? "bg-accent/20 text-accent hover:bg-accent/30"
                     : "bg-card border border-line text-ink-faint"

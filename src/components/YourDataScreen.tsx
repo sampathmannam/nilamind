@@ -974,11 +974,11 @@ valuesClarified: []
         <h3 className="text-xs font-bold text-rose-300 uppercase tracking-wider flex items-center gap-1.5"><Trash2 className="w-3.5 h-3.5" /> Delete everything</h3>
         <p className="text-base text-ink-muted leading-relaxed">Erases all your entries AND your recovery phrase from this device, returning the app to a fresh start. This cannot be undone — export a backup first if you might want it back.</p>
         {!confirmWipe ? (
-          <button onClick={() => setConfirmWipe(true)} className="w-full bg-card border border-rose-500/30 text-rose-300 text-xs font-semibold py-2.5 rounded-xl cursor-pointer">Delete all my data…</button>
+          <button onClick={() => setConfirmWipe(true)} className="w-full bg-card border border-danger/30 text-rose-300 text-xs font-semibold py-2.5 rounded-xl cursor-pointer">Delete all my data…</button>
         ) : (
           <div className="space-y-2">
-            <div className="flex items-start gap-2 bg-rose-500/10 border border-rose-500/30 rounded-lg p-2.5">
-              <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+            <div className="flex items-start gap-2 bg-danger/10 border border-danger/30 rounded-lg p-2.5">
+              <AlertTriangle className="w-4 h-4 text-danger shrink-0 mt-0.5" />
               <p className="text-[11px] text-rose-200/90">Are you sure? Everything will be gone and the app will restart at onboarding.</p>
             </div>
             <div className="flex gap-2">

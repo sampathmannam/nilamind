@@ -34,18 +34,18 @@ describe("ToolsScreen", () => {
 
   it("renders correct number of tools in Calm section", () => {
     render(<ToolsScreen {...props} />);
-    // Calm: plan (Grounding & breathing), breathing, winddown, sounds, reach_out = 5
+    // Calm: plan (Breathing & Grounding), winddown, sounds, reach_out = 4
     const calmSection = screen.getByRole("heading", { name: "Calm" }).closest("section")!;
     const calmRows = calmSection.querySelectorAll("button");
-    expect(calmRows.length).toBe(5);
+    expect(calmRows.length).toBe(4);
   });
 
   it("renders correct number of tools in Track section", () => {
     render(<ToolsScreen {...props} />);
-    // Track: ema_checkin, diary, dbt_diary_card, medication = 4
+    // Track: ema_checkin, diary, medication = 3
     const trackSection = screen.getByRole("heading", { name: "Track" }).closest("section")!;
     const trackRows = trackSection.querySelectorAll("button");
-    expect(trackRows.length).toBe(4);
+    expect(trackRows.length).toBe(3);
   });
 
   it("renders correct number of tools in Skills section", () => {
@@ -59,7 +59,7 @@ describe("ToolsScreen", () => {
   it("each tool row is tappable and calls go with the right target", () => {
     render(<ToolsScreen {...props} />);
     // Check a representative from each section
-    fireEvent.click(screen.getByText("Grounding & breathing"));
+    fireEvent.click(screen.getByText("Breathing & Grounding"));
     expect(props.go).toHaveBeenCalledWith("plan");
 
     fireEvent.click(screen.getByText("Journal"));

@@ -55,7 +55,7 @@ const TONE: Record<
   sky: { text: "text-sky-300", bg: "bg-sky-500/10", border: "border-sky-500/40", bar: "bg-sky-500", stroke: "#38bdf8" },
   amber: { text: "text-warn-hi", bg: "bg-warn/10", border: "border-warn/40", bar: "bg-warn", stroke: "#CE9A3A" },
   orange: { text: "text-orange-300", bg: "bg-orange-500/10", border: "border-orange-500/40", bar: "bg-orange-500", stroke: "#E3A57D" },
-  rose: { text: "text-rose-300", bg: "bg-rose-500/10", border: "border-rose-500/40", bar: "bg-rose-500", stroke: "#B5614E" },
+  rose: { text: "text-rose-300", bg: "bg-danger/10", border: "border-danger/40", bar: "bg-danger", stroke: "#B5614E" },
 };
 
 // Static Tailwind grid classes per response-scale width (PHQ/GAD=4, PSS-4=5, WHO-5=6).
@@ -251,7 +251,7 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
                 </h4>
                 <div className={`flex items-center gap-1.5 text-[11px] ${
                   result.status === "improving" ? "text-success"
-                  : result.status === "deteriorating" ? "text-rose-400"
+                  : result.status === "deteriorating" ? "text-danger"
                   : "text-ink-muted"
                 }`}>
                   <span className="font-semibold capitalize">{result.status}</span>
@@ -411,7 +411,7 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
       <div className="space-y-4 max-w-md mx-auto" id="assessment-result">
         {/* Safety banner first if PHQ-9 item 9 endorsed */}
         {result.safetyFlag && (
-          <div className="bg-rose-500/10 border border-rose-500/40 rounded-2xl p-4 space-y-3" id="assessment-safety-banner">
+          <div className="bg-danger/10 border border-danger/40 rounded-2xl p-4 space-y-3" id="assessment-safety-banner">
             <div className="flex items-center gap-2 text-rose-300">
               <ShieldAlert className="w-5 h-5" />
               <h3 className="text-sm font-bold">You're not alone in this</h3>
@@ -577,7 +577,7 @@ function TrendBlock({ instrumentId, history }: { instrumentId: InstrumentId; his
       {status.current && (
         <div className={`flex items-center gap-1.5 text-[11px] ${
           status.current.trend === "reliably_improved" ? "text-success"
-          : status.current.trend === "reliably_deteriorated" ? "text-rose-400"
+          : status.current.trend === "reliably_deteriorated" ? "text-danger"
           : "text-ink-muted"
         }`}>
           <TrendIcon className="w-3.5 h-3.5" />

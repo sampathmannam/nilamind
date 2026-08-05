@@ -76,7 +76,7 @@ export default function HeroMetric({
           {trend != null && (
             <span
               className={`text-xs font-semibold flex items-center gap-1 ${
-                trendPositive ? "text-success" : trendNegative ? "text-rose-400" : "text-ink-muted"
+                trendPositive ? "text-success" : trendNegative ? "text-danger" : "text-ink-muted"
               }`}
               aria-label={`Trend: ${trendPositive ? "up" : trendNegative ? "down" : "stable"} ${Math.abs(trend)}%`}
             >

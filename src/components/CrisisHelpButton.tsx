@@ -20,7 +20,7 @@ export default function CrisisHelpButton({ variant = "bar" }: { variant?: "bar" 
       onClick={() => setOpen(true)}
       id="gate-crisis-help"
       aria-haspopup="dialog"
-      className="w-full flex items-center justify-center gap-2 rounded-xl border border-rose-500/40 bg-rose-500/10 hover:bg-rose-500/20 px-4 py-3 min-h-[44px] text-[13px] font-semibold text-rose-200 transition-colors cursor-pointer"
+      className="w-full flex items-center justify-center gap-2 rounded-xl border border-danger/40 bg-danger/10 hover:bg-danger/20 px-4 py-3 min-h-[44px] text-[13px] font-semibold text-rose-200 transition-colors cursor-pointer"
     >
       <LifeBuoy className="w-4 h-4 shrink-0" />
       In crisis right now? Get help

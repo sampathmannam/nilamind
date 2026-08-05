@@ -33,7 +33,7 @@ export default function RatingPromptCard() {
       </button>
 
       <div className="flex items-start gap-2.5 pr-8">
-        <Star className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+        <Star className="w-5 h-5 text-warn shrink-0 mt-0.5" />
         <div className="space-y-2">
           <p className="text-sm text-ink-2 leading-relaxed">
             Enjoying NilaMind? A quick rating helps others find a private, on-device companion.
@@ -41,7 +41,7 @@ export default function RatingPromptCard() {
           <div className="flex gap-2">
             <button
               onClick={handleRate}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xs font-semibold transition-colors cursor-pointer min-h-[44px] min-w-[44px]"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-warn/20 hover:bg-warn/30 text-warn-hi text-xs font-semibold transition-colors cursor-pointer min-h-[44px] min-w-[44px]"
             >
               <Star className="w-3.5 h-3.5 fill-current" />
               Rate on Play Store

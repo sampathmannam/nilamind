@@ -346,7 +346,7 @@ export default function ModelSetupScreen({ onReady }: { onReady: () => void }) {
                 <ShieldCheck className="w-3 h-3 shrink-0" /> Verified after download — a corrupt file is never
                 loaded.
               </p>
-              {error && <p className="text-[12px] text-rose-400 mt-2">{error}</p>}
+              {error && <p className="text-[12px] text-danger mt-2">{error}</p>}
            </div>
           )}
         </>

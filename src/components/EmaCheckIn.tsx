@@ -84,7 +84,7 @@ export default function EmaCheckIn({ onLogged, onCrisis }: { onLogged?: () => vo
                   <div className="flex items-center gap-0.5">
                     {[...Array(e)].map((_, i) => (
                       <Sparkle key={i} className={`w-4 h-4 ${
-                        e === 1 ? "text-rose-400" : 
+                        e === 1 ? "text-danger" : 
                         e === 2 ? "text-success" :
                         e === 3 ? "text-accent" :
                         

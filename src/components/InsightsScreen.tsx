@@ -12,7 +12,7 @@ interface InsightsScreenProps {
 }
 
 const ICON_MAP: Record<string, React.ReactNode> = {
-  'sleep-short': <Moon className="w-5 h-5 text-rose-400" />,
+  'sleep-short': <Moon className="w-5 h-5 text-danger" />,
   'sleep-long': <Moon className="w-5 h-5 text-accent" />,
   'night-phone': <Smartphone className="w-5 h-5 text-orange-400" />,
   'screen-time': <Activity className="w-5 h-5 text-warn" />,
@@ -20,11 +20,11 @@ const ICON_MAP: Record<string, React.ReactNode> = {
   'movement': <Footprints className="w-5 h-5 text-success" />,
   'left-home': <Footprints className="w-5 h-5 text-accent" />,
   'steps': <Activity className="w-5 h-5 text-lime-400" />,
-  'social-connection': <Users className="w-5 h-5 text-rose-400" />,
+  'social-connection': <Users className="w-5 h-5 text-danger" />,
 };
 
 const DIRECTION_COLORS = {
-  risk: { bg: "bg-rose-500/10", border: "border-rose-500/30", text: "text-rose-300", icon: "text-rose-400" },
+  risk: { bg: "bg-danger/10", border: "border-danger/30", text: "text-rose-300", icon: "text-danger" },
   protective: { bg: "bg-success/10", border: "border-success/30", text: "text-success-hi", icon: "text-success" },
   neutral: { bg: "bg-ink-faint/10", border: "border-line-strong/30", text: "text-ink-2", icon: "text-ink-muted" },
 };

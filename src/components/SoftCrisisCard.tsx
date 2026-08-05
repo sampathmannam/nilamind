@@ -26,9 +26,9 @@ interface SoftCrisisCardProps {
  */
 export default function SoftCrisisCard({ onEscalate, onDismiss }: SoftCrisisCardProps) {
   return (
-    <div className="w-full px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-100 text-sm space-y-3" id="soft-crisis-card">
+    <div className="w-full px-4 py-3 rounded-xl bg-warn/10 border border-warn/30 text-amber-100 text-sm space-y-3" id="soft-crisis-card">
       <div className="flex items-start gap-2">
-        <ShieldAlert className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
+        <ShieldAlert className="w-4 h-4 text-warn mt-0.5 shrink-0" />
         <div className="flex-1 space-y-1">
           <p className="font-semibold text-amber-100">Can I pause here for a second?</p>
           <p className="text-amber-200/80 leading-relaxed">

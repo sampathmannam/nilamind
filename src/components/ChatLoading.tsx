@@ -66,7 +66,7 @@ export default function ChatLoading({ onCancel }: { onCancel?: () => void }) {
           animation: breathing-orb 4s ease-in-out infinite;
         }
       `}</style>
-      <div className="flex flex-col gap-3 w-full max-w-sm" id="chat-loading">
+      <div className="flex flex-col gap-3 w-full max-w-sm" id="chat-loading" role="status" aria-label="Loading">
         {/* Typing indicator */}
         <div className="flex items-center gap-2 px-4 py-2">
           <span className="text-[11px] text-ink-faint">{note}</span>
@@ -78,7 +78,7 @@ export default function ChatLoading({ onCancel }: { onCancel?: () => void }) {
           {phase >= 2 && onCancel && (
             <button
               onClick={onCancel}
-              className="ml-auto text-[11px] text-rose-400/80 hover:text-rose-300 underline transition-colors cursor-pointer min-h-[44px] focus-ring"
+              className="ml-auto text-[11px] text-danger/80 hover:text-rose-300 underline transition-colors cursor-pointer min-h-[44px] focus-ring"
               aria-label="Cancel and stop generating"
             >
               Tap to cancel

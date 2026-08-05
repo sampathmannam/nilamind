@@ -3,8 +3,8 @@ import { AlertTriangle } from "lucide-react";
 import { createEmptyPlan, loadRelapsePlan, saveRelapsePlan, currentPhase, phaseLabel, phaseDescription, signalFields, actionFields, type RelapsePlan, type PlanPhase } from "../services/relapsePlan";
 
 const PHASES: PlanPhase[] = ["green", "orange", "red"];
-const PHASE_COLORS: Record<PlanPhase, string> = { green: "border-success", orange: "border-warn", red: "border-rose-500" };
-const PHASE_BG: Record<PlanPhase, string> = { green: "bg-success/10", orange: "bg-warn/10", red: "bg-rose-500/10" };
+const PHASE_COLORS: Record<PlanPhase, string> = { green: "border-success", orange: "border-warn", red: "border-danger" };
+const PHASE_BG: Record<PlanPhase, string> = { green: "bg-success/10", orange: "bg-warn/10", red: "bg-danger/10" };
 
 export default function RelapsePlanScreen() {
   const [plan, setPlan] = useState<RelapsePlan>(() => loadRelapsePlan() ?? createEmptyPlan());
