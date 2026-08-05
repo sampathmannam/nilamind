@@ -43,6 +43,8 @@ export interface DiaryCardEntry {
   urges?: DiaryUrge[];
   quickNotes?: string;
   quickNoteTags?: string[];
+  /** Emotion Differentiation chips from the discrete-label picker (Feature 6). Optional for backward-compat. */
+  discreteEmotions?: string[];
   morningIntention?: string;
   /** Which journaling mode the quick note was written in. Optional for backward-compat reads. */
   journalMode?: "free" | "gratitude";

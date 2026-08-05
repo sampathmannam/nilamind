@@ -47,6 +47,7 @@ const EmaCheckInScreen = lazy(() => import("./components/EmaCheckIn"));
 const EpisodeMarkerScreen = lazy(() => import("./components/EpisodeMarkerScreen"));
 const CaregiverSettingsScreen = lazy(() => import("./components/CaregiverSettingsScreen"));
 const BreathingScreen = lazy(() => import("./components/BreathingScreen"));
+const ChainAnalysisScreen = lazy(() => import("./components/ChainAnalysisScreen"));
 const SoundPlayer = lazy(() => import("./components/SoundPlayer"));
 const AboutNilaScreen = lazy(() => import("./components/AboutNilaScreen"));
 const LegalScreen = lazy(() => import("./components/LegalScreen"));
@@ -128,6 +129,7 @@ const AUX_LABELS: Partial<Record<AuxView, string>> = {
   safety_plan: "My Safety Plan",
   guided_programs: "Guided Programs",
   progress: "Your progress",
+  chain_analysis: "Chain Analysis",
 };
 
 function auxViewLabel(view: AuxView): string {
@@ -164,6 +166,7 @@ function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () 
     case "sounds": return <SoundPlayer />;
     case "legal": return <LegalScreen />;
     case "safety_plan": return <SafetyPlanScreen />;
+    case "chain_analysis": return <ChainAnalysisScreen />;
     case "guided_programs":
       return (
         <GuidedProgramsScreen

@@ -40,7 +40,8 @@ export type AuxView =
   | "safety_plan"
   | "values_to_action"
   | "guided_programs"
-  | "progress";
+  | "progress"
+  | "chain_analysis";
 
 export const TAB_TARGETS: readonly TabView[] = [
   "nila", "today", "tools", "you",
@@ -60,9 +61,10 @@ export const KNOWN_AUX_VIEWS: readonly AuxView[] = [
    "sounds",
    "safety_plan",
    "values_to_action",
-   "guided_programs",
-   "progress",
-      ];
+    "guided_programs",
+    "progress",
+    "chain_analysis",
+       ];
 
 export type NavResolution =
   | { kind: "crisis" }

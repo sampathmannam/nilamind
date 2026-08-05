@@ -1,6 +1,7 @@
 import {
   Wind, NotebookPen, Activity, LifeBuoy, TrendingUp, Moon, MessageCircle,
   Pill, Lightbulb, Compass, Mountain, AlertTriangle, Smile, Clock3, Volume2, Sliders,
+  Link2,
   type LucideIcon,
 } from "lucide-react";
 import { t } from "../services/i18n";
@@ -52,6 +53,7 @@ export function buildToolGroups({ go, onEpisode, phoneEnabled }: ToolRowDeps): T
       title: t("tool_group_moment"),
       rows: [
         { id: "plan", label: t("tool_plan_label"), sub: t("tool_plan_sub"), Icon: Wind, iconClass: "w-5 h-5 text-accent", onTap: () => go("plan") },
+        { id: "breathing", label: "Paced breathing", sub: "6-bpm resonance or cyclic sigh — device-free calm", Icon: Wind, iconClass: "w-5 h-5 text-sky-400", onTap: () => go("breathing") },
         { id: "winddown", label: t("tool_winddown_label"), sub: t("tool_winddown_sub"), Icon: Moon, iconClass: "w-5 h-5 text-accent", onTap: () => go("winddown") },
         { id: "sounds", label: "Ambient sounds", sub: "White/brown/pink noise for focus, sleep, or calm", Icon: Volume2, iconClass: "w-5 h-5 text-success", onTap: () => go("sounds") },
         { id: "reach_out", label: t("tool_reach_out_label"), sub: t("tool_reach_out_sub"), Icon: MessageCircle, iconClass: "w-5 h-5 text-success", onTap: () => go("reach_out") },
@@ -77,6 +79,7 @@ export function buildToolGroups({ go, onEpisode, phoneEnabled }: ToolRowDeps): T
         { id: "social_rhythm", label: t("tool_social_rhythm_label"), sub: t("tool_social_rhythm_sub"), Icon: Clock3, iconClass: "w-5 h-5 text-accent", onTap: () => go("social_rhythm") },
         { id: "exposure", label: t("tool_exposure_label"), sub: t("tool_exposure_sub"), Icon: Mountain, iconClass: "w-5 h-5 text-orange-400", onTap: () => go("exposure"), help: "Gentle step-by-step practice, building at your pace." },
         { id: "relapse_plan", label: t("tool_relapse_label"), sub: t("tool_relapse_sub"), Icon: AlertTriangle, iconClass: "w-5 h-5 text-warn", onTap: () => go("relapse_plan") },
+        { id: "chain_analysis", label: "Chain Analysis", sub: "Walk through what happened, moment by moment", Icon: Link2, iconClass: "w-5 h-5 text-accent", onTap: () => go("chain_analysis") },
       ],
     },
     ...(phoneEnabled

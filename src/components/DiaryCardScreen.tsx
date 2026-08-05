@@ -11,6 +11,7 @@ import { useTypingSession } from "../hooks/useTypingSession";
 import { hapticMedium } from "../hooks/useHaptics";
 import CrisisCard from "./CrisisCard";
 import { listenOnce, stopListening } from "../services/voice";
+import { DISCRETE_EMOTIONS } from "../services/emotionLabels";
 import DailyIntentionCard from "./DailyIntentionCard";
 
 // Research-grounded redesign (product-brainstorming session, 2026-07-16): the standard DBT diary
@@ -49,6 +50,7 @@ export default function DiaryCardScreen() {
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
   const [voiceListening, setVoiceListening] = useState(false);
+  const [discreteEmotions, setDiscreteEmotions] = useState<string[]>([]);
 
   const diaryTyping = useTypingSession("diary");
   const [crisis, setCrisis] = useState<boolean>(false);
@@ -69,6 +71,7 @@ export default function DiaryCardScreen() {
       );
       setQuickNotes(existing.quickNotes || "");
       setQuickNoteTags(existing.quickNoteTags || []);
+      setDiscreteEmotions(existing.discreteEmotions || []);
       return;
     }
     // Default reset
@@ -84,6 +87,7 @@ export default function DiaryCardScreen() {
     setSkillEffectiveness({});
     setQuickNotes("");
     setQuickNoteTags([]);
+    setDiscreteEmotions([]);
   }, [selectedDate]);
 
   const handleEmotionChange = (key: keyof typeof emotions, val: number) => {
@@ -136,6 +140,7 @@ export default function DiaryCardScreen() {
         urges,
         quickNotes,
         quickNoteTags,
+        discreteEmotions,
       };
       return entries;
     });
@@ -305,6 +310,39 @@ export default function DiaryCardScreen() {
               </div>
             </div>
           ))}
+        </div>
+
+        {/* PART 1b: Discrete emotion chips — "give the wave a name" (Feature 6).
+            Research: Widdershoven et al. 2019, Lieberman et al. 2007.
+            Toggle chips; user picks as many as fit. Stored alongside the sliders. */}
+        <div className="space-y-3">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-ink-muted border-b border-line pb-2">
+            2b. Name this feeling
+          </h3>
+          <div className="flex flex-wrap gap-2" role="group" aria-label="Discrete emotion labels">
+            {DISCRETE_EMOTIONS.map((e) => {
+              const active = discreteEmotions.includes(e.id);
+              return (
+                <button
+                  key={e.id}
+                  type="button"
+                  onClick={() => {
+                    setDiscreteEmotions((prev) =>
+                      active ? prev.filter((id) => id !== e.id) : [...prev, e.id],
+                    );
+                  }}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer ${
+                    active
+                      ? "bg-accent text-white"
+                      : "bg-page text-ink-2 border border-line/80 hover:border-line-strong"
+                  }`}
+                  aria-pressed={active}
+                >
+                  {e.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* PART 2: Skills used, rated for effectiveness — not just checked off. Simplified from the
