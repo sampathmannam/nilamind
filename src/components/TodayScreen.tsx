@@ -1,15 +1,13 @@
 import { localDateKey } from "../services/storageUtils";
 import { useRef, useState, useEffect, useReducer, useMemo } from "react";
-import { Wind, MessageCircle, Moon, Sparkles, ChevronRight, Sparkle, Clock3, Target, LineChart, Activity, Loader2, LifeBuoy } from "lucide-react";
+import { Wind, MessageCircle, Moon, Sparkles, ChevronRight, Sparkle, Target, LineChart, Activity, Loader2, LifeBuoy, Lock, ShieldCheck } from "lucide-react";
 import { getTimeMode, getUserState } from "../services/modeEngine";
 import { hasCheckinToday, loadCheckins } from "../services/checkin";
 import { useLanguage, t } from "../services/i18n";
 import { secureLocal } from "../services/secureLocal";
-import { loadInsights } from "../services/nilaInsights";
 import { loadAssessments, INSTRUMENTS } from "../services/assessments";
 import { isWellbeingDue, wellbeingCadence } from "../services/wellbeingTrack";
 import { computeCompassionateStreak } from "../services/streaks";
-import { hasRhythmToday, loadTodayAnchors } from "../services/socialRhythm";
 import { getDailyIntention } from "../services/weeklyIntention";
 import DailyIntentionCard, { type DailyIntentionCardHandle } from "./DailyIntentionCard";
 import ConversationalCheckinCard from "./ConversationalCheckinCard";
@@ -33,7 +31,6 @@ import { SkeletonCard } from "./Skeleton";
 import OnboardingMomentum from "./OnboardingMomentum";
 import { usePullToRefresh } from "../hooks/usePullToRefresh";
 import PullToRefresh from "./PullToRefresh";
-import AgencyNarrative from "./AgencyNarrative";
 import ValuePropBanner from "./ValuePropBanner";
 import ConfettiBurst from "./ConfettiBurst";
 import type { TimeMode, UserState } from "../types/modes";
@@ -145,15 +142,6 @@ function getWeekInsight(): { checkinCount: number; topEmotion: string | null } |
   } catch { return null; }
 }
 
-function getNilaReflection(): string | null {
-  try {
-    const insights = loadInsights();
-    if (!insights.length) return null;
-    const idx = Math.floor(Math.random() * insights.length);
-    return insights[idx].text;
-  } catch { return null; }
-}
-
 export default function TodayScreen({
   go,
   phoneEnabled,
@@ -165,7 +153,6 @@ export default function TodayScreen({
   onEpisode: () => void;
   onOpenCrisis: () => void;
 }) {
-  const [showExtraCards, setShowExtraCards] = useState(false);
   const [showHelp, setShowHelp] = useState(false); // U3.5
   const [isSaving, setIsSaving] = useState(false); // U2.1/U2.2
   const [lastRefreshed, setLastRefreshed] = useState<number | null>(null); // U2.3
@@ -284,7 +271,6 @@ export default function TodayScreen({
   const hero = getHeroAction(timeMode, userState, dailyIntentionSet);
   const intentionCardRef = useRef<DailyIntentionCardHandle>(null);
   const weekInsight = getWeekInsight();
-  const nilaReflection = getNilaReflection();
   // UX-6: a tiny 7-day mood sparkline for the "This week" card — show, don't tell (charts > text).
   const weekMoodSpark = useMemo(() => {
     try {
@@ -436,9 +422,13 @@ export default function TodayScreen({
               <p className="text-[12px] text-ink-muted leading-relaxed mt-1 italic">"{nilaMsg.message}"</p>
             )}
             {/* U9.1 + U9.2 — Privacy + crisis-awareness badges */}
+            {/* 2026-08-05 UI/UX audit: replaced emoji-as-icon (🔒/🛡) with themed Lucide SVGs — emoji glyphs
+                are font/platform-dependent (rendering varies by Android version and OEM emoji font) and
+                can't take `currentColor`, so they never quite matched this row's palette. Every other icon
+                in the app is a Lucide SVG; this was the one exception. */}
             <p className="text-[10px] text-ink-faint mt-1.5 flex items-center gap-3">
-              <span className="flex items-center gap-1"><span aria-hidden="true">🔒</span> On-device</span>
-              <span className="flex items-center gap-1 text-rose-400/70"><span aria-hidden="true">🛡</span> Crisis support always here</span>
+              <span className="flex items-center gap-1"><Lock className="w-2.5 h-2.5" aria-hidden="true" /> On-device</span>
+              <span className="flex items-center gap-1 text-rose-400/70"><ShieldCheck className="w-2.5 h-2.5" aria-hidden="true" /> Crisis support always here</span>
             </p>
           </div>
 
@@ -504,8 +494,13 @@ export default function TodayScreen({
         </div>
       )}
 
-      {/* Daily inspiration — quote + tip. Informational, not a primary action → behind the "Your week" fold. */}
-      {showExtraCards && <DailyContentCard />}
+      {/* Daily inspiration — quote + tip. 2026-08-05 declutter: was gated behind a "Your week" toggle
+          fold, but that fold's OTHER contents (a duplicate rhythm card, a hardcoded-fake progress card,
+          a duplicate insight card) have all been removed — this was the only thing left inside it, and
+          it already self-manages its own visibility (once-per-day content, dismissible via its own X
+          button, backed by isDailyDismissed()/dismissDailyContent()). A toggle whose sole job was to
+          reveal one already-self-dismissing card added a tap with no remaining purpose. */}
+      <DailyContentCard />
 
       {/* Proactive nudge rail — surfaced from compound signal analysis */}
       {proactiveNudge && (nudgeCascadeExpanded || topNudge === "proactive") && (
@@ -545,7 +540,7 @@ export default function TodayScreen({
             <LineChart className="w-4 h-4 text-success" />
             <p className="text-sm font-semibold text-ink">{t(wellbeingFirstTime ? "wellbeing_baseline_title" : "wellbeing_due_title")}</p>
           </div>
-          <p className="text-[11px] text-ink-muted leading-relaxed">{t(wellbeingFirstTime ? "wellbeing_baseline_sub" : "wellbeing_due_sub")}</p>
+          <p className="text-base text-ink-muted leading-relaxed">{t(wellbeingFirstTime ? "wellbeing_baseline_sub" : "wellbeing_due_sub")}</p>
           <button
             onClick={() => go("assessment")}
             id="today-wellbeing-due"
@@ -744,85 +739,16 @@ export default function TodayScreen({
         return (
           <div className="space-y-3 animate-fade-in stagger-children">
             <SleepWidget />
-            <MoodTrendWidget />
-            <NextProtocolWidget />
+            <MoodTrendWidget go={go} />
+            <NextProtocolWidget go={go} />
             <QuickActionsWidget onAction={go} />
-            <RhythmWidget />
+            <RhythmWidget go={go} />
             <WeeklyInsightWidget />
             <StreakWidget />
-            <AssessmentWidget />
+            <AssessmentWidget go={go} />
           </div>
         );
       })()}
-
-      {/* Patterns section — toggle + extra content, phase-gated by vis.patterns (U1.1).
-          Only Data phase shows patterns. */}
-      {vis.patterns && (
-        <>
-      {/* Show more toggle — hides informational cards by default */}
-      <button
-        onClick={() => setShowExtraCards(!showExtraCards)}
-        aria-expanded={showExtraCards}
-        className="w-full flex items-center justify-center gap-2 py-2.5 min-h-[44px] rounded-xl border border-line hover:border-line-strong text-ink-faint hover:text-ink-muted text-xs font-medium transition-all cursor-pointer"
-      >
-        <Sparkles className="w-3 h-3" />
-        {showExtraCards ? "Less" : "Your week"}
-      </button>
-
-      {showExtraCards && (
-        <div className="space-y-3 animate-fade-in">
-          {/* Social rhythm card — anchor tracking alongside mood (Phase 10) */}
-      {(() => {
-        const rhythmLogged = hasRhythmToday();
-        const anchors = rhythmLogged ? loadTodayAnchors() : null;
-        const aWake = anchors?.wake;
-        const aBed = anchors?.bed;
-        const extraCount = anchors ? Object.keys(anchors).length - (aWake ? 1 : 0) - (aBed ? 1 : 0) : 0;
-        return (
-          <button onClick={() => go("social_rhythm")} className="w-full bg-card border border-line hover:border-line-strong shadow-sm p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left flex items-center gap-3">
-            <span className="shrink-0 text-accent"><Clock3 className="w-5 h-5" aria-hidden="true" /></span>
-            <span className="flex-1 min-w-0">
-              {rhythmLogged ? (
-                <>
-                  <span className="block text-sm font-semibold text-ink">
-                    {aWake ? `Wake ${aWake}` : ""}{aWake && aBed ? " · " : ""}{aBed ? `Bed ${aBed}` : ""}{extraCount > 0 ? ` · +${extraCount}` : ""}
-                  </span>
-                  <span className="block text-[11px] text-ink-muted mt-0.5">Tap to see all anchors</span>
-                </>
-              ) : (
-                <>
-                  <span className="block text-sm font-semibold text-ink">Log your daily rhythm</span>
-                  <span className="block text-[11px] text-ink-muted mt-0.5">Track wake, meals &amp; bed — anchor your routine</span>
-                </>
-              )}
-            </span>
-            <ChevronRight className="w-5 h-5 text-ink-faint shrink-0" aria-hidden="true" />
-          </button>
-        );
-      })()}
-
-      {/* U3.1 — Your progress: goal→insight linkage for users with goals */}
-      {checkedIn && <AgencyNarrative goal="daily wellness" />}
-
-      {/* Nila's reflection — a durable insight from your history (U9.9: tappable to expand) */}
-      {nilaReflection && (
-        <button
-          onClick={() => go("nila")}
-          className="w-full bg-card border border-line hover:border-line-strong shadow-sm p-4 rounded-2xl border-l-[3px] border-l-accent transition-all cursor-pointer text-left"
-        >
-          <div className="flex items-start gap-3">
-            <Sparkle className="w-5 h-5 text-accent shrink-0 mt-0.5" aria-hidden="true" />
-            <p className="text-xs text-ink-2 leading-relaxed flex-1">
-              <span className="text-ink font-semibold">Nila noticed:</span> {nilaReflection}
-            </p>
-            <ChevronRight className="w-4 h-4 text-ink-faint shrink-0 mt-0.5" aria-hidden="true" />
-          </div>
-        </button>
-      )}
-      </div>
-      )}
-      </>
-      )}
 
       {/* Celebration confetti on check-in completion */}
       <ConfettiBurst

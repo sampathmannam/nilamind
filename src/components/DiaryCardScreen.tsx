@@ -169,11 +169,11 @@ export default function DiaryCardScreen() {
   return (
     <div className="space-y-6 max-w-md mx-auto" id="diary-card-screen">
       {/* Date Picker row */}
-      <div className="flex justify-between items-center glass p-4 rounded-xl">
-        <div>
-          <h1 className="text-xl font-semibold text-ink">DBT Diary Card</h1>
-          <p className="text-xs text-ink-faint">Your daily tracking metrics</p>
-        </div>
+      {/* 2026-08-05 declutter: in-body "DBT Diary Card" h1 removed — the Sheet header
+          (AUX_LABELS.dbt_diary_card) already shows the same title directly above. Subtitle + date
+          picker stay. */}
+      <div className="flex justify-between items-center glass p-4 rounded-xl gap-3">
+        <p className="text-base text-ink-muted leading-relaxed">Your daily tracking metrics</p>
         <div className="flex items-center gap-1.5 relative bg-page p-2 rounded-xl border border-line">
           <Calendar className="w-4 h-4 text-accent" />
           <input
@@ -195,7 +195,7 @@ export default function DiaryCardScreen() {
           <h3 className="text-xs font-semibold uppercase tracking-wider text-ink-muted border-b border-line pb-2">
             1. Urges &amp; Target Behaviors (0 to 5)
           </h3>
-<p className="text-xs text-ink-faint">
+<p className="text-base text-ink-faint">
              Rating an urge — even a high one — is just tracking. It's private and never flags anything on its own.
           </p>
 

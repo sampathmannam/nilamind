@@ -34,7 +34,7 @@ export default function ProgressDashboard({ onClose }: ProgressDashboardProps) {
         <button
           onClick={onClose}
           aria-label={t("back")}
-          className="p-2 -ml-2 rounded-full text-ink-2 hover:bg-fill transition-colors focus-ring"
+          className="p-2 -ml-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full text-ink-2 hover:bg-fill transition-colors focus-ring"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
@@ -68,7 +68,7 @@ export default function ProgressDashboard({ onClose }: ProgressDashboardProps) {
           action={<span className="text-ink-muted text-xs">{unlocked}/{achievements.length}</span>}
         >
           {unlocked === 0 ? (
-            <p className="text-xs text-ink-muted leading-relaxed">{t("achievements_empty")}</p>
+            <p className="text-base text-ink-muted leading-relaxed">{t("achievements_empty")}</p>
           ) : (
             <div className="flex flex-wrap gap-1.5">
               {achievements.map((a) => (

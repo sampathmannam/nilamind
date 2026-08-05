@@ -56,7 +56,14 @@ export function selectQuickActions(timeMode: TimeMode, userState?: UserState | n
   if (userState === "elevated") {
     return ACTIONS.filter((a) => CALMING_WHEN_ELEVATED.includes(a.id)).map((a) => ({ ...a, active: true }));
   }
-  // C-3 fix: dim-not-hide — show all time-appropriate actions, dim the ones that don't match
+  // C-3 fix: dim-not-hide — show all time-appropriate actions, dim the ones that don't match. "Dim, don't
+  // hide" is an established accessibility/inclusive-design pattern precisely BECAUSE it keeps the element
+  // reachable — that's what distinguishes it from "disable." The 2026-07-23 commit that introduced this
+  // wrote that contract in this very comment ("user can still tap, but they're nudged") but simultaneously
+  // added `pointer-events-none` to the button's className (see below), which makes a dimmed action
+  // completely untappable with zero feedback — confirmed on-device: tapping a dimmed "Grounding" chip at
+  // night did nothing at all, no toast, no explanation. Fixed 2026-08-04 by dropping pointer-events-none so
+  // the implementation matches its own documented intent.
   const base = ACTIONS.filter((a) => a.modes.includes(timeMode) && a.id !== "crisis");
   const crisisVisible = userState === "low";
   const crisisAction = crisisVisible ? ACTIONS.find((a) => a.id === "crisis") : null;
@@ -90,9 +97,8 @@ export default function QuickActions({ onAction, timeMode, userState }: QuickAct
           <button
             key={action.id}
             onClick={() => onAction(action.id)}
-            className={`flex items-center gap-3 p-3.5 rounded-2xl bg-card border border-line hover:border-line-strong hover:bg-fill transition-all cursor-pointer active:scale-[0.97] group${action.active ? "" : " opacity-35 pointer-events-none"}`}
+            className={`flex items-center gap-3 p-3.5 rounded-2xl bg-card border border-line hover:border-line-strong hover:bg-fill transition-all cursor-pointer active:scale-[0.97] group${action.active ? "" : " opacity-35"}`}
             aria-label={action.label}
-            aria-disabled={!action.active}
           >
             <span className={`${action.color} transition-transform group-hover:scale-110`}>{action.icon}</span>
             <span className="text-[12px] text-ink-2 font-medium leading-tight">{action.label}</span>

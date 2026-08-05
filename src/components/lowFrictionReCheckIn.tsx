@@ -67,7 +67,7 @@ export default function LowFrictionReCheckIn({ onMoodSelect, onSkip, daysSinceLa
         <Sparkle className="w-4 h-4 text-accent" />
         <p className="text-sm font-semibold text-ink-2">How are you right now?</p>
       </div>
-      <p className="text-[11px] text-ink-muted leading-relaxed">
+      <p className="text-base text-ink-muted leading-relaxed">
         {getReCheckInMessage(daysSinceLast)}
       </p>
       <div className="grid grid-cols-2 gap-2">

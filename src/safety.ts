@@ -22,34 +22,20 @@
 import { getCrisisLines, crisisDigits } from "./services/crisisResources";
 import { recordRule6Fire, recordRule6Pass } from "./services/antiSycophancyMetrics";
 import { spotDistortions } from "./services/distortionSpotter";
+import { normalizeText } from "./services/textNormalize";
 
 /**
- * THE single text normalizer for this module — input gate, output gate, and every isBenign* guard.
- *
- * Lowercase; strip zero-width chars FIRST (U+200B–200D, U+FEFF) so an injected zero-width space cannot
- * split a keyword; unify the typographic apostrophe U+2019 to ASCII "'"; collapse all internal whitespace
- * so a multi-word phrase still matches across a line break.
- *
- * Introduced 2026-08-03 (audit OG-3 / OG-5) because this normalization had been COPY-PASTED nine times and
- * had drifted, which produced two confirmed defects:
- *   - checkResponse Rules 3/5/6/7 normalized nothing at all, so a reply using U+2019 ("You’re worthless",
- *     "You don’t need your meds", "The rules don’t apply to you") bypassed every apostrophe-bearing entry
- *     in DISTORTION_AGREEMENTS / SYCOPHANTIC_AFFIRMATIONS / MANIC_VALIDATION. On-device models emit the
- *     typographic apostrophe constantly, so this was a live output-gate MISS, not a theoretical one.
- *   - isBenignHeartbreakIdiom and isBenignHelpSeeking had `/['']/g` — two ASCII quotes in the character
- *     class, a typo for `/['’]/g`. Both guards silently never fired on text from a phone keyboard (iOS and
- *     Gboard substitute U+2019 by default), so "i can’t go on without her" opened a full crisis takeover
- *     on a breakup message — the exact false-positive class those guards exist to prevent.
- * Routing every call site through one function is what stops that drift recurring.
+ * THE single text normalizer for this module -- input gate, output gate, and every isBenign* guard.
+ * Moved into ./services/textNormalize.ts (2026-08-05 audit) so elevationGuard.ts and distortionSpotter.ts
+ * -- which had independently drifted a second time -- can share it without violating this module's sealed
+ * section-9 boundary or creating a circular import (this file already imports spotDistortions from
+ * distortionSpotter.ts). See that module for the full history: this normalization was originally
+ * introduced here on 2026-08-03 (audit OG-3/OG-5) after being copy-pasted nine times and drifting, which
+ * produced two confirmed defects (checkResponse Rules 3/5/6/7 not normalizing at all, and a two-ASCII-
+ * apostrophe typo silently disabling isBenignHeartbreakIdiom/isBenignHelpSeeking on real-world curly-quote
+ * text from iOS/Gboard). Routing every call site through one shared function is what stops that drift
+ * recurring.
  */
-function normalizeText(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/[\u200B-\u200D\uFEFF]/g, "")
-    .replace(/['’]/g, "'")
-    .replace(/\s+/g, " ")
-    .trim();
-}
 
 export const SUICIDAL_KEYWORDS = [
   "kill myself", "killing myself", "killed myself", // gerund/past: "thinking about KILLING myself" must trip
@@ -373,18 +359,6 @@ export const STOCKPILE_MEANS = [
   "enough pills to make sure", "enough tablets to make sure", "enough pills to end", "enough tablets to end",
 ];
 
-export const DISSOCIATION_KEYWORDS = [
-  "not real", "watching myself", "outside my body", "voices telling me",
-  "cant tell whats real", "can't tell what's real", "nothing feels real",
-  // 2026-07-09 audit: expanded dissociation coverage — depersonalization/derealization are common
-  // in trauma and anxiety populations and are strong distress signals the keyword floor should catch.
-  "feel detached", "feeling detached",
-  "feel unreal", "feeling unreal",
-  "depersonalized", "depersonalised",
-  "disconnected from reality", "feeling disconnected from reality",
-  "dont feel real", "don't feel real"
-];
-
 // Unambiguous first-person method+intent phrases. High-precision ONLY — these gate the input before the
 // model, so a benign false-positive ("call a hotline") on a calm app is itself harmful. No bare nouns
 // (those stay output-only in checkResponse Rule 2). Recall for borderline phrasing is left to the lists
@@ -448,14 +422,10 @@ export const EUPHEMISM_DEATH_PHRASES = [
   "made my peace with dying", "come to peace with dying",
 ];
 
-export const UNSAFE_METHOD_KEYWORDS = [
-  "razor", "blade", "pill", "slit", "overdose", "hang", "rope", "poison", "suffocate"
-];
-
 /**
- * Word-boundary-anchored matcher for the method lexicon above (2026-08-03 audit, OG-1/OG-2).
+ * Word-boundary-anchored matcher for the method lexicon (2026-08-03 audit, OG-1/OG-2).
  *
- * The output gate previously matched UNSAFE_METHOD_KEYWORDS as BARE SUBSTRINGS, which is wrong in BOTH
+ * The output gate previously matched bare substrings, which is wrong in BOTH
  * directions and was confirmed by execution:
  *   - FALSE POSITIVES (warm replies rejected → replaced by the cold crisis fallback): "hang" ⊂ change /
  *     changing / hanging, "pill" ⊂ pillow, "rope" ⊂ properly, "slit" ⊂ slither. "Let's try changing one

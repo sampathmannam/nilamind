@@ -114,7 +114,13 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
       </div>
 
       {/* Slide content */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 max-w-md mx-auto text-center space-y-6">
+      {/* 2026-08-04 audit fix: `max-w-md mx-auto` alone has no effect on a flex item's cross-axis size —
+          without `w-full`, the browser sizes this to its CONTENT's intrinsic width (here, the 5-emoji mood
+          row: 5*66px + 4*12px gap + 48px padding = 426px) rather than clamping to the 375px viewport. On a
+          narrow phone the "Great" mood option and the tail of the body paragraph rendered off-screen with
+          no horizontal scroll to reach them — reproduced at 375px width; the wider physical test device
+          (~412dp+) never showed it. `w-full` makes this fill its parent up to the existing 448px cap. */}
+      <div className="flex-1 flex flex-col items-center justify-center px-6 w-full max-w-md mx-auto text-center space-y-6">
         {/* Icon / Nila orb */}
         {slide.id === "nila_intro" ? (
           <NilaOrbIntro />
@@ -195,7 +201,7 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
         {slide.id === "ready" && (
           <div className="space-y-3 animate-fade-in">
             <div className="text-4xl">🌱</div>
-            <p className="text-[11px] text-ink-muted leading-relaxed">
+            <p className="text-base text-ink-muted leading-relaxed">
               Your story starts now. Every check-in, every tool, every insight — it all builds from here.
             </p>
           </div>
@@ -274,11 +280,28 @@ function NilaOrbIntro() {
   return (
     <div className={`transition-all duration-1000 ${visible ? "opacity-100 scale-100" : "opacity-0 scale-75"}`}>
       <div className="relative">
+        {/* 2026-08-05 audit: on the "meet Nila" slide — the single biggest first-impression beat in the
+            whole onboarding flow — this orb rendered as a completely blank patch of background on an
+            Android emulator's WebView (Chromium 113; confirmed absent, not just faint, via a pixel-level
+            zoom crop), while the identical component rendered correctly in a standard Chromium browser.
+            Isolated the exact cause empirically, across three built-and-installed variants:
+            (1) original `blur-xl` + low opacity → fully invisible, INCLUDING the sibling ring+dot below,
+                which have no blur filter of their own — meaning this div was painting as fully OPAQUE
+                and masking everything under it, not merely failing to show its own glow;
+            (2) `blur-xl` removed, plain `bg-accent/20` Tailwind class kept → renders correctly (soft,
+                semi-transparent circle, ring and dot both visible through it);
+            (3) an inline `style={{ background: "radial-gradient(...)", opacity: 0.35 }}` replacement →
+                masked everything again, same as (1).
+            (1) and (3) share nothing except being non-Tailwind-class background declarations resolved at
+            paint time (a `filter` in (1), an inline `var(--color-accent)` inside a `background` shorthand
+            in (3)); (2) is the only variant using a plain, pre-compiled Tailwind utility class — and it's
+            the only one that worked. Keeping the fix to exactly what's confirmed working rather than
+            continuing to guess at inline-style alternatives. */}
         {/* Outer glow */}
-        <div className="absolute inset-0 rounded-full bg-accent/10 blur-xl animate-pulse" style={{ width: 120, height: 120, margin: "auto" }} />
+        <div className="absolute inset-0 rounded-full bg-accent/20 animate-pulse" style={{ width: 120, height: 120, margin: "auto" }} />
         {/* Orb */}
-        <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-blue-400/30 to-purple-400/20 border border-accent/30 flex items-center justify-center nila-orb">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-400 opacity-60" />
+        <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-blue-400/45 to-purple-400/35 border border-accent/45 flex items-center justify-center nila-orb">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-400 opacity-80" />
         </div>
       </div>
     </div>

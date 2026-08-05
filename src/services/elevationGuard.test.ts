@@ -275,3 +275,16 @@ describe("energyElevationSignal — check-in energy prodrome", () => {
     expect(energyElevationSignal()).toBe("none");
   });
 });
+
+describe("detectElevationRisk — zero-width char evasion resistance", () => {
+  it("catches elevation keywords even with zero-width spaces injected", () => {
+    // U+200B (zero-width space) injected between letters — would evade the old normalize()
+    expect(detectElevationRisk("stop\u200B taking\u200B my\u200B meds").level).toBe("high");
+    expect(detectElevationRisk("I don't need\u200B sleep\u200B anymore").level).toBe("elevated");
+    expect(detectElevationRisk("went on a spending\u200B spree today").level).toBe("elevated");
+  });
+
+  it("catches keywords with U+FEFF (zero-width no-break space)", () => {
+    expect(detectElevationRisk("i\u200B flushed\u200B my\u200B pills").level).toBe("high");
+  });
+});

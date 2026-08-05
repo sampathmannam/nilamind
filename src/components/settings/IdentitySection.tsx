@@ -34,7 +34,7 @@ export default function IdentitySection() {
         <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-2 font-mono flex items-center gap-2">
           <KeyRound className="w-4 h-4 text-accent" /> {t("sec_identity")}
         </h2>
-        <p className="text-[11px] text-ink-muted mt-1 leading-relaxed">
+        <p className="text-base text-ink-muted mt-1 leading-relaxed">
           No email or password — your space is recovered with a 12-word phrase only you hold.
           <span className="block mt-1">ID: <span className="font-mono text-ink-2">{id.userId}</span></span>
         </p>
@@ -55,7 +55,7 @@ export default function IdentitySection() {
         </div>
         {revealed ? (
           <>
-            <p className="text-xs text-ink-2 font-mono leading-relaxed break-words">{id.mnemonic}</p>
+            <p className="text-base text-ink-2 font-mono leading-relaxed break-words">{id.mnemonic}</p>
             <button onClick={copyPhrase} className="text-[11px] text-ink-2 hover:text-ink cursor-pointer flex items-center gap-1">
               {copied ? <><Check className="w-3 h-3 text-success" /> Copied</> : <><Copy className="w-3 h-3" /> Copy</>}
             </button>
@@ -64,12 +64,12 @@ export default function IdentitySection() {
         ) : (
           <p className="text-[11px] text-ink-faint">Hidden. Tap Reveal only when no one's looking.</p>
         )}
-        <p className="text-xs text-ink-faint leading-relaxed">{bioAvail === false ? "🔒 No device lock set on this phone — wiping data, showing this phrase, and exporting each ask you to confirm in-app first." : "🔒 Wiping data, showing this phrase, and exporting a backup each ask for your fingerprint or device lock first."}</p>
+        <p className="text-base text-ink-faint leading-relaxed">{bioAvail === false ? "🔒 No device lock set on this phone — wiping data, showing this phrase, and exporting each ask you to confirm in-app first." : "🔒 Wiping data, showing this phrase, and exporting a backup each ask for your fingerprint or device lock first."}</p>
       </div>
 
       <div className="border border-line rounded-xl p-3 bg-page space-y-2">
         <span className="text-xs font-semibold text-ink-2">Encrypted backup</span>
-        <p className="text-[11px] text-ink-faint leading-relaxed">A file you control, encrypted with your phrase — restore it on a new device by entering the same phrase. No cloud.</p>
+        <p className="text-base text-ink-faint leading-relaxed">A file you control, encrypted with your phrase — restore it on a new device by entering the same phrase. No cloud.</p>
         {!backup ? (
           <button onClick={doExport} disabled={busy} id="settings-export-backup" className="w-full glass hover:bg-raised text-ink-2 text-xs font-semibold py-2.5 rounded-lg cursor-pointer flex items-center justify-center gap-1.5">
             {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <><Download className="w-3.5 h-3.5" /> Create backup</>}

@@ -39,9 +39,33 @@ vi.mock("./diaryReminderPrefs", () => ({
   getDiaryReminderPrefs: () => ({ enabled: emaMocks.diaryEnabled, time: emaMocks.diaryTime }),
 }));
 
-import { notifyReplyReady } from "./notifications";
+// 2026-08-04 audit: nudgeForToday's medication-retention path read "nilamind_medication_logs", but
+// medicationAdherence.ts writes "nilamind_med_logs" — so medicationMissed was ALWAYS false and the
+// med nudge never fired. These mocks make the signal chain deterministic so the fix is testable.
+const nudgeMocks = vi.hoisted(() => ({
+  store: {} as Record<string, string>,
+  sleep: null as null | { firing: boolean },
+  inflection: false,
+  topSignal: null as null | { direction: string },
+  streak: { lapsed: false, current: 2, milestone: 0, activeToday: false, totalActiveDays: 5 },
+}));
+vi.mock("./secureLocal", () => ({
+  secureLocal: {
+    getItem: (k: string) => nudgeMocks.store[k] ?? null,
+    setItem: () => {},
+    removeItem: () => {},
+  },
+}));
+vi.mock("./sleepInsight", () => ({ selfReportSleepSignal: () => nudgeMocks.sleep }));
+vi.mock("./inflectionPrefs", () => ({ getInflectionEnabled: () => nudgeMocks.inflection }));
+vi.mock("./nilaInflection", () => ({ topFireableSignal: () => nudgeMocks.topSignal }));
+vi.mock("./streaks", () => ({ computeCompassionateStreak: () => nudgeMocks.streak }));
 
-beforeEach(() => { checkPermissions.mockReset(); schedule.mockReset(); });
+import { notifyReplyReady } from "./notifications";
+import { WARM_NUDGES } from "./notificationCopy";
+import { localDateKey } from "./storageUtils";
+
+beforeEach(() => { checkPermissions.mockReset(); schedule.mockReset(); nudgeMocks.store = {}; nudgeMocks.sleep = null; nudgeMocks.inflection = false; nudgeMocks.topSignal = null; });
 
 describe("notifyReplyReady — the backgrounded 'Nila replied' ping", () => {
   it("no-ops (never schedules, never prompts) when notification permission isn't granted", async () => {
@@ -423,5 +447,45 @@ describe("optimal timing learner (P6.2)", () => {
     expect(res.scheduled).toBe(true);
     const call = schedule.mock.calls[0][0];
     expect(call.notifications[0].schedule.on.hour).toBe(10); // windowStart default
+  });
+});
+
+describe("nudgeForToday — medication-retention wiring (dead-key fix, 2026-08-04)", () => {
+  beforeEach(() => {
+    checkPermissions.mockReset();
+    schedule.mockReset();
+    cancel.mockReset();
+    emaMocks.dnd = false;
+    emaMocks.suppressed = false;
+    emaMocks.skip = false;
+    emaMocks.budget = 3;
+    emaMocks.catInsight = true;
+    emaMocks.learnedHour = null;
+    checkPermissions.mockResolvedValue({ display: "granted" });
+  });
+
+  const activeMeds = JSON.stringify([{ id: "m1", name: "Lamotrigine", dose: "200mg", active: true }]);
+
+  it("surfaces the medication nudge when today's med logs are short of active meds", async () => {
+    // 1 active med, NO log for today → missed dose → medication-retention nudge (last in the cascade).
+    nudgeMocks.store = { "nilamind_medications": activeMeds, "nilamind_med_logs": "[]" };
+    const { syncDailyReminders } = await import("./notifications");
+    const res = await syncDailyReminders({ request: false });
+    expect(res.scheduled).toBe(true);
+    const body = (schedule.mock.calls[0][0] as { notifications: { body: string }[] }).notifications[0].body;
+    expect(body).toMatch(/meds?/i);
+  });
+
+  it("falls back to the warm nudge when logs cover every active med", async () => {
+    const today = localDateKey();
+    nudgeMocks.store = {
+      "nilamind_medications": activeMeds,
+      "nilamind_med_logs": JSON.stringify([{ id: "l1", medId: "m1", date: today, taken: true }]),
+    };
+    const { syncDailyReminders } = await import("./notifications");
+    const res = await syncDailyReminders({ request: false });
+    expect(res.scheduled).toBe(true);
+    const body = (schedule.mock.calls[0][0] as { notifications: { body: string }[] }).notifications[0].body;
+    expect(WARM_NUDGES).toContain(body);
   });
 });

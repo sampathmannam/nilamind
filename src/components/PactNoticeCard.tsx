@@ -11,7 +11,7 @@ export default function PactNoticeCard({ notice, onDismiss }: { notice: PactNoti
   return (
     <div className="w-full rounded-xl bg-amber-500/10 border border-amber-500/30 p-3 space-y-2" id="pact-notice-card">
       <div className="flex items-start justify-between gap-2">
-        <p className="text-xs text-amber-200/90 leading-relaxed">
+        <p className="text-base text-amber-200/90 leading-relaxed">
           {notice.reason}. When you were steadier, you wrote this for a moment like this:
         </p>
         <button

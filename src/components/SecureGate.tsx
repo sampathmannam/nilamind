@@ -37,7 +37,7 @@ export default function SecureGate({ children }: { children: React.ReactNode }) 
             </div>
             <div className="space-y-1">
               <h1 className="text-lg font-bold text-ink">We couldn't open your data this time</h1>
-              <p className="text-xs text-ink-muted leading-relaxed">
+              <p className="text-base text-ink-muted leading-relaxed">
                 Your encrypted entries are still saved on this device — something just stopped us opening them
                 right now. Nothing has been deleted. This is often temporary, so please try again.
               </p>
@@ -100,7 +100,7 @@ function UnlockScreen({ onUnlocked }: { onUnlocked: () => void }) {
           </div>
           <div className="space-y-1">
             <h1 className="text-lg font-bold text-ink">Welcome back</h1>
-            <p className="text-xs text-ink-muted leading-relaxed">
+            <p className="text-base text-ink-muted leading-relaxed">
               Your entries are encrypted on this device. Enter your PIN to unlock them.
             </p>
           </div>
@@ -130,7 +130,7 @@ function UnlockScreen({ onUnlocked }: { onUnlocked: () => void }) {
           </button>
         </div>
 
-        <p className="text-xs text-slate-600 leading-relaxed">
+        <p className="text-base text-slate-600 leading-relaxed">
           Your PIN never leaves this device and isn't stored anywhere — it only unlocks your data.
           If you've forgotten it, your encrypted entries can't be recovered.
         </p>

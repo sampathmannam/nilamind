@@ -36,12 +36,20 @@ export default function OnboardingMomentum({ onComplete }: OnboardingMomentumPro
             value={goal}
             onChange={(e) => setGoal(e.target.value)}
             placeholder="e.g., Reduce anxiety, improve sleep, manage stress"
-            className="w-full rounded-lg border-[var(--color-slate-300)] border p-3 focus:border-[var(--color-peach-400)] focus:outline-none dark:border-[var(--color-slate-400)]"
+            className="w-full rounded-lg border-[var(--color-slate-300)] border p-3 focus:border-[var(--color-peach-400)] focus:outline-none"
           />
+          {/* 2026-08-05 audit: was `bg-[var(--color-peach-400)] text-[var(--color-slate-900)]` — correct
+              text color for the DARK theme only. slate-900 is theme-inverted (near-black in dark theme,
+              near-white in light theme; see --color-hero's own comment: "dark text pairing"), and this
+              button never had the light-theme override that the app's existing `.sun-cta` class already
+              carries (`:root.theme-light .sun-cta` swaps to slate-100 — dark text — specifically because
+              light theme's peach is a paler tone that a light-cream slate-900 washes out against).
+              Confirmed low-contrast ("Begin Journey" barely legible) in light theme on-device. Reusing the
+              established, already-correct `.sun-cta` class instead of re-deriving the same pairing. */}
           <button
             onClick={handleStartGoal}
             disabled={!goal.trim()}
-            className="w-full rounded-lg bg-[var(--color-peach-400)] py-3 text-[var(--color-slate-900)] font-medium hover:bg-[var(--color-peach-500)] disabled:opacity-50"
+            className="sun-cta w-full rounded-lg py-3 font-medium disabled:opacity-50"
           >
             Begin Journey
           </button>
@@ -55,12 +63,18 @@ export default function OnboardingMomentum({ onComplete }: OnboardingMomentumPro
             value={journalEntry}
             onChange={(e) => setJournalEntry(e.target.value)}
             placeholder="Describe your mood, energy, and any standout moments..."
-            className="w-full rounded-lg border-[var(--color-slate-300)] border p-3 h-32 focus:border-[var(--color-peach-400)] focus:outline-none dark:border-[var(--color-slate-400)]"
+            className="w-full rounded-lg border-[var(--color-slate-300)] border p-3 h-32 focus:border-[var(--color-peach-400)] focus:outline-none"
           />
+          {/* 2026-08-05 audit: was `bg-[var(--color-blue-400)] text-[var(--color-slate-900)]` — the same
+              theme-inverted-slate-on-colored-fill bug as the "Begin Journey" button above (measured 4.26:1
+              in light theme, just under the 4.5:1 AA minimum). Switched to the established `bg-accent
+              text-white` convention this app already uses for every other primary CTA (AgeGate,
+              IdentityOnboarding, AssessmentScreen, SocialRhythmScreen, ...), rather than inventing another
+              one-off color pairing. */}
           <button
             onClick={handleNext}
             disabled={!journalEntry.trim()}
-            className="w-full rounded-lg bg-[var(--color-blue-400)] py-3 text-[var(--color-slate-900)] font-medium hover:bg-[var(--color-blue-500)] disabled:opacity-50"
+            className="w-full rounded-lg bg-accent hover:opacity-90 py-3 text-white font-medium disabled:opacity-50"
           >
             Get Insight
           </button>

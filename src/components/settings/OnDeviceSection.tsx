@@ -29,7 +29,7 @@ export default function OnDeviceSection() {
         <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-2 font-mono flex items-center gap-2">
           <Cpu className="w-4 h-4 text-accent" /> {t("sec_on_device")}
         </h2>
-        <p className="text-[11px] text-ink-muted mt-1 leading-relaxed">
+        <p className="text-base text-ink-muted mt-1 leading-relaxed">
           {isNative ? (
             "Nila's mind runs entirely on your phone — your conversations never leave the device and no internet is needed to talk. The on-device model loads automatically."
           ) : (
@@ -58,7 +58,7 @@ export default function OnDeviceSection() {
 
       {!modelId && (
         <div className="border border-warn/30 bg-warn/10 rounded-xl p-3">
-          <p className="text-[11px] text-warn-hi/90 leading-relaxed">
+          <p className="text-base text-warn-hi/90 leading-relaxed">
             {isNative ? (
               "The model downloads on first open."
             ) : (

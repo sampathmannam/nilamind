@@ -23,6 +23,7 @@ import { getProtocol } from "./protocols";
 // but different users get different orderings (reduces systematic bias).
 
 const COMPLETIONS_KEY = "nilamind_protocol_completions";
+const STARTS_KEY = "nilamind_protocol_starts";
 const COUNTERBALANCE_SEED_KEY = "nilamind_nof1_cb_seed";
 
 export interface ProtocolCompletion {
@@ -83,6 +84,41 @@ export function recordProtocolCompletion(protocolId: string, date: string, stepI
 /** How many times has this protocol been completed? Shared by protocolProgress.ts and nOf1 analytics. */
 export function completionCountFor(protocolId: string): number {
   return readCompletions().filter((r) => r && r.protocolId === protocolId).length;
+}
+
+interface ProtocolStart {
+  protocolId: string;
+  date: string; // YYYY-MM-DD
+}
+
+function readStarts(): ProtocolStart[] {
+  try {
+    const raw = secureLocal.getItem(STARTS_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+/** Record a protocol start for historical completion-rate tracking (2026-08-05 audit fix: the old
+ *  `usageAnalytics.protocolCompletions()` read a single-slot "is one currently active" flag as `started`,
+ *  which is CLEARED the moment a protocol completes — so the rate collapsed to a misleading 100% right
+ *  after any completion. This append-only log tracks every start, ever, so the rate stays meaningful. */
+export function recordProtocolStart(protocolId: string, date: string): void {
+  try {
+    const starts = readStarts();
+    starts.push({ protocolId, date });
+    if (starts.length > 200) starts.splice(0, starts.length - 200);
+    secureLocal.setItem(STARTS_KEY, JSON.stringify(starts));
+  } catch {
+    /* best-effort — a missed start record only understates the historical denominator */
+  }
+}
+
+/** Total protocol starts ever recorded (see recordProtocolStart). */
+export function startCount(): number {
+  return readStarts().length;
 }
 
 /** Backfill completions from existing protocolProgress (for migration). */

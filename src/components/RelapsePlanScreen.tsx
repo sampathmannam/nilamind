@@ -30,7 +30,7 @@ export default function RelapsePlanScreen() {
   return (
     <div className="space-y-4 max-w-md mx-auto" id="relapse-plan-screen">
       <h2 className="text-xl font-semibold text-ink flex items-center gap-2"><AlertTriangle className="w-5 h-5 text-warn" /> Relapse Prevention Plan</h2>
-      <p className="text-xs text-ink-muted leading-relaxed">Plan ahead for each phase: what to notice, what to do. Fill it in when you're feeling well so it's there when you need it.</p>
+      <p className="text-base text-ink-muted leading-relaxed">Plan ahead for each phase: what to notice, what to do. Fill it in when you're feeling well so it's there when you need it.</p>
 
       <div className="flex items-center gap-2 text-xs">
         <span className="text-ink-faint">Current phase:</span>
@@ -44,7 +44,7 @@ export default function RelapsePlanScreen() {
             <span className={`text-sm font-bold text-ink ${p === phase ? "" : "text-ink-muted"}`}>{phaseLabel(p)}</span>
             {p === phase && <span className="text-xs font-mono uppercase tracking-wider bg-warn/20 text-warn-hi px-1.5 py-0.5 rounded">current</span>}
           </div>
-          <p className="text-xs text-ink-faint">{phaseDescription(p)}</p>
+          <p className="text-base text-ink-faint">{phaseDescription(p)}</p>
 
           <div className="space-y-2">
             <div className="text-xs uppercase font-mono tracking-widest text-ink-faint">Warning signs</div>

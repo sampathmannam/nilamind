@@ -76,7 +76,7 @@ export default function EpisodeMarkerScreen({ onClose }: Props) {
         <h1 className="text-xl font-semibold text-ink flex items-center gap-2">
           <CalendarRange className="w-5 h-5 text-warn" /> {t("you_episode_marker_label")}
         </h1>
-        <p className="text-xs text-ink-muted leading-relaxed">{t("em_intro")}</p>
+        <p className="text-base text-ink-muted leading-relaxed">{t("em_intro")}</p>
       </header>
 
       {/* Add marker */}

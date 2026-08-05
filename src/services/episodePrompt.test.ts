@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { buildEpisodeContextBlock, buildEpisodeSystem } from "./episodePrompt";
-import { EPISODE_STEER_PROMPT } from "../components/EpisodeSupportScreen";
+import { EPISODE_STEER_PROMPT } from "./episodePrompt";
 import { EpisodeRecord } from "../types";
 
 vi.mock("./nilaContext", () => ({

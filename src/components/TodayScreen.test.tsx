@@ -209,10 +209,19 @@ describe("TodayScreen — phase-based section filtering (U1.1)", () => {
     expect(screen.getByText(/This week/i)).toBeTruthy();
   });
 
-  it("data phase: patterns toggle (Your week) is accessible", () => {
+  // 2026-08-05 declutter: the "Your week" fold used to gate three cards — a "Daily Rhythm" card that
+  // duplicated the always-visible RhythmWidget, a hardcoded-fake "Your progress" card (AgencyNarrative,
+  // `const progress = 42` — never tied to real data), and a "Nila noticed" card that duplicated
+  // WeeklyInsightWidget (both drew a random entry from the same loadInsights() array). Once those three
+  // were removed, DailyContentCard was the only thing left behind the fold — and it already manages its
+  // own visibility (once-per-day content, dismissible via its own X button), so the toggle had become a
+  // tap that revealed one already-self-dismissing card. Removed; this test now locks that it stays gone
+  // rather than silently reappearing in a future edit.
+  it("data phase: the 'Your week' fold is gone — patterns content is reachable without an extra toggle", () => {
     render(<TodayScreen go={noop} phoneEnabled={false} onEpisode={noop} onOpenCrisis={noop} />);
     // Default phase at 10am morning is "data"
-    expect(screen.queryByText(/Your week/i)).toBeTruthy();
+    expect(screen.queryByText(/Your week/i)).toBeNull();
+    expect(screen.queryByRole("button", { name: /^Less$/i })).toBeNull();
   });
 
   it("protocol phase: hides mood, intention, and patterns (minimal surface)", () => {

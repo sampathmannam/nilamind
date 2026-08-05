@@ -138,7 +138,7 @@ export default function ToolsScreen({ go, onEpisode, phoneEnabled, onOpenCrisis 
       <div className="flex items-center gap-2">
         <button
           onClick={onOpenCrisis}
-          className="shrink-0 w-9 h-9 rounded-xl bg-danger/10 border border-danger/20 flex items-center justify-center text-rose-400 hover:text-rose-400 hover:bg-danger/15 transition-all cursor-pointer focus-ring"
+          className="shrink-0 w-11 h-11 rounded-xl bg-danger/10 border border-danger/20 flex items-center justify-center text-rose-400 hover:text-rose-400 hover:bg-danger/15 transition-all cursor-pointer focus-ring"
           aria-label="Crisis resources"
         >
           <ShieldAlert className="w-4 h-4" aria-hidden="true" />

@@ -25,7 +25,7 @@ export default function PilotSection() {
           <FlaskConical className="w-4 h-4 text-success" /> {t("sec_pilot")}
           <span className="text-ink-faint normal-case font-sans text-[11px]">(optional)</span>
         </h2>
-        <p className="text-[11px] text-ink-muted mt-1 leading-relaxed">
+        <p className="text-base text-ink-muted mt-1 leading-relaxed">
           Help find out whether NilaMind actually helps — by tracking your own progress over about four weeks.
           Everything stays on your device. Nothing is sent anywhere automatically; you only ever share by
           choosing to export your report.
@@ -34,7 +34,7 @@ export default function PilotSection() {
 
       {!state?.enrolled ? (
         <div className="border border-line rounded-xl p-3 bg-page space-y-3">
-          <ul className="text-[11px] text-ink-muted leading-relaxed list-disc pl-4 space-y-1">
+          <ul className="text-base text-ink-muted leading-relaxed list-disc pl-4 space-y-1">
             <li>Take the PHQ-9 / GAD-7 / WHO-5 check-ins now (baseline) and again in ~{PILOT_ENDPOINT_DAYS} days.</li>
             <li>Use the app however you like in between; you'll get one gentle endpoint reminder.</li>
             <li>Your export then includes a private pre/post + retention summary you can share with a researcher.</li>
@@ -51,13 +51,13 @@ export default function PilotSection() {
       ) : (
         <div className="border border-line rounded-xl p-3 bg-page space-y-2">
           <div className="text-sm font-medium text-ink-2">You're enrolled</div>
-          <div className="text-[11px] text-ink-muted leading-relaxed">
+          <div className="text-base text-ink-muted leading-relaxed">
             Baseline {state.enrolledDay} · endpoint {state.endpointDueDay}
             {summary && (summary.endpointReached
               ? " · ready — take your endpoint check-in"
               : ` · ${summary.daysRemaining} days to go`)}
           </div>
-          <p className="text-xs text-ink-faint leading-relaxed">
+          <p className="text-base text-ink-faint leading-relaxed">
             When you're done, export your report from Your Data or the Dashboard to share it.
           </p>
           <button

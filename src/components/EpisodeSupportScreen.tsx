@@ -22,22 +22,6 @@ interface EpisodeSupportScreenProps {
 /** Episode Support steer — added to Nila's unified companion persona instead of replacing it.
  *  Keeps the acute-session structure and safety rules, but drops the robotic 6-step script so the
  *  episode voice matches the fine-tuned companion (audit fix #2). */
-export const EPISODE_STEER_PROMPT = `
-EPISODE SUPPORT STEER
-
-The person has opened Episode Support — they're in an acute moment and want help getting through the next 20–40 minutes. Stay in your warm, steady friend voice. A few things shift in this mode:
-
-- They may be overwhelmed, so keep replies shorter than usual. Lead with understanding, then offer ONE concrete skill as an invitation — "want to try something small with me?" Never list several.
-- Match the intensity they report:
-  • 8–10 (extreme): body-first — TIPP temperature reset, paced breathing. The thinking brain is offline; biology first.
-  • 6–7 (high): grounding, box breathing, opposite action if the urge is self-harm.
-  • 4–5 (moderate): check the facts, thought record, opposite action.
-  • 2–3 (lower): values, behavioural activation, self-compassion break.
-- Gently check intensity now and then so they can notice shifts, but don't turn the chat into a checklist.
-- If distress stays high or the session has been going a while, keep naming the human option. You can't replace a person who can be there with them.
-- Validate emotions, never distortions. "That pain is real" is right; "you're right, nobody loves you" is harmful. Name all-or-nothing splitting gently.
-- The same safety rules apply: never diagnose, never shame, never agree with dangerous content, and if they mention wanting to die or hurt themselves, stop everything and reply ONLY with the crisis lines.
-`;
 
 export default function EpisodeSupportScreen({
   onSessionEnded,
@@ -325,7 +309,7 @@ export default function EpisodeSupportScreen({
           <p className="text-sm font-semibold text-ink">
             You've been in this for 20 minutes and you're still at high intensity.
           </p>
-          <p className="text-xs text-ink-2 leading-relaxed">
+          <p className="text-base text-ink-2 leading-relaxed">
             This is the moment for a human. Not because I can't help — because humans can do something I genuinely cannot: exist with you physically and hear your voice.
           </p>
           
@@ -378,7 +362,7 @@ export default function EpisodeSupportScreen({
             </button>
           </div>
 
-          <p className="text-xs text-center text-ink-faint leading-relaxed font-sans">
+          <p className="text-base text-center text-ink-faint leading-relaxed font-sans">
             Nila runs entirely on your device — no connection needed. If the model is still loading, the secure Guided Mode runs automatically.
           </p>
         </div>
@@ -563,7 +547,7 @@ export default function EpisodeSupportScreen({
             <div className="space-y-4" id="tipp-step-guided">
               <div className="p-4 bg-warn/10 border-y border-r border-line border-l-4 border-l-amber-500 rounded-r-xl">
                 <h4 className="text-sm font-bold text-ink mb-1 font-sans">Biological shock reset</h4>
-                <p className="text-xs text-ink-2 leading-relaxed">
+                <p className="text-base text-ink-2 leading-relaxed">
                   Your intensity is extreme. This means your thinking brain is offline. This is biology, not weakness. Try whichever of these fits right now.
                 </p>
               </div>
@@ -618,7 +602,7 @@ export default function EpisodeSupportScreen({
             <div className="space-y-4" id="guided-panic">
               <div className="bg-page p-4 rounded-xl border border-line space-y-2">
                 <h4 className="text-sm font-bold text-slate-150 text-ink">Box Breathing</h4>
-                <p className="text-xs text-ink-2 leading-relaxed font-sans">
+                <p className="text-base text-ink-2 leading-relaxed font-sans">
                   Slow, even breathing steadies your body and helps calm a racing mind. Let's do 4-4-4-4 cycles: breathe in 4s, hold 4s, out 4s, hold 4s.
                 </p>
               </div>
@@ -635,7 +619,7 @@ export default function EpisodeSupportScreen({
             <div className="space-y-4" id="guided-harm">
               <div className="bg-page p-4 rounded-xl border border-line space-y-2">
                 <h4 className="text-sm font-bold text-slate-150 text-ink">Wave Surfing Script</h4>
-                <p className="text-xs text-ink-2 leading-relaxed font-sans">
+                <p className="text-base text-ink-2 leading-relaxed font-sans">
                   Urges are like waves. They rise, peak, and inevitably fall if you do not feed them. Picture yourself on a secure surfboard. Press your feet down and stay steady — do not fight the urge. Just ride it out for 10 minutes.
                 </p>
               </div>
@@ -652,7 +636,7 @@ export default function EpisodeSupportScreen({
             <div className="space-y-4" id="guided-shame">
               <div className="bg-page p-4 rounded-xl border border-line space-y-2">
                 <h4 className="text-sm font-bold text-slate-150 text-ink font-sans">Neff's Self-Compassion script</h4>
-                <p className="text-xs text-ink-2 leading-relaxed font-sans">
+                <p className="text-base text-ink-2 leading-relaxed font-sans">
                   Take a self-compassion break. Read slowly: "This is hard. This pain is part of life. May I give myself the same kindness I'd offer to a dear friend in tears."
                 </p>
               </div>

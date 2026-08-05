@@ -484,7 +484,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
             onClick={(e) => e.stopPropagation()}
           >
             <p className="text-sm font-semibold text-ink">Start a new conversation?</p>
-            <p className="text-xs text-ink-muted leading-relaxed">
+            <p className="text-base text-ink-muted leading-relaxed">
               This clears the current chat from your device. Nila won't carry what was said here into the new one.
             </p>
             <div className="flex gap-3 pt-1">
@@ -533,7 +533,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           <div className="max-w-xs">
             <p className="text-[15px] text-ink-2 font-display leading-relaxed">{question}</p>
             {mode.userState && mode.userState !== "calm" && (
-              <p className="text-xs text-ink-muted mt-1.5 leading-relaxed">
+              <p className="text-base text-ink-muted mt-1.5 leading-relaxed">
                 {mode.userState === "anxious" && STATE_MESSAGES.anxious}
                 {mode.userState === "low" && STATE_MESSAGES.low}
                 {mode.userState === "elevated" && STATE_MESSAGES.elevated}

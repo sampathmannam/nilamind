@@ -86,11 +86,11 @@ export default function CloudApiSection() {
         <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-2 font-mono flex items-center gap-2">
           <Cloud className="w-4 h-4 text-accent" /> {t("sec_cloud_api")}
        </h2>
-        <p className="text-[11px] text-ink-muted mt-1 leading-relaxed">{t("sec_cloud_apiSub")}</p>
+        <p className="text-base text-ink-muted mt-1 leading-relaxed">{t("sec_cloud_apiSub")}</p>
      </div>
 
       <div className="border border-warn/30 bg-warn/10 rounded-xl p-3">
-        <p className="text-[11px] text-warn/90 leading-relaxed flex gap-2">
+        <p className="text-base text-warn/90 leading-relaxed flex gap-2">
           <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5 text-warn" />
           <span>
             <strong>Privacy notice</strong>{" "}

@@ -1,8 +1,9 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { secureLocal } from "./secureLocal";
-import { recordProtocolCompletion, getNo1Insights, getNo1DashboardCard, no1ContextBlock, computeNof1Ranking, type ProtocolCompletion } from "./nOf1";
+import { recordProtocolCompletion, getNo1Insights, getNo1DashboardCard, no1ContextBlock, computeNof1Ranking, recordProtocolStart, startCount, type ProtocolCompletion } from "./nOf1";
 
 const COMPLETIONS_KEY = "nilamind_protocol_completions";
+const STARTS_KEY = "nilamind_protocol_starts";
 
 function setMoodHistory(entries: Array<{ date: string; intensity: number }>) {
   secureLocal.setItem("nilamind_checkins", JSON.stringify(
@@ -37,6 +38,34 @@ describe("nOf1 — protocol name resolution", () => {
     for (const i of insights) {
       expect(i.protocolName).not.toBe(i.protocolId);
     }
+  });
+});
+
+describe("nOf1 — protocol starts (2026-08-05 audit fix)", () => {
+  beforeEach(() => {
+    secureLocal.removeItem(STARTS_KEY);
+  });
+
+  it("startCount is 0 when nothing has ever been started", () => {
+    expect(startCount()).toBe(0);
+  });
+
+  it("records a start and reflects it in startCount", () => {
+    recordProtocolStart("behavioral-activation", "2026-08-05");
+    expect(startCount()).toBe(1);
+  });
+
+  it("accumulates starts across multiple protocols/dates", () => {
+    recordProtocolStart("behavioral-activation", "2026-08-01");
+    recordProtocolStart("worry-postponement", "2026-08-02");
+    recordProtocolStart("behavioral-activation", "2026-08-03");
+    expect(startCount()).toBe(3);
+  });
+
+  it("survives a corrupt starts log rather than throwing", () => {
+    secureLocal.setItem(STARTS_KEY, "not valid json");
+    expect(() => startCount()).not.toThrow();
+    expect(startCount()).toBe(0);
   });
 });
 

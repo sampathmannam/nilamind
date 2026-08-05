@@ -1,4 +1,5 @@
 import { scanForCrisis } from "../safety";
+import { normalizeText as normalize } from "./textNormalize";
 
 type DistortionId =
   | "all_or_nothing" | "catastrophizing" | "mind_reading"
@@ -124,9 +125,9 @@ const DISTORTIONS: DistortionDef[] = [
   },
 ];
 
-function normalize(text: string): string {
-  return text.toLowerCase().replace(/['\u2019]/g, "'").replace(/\s+/g, " ").trim();
-}
+// normalize() moved to ./textNormalize.ts (2026-08-05 audit): shares the single, already-reviewed
+// normalizer with safety.ts and elevationGuard.ts instead of a third independently-drifting copy.
+// Aliased as `normalize` so every call site below is unchanged.
 
 export function spotDistortions(text: string): DistortionMatch[] {
   const n = normalize(text);

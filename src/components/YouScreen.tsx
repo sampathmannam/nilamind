@@ -1,6 +1,6 @@
 import { localDateKey } from "../services/storageUtils";
 import React, { useState, useMemo, useEffect } from "react";
-import { ChevronRight, Sparkles, Target, CheckCircle, X, Lightbulb, Heart, Wind } from "lucide-react";
+import { ChevronRight, Sparkles, Target, CheckCircle, X, Lightbulb, Heart, Wind, Lock, ShieldCheck } from "lucide-react";
 import CrisisHeaderButton from "./CrisisHeaderButton";
 import ConfettiBurst from "./ConfettiBurst";
 
@@ -15,8 +15,6 @@ import { getCapacityLevel } from "../services/capacitySignal";
 import { getUserState } from "../services/modeEngine";
 import { useUserContext } from "../hooks/useUserContext";
 import { secureLocal } from "../services/secureLocal";
-
-const GROUP_ACCENTS = ["var(--color-accent)"];
 
 function getWeekSnapshot(): { checkinDays: number; topEmotion: string | null } | null {
   try {
@@ -137,7 +135,7 @@ function WelcomeCard({
           <p className="text-xs text-ink-muted mt-0.5">{t("you_welcome_title")}</p>
         </div>
       </div>
-      <p className="text-xs text-ink-muted leading-relaxed mb-4">
+      <p className="text-base text-ink-muted leading-relaxed mb-4">
         {t("you_welcome_body")}
       </p>
       <div className="space-y-2">
@@ -264,10 +262,11 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
             <div className="flex-1 min-w-0">
               <h1 className="editorial text-2xl text-ink">{greet}</h1>
               <p className="text-xs text-ink-muted mt-0.5">{streak.message}</p>
-              {/* U9.1 + U9.2 — Privacy + crisis-awareness badges */}
+              {/* U9.1 + U9.2 — Privacy + crisis-awareness badges. 2026-08-05: emoji-as-icon → Lucide SVG,
+                  matching the same fix in TodayScreen.tsx (consistent icon language, theme-adaptive color). */}
               <p className="text-[10px] text-ink-faint mt-1 flex items-center gap-3">
-                <span className="flex items-center gap-1"><span aria-hidden="true">🔒</span> {t("you_badge_on_device")}</span>
-                <span className="flex items-center gap-1 text-rose-400/70"><span aria-hidden="true">🛡</span> {t("you_badge_crisis")}</span>
+                <span className="flex items-center gap-1"><Lock className="w-2.5 h-2.5" aria-hidden="true" /> {t("you_badge_on_device")}</span>
+                <span className="flex items-center gap-1 text-rose-400/70"><ShieldCheck className="w-2.5 h-2.5" aria-hidden="true" /> {t("you_badge_crisis")}</span>
               </p>
             </div>
           </div>
@@ -312,7 +311,7 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
         <div className="bg-card rounded-2xl border border-line shadow-sm p-4 border-l-[3px] border-l-success">
           <div className="flex items-center gap-3">
             <CheckCircle className="w-5 h-5 text-success shrink-0" />
-            <p className="text-xs text-ink-2 leading-relaxed">{ack}</p>
+            <p className="text-base text-ink-2 leading-relaxed">{ack}</p>
           </div>
         </div>
       )}
@@ -479,7 +478,7 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
         </button>
       )}
 
-      <p className="text-[11px] text-ink-faint text-center leading-relaxed px-4">
+      <p className="text-base text-ink-faint text-center leading-relaxed px-4">
         {t("you_footer_disclaimer")}
       </p>
 

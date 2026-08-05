@@ -1,5 +1,6 @@
 import { localDateKey } from "./storageUtils";
 import { secureLocal } from "./secureLocal";
+import { startCount } from "./nOf1";
 import type { CheckInEntry } from "../types";
 
 const CHECKINS_KEY = "nilamind_checkins";
@@ -84,11 +85,13 @@ export interface ProtocolStats {
 }
 
 export function protocolCompletions(): ProtocolStats {
+  // 2026-08-05 audit fix: `started` used to be a single-slot "is a protocol currently active" flag, which
+  // is CLEARED the instant that protocol completes — so the rate collapsed to a misleading 100% right after
+  // any single completion, regardless of how many prior attempts were abandoned. `startCount()` reads a
+  // historical, append-only log of every start ever recorded instead (protocolProgress.startProtocol()).
   let started = 0;
   try {
-    const raw = secureLocal.getItem("nilamind_protocol_progress");
-    const parsed = raw ? JSON.parse(raw) : null;
-    started = parsed?.protocolId ? 1 : 0;
+    started = startCount();
   } catch {
     started = 0;
   }
@@ -103,7 +106,12 @@ export function protocolCompletions(): ProtocolStats {
   } catch {
     completed = 0;
   }
-  const rate = started + completed > 0 ? completed / (started + completed) : 0;
+  // The starts log is new (2026-08-05) — a user with completions from before this fix shipped may have
+  // more historical completions than logged starts. Guard against a >100% rate in that transition window;
+  // as new starts get logged going forward, `started` naturally overtakes `completed` and the rate becomes
+  // a true historical completion rate.
+  const effectiveStarted = Math.max(started, completed);
+  const rate = effectiveStarted > 0 ? completed / effectiveStarted : 0;
   return { started, completed, rate };
 }
 

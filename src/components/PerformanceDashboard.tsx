@@ -150,7 +150,7 @@ export default function PerformanceDashboard() {
               </div>
             );
           })}
-          <p className="text-xs text-ink-faint leading-relaxed pt-1">
+          <p className="text-base text-ink-faint leading-relaxed pt-1">
             Core Web Vitals are collected automatically. Use the app to populate real measurements.
           </p>
         </div>

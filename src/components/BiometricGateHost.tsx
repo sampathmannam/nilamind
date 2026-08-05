@@ -36,8 +36,8 @@ export default function BiometricGateHost() {
           <Fingerprint className="w-5 h-5 text-accent" />
           <span className="text-sm font-semibold">Confirm it's you</span>
         </div>
-        <p id="gate-desc" className="text-xs text-ink-2 leading-relaxed">{req.reason}</p>
-        <p className="text-xs text-ink-faint leading-relaxed">This device has no fingerprint or screen lock set, so we're asking you to confirm instead.</p>
+        <p id="gate-desc" className="text-base text-ink-2 leading-relaxed">{req.reason}</p>
+        <p className="text-base text-ink-faint leading-relaxed">This device has no fingerprint or screen lock set, so we're asking you to confirm instead.</p>
         <div className="flex gap-2 pt-1">
           <button type="button" onClick={() => close(false)} className="flex-1 bg-page border border-line-strong text-ink-2 text-xs font-semibold py-2.5 rounded-xl cursor-pointer">Cancel</button>
           <button type="button" onClick={() => close(true)} className="flex-1 bg-accent hover:opacity-90 text-white text-xs font-bold py-2.5 rounded-xl cursor-pointer">Confirm</button>

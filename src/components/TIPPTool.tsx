@@ -102,7 +102,7 @@ export default function TIPPTool({ onSubSkillComplete, onIntensityChange }: TIPP
 
   return (
     <div className="space-y-4" id="tipp-tool">
-      <p className="text-[11px] text-ink-faint leading-relaxed">{HONESTY_GAP_COPY}</p>
+      <p className="text-base text-ink-faint leading-relaxed">{HONESTY_GAP_COPY}</p>
 
       {!showTemperature && activeTab === "exercise" && (
         <p className="text-[11px] text-warn-hi bg-warn/10 border border-warn/30 rounded-lg px-3 py-2" id="tipp-temp-skipped-notice">
@@ -223,8 +223,8 @@ function TimedSubSkill({
   return (
     <div className="space-y-3">
       <CountdownRing progress={0} label={label} color={color} ariaLabel={ariaLabel} durationMs={durationMs} />
-      <p className="text-xs text-ink-2 leading-relaxed">{description}</p>
-      <p className="text-[11px] text-warn-hi/90 leading-relaxed">{caution}</p>
+      <p className="text-base text-ink-2 leading-relaxed">{description}</p>
+      <p className="text-base text-warn-hi/90 leading-relaxed">{caution}</p>
       <MarkTriedButton tried={tried} onClick={onMarkTried} />
       {intensityPromptOpen && (
         <div className="space-y-2 pt-1" id="tipp-intensity-recheck">
@@ -257,7 +257,7 @@ function TippSafetyChecklist({ onSubmit }: { onSubmit: (flags: TippSafetyFlags) 
         <ShieldAlert className="w-4 h-4 text-warn mt-0.5 shrink-0" />
         <div>
           <p className="text-sm font-semibold text-ink">Before we start — quick safety check</p>
-          <p className="text-xs text-ink-muted leading-relaxed">
+          <p className="text-base text-ink-muted leading-relaxed">
             One of TIPP's tools (cold water) briefly changes your heart rhythm on purpose — that's usually
             safe, but not always. Check anything that applies to you; you'll only need to do this once.
           </p>

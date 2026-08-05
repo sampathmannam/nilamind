@@ -66,7 +66,7 @@ export default function IdentityOnboarding({ onDone }: { onDone: () => void }) {
             <Anchor className="w-7 h-7 text-accent" />
           </div>
           <h1 className="text-xl font-bold text-ink">Welcome to NilaMind</h1>
-          <p className="text-xs text-ink-muted leading-relaxed">
+          <p className="text-base text-ink-muted leading-relaxed">
             No email, no password, no account on any server. Your space is private to this device and
             recovered with a phrase only you hold.
           </p>
@@ -91,7 +91,7 @@ export default function IdentityOnboarding({ onDone }: { onDone: () => void }) {
         <button onClick={() => setMode("choose")} className="text-xs font-semibold text-ink-muted hover:text-ink flex items-center gap-1 cursor-pointer"><ArrowLeft className="w-3.5 h-3.5" /> Back</button>
         <div className="space-y-1">
           <h1 className="text-lg font-bold text-ink flex items-center gap-2"><ShieldCheck className="w-5 h-5 text-accent" /> Save your recovery phrase</h1>
-          <p className="text-xs text-ink-muted leading-relaxed">These 12 words are the <span className="text-ink-2 font-semibold">only</span> way to recover your data. Write them down and keep them somewhere safe and private. We can't reset them for you.</p>
+          <p className="text-base text-ink-muted leading-relaxed">These 12 words are the <span className="text-ink-2 font-semibold">only</span> way to recover your data. Write them down and keep them somewhere safe and private. We can't reset them for you.</p>
         </div>
         <div className="grid grid-cols-3 gap-2" id="identity-phrase-grid">
           {words.map((w, i) => (
@@ -106,7 +106,7 @@ export default function IdentityOnboarding({ onDone }: { onDone: () => void }) {
         </button>
         <div className="bg-warn/10 border border-warn/30 rounded-xl p-3 flex gap-2">
           <AlertTriangle className="w-4 h-4 text-warn shrink-0 mt-0.5" />
-          <p className="text-[11px] text-warn-hi/90 leading-relaxed">Anyone with these words can restore your data. Don't screenshot them to the cloud or share them.</p>
+          <p className="text-base text-warn-hi/90 leading-relaxed">Anyone with these words can restore your data. Don't screenshot them to the cloud or share them.</p>
         </div>
         <label className="flex items-start gap-2 cursor-pointer">
           <input type="checkbox" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)} id="identity-confirm-saved" className="mt-0.5 accent-blue-500 w-4 h-4" />
@@ -126,7 +126,7 @@ export default function IdentityOnboarding({ onDone }: { onDone: () => void }) {
       <button onClick={() => { setMode("choose"); setError(null); }} className="text-xs font-semibold text-ink-muted hover:text-ink flex items-center gap-1 cursor-pointer"><ArrowLeft className="w-3.5 h-3.5" /> Back</button>
       <div className="space-y-1">
         <h1 className="text-lg font-bold text-ink flex items-center gap-2"><KeyRound className="w-5 h-5 text-accent" /> Restore with your phrase</h1>
-        <p className="text-xs text-ink-muted leading-relaxed">Enter your 12-word recovery phrase, separated by spaces.</p>
+        <p className="text-base text-ink-muted leading-relaxed">Enter your 12-word recovery phrase, separated by spaces.</p>
       </div>
       <textarea
         value={restoreInput}

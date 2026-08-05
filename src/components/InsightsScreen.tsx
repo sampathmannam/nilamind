@@ -50,7 +50,7 @@ function InsightCard({ insight, index }: { insight: Insight; index: number }) {
               {insight.direction === 'risk' ? 'Risk factor' : insight.direction === 'protective' ? 'Protective' : 'Neutral'}
             </span>
           </div>
-          <p className="text-xs text-ink-2 mt-1 leading-relaxed">{insight.finding}</p>
+          <p className="text-base text-ink-2 mt-1 leading-relaxed">{insight.finding}</p>
           <div className="flex items-center gap-2 mt-2">
             <span className="text-xs text-ink-faint flex items-center gap-1">
               <ShieldCheck className="w-3 h-3" /> {insight.dataPoints} days of data
@@ -70,7 +70,7 @@ function InsightCard({ insight, index }: { insight: Insight; index: number }) {
         <summary className="text-xs text-ink-faint hover:text-ink-muted cursor-pointer flex items-center gap-1">
           Show research citation
         </summary>
-        <div className="mt-2 p-3 bg-card/50 rounded-xl text-xs text-ink-muted leading-relaxed border border-line">
+        <div className="mt-2 p-3 bg-card/50 rounded-xl text-base text-ink-muted leading-relaxed border border-line">
           {insight.basis}
         </div>
       </details>
@@ -154,23 +154,14 @@ export default function InsightsScreen({ onClose }: InsightsScreenProps) {
 
   return (
     <div className="space-y-5 max-w-md mx-auto" id="insights-screen">
-      <header className="space-y-1">
-        <div className="flex items-center justify-between">
-          <h1 className="editorial text-xl text-ink">Your patterns</h1>
-          {onClose && (
-            <button
-              onClick={onClose}
-              className="p-2 rounded-full hover:bg-fill text-ink-muted hover:text-ink-2 cursor-pointer"
-              aria-label="Close"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-            </button>
-          )}
-        </div>
-        <p className="text-xs text-ink-muted">
-          Evidence-based patterns from your check-ins and phone behaviour. Everything stays on this device.
-        </p>
-      </header>
+      {/* 2026-08-05 declutter: in-body "Your patterns" h1 AND the in-body close button removed — this
+          screen renders inside the Sheet, whose header already shows the same title (AUX_LABELS.insights)
+          plus its own X close directly above; the user saw a double title AND two stacked close buttons.
+          The onClose prop stays in the signature (App.tsx still passes it) but is intentionally unused
+          now — the Sheet's close is the single dismiss affordance. Description stays. */}
+      <p className="text-base text-ink-muted leading-relaxed">
+        Evidence-based patterns from your check-ins and phone behaviour. Everything stays on this device.
+      </p>
 
       {loading ? (
         <LoadingState />
@@ -218,7 +209,7 @@ export default function InsightsScreen({ onClose }: InsightsScreenProps) {
                     {no1Insights.map((insight, i) => (
                       <div key={insight.protocolId} className="glass rounded-2xl p-4 border border-warn/20 space-y-1.5">
                         <p className="text-xs font-medium text-warn-hi">{insight.protocolName}</p>
-                        <p className="text-xs text-ink-2">{insight.description}</p>
+                        <p className="text-base text-ink-2">{insight.description}</p>
                       </div>
                     ))}
                   </div>
@@ -227,7 +218,7 @@ export default function InsightsScreen({ onClose }: InsightsScreenProps) {
 
               {dataDays > 0 && behaviourInsights.length === 0 && assessmentInsightsList.length === 0 && no1Insights.length === 0 && (
                 <div className="glass rounded-2xl p-4 border border-line-strong/50">
-                  <p className="text-xs text-ink-muted text-center leading-relaxed">
+                  <p className="text-base text-ink-muted text-center leading-relaxed">
                     You have <span className="text-ink-2 font-medium">{dataDays}</span> paired day{dataDays > 1 ? 's' : ''} of data.
                     Need at least <span className="text-ink-2 font-medium">5 days</span> per pattern for an insight to appear.
                     Keep checking in — patterns take time.
@@ -246,14 +237,14 @@ export default function InsightsScreen({ onClose }: InsightsScreenProps) {
                 <Shield className="w-5 h-5 text-warn" />
                 <span className="text-sm font-semibold text-warn-hi">Phone behaviour insights unavailable</span>
               </div>
-              <p className="text-xs text-ink-muted">
+              <p className="text-base text-ink-muted">
                 Android usage-stats permission is needed for screen-time, sleep, and movement patterns.
                 <br />This only runs on Android; web/iOS shows self-reported data only.
               </p>
             </div>
           )}
 
-          <p className="text-[11px] text-ink-faint text-center leading-relaxed px-4">
+          <p className="text-base text-ink-faint text-center leading-relaxed px-4">
             NilaMind is a support alongside — not a substitute for — professional care.
           </p>
         </>

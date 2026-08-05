@@ -4,8 +4,9 @@ Read this before changing anything. It's for any coding agent (OpenCode, Claude 
 
 ## What this is
 A **privacy-first, ON-DEVICE mental-health WELLNESS companion.** Ionic/React/Capacitor app with a
-stock **Gemma-3-1B-it** brain running locally by default via a llama.cpp seam (a fine-tuned **Gemma-3-4B**
-is an optional revert/side-load, not the default — 2026-07-07 speed A/B). India-first, **manic-first** (bipolar-aware).
+stock **Qwen2.5-1.5B** brain (Q4_K_M) running locally by default via a llama.cpp seam; a **Qwen2.5-3B**
+"thoughtful" brain is the alternate first-run choice, and a fine-tuned **Gemma-3-4B** remains an optional
+revert/side-load (not the default — 2026-07-07 speed A/B → 2026-07-11 Qwen swap). India-first, **manic-first** (bipolar-aware).
 Core promise: **nothing leaves your phone.**
 
 ## Golden rules — DO NOT VIOLATE
@@ -28,7 +29,7 @@ Core promise: **nothing leaves your phone.**
   REFACTOR. No production code without a failing test first. Match the codebase style: pure, deterministic,
   research-cited functions; every safety keyword list has PAIRED benign-control tests (precision matters — a
   false crisis fire on a calm chat is itself harmful).
-- **Device-only:** Gemma inference, sensors (Health Connect), and Vosk voice can't run in node/web. Anything
+- **Device-only:** on-device LLM inference (Qwen via llama.cpp), sensors (Health Connect), and Vosk voice can't run in node/web. Anything
   touching them must be **device-verified on the phone** (adb) — tests cover the logic seams only.
 
 ## Guardrails against reward-hacking (READ — this is a safety-critical app)

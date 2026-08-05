@@ -26,7 +26,6 @@ import {
 } from "../services/values";
 import { toDoList, DoItem } from "../services/valuesToAction";
 import {
-  Compass,
   Target,
   Plus,
   Check,
@@ -241,11 +240,12 @@ export default function ValuesToActionScreen({ highlightDomains = [] }: { highli
 
   return (
     <div className="space-y-6 max-w-md mx-auto" id="vta-screen">
+      {/* 2026-08-05 declutter: in-body "Values to Action" h1 removed — both render paths already title
+          this screen in the Sheet header directly above (aux "Values work" / CaptureSheets "Do one
+          thing"), and the in-body wording DISAGREED with both, so users saw two different titles
+          stacked. Description stays. */}
       <header className="space-y-1">
-        <h1 className="text-xl font-semibold text-ink flex items-center gap-2">
-          <Compass className="w-5 h-5 text-rose-400" /> Values to Action
-        </h1>
-        <p className="text-xs text-ink-muted leading-relaxed">
+        <p className="text-base text-ink-muted leading-relaxed">
           Start with <span className="text-ink-2 font-semibold">why</span> — what matters and where
           life has drifted from it — then take one small step. You act first, in tiny steps, and let
           the feeling catch up. You don't have to feel like it.
@@ -258,7 +258,7 @@ export default function ValuesToActionScreen({ highlightDomains = [] }: { highli
           <>
             {rateStep === "rate" && (
               <div className="bg-rose-500/5 border border-rose-500/20 rounded-xl p-3">
-                <p className="text-xs text-ink-faint leading-relaxed">
+                <p className="text-base text-ink-faint leading-relaxed">
                   For each area, rate how <span className="text-ink-2 font-semibold">important</span> it is
                   to you and how <span className="text-ink-2 font-semibold">consistently</span> you've lived
                   it recently. There are no right answers and no judgement. (Structure: Valued Living
@@ -268,7 +268,7 @@ export default function ValuesToActionScreen({ highlightDomains = [] }: { highli
             )}
             {highlightDomains.length > 0 && (
               <div className="bg-accent/5 border border-accent/20 rounded-xl p-3" id="vta-highlight-note">
-                <p className="text-xs text-ink-muted leading-relaxed">
+                <p className="text-base text-ink-muted leading-relaxed">
                   These came up when we talked:{" "}
                   <span className="text-ink-2 font-semibold">
                     {VALUE_DOMAINS.filter((d) => highlightDomains.includes(d.id)).map((d) => d.label).join(", ")}
@@ -363,7 +363,7 @@ export default function ValuesToActionScreen({ highlightDomains = [] }: { highli
             </div>
             {gaps.length === 0 ? (
               <div className="glass rounded-2xl p-4">
-                <p className="text-xs text-ink-muted leading-relaxed">
+                <p className="text-base text-ink-muted leading-relaxed">
                   No big gaps showing between what you value and how you're living — or nothing rated as
                   highly important yet. Tap <span className="text-ink-2 font-semibold">Edit</span> any time.
                 </p>
@@ -409,7 +409,7 @@ export default function ValuesToActionScreen({ highlightDomains = [] }: { highli
           <Footprints className="w-3.5 h-3.5 text-success" /> Do — one small thing
         </h3>
         <div className="bg-success/5 border border-success/20 rounded-xl p-3">
-          <p className="text-xs text-ink-faint leading-relaxed">
+          <p className="text-base text-ink-faint leading-relaxed">
             Acting on a plan rather than a mood is the core of Behavioural Activation, which on its own
             matches full CBT and antidepressants for depression. (Jacobson et al., 1996; Dimidjian et
             al., 2006; Ekers et al., 2014)
@@ -430,7 +430,7 @@ export default function ValuesToActionScreen({ highlightDomains = [] }: { highli
               <p className="text-[11px] text-ink-faint">Rate a few activities to see what lifts you most.</p>
             )}
             {insight.topCategory && (
-              <p className="text-[11px] text-ink-2 leading-relaxed">
+              <p className="text-base text-ink-2 leading-relaxed">
                 So far, <span className={`font-semibold ${TONE[categoryMeta(insight.topCategory.id).tone].text}`}>{insight.topCategory.label}</span> activities have given you the most mastery + pleasure combined. Worth leaning into.
               </p>
             )}

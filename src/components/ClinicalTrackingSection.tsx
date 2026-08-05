@@ -2,6 +2,7 @@ import React from "react";
 import WellbeingTrendCard from "./WellbeingTrendCard";
 import CalibrationPeriodCard from "./calibrationPeriod";
 import EpisodeMarkerCard from "./EpisodeMarkerCard";
+import SkillsPracticeCard from "./SkillsPracticeCard";
 import MoodHeatmap from "./MoodHeatmap";
 import AffectToneStrip from "./AffectToneStrip";
 import PhaseTimeline from "./PhaseTimeline";
@@ -36,6 +37,9 @@ function ClinicalTrackingSection({
 
       {/* Episode-phase marker — current phase if active */}
       <EpisodeMarkerCard onOpen={() => onOpenView?.("episode_marker")} />
+
+      {/* Skills practice — DBT skills-use mechanism loop */}
+      <SkillsPracticeCard onOpen={() => onOpenView?.("guided_programs")} />
 
       {/* Mood Heatmap — Year in Pixels */}
       {mood.length >= 7 && <MoodHeatmap moods={mood} days={182} />}

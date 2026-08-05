@@ -25,7 +25,9 @@ beforeEach(() => store.clear());
 describe("SocialRhythmScreen", () => {
   it("renders the anchors, the honest IPSRT basis, and the 'keep logging' state when empty", () => {
     render(<SocialRhythmScreen />);
-    expect(screen.getByText("Social rhythm")).toBeTruthy();
+    // 2026-08-05 declutter: the in-body "Social rhythm" h1 was removed (the Sheet header that always
+    // wraps this screen shows the same title). The description line is the screen's identity now.
+    expect(screen.getByText(/Keeping daily routines at steady times/i)).toBeTruthy();
     expect(screen.getByLabelText("Out of bed")).toBeTruthy();
     expect(screen.getByLabelText("To bed")).toBeTruthy();
     expect(screen.getByText(/keep logging/i)).toBeTruthy(); // insufficient state (0 days)

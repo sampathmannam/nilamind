@@ -541,7 +541,7 @@ export default function DashboardScreen({ onOpenView }: { onOpenView?: (target: 
             )}
           </div>
         </h1>
-        <p className="text-xs text-ink-muted leading-relaxed">{t("dash_privacy")}</p>
+        <p className="text-base text-ink-muted leading-relaxed">{t("dash_privacy")}</p>
       </header>
 
       {/* Level 1: Hero metric + stat pills — answers "How am I doing?" in 2 seconds */}
@@ -758,7 +758,7 @@ export default function DashboardScreen({ onOpenView }: { onOpenView?: (target: 
           </h2>
           <ul className="space-y-3">
             {observations.slice(0, showAllObservations ? observations.length : 3).map((ins, i) => (
-              <li key={i} className="text-xs text-ink-2 leading-relaxed flex items-start gap-2 bg-page p-3 rounded-xl border border-line">
+              <li key={i} className="text-base text-ink-2 leading-relaxed flex items-start gap-2 bg-page p-3 rounded-xl border border-line">
                 <span className="text-success font-bold">●</span><span>{ins}</span>
               </li>
             ))}
@@ -791,7 +791,7 @@ export default function DashboardScreen({ onOpenView }: { onOpenView?: (target: 
           </h2>
           <ul className="space-y-3">
             {behaviourInsights.slice(0, showAllBehaviour ? behaviourInsights.length : 3).map((ins) => (
-              <li key={ins.id} className={`text-xs leading-relaxed flex items-start gap-2 bg-page p-3 rounded-xl border ${
+              <li key={ins.id} className={`text-base leading-relaxed flex items-start gap-2 bg-page p-3 rounded-xl border ${
                 ins.direction === "risk" ? "border-warn/30" : ins.direction === "protective" ? "border-success/30" : "border-line"
               }`}>
                 <span className={`font-bold ${ins.direction === "risk" ? "text-warn" : ins.direction === "protective" ? "text-success" : "text-ink-muted"}`}>●</span>
@@ -845,7 +845,7 @@ export default function DashboardScreen({ onOpenView }: { onOpenView?: (target: 
             <h2 className="text-xs font-semibold uppercase tracking-wider text-accent font-mono flex items-center gap-1.5 mb-1">
               <BrainCircuit className="w-4 h-4" /> Nila's Deep Evaluation ✨
             </h2>
-            <p className="text-[11px] text-ink-muted leading-relaxed">
+            <p className="text-base text-ink-muted leading-relaxed">
               This asks Nila to analyze your recent check-ins, diary notes, and episode records — all on your device, using the same local AI that powers your conversations. Nothing leaves your phone.
             </p>
           </div>
@@ -858,7 +858,7 @@ export default function DashboardScreen({ onOpenView }: { onOpenView?: (target: 
           )}
           {assessmentResult && !assessmentCrisis && (
             <div className="mt-4 p-4 bg-page border border-line rounded-xl">
-              <div className="text-xs text-ink-2 leading-relaxed space-y-2 markdown-body font-sans">
+              <div className="text-base text-ink-2 leading-relaxed space-y-2 markdown-body font-sans">
                 <Markdown>{assessmentResult}</Markdown>
               </div>
             </div>

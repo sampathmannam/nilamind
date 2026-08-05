@@ -57,7 +57,7 @@ function AchievementBadge({ achievement, locked = false, compact = false, onClic
             <p className={`text-sm font-semibold ${locked ? "text-ink-faint" : "text-ink-2"}`}>
               {achievement.title}
             </p>
-            <p className="text-xs text-ink-muted leading-relaxed">
+            <p className="text-base text-ink-muted leading-relaxed">
               {achievement.description}
             </p>
           </div>

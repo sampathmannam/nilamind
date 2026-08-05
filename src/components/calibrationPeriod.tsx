@@ -56,7 +56,7 @@ function CalibrationPeriodCard({ startDate }: CalibrationPeriodCardProps) {
             {progress}%
           </span>
         </div>
-        <p className="text-[11px] text-ink-muted leading-relaxed mt-1">{message}</p>
+        <p className="text-base text-ink-muted leading-relaxed mt-1">{message}</p>
         <div className="mt-2 w-full bg-line-strong rounded-full h-1.5">
           <div
             className="bg-accent h-1.5 rounded-full transition-all"

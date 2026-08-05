@@ -349,7 +349,7 @@ export default function NilaCheckIn({ onLogged, onSkip }: NilaCheckInProps) {
         {/* ── Step 5: Granularity — precise emotion naming ── */}
         {draft.step === "granularity" && suggestions.length > 0 && (
           <div className="space-y-3">
-            <p className="text-xs text-ink-muted leading-relaxed">
+            <p className="text-base text-ink-muted leading-relaxed">
               Research shows that naming feelings more precisely helps us process them better. Which word fits best?
             </p>
             <div className="grid grid-cols-1 gap-2" id="nila-granularity-grid">

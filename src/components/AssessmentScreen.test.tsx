@@ -104,3 +104,22 @@ describe("AssessmentScreen — deterioration nudge (2026-07-12 Wave 3, Group G)"
     expect(nudge!.textContent).not.toMatch(/^.*5-point.*$/); // shouldn't borrow the PHQ-9 cited wording
   });
 });
+
+// 2026-08-05 audit: the sticky submit-bar wrapper's `bg-gradient-to-t ... to-transparent` fades to
+// transparent so the LAST item(s) show through visually underneath it — but a transparent background
+// does not stop an element from intercepting real touches. Confirmed on-device: PHQ-9 items 8 and 9
+// (item 9 = the self-harm/suicidality safety item) were visible but completely unresponsive to tap,
+// while every earlier item worked normally; the last item's answer buttons sit directly under the
+// sticky bar's full bounding box. jsdom's fireEvent.click dispatches straight to the element reference
+// and does no real hit-testing, so it can never exercise (or catch a regression in) this — this test
+// only pins the fix's CSS contract; the actual click-through behavior was verified on a physical device.
+describe("AssessmentScreen — sticky submit bar must not swallow taps on the item(s) behind it (2026-08-05)", () => {
+  it("the sticky wrapper is pointer-events-none and the button re-enables pointer-events-auto", () => {
+    render(<AssessmentScreen onActivateCrisis={noop} />);
+    fireEvent.click(document.getElementById("assessment-start-PHQ-9")!);
+    const submitBtn = document.getElementById("assessment-submit")!;
+    const wrapper = submitBtn.parentElement!;
+    expect(wrapper.className).toMatch(/\bpointer-events-none\b/);
+    expect(submitBtn.className).toMatch(/\bpointer-events-auto\b/);
+  });
+});

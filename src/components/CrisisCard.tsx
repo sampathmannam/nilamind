@@ -20,7 +20,7 @@ export default function CrisisCard({
       <h4 className="text-sm font-semibold text-rose-200 flex items-center gap-1.5">
         <LifeBuoy className="w-4 h-4" /> {heading}
       </h4>
-      <p className="text-xs text-ink-2 whitespace-pre-line leading-relaxed">{getCrisisReply()}</p>
+      <p className="text-base text-ink-2 whitespace-pre-line leading-relaxed">{getCrisisReply()}</p>
       <CrisisLines tone="rose" compact />
     </div>
   );

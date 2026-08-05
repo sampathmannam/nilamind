@@ -42,6 +42,9 @@ export const SENSITIVE_KEYS = [
   "nilamind_values",
   "nilamind_values_actions",
   "nilamind_ba_activities",
+  // DBT Skills Practice log — per-skill urge-before/after + helped ratings (encrypted at rest,
+  // see skillsPractice.ts). Mirrors BA's before/after pattern for the mechanism loop.
+  "nilamind_skill_practice",
   "nilamind_home_coords",
   "nilamind_nila_sessions",
   "nilamind_nila_memory",
@@ -84,8 +87,24 @@ export const SENSITIVE_KEYS = [
   "nilamind_signal_features",
   "nilamind_proactive_cards",
   "nilamind_passive_sensing_status",
+  // 2026-08-04 audit: health/safety data keys that were written via secureLocal (so already encrypted
+  // for NEW writes) but absent from this allowlist — meaning any LEGACY plaintext was never swept and
+  // the list understated what is sensitive. Medications + dose logs, lethal-means coaching progress,
+  // voice check-in sessions, alliance pact text, protocol completions, and onboarding goal/mood are
+  // all health-adjacent or free-text; phase_tooltip_dismissed / welcome_back_dismissed stay out (pure
+  // UI prefs, same policy as nilamind_disable_pulse).
+  "nilamind_medications",
+  "nilamind_med_logs",
+  "nilamind_means_coaching",
+  "nilamind_voice_sessions",
+  "nilamind_pact",
+  "nilamind_protocol_completions",
+  "nilamind_protocol_starts",
+  "nilamind_onboarding_mood",
+  "nilamind_user_goal",
+  "nilamind_error_log",
 ];
-const MIGRATION_VERSION = 3; // v3: encrypt nilamind_values_work (previously stored in plaintext localStorage)
+const MIGRATION_VERSION = 4; // v4: encrypt nilamind_medications/med_logs/means_coaching/voice_sessions/pact/protocol_completions/onboarding_mood/user_goal/error_log legacy plaintext
 
 const cache = new Map<string, string>();
 let hydrated = false;
@@ -143,6 +162,7 @@ async function migrate(): Promise<void> {
     return;
   }
   const store = ls();
+  let allSucceeded = true;
   if (store) {
     for (const key of SENSITIVE_KEYS) {
       if (cache.has(key)) continue; // already in encrypted store
@@ -157,13 +177,16 @@ async function migrate(): Promise<void> {
           store.removeItem(key); // only drop plaintext after a verified encrypted round-trip
         } else {
           console.error("secureLocal migration verify mismatch, keeping plaintext");
+          allSucceeded = false;
         }
       } catch (e) {
         console.error("secureLocal migration failed, keeping plaintext");
+        allSucceeded = false;
       }
     }
   }
-  await setMigratedVersion(MIGRATION_VERSION);
+  // Only bump version if ALL keys migrated successfully — otherwise retry on next boot.
+  if (allSucceeded) await setMigratedVersion(MIGRATION_VERSION);
 }
 
 /** Boot the secure store and hydrate the in-memory cache. Call once before rendering data screens.
@@ -201,12 +224,17 @@ export async function hydrate(): Promise<void> {
   if (hydrated) return;
   if (!isUnlocked()) throw new Error("cannot hydrate while locked");
   const all = await kvGetAll();
+  const failedKeys: string[] = [];
   for (const [key, blob] of Object.entries(all)) {
     try {
       cache.set(key, await decryptValue(blob));
     } catch (e) {
-      console.error("secureLocal failed to decrypt a stored key");
+      console.error(`secureLocal failed to decrypt key: ${key}`);
+      failedKeys.push(key);
     }
+  }
+  if (failedKeys.length) {
+    console.error(`secureLocal: ${failedKeys.length} key(s) failed decryption: ${failedKeys.join(", ")}`);
   }
   await migrate();
   hydrated = true;

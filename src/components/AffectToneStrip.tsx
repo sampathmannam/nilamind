@@ -41,7 +41,7 @@ function AffectToneStrip() {
               );
             })}
           </div>
-          <p className="text-[11px] text-ink-muted leading-relaxed">
+          <p className="text-base text-ink-muted leading-relaxed">
             An automatic tone estimate from the app's on-device model — not something you told the app.
           </p>
         </>

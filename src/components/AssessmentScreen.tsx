@@ -29,7 +29,6 @@ import {
 import { outcomeStatus, reliableChangeThreshold } from "../services/reliableChange";
 import { evaluateNofOne } from "../services/nofOneEval";
 import {
-  ClipboardCheck,
   ChevronRight,
   ChevronLeft,
   ShieldAlert,
@@ -166,11 +165,12 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
   if (phase === "menu") {
     return (
       <div className="space-y-5 max-w-md mx-auto" id="assessment-screen">
+        {/* 2026-08-05 declutter: in-body "Validated Check-Ins" h1 removed — the Sheet header
+            (AUX_LABELS.assessment) already titles this screen "Screenings" directly above, so users saw
+            TWO DIFFERENT titles stacked for the same surface. The Sheet title wins (it matches the Tools
+            row that opens it); the description below still carries the "research-validated" framing. */}
         <header className="space-y-1">
-          <h1 className="text-xl font-semibold text-ink flex items-center gap-2">
-            <ClipboardCheck className="w-5 h-5 text-accent" /> Validated Check-Ins
-          </h1>
-          <p className="text-xs text-ink-muted leading-relaxed">
+          <p className="text-base text-ink-muted leading-relaxed">
             Short, research-validated check-ins — depression (<span className="text-ink-faint">PHQ-9 / quick PHQ-2</span>), anxiety (<span className="text-ink-faint">GAD-7</span>),
             wellbeing (<span className="text-ink-faint">WHO-5</span>) and stress (<span className="text-ink-faint">PSS-4</span>). They turn a vague "I feel worse" into something you
             can actually see move.
@@ -179,7 +179,7 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
 
         <div className="bg-accent/5 border border-accent/20 rounded-xl p-3 flex gap-2.5">
           <Info className="w-4 h-4 text-accent shrink-0 mt-0.5" />
-          <p className="text-[11px] text-ink-muted leading-relaxed">
+          <p className="text-base text-ink-muted leading-relaxed">
             These are <span className="text-ink-2 font-semibold">screening tools, not a diagnosis</span>.
             A high score is a reason to talk to a professional — not a verdict about who you are. They
             ask about the last week or two, so a retake mostly re-scores that same window — weekly or
@@ -313,11 +313,11 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
                 onActivateCrisis was already wired; this surfaces it. */}
             <CrisisHeaderButton onClick={onActivateCrisis} className="shrink-0" />
           </div>
-          <p className="text-xs text-ink-2 leading-relaxed glass rounded-xl p-3">
+          <p className="text-base text-ink-2 leading-relaxed glass rounded-xl p-3">
             {inst.prompt}
           </p>
           {inst.safetyItemIndex !== undefined && (
-            <p className="text-[11px] text-ink-faint leading-relaxed">
+            <p className="text-base text-ink-faint leading-relaxed">
               Answer as honestly as you can. If anything hard comes up while you answer, the
               <span className="text-rose-300 font-semibold"> Help</span> button at the top is always one tap away.
             </p>
@@ -348,7 +348,7 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
               >
                 <div className="flex gap-2 mb-3">
                   <span className="text-[11px] font-mono text-slate-600 shrink-0">{idx + 1}.</span>
-                  <p className={`text-xs leading-relaxed ${isSafety ? "text-ink-2" : "text-ink-2"}`}>{item}</p>
+                  <p className={`text-base leading-relaxed ${isSafety ? "text-ink-2" : "text-ink-2"}`}>{item}</p>
                 </div>
                 <div className={`grid ${COLS[optionsFor(inst, idx).length] ?? "grid-cols-4"} gap-1.5`}>
                   {optionsFor(inst, idx).map((opt, val) => {
@@ -375,12 +375,21 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
         </div>
 
         {/* Submit */}
-        <div className="sticky bottom-0 bg-gradient-to-t from-page via-page to-transparent pt-4 pb-2">
+        {/* 2026-08-05 audit: this wrapper's gradient fades to `transparent` at the top so the last item(s)
+            visually show through underneath it — but a transparent background does NOT stop an element
+            from intercepting touches; without `pointer-events-none` here, the sticky bar's full bounding
+            box (which overlaps the bottom of the scrollable item list, most severely on tall multi-line
+            items) silently swallows taps meant for whatever renders underneath it. Confirmed on-device:
+            PHQ-9 items 8 and 9 — item 9 being the self-harm/suicidality safety item — were visible but
+            completely unresponsive to tap, while every earlier item worked normally. `pointer-events-none`
+            on the wrapper + `pointer-events-auto` on the button restores the intended behavior: the
+            transparent gradient area stops intercepting, only the actual visible button stays clickable. */}
+        <div className="sticky bottom-0 bg-gradient-to-t from-page via-page to-transparent pt-4 pb-2 pointer-events-none">
           <button
             onClick={submit}
             disabled={!allAnswered}
             id="assessment-submit"
-            className="w-full font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed bg-accent hover:opacity-90 text-white disabled:bg-fill disabled:text-ink-faint"
+            className="w-full font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed bg-accent hover:opacity-90 text-white disabled:bg-fill disabled:text-ink-faint pointer-events-auto"
           >
             {allAnswered ? (
               <><Check className="w-4 h-4" /> See my result</>
@@ -407,7 +416,7 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
               <ShieldAlert className="w-5 h-5" />
               <h3 className="text-sm font-bold">You're not alone in this</h3>
             </div>
-            <p className="text-xs text-ink-2 leading-relaxed">
+            <p className="text-base text-ink-2 leading-relaxed">
               You marked having had thoughts of being better off dead or of hurting yourself. That
               takes honesty, and it matters. Please consider reaching out right now — to someone you
               trust, or to a trained listener who is available 24/7:
@@ -437,7 +446,7 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
           <div className="h-2 rounded-full bg-page overflow-hidden">
             <div className={`h-full ${tone.bar} rounded-full transition-all`} style={{ width: `${Math.round((result.total / inst.maxScore) * 100)}%` }} />
           </div>
-          <p className="text-xs text-ink-2 leading-relaxed">{result.band.interpretation}</p>
+          <p className="text-base text-ink-2 leading-relaxed">{result.band.interpretation}</p>
         </div>
 
         {/* Reliable-change / deterioration nudge — fires ONLY on a reliable (>=MCID) worsening vs. the
@@ -452,7 +461,7 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
               <Activity className="w-4 h-4 shrink-0" />
               <h3 className="text-xs font-bold">This looks like a real shift, not day-to-day noise</h3>
             </div>
-            <p className="text-[11px] text-ink-2 leading-relaxed">
+            <p className="text-base text-ink-2 leading-relaxed">
               {change.confidence === "cited" ? (
                 <>
                   Your {inst.name} score moved by more than the {change.threshold}-point range research
@@ -477,10 +486,10 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
           {overCut && (
             <div className="flex items-start gap-2">
               <Activity className="w-4 h-4 text-warn shrink-0 mt-0.5" />
-              <p className="text-[11px] text-ink-2 leading-relaxed">{inst.cutPoint.note}</p>
+              <p className="text-base text-ink-2 leading-relaxed">{inst.cutPoint.note}</p>
             </div>
           )}
-          <p className="text-xs text-ink-faint leading-relaxed">
+          <p className="text-base text-ink-faint leading-relaxed">
             <span className="text-ink-muted font-semibold">Not a diagnosis.</span> This is a validated
             screening questionnaire. Only a qualified professional can diagnose — but they use exactly
             these scores as a starting point. Source: {inst.citation}
