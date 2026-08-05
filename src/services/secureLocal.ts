@@ -83,6 +83,8 @@ export const SENSITIVE_KEYS = [
   "nilamind_caregiver_prefs",
   "nilamind_tipp_safety",
   "nilamind_values_work",
+  // Guided chain analyses — step-by-step behavioral chain records (encrypted at rest).
+  "nilamind_chain_analyses",
   // Phase 21 — passive sensing (encrypted at rest, process-and-discard pipeline).
   "nilamind_signal_features",
   "nilamind_proactive_cards",

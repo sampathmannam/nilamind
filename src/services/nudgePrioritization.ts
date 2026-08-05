@@ -6,6 +6,7 @@ export type NudgeCandidate = {
   hasReCheckIn: boolean;
   hasPendingDraft: boolean;
   hasWellbeingDue: boolean;
+  hasPleaseAuditDue: boolean;
   hasAssessmentPrompt: boolean;
   hasProactiveNudge: boolean;
 };
@@ -15,6 +16,7 @@ export type NudgeType =
   | "re_checkin"
   | "pending_draft"
   | "wellbeing_due"
+  | "please_audit"
   | "assessment_prompt"
   | "proactive";
 
@@ -23,8 +25,9 @@ const PRIORITY: NudgeType[] = [
   "re_checkin",       // 2 — engagement recovery after gap
   "pending_draft",    // 3 — conversational check-in waiting
   "wellbeing_due",    // 4 — longitudinal assessment
-  "assessment_prompt", // 5 — contextual screening
-  "proactive",        // 6 — insight-based nudge (lowest)
+  "please_audit",     // 5 — body-care vulnerability check (clinically upstream of PHQ/GAD)
+  "assessment_prompt", // 6 — contextual screening
+  "proactive",        // 7 — insight-based nudge (lowest)
 ];
 
 const FLAG_MAP: [keyof NudgeCandidate, NudgeType][] = [
@@ -32,6 +35,7 @@ const FLAG_MAP: [keyof NudgeCandidate, NudgeType][] = [
   ["hasReCheckIn", "re_checkin"],
   ["hasPendingDraft", "pending_draft"],
   ["hasWellbeingDue", "wellbeing_due"],
+  ["hasPleaseAuditDue", "please_audit"],
   ["hasAssessmentPrompt", "assessment_prompt"],
   ["hasProactiveNudge", "proactive"],
 ];

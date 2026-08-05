@@ -9,7 +9,8 @@ import {
   generateSafeEnvironmentBlock,
   type MeansCoachingProgress,
 } from "../services/lethalMeansCoaching";
-import { CheckCircle2, ChevronDown, ChevronRight, Save, Sparkles } from "lucide-react";
+import { CheckCircle2, ChevronDown, ChevronRight, Save, Sparkles, Play, ArrowRight } from "lucide-react";
+import { DEFAULT_LADDER, type SafetyLadderStep } from "../services/safetyPlanSkills";
 
 const INITIAL_MEANS_PROGRESS: MeansCoachingProgress = {
   startedAt: 0,
@@ -380,6 +381,39 @@ export default function SafetyPlanScreen({ draft }: { draft?: Partial<Pick<Safet
             </button>
           </div>
         )}
+
+        {/* Skills Ladder — Feature 11 / Phase J: ordered crisis-response steps.
+            Evidence: Bryan et al. 2017, Rizvi et al. 2016. Pure data, no LLM involvement. */}
+        <div className="space-y-3 bg-card p-4 rounded-xl border border-line" id="skills-ladder">
+          <h3 className="text-sm font-semibold text-ink flex items-center gap-1.5">
+            <Play className="w-4 h-4 text-accent" />
+            Skills Ladder
+          </h3>
+          <p className="text-xs text-ink-muted">
+            When crisis hits, follow these steps in order. Each one builds on the last.
+          </p>
+          <div className="space-y-2">
+            {DEFAULT_LADDER.map((step, i) => (
+              <div key={step.skillId} className="flex items-start gap-3 p-2 rounded-lg bg-page border border-line/50">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-accent/20 text-accent text-xs font-bold flex items-center justify-center">
+                  {i + 1}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-ink">{step.label}</span>
+                    {step.duration && (
+                      <span className="text-[10px] text-ink-faint bg-fill px-1.5 py-0.5 rounded">{step.duration}</span>
+                    )}
+                  </div>
+                  <p className="text-xs text-ink-muted mt-0.5">{step.instructions}</p>
+                </div>
+                {i < DEFAULT_LADDER.length - 1 && (
+                  <ArrowRight className="w-3 h-3 text-ink-faint mt-1 flex-shrink-0" />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

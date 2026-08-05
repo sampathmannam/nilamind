@@ -11,6 +11,9 @@
  * Pure service — no React, no side-effects. Chat flow owns the trigger.
  */
 
+import { getLocalisedScript, type SkillId as CulturalSkillId } from "./culturalVoice";
+import { getLanguage, type SupportedLang } from "./i18n";
+
 export interface SkillOffer {
   skillId: string;
   family: "mindfulness" | "distress" | "emotion" | "interpersonal" | "crisis";
@@ -118,8 +121,14 @@ export function selectSkill(userMessage: string): SkillOffer | null {
 
 /**
  * Build the chat message to send when offering a skill.
- * Returns the formatted string the user sees, or null if no skill was selected.
+ * Uses the culturally-adapted script when available for the user's language.
+ * Falls back to the English script from the offer definition.
  */
-export function formatSkillOffer(offer: SkillOffer): string {
-  return `I hear you. Here's a skill that might help right now:\n\n**${offer.skillId.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}**\n\n${offer.microScript}\n\n_${offer.followUp}_`;
+export function formatSkillOffer(offer: SkillOffer, lang?: SupportedLang): string {
+  const resolvedLang = lang ?? getLanguage();
+  const localised = getLocalisedScript(offer.skillId as CulturalSkillId, resolvedLang);
+  const script = localised?.microScript ?? offer.microScript;
+  const followUp = localised?.followUp ?? offer.followUp;
+  const skillName = offer.skillId.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  return `I hear you. Here's a skill that might help right now:\n\n**${skillName}**\n\n${script}\n\n_${followUp}_`;
 }

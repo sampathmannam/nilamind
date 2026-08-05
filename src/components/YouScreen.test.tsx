@@ -2,11 +2,6 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 
-// U5.2 — storage corruption error banner on the You tab.
-// Mirrors the TodayScreen.test.tsx error-banner pattern: we swap secureLocal with an in-memory
-// store Map so we can inject corrupted (unparseable) blobs for specific keys, then assert the
-// banner renders when the component's useMemo detects the failure.
-
 const store = new Map<string, string>();
 vi.mock("../services/secureLocal", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../services/secureLocal")>();
@@ -21,7 +16,6 @@ vi.mock("../services/secureLocal", async (importOriginal) => {
 });
 vi.mock("../hooks/useHaptics", () => ({ hapticMedium: vi.fn() }));
 
-// MatchMedia mock for useReducedMotion hook (used by ConfettiBurst)
 Object.defineProperty(window, "matchMedia", {
   writable: true,
   value: vi.fn().mockImplementation((query: string) => ({
@@ -44,15 +38,61 @@ const noop = () => {};
 
 describe("YouScreen — data error feedback (U5.2)", () => {
   it("shows error banner when a storage key contains corrupted data", () => {
-    // Inject an unparseable JSON blob for one of the scanned keys.
-    // The component's dataErrors useMemo calls secureLocal.getItem then JSON.parse;
-    // "garbage" causes JSON.parse to throw, adding the key to badKeys.
     store.set("nilamind_checkins", "garbage");
-
-    render(<YouScreen go={noop} onOpenCrisis={noop} />);
-
-    // The banner text includes "couldn't load" (HTML-entity'd apostrophe in the source).
+    render(<YouScreen go={noop} />);
     expect(screen.getByRole("alert")).toBeTruthy();
     expect(screen.getByText(/couldn't load/i)).toBeTruthy();
+  });
+});
+
+describe("YouScreen — simplified layout", () => {
+  it("renders streak card", () => {
+    render(<YouScreen go={noop} />);
+    expect(screen.getByText(/-day streak/)).toBeTruthy();
+  });
+
+  it("renders all navigation rows", () => {
+    render(<YouScreen go={noop} />);
+    expect(screen.getByText("Dashboard")).toBeTruthy();
+    expect(screen.getByText("Insights")).toBeTruthy();
+    expect(screen.getByText("Nila Memory")).toBeTruthy();
+    expect(screen.getByText("Learn")).toBeTruthy();
+    expect(screen.getByText("Caregiver")).toBeTruthy();
+    expect(screen.getByText("Settings")).toBeTruthy();
+    expect(screen.getByText("Your Data")).toBeTruthy();
+  });
+
+  it("calls go with correct targets on press", () => {
+    const go = vi.fn();
+    render(<YouScreen go={go} />);
+    screen.getByText("Dashboard").click();
+    expect(go).toHaveBeenCalledWith("dashboard");
+    screen.getByText("Insights").click();
+    expect(go).toHaveBeenCalledWith("insights");
+    screen.getByText("Nila Memory").click();
+    expect(go).toHaveBeenCalledWith("nila_memory");
+    screen.getByText("Learn").click();
+    expect(go).toHaveBeenCalledWith("learn");
+    screen.getByText("Caregiver").click();
+    expect(go).toHaveBeenCalledWith("caregiver_settings");
+    screen.getByText("Settings").click();
+    expect(go).toHaveBeenCalledWith("settings");
+    screen.getByText("Your Data").click();
+    expect(go).toHaveBeenCalledWith("your_data");
+  });
+
+  it("does not render contextual suggestion strip", () => {
+    render(<YouScreen go={noop} />);
+    expect(screen.queryByText(/you_elevated_hint/)).toBeNull();
+  });
+
+  it("does not render weekly intention section", () => {
+    render(<YouScreen go={noop} />);
+    expect(screen.queryByText(/intention/)).toBeNull();
+  });
+
+  it("does not render show more toggle", () => {
+    render(<YouScreen go={noop} />);
+    expect(screen.queryByText(/more resources/)).toBeNull();
   });
 });

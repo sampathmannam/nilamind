@@ -28,6 +28,7 @@ import { parseSafetyPlan } from "../services/safetyPlan";
 import { listCaregiverContacts } from "../services/caregiverContacts";
 import { loadSessions as loadPeerSessions } from "../services/peerSupport";
 import { getCoverId } from "../services/coverId";
+import { loadPractices, generateWeeklySkillsSynthesis } from "../services/skillsPractice";
 import { voiceMoodSignal, computeVoiceMetrics, type VoiceSession } from "../services/voicePatterns";
 import { loadConnections } from "../services/humanConnection";
 import { gatherClinicianUsage, protocolsCompletedInPeriod, periodCutoffIso, type ReportPeriod } from "../services/clinicianPeriod";
@@ -779,7 +780,14 @@ valuesClarified: []
           enhancedSocialRhythmDetails,
           behavioralInsights,
           userInsightsSummary,
-          conversationTone: toneOptIn ?? undefined
+          conversationTone: toneOptIn ?? undefined,
+          skillsPracticeSynthesis: (() => {
+            try {
+              const practices = loadPractices();
+              const windowPractices = practices.filter(p => p.date >= cutoff);
+              return generateWeeklySkillsSynthesis(windowPractices) || undefined;
+            } catch { return undefined; }
+          })()
        };
 
       const blob = generateClinicianPdfBlob(input, {

@@ -822,6 +822,28 @@ export function buildReflectionDigest(): string {
     /* best-effort — matches every other block in this function */
   }
 
+  // ── PLEASE audit (Feature 7 / Phase G) ────────────────────────────────────────
+  // Reads recent PLEASE audits to surface baseline vulnerability. Never during crisis.
+  try {
+    const allAudits = readArray("nilamind_please_audit")
+      .filter((a) => a && typeof a.sleep === "number" && typeof a.date === "string")
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    if (allAudits.length > 0) {
+      const recent = allAudits.slice(0, 3);
+      const avgScore = recent.reduce((s, a) => s + (a.sleep + a.food + a.movement + a.substances + a.mastery), 0) / recent.length;
+      const lastAudit = recent[0];
+      const lastTotal = lastAudit.sleep + lastAudit.food + lastAudit.movement + lastAudit.substances + lastAudit.mastery;
+      lines.push(
+        `PLEASE audit (last ${recent.length}, 0\u201315 scale): avg ${avgScore.toFixed(0)}, latest ${lastTotal}. ` +
+        (lastTotal <= 5 ? "Vulnerability is high today \u2014 gentle body care may help." :
+         lastTotal <= 8 ? "Vulnerability is moderate \u2014 one small act of care could help." :
+         "Baseline vulnerability is low.")
+      );
+    }
+  } catch {
+    /* best-effort */
+  }
+
   return lines.join("\n");
 }
 

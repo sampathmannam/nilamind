@@ -11,6 +11,7 @@ import {
   TIPP_SAFETY_ITEMS,
   type TippSafetyFlags,
 } from "../services/tippSafetyGate";
+import { detectElevationRisk, energyElevationSignal, napElevationSignal } from "../services/elevationGuard";
 
 // TIPPTool — one unified interactive TIPP (Temperature, Intense exercise, Paced breathing, Paired
 // muscle relaxation) tool, replacing 3 shallow, divergent half-implementations (2026-07-12 Wave 3,
@@ -72,13 +73,26 @@ export default function TIPPTool({ onSubSkillComplete, onIntensityChange }: TIPP
   const [tried, setTried] = useState<Set<TippSubSkill>>(new Set());
   const [intensityPromptFor, setIntensityPromptFor] = useState<TippSubSkill | null>(null);
 
+  // Phase F / Feature 3: Manic-gated TIPP — suppress "I" (intense exercise) when elevated.
+  // Intense exercise feeds elevated arousal in bipolar (L5 physiology). The dive reflex (cool
+  // water) suffices instead (StatPearls, Kinoshita 2021).
+  const elevationLevel = detectElevationRisk("").level;
+  const energySignal = energyElevationSignal();
+  const napSignal = napElevationSignal();
+  const isElevated = elevationLevel !== "none" || energySignal !== "none" || napSignal !== "none";
+
   const showTemperature = !hasTemperatureCaution(safety.flags);
-  const tabs = ALL_TABS.filter((t) => t.id !== "temperature" || showTemperature);
+  // Phase F: suppress exercise tab when elevated — movement feeds the high
+  const tabs = ALL_TABS.filter((t) => {
+    if (t.id === "temperature" && !showTemperature) return false;
+    if (t.id === "exercise" && isElevated) return false;
+    return true;
+  });
 
   // Once the checklist is (already, or newly) completed, land on the first available tab.
   useEffect(() => {
     if (safety.completed && tab === null) {
-      setTab(showTemperature ? "temperature" : "exercise");
+      setTab(showTemperature ? "temperature" : isElevated ? "breathing" : "exercise");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [safety.completed, showTemperature]);
@@ -98,7 +112,7 @@ export default function TIPPTool({ onSubSkillComplete, onIntensityChange }: TIPP
     return <TippSafetyChecklist onSubmit={(flags) => setSafety(saveTippSafetyFlags(flags))} />;
   }
 
-  const activeTab = tab ?? (showTemperature ? "temperature" : "exercise");
+  const activeTab = tab ?? (showTemperature ? "temperature" : isElevated ? "breathing" : "exercise");
 
   return (
     <div className="space-y-4" id="tipp-tool">
@@ -141,7 +155,7 @@ export default function TIPPTool({ onSubSkillComplete, onIntensityChange }: TIPP
           color="#22D3EE"
           label="Cold water"
           ariaLabel="Cold water countdown"
-          description="Splash ice-cold water on your face, hold an ice cube, or press something cold to your neck or wrists — this triggers the mammalian dive reflex (Ackermann et al. 2023)."
+          description="Splash cool water on your face, or press a cool cloth to your neck or wrists — this triggers the mammalian dive reflex (Ackermann et al. 2023). The water doesn't need to be ice-cold; cool (10–20°C) is enough."
           caution="Skip this if you have a cardiac condition, are pregnant, or checked any box on the safety checklist — the same reflex can affect heart rhythm (Shattock & Tipton 2012)."
           tried={tried.has("temperature")}
           intensityPromptOpen={intensityPromptFor === "temperature"}
@@ -150,7 +164,7 @@ export default function TIPPTool({ onSubSkillComplete, onIntensityChange }: TIPP
         />
       )}
 
-      {activeTab === "exercise" && (
+      {activeTab === "exercise" && !isElevated && (
         <TimedSubSkill
           key="exercise"
           durationMs={EXERCISE_MS}
@@ -164,6 +178,32 @@ export default function TIPPTool({ onSubSkillComplete, onIntensityChange }: TIPP
           onMarkTried={() => markTried("exercise")}
           onIntensity={recordIntensity}
         />
+      )}
+
+      {/* Phase F: When elevated, exercise is suppressed — show cooling alternative instead */}
+      {activeTab === "exercise" && isElevated && (
+        <div className="space-y-3 p-3 rounded-xl bg-sky-500/10 border border-sky-500/30" id="tipp-elevation-gate">
+          <p className="text-sm font-medium text-sky-300">Movement can feed the high right now</p>
+          <p className="text-xs text-ink-muted leading-relaxed">
+            Intense exercise can increase arousal when you're already elevated. Let's use the cooling
+            steps instead — splash cool water on your face, or press a cool cloth against your wrists.
+            Breathe in for 4, out for 6, for 2 minutes.
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setTab("temperature")}
+              className="flex-1 py-2 rounded-lg bg-sky-500/20 text-sky-300 text-xs font-medium cursor-pointer"
+            >
+              Try Temperature
+            </button>
+            <button
+              onClick={() => setTab("breathing")}
+              className="flex-1 py-2 rounded-lg bg-sky-500/20 text-sky-300 text-xs font-medium cursor-pointer"
+            >
+              Try Breathing
+            </button>
+          </div>
+        </div>
       )}
 
       {activeTab === "breathing" && (
@@ -281,7 +321,7 @@ function TippSafetyChecklist({ onSubmit }: { onSubmit: (flags: TippSafetyFlags) 
 
       <button
         onClick={() => onSubmit(flags)}
-        className="w-full bg-accent hover:bg-accent text-slate-950 font-bold py-3 rounded-xl text-xs cursor-pointer transition-all"
+        className="w-full bg-accent hover:bg-accent text-ink font-bold py-3 rounded-xl text-xs cursor-pointer transition-all"
       >
         Continue
       </button>

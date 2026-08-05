@@ -509,7 +509,7 @@ function AppShell() {
             <div className="flex-1 min-h-0 flex flex-col">
               <div className="shrink-0 bg-page" style={{ height: 'var(--safe-top)' }} />
               <div className="flex-1 min-h-0 overflow-y-auto px-4 pt-2 pb-12">
-                <YouScreen go={go} onOpenCrisis={activateCrisis} />
+                <YouScreen go={go} />
               </div>
             </div>
           </ErrorBoundary>

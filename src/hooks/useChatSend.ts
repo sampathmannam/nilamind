@@ -19,6 +19,7 @@ import { offlineBrainMessage } from "../services/nilaReflect";
 import { localLlmLoadState } from "../services/localLlm";
 import { hapticLight } from "./useHaptics";
 import { rememberSession } from "../services/nilaMemory";
+import { selectSkill, formatSkillOffer } from "../services/skillCoach";
 
 function msg(role: "user" | "assistant", content: string, extra: Partial<Pick<NilaUiMessage, "insight" | "synthetic">> = {}): NilaUiMessage {
   return { role, content, timestamp: Date.now(), ...extra };
@@ -146,6 +147,17 @@ export function useChatSend({
       const insight = await deriveInMomentInsight(textToSend, modeUserState, previousExplainerId);
       if (result.reply) {
         setMessages((prev) => [...prev, msg("assistant", result.reply, { insight: insight ?? undefined })]);
+        // Skill Coach offer (Feature 1 / Phase E): fires AFTER the model reply, ONLY when:
+        //   1. No crisis (sendToNila would have blocked — line 125)
+        //   2. No soft crisis (CrisisPill is already showing — line 130)
+        //   3. No elevation (elevation → no skill offer, per Simon 2022 / skillCoach.ts docstring)
+        // Deterministic pattern match — no LLM involvement.
+        if (!result.softCrisis && detectElevationRisk(textToSend).level === "none") {
+          const skillOffer = selectSkill(textToSend);
+          if (skillOffer) {
+            setMessages((prev) => [...prev, msg("assistant", formatSkillOffer(skillOffer))]);
+          }
+        }
         if (result.reachedAI) {
           speakIfEnabled(result.reply);
           if (document.hidden) void notifyReplyReady();

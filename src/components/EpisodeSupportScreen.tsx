@@ -353,7 +353,7 @@ export default function EpisodeSupportScreen({
               disabled={!chatInput.trim()}
               className={`w-full py-4 rounded-xl font-bold transition-all text-sm cursor-pointer flex items-center justify-center gap-2 ${
                 chatInput.trim()
-                  ? "bg-warn hover:opacity-90 text-slate-950 font-extrabold"
+                  ? "bg-warn hover:opacity-90 text-ink font-extrabold"
                   : "bg-page text-ink-faint border border-line cursor-not-allowed"
               }`}
               id="start-episode-btn"
@@ -440,7 +440,7 @@ export default function EpisodeSupportScreen({
                     setStage("opening");
                     setChatInput("");
                   }}
-                  className="w-full bg-success hover:opacity-90 text-slate-950 text-xs font-bold py-3 rounded-xl cursor-pointer transition-all"
+                  className="w-full bg-success hover:opacity-90 text-ink text-xs font-bold py-3 rounded-xl cursor-pointer transition-all"
                 >
                   Return to Home
                 </button>
@@ -482,7 +482,7 @@ export default function EpisodeSupportScreen({
                 <button
                   type="submit"
                   disabled={!chatInput.trim() || loading}
-                  className={`bg-warn hover:opacity-90 text-slate-950 font-bold px-4 rounded-xl flex items-center justify-center cursor-pointer transition-all ${
+                  className={`bg-warn hover:opacity-90 text-ink font-bold px-4 rounded-xl flex items-center justify-center cursor-pointer transition-all ${
                     chatInput.trim() && !loading ? "opacity-100" : "opacity-40 cursor-not-allowed"
                   }`}
                 >
@@ -530,7 +530,7 @@ export default function EpisodeSupportScreen({
                         setGuidedStep("low_end");
                       }
                     }}
-                    className="bg-page border border-line hover:opacity-90 hover:text-slate-950 py-3.5 rounded-xl font-mono text-sm cursor-pointer font-bold text-center text-ink-2 transition-colors"
+                    className="bg-page border border-line hover:opacity-90 hover:text-ink py-3.5 rounded-xl font-mono text-sm cursor-pointer font-bold text-center text-ink-2 transition-colors"
                   >
                     {num}
                   </button>
@@ -561,7 +561,7 @@ export default function EpisodeSupportScreen({
 
               <button
                 onClick={() => setStage("debrief_1")}
-                className="w-full bg-warn hover:opacity-90 text-slate-950 font-bold py-3 rounded-xl transition-all text-xs uppercase tracking-wider cursor-pointer text-center font-extrabold"
+                className="w-full bg-warn hover:opacity-90 text-ink font-bold py-3 rounded-xl transition-all text-xs uppercase tracking-wider cursor-pointer text-center font-extrabold"
               >
                 I'm ready to close out
               </button>
@@ -608,7 +608,7 @@ export default function EpisodeSupportScreen({
               </div>
               <button
                 onClick={() => setStage("debrief_1")}
-                className="w-full bg-warn hover:opacity-90 text-slate-950 font-bold py-3 rounded-lg text-xs cursor-pointer font-extrabold uppercase transition-all"
+                className="w-full bg-warn hover:opacity-90 text-ink font-bold py-3 rounded-lg text-xs cursor-pointer font-extrabold uppercase transition-all"
               >
                 Done
               </button>
@@ -625,7 +625,7 @@ export default function EpisodeSupportScreen({
               </div>
               <button
                 onClick={() => setStage("debrief_1")}
-                className="w-full bg-warn hover:opacity-90 text-slate-950 font-bold py-3 rounded-lg text-xs cursor-pointer font-extrabold uppercase transition-all"
+                className="w-full bg-warn hover:opacity-90 text-ink font-bold py-3 rounded-lg text-xs cursor-pointer font-extrabold uppercase transition-all"
               >
                 Done
               </button>
@@ -642,7 +642,7 @@ export default function EpisodeSupportScreen({
               </div>
               <button
                 onClick={() => setStage("debrief_1")}
-                className="w-full bg-warn hover:opacity-90 text-slate-950 font-bold py-3 rounded-lg text-xs cursor-pointer font-extrabold uppercase transition-all"
+                className="w-full bg-warn hover:opacity-90 text-ink font-bold py-3 rounded-lg text-xs cursor-pointer font-extrabold uppercase transition-all"
               >
                 Proceed to debrief
               </button>
@@ -656,7 +656,7 @@ export default function EpisodeSupportScreen({
               </p>
               <button
                 onClick={() => setStage("debrief_1")}
-                className="w-full bg-warn hover:opacity-90 text-slate-950 font-bold py-3 rounded-lg text-xs cursor-pointer font-extrabold uppercase transition-all"
+                className="w-full bg-warn hover:opacity-90 text-ink font-bold py-3 rounded-lg text-xs cursor-pointer font-extrabold uppercase transition-all"
               >
                 Safe Close
               </button>
@@ -698,7 +698,7 @@ export default function EpisodeSupportScreen({
             </button>
             <button
               onClick={handleSaveDebrief1}
-              className="bg-warn hover:opacity-90 text-slate-950 text-xs font-black py-3 rounded-xl cursor-pointer font-extrabold transition-all"
+              className="bg-warn hover:opacity-90 text-ink text-xs font-black py-3 rounded-xl cursor-pointer font-extrabold transition-all"
             >
               Save & Next
             </button>
@@ -741,7 +741,7 @@ export default function EpisodeSupportScreen({
 
           <button
             onClick={() => setStage("debrief_3")}
-            className="w-full bg-warn hover:opacity-90 text-slate-950 font-extrabold py-3.5 rounded-xl text-center text-xs transition-all cursor-pointer uppercase font-black"
+            className="w-full bg-warn hover:opacity-90 text-ink font-extrabold py-3.5 rounded-xl text-center text-xs transition-all cursor-pointer uppercase font-black"
           >
             Continue
           </button>
@@ -783,7 +783,7 @@ export default function EpisodeSupportScreen({
                 <button
                   key={num}
                   onClick={() => saveEpisodeRecord(num)}
-                  className="bg-page border border-line text-ink-2 hover:opacity-90 hover:text-slate-950 font-bold py-3 rounded-xl transition-all font-mono cursor-pointer text-center text-sm"
+                  className="bg-page border border-line text-ink-2 hover:opacity-90 hover:text-ink font-bold py-3 rounded-xl transition-all font-mono cursor-pointer text-center text-sm"
                 >
                   {num}
                 </button>
@@ -817,7 +817,7 @@ export default function EpisodeSupportScreen({
               setElapsedSeconds(0);
               onSessionEnded();
             }}
-            className="w-full bg-success hover:opacity-90 text-slate-950 font-bold py-3.5 rounded-xl text-xs uppercase tracking-wider cursor-pointer transition-all font-extrabold"
+            className="w-full bg-success hover:opacity-90 text-ink font-bold py-3.5 rounded-xl text-xs uppercase tracking-wider cursor-pointer transition-all font-extrabold"
           >
             I'm done for now
           </button>
