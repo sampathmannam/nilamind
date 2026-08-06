@@ -160,7 +160,6 @@ interface InflectionStore { log: (InflectionSignal & { surfaced: boolean })[]; a
 
 const STORE_KEY = "nilamind_inflection";               // SENSITIVE (encrypted)
 const CHECKED_KEY = "nilamind_inflection_checked";     // plain localStorage, local date
-const SURFACED_KEY = "nilamind_inflection_surfaced";   // plain localStorage, local date
 const LOG_CAP = 30, COOLDOWN_DAYS = 14, SCREEN_RECENCY_DAYS = 21;
 
 function loadStore(): InflectionStore {
@@ -213,20 +212,15 @@ export function topFireableSignal(): InflectionSignal | null {
   return eligible[0] ?? null;
 }
 
-export function shouldSurfaceToday(): boolean { return plainGet(SURFACED_KEY) !== ymd(new Date()); }
-
-/** Pick + commit an opener for this open (≤1/day). Caller must have checked getInflectionEnabled(). */
-export function surfaceOpener(): InflectionSignal | null {
-  if (!shouldSurfaceToday()) return null;
-  const sig = topFireableSignal();
-  if (!sig) return null;
-  plainSet(SURFACED_KEY, ymd(new Date()));
-  const s = loadStore();
-  const entry = s.log.find((l) => l.id === sig.id);
-  if (entry) entry.surfaced = true; else s.log.push({ ...sig, surfaced: true });
-  saveStore(s);
-  return sig;
-}
+// 2026-08-06 audit: surfaceOpener()/shouldSurfaceToday() deleted as dead code -- a once/day "opener" cap
+// with zero callers anywhere (only a stale comment in main.tsx referenced the name). NilaMemoryScreen.tsx's
+// "noticed" section already covers the review-log half of this design (latestInflectionsForLog()/
+// dismissLoggedSignal() below ARE wired there) -- it was specifically the scripted, auto-surfaced "opener"
+// card that was never built. Left unbuilt deliberately: research gathered for
+// docs/RESEARCH_INNOVATION_ROADMAP_2026.md (SS2) found that surfacing an algorithmic inference about
+// someone's own state is not a neutral mirror -- it measurably changes self-reported state -- so an
+// auto-popped "I noticed X" card is a bigger, unvalidated intervention than the current soft, opt-in,
+// user-initiated review log this screen already provides.
 
 export function acknowledgeInflection(id: string, response: "fits" | "dismissed"): void {
   const s = loadStore();

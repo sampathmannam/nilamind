@@ -20,6 +20,7 @@ import { localLlmLoadState } from "../services/localLlm";
 import { hapticLight } from "./useHaptics";
 import { rememberSession } from "../services/nilaMemory";
 import { selectSkill, formatSkillOffer } from "../services/skillCoach";
+import { classify, runAgent } from "../services/agent";
 
 function msg(role: "user" | "assistant", content: string, extra: Partial<Pick<NilaUiMessage, "insight" | "synthetic">> = {}): NilaUiMessage {
   return { role, content, timestamp: Date.now(), ...extra };
@@ -108,6 +109,30 @@ export function useChatSend({
         setLoading(false);
       }
       return;
+    }
+
+    // Agent command shortcuts (2026-08-06 audit: runAgent/classify had zero callers anywhere — the
+    // intent classifier itself was tested but never wired to the live chat). Deterministic pattern
+    // match, no LLM involvement, mirroring the looksLikeArmRequest gate above exactly: explicit crisis
+    // check BEFORE executing, same as every other pre-LLM intercept in this hook. Scoped to the intents
+    // that need no new navigation plumbing (reminder/log_mood/read_dashboard) -- "navigate" is excluded
+    // because ModeScreen's callback props don't cover every AgentView target, and "arm_checkin" is
+    // excluded because looksLikeArmRequest/requestArmedCheckin above already handles that case with its
+    // own elevation gate layered on top of the bare armCheckin() this intent would otherwise call.
+    const agentIntent = classify(textToSend);
+    if (agentIntent && agentIntent.kind !== "navigate" && agentIntent.kind !== "arm_checkin") {
+      setLoading(true);
+      try {
+        if (await shouldBlockForCrisisAsync(textToSend)) { openCrisis(true); return; }
+        crisisPendingRef.current = false;
+        const agentResult = await runAgent(textToSend);
+        if (agentResult.handled) {
+          setMessages((prev) => [...prev, msg("assistant", agentResult.reply)]);
+          return;
+        }
+      } finally {
+        setLoading(false);
+      }
     }
 
     setProtocolCard(protocolOfferCard(textToSend));

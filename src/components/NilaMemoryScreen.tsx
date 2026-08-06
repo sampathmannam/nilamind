@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Pencil, Trash2, Check, X, TrendingUp, TrendingDown } from "lucide-react";
+import { Pencil, Trash2, Check, X, Plus, TrendingUp, TrendingDown } from "lucide-react";
 import ConfirmDialog from "./ConfirmDialog";
 import {
-  loadInsights, editInsight, deleteInsight, INSIGHT_KINDS,
+  loadInsights, editInsight, deleteInsight, upsertUserInsight, INSIGHT_KINDS,
   type Insight, type InsightKind,
 } from "../services/nilaInsights";
 import { latestInflectionsForLog, dismissLoggedSignal, type InflectionSignal } from "../services/nilaInflection";
@@ -55,6 +55,23 @@ export default function NilaMemoryScreen() {
   const saveEdit = (id: string) => { editInsight(id, draft); cancelEdit(); refresh(); };
   const remove = (id: string) => { deleteInsight(id); refresh(); };
 
+  // 2026-08-06 audit: upsertUserInsight() (nilaInsights.ts) had zero callers anywhere — this screen
+  // already let a person edit/delete what Nila remembers, but never add something themselves. Wiring the
+  // missing "create" half of that CRUD set here, matching the existing edit-in-place pattern.
+  const [addingOpen, setAddingOpen] = useState(false);
+  const [addKind, setAddKind] = useState<InsightKind>(INSIGHT_KINDS[0]);
+  const [addDraft, setAddDraft] = useState("");
+  const openAdd = () => { setAddingOpen(true); setAddKind(INSIGHT_KINDS[0]); setAddDraft(""); };
+  const cancelAdd = () => { setAddingOpen(false); setAddDraft(""); };
+  const saveAdd = () => {
+    const clean = addDraft.trim();
+    if (!clean) return;
+    upsertUserInsight(addKind, clean);
+    setAddingOpen(false);
+    setAddDraft("");
+    refresh();
+  };
+
   const groups = groupByKind(all);
 
   // User-owned profile tiers — captured only with the person's say-so (services/nilaProfile.ts).
@@ -88,6 +105,47 @@ export default function NilaMemoryScreen() {
         anything that's off, or delete what you'd rather she let go. If she notices something again
         later, just delete it again.
       </p>
+
+      {addingOpen ? (
+        <section className="space-y-2 glass rounded-2xl p-3">
+          <label className="block text-[11px] font-mono uppercase tracking-widest text-ink-faint" htmlFor="add-insight-kind">
+            Add something yourself
+          </label>
+          <select
+            id="add-insight-kind"
+            value={addKind}
+            onChange={(e) => setAddKind(e.target.value as InsightKind)}
+            className="w-full text-sm glass rounded-xl p-2 text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          >
+            {INSIGHT_KINDS.map((k) => (
+              <option key={k} value={k}>{KIND_LABELS[k]}</option>
+            ))}
+          </select>
+          <textarea
+            aria-label="What should Nila remember?"
+            placeholder="What should Nila remember?"
+            value={addDraft}
+            onChange={(e) => setAddDraft(e.target.value)}
+            rows={2}
+            className="w-full text-sm glass rounded-xl p-2 text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          />
+          <div className="flex items-center gap-2 justify-end">
+            <button onClick={cancelAdd} aria-label="Cancel" className="p-1.5 text-ink-muted hover:text-ink-2 cursor-pointer">
+              <X className="w-4 h-4" />
+            </button>
+            <button onClick={saveAdd} disabled={!addDraft.trim()} aria-label="Save" className="p-1.5 text-success hover:text-success-hi disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
+              <Check className="w-4 h-4" />
+            </button>
+          </div>
+        </section>
+      ) : (
+        <button
+          onClick={openAdd}
+          className="w-full flex items-center gap-2 glass hover:brightness-125 px-4 py-2.5 rounded-xl transition-all active:scale-[0.99] cursor-pointer text-sm font-medium text-ink-2"
+        >
+          <Plus className="w-4 h-4 text-accent" aria-hidden="true" /> Add something yourself
+        </button>
+      )}
 
       {/* User-owned profile tiers — what they told Nila to keep. Deletable here = the consent backstop. */}
       {facts.length > 0 && (
