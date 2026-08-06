@@ -308,12 +308,20 @@ export default function DashboardScreen({ onOpenView }: { onOpenView?: (target: 
   );
   const trendLength = chartTab === "emotion" ? emotionTrend.length : chartTab === "energy" ? energyScatter.length : chartTab === "sleep-mood" ? sleepMoodTrendData.length : ctxTrend.length;
 
+  // The hero stat already states this week's average, its window, and the week-over-week delta.
+  // A narrative earns its place here only when it adds something the number cannot: the up/down
+  // branches carry the framing ("that's a real improvement" / "be gentle with yourself"), and the
+  // empty/first-week branches carry guidance. The flat branch had none of that — it restated the
+  // average, the window AND the comparison in prose, so at day 15 the screen said "4.1 · mood
+  // average (7 days) · ↓3% from last week" and then, right below, "this week your distress
+  // averaged 4.1/10 — about the same as last week" (15-day run, 2026-08-24). BandNarrative renders
+  // nothing for an empty string, so the strip simply doesn't appear when there is nothing to add.
   const moodSummary = (() => {
     if (thisAvg == null) return tn("narr_mood_none", lang, {});
     const avgStr = r1(thisAvg);
     if (lastAvg == null) return tn("narr_mood_base_only", lang, { avg: avgStr });
     const delta = thisAvg - lastAvg;
-    if (Math.abs(delta) < 0.5) return tn("narr_mood_same", lang, { avg: avgStr });
+    if (Math.abs(delta) < 0.5) return "";
     return delta < 0
       ? tn("narr_mood_down", lang, { avg: avgStr, delta: r1(Math.abs(delta)) })
       : tn("narr_mood_up", lang, { avg: avgStr, delta: r1(delta) });
