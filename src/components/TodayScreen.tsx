@@ -9,6 +9,7 @@ import CrisisHeaderButton from "./CrisisHeaderButton";
 import RatingPromptCard from "./RatingPromptCard";
 import { useTimeOfDay, type TimeOfDay } from "../hooks/useTimeOfDay";
 import { getRecentTools, recordToolUse } from "../services/recentTools";
+import { setEmaPrefill } from "../services/emaPrefill";
 
 const MOOD_OPTIONS = [
   { id: "calm", emoji: "😌", label: "Calm" },
@@ -17,6 +18,16 @@ const MOOD_OPTIONS = [
   { id: "anxious", emoji: "😰", label: "Anxious" },
   { id: "overwhelmed", emoji: "🤯", label: "Overwhelmed" },
 ] as const;
+
+// Inverse of EmaCheckIn's emaValenceToMood: the tapped face carries into the check-in as its
+// 5-point EMA valence, so the check-in never re-asks what the person just told us (redesign §5.1).
+const MOOD_TO_VALENCE: Record<(typeof MOOD_OPTIONS)[number]["id"], number> = {
+  calm: 3,
+  good: 1,
+  okay: 0,
+  anxious: -1,
+  overwhelmed: -3,
+};
 
 function formatDate(): string {
   const d = new Date();
@@ -118,7 +129,7 @@ export default function TodayScreen({
               key={mood.id}
               variant="secondary"
               size="lg"
-              onClick={() => go("ema_checkin")}
+              onClick={() => { setEmaPrefill(MOOD_TO_VALENCE[mood.id]); go("ema_checkin"); }}
               aria-label={`I'm feeling ${mood.label}`}
               className="flex-1 flex-col gap-1 min-h-[64px]"
             >

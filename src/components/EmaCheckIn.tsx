@@ -18,6 +18,7 @@ function emaValenceToMood(valence: number): [string, number] {
 }
 import { generateTinyId } from "../services/idGen";
 import { scanForCrisis } from "../safety";
+import { consumeEmaPrefill } from "../services/emaPrefill";
 
 
 const VALENCE_OPTIONS = [
@@ -33,8 +34,12 @@ const ENERGY_OPTIONS = [
 ] as const;
 
 export default function EmaCheckIn({ onLogged, onCrisis }: { onLogged?: () => void; onCrisis?: () => void }) {
-  const [step, setStep] = useState<"valence" | "energy" | "note">("valence");
-  const [valence, setValence] = useState<number | null>(null);
+  // Redesign §5.1: a Home mood-strip tap already answered the valence question — start on the
+  // energy step instead of re-asking. Initializer-only (one-shot consume), so re-renders never
+  // re-trigger it and a direct open (Tools → Quick check-in) still starts at valence.
+  const [prefill] = useState<number | null>(() => consumeEmaPrefill());
+  const [step, setStep] = useState<"valence" | "energy" | "note">(prefill !== null ? "energy" : "valence");
+  const [valence, setValence] = useState<number | null>(prefill);
   const [energy, setEnergy] = useState<number | null>(null);
   const [note, setNote] = useState("");
 
@@ -67,7 +72,7 @@ export default function EmaCheckIn({ onLogged, onCrisis }: { onLogged?: () => vo
         )}
 
         {step === "energy" && (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4" id="ema-energy">
             <p className="text-sm text-ink-2 font-semibold text-center">Your energy?</p>
             <div className="grid grid-cols-4 gap-3">
               {[1, 2, 3, 4].map((e) => (

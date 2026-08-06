@@ -3,6 +3,7 @@ import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
 import { render, screen, cleanup, fireEvent } from "@testing-library/react";
 import EmaCheckIn from "./EmaCheckIn";
 import { loadEmaEntries } from "../services/ema";
+import { setEmaPrefill, consumeEmaPrefill } from "../services/emaPrefill";
 
 // re-audit #1 (§9): the EMA note is free text persisted on "Done". A crisis disclosure typed there must
 // route to the crisis surface and must NOT be silently stored as a mood note. The plan's "EMA skips crisis
@@ -18,7 +19,7 @@ vi.mock("../services/secureLocal", () => ({
     removeItem: (k: string) => { mockStore.delete(k); },
   },
 }));
-beforeEach(() => { mockStore.clear(); });
+beforeEach(() => { mockStore.clear(); consumeEmaPrefill(); /* drain any prefill left by a prior test */ });
 afterEach(() => cleanup());
 
 /** Drive the 3-step micro-check-in (valence → energy → note) and tap Done. */
@@ -48,5 +49,32 @@ describe("EmaCheckIn — §9 note gate (re-audit #1)", () => {
     const saved = loadEmaEntries();
     expect(saved).toHaveLength(1);
     expect(saved[0].note).toBe("tired today");
+  });
+});
+
+describe("EmaCheckIn — Home mood-strip prefill (redesign §5.1)", () => {
+  it("skips the valence step when a prefill is pending", () => {
+    setEmaPrefill(-3);
+    render(<EmaCheckIn />);
+    expect(document.getElementById("ema-valence")).toBeNull();   // not re-asked
+    expect(document.getElementById("ema-energy")).toBeTruthy();  // lands on energy
+  });
+
+  it("starts at valence on a direct open (no prefill)", () => {
+    render(<EmaCheckIn />);
+    expect(document.getElementById("ema-valence")).toBeTruthy();
+    expect(document.getElementById("ema-energy")).toBeNull();
+  });
+
+  it("persists the prefilled valence through Done", () => {
+    setEmaPrefill(-3);
+    const onLogged = vi.fn();
+    render(<EmaCheckIn onLogged={onLogged} />);
+    fireEvent.click(screen.getByText("Moderate"));             // energy → note step
+    fireEvent.click(document.getElementById("ema-save")!);     // Done (note left empty)
+    expect(onLogged).toHaveBeenCalledOnce();
+    const saved = loadEmaEntries();
+    expect(saved).toHaveLength(1);
+    expect(saved[0].valence).toBe(-3);
   });
 });
