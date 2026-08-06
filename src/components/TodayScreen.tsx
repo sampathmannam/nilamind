@@ -11,6 +11,8 @@ import { useTimeOfDay, type TimeOfDay } from "../hooks/useTimeOfDay";
 import { getRecentTools, recordToolUse } from "../services/recentTools";
 import { setEmaPrefill } from "../services/emaPrefill";
 import { TOOL_META } from "./toolMeta";
+import { loadCheckins } from "../services/checkin";
+import { localDateKey } from "../services/storageUtils";
 
 const MOOD_OPTIONS = [
   { id: "calm", emoji: "😌", label: "Calm" },
@@ -29,6 +31,22 @@ const MOOD_TO_VALENCE: Record<(typeof MOOD_OPTIONS)[number]["id"], number> = {
   anxious: -1,
   overwhelmed: -3,
 };
+
+/** Today's logged mood label, or null. The 15-day longitudinal run (2026-08-24) showed Home asking
+ *  "How are you feeling?" in exactly the same words after the person had already checked in that
+ *  morning — no acknowledgement, no way to tell a logged day from an unlogged one. */
+function getTodayMoodLabel(): string | null {
+  try {
+    const today = localDateKey();
+    const todays = loadCheckins().filter((e) => e && e.date === today);
+    const last = todays[todays.length - 1];
+    if (!last?.emotion) return null;
+    const match = MOOD_OPTIONS.find((m) => m.id === String(last.emotion).toLowerCase());
+    return match ? match.label : String(last.emotion);
+  } catch {
+    return null;
+  }
+}
 
 function formatDate(): string {
   const d = new Date();
@@ -79,6 +97,7 @@ export default function TodayScreen({
   const greeting = greetingMap[timeOfDay];
   const recommendedAction = useMemo(() => getRecommendedAction(new Date().getHours()), [timeOfDay]);
   const recentTools = useMemo(() => getRecentTools(), []);
+  const todayMood = useMemo(() => getTodayMoodLabel(), []);
 
   function ago(ts: number): string {
     const diff = Date.now() - ts;
@@ -108,9 +127,14 @@ export default function TodayScreen({
         </button>
       </header>
 
-      {/* Mood check-in */}
+      {/* Mood check-in — acknowledges an already-logged day instead of re-asking identically */}
       <Card variant="raised" padding="md" gap="sm" aria-label="Mood check-in">
-        <p className="text-sm font-semibold text-ink">How are you feeling?</p>
+        <p className="text-sm font-semibold text-ink" id="mood-card-prompt">
+          {todayMood ? `Checked in today — ${todayMood.toLowerCase()}` : "How are you feeling?"}
+        </p>
+        {todayMood && (
+          <p className="text-xs text-ink-muted -mt-1">Feeling different now? Tap to log it again.</p>
+        )}
         <div className="flex gap-3 justify-between">
           {MOOD_OPTIONS.map((mood) => (
             <Button

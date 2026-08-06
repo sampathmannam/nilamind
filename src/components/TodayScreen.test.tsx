@@ -110,6 +110,25 @@ describe("TodayScreen — calm home", () => {
     expect(screen.getByText("Take a grounding break")).toBeTruthy();
   });
 
+  // 15-day longitudinal run (2026-08-24): after checking in that morning, Home still asked "How are
+  // you feeling?" in exactly the same words — a logged day looked identical to an unlogged one.
+  it("acknowledges today's check-in instead of re-asking identically", () => {
+    const today = new Date().toISOString().slice(0, 10);
+    store.set("nilamind_checkins", JSON.stringify([
+      { id: "a", date: today, timestamp: new Date().toISOString(), emotion: "good", intensity: 3, context: "" },
+    ]));
+    render(<TodayScreen go={noop} phoneEnabled={false} onEpisode={noop} onOpenCrisis={noop} />);
+    expect(screen.getByText(/checked in today/i)).toBeTruthy();
+    expect(screen.queryByText("How are you feeling?")).toBeNull();
+    // the faces stay tappable so a changed mood can still be logged
+    expect(screen.getByLabelText(/I'm feeling Calm/i)).toBeTruthy();
+  });
+
+  it("asks how you're feeling when the day has no check-in yet", () => {
+    render(<TodayScreen go={noop} phoneEnabled={false} onEpisode={noop} onOpenCrisis={noop} />);
+    expect(screen.getByText("How are you feeling?")).toBeTruthy();
+  });
+
   it("re-using a Recently tool refreshes its recency and navigates", () => {
     const oldTs = Date.now() - 3600_000;
     store.set("nilamind_recent_tools", JSON.stringify([{ target: "winddown", timestamp: oldTs }]));

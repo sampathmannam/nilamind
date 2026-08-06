@@ -35,14 +35,31 @@ function ClinicalTrackingSection({
         <CalibrationPeriodCard startDate={checkins[0]?.date ?? new Date().toISOString()} />
       )}
 
-      {/* Episode-phase marker — current phase if active */}
-      <EpisodeMarkerCard onOpen={() => onOpenView?.("episode_marker")} />
+      {/* Episode-phase marker — only once there are markers. SkillsPracticeCard already self-hides
+          when empty (totalPractices === 0); this card kept a full-size "No markers yet" card on the
+          dashboard indefinitely (15-day run, 2026-08-24). The screen is off if there's nothing to
+          show; the destination stays reachable from its own row. */}
+      {episodeMarkers.length > 0 && (
+        <EpisodeMarkerCard onOpen={() => onOpenView?.("episode_marker")} />
+      )}
 
       {/* Skills practice — DBT skills-use mechanism loop */}
       <SkillsPracticeCard onOpen={() => onOpenView?.("guided_programs")} />
 
-      {/* Mood Heatmap — Year in Pixels */}
-      {mood.length >= 7 && <MoodHeatmap moods={mood} days={182} />}
+      {/* Mood Heatmap — window follows the data instead of a fixed half-year. At two weeks of use a
+          182-day grid was ~95% "no data" squares: a big, mostly-empty block that reads as absence
+          rather than as a pattern. Grow it as the history grows (4 weeks → 26 weeks). */}
+      {mood.length >= 7 && (
+        <MoodHeatmap
+          moods={mood}
+          days={(() => {
+            const dates = mood.map((m) => m.date).filter(Boolean).sort();
+            const first = dates[0] ? new Date(dates[0]).getTime() : Date.now();
+            const spanDays = Math.ceil((Date.now() - first) / 86_400_000) + 7;
+            return Math.min(182, Math.max(28, spanDays));
+          })()}
+        />
+      )}
 
       {/* Conversation tone — orb affect accent */}
       <AffectToneStrip />
