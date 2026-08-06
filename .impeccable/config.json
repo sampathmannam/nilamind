@@ -1,0 +1,26 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "bounce-easing",
+        "value": "animate-bounce",
+        "createdAt": "2026-08-06T17:37:52.912Z",
+        "reason": "Chat loading dots + shipped micro-interactions; user delegated 2026-08-06, confirmed intentional"
+      },
+      {
+        "rule": "bounce-easing",
+        "value": "bounce-in",
+        "createdAt": "2026-08-06T17:37:53.741Z",
+        "reason": "Shipped celebration/entrance keyframe; user delegated 2026-08-06, confirmed intentional"
+      },
+      {
+        "rule": "bounce-easing",
+        "value": "cubic-bezier(0.34, 1.56, 0.64, 1)",
+        "createdAt": "2026-08-06T17:37:54.444Z",
+        "reason": "Shipped spring curve for existing micro-interactions; user delegated 2026-08-06, confirmed intentional"
+      }
+    ]
+  }
+}
