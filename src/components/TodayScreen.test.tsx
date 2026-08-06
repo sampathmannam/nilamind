@@ -71,16 +71,6 @@ describe("TodayScreen — calm home", () => {
     expect(screen.getByText("Set your intention for today")).toBeTruthy();
   });
 
-  it("renders Talk to Nila link", () => {
-    render(<TodayScreen go={noop} phoneEnabled={false} onEpisode={noop} onOpenCrisis={noop} />);
-    expect(screen.getByText("Talk to Nila")).toBeTruthy();
-  });
-
-  it("renders crisis support button", () => {
-    render(<TodayScreen go={noop} phoneEnabled={false} onEpisode={noop} onOpenCrisis={noop} />);
-    expect(screen.getByRole("button", { name: /get help now/i })).toBeTruthy();
-  });
-
   it("mood button navigates to ema_checkin", () => {
     const go = vi.fn();
     render(<TodayScreen go={go} phoneEnabled={false} onEpisode={noop} onOpenCrisis={noop} />);
@@ -88,11 +78,16 @@ describe("TodayScreen — calm home", () => {
     expect(go).toHaveBeenCalledWith("ema_checkin");
   });
 
-  it("Talk to Nila navigates to nila", () => {
+  it("renders crisis support button", () => {
+    render(<TodayScreen go={noop} phoneEnabled={false} onEpisode={noop} onOpenCrisis={noop} />);
+    expect(screen.getByRole("button", { name: /get help now/i })).toBeTruthy();
+  });
+
+  it("settings gear navigates to settings", () => {
     const go = vi.fn();
     render(<TodayScreen go={go} phoneEnabled={false} onEpisode={noop} onOpenCrisis={noop} />);
-    fireEvent.click(screen.getByText("Talk to Nila").closest("button")!);
-    expect(go).toHaveBeenCalledWith("nila");
+    fireEvent.click(screen.getByRole("button", { name: /settings/i }));
+    expect(go).toHaveBeenCalledWith("settings");
   });
 
   it("recommended action navigates to correct route", () => {

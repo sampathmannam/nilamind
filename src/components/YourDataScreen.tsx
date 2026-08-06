@@ -935,7 +935,7 @@ valuesClarified: []
         <h3 className="text-xs font-bold text-ink uppercase tracking-wider flex items-center gap-1.5"><FileText className="w-3.5 h-3.5" /> Export history</h3>
         <p className="text-base text-ink-faint leading-relaxed">A private log of every export you've made on this device. Nothing here is ever sent anywhere.</p>
         {shareErr && (
-          <div className="flex items-start gap-2 text-[11px] text-warn-hi bg-warn/10 border border-warn/20 rounded-lg px-3 py-2">
+          <div className="flex items-start gap-2 text-sm text-warn-hi bg-warn/10 border border-warn/20 rounded-lg px-3 py-2">
             <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
             <span>{shareErr}</span>
           </div>

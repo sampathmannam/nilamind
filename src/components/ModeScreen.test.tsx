@@ -105,15 +105,6 @@ vi.mock("../services/localLlm", () => ({
   isLocalLlmReady: () => true,
 }));
 
-// Gap A-3 fix test support (2026-08-03): force the rating prompt's gate open so its PLACEMENT is testable
-// independent of localStorage session counts. Defaults to closed so the other tests keep the card hidden.
-const { ratingPromptStateRef } = vi.hoisted(() => ({ ratingPromptStateRef: { current: false } }));
-vi.mock("../services/ratingPrompt", () => ({
-  shouldPromptRating: () => ratingPromptStateRef.current,
-  dismissRatingPrompt: () => {},
-  onUserRated: () => {},
-}));
-
 import ModeScreen from "./ModeScreen";
 
 afterEach(() => {
@@ -129,7 +120,6 @@ afterEach(() => {
   scoreAffectMock.mockReset();
   noteChatAffectMock.mockReset();
   affectAccentActiveRef.current = false;
-  ratingPromptStateRef.current = false;
 });
 
 function openTextInput() {
@@ -414,22 +404,5 @@ describe("ModeScreen — orb affect-accent wiring (Phase 1)", () => {
     await sendMessage("I want to kill myself");
     await waitFor(() => expect(sendToNilaMock).toHaveBeenCalled());
     expect(scoreAffectMock).not.toHaveBeenCalled();
-  });
-});
-
-describe("ModeScreen — rating prompt stays out of the active chat flow (Gap A-3)", () => {
-  it("renders the rating card only on a fresh session (no messages)", async () => {
-    ratingPromptStateRef.current = true;
-    render(<ModeScreen onOpenCrisis={vi.fn()} />);
-    expect(document.getElementById("rating-prompt-card")).toBeTruthy();
-  });
-
-  it("hides the rating card once a conversation is in progress", async () => {
-    ratingPromptStateRef.current = true;
-    sendToNilaMock.mockResolvedValue({ reply: "Nila's reply", reachedAI: true, blocked: false });
-    render(<ModeScreen onOpenCrisis={vi.fn()} />);
-    await sendMessage("hello there");
-    await waitFor(() => expect(sendToNilaMock).toHaveBeenCalled());
-    expect(document.getElementById("rating-prompt-card")).toBeNull();
   });
 });

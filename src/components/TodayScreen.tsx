@@ -1,10 +1,14 @@
 import { useMemo } from "react";
-import { Moon, Wind, MessageCircle, ChevronRight, Sparkles } from "lucide-react";
+import { Moon, Wind, ChevronRight, Sparkles, NotebookPen, Pill, Smile, Activity, Compass, Lightbulb, Volume2, Clock3, Settings } from "lucide-react";
 import { useLanguage, t } from "../services/i18n";
 import Card from "./Card";
 import Button from "./Button";
+import ToolRow from "./ToolRow";
+import Section from "./Section";
 import CrisisHeaderButton from "./CrisisHeaderButton";
+import RatingPromptCard from "./RatingPromptCard";
 import { useTimeOfDay, type TimeOfDay } from "../hooks/useTimeOfDay";
+import { getRecentTools, recordToolUse } from "../services/recentTools";
 
 const MOOD_OPTIONS = [
   { id: "calm", emoji: "😌", label: "Calm" },
@@ -62,13 +66,47 @@ export default function TodayScreen({
   };
   const greeting = greetingMap[timeOfDay];
   const recommendedAction = useMemo(() => getRecommendedAction(new Date().getHours()), [timeOfDay]);
+  const recentTools = useMemo(() => getRecentTools(), []);
+
+  const TOOL_META: Record<string, { icon: React.ReactNode; label: string }> = {
+    plan: { icon: <Wind className="w-4 h-4 text-accent" />, label: "Breathing & Grounding" },
+    winddown: { icon: <Moon className="w-4 h-4 text-accent" />, label: "Wind Down" },
+    diary: { icon: <NotebookPen className="w-4 h-4 text-accent" />, label: "Diary" },
+    medication: { icon: <Pill className="w-4 h-4 text-accent" />, label: "Medication" },
+    ema_checkin: { icon: <Smile className="w-4 h-4 text-accent" />, label: "Check-in" },
+    assessment: { icon: <Activity className="w-4 h-4 text-accent" />, label: "Assessment" },
+    values_to_action: { icon: <Compass className="w-4 h-4 text-accent" />, label: "Values to Action" },
+    problem_solving: { icon: <Lightbulb className="w-4 h-4 text-warn" />, label: "Problem Solving" },
+    sounds: { icon: <Volume2 className="w-4 h-4 text-success" />, label: "Ambient Sounds" },
+    social_rhythm: { icon: <Clock3 className="w-4 h-4 text-accent" />, label: "Social Rhythm" },
+  };
+
+  function ago(ts: number): string {
+    const diff = Date.now() - ts;
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return "just now";
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    const days = Math.floor(hrs / 24);
+    return `${days}d ago`;
+  }
 
   return (
     <div className="space-y-4 max-w-md mx-auto animate-fade-in px-4" id="today-hub">
       {/* Greeting */}
-      <header className="pt-2 pb-1">
-        <h1 className="editorial text-2xl text-ink leading-tight">{greeting}</h1>
-        <p className="text-sm text-ink-2 mt-0.5">{formatDate()}</p>
+      <header className="pt-2 pb-1 flex items-center justify-between">
+        <div>
+          <h1 className="editorial text-2xl text-ink leading-tight">{greeting}</h1>
+          <p className="text-sm text-ink-2 mt-0.5">{formatDate()}</p>
+        </div>
+        <button
+          onClick={() => go("settings")}
+          className="text-ink-muted hover:text-ink cursor-pointer w-5 h-5"
+          aria-label="Settings"
+        >
+          <Settings className="w-5 h-5" />
+        </button>
       </header>
 
       {/* Mood check-in */}
@@ -93,7 +131,7 @@ export default function TodayScreen({
 
       {/* Recommended action */}
       <button
-        onClick={() => go(recommendedAction.route)}
+        onClick={() => { recordToolUse(recommendedAction.route); go(recommendedAction.route); }}
         className="w-full bg-accent/8 border border-accent/20 shadow-sm hover:bg-accent/12 p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left flex items-center gap-3"
       >
         <span className="shrink-0 w-10 h-10 rounded-xl bg-accent/15 flex items-center justify-center text-accent">{recommendedAction.icon}</span>
@@ -104,17 +142,27 @@ export default function TodayScreen({
         <ChevronRight className="w-5 h-5 text-ink-faint shrink-0 ml-auto" aria-hidden="true" />
       </button>
 
-      {/* Talk to Nila */}
-      <Card variant="glass" padding="md" gap="none">
-        <button
-          onClick={() => go("nila")}
-          className="w-full flex items-center gap-3 cursor-pointer min-h-[44px] active:scale-[0.99] transition-all"
-        >
-          <span className="shrink-0 text-accent"><MessageCircle className="w-5 h-5" aria-hidden="true" /></span>
-          <span className="flex-1 text-sm font-semibold text-ink">Talk to Nila</span>
-          <ChevronRight className="w-5 h-5 text-ink-faint shrink-0" aria-hidden="true" />
-        </button>
-      </Card>
+      {/* Recently used tools */}
+      {recentTools.length > 0 && (
+        <Section title="Recently">
+          {recentTools.map((entry) => {
+            const meta = TOOL_META[entry.target];
+            if (!meta) return null;
+            return (
+              <ToolRow
+                key={entry.target}
+                icon={meta.icon}
+                label={meta.label}
+                subtitle={ago(entry.timestamp)}
+                onPress={() => go(entry.target)}
+              />
+            );
+          })}
+        </Section>
+      )}
+
+      {/* Rating prompt — gated by session count, dismissible */}
+      <RatingPromptCard />
 
       {/* Crisis support — always visible, subtle */}
       <div className="flex justify-center pt-2 pb-4">

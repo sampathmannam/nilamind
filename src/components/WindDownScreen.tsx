@@ -243,7 +243,7 @@ export default function WindDownScreen() {
             )}
           </div>
 
-          <p className="text-base text-slate-600 leading-relaxed px-1">
+          <p className="text-base text-ink-faint leading-relaxed px-1">
             These are gentle habits, not rules. If sleep stays hard for weeks — or your body clock feels far off — a
             GP or sleep clinician can help more than tips can.
           </p>

@@ -135,7 +135,7 @@ function auxViewLabel(view: AuxView): string {
 function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () => void, onOpenGrounding: () => void, onOpenView: (target: string) => void, onOpenCaregiverShare?: (contactId: string) => void) {
   switch (view) {
     case "about_nila": return <AboutNilaScreen />;
-    case "insights": return <InsightsScreen onClose={onClose} />;
+    case "insights": return <InsightsScreen />;
     case "thought_record": return <ThoughtRecordScreen />;
     case "assessment": return <AssessmentScreen onActivateCrisis={onActivateCrisis} />;
     case "your_data": return <YourDataScreen />;
@@ -514,7 +514,7 @@ function AppShell() {
       <nav className="shrink-0 flex items-center justify-around border-t border-line bg-page/95 backdrop-blur pb-[max(8px,env(safe-area-inset-bottom))]" role="tablist" aria-label="Main navigation">
         {([
           { id: "nila" as AppTab, label: "Nila", Icon: MessageSquare },
-          { id: "today" as AppTab, label: "Today", Icon: LayoutGrid },
+          { id: "today" as AppTab, label: "Home", Icon: LayoutGrid },
           { id: "tools" as AppTab, label: "Tools", Icon: Wrench },
           { id: "you" as AppTab, label: t("you"), Icon: User },
         ]).map(({ id, label, Icon }) => (

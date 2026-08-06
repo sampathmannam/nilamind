@@ -169,13 +169,11 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
             (AUX_LABELS.assessment) already titles this screen "Screenings" directly above, so users saw
             TWO DIFFERENT titles stacked for the same surface. The Sheet title wins (it matches the Tools
             row that opens it); the description below still carries the "research-validated" framing. */}
-        <header className="space-y-1">
-          <p className="text-base text-ink-muted leading-relaxed">
-            Short, research-validated check-ins — depression (<span className="text-ink-faint">PHQ-9 / quick PHQ-2</span>), anxiety (<span className="text-ink-faint">GAD-7</span>),
-            wellbeing (<span className="text-ink-faint">WHO-5</span>) and stress (<span className="text-ink-faint">PSS-4</span>). They turn a vague "I feel worse" into something you
-            can actually see move.
-          </p>
-        </header>
+        <p className="text-base text-ink-muted leading-relaxed">
+          Short, research-validated check-ins — depression (<span className="text-ink-faint">PHQ-9 / quick PHQ-2</span>), anxiety (<span className="text-ink-faint">GAD-7</span>),
+          wellbeing (<span className="text-ink-faint">WHO-5</span>) and stress (<span className="text-ink-faint">PSS-4</span>). They turn a vague "I feel worse" into something you
+          can actually see move.
+        </p>
 
         <div className="bg-accent/5 border border-accent/20 rounded-xl p-3 flex gap-2.5">
           <Info className="w-4 h-4 text-accent shrink-0 mt-0.5" />
@@ -339,7 +337,6 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
         {/* Items */}
         <div className="space-y-3">
           {inst.items.map((item, idx) => {
-            const isSafety = inst.safetyItemIndex === idx;
             return (
               <div
                 key={idx}
@@ -347,8 +344,8 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
                 id={`assessment-item-${idx}`}
               >
                 <div className="flex gap-2 mb-3">
-                  <span className="text-[11px] font-mono text-slate-600 shrink-0">{idx + 1}.</span>
-                  <p className={`text-base leading-relaxed ${isSafety ? "text-ink-2" : "text-ink-2"}`}>{item}</p>
+                  <span className="text-[11px] font-mono text-ink-faint shrink-0">{idx + 1}.</span>
+                  <p className="text-base leading-relaxed text-ink-2">{item}</p>
                 </div>
                 <div className={`grid ${COLS[optionsFor(inst, idx).length] ?? "grid-cols-4"} gap-1.5`}>
                   {optionsFor(inst, idx).map((opt, val) => {

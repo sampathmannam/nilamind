@@ -83,13 +83,11 @@ export default function NilaMemoryScreen() {
     <div className="space-y-5 max-w-md mx-auto" id="nila-memory-screen">
       {/* 2026-08-05 declutter: in-body "What Nila remembers" h1 removed — the Sheet header
           (AUX_LABELS.nila_memory) already shows the same title directly above. Description stays. */}
-      <header className="space-y-1">
-        <p className="text-base text-ink-muted leading-relaxed">
-          The things Nila has come to understand about you over time — kept private on this device. Edit
-          anything that's off, or delete what you'd rather she let go. If she notices something again
-          later, just delete it again.
-        </p>
-      </header>
+      <p className="text-base text-ink-muted leading-relaxed">
+        The things Nila has come to understand about you over time — kept private on this device. Edit
+        anything that's off, or delete what you'd rather she let go. If she notices something again
+        later, just delete it again.
+      </p>
 
       {/* User-owned profile tiers — what they told Nila to keep. Deletable here = the consent backstop. */}
       {facts.length > 0 && (

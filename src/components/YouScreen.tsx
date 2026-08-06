@@ -96,8 +96,12 @@ export default function YouScreen({ go }: { go: (target: string) => void }) {
 
       <Card variant="raised" padding="lg" gap="none">
         <div className="text-center">
-          <span className="text-2xl font-bold text-ink">{streak.current}-day streak</span>
-          <p className="text-xs text-ink-muted mt-1">{streak.message}</p>
+          <span className="text-2xl font-bold text-ink">
+            {streak.current > 0 ? `${streak.current}-day streak` : "Welcome"}
+          </span>
+          <p className="text-xs text-ink-muted mt-1">
+            {streak.current > 0 ? streak.message : "Your journey starts with one check-in"}
+          </p>
         </div>
         <div className="mt-3 pt-3 border-t border-line">
           <StreakConstellation activeDays={activeDays} />

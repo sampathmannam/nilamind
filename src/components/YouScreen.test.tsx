@@ -48,7 +48,7 @@ describe("YouScreen — data error feedback (U5.2)", () => {
 describe("YouScreen — simplified layout", () => {
   it("renders streak card", () => {
     render(<YouScreen go={noop} />);
-    expect(screen.getByText(/-day streak/)).toBeTruthy();
+    expect(screen.getByText(/Welcome|-day streak/)).toBeTruthy();
   });
 
   it("renders all navigation rows", () => {

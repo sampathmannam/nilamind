@@ -244,13 +244,11 @@ export default function ValuesToActionScreen({ highlightDomains = [] }: { highli
           this screen in the Sheet header directly above (aux "Values work" / CaptureSheets "Do one
           thing"), and the in-body wording DISAGREED with both, so users saw two different titles
           stacked. Description stays. */}
-      <header className="space-y-1">
-        <p className="text-base text-ink-muted leading-relaxed">
-          Start with <span className="text-ink-2 font-semibold">why</span> — what matters and where
-          life has drifted from it — then take one small step. You act first, in tiny steps, and let
-          the feeling catch up. You don't have to feel like it.
-        </p>
-      </header>
+      <p className="text-base text-ink-muted leading-relaxed">
+        Start with <span className="text-ink-2 font-semibold">why</span> — what matters and where
+        life has drifted from it — then take one small step. You act first, in tiny steps, and let
+        the feeling catch up. You don't have to feel like it.
+      </p>
 
       {/* ═══ WHY — Values compass ═══ */}
       <section className="space-y-3" id="vta-why">
@@ -427,7 +425,7 @@ export default function ValuesToActionScreen({ highlightDomains = [] }: { highli
                 <MiniBar label="Avg pleasure" value={insight.avgPleasure} tone="purple" />
               </div>
             ) : (
-              <p className="text-[11px] text-ink-faint">Rate a few activities to see what lifts you most.</p>
+              <p className="text-base text-ink-faint leading-relaxed">Rate a few activities to see what lifts you most.</p>
             )}
             {insight.topCategory && (
               <p className="text-base text-ink-2 leading-relaxed">

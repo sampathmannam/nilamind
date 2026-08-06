@@ -43,7 +43,7 @@ import { speakIfEnabled, listenOnce, stopSpeaking } from "../services/voice";
 import { startVoiceSession, endVoiceSession } from "../services/voicePatterns";
 import { checkSttCoherence } from "../services/sttCoherenceGate";
 import { Mic, Send, MicOff, Keyboard, X, Square, Wind, Snowflake } from "lucide-react";
-import RatingPromptCard from "./RatingPromptCard";
+
 import { hapticMedium } from "../hooks/useHaptics";
 
 interface ModeScreenProps {
@@ -492,20 +492,20 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           </div>
         )}
 
-        {/* Nila presence */}
-        <div className="w-full max-w-sm flex flex-col items-center text-center gap-3 animate-fade-up">
+        {/* Nila presence — compact inline layout */}
+        <div className="w-full max-w-sm flex items-center gap-3 animate-fade-up px-2">
           <NilaFace
             state={mode.userState}
             onClick={handleVoice}
             onLongPress={() => openCrisis()}
-            size={100}
+            size={48}
             isListening={listening}
             affectAccent={affectAccent}
           />
-          <div className="max-w-xs">
-            <p className="text-[15px] text-ink-2 font-display leading-relaxed">{question}</p>
+          <div className="flex-1 min-w-0">
+            <p className="text-[14px] text-ink-2 font-display leading-snug">{question}</p>
             {mode.userState && mode.userState !== "calm" && (
-              <p className="text-base text-ink-muted mt-1.5 leading-relaxed">
+              <p className="text-xs text-ink-muted mt-0.5 leading-snug">
                 {mode.userState === "anxious" && STATE_MESSAGES.anxious}
                 {mode.userState === "low" && STATE_MESSAGES.low}
                 {mode.userState === "elevated" && STATE_MESSAGES.elevated}
@@ -514,12 +514,12 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           </div>
         </div>
 
-        {/* Quick Calm — two fast-regulate buttons */}
+        {/* Quick Calm — compact horizontal bar */}
         <div className="w-full max-w-sm flex gap-2 animate-fade-up" style={{ animationDelay: '60ms' }}>
-          <Button variant="secondary" size="sm" onClick={() => onOpenGrounding?.(1)} className="flex-1 gap-1.5">
+          <Button variant="secondary" size="sm" onClick={() => onOpenGrounding?.(1)} className="flex-1 gap-1.5 py-2 text-xs">
             <Wind className="w-3.5 h-3.5" /> Breathe
           </Button>
-          <Button variant="secondary" size="sm" onClick={() => onOpenGrounding?.()} className="flex-1 gap-1.5">
+          <Button variant="secondary" size="sm" onClick={() => onOpenGrounding?.()} className="flex-1 gap-1.5 py-2 text-xs">
             <Snowflake className="w-3.5 h-3.5" /> Ground
           </Button>
         </div>
@@ -572,11 +572,6 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           </div>
         )}
       </div>
-
-      {/* Rating prompt lives OUTSIDE the chat scroll area (Gap A-3) and only before the conversation
-          starts (no user-authored message yet — the welcome seed doesn't count) so it never interrupts
-          an active conversation. */}
-      {!messages.some((m) => m.role === "user") && <RatingPromptCard />}
 
       {/* Input bar */}
       <div className="px-4 py-3 border-t border-line/40 bg-page/95 backdrop-blur-sm space-y-2.5 shrink-0">

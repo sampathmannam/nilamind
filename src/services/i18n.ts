@@ -559,7 +559,6 @@ export type I18nKey =
   | "you_more_resources"
   | "you_footer_disclaimer"
   // Thought record
-  | "tr_title"
   | "tr_subtitle"
   | "tr_step_of"
   | "tr_step1_title"
@@ -1236,8 +1235,7 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     you_fewer_resources: "Show fewer resources",
     you_more_resources: " more resources",
     you_footer_disclaimer: "NilaMind is a support alongside \u2014 not a substitute for \u2014 professional care.",
-    tr_title: "CBT Thought Record",
-    tr_subtitle: "Challenging automatic cognitive filters",
+    tr_subtitle: "Catch a heavy thought, look at it fairly, and try a kinder, truer take.",
     tr_step_of: " of 5",
     tr_step1_title: "Step 1: The Situation",
     tr_step1_question: "What happened?",
@@ -1897,8 +1895,7 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     you_fewer_resources: "कम संसाधन दिखाएं",
     you_more_resources: " और संसाधन",
     you_footer_disclaimer: "NilaMind पेशेवर देखभाल के साथ सहायता है — विकल्प नहीं।",
-    tr_title: "CBT विचार रिकॉर्ड",
-    tr_subtitle: "स्वचालित संज्ञानात्मक फ़िल्टरों को चुनौती देना",
+    tr_subtitle: "किसी भारी विचार को पकड़ें, उसे निष्पक्ष होकर देखें, और एक दयालु, सच्चा नज़रिया अपनाएं।",
     tr_step_of: " / 5",
     tr_step1_title: "चरण 1: स्थिति",
     tr_step1_question: "क्या हुआ?",
@@ -2556,8 +2553,7 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     you_fewer_resources: "குறைவான வளங்களைக் காட்டு",
     you_more_resources: " மேலும் வளங்கள்",
     you_footer_disclaimer: "NilaMind தொழில்முறை பரிவுடன் ஆதரவு — மாற்று அல்ல.",
-    tr_title: "CBT எண்ணப் பதிவு",
-    tr_subtitle: "தானியங்கு அறிவாற்றல் வடிகட்டிகளை எதிர்கொள்ளுதல்",
+    tr_subtitle: "ஒரு கனமான எண்ணத்தைக் கவனியுங்கள், அதை நியாயமாகப் பரிசீலியுங்கள், மேலும் இரக்கமான, உண்மையான பார்வையை முயற்சிக்கவும்.",
     tr_step_of: " / 5",
     tr_step1_title: "படி 1: சூழ்நிலை",
     tr_step1_question: "என்ன நடந்தது?",
@@ -3215,8 +3211,7 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     you_fewer_resources: "తక్కువ వనరులు చూపించు",
     you_more_resources: " మరిన్ని వనరులు",
     you_footer_disclaimer: "NilaMind వృత్తిపరమైన సంరక్షణతో పాటు మద్దతు — ప్రత్యామ్నాయం కాదు.",
-    tr_title: "CBT ఆలోచన రికార్డు",
-    tr_subtitle: "స్వయంచాలిత అంతర్జ్ఞాన ఫిల్టర్లను సవాలు చేయడం",
+    tr_subtitle: "ఒక బరువైన ఆలోచనను గమనించండి, దాన్ని నిష్పక్షపాతంగా చూడండి, మరింత దయగల, నిజమైన దృక్కోణాన్ని ప్రయత్నించండి.",
     tr_step_of: " / 5",
     tr_step1_title: "దశ 1: పరిస్థితి",
     tr_step1_question: "ఏమి జరిగింది?",
