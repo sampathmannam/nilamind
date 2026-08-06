@@ -93,11 +93,18 @@ function ActivitySection({
               <p className="text-xs text-ink-muted uppercase tracking-wide">{t("usage_features")}</p>
             </div>
           </div>
-          {usageSummary.avgMood != null && (
+          {/* 15-day longitudinal run (2026-08-24): this line carried an ALL-TIME mood mean with no
+              window label, next to the dashboard's 7-day hero average — at day 15 the screen read
+              "4.1" at the top and "3.7" here, two different windows presented as if comparable, with
+              nothing saying so. Mood is already reported twice with explicit windows (the 7-day hero
+              and the "this month … (min–max)" narrative); a third, unlabelled lifetime mean in a
+              section about sessions and features contradicts them for no gain. Top emotion stays —
+              it is a usage fact, not a second reading of the same measure. */}
+          {(usageSummary.topEmotion || usageSummary.features.includes("values_snapshot")) && (
             <p className="text-xs text-ink-muted text-center">
-              Avg mood: <span className="font-mono text-ink">{usageSummary.avgMood.toFixed(1)}/10</span>
-              {usageSummary.topEmotion && <> · Top: <span className="text-ink capitalize">{usageSummary.topEmotion}</span></>}
-              {usageSummary.features.includes("values_snapshot") && <> · <span className="text-success">Values set ✓</span></>}
+              {usageSummary.topEmotion && <>Top: <span className="text-ink capitalize">{usageSummary.topEmotion}</span></>}
+              {usageSummary.topEmotion && usageSummary.features.includes("values_snapshot") && <> · </>}
+              {usageSummary.features.includes("values_snapshot") && <span className="text-success">Values set ✓</span>}
             </p>
           )}
           {usageSummary.moodSleepCorrelation && (
