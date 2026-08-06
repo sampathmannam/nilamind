@@ -5,6 +5,7 @@ import Section from "./Section";
 import ToolRow from "./ToolRow";
 import CrisisHeaderButton from "./CrisisHeaderButton";
 import { SkeletonList } from "./Skeleton";
+import { TOOL_META } from "./toolMeta";
 import { getUserGoals } from "../services/chatSuggestions";
 import { useUserContext } from "../hooks/useUserContext";
 import { recordToolUse, getAllRecentTools } from "../services/recentTools";
@@ -38,19 +39,8 @@ interface Props {
   onOpenCrisis: () => void;
 }
 
-// ── Section definitions: maps toolsRows group titles → visible section labels ──
-const SECTIONS = [
-  { title: "Calm", groupFilter: (id: string) => ["plan", "winddown", "sounds", "reach_out"].includes(id) },
-  { title: "Track", groupFilter: (id: string) => ["ema_checkin", "diary", "medication"].includes(id) },
-  { title: "Skills", groupFilter: (id: string) =>
-    ["problem_solving", "values_to_action", "assessment", "social_rhythm", "exposure", "relapse_plan", "chain_analysis"].includes(id),
-  },
-] as const;
-
-function sectionRows(allRows: ReturnType<typeof buildToolGroups>[number]["rows"], filter: (id: string) => boolean) {
-  return allRows.filter((r) => filter(r.id));
-}
-
+// Redesign §5.3: ToolsScreen renders exactly what buildToolGroups() returns — the old SECTIONS
+// whitelist (which silently dropped built rows like episode + dashboard) is gone.
 export default function ToolsScreen({ go, onEpisode, phoneEnabled, onOpenCrisis }: Props) {
   const { timeMode, state } = useUserContext();
   const [loading, setLoading] = useState(true);
@@ -68,8 +58,6 @@ export default function ToolsScreen({ go, onEpisode, phoneEnabled, onOpenCrisis 
       ),
     [go, onEpisode, phoneEnabled, timeMode, state],
   );
-
-  const allRows = useMemo(() => groups.flatMap((g) => g.rows), [groups]);
 
   const pinnedTools = useMemo(() => getPinnedTools(go, onEpisode, phoneEnabled), [go, onEpisode, phoneEnabled]);
 
@@ -100,35 +88,36 @@ export default function ToolsScreen({ go, onEpisode, phoneEnabled, onOpenCrisis 
 
       {pinnedTools.length > 0 && (
         <Section title="Pinned">
-          {pinnedTools.map((r) => (
+          {pinnedTools.map((r) => {
+            const meta = TOOL_META[r.id];
+            return (
+              <ToolRow
+                key={r.id}
+                icon={meta
+                  ? <meta.Icon className={meta.iconClass} aria-hidden="true" />
+                  : <Pin className="w-5 h-5 text-accent" aria-hidden="true" />}
+                label={r.label}
+                subtitle={r.sub}
+                onPress={() => { recordToolUse(r.id); r.onTap(); }}
+              />
+            );
+          })}
+        </Section>
+      )}
+
+      {groups.map((g) => (
+        <Section key={g.title} title={g.title}>
+          {g.rows.map((r) => (
             <ToolRow
               key={r.id}
-              icon={<Pin className="w-5 h-5 text-accent" />}
+              icon={<r.Icon className={r.iconClass} aria-hidden="true" />}
               label={r.label}
               subtitle={r.sub}
               onPress={() => { recordToolUse(r.id); r.onTap(); }}
             />
           ))}
         </Section>
-      )}
-
-      {SECTIONS.map((sec) => {
-        const rows = sectionRows(allRows, sec.groupFilter);
-        if (rows.length === 0) return null;
-        return (
-          <Section key={sec.title} title={sec.title}>
-            {rows.map((r) => (
-              <ToolRow
-                key={r.id}
-                icon={<r.Icon className={r.iconClass} aria-hidden="true" />}
-                label={r.label}
-                subtitle={r.sub}
-                onPress={() => { recordToolUse(r.id); r.onTap(); }}
-              />
-            ))}
-          </Section>
-        );
-      })}
+      ))}
     </div>
   );
 }

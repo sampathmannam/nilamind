@@ -24,7 +24,7 @@ export const TOOL_META: Record<string, ToolMeta> = {
   episode: { Icon: LifeBuoy, iconClass: "w-5 h-5 text-danger", label: () => t("tool_episode_label"), sub: () => t("tool_episode_sub") },
   safety_plan: { Icon: ShieldCheck, iconClass: "w-5 h-5 text-success", label: () => "Safety plan", sub: () => "Your steps for the hardest moments — ready before you need them" },
   // ── Calm ──
-  calm_hub: { Icon: Wind, iconClass: "w-5 h-5 text-accent", label: () => "Calm", sub: () => "Breathing, grounding, wind down, and sounds" },
+  calm_hub: { Icon: Wind, iconClass: "w-5 h-5 text-accent", label: () => "Calm space", sub: () => "Breathing, grounding, wind down, and sounds" },
   plan: { Icon: Wind, iconClass: "w-5 h-5 text-accent", label: () => "Breathing & Grounding", sub: () => "Paced breathing, grounding exercises, and TIPP tools" },
   winddown: { Icon: Moon, iconClass: "w-5 h-5 text-accent", label: () => t("tool_winddown_label"), sub: () => t("tool_winddown_sub") },
   sounds: { Icon: Volume2, iconClass: "w-5 h-5 text-success", label: () => "Ambient sounds", sub: () => "White/brown/pink noise for focus, sleep, or calm" },

@@ -127,7 +127,7 @@ const AUX_LABELS: Partial<Record<AuxView, string>> = {
   guided_programs: "Guided Programs",
   progress: "Your progress",
   chain_analysis: "Chain Analysis",
-  calm_hub: "Calm",
+  calm_hub: "Calm space",
   skills_hub: "Skills & programs",
 };
 

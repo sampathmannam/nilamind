@@ -1,24 +1,20 @@
-import {
-  Wind, NotebookPen, Activity, LifeBuoy, TrendingUp, Moon, MessageCircle,
-  Pill, Lightbulb, Compass, Mountain, AlertTriangle, Smile, Clock3, Volume2, Sliders,
-  Link2,
-  type LucideIcon,
-} from "lucide-react";
+import { type LucideIcon } from "lucide-react";
 import { t } from "../services/i18n";
+import { TOOL_META } from "./toolMeta";
 
-// Redesign §2 — the single source of truth for the "Tools" hub rows. ToolsScreen renders exactly what
-// buildToolGroups() returns, so this file (and its test) guard the real, on-screen row set: focused
-// right-now tools grouped by intent. "In the moment" = grounding/breathing, wind-down for sleep,
-// episode support; "Log & track" = diary, screenings; "Patterns" = phone insights when enabled.
-// Re-homed rows (skills, thought_record, self_compassion) now live under You → Resources; episode
-// support is a Nila MODE reached via onEpisode(), not a route; the "behaviour" row only appears when
-// phone features are enabled (PHONE_FEATURES_ENABLED).
-// Wave 3 Group B (2026-07-12, see docs/superpowers/plans/2026-07-12-wave3-technical-specs.md §5):
-// "values_work" (uncited duplicate) is retired from this hub — its data was migrated into values.ts,
-// the actual VLQ-cited tool, and "values_to_action" now takes its place here. values_to_action does
-// NOT go through nav.ts's generic aux-view system (KNOWN_AUX_VIEWS deliberately excludes it — see
-// nav.test.ts, PLAN_OF_ACTION A6); App.tsx's go() special-cases the "unknown" resolution for this one
-// target and opens its own sheet, same pattern as "caregiver"/"grounding".
+// Redesign §5.3 (2026-08-06) — the single source of truth for the "Tools" hub rows. ToolsScreen
+// renders exactly what buildToolGroups() returns (the old SECTIONS whitelist that silently dropped
+// built rows is gone), so this file (and its test) guard the real, on-screen row set.
+//
+// Shape: 14 flat rows → 9 rows under 4 headers. "In the moment" comes FIRST (episode support +
+// safety plan — when someone opens Tools in distress, the top row is the right one; Stanley & Brown
+// 2012: the plan should be built/reviewed calm-time, before it's needed). Calm and Skills fan out
+// through hub launchers (CalmHubScreen/SkillsHubScreen — Hick–Hyman: fewer simultaneous choices;
+// progressive disclosure keeps the full catalog reachable, including the previously-orphaned
+// Guided Programs library). The dashboard row moved to You ("Patterns").
+//
+// Labels/subs/icons resolve through TOOL_META (./toolMeta) — the same registry Recently/Pinned and
+// the hubs render from, so recency surfaces can never drift from the catalog again.
 // Kept as plain data (icon component refs, not JSX) so the row set stays unit-testable in a node env.
 
 export interface ToolRow {
@@ -35,75 +31,68 @@ export interface ToolRow {
 export interface ToolGroup {
   title: string;
   rows: ToolRow[];
-  /** When true, the group is hidden behind a "Show more" toggle — niche tools with low self-directed
-   *  engagement (exposure, crisis rehearsal, relapse prevention, etc.) are kept accessible but not
-   *  surfaced by default, matching Woebot/Wysa's conversational-routing model. */
+  /** Legacy collapse flag — no redesigned group uses it (all 9 rows are always visible). */
   more?: true;
 }
 
 export interface ToolRowDeps {
   go: (target: string) => void;
   onEpisode: () => void;
+  /** Kept for call-site compatibility; the phone-gated dashboard row moved to the You tab. */
   phoneEnabled: boolean;
 }
 
-export function buildToolGroups({ go, onEpisode, phoneEnabled }: ToolRowDeps): ToolGroup[] {
+function metaRow(id: string, onTap: () => void): ToolRow {
+  const m = TOOL_META[id];
+  return { id, label: m.label(), sub: m.sub(), Icon: m.Icon, iconClass: m.iconClass, onTap };
+}
+
+export function buildToolGroups({ go, onEpisode }: ToolRowDeps): ToolGroup[] {
   return [
     {
       title: t("tool_group_moment"),
       rows: [
-        { id: "plan", label: "Breathing & Grounding", sub: "Paced breathing, grounding exercises, and TIPP tools", Icon: Wind, iconClass: "w-5 h-5 text-accent", onTap: () => go("plan") },
-        { id: "winddown", label: t("tool_winddown_label"), sub: t("tool_winddown_sub"), Icon: Moon, iconClass: "w-5 h-5 text-accent", onTap: () => go("winddown") },
-        { id: "sounds", label: "Ambient sounds", sub: "White/brown/pink noise for focus, sleep, or calm", Icon: Volume2, iconClass: "w-5 h-5 text-success", onTap: () => go("sounds") },
-        { id: "reach_out", label: t("tool_reach_out_label"), sub: t("tool_reach_out_sub"), Icon: MessageCircle, iconClass: "w-5 h-5 text-success", onTap: () => go("reach_out") },
-        { id: "episode", label: t("tool_episode_label"), sub: t("tool_episode_sub"), Icon: LifeBuoy, iconClass: "w-5 h-5 text-rose-400", onTap: onEpisode },
+        metaRow("episode", onEpisode),
+        metaRow("safety_plan", () => go("safety_plan")),
+      ],
+    },
+    {
+      title: t("tool_group_calm"),
+      rows: [
+        metaRow("calm_hub", () => go("calm_hub")),
+        metaRow("reach_out", () => go("reach_out")),
       ],
     },
     {
       title: t("tool_group_log"),
       rows: [
-        { id: "ema_checkin", label: t("tool_ema_label"), sub: t("tool_ema_sub"), Icon: Smile, iconClass: "w-5 h-5 text-accent", onTap: () => go("ema_checkin") },
-        { id: "diary", label: t("tool_diary_label"), sub: t("tool_diary_sub"), Icon: NotebookPen, iconClass: "w-5 h-5 text-accent", onTap: () => go("diary") },
-        { id: "medication", label: t("tool_medication_label"), sub: t("tool_medication_sub"), Icon: Pill, iconClass: "w-5 h-5 text-accent", onTap: () => go("medication") },
+        metaRow("ema_checkin", () => go("ema_checkin")),
+        metaRow("diary", () => go("diary")),
+        metaRow("medication", () => go("medication")),
       ],
     },
     {
       title: t("tool_group_skills"),
-      more: true,
       rows: [
-        { id: "problem_solving", label: t("tool_problem_solving_label"), sub: t("tool_problem_solving_sub"), Icon: Lightbulb, iconClass: "w-5 h-5 text-warn", onTap: () => go("problem_solving"), help: "A structured way to work through a challenge." },
-        { id: "values_to_action", label: t("tool_values_work_label"), sub: t("tool_values_work_sub"), Icon: Compass, iconClass: "w-5 h-5 text-accent", onTap: () => go("values_to_action") },
-        { id: "assessment", label: t("tool_assessment_label"), sub: t("tool_assessment_sub"), Icon: Activity, iconClass: "w-5 h-5 text-accent", onTap: () => go("assessment") },
-        { id: "social_rhythm", label: t("tool_social_rhythm_label"), sub: t("tool_social_rhythm_sub"), Icon: Clock3, iconClass: "w-5 h-5 text-accent", onTap: () => go("social_rhythm") },
-        { id: "exposure", label: t("tool_exposure_label"), sub: t("tool_exposure_sub"), Icon: Mountain, iconClass: "w-5 h-5 text-orange-400", onTap: () => go("exposure"), help: "Gentle step-by-step practice, building at your pace." },
-        { id: "relapse_plan", label: t("tool_relapse_label"), sub: t("tool_relapse_sub"), Icon: AlertTriangle, iconClass: "w-5 h-5 text-warn", onTap: () => go("relapse_plan") },
-        { id: "chain_analysis", label: "Chain Analysis", sub: "Walk through what happened, moment by moment", Icon: Link2, iconClass: "w-5 h-5 text-accent", onTap: () => go("chain_analysis") },
+        metaRow("assessment", () => go("assessment")),
+        metaRow("skills_hub", () => go("skills_hub")),
       ],
     },
-    ...(phoneEnabled
-      ? [{
-          title: t("tool_group_patterns"),
-          rows: [
-            { id: "dashboard", label: t("tool_behaviour_label"), sub: t("tool_behaviour_sub"), Icon: TrendingUp, iconClass: "w-5 h-5 text-accent", onTap: () => go("dashboard") },
-          ],
-        }]
-      : []),
   ];
 }
 
 // Goal -> the tool row ids it should promote to the front of their group, when present in that group.
 // Same personalization rationale/citation as chatSuggestions.ts's GOAL_CHIP_PRIORITY: customizable/relevant
-// content is a named engagement facilitator, closing the onboarding goal picker's previously write-only
-// loop (nilamind_user_goal), per Borghouts, Eikey, Mark et al. (2021), J Med Internet Res.
+// content is a named engagement facilitator, per Borghouts, Eikey, Mark et al. (2021), J Med Internet Res.
 // Keyed by the onboarding goal IDs actually stored in nilamind_user_goal (OnboardingGate USER_GOALS).
-// Design review 2026-07-18: these were keyed on retired labels ("Feeling low", …) that no key ever
-// matched, so goal personalization was a permanent no-op — the app asked what mattered and threw it away.
+// Redesign 2026-08-06: hub children can no longer be promoted directly — promote their hub instead
+// (e.g. sleep's wind-down lives inside calm_hub); ids absent from a group are a no-op by design.
 const GOAL_TOOL_PRIORITY: Record<string, string[]> = {
-  sleep: ["winddown", "social_rhythm", "diary"],
-  mood: ["ema_checkin", "diary", "assessment", "social_rhythm"],
-  grounding: ["plan", "exposure"],
+  sleep: ["calm_hub", "diary", "skills_hub"],
+  mood: ["ema_checkin", "diary", "assessment", "skills_hub"],
+  grounding: ["calm_hub", "skills_hub"],
   medication: ["medication", "diary"],
-  talking: ["problem_solving", "values_to_action"],
+  talking: ["skills_hub"],
 };
 
 /** Reorders each group's rows so goal-relevant tools lead, without changing group titles, membership,
@@ -126,20 +115,19 @@ export function personalizeToolOrder(groups: ToolGroup[], goals: string[]): Tool
 }
 
 // Time/state -> the tool row ids it should promote to the front of their group, IN ORDER, when present.
-// Mirrors the research behind personalizeToolOrder: surface the right tool for the moment, not a
-// flat list. Evening/night lead with wind-down then grounding (sleep/settle); anxious/elevated lead with
-// grounding (plan); crisis additionally leads with direct crisis support (episode) then grounding.
+// Evening/night lead with the Calm hub (wind-down/settle lives inside it); anxious/elevated lead with
+// Calm; crisis additionally leads with direct crisis support (episode) then Calm.
 const TIME_TOOL_PRIORITY: Record<"morning" | "day" | "evening" | "night", string[]> = {
   morning: [],
   day: [],
-  evening: ["winddown", "plan"],
-  night: ["winddown", "plan"],
+  evening: ["calm_hub"],
+  night: ["calm_hub"],
 };
 
 const STATE_TOOL_PRIORITY: Partial<Record<string, string[]>> = {
-  anxious: ["plan"],
-  elevated: ["plan"],
-  crisis: ["episode", "plan"],
+  anxious: ["calm_hub"],
+  elevated: ["calm_hub"],
+  crisis: ["episode", "calm_hub"],
 };
 
 /** Reorders each group's rows so time- and state-relevant tools lead (in the declared order), without

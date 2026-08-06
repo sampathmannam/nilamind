@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { buildToolGroups, type ToolRowDeps } from "./toolsRows";
 
 const store = new Map<string, string>();
@@ -11,33 +11,32 @@ vi.mock("../services/storageUtils", () => ({
   DAY_MS: 86_400_000,
 }));
 
-
 const STUB: ToolRowDeps = { go: () => {}, onEpisode: () => {}, phoneEnabled: false };
 const rowIds = (phoneEnabled: boolean) =>
   buildToolGroups({ ...STUB, phoneEnabled }).flatMap((g) => g.rows.map((r) => r.id));
 
-describe("Tools hub rows (redesign §2)", () => {
-  it("renders all tool rows in order, when phone is off", () => {
+// Redesign 2026-08-06 (§5.3, deliberate golden update): 14 flat rows → 9 rows under 4 headers.
+// Calm/Skills fan out through hub launchers; episode support + safety plan get calm-time entries
+// ("In the moment" first — when someone opens Tools in distress, the top row is the right one);
+// the dashboard row moved to You ("Patterns").
+describe("Tools hub rows (redesign §5.3)", () => {
+  it("renders exactly the 9 redesigned rows in order", () => {
     expect(rowIds(false)).toEqual([
-      "plan", "winddown", "sounds", "reach_out", "episode",
+      "episode", "safety_plan",
+      "calm_hub", "reach_out",
       "ema_checkin", "diary", "medication",
-      "problem_solving", "values_to_action", "assessment", "social_rhythm", "exposure", "relapse_plan", "chain_analysis",
+      "assessment", "skills_hub",
     ]);
   });
 
-  it("appends the phone patterns row only when phone features are enabled", () => {
-    expect(rowIds(false)).not.toContain("dashboard");
-    const withPhone = rowIds(true);
-    expect(withPhone).toContain("dashboard");
-    expect(withPhone.indexOf("dashboard")).toBeGreaterThan(withPhone.indexOf("diary"));
+  it("phoneEnabled no longer adds a dashboard row — Patterns lives on the You tab now", () => {
+    expect(rowIds(true)).toEqual(rowIds(false));
+    expect(rowIds(true)).not.toContain("dashboard");
   });
 
-  it("groups rows under the redesigned section titles", () => {
+  it("groups rows under the four redesigned section titles", () => {
     expect(buildToolGroups({ ...STUB, phoneEnabled: false }).map((g) => g.title)).toEqual([
-      "In the moment", "Log & track", "Skills & practice",
-    ]);
-    expect(buildToolGroups({ ...STUB, phoneEnabled: true }).map((g) => g.title)).toEqual([
-      "In the moment", "Log & track", "Skills & practice", "Patterns",
+      "In the moment", "Calm", "Log & track", "Skills & practice",
     ]);
   });
 
@@ -55,56 +54,35 @@ describe("Tools hub rows (redesign §2)", () => {
     expect(routed).toBeNull();
   });
 
-  it("routes the quick check-in row to the ema_checkin screen", () => {
-    let routed: string | null = null;
-    const groups = buildToolGroups({ go: (t) => { routed = t; }, onEpisode: () => {}, phoneEnabled: false });
-    const ema = groups.flatMap((g) => g.rows).find((r) => r.id === "ema_checkin")!;
-    expect(ema).toBeTruthy();
-    ema.onTap();
-    expect(routed).toBe("ema_checkin");
+  it("routes safety_plan, calm_hub, skills_hub and ema_checkin through go()", () => {
+    const routed: string[] = [];
+    const groups = buildToolGroups({ go: (t) => { routed.push(t); }, onEpisode: () => {}, phoneEnabled: false });
+    const byId = new Map(groups.flatMap((g) => g.rows).map((r) => [r.id, r]));
+    for (const id of ["safety_plan", "calm_hub", "skills_hub", "ema_checkin"]) {
+      byId.get(id)!.onTap();
+    }
+    expect(routed).toEqual(["safety_plan", "calm_hub", "skills_hub", "ema_checkin"]);
   });
 
-  it("keeps every re-homed row out of the Tools hub", () => {
+  it("keeps hub children and re-homed rows out of the top level", () => {
     const all = rowIds(true);
     for (const gone of [
-      "skills", "thought_record", "self_compassion",
-      "behavioural_activation", "values_compass", "episode_agent", "checkin",
+      // hub children (Calm hub)
+      "plan", "winddown", "sounds",
+      // hub children (Skills hub)
+      "problem_solving", "values_to_action", "social_rhythm", "exposure", "relapse_plan", "chain_analysis", "guided_programs",
+      // moved to You
+      "dashboard",
+      // long-retired rows
+      "skills", "thought_record", "self_compassion", "behavioural_activation", "values_compass", "episode_agent", "checkin", "values_work",
     ]) {
-      expect(all).not.toContain(gone);
+      expect(all, `top-level leak: ${gone}`).not.toContain(gone);
     }
   });
 
-  it("retired values_work (uncited duplicate) — values_to_action (VLQ-cited) took its place, wave 3 Group B", () => {
-    const all = rowIds(true);
-    expect(all).not.toContain("values_work");
-    expect(all).toContain("values_to_action");
-  });
-
-  it("marks the Skills & practice group as 'more' (hidden behind a toggle, not shown by default)", () => {
-    const groups = buildToolGroups({ ...STUB, phoneEnabled: false });
-    const skills = groups.find((g) => g.rows.some((r) => r.id === "problem_solving"))!;
-    expect(skills).toBeDefined();
-    expect(skills.more).toBe(true);
-  });
-
-  it("does not mark In the moment or Log & track as 'more'", () => {
-    const groups = buildToolGroups({ ...STUB, phoneEnabled: false });
-    for (const g of groups) {
-      if (g.rows.some((r) => r.id === "plan" || r.id === "winddown")) {
-        expect(g.more).toBeUndefined();
-      }
-      if (g.rows.some((r) => r.id === "ema_checkin" || r.id === "diary")) {
-        expect(g.more).toBeUndefined();
-      }
+  it("no group hides behind a 'more' toggle anymore — 9 rows are always visible", () => {
+    for (const g of buildToolGroups({ ...STUB, phoneEnabled: false })) {
+      expect(g.more, `group "${g.title}" should not be collapsed`).toBeUndefined();
     }
-  });
-
-  it("routes the values_to_action row through go(), same as every other Skills & practice row", () => {
-    let routed: string | null = null;
-    const groups = buildToolGroups({ go: (t) => { routed = t; }, onEpisode: () => {}, phoneEnabled: false });
-    const row = groups.flatMap((g) => g.rows).find((r) => r.id === "values_to_action")!;
-    expect(row).toBeTruthy();
-    row.onTap();
-    expect(routed).toBe("values_to_action");
   });
 });

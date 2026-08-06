@@ -91,6 +91,7 @@ export type I18nKey =
   | "perfSub"
   // Tools hub
   | "tool_group_moment"
+  | "tool_group_calm"
   | "tool_plan_label"
   | "tool_plan_sub"
   | "tool_winddown_label"
@@ -777,6 +778,7 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     perfTitle: "Performance & Diagnostics",
     perfSub: "Web vitals, model cache, crash log — on this device only",
     tool_group_moment: "In the moment",
+    tool_group_calm: "Calm",
     tool_plan_label: "Breathing & Grounding",
     tool_plan_sub: "Calm your body in a hard minute",
     tool_winddown_label: "Wind down for sleep",
@@ -1450,6 +1452,7 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     perfTitle: "प्रदर्शन और निदान",
     perfSub: "वेब वाइटल्स, मॉडल कैश, क्रैश लॉग — केवल इस डिवाइस पर",
     tool_group_moment: "इस क्षण में",
+    tool_group_calm: "शांति",
     tool_plan_label: "श्वास और ग्राउंडिंग",
     tool_plan_sub: "कठिन मिनट में अपने शरीर को शांत करें",
     tool_winddown_label: "नींद के लिए शांत हों",
@@ -2108,6 +2111,7 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     perfTitle: "செயல்திறன் மற்றும் கண்டறிதல்",
     perfSub: "வலை முக்கிய அளவீடுகள், மாதிரி கேச், க்ராஷ் பதிவு — இந்தச் சாதனத்தில் மட்டும்",
     tool_group_moment: "இந்தத் தருணத்தில்",
+    tool_group_calm: "அமைதி",
     tool_plan_label: "மூச்சு மற்றும் கிரவுண்டிங்",
     tool_plan_sub: "கடினமான நிமிடத்தில் உங்கள் உடலை அமைதிப்படுத்துங்கள்",
     tool_winddown_label: "தூக்கத்திற்குத் தயாராகுங்கள்",
@@ -2766,6 +2770,7 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     perfTitle: "పనితీరు మరియు డయాగ్నాస్టిక్స్",
     perfSub: "వెబ్ వైటల్స్, మోడల్ క్యాచ్, క్రాష్ లాగ్ — ఈ పరికరంలో మాత్రమే",
     tool_group_moment: "ఈ క్షణంలో",
+    tool_group_calm: "ప్రశాంతత",
     tool_plan_label: "శ్వాస మరియు గ్రౌండింగ్",
     tool_plan_sub: "కష్టమైన నిమిషంలో మీ శరీరాన్ని శాంతింపజేయండి",
     tool_winddown_label: "నిద్రకు తయారవ్వండి",
