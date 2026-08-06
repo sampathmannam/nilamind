@@ -92,6 +92,18 @@ export type I18nKey =
   // Tools hub
   | "tool_group_moment"
   | "tool_group_calm"
+  | "tool_safety_plan_sub"
+  | "tool_calm_hub_sub"
+  | "tool_skills_hub_sub"
+  | "aux_sounds"
+  | "aux_safety_plan"
+  | "aux_guided_programs"
+  | "aux_chain_analysis"
+  | "aux_episode"
+  | "aux_calm_hub"
+  | "aux_skills_hub"
+  | "aux_grounding"
+  | "aux_legal"
   | "tool_plan_label"
   | "tool_plan_sub"
   | "tool_winddown_label"
@@ -779,6 +791,18 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     perfSub: "Web vitals, model cache, crash log — on this device only",
     tool_group_moment: "In the moment",
     tool_group_calm: "Calm",
+    tool_safety_plan_sub: "Your steps for the hardest moments — ready before you need them",
+    tool_calm_hub_sub: "Breathing, grounding, wind down, and sounds",
+    tool_skills_hub_sub: "Structured practices, step by step",
+    aux_sounds: "Ambient sounds",
+    aux_safety_plan: "My Safety Plan",
+    aux_guided_programs: "Guided Programs",
+    aux_chain_analysis: "Chain Analysis",
+    aux_episode: "Episode support",
+    aux_calm_hub: "Calm space",
+    aux_skills_hub: "Skills & programs",
+    aux_grounding: "Breathing & Grounding",
+    aux_legal: "Legal",
     tool_plan_label: "Breathing & Grounding",
     tool_plan_sub: "Calm your body in a hard minute",
     tool_winddown_label: "Wind down for sleep",
@@ -1453,6 +1477,18 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     perfSub: "वेब वाइटल्स, मॉडल कैश, क्रैश लॉग — केवल इस डिवाइस पर",
     tool_group_moment: "इस क्षण में",
     tool_group_calm: "शांति",
+    tool_safety_plan_sub: "सबसे कठिन पलों के लिए आपके कदम — ज़रूरत से पहले तैयार",
+    tool_calm_hub_sub: "साँस, ग्राउंडिंग, विंड डाउन और ध्वनियाँ",
+    tool_skills_hub_sub: "संरचित अभ्यास, कदम दर कदम",
+    aux_sounds: "परिवेशी ध्वनियाँ",
+    aux_safety_plan: "मेरी सुरक्षा योजना",
+    aux_guided_programs: "मार्गदर्शित कार्यक्रम",
+    aux_chain_analysis: "श्रृंखला विश्लेषण",
+    aux_episode: "एपिसोड सहायता",
+    aux_calm_hub: "शांत स्थान",
+    aux_skills_hub: "कौशल और कार्यक्रम",
+    aux_grounding: "साँस और ग्राउंडिंग",
+    aux_legal: "कानूनी",
     tool_plan_label: "श्वास और ग्राउंडिंग",
     tool_plan_sub: "कठिन मिनट में अपने शरीर को शांत करें",
     tool_winddown_label: "नींद के लिए शांत हों",
@@ -2112,6 +2148,18 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     perfSub: "வலை முக்கிய அளவீடுகள், மாதிரி கேச், க்ராஷ் பதிவு — இந்தச் சாதனத்தில் மட்டும்",
     tool_group_moment: "இந்தத் தருணத்தில்",
     tool_group_calm: "அமைதி",
+    tool_safety_plan_sub: "மிகக் கடினமான தருணங்களுக்கான உங்கள் படிகள் — தேவைக்கு முன்பே தயார்",
+    tool_calm_hub_sub: "மூச்சு, நிலைநிறுத்தல், வைண்ட் டவுன் மற்றும் ஒலிகள்",
+    tool_skills_hub_sub: "கட்டமைக்கப்பட்ட பயிற்சிகள், படிப்படியாக",
+    aux_sounds: "சூழல் ஒலிகள்",
+    aux_safety_plan: "என் பாதுகாப்புத் திட்டம்",
+    aux_guided_programs: "வழிகாட்டப்பட்ட திட்டங்கள்",
+    aux_chain_analysis: "சங்கிலிப் பகுப்பாய்வு",
+    aux_episode: "எபிசோட் ஆதரவு",
+    aux_calm_hub: "அமைதியான இடம்",
+    aux_skills_hub: "திறன்கள் & திட்டங்கள்",
+    aux_grounding: "மூச்சு & நிலைநிறுத்தல்",
+    aux_legal: "சட்டப்பூர்வ",
     tool_plan_label: "மூச்சு மற்றும் கிரவுண்டிங்",
     tool_plan_sub: "கடினமான நிமிடத்தில் உங்கள் உடலை அமைதிப்படுத்துங்கள்",
     tool_winddown_label: "தூக்கத்திற்குத் தயாராகுங்கள்",
@@ -2771,6 +2819,18 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     perfSub: "వెబ్ వైటల్స్, మోడల్ క్యాచ్, క్రాష్ లాగ్ — ఈ పరికరంలో మాత్రమే",
     tool_group_moment: "ఈ క్షణంలో",
     tool_group_calm: "ప్రశాంతత",
+    tool_safety_plan_sub: "అత్యంత కష్టమైన క్షణాల కోసం మీ అడుగులు — అవసరానికి ముందే సిద్ధం",
+    tool_calm_hub_sub: "శ్వాస, గ్రౌండింగ్, వైండ్ డౌన్ మరియు ధ్వనులు",
+    tool_skills_hub_sub: "నిర్మాణాత్మక అభ్యాసాలు, అడుగడుగునా",
+    aux_sounds: "పరిసర ధ్వనులు",
+    aux_safety_plan: "నా భద్రతా ప్రణాళిక",
+    aux_guided_programs: "మార్గదర్శక కార్యక్రమాలు",
+    aux_chain_analysis: "గొలుసు విశ్లేషణ",
+    aux_episode: "ఎపిసోడ్ మద్దతు",
+    aux_calm_hub: "ప్రశాంత స్థలం",
+    aux_skills_hub: "నైపుణ్యాలు & కార్యక్రమాలు",
+    aux_grounding: "శ్వాస & గ్రౌండింగ్",
+    aux_legal: "చట్టపరమైన",
     tool_plan_label: "శ్వాస మరియు గ్రౌండింగ్",
     tool_plan_sub: "కష్టమైన నిమిషంలో మీ శరీరాన్ని శాంతింపజేయండి",
     tool_winddown_label: "నిద్రకు తయారవ్వండి",

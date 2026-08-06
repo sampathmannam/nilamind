@@ -23,7 +23,7 @@ export default function RatingPromptCard() {
   };
 
   return (
-    <div className="glass rounded-2xl p-4 space-y-3 relative animate-fade-in border border-amber-500/20" id="rating-prompt-card">
+    <div className="glass rounded-2xl p-4 space-y-3 relative animate-fade-in border border-warn/20" id="rating-prompt-card">
       <button
         onClick={handleDismiss}
         className="absolute top-3 right-3 p-1.5 rounded-lg text-ink-faint hover:text-ink-2 hover:bg-fill/50 transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center"

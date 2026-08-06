@@ -67,7 +67,7 @@ import { recordNotificationOpen } from "./services/notificationEngagement";
 import { enableDndFor } from "./services/dnd";
 import { logMedication, loadMedications } from "./services/medicationAdherence";
 import { LocalNotifications } from "@capacitor/local-notifications";
-import { t, LANGUAGE_CHANGED_EVENT } from "./services/i18n";
+import { t, LANGUAGE_CHANGED_EVENT, type I18nKey } from "./services/i18n";
 import { wakeWord } from "./services/wakeWord";
 import { getWakeEnabled } from "./services/wakePrefs";
 import ListeningIndicator from "./components/ListeningIndicator";
@@ -97,35 +97,39 @@ import { hapticLight } from "./hooks/useHaptics";
 import { NavProvider, useNav, hasOverlay, topOverlay, type NavApi, type SheetId, type AppTab } from "./services/navStore";
 
 // ── Aux view label map for sheet headers ──
-const AUX_LABELS: Partial<Record<AuxView, string>> = {
-  about_nila: "About Nila",
-  assessment: "Screenings",
-  your_data: "Your data",
-  nila_memory: "What Nila remembers",
-  winddown: "Wind down",
-  social_rhythm: "Social rhythm",
-  reach_out: "Reach out",
-  learn: "Learn",
-  problem_solving: "Problem solving",
-  values_to_action: "Values work",
-  exposure: "Exposure hierarchy",
-  relapse_plan: "Relapse prevention",
-  diary: "Journal",
-  episode: "Episode support",
-  ema_checkin: "Quick check-in",
-  episode_marker: "Episode markers",
-  caregiver_settings: "Caregiver settings",
-  legal: "Legal",
-  sounds: "Ambient sounds",
-  safety_plan: "My Safety Plan",
-  guided_programs: "Guided Programs",
-  chain_analysis: "Chain Analysis",
-  calm_hub: "Calm space",
-  skills_hub: "Skills & programs",
+// Redesign 2026-08-06: titles resolve through t() (closes the Jul-19 "AUX_LABELS not localized"
+// gap). Where a row-label key exists, the sheet reuses it so the tile a person taps and the title
+// they land on can never diverge (the Jul-19 tile≡title rule).
+const AUX_LABEL_KEYS: Partial<Record<AuxView, I18nKey>> = {
+  about_nila: "you_about_nila_label",
+  assessment: "tool_assessment_label",
+  your_data: "you_your_data_label",
+  nila_memory: "you_nila_memory_label",
+  winddown: "tool_winddown_label",
+  social_rhythm: "tool_social_rhythm_label",
+  reach_out: "tool_reach_out_label",
+  learn: "you_learn_label",
+  problem_solving: "tool_problem_solving_label",
+  values_to_action: "tool_values_work_label",
+  exposure: "tool_exposure_label",
+  relapse_plan: "tool_relapse_label",
+  diary: "tool_diary_label",
+  episode: "aux_episode",
+  ema_checkin: "tool_ema_label",
+  episode_marker: "you_episode_marker_label",
+  caregiver_settings: "you_caregiver_settings_label",
+  legal: "aux_legal",
+  sounds: "aux_sounds",
+  safety_plan: "aux_safety_plan",
+  guided_programs: "aux_guided_programs",
+  chain_analysis: "aux_chain_analysis",
+  calm_hub: "aux_calm_hub",
+  skills_hub: "aux_skills_hub",
 };
 
 function auxViewLabel(view: AuxView): string {
-  return AUX_LABELS[view] ?? view;
+  const key = AUX_LABEL_KEYS[view];
+  return key ? t(key) : view;
 }
 
 // ── Aux view component renderers (module-scoped lazy imports — created once, not per render)
@@ -547,7 +551,7 @@ function AppShell() {
       {/* Breathing & Grounding — unified sheet */}
       <Sheet
         open={hasOverlay(state, (o) => o.kind === "sheet" && o.id === "grounding")}
-        title="Breathing & Grounding"
+        title={t("aux_grounding")}
         onClose={() => { closeTop(); setGroundingExpandIndex(undefined); }}
         id="grounding-sheet"
       >
@@ -569,7 +573,7 @@ function AppShell() {
       </Sheet>
 
       {/* Dashboard sheet */}
-      <Sheet open={hasOverlay(state, (o) => o.kind === "sheet" && o.id === "dashboard")} title={t("dashboard")} onClose={closeTop} id="dashboard-sheet">
+      <Sheet open={hasOverlay(state, (o) => o.kind === "sheet" && o.id === "dashboard")} title={t("you_dashboard_label")} onClose={closeTop} id="dashboard-sheet">
         <ErrorBoundary name="dashboard-sheet">
           <Suspense fallback={<ScreenFallback />}><DashboardScreen onOpenView={(target) => { closeTop(); go(target); }} /></Suspense>
         </ErrorBoundary>
@@ -583,14 +587,14 @@ function AppShell() {
       </Sheet>
 
       {/* Caregiver sheet */}
-      <Sheet open={hasOverlay(state, (o) => o.kind === "sheet" && o.id === "caregiver")} title="Share with a trusted person" onClose={closeTop} id="caregiver-sheet" bodyClassName="p-4">
+      <Sheet open={hasOverlay(state, (o) => o.kind === "sheet" && o.id === "caregiver")} title={t("shareTrustedTitle")} onClose={closeTop} id="caregiver-sheet" bodyClassName="p-4">
         <ErrorBoundary name="caregiver-sheet">
           <Suspense fallback={<ScreenFallback />}><CaregiverShareScreen selectedContactId={selectedCaregiverContactId} /></Suspense>
         </ErrorBoundary>
       </Sheet>
 
       {/* Legal sheet — Privacy Policy, Terms, OSS licenses */}
-      <Sheet open={hasOverlay(state, (o) => o.kind === "sheet" && o.id === "legal")} title="Legal" onClose={closeTop} id="legal-sheet">
+      <Sheet open={hasOverlay(state, (o) => o.kind === "sheet" && o.id === "legal")} title={t("aux_legal")} onClose={closeTop} id="legal-sheet">
         <ErrorBoundary name="legal-sheet">
           <Suspense fallback={<ScreenFallback />}><LegalScreen /></Suspense>
         </ErrorBoundary>

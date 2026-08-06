@@ -22,11 +22,13 @@ import { consumeEmaPrefill } from "../services/emaPrefill";
 
 
 const VALENCE_OPTIONS = [
+  // orange-400 stays a raw (already warm-remapped) ramp: the valence scale needs a step between
+  // warn and neutral and no role token resolves to that shade in both themes.
   { key: -3, label: "Very bad", icon: Frown, class: "text-warn" },
   { key: -1, label: "Bad", icon: Frown, class: "text-orange-400" },
   { key: 0, label: "Neutral", icon: Meh, class: "text-ink-muted" },
-  { key: 1, label: "Good", icon: Smile, class: "text-green-400" },
-  { key: 3, label: "Very good", icon: Smile, class: "text-cyan-400" },
+  { key: 1, label: "Good", icon: Smile, class: "text-success-hi" },
+  { key: 3, label: "Very good", icon: Smile, class: "text-success-hi" },
 ];
 
 const ENERGY_OPTIONS = [
@@ -92,8 +94,7 @@ export default function EmaCheckIn({ onLogged, onCrisis }: { onLogged?: () => vo
                         e === 1 ? "text-danger" : 
                         e === 2 ? "text-success" :
                         e === 3 ? "text-accent" :
-                        
-                         "text-cyan-400"
+                         "text-success-hi"
                       }`} />
                     ))}
                   </div>
