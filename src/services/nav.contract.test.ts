@@ -25,8 +25,10 @@ const GOLDEN_TABS: readonly TabView[] = ["nila", "today", "tools", "you"];
 // inside the Journal hub; the duplicate route had zero callers); insights removed (duplicated the
 // dashboard — merged into "Patterns"); progress removed (duplicated the You streak card);
 // calm_hub + skills_hub added (launchers restoring guided_programs reachability).
+// thought_record route also retired (2026-08-06): zero go()/openAux() callers; the screen itself
+// lives on inside the Journal hub tab + the §9-gated capture sheets (different id namespace).
 const GOLDEN_AUX: readonly AuxView[] = [
-  "about_nila", "thought_record", "settings", "reach_out", "assessment",
+  "about_nila", "settings", "reach_out", "assessment",
   "dashboard", "your_data", "nila_memory", "winddown",
   "learn", "medication", "problem_solving", "exposure", "relapse_plan", "caregiver", "episode",
   "diary", "social_rhythm", "ema_checkin", "episode_marker",

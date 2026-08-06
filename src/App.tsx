@@ -25,7 +25,6 @@ const MedicationAdherenceScreen = lazy(() => import("./components/MedicationAdhe
 const CaregiverShareScreen = lazy(() => import("./components/CaregiverShareScreen"));
 
 // LAZY — aux view screens (module-scoped so lazy() runs once, not per render)
-const ThoughtRecordScreen = lazy(() => import("./components/ThoughtRecordScreen"));
 const AssessmentScreen = lazy(() => import("./components/AssessmentScreen"));
 const YourDataScreen = lazy(() => import("./components/YourDataScreen"));
 const NilaMemoryScreen = lazy(() => import("./components/NilaMemoryScreen"));
@@ -100,7 +99,6 @@ import { NavProvider, useNav, hasOverlay, topOverlay, type NavApi, type SheetId,
 // ── Aux view label map for sheet headers ──
 const AUX_LABELS: Partial<Record<AuxView, string>> = {
   about_nila: "About Nila",
-  thought_record: "Thought record",
   assessment: "Screenings",
   your_data: "Your data",
   nila_memory: "What Nila remembers",
@@ -134,7 +132,6 @@ function auxViewLabel(view: AuxView): string {
 function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () => void, onOpenGrounding: () => void, onOpenView: (target: string) => void, onOpenCaregiverShare?: (contactId: string) => void) {
   switch (view) {
     case "about_nila": return <AboutNilaScreen />;
-    case "thought_record": return <ThoughtRecordScreen />;
     case "assessment": return <AssessmentScreen onActivateCrisis={onActivateCrisis} />;
     case "your_data": return <YourDataScreen />;
     case "nila_memory": return <NilaMemoryScreen />;
