@@ -1,6 +1,13 @@
 import { useState } from "react";
-import { useLanguage } from "../services/i18n";
+import { useLanguage, t } from "../services/i18n";
 import { Shield, FileText, Scale } from "lucide-react";
+
+// i18n scope note (2026-08-06): only the CHROME below (tab labels, heading, "last updated") is
+// localized. PRIVACY_CONTENT/TERMS_CONTENT/OSS_CONTENT stay English-only deliberately -- this is
+// genuine legal text (privacy policy, terms of service, liability/governing-law clauses, and
+// OSS license attributions that must not be altered from their original wording for license
+// compliance). Machine-translating binding legal text without professional/legal review carries
+// real risk; that's a distinct workstream from UI copy localization.
 
 type LegalTab = "privacy" | "terms" | "oss";
 
@@ -104,9 +111,9 @@ export default function LegalScreen() {
   useLanguage();
 
   const tabs: { id: LegalTab; label: string; Icon: React.ElementType }[] = [
-    { id: "privacy", label: "Privacy Policy", Icon: Shield },
-    { id: "terms", label: "Terms of Service", Icon: Scale },
-    { id: "oss", label: "OSS Licenses", Icon: FileText },
+    { id: "privacy", label: t("privacyPolicy"), Icon: Shield },
+    { id: "terms", label: t("legal_termsTab"), Icon: Scale },
+    { id: "oss", label: t("legal_ossTab"), Icon: FileText },
   ];
 
   const content = tab === "privacy" ? PRIVACY_CONTENT : tab === "terms" ? TERMS_CONTENT : OSS_CONTENT;
@@ -114,8 +121,8 @@ export default function LegalScreen() {
   return (
     <div className="space-y-5 max-w-md mx-auto text-ink pb-8" id="legal-screen">
       <div>
-        <h1 className="text-xl font-semibold text-ink font-sans tracking-tight">Legal</h1>
-        <p className="text-xs text-ink-muted mt-1">Privacy Policy, Terms of Service, and open‑source licenses</p>
+        <h1 className="text-xl font-semibold text-ink font-sans tracking-tight">{t("sec_legal")}</h1>
+        <p className="text-xs text-ink-muted mt-1">{t("sec_legalSub")}</p>
       </div>
 
       <div className="flex gap-1.5 border-b border-line pb-0">
@@ -137,7 +144,7 @@ export default function LegalScreen() {
 
       <div className="space-y-5 animate-fade-in" key={tab}>
         {tab === "privacy" && (
-          <p className="text-[11px] text-ink-faint">Last updated: 2026-07-09</p>
+          <p className="text-[11px] text-ink-faint">{t("legal_lastUpdated")} 2026-07-09</p>
         )}
         {content.map((section) => (
           <div key={section.heading} className="space-y-1.5">

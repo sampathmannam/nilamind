@@ -298,6 +298,9 @@ export type I18nKey =
   | "sec_feedback"
   | "sec_legal"
   | "sec_legalSub"
+  | "legal_termsTab"
+  | "legal_ossTab"
+  | "legal_lastUpdated"
   | "sec_cloud_api"
   | "sec_cloud_apiSub"
   | "sec_region"
@@ -1024,6 +1027,9 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     sec_feedback: "💬 Feedback & about",
     sec_legal: "Legal — Terms & licenses",
     sec_legalSub: "Privacy Policy, Terms of Service, and open-source licenses",
+    legal_termsTab: "Terms of Service",
+    legal_ossTab: "OSS Licenses",
+    legal_lastUpdated: "Last updated:",
     sec_cloud_api: "Optional Cloud API",
     sec_cloud_apiSub: "Connect your own API key for a cloud model (messages leave your device)",
     sec_region: "Crisis lines & region",
@@ -1743,6 +1749,9 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     sec_feedback: "प्रतिक्रिया और बारे में",
     sec_legal: "कानूनी — शर्तें और लाइसेंस",
     sec_legalSub: "गोपनीयता नीति, सेवा की शर्तें, और ओपन-सोर्स लाइसेंस",
+    legal_termsTab: "सेवा की शर्तें",
+    legal_ossTab: "ओपन-सोर्स लाइसेंस",
+    legal_lastUpdated: "अंतिम अपडेट:",
     sec_cloud_api: "वैकल्पिक क्लाउड API",
     sec_cloud_apiSub: "क्लाउड मॉडल के लिए अपनी API कुंजी कनेक्ट करें (संदेश आपके डिवाइस से बाहर जाते हैं)",
     sec_region: "संकट लाइनें और क्षेत्र",
@@ -2447,6 +2456,9 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     sec_feedback: "கருத்து & பற்றி",
     sec_legal: "சட்டப்பூர்வ — விதிமுறைகள் & உரிமங்கள்",
     sec_legalSub: "தனியுரிமைக் கொள்கை, சேவை விதிமுறைகள், மற்றும் திறந்த மூல உரிமங்கள்",
+    legal_termsTab: "சேவை விதிமுறைகள்",
+    legal_ossTab: "திறந்த மூல உரிமங்கள்",
+    legal_lastUpdated: "கடைசியாக புதுப்பிக்கப்பட்டது:",
     sec_cloud_api: "விருப்பமான கிளவுட் API",
     sec_cloud_apiSub: "கிளவுட் மாடலுக்கு உங்கள் API விசையை இணைக்கவும் (செய்திகள் உங்கள் சாதனத்தை விட்டு வெளியேறும்)",
     sec_region: "நெருக்கடி வரிகள் & பகுதி",
@@ -3151,6 +3163,9 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     sec_feedback: "ఫీడ్‌బ్యాక్ & గురించి",
     sec_legal: "చట్టపరమైన — నియమాలు & లైసెన్స్‌లు",
     sec_legalSub: "గోప్యతా విధానం, సేవా షరతులు, మరియు ఓపెన్-సోర్స్ లైసెన్స్‌లు",
+    legal_termsTab: "సేవా షరతులు",
+    legal_ossTab: "ఓపెన్-సోర్స్ లైసెన్స్‌లు",
+    legal_lastUpdated: "చివరిగా నవీకరించబడింది:",
     sec_cloud_api: "ఐచ్ఛిక క్లౌడ్ API",
     sec_cloud_apiSub: "క్లౌడ్ మోడల్ కోసం మీ API కీని కనెక్ట్ చేయండి (సందేశాలు మీ పరికరం నుండి బయటకు వెళ్తాయి)",
     sec_region: "సంక్షోభ లైన్‌లు & ప్రాంతం",
