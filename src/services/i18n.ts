@@ -180,6 +180,61 @@ export type I18nKey =
   | "mem_patternsNoticed"
   | "mem_nothingNotable"
   | "mem_computedNote"
+  | "skp_title"
+  | "skp_practices"
+  | "skp_mostUsed"
+  | "skp_helpedPct"
+  | "skp_crisisDominant"
+  | "skp_balanced"
+  | "ca_step_vulnerability"
+  | "ca_step_prompting"
+  | "ca_step_chain"
+  | "ca_step_behavior"
+  | "ca_step_consequences"
+  | "ca_step_intervention"
+  | "ca_skill_oppositeAction"
+  | "ca_skill_tipp"
+  | "ca_skill_checkFacts"
+  | "ca_skill_radicalAcceptance"
+  | "ca_skill_dearMan"
+  | "ca_skill_mindfulness"
+  | "ca_skill_prosCons"
+  | "ca_v_intro"
+  | "ca_v_sleepProdrome"
+  | "ca_v_elevationLevel"
+  | "ca_v_levelNone"
+  | "ca_v_levelElevated"
+  | "ca_v_levelHigh"
+  | "ca_v_otherFactors"
+  | "ca_v_otherPlaceholder"
+  | "ca_p_label"
+  | "ca_p_placeholder"
+  | "ca_c_intro"
+  | "ca_c_link"
+  | "ca_c_removeLink"
+  | "ca_c_whatHappened"
+  | "ca_c_thought"
+  | "ca_c_emotion"
+  | "ca_c_sensation"
+  | "ca_c_action"
+  | "ca_c_addLink"
+  | "ca_b_label"
+  | "ca_b_placeholder"
+  | "ca_cons_label"
+  | "ca_cons_placeholder"
+  | "ca_i_intro"
+  | "ca_i_intervene"
+  | "ca_i_linkOption"
+  | "ca_i_skillToUse"
+  | "ca_i_whatDifferently"
+  | "ca_i_placeholder"
+  | "ca_i_suggestedSkill"
+  | "ca_i_basedOn"
+  | "ca_stepAria"
+  | "ca_back"
+  | "ca_next"
+  | "ca_saved"
+  | "ca_saveChain"
   | "you_settings_label"
   | "you_settings_sub"
   | "you_caregiver_label"
@@ -931,6 +986,61 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     mem_patternsNoticed: "Patterns Nila's noticed lately",
     mem_nothingNotable: "Nothing notable yet — Nila watches your own trends quietly.",
     mem_computedNote: "Computed on your device and never sent anywhere. Nila only mentions these in chat if you turn it on in Settings.",
+    skp_title: "Skills Practice",
+    skp_practices: "practices",
+    skp_mostUsed: "most-used:",
+    skp_helpedPct: "{skill} helped {pct}% of the time",
+    skp_crisisDominant: "Mostly crisis skills — try one for calm days",
+    skp_balanced: "Skills spread across families",
+    ca_step_vulnerability: "What made me fragile?",
+    ca_step_prompting: "What set it off?",
+    ca_step_chain: "Moment by moment",
+    ca_step_behavior: "What did I do?",
+    ca_step_consequences: "What happened after?",
+    ca_step_intervention: "Where could I intervene?",
+    ca_skill_oppositeAction: "Opposite Action",
+    ca_skill_tipp: "TIPP",
+    ca_skill_checkFacts: "Check the Facts",
+    ca_skill_radicalAcceptance: "Radical Acceptance",
+    ca_skill_dearMan: "DEAR MAN",
+    ca_skill_mindfulness: "Mindfulness",
+    ca_skill_prosCons: "Pros & Cons",
+    ca_v_intro: "What conditions made you more likely to react strongly? Check any that apply from your own data.",
+    ca_v_sleepProdrome: "Poor sleep / sleep prodrome detected",
+    ca_v_elevationLevel: "Elevation level",
+    ca_v_levelNone: "none",
+    ca_v_levelElevated: "elevated",
+    ca_v_levelHigh: "high",
+    ca_v_otherFactors: "Other factors",
+    ca_v_otherPlaceholder: "e.g. skipped meals, conflict at work",
+    ca_p_label: "What was the triggering event?",
+    ca_p_placeholder: "e.g. received a critical message from my manager",
+    ca_c_intro: "Walk through it moment by moment. For each step, note what you thought, felt, sensed, or did.",
+    ca_c_link: "Link {n}",
+    ca_c_removeLink: "Remove link {n}",
+    ca_c_whatHappened: "What happened?",
+    ca_c_thought: "Thought",
+    ca_c_emotion: "Emotion",
+    ca_c_sensation: "Sensation",
+    ca_c_action: "Action",
+    ca_c_addLink: "Add link",
+    ca_b_label: "What was the target behavior? (What actually happened?)",
+    ca_b_placeholder: "e.g. sent an angry reply, skipped the meeting",
+    ca_cons_label: "What happened after?",
+    ca_cons_placeholder: "e.g. felt worse, relationship strained, missed work",
+    ca_i_intro: "Look at your chain. Where could you have intervened? Pick a link and a skill.",
+    ca_i_intervene: "Intervene at link",
+    ca_i_linkOption: "Link {n}: {text}",
+    ca_i_skillToUse: "Skill to use",
+    ca_i_whatDifferently: "What would you do differently?",
+    ca_i_placeholder: "e.g. When I notice my chest tightening (Link 2), I'll use TIPP to bring my body out of fight-or-flight before responding.",
+    ca_i_suggestedSkill: "Suggested skill:",
+    ca_i_basedOn: "Based on \"{emotion}\", try {skill}",
+    ca_stepAria: "Step {n}: {label}",
+    ca_back: "Back",
+    ca_next: "Next",
+    ca_saved: "Saved",
+    ca_saveChain: "Save chain",
     you_settings_label: "Settings",
     you_settings_sub: "Voice, reminders, recovery phrase",
     you_caregiver_label: "Share with a trusted person",
@@ -1670,6 +1780,61 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     mem_patternsNoticed: "निला ने हाल में जो पैटर्न देखे",
     mem_nothingNotable: "अभी कुछ खास नहीं — निला चुपचाप आपके अपने रुझान देखती है।",
     mem_computedNote: "आपके डिवाइस पर गणना की जाती है और कभी कहीं नहीं भेजी जाती। निला इनका ज़िक्र चैट में तभी करती है जब आप इसे सेटिंग्स में चालू करते हैं।",
+    skp_title: "कौशल अभ्यास",
+    skp_practices: "अभ्यास",
+    skp_mostUsed: "सबसे ज़्यादा उपयोग किया गया:",
+    skp_helpedPct: "{skill} ने {pct}% समय मदद की",
+    skp_crisisDominant: "ज़्यादातर संकट कौशल — शांत दिनों के लिए एक आज़माएं",
+    skp_balanced: "कौशल विभिन्न श्रेणियों में फैले हुए हैं",
+    ca_step_vulnerability: "मुझे क्या कमज़ोर बना दिया?",
+    ca_step_prompting: "इसे किसने शुरू किया?",
+    ca_step_chain: "पल दर पल",
+    ca_step_behavior: "मैंने क्या किया?",
+    ca_step_consequences: "बाद में क्या हुआ?",
+    ca_step_intervention: "मैं कहां हस्तक्षेप कर सकता/सकती था/थी?",
+    ca_skill_oppositeAction: "विपरीत क्रिया",
+    ca_skill_tipp: "TIPP",
+    ca_skill_checkFacts: "तथ्य जांचें",
+    ca_skill_radicalAcceptance: "पूर्ण स्वीकृति",
+    ca_skill_dearMan: "DEAR MAN",
+    ca_skill_mindfulness: "माइंडफुलनेस",
+    ca_skill_prosCons: "फ़ायदे और नुकसान",
+    ca_v_intro: "किन स्थितियों ने आपको तेज़ प्रतिक्रिया देने की संभावना बढ़ाई? अपने खुद के डेटा से जो भी लागू हो उसे चुनें।",
+    ca_v_sleepProdrome: "खराब नींद / नींद का पूर्व-संकेत मिला",
+    ca_v_elevationLevel: "उत्तेजना स्तर",
+    ca_v_levelNone: "कोई नहीं",
+    ca_v_levelElevated: "उत्साहित",
+    ca_v_levelHigh: "अधिक",
+    ca_v_otherFactors: "अन्य कारक",
+    ca_v_otherPlaceholder: "जैसे: भोजन छोड़ना, काम पर टकराव",
+    ca_p_label: "ट्रिगर करने वाली घटना क्या थी?",
+    ca_p_placeholder: "जैसे: मैनेजर से आलोचनात्मक संदेश मिला",
+    ca_c_intro: "इसे पल-पल करके देखें। हर कदम में, नोट करें कि आपने क्या सोचा, महसूस किया, अनुभव किया, या किया।",
+    ca_c_link: "कड़ी {n}",
+    ca_c_removeLink: "कड़ी {n} हटाएं",
+    ca_c_whatHappened: "क्या हुआ?",
+    ca_c_thought: "विचार",
+    ca_c_emotion: "भावना",
+    ca_c_sensation: "संवेदना",
+    ca_c_action: "क्रिया",
+    ca_c_addLink: "कड़ी जोड़ें",
+    ca_b_label: "लक्षित व्यवहार क्या था? (वास्तव में क्या हुआ?)",
+    ca_b_placeholder: "जैसे: गुस्से में जवाब भेजा, मीटिंग छोड़ दी",
+    ca_cons_label: "बाद में क्या हुआ?",
+    ca_cons_placeholder: "जैसे: बुरा महसूस हुआ, रिश्ते में तनाव आया, काम छूट गया",
+    ca_i_intro: "अपनी कड़ी को देखें। आप कहां हस्तक्षेप कर सकते थे? एक कड़ी और एक कौशल चुनें।",
+    ca_i_intervene: "किस कड़ी पर हस्तक्षेप करें",
+    ca_i_linkOption: "कड़ी {n}: {text}",
+    ca_i_skillToUse: "उपयोग करने के लिए कौशल",
+    ca_i_whatDifferently: "आप अलग तरीके से क्या करेंगे?",
+    ca_i_placeholder: "जैसे: जब मुझे अपनी छाती में जकड़न महसूस हो (कड़ी 2), तो जवाब देने से पहले अपने शरीर को फाइट-या-फ्लाइट से बाहर लाने के लिए TIPP का उपयोग करूंगा/करूंगी।",
+    ca_i_suggestedSkill: "सुझाया गया कौशल:",
+    ca_i_basedOn: "\"{emotion}\" के आधार पर, {skill} आज़माएं",
+    ca_stepAria: "चरण {n}: {label}",
+    ca_back: "वापस",
+    ca_next: "आगे",
+    ca_saved: "सहेजा गया",
+    ca_saveChain: "चेन सहेजें",
     you_settings_label: "सेटिंग्स",
     you_settings_sub: "आवाज़, रिमाइंडर, रिकवरी वाक्यांश",
     you_caregiver_label: "किसी भरोसेमंद व्यक्ति के साथ साझा करें",
@@ -2394,6 +2559,61 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     mem_patternsNoticed: "நிலா சமீபத்தில் கவனித்த பேட்டர்ன்கள்",
     mem_nothingNotable: "இன்னும் குறிப்பிடத்தக்கது ஒன்றுமில்லை — நிலா அமைதியாக உங்கள் சொந்த போக்குகளை கவனிக்கிறாள்.",
     mem_computedNote: "உங்கள் சாதனத்தில் கணக்கிடப்பட்டு எங்கும் அனுப்பப்படுவதில்லை. நீங்கள் அமைப்புகளில் இயக்கினால் மட்டுமே நிலா இவற்றை உரையாடலில் குறிப்பிடுவாள்.",
+    skp_title: "திறன் பயிற்சி",
+    skp_practices: "பயிற்சிகள்",
+    skp_mostUsed: "அதிகம் பயன்படுத்தியது:",
+    skp_helpedPct: "{skill} {pct}% நேரம் உதவியது",
+    skp_crisisDominant: "பெரும்பாலும் நெருக்கடி திறன்கள் — அமைதியான நாட்களுக்கு ஒன்றை முயற்சிக்கவும்",
+    skp_balanced: "திறன்கள் பல்வேறு குடும்பங்களில் பரவியுள்ளன",
+    ca_step_vulnerability: "என்னை பலவீனமாக்கியது என்ன?",
+    ca_step_prompting: "இதைத் தூண்டியது என்ன?",
+    ca_step_chain: "நொடிக்கு நொடி",
+    ca_step_behavior: "நான் என்ன செய்தேன்?",
+    ca_step_consequences: "பிறகு என்ன நடந்தது?",
+    ca_step_intervention: "நான் எங்கு தலையிட்டிருக்க முடியும்?",
+    ca_skill_oppositeAction: "எதிர் செயல்",
+    ca_skill_tipp: "TIPP",
+    ca_skill_checkFacts: "உண்மைகளைச் சரிபார்க்கவும்",
+    ca_skill_radicalAcceptance: "முழுமையான ஏற்பு",
+    ca_skill_dearMan: "DEAR MAN",
+    ca_skill_mindfulness: "மனநிறைவு",
+    ca_skill_prosCons: "நன்மைகள் & தீமைகள்",
+    ca_v_intro: "எந்த சூழ்நிலைகள் நீங்கள் தீவிரமாக எதிர்வினையாற்ற வாய்ப்பை அதிகரித்தன? உங்கள் சொந்த தரவிலிருந்து பொருந்துவதைத் தேர்ந்தெடுக்கவும்.",
+    ca_v_sleepProdrome: "மோசமான தூக்கம் / தூக்க முன்னறிகுறி கண்டறியப்பட்டது",
+    ca_v_elevationLevel: "உற்சாக நிலை",
+    ca_v_levelNone: "இல்லை",
+    ca_v_levelElevated: "உற்சாகம்",
+    ca_v_levelHigh: "அதிகம்",
+    ca_v_otherFactors: "மற்ற காரணிகள்",
+    ca_v_otherPlaceholder: "எ.கா. உணவைத் தவிர்த்தல், வேலையில் மோதல்",
+    ca_p_label: "தூண்டுதல் நிகழ்வு என்ன?",
+    ca_p_placeholder: "எ.கா. மேலாளரிடமிருந்து விமர்சன செய்தி வந்தது",
+    ca_c_intro: "அதை நொடிக்கு நொடி பார்வையிடுங்கள். ஒவ்வொரு படியிலும், நீங்கள் என்ன நினைத்தீர்கள், உணர்ந்தீர்கள், உணர்வு பெற்றீர்கள் அல்லது செய்தீர்கள் என்பதைக் குறிப்பிடுங்கள்.",
+    ca_c_link: "இணைப்பு {n}",
+    ca_c_removeLink: "இணைப்பு {n} ஐ அகற்று",
+    ca_c_whatHappened: "என்ன நடந்தது?",
+    ca_c_thought: "எண்ணம்",
+    ca_c_emotion: "உணர்வு",
+    ca_c_sensation: "உடல் உணர்வு",
+    ca_c_action: "செயல்",
+    ca_c_addLink: "இணைப்பு சேர்",
+    ca_b_label: "இலக்கு நடத்தை என்ன? (உண்மையில் என்ன நடந்தது?)",
+    ca_b_placeholder: "எ.கா. கோபமான பதில் அனுப்பியது, கூட்டத்தைத் தவிர்த்தது",
+    ca_cons_label: "பிறகு என்ன நடந்தது?",
+    ca_cons_placeholder: "எ.கா. மோசமாக உணர்ந்தது, உறவில் பதற்றம், வேலையைத் தவறவிட்டது",
+    ca_i_intro: "உங்கள் சங்கிலியைப் பாருங்கள். நீங்கள் எங்கு தலையிட்டிருக்க முடியும்? ஒரு இணைப்பையும் ஒரு திறனையும் தேர்ந்தெடுக்கவும்.",
+    ca_i_intervene: "எந்த இணைப்பில் தலையிடுவது",
+    ca_i_linkOption: "இணைப்பு {n}: {text}",
+    ca_i_skillToUse: "பயன்படுத்த வேண்டிய திறன்",
+    ca_i_whatDifferently: "நீங்கள் வித்தியாசமாக என்ன செய்வீர்கள்?",
+    ca_i_placeholder: "எ.கா. என் மார்பு இறுகுவதை நான் கவனிக்கும்போது (இணைப்பு 2), பதிலளிக்கும் முன் என் உடலை போராடு-அல்லது-ஓடு நிலையிலிருந்து வெளியே கொண்டுவர TIPP ஐப் பயன்படுத்துவேன்.",
+    ca_i_suggestedSkill: "பரிந்துரைக்கப்பட்ட திறன்:",
+    ca_i_basedOn: "\"{emotion}\" அடிப்படையில், {skill} முயற்சிக்கவும்",
+    ca_stepAria: "படி {n}: {label}",
+    ca_back: "பின்",
+    ca_next: "அடுத்து",
+    ca_saved: "சேமிக்கப்பட்டது",
+    ca_saveChain: "சங்கிலியைச் சேமி",
     you_settings_label: "அமைப்புகள்",
     you_settings_sub: "குரல், நினைவூட்டல்கள், மீட்பு சொற்றொடர்",
     you_caregiver_label: "நம்பகமான நபருடன் பகிர்",
@@ -3118,6 +3338,61 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     mem_patternsNoticed: "నిలా ఇటీవల గమనించిన నమూనాలు",
     mem_nothingNotable: "ఇంకా గమనార్హమైనది ఏమీ లేదు — నిలా నిశ్శబ్దంగా మీ స్వంత ధోరణులను గమనిస్తుంది.",
     mem_computedNote: "మీ పరికరంలో లెక్కించబడి ఎక్కడికీ పంపబడదు. మీరు సెట్టింగ్‌లలో ఆన్ చేస్తేనే నిలా వీటిని చాట్‌లో ప్రస్తావిస్తుంది.",
+    skp_title: "నైపుణ్య అభ్యాసం",
+    skp_practices: "అభ్యాసాలు",
+    skp_mostUsed: "ఎక్కువగా ఉపయోగించినది:",
+    skp_helpedPct: "{skill} {pct}% సమయం సహాయపడింది",
+    skp_crisisDominant: "ఎక్కువగా సంక్షోభ నైపుణ్యాలు — ప్రశాంతమైన రోజుల కోసం ఒకటి ప్రయత్నించండి",
+    skp_balanced: "నైపుణ్యాలు వివిధ కుటుంబాలలో విస్తరించి ఉన్నాయి",
+    ca_step_vulnerability: "నన్ను బలహీనంగా చేసింది ఏమిటి?",
+    ca_step_prompting: "దీన్ని ఏది ప్రేరేపించింది?",
+    ca_step_chain: "క్షణం క్షణం",
+    ca_step_behavior: "నేను ఏమి చేశాను?",
+    ca_step_consequences: "తర్వాత ఏమి జరిగింది?",
+    ca_step_intervention: "నేను ఎక్కడ జోక్యం చేసుకోగలను?",
+    ca_skill_oppositeAction: "వ్యతిరేక చర్య",
+    ca_skill_tipp: "TIPP",
+    ca_skill_checkFacts: "వాస్తవాలను తనిఖీ చేయండి",
+    ca_skill_radicalAcceptance: "సంపూర్ణ అంగీకారం",
+    ca_skill_dearMan: "DEAR MAN",
+    ca_skill_mindfulness: "మైండ్‌ఫుల్‌నెస్",
+    ca_skill_prosCons: "లాభాలు & నష్టాలు",
+    ca_v_intro: "మీరు తీవ్రంగా స్పందించే అవకాశాన్ని ఏ పరిస్థితులు పెంచాయి? మీ స్వంత డేటా నుండి వర్తించేదాన్ని ఎంచుకోండి.",
+    ca_v_sleepProdrome: "సరిపడని నిద్ర / నిద్ర పూర్వ సంకేతం గుర్తించబడింది",
+    ca_v_elevationLevel: "ఉత్సాహ స్థాయి",
+    ca_v_levelNone: "ఏదీ లేదు",
+    ca_v_levelElevated: "ఉత్సాహం",
+    ca_v_levelHigh: "అధికం",
+    ca_v_otherFactors: "ఇతర అంశాలు",
+    ca_v_otherPlaceholder: "ఉదా. భోజనం మానేయడం, పనిలో వివాదం",
+    ca_p_label: "ప్రేరేపించిన సంఘటన ఏమిటి?",
+    ca_p_placeholder: "ఉదా. మేనేజర్ నుండి విమర్శనాత్మక సందేశం వచ్చింది",
+    ca_c_intro: "దాన్ని క్షణం క్షణం చూడండి. ప్రతి దశలో, మీరు ఏమి ఆలోచించారు, భావించారు, అనుభవించారు లేదా చేశారో గమనించండి.",
+    ca_c_link: "లింక్ {n}",
+    ca_c_removeLink: "లింక్ {n} తొలగించండి",
+    ca_c_whatHappened: "ఏమి జరిగింది?",
+    ca_c_thought: "ఆలోచన",
+    ca_c_emotion: "భావోద్వేగం",
+    ca_c_sensation: "శారీరక అనుభూతి",
+    ca_c_action: "చర్య",
+    ca_c_addLink: "లింక్ జోడించండి",
+    ca_b_label: "లక్ష్య ప్రవర్తన ఏమిటి? (నిజంగా ఏమి జరిగింది?)",
+    ca_b_placeholder: "ఉదా. కోపంగా సమాధానం పంపాను, సమావేశాన్ని వదిలేశాను",
+    ca_cons_label: "తర్వాత ఏమి జరిగింది?",
+    ca_cons_placeholder: "ఉదా. అధ్వాన్నంగా అనిపించింది, సంబంధంలో ఒత్తిడి, పని తప్పిపోయింది",
+    ca_i_intro: "మీ చైన్‌ను చూడండి. మీరు ఎక్కడ జోక్యం చేసుకుని ఉండగలరు? ఒక లింక్ మరియు ఒక నైపుణ్యాన్ని ఎంచుకోండి.",
+    ca_i_intervene: "ఏ లింక్ వద్ద జోక్యం చేసుకోవాలి",
+    ca_i_linkOption: "లింక్ {n}: {text}",
+    ca_i_skillToUse: "ఉపయోగించాల్సిన నైపుణ్యం",
+    ca_i_whatDifferently: "మీరు వేరుగా ఏమి చేస్తారు?",
+    ca_i_placeholder: "ఉదా. నా ఛాతీ బిగుసుకుపోవడం గమనించినప్పుడు (లింక్ 2), స్పందించే ముందు నా శరీరాన్ని ఫైట్-లేదా-ఫ్లైట్ నుండి బయటకు తీసుకురావడానికి TIPP ఉపయోగిస్తాను.",
+    ca_i_suggestedSkill: "సూచించిన నైపుణ్యం:",
+    ca_i_basedOn: "\"{emotion}\" ఆధారంగా, {skill} ప్రయత్నించండి",
+    ca_stepAria: "దశ {n}: {label}",
+    ca_back: "వెనుకకు",
+    ca_next: "తదుపరి",
+    ca_saved: "సేవ్ చేయబడింది",
+    ca_saveChain: "చైన్ సేవ్ చేయండి",
     you_settings_label: "సెట్టింగ్‌లు",
     you_settings_sub: "వాయిస్, రిమైండర్లు, రికవరీ వాక్యం",
     you_caregiver_label: "నమ్మకమైన వ్యక్తితో షేర్ చేయి",

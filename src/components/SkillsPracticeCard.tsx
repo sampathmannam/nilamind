@@ -1,9 +1,11 @@
 import React from "react";
 import { Swords } from "lucide-react";
 import { computeInsight } from "../services/skillsPractice";
+import { t, tn, useLanguage } from "../services/i18n";
 
 /** Compact Dashboard card showing DBT skills practice summary. */
 function SkillsPracticeCard({ onOpen }: { onOpen: () => void }) {
+  const lang = useLanguage();
   const insight = computeInsight();
 
   if (insight.totalPractices === 0) return null;
@@ -16,9 +18,9 @@ function SkillsPracticeCard({ onOpen }: { onOpen: () => void }) {
 
   const balanceNote =
     insight.familyBalance === "crisis_dominant"
-      ? "Mostly crisis skills — try one for calm days"
+      ? t("skp_crisisDominant")
       : insight.familyBalance === "balanced"
-        ? "Skills spread across families"
+        ? t("skp_balanced")
         : null;
 
   return (
@@ -30,17 +32,17 @@ function SkillsPracticeCard({ onOpen }: { onOpen: () => void }) {
       <div className="space-y-1 min-w-0">
         <div className="flex items-center gap-2">
           <Swords className="w-4 h-4 text-sky-400" />
-          <span className="text-sm font-bold text-ink">Skills Practice</span>
+          <span className="text-sm font-bold text-ink">{t("skp_title")}</span>
         </div>
         <p className="text-[11px] text-ink-muted">
-          <span className="font-semibold text-ink-2">{insight.totalPractices}</span> practices
+          <span className="font-semibold text-ink-2">{insight.totalPractices}</span> {t("skp_practices")}
           {topSkill && (
-            <> · most-used: <span className="font-semibold text-ink-2">{topSkill[0]}</span></>
+            <> · {t("skp_mostUsed")} <span className="font-semibold text-ink-2">{topSkill[0]}</span></>
           )}
         </p>
         {topHelped && (
           <p className="text-[11px] text-success font-medium">
-            {topHelped[0]} helped {Math.round(topHelped[1] * 100)}% of the time
+            {tn("skp_helpedPct", lang, { skill: topHelped[0], pct: Math.round(topHelped[1] * 100) })}
           </p>
         )}
         {balanceNote && (
