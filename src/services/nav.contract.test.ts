@@ -21,16 +21,17 @@ import { resolveNavTarget, KNOWN_AUX_VIEWS, TAB_TARGETS, type AuxView, type TabV
 const GOLDEN_TABS: readonly TabView[] = ["nila", "today", "tools", "you"];
 
 // Frozen golden of the aux allowlist, in declaration order.
+// Redesign 2026-08-06 (deliberate contract updates): dbt_diary_card removed (DBT card is a tab
+// inside the Journal hub; the duplicate route had zero callers); insights removed (duplicated the
+// dashboard — merged into "Patterns"); progress removed (duplicated the You streak card);
+// calm_hub + skills_hub added (launchers restoring guided_programs reachability).
 const GOLDEN_AUX: readonly AuxView[] = [
-  "about_nila", "insights", "thought_record", "settings", "reach_out", "assessment",
+  "about_nila", "thought_record", "settings", "reach_out", "assessment",
   "dashboard", "your_data", "nila_memory", "winddown",
   "learn", "medication", "problem_solving", "exposure", "relapse_plan", "caregiver", "episode",
-  // Redesign 2026-08-06 (deliberate contract update): dbt_diary_card removed — the DBT card is a
-  // tab inside the Journal hub (JournalScreen), and the duplicate route had zero callers.
   "diary", "social_rhythm", "ema_checkin", "episode_marker",
   "caregiver_settings", "legal", "sounds", "safety_plan", "values_to_action",
-  "guided_programs", "progress", "chain_analysis",
-  // Redesign 2026-08-06 (deliberate contract update): Calm + Skills hub launchers.
+  "guided_programs", "chain_analysis",
   "calm_hub", "skills_hub",
 ];
 

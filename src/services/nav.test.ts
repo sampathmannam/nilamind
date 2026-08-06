@@ -27,12 +27,15 @@ describe("resolveNavTarget", () => {
   it("treats unknown targets as unknown", () => {
     expect(resolveNavTarget("oldtab")).toEqual({ kind: "unknown", target: "oldtab" });
   });
-  it("maps known aux views including insights (values_to_action is a live Tools-hub route, not retired)", () => {
+  it("maps known aux views (values_to_action is a live Skills-hub route, not retired)", () => {
     expect(resolveNavTarget("dashboard")).toEqual({ kind: "aux", view: "dashboard" });
     expect(resolveNavTarget("values_to_action")).toEqual({ kind: "aux", view: "values_to_action" });
     expect(resolveNavTarget("skills")).toEqual({ kind: "unknown", target: "skills" });
     expect(resolveNavTarget("assessment")).toEqual({ kind: "aux", view: "assessment" });
-    expect(resolveNavTarget("insights")).toEqual({ kind: "aux", view: "insights" });
+  });
+  it("insights + progress are retired (redesign 2026-08-06) — merged into Patterns (dashboard) / the streak card", () => {
+    expect(resolveNavTarget("insights")).toEqual({ kind: "unknown", target: "insights" });
+    expect(resolveNavTarget("progress")).toEqual({ kind: "unknown", target: "progress" });
   });
   it("dbt_diary_card is retired (redesign 2026-08-06) — the DBT card is a tab inside the Journal hub", () => {
     expect(resolveNavTarget("dbt_diary_card")).toEqual({ kind: "unknown", target: "dbt_diary_card" });
@@ -52,7 +55,7 @@ describe("resolveNavTarget", () => {
   it("exposes stable allowlists", () => {
     expect(KNOWN_AUX_VIEWS).toContain("values_to_action");
     expect(KNOWN_AUX_VIEWS).not.toContain("skills");
-    expect(KNOWN_AUX_VIEWS).toContain("insights");
+    expect(KNOWN_AUX_VIEWS).not.toContain("insights"); // retired 2026-08-06 — merged into dashboard
     expect(KNOWN_AUX_VIEWS).not.toContain("nila_voice");
     expect(KNOWN_AUX_VIEWS).not.toContain("pact");
     expect(KNOWN_AUX_VIEWS).not.toContain("armed_checkin");
@@ -115,12 +118,14 @@ describe("nav — reach_out aux view", () => {
   });
 });
 
-describe("nav — insights aux view", () => {
-  it("resolves insights to an aux view", () => {
-    expect(resolveNavTarget("insights")).toEqual({ kind: "aux", view: "insights" });
+describe("nav — retired insights aux view (redesign 2026-08-06)", () => {
+  // InsightsScreen duplicated the dashboard's data (generateInsights + mood history); its unique
+  // N-of-1 block moved into DashboardScreen ("Patterns"). Unknown target = deliberate no-op.
+  it("resolves insights to unknown (merged into Patterns)", () => {
+    expect(resolveNavTarget("insights")).toEqual({ kind: "unknown", target: "insights" });
   });
-  it("lists insights in the allowlist", () => {
-    expect(KNOWN_AUX_VIEWS).toContain("insights");
+  it("does not list insights in the allowlist", () => {
+    expect(KNOWN_AUX_VIEWS).not.toContain("insights");
   });
 });
 

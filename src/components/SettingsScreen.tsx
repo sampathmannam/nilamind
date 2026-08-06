@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Settings as SettingsIcon, Users, Shield, Gauge, ChevronDown, ChevronUp, Bell, Volume2, Sun, MessageSquare, Cpu } from "lucide-react";
+import { Settings as SettingsIcon, Users, Shield, Gauge, ChevronDown, ChevronUp, Bell, Volume2, Sun, MessageSquare, Cpu, Info } from "lucide-react";
 import { t, useLanguage } from "../services/i18n";
 import { isAutoUpdateEnabled, setAutoUpdateEnabled } from "../services/autoUpdate";
 import AppearanceSection from "./settings/AppearanceSection";
@@ -23,6 +23,8 @@ import PassiveSensingSection from "./settings/PassiveSensingSection";
 interface SettingsScreenProps {
   onOpenCaregiver?: () => void;
   onOpenLegal?: () => void;
+  /** Redesign §5.4: About Nila moved here from the You tab (one fewer top-level destination). */
+  onOpenAbout?: () => void;
 }
 
 function SettingsGroup({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
@@ -44,7 +46,7 @@ function SearchFilter({ query, text, children }: { query: string; text: string; 
   return query.toLowerCase().includes(text.toLowerCase()) ? <>{children}</> : null;
 }
 
-export default function SettingsScreen({ onOpenCaregiver, onOpenLegal }: SettingsScreenProps) {
+export default function SettingsScreen({ onOpenCaregiver, onOpenLegal, onOpenAbout }: SettingsScreenProps) {
   const [showPerf, setShowPerf] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [autoUpdateOn, setAutoUpdateOn] = useState(isAutoUpdateEnabled());
@@ -103,7 +105,7 @@ export default function SettingsScreen({ onOpenCaregiver, onOpenLegal }: Setting
         </SettingsGroup>
       </SearchFilter>
 
-      <SearchFilter query={searchQuery} text="privacy security identity recovery phrase pin lock passcode caregiver share trusted legal policy terms">
+      <SearchFilter query={searchQuery} text="privacy security identity recovery phrase pin lock passcode caregiver share trusted legal policy terms about nila transparency model">
         <SettingsGroup icon={<Shield className="w-3 h-3 text-success" />} title="Privacy & Security">
           <IdentitySection />
           <PrivacyLockSection />
@@ -136,6 +138,19 @@ export default function SettingsScreen({ onOpenCaregiver, onOpenLegal }: Setting
                 <span className="block text-[11px] text-ink-muted">{t("privacyPolicySub")}</span>
               </span>
           </button>
+          {onOpenAbout && (
+            <button
+              onClick={onOpenAbout}
+              className="w-full flex items-center gap-3 glass hover:brightness-125 p-4 rounded-2xl transition-all active:scale-[0.99] cursor-pointer text-left"
+              id="open-about-nila"
+            >
+              <span className="shrink-0 text-accent"><Info className="w-5 h-5" /></span>
+                <span className="flex-1 min-w-0">
+                  <span className="block text-sm font-bold text-ink">{t("you_about_nila_label")}</span>
+                  <span className="block text-[11px] text-ink-muted">{t("you_about_nila_sub")}</span>
+                </span>
+            </button>
+          )}
         </SettingsGroup>
       </SearchFilter>
 

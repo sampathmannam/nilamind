@@ -28,7 +28,6 @@ const CaregiverShareScreen = lazy(() => import("./components/CaregiverShareScree
 const ThoughtRecordScreen = lazy(() => import("./components/ThoughtRecordScreen"));
 const AssessmentScreen = lazy(() => import("./components/AssessmentScreen"));
 const YourDataScreen = lazy(() => import("./components/YourDataScreen"));
-const ProgressDashboard = lazy(() => import("./components/ProgressDashboard"));
 const NilaMemoryScreen = lazy(() => import("./components/NilaMemoryScreen"));
 const WindDownScreen = lazy(() => import("./components/WindDownScreen"));
 const SocialRhythmScreen = lazy(() => import("./components/SocialRhythmScreen"));
@@ -48,7 +47,6 @@ const ChainAnalysisScreen = lazy(() => import("./components/ChainAnalysisScreen"
 const SoundPlayer = lazy(() => import("./components/SoundPlayer"));
 const AboutNilaScreen = lazy(() => import("./components/AboutNilaScreen"));
 const LegalScreen = lazy(() => import("./components/LegalScreen"));
-const InsightsScreen = lazy(() => import("./components/InsightsScreen"));
 
 // Calm fallback while lazy chunks load
 import { SkeletonCard, SkeletonList } from "./components/Skeleton";
@@ -102,7 +100,6 @@ import { NavProvider, useNav, hasOverlay, topOverlay, type NavApi, type SheetId,
 // ── Aux view label map for sheet headers ──
 const AUX_LABELS: Partial<Record<AuxView, string>> = {
   about_nila: "About Nila",
-  insights: "Your patterns",
   thought_record: "Thought record",
   assessment: "Screenings",
   your_data: "Your data",
@@ -124,7 +121,6 @@ const AUX_LABELS: Partial<Record<AuxView, string>> = {
   sounds: "Ambient sounds",
   safety_plan: "My Safety Plan",
   guided_programs: "Guided Programs",
-  progress: "Your progress",
   chain_analysis: "Chain Analysis",
   calm_hub: "Calm space",
   skills_hub: "Skills & programs",
@@ -138,7 +134,6 @@ function auxViewLabel(view: AuxView): string {
 function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () => void, onOpenGrounding: () => void, onOpenView: (target: string) => void, onOpenCaregiverShare?: (contactId: string) => void) {
   switch (view) {
     case "about_nila": return <AboutNilaScreen />;
-    case "insights": return <InsightsScreen />;
     case "thought_record": return <ThoughtRecordScreen />;
     case "assessment": return <AssessmentScreen onActivateCrisis={onActivateCrisis} />;
     case "your_data": return <YourDataScreen />;
@@ -152,7 +147,6 @@ function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () 
         return <ValuesToActionScreen />;
     case "exposure": return <ExposureHierarchyScreen />;
     case "relapse_plan": return <RelapsePlanScreen />;
-    case "progress": return <ProgressDashboard onClose={onClose} />;
     case "diary": return <JournalScreen />;
     case "episode": return <EpisodeSupportScreen onSessionEnded={onClose} onNavigateToGrounding={() => { onClose(); onOpenGrounding(); }} onNavigateToBreathing={() => { onClose(); onOpenGrounding(); }} />;
     case "ema_checkin": return <EmaCheckInScreen onLogged={onClose} onCrisis={() => { onClose(); onActivateCrisis(); }} />;
@@ -572,7 +566,7 @@ function AppShell() {
       >
         <ErrorBoundary name="settings-sheet">
           <Suspense fallback={<ScreenFallback />}>
-            <SettingsScreen onOpenCaregiver={() => openSheet("caregiver")} onOpenLegal={() => openSheet("legal")} />
+            <SettingsScreen onOpenCaregiver={() => openSheet("caregiver")} onOpenLegal={() => openSheet("legal")} onOpenAbout={() => openAux("about_nila")} />
           </Suspense>
         </ErrorBoundary>
       </Sheet>

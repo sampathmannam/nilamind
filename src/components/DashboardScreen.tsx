@@ -11,6 +11,7 @@ import { readEpisodeMarkers, type EpisodeMarker } from "../services/episodeMarke
 import { t, tn, useLanguage, type I18nKey } from "../services/i18n";
 import { loadAssessments, latestFor, INSTRUMENTS, type InstrumentId } from "../services/assessments";
 import { assessmentInsights, generateInsights, daysOfData, medicationMoodInsight, type Insight } from "../services/patternInsights";
+import { getNo1Insights, type No1Insight } from "../services/nOf1";
 import { computeStreak, computeCompassionateStreak } from "../services/streaks";
 import { nilaStats } from "../services/nilaSessions";
 import { adherenceSummary, loadMedicationLogs } from "../services/medicationAdherence";
@@ -89,6 +90,9 @@ export default function DashboardScreen({ onOpenView }: { onOpenView?: (target: 
   const [behaviourInsights, setBehaviourInsights] = useState<Insight[]>([]);
   const [behaviourDays, setBehaviourDays] = useState(0);
   const [behaviourLoading, setBehaviourLoading] = useState(true);
+  // Redesign §5.4: N-of-1 protocol insights moved here from the deleted InsightsScreen — the
+  // dashboard ("Patterns") is now their only surface.
+  const [no1Insights, setNo1Insights] = useState<No1Insight[]>([]);
   const [proactiveCards, setProactiveCards] = useState<ReturnType<typeof selectProactiveCards>>([]);
   const lang = useLanguage();
   const [showAllObservations, setShowAllObservations] = useState(false);
@@ -223,6 +227,10 @@ export default function DashboardScreen({ onOpenView }: { onOpenView?: (target: 
         setBehaviourInsights(insights);
         setBehaviourDays(daysOfData(snaps, mood));
       } catch { /* fresh db or no permission */ }
+      try {
+        const n1 = getNo1Insights();
+        if (!cancelled) setNo1Insights(n1);
+      } catch { /* no protocol completions yet */ }
       if (!cancelled) setBehaviourLoading(false);
     })();
     return () => { cancelled = true; };
@@ -810,6 +818,23 @@ export default function DashboardScreen({ onOpenView }: { onOpenView?: (target: 
               {showAllBehaviour ? `Show less` : `See all ${behaviourInsights.length} insights`}
             </button>
           )}
+        </Card>
+      )}
+
+      {/* N-of-1 protocol insights (moved from the deleted InsightsScreen — redesign §5.4) */}
+      {no1Insights.length > 0 && (
+        <Card variant="glass" padding="lg" gap="md">
+          <p className="text-[11px] text-ink-faint italic px-1">
+            Patterns from your protocol completions — may not always hold, but worth noticing.
+          </p>
+          <div className="space-y-3">
+            {no1Insights.map((insight) => (
+              <div key={insight.protocolId} className="glass rounded-2xl p-4 border border-warn/20 space-y-1.5">
+                <p className="text-xs font-medium text-warn-hi">{insight.protocolName}</p>
+                <p className="text-base text-ink-2">{insight.description}</p>
+              </div>
+            ))}
+          </div>
         </Card>
       )}
 
