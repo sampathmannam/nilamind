@@ -23,7 +23,7 @@ function allSourceFiles(dir: string, acc: string[] = []): string[] {
   return acc;
 }
 
-// The 50 protected sensitive keys, in declaration order (src/services/secureLocal.ts).
+// The 52 protected sensitive keys, in declaration order (src/services/secureLocal.ts).
 // FIXTURE UPDATE 2026-08-04: +9 keys (medications/med_logs/means_coaching/voice_sessions/pact/
 // protocol_completions/onboarding_mood/user_goal/error_log) added to SENSITIVE_KEYS by the
 // health/safety-keys audit — this pin mirrors the allowlist exactly (it must never be edited to
@@ -32,6 +32,9 @@ function allSourceFiles(dir: string, acc: string[] = []): string[] {
 // added to fix usageAnalytics.protocolCompletions()'s misleading 100%-after-one-completion rate.
 // FIXTURE UPDATE 2026-08-05: +1 key (nilamind_skill_practice) — DBT skills practice log for the
 // skills-use mechanism loop (skillsPractice.ts).
+// FIXTURE UPDATE 2026-08-06: +1 key (nilamind_recent_tools) — was briefly written via raw
+// localStorage during the UI/UX redesign, fixed before ship; MIGRATION_VERSION bumped to 5 in
+// secureLocal.ts to sweep any stray plaintext under that key on next boot.
 const SENSITIVE_KEYS = [
   "nilamind_checkins",
   "nilamind_checkin_draft",
@@ -84,6 +87,7 @@ const SENSITIVE_KEYS = [
   "nilamind_onboarding_mood",
   "nilamind_user_goal",
   "nilamind_error_log",
+  "nilamind_recent_tools",
 ];
 
 describe("protected literals (privacy/encryption invariants — never change)", () => {
@@ -93,14 +97,14 @@ describe("protected literals (privacy/encryption invariants — never change)", 
   });
 
 
-  it("secureLocal.ts SENSITIVE_KEYS contains exactly the 51 expected entries", () => {
+  it("secureLocal.ts SENSITIVE_KEYS contains exactly the 52 expected entries", () => {
     const src = read("services/secureLocal.ts");
     // Pull the array body out of `export const SENSITIVE_KEYS = [ ... ];`
     const m = src.match(/export const SENSITIVE_KEYS\s*=\s*\[([\s\S]*?)\]/);
     expect(m, "SENSITIVE_KEYS array literal not found").toBeTruthy();
     const found = [...m![1].matchAll(/"([^"]+)"/g)].map((x) => x[1]);
     expect(found).toEqual(SENSITIVE_KEYS);
-    expect(found).toHaveLength(51);
+    expect(found).toHaveLength(52);
     // The reflection throttle flag is a non-sensitive date-only value in plain localStorage.
     expect(found).not.toContain("nilamind_last_reflected");
     // Phase 2 inflection: the toggle + throttle + daily-cap are non-sensitive flag/date values.
