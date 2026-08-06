@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Moon, Wind, ChevronRight, Sparkles, NotebookPen, Pill, Smile, Activity, Compass, Lightbulb, Volume2, Clock3, Settings } from "lucide-react";
+import { Moon, Wind, ChevronRight, Sparkles, Settings } from "lucide-react";
 import { useLanguage, t } from "../services/i18n";
 import Card from "./Card";
 import Button from "./Button";
@@ -10,6 +10,7 @@ import AmbientSlot from "./AmbientSlot";
 import { useTimeOfDay, type TimeOfDay } from "../hooks/useTimeOfDay";
 import { getRecentTools, recordToolUse } from "../services/recentTools";
 import { setEmaPrefill } from "../services/emaPrefill";
+import { TOOL_META } from "./toolMeta";
 
 const MOOD_OPTIONS = [
   { id: "calm", emoji: "😌", label: "Calm" },
@@ -78,19 +79,6 @@ export default function TodayScreen({
   const greeting = greetingMap[timeOfDay];
   const recommendedAction = useMemo(() => getRecommendedAction(new Date().getHours()), [timeOfDay]);
   const recentTools = useMemo(() => getRecentTools(), []);
-
-  const TOOL_META: Record<string, { icon: React.ReactNode; label: string }> = {
-    plan: { icon: <Wind className="w-4 h-4 text-accent" />, label: "Breathing & Grounding" },
-    winddown: { icon: <Moon className="w-4 h-4 text-accent" />, label: "Wind Down" },
-    diary: { icon: <NotebookPen className="w-4 h-4 text-accent" />, label: "Diary" },
-    medication: { icon: <Pill className="w-4 h-4 text-accent" />, label: "Medication" },
-    ema_checkin: { icon: <Smile className="w-4 h-4 text-accent" />, label: "Check-in" },
-    assessment: { icon: <Activity className="w-4 h-4 text-accent" />, label: "Assessment" },
-    values_to_action: { icon: <Compass className="w-4 h-4 text-accent" />, label: "Values to Action" },
-    problem_solving: { icon: <Lightbulb className="w-4 h-4 text-warn" />, label: "Problem Solving" },
-    sounds: { icon: <Volume2 className="w-4 h-4 text-success" />, label: "Ambient Sounds" },
-    social_rhythm: { icon: <Clock3 className="w-4 h-4 text-accent" />, label: "Social Rhythm" },
-  };
 
   function ago(ts: number): string {
     const diff = Date.now() - ts;
@@ -162,8 +150,8 @@ export default function TodayScreen({
             return (
               <ToolRow
                 key={entry.target}
-                icon={meta.icon}
-                label={meta.label}
+                icon={<meta.Icon className={meta.iconClass} aria-hidden="true" />}
+                label={meta.label()}
                 subtitle={ago(entry.timestamp)}
                 onPress={() => { recordToolUse(entry.target); go(entry.target); }}
               />

@@ -17,6 +17,7 @@ vi.mock("../services/secureLocal", async (importOriginal) => {
 vi.mock("../hooks/useHaptics", () => ({ hapticMedium: vi.fn() }));
 
 import TodayScreen, { getRecommendedAction } from "./TodayScreen";
+import { TOOL_META } from "./toolMeta";
 
 afterEach(() => { cleanup(); store.clear(); });
 
@@ -114,7 +115,7 @@ describe("TodayScreen — calm home", () => {
     store.set("nilamind_recent_tools", JSON.stringify([{ target: "winddown", timestamp: oldTs }]));
     const go = vi.fn();
     render(<TodayScreen go={go} phoneEnabled={false} onEpisode={noop} onOpenCrisis={noop} />);
-    fireEvent.click(screen.getByText("Wind Down"));
+    fireEvent.click(screen.getByText(TOOL_META.winddown.label()));
     expect(go).toHaveBeenCalledWith("winddown");
     const saved = JSON.parse(store.get("nilamind_recent_tools")!) as { target: string; timestamp: number }[];
     expect(saved[0].target).toBe("winddown");
