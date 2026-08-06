@@ -10,7 +10,35 @@ import {
   type MeansCoachingProgress,
 } from "../services/lethalMeansCoaching";
 import { CheckCircle2, ChevronDown, ChevronRight, Save, Sparkles, Play, ArrowRight } from "lucide-react";
-import { DEFAULT_LADDER, type SafetyLadderStep } from "../services/safetyPlanSkills";
+import {
+  createSkillsBridge,
+  markUsed,
+  isInCooldown,
+  nextStep,
+  type SafetyLadderStep,
+  type SafetyPlanSkillsBridge,
+} from "../services/safetyPlanSkills";
+
+const SKILLS_BRIDGE_KEY = "nilamind_safety_skills_bridge";
+
+function loadSkillsBridge(): SafetyPlanSkillsBridge {
+  try {
+    const raw = secureLocal.getItem(SKILLS_BRIDGE_KEY);
+    if (!raw) return createSkillsBridge();
+    const parsed = JSON.parse(raw);
+    return parsed && Array.isArray(parsed.steps) ? parsed : createSkillsBridge();
+  } catch {
+    return createSkillsBridge();
+  }
+}
+
+function saveSkillsBridge(bridge: SafetyPlanSkillsBridge): void {
+  try {
+    secureLocal.setItem(SKILLS_BRIDGE_KEY, JSON.stringify(bridge));
+  } catch {
+    /* best-effort — a failed write just means the cooldown/last-used note isn't remembered next time */
+  }
+}
 
 const INITIAL_MEANS_PROGRESS: MeansCoachingProgress = {
   startedAt: 0,
@@ -33,6 +61,19 @@ export default function SafetyPlanScreen({ draft }: { draft?: Partial<Pick<Safet
   const [expandedCat, setExpandedCat] = useState<string | null>(null);
   const [meansProgress, setMeansProgress] = useState<MeansCoachingProgress>(INITIAL_MEANS_PROGRESS);
   const [commitmentInput, setCommitmentInput] = useState("");
+  // Skills Ladder bridge (2026-08-06 audit fix): createSkillsBridge/markUsed/isInCooldown/nextStep
+  // (safetyPlanSkills.ts) had zero callers anywhere — the ladder was a static reference list with no
+  // way to record that a step was actually tried. Screen owns persistence per that module's own doc
+  // comment ("Pure service — no React, no side-effects").
+  const [skillsBridge, setSkillsBridge] = useState<SafetyPlanSkillsBridge>(() => loadSkillsBridge());
+  const [lastTriedSkillId, setLastTriedSkillId] = useState<string | null>(null);
+  const handleTrySkill = (skillId: string) => {
+    const updated = markUsed(skillsBridge);
+    setSkillsBridge(updated);
+    saveSkillsBridge(updated);
+    setLastTriedSkillId(skillId);
+  };
+  const suggestedNextId = lastTriedSkillId ? nextStep(skillsBridge, lastTriedSkillId)?.skillId : undefined;
 
   useEffect(() => {
     const saved = secureLocal.getItem("nilamind_safetyplan");
@@ -392,26 +433,49 @@ export default function SafetyPlanScreen({ draft }: { draft?: Partial<Pick<Safet
           <p className="text-xs text-ink-muted">
             When crisis hits, follow these steps in order. Each one builds on the last.
           </p>
+          {isInCooldown(skillsBridge) && (
+            <p className="text-xs text-accent bg-accent/10 border border-accent/20 rounded-lg px-2.5 py-1.5">
+              You worked through this ladder recently — that's okay, use it again anytime.
+            </p>
+          )}
           <div className="space-y-2">
-            {DEFAULT_LADDER.map((step, i) => (
-              <div key={step.skillId} className="flex items-start gap-3 p-2 rounded-lg bg-page border border-line/50">
-                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-accent/20 text-accent text-xs font-bold flex items-center justify-center">
-                  {i + 1}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-ink">{step.label}</span>
-                    {step.duration && (
-                      <span className="text-[10px] text-ink-faint bg-fill px-1.5 py-0.5 rounded">{step.duration}</span>
-                    )}
+            {skillsBridge.steps.map((step, i) => {
+              const tried = step.skillId === lastTriedSkillId;
+              const suggested = step.skillId === suggestedNextId;
+              return (
+                <div
+                  key={step.skillId}
+                  className={`flex items-start gap-3 p-2 rounded-lg bg-page border ${suggested ? "border-accent/50" : "border-line/50"}`}
+                >
+                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-accent/20 text-accent text-xs font-bold flex items-center justify-center">
+                    {i + 1}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-medium text-ink">{step.label}</span>
+                      {step.duration && (
+                        <span className="text-[10px] text-ink-faint bg-fill px-1.5 py-0.5 rounded">{step.duration}</span>
+                      )}
+                      {suggested && !tried && (
+                        <span className="text-[10px] text-accent bg-accent/10 px-1.5 py-0.5 rounded">Try this next</span>
+                      )}
+                    </div>
+                    <p className="text-xs text-ink-muted mt-0.5">{step.instructions}</p>
                   </div>
-                  <p className="text-xs text-ink-muted mt-0.5">{step.instructions}</p>
+                  <button
+                    onClick={() => handleTrySkill(step.skillId)}
+                    aria-label={`Mark ${step.label} as tried`}
+                    aria-pressed={tried}
+                    className={`flex-shrink-0 p-1 rounded-full cursor-pointer transition-colors ${tried ? "text-success" : "text-ink-faint hover:text-ink-2"}`}
+                  >
+                    <CheckCircle2 className="w-5 h-5" />
+                  </button>
+                  {i < skillsBridge.steps.length - 1 && (
+                    <ArrowRight className="w-3 h-3 text-ink-faint mt-1 flex-shrink-0" />
+                  )}
                 </div>
-                {i < DEFAULT_LADDER.length - 1 && (
-                  <ArrowRight className="w-3 h-3 text-ink-faint mt-1 flex-shrink-0" />
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>

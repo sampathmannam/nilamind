@@ -106,6 +106,7 @@ export const SENSITIVE_KEYS = [
   "nilamind_user_goal",
   "nilamind_error_log",
   "nilamind_recent_tools",
+  "nilamind_safety_skills_bridge",
 ];
 const MIGRATION_VERSION = 5; // v4: encrypt nilamind_medications/med_logs/means_coaching/voice_sessions/pact/protocol_completions/onboarding_mood/user_goal/error_log legacy plaintext
 // v5: nilamind_recent_tools was briefly written via raw localStorage (2026-08-06 UI/UX redesign, fixed
