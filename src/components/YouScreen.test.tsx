@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { render, screen, cleanup } from "@testing-library/react";
+import { render, screen, cleanup, waitFor } from "@testing-library/react";
 
 const store = new Map<string, string>();
 vi.mock("../services/secureLocal", async (importOriginal) => {
@@ -37,34 +37,43 @@ afterEach(() => { cleanup(); store.clear(); });
 const noop = () => {};
 
 describe("YouScreen — data error feedback (U5.2)", () => {
-  it("shows error banner when a storage key contains corrupted data", () => {
+  it("shows error banner when a storage key contains corrupted data", async () => {
     store.set("nilamind_checkins", "garbage");
     render(<YouScreen go={noop} onOpenCrisis={noop} />);
-    expect(screen.getByRole("alert")).toBeTruthy();
-    expect(screen.getByText(/couldn't load/i)).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toBeTruthy();
+      expect(screen.getByText(/couldn't load/i)).toBeTruthy();
+    });
   });
 });
 
 describe("YouScreen — simplified layout", () => {
-  it("renders streak card", () => {
+  it("renders streak card", async () => {
     render(<YouScreen go={noop} onOpenCrisis={noop} />);
-    expect(screen.getByText(/Welcome|-day streak/)).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.getByText(/Welcome|-day streak/)).toBeTruthy();
+    });
   });
 
-  it("renders all navigation rows", () => {
+  it("renders all navigation rows", async () => {
     render(<YouScreen go={noop} onOpenCrisis={noop} />);
-    expect(screen.getByText("Dashboard")).toBeTruthy();
-    expect(screen.getByText("Insights")).toBeTruthy();
-    expect(screen.getByText("Nila Memory")).toBeTruthy();
-    expect(screen.getByText("Learn")).toBeTruthy();
-    expect(screen.getByText("Caregiver")).toBeTruthy();
-    expect(screen.getByText("Settings")).toBeTruthy();
-    expect(screen.getByText("Your Data")).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.getByText("Dashboard")).toBeTruthy();
+      expect(screen.getByText("Insights")).toBeTruthy();
+      expect(screen.getByText("Nila Memory")).toBeTruthy();
+      expect(screen.getByText("Learn")).toBeTruthy();
+      expect(screen.getByText("Caregiver")).toBeTruthy();
+      expect(screen.getByText("Settings")).toBeTruthy();
+      expect(screen.getByText("Your Data")).toBeTruthy();
+    });
   });
 
-  it("calls go with correct targets on press", () => {
+  it("calls go with correct targets on press", async () => {
     const go = vi.fn();
     render(<YouScreen go={go} onOpenCrisis={noop} />);
+    await waitFor(() => {
+      expect(screen.getByText("Dashboard")).toBeTruthy();
+    });
     screen.getByText("Dashboard").click();
     expect(go).toHaveBeenCalledWith("dashboard");
     screen.getByText("Insights").click();
@@ -81,18 +90,24 @@ describe("YouScreen — simplified layout", () => {
     expect(go).toHaveBeenCalledWith("your_data");
   });
 
-  it("does not render contextual suggestion strip", () => {
+  it("does not render contextual suggestion strip", async () => {
     render(<YouScreen go={noop} onOpenCrisis={noop} />);
-    expect(screen.queryByText(/you_elevated_hint/)).toBeNull();
+    await waitFor(() => {
+      expect(screen.queryByText(/you_elevated_hint/)).toBeNull();
+    });
   });
 
-  it("does not render weekly intention section", () => {
+  it("does not render weekly intention section", async () => {
     render(<YouScreen go={noop} onOpenCrisis={noop} />);
-    expect(screen.queryByText(/intention/)).toBeNull();
+    await waitFor(() => {
+      expect(screen.queryByText(/intention/)).toBeNull();
+    });
   });
 
-  it("does not render show more toggle", () => {
+  it("does not render show more toggle", async () => {
     render(<YouScreen go={noop} onOpenCrisis={noop} />);
-    expect(screen.queryByText(/more resources/)).toBeNull();
+    await waitFor(() => {
+      expect(screen.queryByText(/more resources/)).toBeNull();
+    });
   });
 });

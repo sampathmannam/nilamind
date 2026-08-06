@@ -1,11 +1,12 @@
 import { localDateKey } from "../services/storageUtils";
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { LayoutDashboard, TrendingUp, Sparkles, BookOpen, Users, Settings as SettingsIcon, ShieldCheck } from "lucide-react";
 
 import ToolRow from "./ToolRow";
 import Section from "./Section";
 import Card from "./Card";
 import CrisisHeaderButton from "./CrisisHeaderButton";
+import { SkeletonCard, SkeletonList } from "./Skeleton";
 import { useLanguage, t } from "../services/i18n";
 import { computeCompassionateStreak } from "../services/streaks";
 import { loadCheckins } from "../services/checkin";
@@ -65,6 +66,13 @@ function getActiveDaysInRange(): string[] {
 
 export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) => void; onOpenCrisis: () => void }) {
   useLanguage();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const t = setTimeout(() => setLoading(false), 150);
+    return () => clearTimeout(t);
+  }, []);
+
   const activeDays = getActiveDaysInRange();
 
   let streak = { current: 0, totalActiveDays: 0, message: "Welcome" };
@@ -85,6 +93,19 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
     }
     return badKeys;
   }, []);
+
+  if (loading) {
+    return (
+      <div className="space-y-4 max-w-md mx-auto animate-fade-in px-4" id="you-hub">
+        <header className="pt-2 flex items-start justify-between gap-3">
+          <h1 className="editorial text-[26px] text-ink tracking-tight">{t("you")}</h1>
+          <CrisisHeaderButton onClick={onOpenCrisis} className="shrink-0" />
+        </header>
+        <SkeletonCard lines={2} />
+        <SkeletonList count={5} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 max-w-md mx-auto animate-fade-in px-4" id="you-hub">

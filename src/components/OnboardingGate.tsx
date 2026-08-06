@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { LifeBuoy, ChevronRight, ChevronLeft, Globe, HeartHandshake, MessageCircle, Check, Shield } from "lucide-react";
+import { LifeBuoy, ChevronRight, ChevronLeft, Globe, HeartHandshake, MessageCircle, Check, Shield, Sparkles, Moon, Brain, Smile, Users } from "lucide-react";
 import { LocalNotifications } from "@capacitor/local-notifications";
 import {
   completeOnboarding,
@@ -21,6 +21,13 @@ const MOOD_OPTIONS = [
   { value: 5, emoji: "🙂", label: "Okay", color: "text-warn" },
   { value: 7, emoji: "😊", label: "Good", color: "text-success" },
   { value: 9, emoji: "😄", label: "Great", color: "text-success-hi" },
+] as const;
+
+const GOAL_OPTIONS = [
+  { id: "sleep", label: "Sleep", icon: Moon },
+  { id: "anxiety", label: "Anxiety", icon: Brain },
+  { id: "mood", label: "Mood", icon: Smile },
+  { id: "relationships", label: "Relationships", icon: Users },
 ] as const;
 
 // Soft Wellness register: same coarse 3-bucket valence mapping used for the Today mood display,
@@ -197,6 +204,36 @@ export default function OnboardingGate({ onComplete, onOpenCrisis }: OnboardingG
           </div>
         )}
 
+        {/* Goal selection */}
+        {slide.id === "goals" && (
+          <div className="w-full space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              {GOAL_OPTIONS.map((goal) => {
+                const isSelected = selectedGoals.includes(goal.id);
+                return (
+                  <button
+                    key={goal.id}
+                    onClick={() => toggleGoal(goal.id)}
+                    className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all cursor-pointer ${
+                      isSelected
+                        ? "bg-accent/15 border-accent/50"
+                        : "bg-fill/50 border-line-strong/50 hover:border-line-strong"
+                    }`}
+                  >
+                    <goal.icon className={`w-6 h-6 ${isSelected ? "text-accent-hi" : "text-ink-muted"}`} />
+                    <span className={`text-sm font-medium ${isSelected ? "text-accent-hi" : "text-ink-2"}`}>{goal.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+            {selectedGoals.length > 0 && (
+              <p className="text-[11px] text-ink-faint animate-fade-in text-center">
+                {selectedGoals.length} goal{selectedGoals.length > 1 ? "s" : ""} selected — I'll personalize your experience.
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Completion animation */}
         {slide.id === "ready" && (
           <div className="space-y-3 animate-fade-in">
@@ -328,6 +365,12 @@ function getSlides(baselineMood: number | null) {
       title: "How are you feeling right now?",
       body: "There's no wrong answer. Pick what fits — I'll use this to personalize your experience. You can change this anytime.",
       icon: <HeartHandshake className="w-10 h-10 text-warn" />,
+    },
+    {
+      id: "goals",
+      title: "What matters most to you?",
+      body: "Pick one or more — I'll personalize your tools and suggestions. You can change this anytime.",
+      icon: <Sparkles className="w-10 h-10 text-accent" />,
     },
     {
       id: "region",

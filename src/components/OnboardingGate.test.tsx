@@ -26,7 +26,8 @@ const noop = () => {};
 
 function goToHowNilaHelpsSlide() {
   render(<OnboardingGate onComplete={noop} onOpenCrisis={noop} />);
-  // nila_intro -> privacy -> mood_check -> region -> how_nila_helps (4 "Next" taps)
+  // nila_intro -> privacy -> mood_check -> goals -> region -> how_nila_helps (5 "Next" taps)
+  fireEvent.click(screen.getByText(/next/i));
   fireEvent.click(screen.getByText(/next/i));
   fireEvent.click(screen.getByText(/next/i));
   fireEvent.click(screen.getByText(/next/i));
@@ -59,7 +60,8 @@ describe("OnboardingGate — how Nila helps slide (expectancy-setting copy)", ()
 describe("OnboardingGate — simplified flow", () => {
   it("completes onboarding with default notification settings", () => {
     render(<OnboardingGate onComplete={noop} onOpenCrisis={noop} />);
-    // nila_intro -> privacy -> mood_check -> region -> how_nila_helps -> ready (5 "Next" taps)
+    // nila_intro -> privacy -> mood_check -> goals -> region -> how_nila_helps -> ready (6 "Next" taps)
+    fireEvent.click(screen.getByText(/next/i));
     fireEvent.click(screen.getByText(/next/i));
     fireEvent.click(screen.getByText(/next/i));
     fireEvent.click(screen.getByText(/next/i));
@@ -77,10 +79,28 @@ describe("OnboardingGate — simplified flow", () => {
     // Select a mood
     const moodButton = screen.getByText("😊");
     fireEvent.click(moodButton);
+    fireEvent.click(screen.getByText(/next/i)); // -> goals
     fireEvent.click(screen.getByText(/next/i)); // -> region
     fireEvent.click(screen.getByText(/next/i)); // -> how_nila_helps
     fireEvent.click(screen.getByText(/next/i)); // -> ready
     fireEvent.click(screen.getByRole("button", { name: /start/i })); // finish()
     expect(store.get("nilamind_onboarding_mood")).toBeTruthy();
+  });
+
+  it("saves goals when selected", () => {
+    render(<OnboardingGate onComplete={noop} onOpenCrisis={noop} />);
+    fireEvent.click(screen.getByText(/next/i)); // -> privacy
+    fireEvent.click(screen.getByText(/next/i)); // -> mood_check
+    fireEvent.click(screen.getByText(/next/i)); // -> goals
+    // Select goals
+    fireEvent.click(screen.getByText("Sleep"));
+    fireEvent.click(screen.getByText("Mood"));
+    fireEvent.click(screen.getByText(/next/i)); // -> region
+    fireEvent.click(screen.getByText(/next/i)); // -> how_nila_helps
+    fireEvent.click(screen.getByText(/next/i)); // -> ready
+    fireEvent.click(screen.getByRole("button", { name: /start/i })); // finish()
+    const goals = JSON.parse(store.get("nilamind_user_goal") ?? "[]");
+    expect(goals).toContain("sleep");
+    expect(goals).toContain("mood");
   });
 });
