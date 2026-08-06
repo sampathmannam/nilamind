@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { LifeBuoy, X } from "lucide-react";
 import CrisisLines from "./CrisisLines";
+import { t } from "../services/i18n";
 
 // Always-available crisis affordance for the PRE-APP gates (identity onboarding, PIN unlock, and the
 // first-run model download). Those screens block the user before App's global CrisisOverlay exists, so a
@@ -23,7 +24,7 @@ export default function CrisisHelpButton({ variant = "bar" }: { variant?: "bar" 
       className="w-full flex items-center justify-center gap-2 rounded-xl border border-danger/40 bg-danger/10 hover:bg-danger/20 px-4 py-3 min-h-[44px] text-[13px] font-semibold text-rose-200 transition-colors cursor-pointer"
     >
       <LifeBuoy className="w-4 h-4 shrink-0" />
-      In crisis right now? Get help
+      {t("crisisGate_cta")}
     </button>
   );
 
@@ -45,27 +46,26 @@ export default function CrisisHelpButton({ variant = "bar" }: { variant?: "bar" 
           className="fixed inset-0 z-[80] bg-page/95 backdrop-blur-sm overflow-y-auto"
           role="dialog"
           aria-modal="true"
-          aria-label="Crisis help"
+          aria-label={t("crisisGate_dialogLabel")}
           id="gate-crisis-panel"
         >
           <div className="max-w-md mx-auto px-5 py-8" style={{ paddingTop: "calc(var(--safe-top) + 1rem)" }}>
             <div className="flex items-start justify-between gap-3 mb-3">
               <div className="flex items-center gap-2 text-rose-200">
                 <LifeBuoy className="w-5 h-5 shrink-0" />
-                <h2 className="text-base font-semibold">You're not alone — support is here</h2>
+                <h2 className="text-base font-semibold">{t("crisisGate_title")}</h2>
               </div>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                aria-label="Close crisis help"
+                aria-label={t("crisisGate_close")}
                 className="text-ink-muted hover:text-ink-2 cursor-pointer shrink-0 p-1 -m-1"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
             <p className="text-base text-ink-2 leading-relaxed mb-4">
-              These lines are free, confidential, and there for you any time — day or night. You don't need
-              the app set up to reach them. If you're in immediate danger, call your local emergency number.
+              {t("crisisGate_bodyIntro")} {t("reach_crisis_body")}
             </p>
             <CrisisLines tone="rose" />
             <button
@@ -73,7 +73,7 @@ export default function CrisisHelpButton({ variant = "bar" }: { variant?: "bar" 
               onClick={() => setOpen(false)}
               className="w-full mt-5 rounded-full border border-line bg-card hover:bg-raised text-ink-2 font-medium px-8 py-3 min-h-[44px] transition-all cursor-pointer"
             >
-              I'm okay for now
+              {t("crisisGate_dismiss")}
             </button>
           </div>
         </div>

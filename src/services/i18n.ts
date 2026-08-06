@@ -68,6 +68,12 @@ export type I18nKey =
   | "crisisBreathingSub"
   | "crisisSpeakNow"
   | "crisisHelplineNote"
+  | "crisisGate_cta"
+  | "crisisGate_dialogLabel"
+  | "crisisGate_title"
+  | "crisisGate_close"
+  | "crisisGate_bodyIntro"
+  | "crisisGate_dismiss"
   | "crisisCopingPlan"
   | "crisisWarnSigns"
   | "crisisWarnSignsBlank"
@@ -769,6 +775,12 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     crisisBreathingSub: "Paced breathing to calm your nervous system",
     crisisSpeakNow: "Or speak with someone now",
     crisisHelplineNote: "Free, confidential helplines for your region — change in Settings.",
+    crisisGate_cta: "In crisis right now? Get help",
+    crisisGate_dialogLabel: "Crisis help",
+    crisisGate_title: "You're not alone — support is here",
+    crisisGate_close: "Close crisis help",
+    crisisGate_bodyIntro: "These lines are free, confidential, and available any time — day or night. You don't need the app set up to reach them.",
+    crisisGate_dismiss: "I'm okay for now",
     crisisCopingPlan: "Your coping plan",
     crisisWarnSigns: "1. Warning signs I notice:",
     crisisWarnSignsBlank: "This part is still blank — and that's okay. You're here now, and that counts.",
@@ -1455,6 +1467,12 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     crisisBreathingSub: "अपनी तंत्रिका प्रणाली को शांत करने के लिए लयबद्ध श्वास",
     crisisSpeakNow: "या अभी किसी से बात करें",
     crisisHelplineNote: "आपके क्षेत्र के लिए मुफ़्त, गोपनीय हेल्पलाइन — सेटिंग्स में बदलें।",
+    crisisGate_cta: "अभी संकट में हैं? सहायता पाएं",
+    crisisGate_dialogLabel: "संकट सहायता",
+    crisisGate_title: "आप अकेले नहीं हैं — सहायता यहां है",
+    crisisGate_close: "संकट सहायता बंद करें",
+    crisisGate_bodyIntro: "ये लाइनें मुफ़्त, गोपनीय हैं, और कभी भी उपलब्ध हैं — दिन हो या रात। इन्हें पाने के लिए ऐप सेट अप होने की ज़रूरत नहीं है।",
+    crisisGate_dismiss: "अभी के लिए मैं ठीक हूं",
     crisisCopingPlan: "आपकी सामना योजना",
     crisisWarnSigns: "1. चेतावनी के संकेत जो मैं देखता/देखती हूँ:",
     crisisWarnSignsBlank: "यह हिस्सा अभी खाली है — और यह ठीक है। आप अभी यहाँ हैं, और वह मायने रखता है।",
@@ -2126,6 +2144,12 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     crisisBreathingSub: "உங்கள் நரம்பு மண்டலத்தை அமைதிப்படுத்த நிதானமான மூச்சு",
     crisisSpeakNow: "அல்லது இப்போது யாராவது பேசுங்கள்",
     crisisHelplineNote: "உங்கள் பகுதிக்கான இலவச, ரகசிய உதவி எண்கள் — அமைப்புகளில் மாற்றவும்.",
+    crisisGate_cta: "இப்போது நெருக்கடியில் உள்ளீர்களா? உதவி பெறுங்கள்",
+    crisisGate_dialogLabel: "அவசர உதவி",
+    crisisGate_title: "நீங்கள் தனியாக இல்லை — உதவி இங்கே உள்ளது",
+    crisisGate_close: "அவசர உதவியை மூடு",
+    crisisGate_bodyIntro: "இந்த எண்கள் இலவசம், ரகசியமானவை, மேலும் எப்போது வேண்டுமானாலும் — பகலோ இரவோ — கிடைக்கும். இவற்றை அணுக ஆப் அமைக்கப்பட வேண்டிய அவசியமில்லை.",
+    crisisGate_dismiss: "இப்போதைக்கு நான் நலமாக இருக்கிறேன்",
     crisisCopingPlan: "உங்கள் சமாளிப்புத் திட்டம்",
     crisisWarnSigns: "1. நான் கவனிக்கும் எச்சரிக்கை அறிகுறிகள்:",
     crisisWarnSignsBlank: "இந்தப் பகுதி இன்னும் காலியாக உள்ளது — அது பரவாயில்லை. நீங்கள் இப்போது இங்கே இருக்கிறீர்கள், அது முக்கியம்.",
@@ -2797,6 +2821,12 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     crisisBreathingSub: "మీ నరాల వ్యవస్థను శాంతించేందుకు లయబద్ధమైన శ్వాస",
     crisisSpeakNow: "లేదా ఇప్పుడే ఎవరితోనైనా మాట్లాడండి",
     crisisHelplineNote: "మీ ప్రాంతానికి ఉచిత, రహస్య సహాయ నంబర్లు — సెట్టింగ్‌లలో మార్చండి.",
+    crisisGate_cta: "ఇప్పుడు సంక్షోభంలో ఉన్నారా? సహాయం పొందండి",
+    crisisGate_dialogLabel: "అత్యవసర సహాయం",
+    crisisGate_title: "మీరు ఒంటరి కాదు — సహాయం ఇక్కడ ఉంది",
+    crisisGate_close: "అత్యవసర సహాయాన్ని మూసివేయి",
+    crisisGate_bodyIntro: "ఈ నంబర్లు ఉచితం, రహస్యమైనవి, మరియు ఎప్పుడైనా — పగలైనా రాత్రైనా — అందుబాటులో ఉంటాయి. వీటిని చేరుకోవడానికి యాప్ సెటప్ చేయాల్సిన అవసరం లేదు.",
+    crisisGate_dismiss: "ఇప్పుడు నేను బాగానే ఉన్నాను",
     crisisCopingPlan: "మీ ఎదుర్కొనే ప్రణాళిక",
     crisisWarnSigns: "1. నేను గమనించే హెచ్చరిక సంకేతాలు:",
     crisisWarnSignsBlank: "ఈ భాగం ఇంకా ఖాళీగా ఉంది — అది సరే. మీరు ఇప్పుడు ఇక్కడ ఉన్నారు, అది ముఖ్యం.",
