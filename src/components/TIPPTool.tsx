@@ -11,7 +11,8 @@ import {
   TIPP_SAFETY_ITEMS,
   type TippSafetyFlags,
 } from "../services/tippSafetyGate";
-import { detectElevationRisk, energyElevationSignal, napElevationSignal } from "../services/elevationGuard";
+import { energyElevationSignal, napElevationSignal } from "../services/elevationGuard";
+import { chatElevationSignal } from "../services/chatElevation";
 
 // TIPPTool — one unified interactive TIPP (Temperature, Intense exercise, Paced breathing, Paired
 // muscle relaxation) tool, replacing 3 shallow, divergent half-implementations (2026-07-12 Wave 3,
@@ -76,10 +77,16 @@ export default function TIPPTool({ onSubSkillComplete, onIntensityChange }: TIPP
   // Phase F / Feature 3: Manic-gated TIPP — suppress "I" (intense exercise) when elevated.
   // Intense exercise feeds elevated arousal in bipolar (L5 physiology). The dive reflex (cool
   // water) suffices instead (StatPearls, Kinoshita 2021).
-  const elevationLevel = detectElevationRisk("").level;
+  // 2026-08-06 audit fix: this used to call detectElevationRisk("") -- a hardcoded EMPTY string, which
+  // that function always maps to {level:"none"} regardless of real state, so the text-based half of this
+  // gate was permanently inert. TIPPTool is a standalone tool screen (opened from BreathingScreen/
+  // ToolsScreen, not chat) with no "current message" to scan -- the correct real signal for "was
+  // elevation just detected in chat" here is chatElevationSignal(), the same persisted 6h latch
+  // useChatSend.ts's noteChatElevation() already writes on every elevated chat turn.
+  const chatSignal = chatElevationSignal();
   const energySignal = energyElevationSignal();
   const napSignal = napElevationSignal();
-  const isElevated = elevationLevel !== "none" || energySignal !== "none" || napSignal !== "none";
+  const isElevated = chatSignal !== "none" || energySignal !== "none" || napSignal !== "none";
 
   const showTemperature = !hasTemperatureCaution(safety.flags);
   // Phase F: suppress exercise tab when elevated — movement feeds the high

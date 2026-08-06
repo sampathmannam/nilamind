@@ -14,18 +14,28 @@ vi.mock("../services/secureLocal", () => ({
   flush: () => {},
 }));
 
-// Phase F: mock elevationGuard so TIPPTool tests exercise the UI, not elevation detection.
+// Phase F: mock elevationGuard's passive signals so most tests exercise the UI, not elevation detection.
+// Controllable per-test via the hoisted refs (default "none") so the elevated-suppression path
+// (2026-08-06 audit fix) can be exercised directly, instead of only ever testing the always-"none" case.
+const { energySignalRef, napSignalRef } = vi.hoisted(() => ({
+  energySignalRef: { current: "none" as "none" | "elevated" | "high" },
+  napSignalRef: { current: "none" as "none" | "elevated" | "high" },
+}));
 vi.mock("../services/elevationGuard", () => ({
-  detectElevationRisk: () => ({ level: "none", markers: [] }),
-  energyElevationSignal: () => "none",
-  napElevationSignal: () => "none",
+  energyElevationSignal: () => energySignalRef.current,
+  napElevationSignal: () => napSignalRef.current,
 }));
 
 import TIPPTool from "./TIPPTool";
 import { saveTippSafetyFlags, defaultTippSafetyFlags } from "../services/tippSafetyGate";
+import { noteChatElevation } from "../services/chatElevation";
 
 afterEach(cleanup);
-beforeEach(() => store.clear());
+beforeEach(() => {
+  store.clear();
+  energySignalRef.current = "none";
+  napSignalRef.current = "none";
+});
 
 describe("TIPPTool — safety-gate entry checklist", () => {
   it("shows the one-time safety checklist before the tabs, on first open", () => {
@@ -114,6 +124,53 @@ describe("TIPPTool — 4-tab strip", () => {
   it("shows the honesty-gap copy about no dismantling trial isolating one TIPP subskill", () => {
     render(<TIPPTool />);
     expect(screen.getByText(/no (single )?(study|trial|research)/i)).toBeTruthy();
+  });
+});
+
+// 2026-08-06 audit fix: previously this file mocked elevationGuard to a HARDCODED "none" for every test,
+// so the elevated=true suppression branch had zero coverage. These tests exercise each of the 3 real
+// signal sources TIPPTool now reads (chatElevationSignal, energyElevationSignal, napElevationSignal).
+describe("TIPPTool — Phase F manic-gated suppression (elevated state)", () => {
+  beforeEach(() => { saveTippSafetyFlags(defaultTippSafetyFlags()); });
+
+  it("suppresses the Intense-exercise tab when a chat-detected elevation latch is active", () => {
+    noteChatElevation("elevated");
+    render(<TIPPTool />);
+    expect(screen.queryByRole("tab", { name: /Intense exercise/i })).toBeNull();
+    // Temperature (the dive-reflex alternative) remains available.
+    expect(screen.getByRole("tab", { name: /Temperature/i })).toBeTruthy();
+  });
+
+  it("suppresses the Intense-exercise tab on a HIGH chat-detected elevation too", () => {
+    noteChatElevation("high");
+    render(<TIPPTool />);
+    expect(screen.queryByRole("tab", { name: /Intense exercise/i })).toBeNull();
+  });
+
+  it("suppresses the Intense-exercise tab from energyElevationSignal alone (no chat signal needed)", () => {
+    energySignalRef.current = "elevated";
+    render(<TIPPTool />);
+    expect(screen.queryByRole("tab", { name: /Intense exercise/i })).toBeNull();
+  });
+
+  it("suppresses the Intense-exercise tab from napElevationSignal alone", () => {
+    napSignalRef.current = "elevated";
+    render(<TIPPTool />);
+    expect(screen.queryByRole("tab", { name: /Intense exercise/i })).toBeNull();
+  });
+
+  it("shows the Intense-exercise tab when nothing is elevated (baseline, unchanged behavior)", () => {
+    render(<TIPPTool />);
+    expect(screen.getByRole("tab", { name: /Intense exercise/i })).toBeTruthy();
+  });
+
+  it("when Temperature is ALSO unavailable (caution flag set), lands on breathing rather than exercise while elevated", () => {
+    saveTippSafetyFlags({ ...defaultTippSafetyFlags(), cardiac: true }); // removes the Temperature tab
+    noteChatElevation("elevated"); // removes the Intense-exercise tab
+    render(<TIPPTool />);
+    expect(screen.queryByRole("tab", { name: /Temperature/i })).toBeNull();
+    expect(screen.queryByRole("tab", { name: /Intense exercise/i })).toBeNull();
+    expect(screen.getByRole("tab", { name: /Paced breathing/i, selected: true })).toBeTruthy();
   });
 });
 
