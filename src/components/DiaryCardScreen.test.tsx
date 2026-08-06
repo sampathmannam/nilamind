@@ -116,3 +116,54 @@ describe("DiaryCardScreen — skill effectiveness (research-grounded redesign)",
     expect(saved[today]?.skillEffectiveness?.TIPP).toBeUndefined();
   });
 });
+
+// 2026-08-06 audit fix: the discrete-emotion chip picker (Feature 6, "give the wave a name") was
+// shipped and wired to state/persistence, but had ZERO test coverage anywhere.
+describe("DiaryCardScreen — discrete emotion chips (Feature 6)", () => {
+  it("renders the chip group with the 10 curated discrete emotions", () => {
+    render(<DiaryCardScreen />);
+    const group = screen.getByRole("group", { name: /discrete emotion labels/i });
+    expect(group).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Prickly" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Heavy" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Calm" })).toBeTruthy();
+  });
+
+  it("toggles a chip on tap, and off on a second tap", () => {
+    render(<DiaryCardScreen />);
+    const chip = screen.getByRole("button", { name: "Numb" });
+    expect(chip.getAttribute("aria-pressed")).toBe("false");
+    fireEvent.click(chip);
+    expect(chip.getAttribute("aria-pressed")).toBe("true");
+    fireEvent.click(chip);
+    expect(chip.getAttribute("aria-pressed")).toBe("false");
+  });
+
+  it("allows selecting more than one chip at once", () => {
+    render(<DiaryCardScreen />);
+    fireEvent.click(screen.getByRole("button", { name: "Prickly" }));
+    fireEvent.click(screen.getByRole("button", { name: "Wired" }));
+    expect(screen.getByRole("button", { name: "Prickly" }).getAttribute("aria-pressed")).toBe("true");
+    expect(screen.getByRole("button", { name: "Wired" }).getAttribute("aria-pressed")).toBe("true");
+  });
+
+  it("persists selected chips on save, under discreteEmotions", () => {
+    render(<DiaryCardScreen />);
+    fireEvent.click(screen.getByRole("button", { name: "Heavy" }));
+    fireEvent.click(screen.getByRole("button", { name: "Empty" }));
+    fireEvent.click(document.getElementById("save-diary-btn")!);
+
+    const today = localDateKey();
+    const saved = JSON.parse(store.get("nilamind_diary") || "{}");
+    expect(saved[today]?.discreteEmotions).toEqual(["heavy", "empty"]);
+  });
+
+  it("reloads previously-saved chip selections when reopened on the same date", () => {
+    const today = localDateKey();
+    store.set("nilamind_diary", JSON.stringify({
+      [today]: { date: today, emotions: {}, skillsUsed: [], discreteEmotions: ["furious"] },
+    }));
+    render(<DiaryCardScreen />);
+    expect(screen.getByRole("button", { name: "Furious" }).getAttribute("aria-pressed")).toBe("true");
+  });
+});

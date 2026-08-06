@@ -70,6 +70,33 @@ describe("extractWeeklyFacts", () => {
     expect(f.skillsUsed).toContain("TIPP");
     expect(f.skillsUsed).toContain("Radical Acceptance");
   });
+
+  // 2026-08-06 audit fix: countDistinctEmotions() (emotionLabels.ts, Feature 6) had zero callers
+  // anywhere -- the weekly-synthesis half of the emotion-differentiation feature was never wired.
+  it("counts distinct discrete emotion chips named on this week's diary entries", () => {
+    const today = new Date().toISOString().split("T")[0];
+    store.set("nilamind_diary", JSON.stringify({
+      [today]: { date: today, discreteEmotions: ["heavy", "numb", "heavy"] },
+    }));
+    const f = extractWeeklyFacts();
+    expect(f.distinctDiscreteEmotionCount).toBe(2); // "heavy" deduped
+  });
+
+  it("distinctDiscreteEmotionCount is 0 when no diary entries have discrete emotions", () => {
+    const f = extractWeeklyFacts();
+    expect(f.distinctDiscreteEmotionCount).toBe(0);
+  });
+
+  it("excludes discrete emotions from diary entries older than 7 days", () => {
+    const oldDate = new Date();
+    oldDate.setDate(oldDate.getDate() - 10);
+    const oldKey = oldDate.toISOString().split("T")[0];
+    store.set("nilamind_diary", JSON.stringify({
+      [oldKey]: { date: oldKey, discreteEmotions: ["prickly"] },
+    }));
+    const f = extractWeeklyFacts();
+    expect(f.distinctDiscreteEmotionCount).toBe(0);
+  });
 });
 
 describe("shouldRunSynthesis", () => {
@@ -96,6 +123,7 @@ describe("weeklySynthesisPrompt", () => {
       checkinCount: 3, distinctEmotions: ["low", "anxious"], topEmotion: "low",
       avgIntensity: 5.2, skillsUsed: ["TIPP"], streak: 4, activeProtocol: null,
       sleepFiring: false, napNote: null, episodes: 0, lastSynthesisDay: null,
+      distinctDiscreteEmotionCount: 0,
     });
     expect(p).toContain("3 times");
     expect(p).toContain("low");
@@ -108,8 +136,29 @@ describe("weeklySynthesisPrompt", () => {
       checkinCount: 0, distinctEmotions: [], topEmotion: null,
       avgIntensity: null, skillsUsed: [], streak: 0, activeProtocol: null,
       sleepFiring: false, napNote: null, episodes: 0, lastSynthesisDay: null,
+      distinctDiscreteEmotionCount: 0,
     });
     expect(p).toContain("Here is what happened this week");
+  });
+
+  it("mentions distinct discrete feelings named when 2 or more were logged this week", () => {
+    const p = weeklySynthesisPrompt({
+      checkinCount: 0, distinctEmotions: [], topEmotion: null,
+      avgIntensity: null, skillsUsed: [], streak: 0, activeProtocol: null,
+      sleepFiring: false, napNote: null, episodes: 0, lastSynthesisDay: null,
+      distinctDiscreteEmotionCount: 3,
+    });
+    expect(p).toContain("3 distinct feelings");
+  });
+
+  it("does not mention discrete feelings when fewer than 2 were logged (0 or 1)", () => {
+    const p = weeklySynthesisPrompt({
+      checkinCount: 0, distinctEmotions: [], topEmotion: null,
+      avgIntensity: null, skillsUsed: [], streak: 0, activeProtocol: null,
+      sleepFiring: false, napNote: null, episodes: 0, lastSynthesisDay: null,
+      distinctDiscreteEmotionCount: 1,
+    });
+    expect(p).not.toContain("distinct feelings");
   });
 });
 

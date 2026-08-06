@@ -6,6 +6,7 @@ import { computeCompassionateStreak } from "./streaks";
 import { getActiveProgress } from "./protocolProgress";
 import { selfReportSleepSignal } from "./sleepInsight";
 import { napDisruptionSignal } from "./napTracking";
+import { countDistinctEmotions } from "./emotionLabels";
 
 export interface WeeklyFacts {
   checkinCount: number;
@@ -19,6 +20,10 @@ export interface WeeklyFacts {
   napNote: string | null;
   episodes: number;
   lastSynthesisDay: number | null;
+  /** Feature 6 (emotionLabels.ts): count of distinct DISCRETE emotion chips (prickly/heavy/numb/...)
+   *  named on the diary card this week -- a different, narrower signal than `distinctEmotions` above
+   *  (which tallies the broad check-in emotion field, e.g. "anxious"/"low"). */
+  distinctDiscreteEmotionCount: number;
 }
 
 const SYNTHESIS_KEY = "nilamind_weekly_synthesis";
@@ -66,9 +71,11 @@ export function extractWeeklyFacts(): WeeklyFacts {
     ? Math.round((intensities.reduce((a, n) => a + n, 0) / intensities.length) * 10) / 10
     : null;
 
-  const diarySkills: string[] = loadDiaryEntries()
-    .filter((e: any) => { const d = new Date(e?.date); return !isNaN(d.getTime()) && d >= since; })
+  const recentDiaryEntries = loadDiaryEntries()
+    .filter((e: any) => { const d = new Date(e?.date); return !isNaN(d.getTime()) && d >= since; });
+  const diarySkills: string[] = recentDiaryEntries
     .flatMap((e: any) => Array.isArray(e?.skillsUsed) ? e.skillsUsed : []);
+  const distinctDiscreteEmotionCount = countDistinctEmotions(recentDiaryEntries);
 
   const epSkills: string[] = (() => {
     try {
@@ -104,6 +111,7 @@ export function extractWeeklyFacts(): WeeklyFacts {
     napNote: nap.firing ? nap.note : null,
     episodes: 0, // counted from nilamind_episodes in real version
     lastSynthesisDay: lastSynthesisTimestamp(),
+    distinctDiscreteEmotionCount,
   };
 }
 
@@ -142,6 +150,9 @@ export function weeklySynthesisPrompt(facts: WeeklyFacts): string {
   }
   if (facts.napNote) {
     parts.push(`Nap pattern: ${facts.napNote}`);
+  }
+  if (facts.distinctDiscreteEmotionCount >= 2) {
+    parts.push(`They named ${facts.distinctDiscreteEmotionCount} distinct feelings on their diary card this week — noticing more shades like that tends to help waves pass sooner (affect labeling).`);
   }
   return parts.join(" ");
 }
