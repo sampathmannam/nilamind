@@ -1,4 +1,5 @@
 import React from "react";
+import { useFocusTrap } from "../hooks/useFocusTrap";
 
 interface Props {
   open: boolean;
@@ -21,6 +22,10 @@ export default function ConfirmDialog({
   onCancel,
   variant = "danger",
 }: Props) {
+  // Focus-trap parity with the app's other dialogs (v1.20.14 stack-aware trap): focus moves into
+  // the dialog, Tab cycles inside it, Escape/backdrop cancel, and focus restores on close.
+  const trapRef = useFocusTrap<HTMLDivElement>(open, onCancel);
+
   if (!open) return null;
 
   const confirmColor =
@@ -31,8 +36,8 @@ export default function ConfirmDialog({
       : "bg-accent hover:opacity-90 text-white";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" role="dialog" aria-modal="true" aria-label={title}>
-      <div className="bg-fill border border-line-strong rounded-2xl p-5 max-w-sm w-full shadow-xl space-y-4 animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" role="dialog" aria-modal="true" aria-label={title} onClick={onCancel}>
+      <div ref={trapRef} tabIndex={-1} onClick={(e) => e.stopPropagation()} className="bg-fill border border-line-strong rounded-2xl p-5 max-w-sm w-full shadow-xl space-y-4 animate-fade-in outline-none">
         <h2 className="text-base font-semibold text-ink">{title}</h2>
         <p className="text-sm text-ink-muted leading-relaxed">{message}</p>
         <div className="flex gap-3 justify-end">

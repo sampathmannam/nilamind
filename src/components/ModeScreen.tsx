@@ -36,7 +36,7 @@ import { useNudges } from "../hooks/useNudges";
 import { useCheckinGate } from "../hooks/useCheckinGate";
 import { useCrisisGate } from "../hooks/useCrisisGate";
 import { useMessageFeedback } from "../hooks/useMessageFeedback";
-import { useFocusTrap } from "../hooks/useFocusTrap";
+import ConfirmDialog from "./ConfirmDialog";
 import { protocolOfferCard, startProtocolChat, continueProtocolChat, stepUpOffer, type ProtocolCard } from "../services/protocolChat";
 import { abandonProtocol } from "../services/protocolProgress";
 import { speakIfEnabled, listenOnce, stopSpeaking } from "../services/voice";
@@ -125,8 +125,6 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
     return () => { cancelled = true; clearInterval(iv); };
   }, []);
   const [expandedFeedbackIndices, setExpandedFeedbackIndices] = useState<Set<number>>(new Set());
-  const [suggestionChipsExpanded, setSuggestionChipsExpanded] = useState(false);
-  const newChatConfirmRef = useFocusTrap<HTMLDivElement>(confirmNewChat, () => setConfirmNewChat(false));
 
   const hadCrisisRef = useRef(false);
   const nudges = useNudges({ messages, auxView, hadCrisisRef });
@@ -462,42 +460,19 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
       <>
       <NilaHeader greeting={greeting} onOpenSettings={onOpenSettings} onOpenCrisis={() => openCrisis()} />
 
-      {/* New-conversation confirm */}
-      {confirmNewChat && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-6"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Start a new conversation"
-          onClick={() => setConfirmNewChat(false)}
-        >
-          <div
-            ref={newChatConfirmRef}
-            tabIndex={-1}
-            className="w-full max-w-xs rounded-2xl bg-card border border-line-strong p-6 space-y-4 outline-none shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <p className="text-sm font-semibold text-ink">Start a new conversation?</p>
-            <p className="text-base text-ink-muted leading-relaxed">
-              This clears the current chat from your device. Nila won't carry what was said here into the new one.
-            </p>
-            <div className="flex gap-3 pt-1">
-              <button
-                onClick={() => setConfirmNewChat(false)}
-                className="flex-1 py-3 rounded-xl bg-fill text-ink-2 text-sm font-medium cursor-pointer hover:bg-line-strong transition-colors min-h-[44px] focus-ring"
-              >
-                Keep it
-              </button>
-              <button
-                onClick={startNewConversation}
-                className="flex-1 py-3 rounded-xl sun-cta text-sm font-medium cursor-pointer transition-opacity hover:opacity-90 min-h-[44px] focus-ring"
-              >
-                Start fresh
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* New-conversation confirm — shared ConfirmDialog (redesign §5.6: Sheet + ConfirmDialog are
+          the only modal primitives outside §9); copy byte-identical, focus trap now lives in the
+          shared component. */}
+      <ConfirmDialog
+        open={confirmNewChat}
+        title="Start a new conversation?"
+        message="This clears the current chat from your device. Nila won't carry what was said here into the new one."
+        confirmLabel="Start fresh"
+        cancelLabel="Keep it"
+        variant="info"
+        onConfirm={startNewConversation}
+        onCancel={() => setConfirmNewChat(false)}
+      />
 
       {/* Main content */}
       <div className="flex-1 min-h-0 overflow-y-auto flex flex-col items-center gap-5 px-4 pt-6 pb-4">
@@ -645,26 +620,19 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
               </button>
             )}
 
-            <div className={`flex flex-wrap gap-2 transition-opacity duration-200 ${inputText.length > 0 || loading ? "opacity-30 pointer-events-none" : ""}`} id="chat-suggestions">
-              {(suggestionChipsExpanded ? suggestions.slice(0, 4) : suggestions.slice(0, 2)).map((chip) => (
+            {/* Redesign §5.2 (review #10): up to 3 chips in a scroll strip — nothing hidden behind a
+                "+N more" toggle a distressed scanner has to discover. */}
+            <div className={`flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 transition-opacity duration-200 ${inputText.length > 0 || loading ? "opacity-30 pointer-events-none" : ""}`} id="chat-suggestions" role="list" aria-label="Suggestions">
+              {suggestions.slice(0, 3).map((chip) => (
                 <button
                   key={chip.id}
                   onClick={() => handleSendMessage(chip.text)}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-card border border-line text-xs text-ink-2 hover:bg-fill hover:border-line-strong transition-colors cursor-pointer min-h-[44px] focus-ring active:scale-95"
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-card border border-line text-xs text-ink-2 hover:bg-fill hover:border-line-strong transition-colors cursor-pointer min-h-[44px] shrink-0 whitespace-nowrap focus-ring active:scale-95"
                 >
                   <chip.Icon className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                   {chip.text}
                 </button>
               ))}
-              {suggestions.length > 2 && (
-                <button
-                  onClick={() => setSuggestionChipsExpanded(!suggestionChipsExpanded)}
-                  className="px-3 py-2 rounded-full bg-card border border-dashed border-line text-xs text-ink-faint hover:text-ink-2 hover:border-line-strong transition-colors cursor-pointer min-h-[44px] focus-ring active:scale-95"
-                  aria-label={suggestionChipsExpanded ? "Show fewer suggestions" : `Show ${Math.min(suggestions.length - 2, 2)} more suggestions`}
-                >
-                  {suggestionChipsExpanded ? `−Show fewer` : `+${Math.min(suggestions.length - 2, 2)} more`}
-                </button>
-              )}
             </div>
           </>
         ) : (
