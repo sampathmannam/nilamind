@@ -39,7 +39,7 @@ const noop = () => {};
 describe("YouScreen — data error feedback (U5.2)", () => {
   it("shows error banner when a storage key contains corrupted data", () => {
     store.set("nilamind_checkins", "garbage");
-    render(<YouScreen go={noop} />);
+    render(<YouScreen go={noop} onOpenCrisis={noop} />);
     expect(screen.getByRole("alert")).toBeTruthy();
     expect(screen.getByText(/couldn't load/i)).toBeTruthy();
   });
@@ -47,12 +47,12 @@ describe("YouScreen — data error feedback (U5.2)", () => {
 
 describe("YouScreen — simplified layout", () => {
   it("renders streak card", () => {
-    render(<YouScreen go={noop} />);
+    render(<YouScreen go={noop} onOpenCrisis={noop} />);
     expect(screen.getByText(/Welcome|-day streak/)).toBeTruthy();
   });
 
   it("renders all navigation rows", () => {
-    render(<YouScreen go={noop} />);
+    render(<YouScreen go={noop} onOpenCrisis={noop} />);
     expect(screen.getByText("Dashboard")).toBeTruthy();
     expect(screen.getByText("Insights")).toBeTruthy();
     expect(screen.getByText("Nila Memory")).toBeTruthy();
@@ -64,7 +64,7 @@ describe("YouScreen — simplified layout", () => {
 
   it("calls go with correct targets on press", () => {
     const go = vi.fn();
-    render(<YouScreen go={go} />);
+    render(<YouScreen go={go} onOpenCrisis={noop} />);
     screen.getByText("Dashboard").click();
     expect(go).toHaveBeenCalledWith("dashboard");
     screen.getByText("Insights").click();
@@ -82,17 +82,17 @@ describe("YouScreen — simplified layout", () => {
   });
 
   it("does not render contextual suggestion strip", () => {
-    render(<YouScreen go={noop} />);
+    render(<YouScreen go={noop} onOpenCrisis={noop} />);
     expect(screen.queryByText(/you_elevated_hint/)).toBeNull();
   });
 
   it("does not render weekly intention section", () => {
-    render(<YouScreen go={noop} />);
+    render(<YouScreen go={noop} onOpenCrisis={noop} />);
     expect(screen.queryByText(/intention/)).toBeNull();
   });
 
   it("does not render show more toggle", () => {
-    render(<YouScreen go={noop} />);
+    render(<YouScreen go={noop} onOpenCrisis={noop} />);
     expect(screen.queryByText(/more resources/)).toBeNull();
   });
 });

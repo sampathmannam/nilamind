@@ -5,7 +5,8 @@ import { LayoutDashboard, TrendingUp, Sparkles, BookOpen, Users, Settings as Set
 import ToolRow from "./ToolRow";
 import Section from "./Section";
 import Card from "./Card";
-import { useLanguage } from "../services/i18n";
+import CrisisHeaderButton from "./CrisisHeaderButton";
+import { useLanguage, t } from "../services/i18n";
 import { computeCompassionateStreak } from "../services/streaks";
 import { loadCheckins } from "../services/checkin";
 import { secureLocal } from "../services/secureLocal";
@@ -62,7 +63,7 @@ function getActiveDaysInRange(): string[] {
   } catch { return []; }
 }
 
-export default function YouScreen({ go }: { go: (target: string) => void }) {
+export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) => void; onOpenCrisis: () => void }) {
   useLanguage();
   const activeDays = getActiveDaysInRange();
 
@@ -87,6 +88,11 @@ export default function YouScreen({ go }: { go: (target: string) => void }) {
 
   return (
     <div className="space-y-4 max-w-md mx-auto animate-fade-in px-4" id="you-hub">
+      <header className="pt-2 flex items-start justify-between gap-3">
+        <h1 className="editorial text-[26px] text-ink tracking-tight">{t("you")}</h1>
+        <CrisisHeaderButton onClick={onOpenCrisis} className="shrink-0" />
+      </header>
+
       {dataErrors.length > 0 && (
         <div className="bg-warn/10 border border-warn/30 rounded-2xl p-3 text-xs text-ink-muted flex items-center gap-2" role="alert">
           <span>⚠️</span>

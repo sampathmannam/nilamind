@@ -3,6 +3,7 @@ import { Pin } from "lucide-react";
 import { buildToolGroups, personalizeToolOrder, personalizeToolByContext } from "./toolsRows";
 import Section from "./Section";
 import ToolRow from "./ToolRow";
+import CrisisHeaderButton from "./CrisisHeaderButton";
 import { getUserGoals } from "../services/chatSuggestions";
 import { useUserContext } from "../hooks/useUserContext";
 import { recordToolUse, getAllRecentTools } from "../services/recentTools";
@@ -49,7 +50,7 @@ function sectionRows(allRows: ReturnType<typeof buildToolGroups>[number]["rows"]
   return allRows.filter((r) => filter(r.id));
 }
 
-export default function ToolsScreen({ go, onEpisode, phoneEnabled }: Props) {
+export default function ToolsScreen({ go, onEpisode, phoneEnabled, onOpenCrisis }: Props) {
   const { timeMode, state } = useUserContext();
 
   const groups = useMemo(
@@ -67,9 +68,12 @@ export default function ToolsScreen({ go, onEpisode, phoneEnabled }: Props) {
 
   return (
     <div className="space-y-6 max-w-md mx-auto px-4" id="tools-hub">
-      <header className="space-y-1 pt-2">
-        <h1 className="editorial text-[26px] text-ink tracking-tight">Tools</h1>
-        <p className="text-[12px] text-ink-muted">Skills, trackers, and practices.</p>
+      <header className="pt-2 flex items-start justify-between gap-3">
+        <div className="space-y-1">
+          <h1 className="editorial text-[26px] text-ink tracking-tight">Tools</h1>
+          <p className="text-[12px] text-ink-muted">Skills, trackers, and practices.</p>
+        </div>
+        <CrisisHeaderButton onClick={onOpenCrisis} className="shrink-0" />
       </header>
 
       {pinnedTools.length > 0 && (
