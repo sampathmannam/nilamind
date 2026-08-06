@@ -76,4 +76,14 @@ describe("DBT_SKILLS_TRAINING protocol", () => {
     const last = p.steps[p.steps.length - 1];
     expect(["reflect", "plan"]).toContain(last.kind);
   });
+
+  // 2026-08-06 audit fix: the chain-analysis chat steps (dbt-9/dbt-10) walked the user through the
+  // exercise entirely in ephemeral chat prose, with no mention of the real, saved, structured
+  // ChainAnalysisScreen tool that already exists (chainAnalysis.ts) -- matching the same
+  // "chat-prose-only" gap this app's other protocols have fixed by naming the real tool.
+  it("the chain-analysis step points to the real Chain Analysis tool", () => {
+    const chainStep = p.steps.find((s) => s.id === "dbt-10");
+    expect(chainStep).toBeTruthy();
+    expect(chainStep!.prompt.toLowerCase()).toContain("chain analysis tool");
+  });
 });

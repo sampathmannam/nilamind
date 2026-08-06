@@ -141,7 +141,10 @@ export const DBT_SKILLS_TRAINING: Protocol = {
         "5. Consequences: What happened next — for you and others?\n\n" +
         "Now look at the chain: where's one link you could intervene at next time? " +
         "Maybe a skill at step 3 (Check the Facts) or step 4 (TIPP) could break the chain. " +
-        "What's your intervention point?",
+        "What's your intervention point?\n\n" +
+        "Want to save this one instead of just talking it through? The Chain Analysis tool walks " +
+        "through the same five links as a structured, saved entry — it remembers your vulnerability " +
+        "factors and suggests a skill for your intervention point automatically.",
     },
   ],
 };
