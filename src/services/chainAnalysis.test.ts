@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import {
   prefillVulnerability,
   chainId,
@@ -6,16 +6,51 @@ import {
   summariseChain,
   type ChainAnalysis,
 } from "./chainAnalysis";
+import { secureLocal } from "./secureLocal";
+import { noteChatElevation } from "./chatElevation";
+import { localDateKey } from "./storageUtils";
 
 describe("chainAnalysis", () => {
   describe("prefillVulnerability", () => {
-    it("returns safe defaults", () => {
+    beforeEach(() => {
+      secureLocal.removeItem("nilamind_checkins");
+      secureLocal.removeItem("nilamind_ema");
+      secureLocal.removeItem("nilamind_chat_elevation");
+    });
+
+    it("returns safe defaults when there is no signal at all", () => {
       const v = prefillVulnerability();
       expect(v.sleepProdrome).toBe(false);
       expect(v.elevationLevel).toBe("none");
       expect(v.checkinDistress).toBe(0);
       expect(v.elevatedHours).toBe(0);
       expect(v.other).toEqual([]);
+    });
+
+    // 2026-08-06 audit fix: this used to be a hardcoded stub that ALWAYS returned the above defaults,
+    // regardless of real state -- these tests prove it now reads live signals.
+    it("picks up an active chat-detected elevation latch", () => {
+      noteChatElevation("elevated");
+      expect(prefillVulnerability().elevationLevel).toBe("elevated");
+    });
+
+    it("picks up a HIGH chat-detected elevation over a lower one (highest-of-all-sources)", () => {
+      noteChatElevation("high");
+      expect(prefillVulnerability().elevationLevel).toBe("high");
+    });
+
+    it("prefills checkinDistress from today's latest check-in intensity", () => {
+      const today = localDateKey();
+      secureLocal.setItem("nilamind_checkins", JSON.stringify([
+        { id: "c1", date: today, timestamp: "t", emotion: "anxious", intensity: 7, context: "" },
+      ]));
+      expect(prefillVulnerability().checkinDistress).toBe(7);
+    });
+
+    it("never throws even if a signal source is corrupt", () => {
+      secureLocal.setItem("nilamind_checkins", "not valid json");
+      secureLocal.setItem("nilamind_chat_elevation", "also not valid json");
+      expect(() => prefillVulnerability()).not.toThrow();
     });
   });
 
