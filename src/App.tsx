@@ -79,6 +79,8 @@ import ModelSetupGate from "./components/ModelSetupGate";
 import OnboardingGate from "./components/OnboardingGate";
 import SafetyPlanScreen from "./components/SafetyPlanScreen";
 import GuidedProgramsScreen from "./components/GuidedProgramsScreen";
+import CalmHubScreen from "./components/CalmHubScreen";
+import SkillsHubScreen from "./components/SkillsHubScreen";
 import { startProtocolChat } from "./services/protocolChat";
 import { getSessionChat, setSessionChat } from "./services/sessionChat";
 import { hasCompletedOnboarding } from "./services/onboarding";
@@ -125,6 +127,8 @@ const AUX_LABELS: Partial<Record<AuxView, string>> = {
   guided_programs: "Guided Programs",
   progress: "Your progress",
   chain_analysis: "Chain Analysis",
+  calm_hub: "Calm",
+  skills_hub: "Skills & programs",
 };
 
 function auxViewLabel(view: AuxView): string {
@@ -160,6 +164,8 @@ function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () 
     case "legal": return <LegalScreen />;
     case "safety_plan": return <SafetyPlanScreen />;
     case "chain_analysis": return <ChainAnalysisScreen />;
+    case "calm_hub": return <CalmHubScreen go={onOpenView} />;
+    case "skills_hub": return <SkillsHubScreen go={onOpenView} />;
     case "guided_programs":
       return (
         <GuidedProgramsScreen

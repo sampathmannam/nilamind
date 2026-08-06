@@ -28,6 +28,8 @@ const GOLDEN_AUX: readonly AuxView[] = [
   "diary", "dbt_diary_card", "social_rhythm", "ema_checkin", "episode_marker",
   "caregiver_settings", "legal", "sounds", "safety_plan", "values_to_action",
   "guided_programs", "progress", "chain_analysis",
+  // Redesign 2026-08-06 (deliberate contract update): Calm + Skills hub launchers.
+  "calm_hub", "skills_hub",
 ];
 
 describe("nav contract — allowlists are frozen (any change is deliberate)", () => {

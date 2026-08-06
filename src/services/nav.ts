@@ -39,7 +39,9 @@ export type AuxView =
   | "values_to_action"
   | "guided_programs"
   | "progress"
-  | "chain_analysis";
+  | "chain_analysis"
+  | "calm_hub"
+  | "skills_hub";
 
 export const TAB_TARGETS: readonly TabView[] = [
   "nila", "today", "tools", "you",
@@ -62,6 +64,8 @@ export const KNOWN_AUX_VIEWS: readonly AuxView[] = [
     "guided_programs",
     "progress",
     "chain_analysis",
+    "calm_hub",
+    "skills_hub",
        ];
 
 export type NavResolution =
