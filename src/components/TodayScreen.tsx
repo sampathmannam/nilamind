@@ -165,7 +165,7 @@ export default function TodayScreen({
                 icon={meta.icon}
                 label={meta.label}
                 subtitle={ago(entry.timestamp)}
-                onPress={() => go(entry.target)}
+                onPress={() => { recordToolUse(entry.target); go(entry.target); }}
               />
             );
           })}

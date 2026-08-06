@@ -108,4 +108,16 @@ describe("TodayScreen — calm home", () => {
     render(<TodayScreen go={noop} phoneEnabled={false} onEpisode={noop} onOpenCrisis={noop} />);
     expect(screen.getByText("Take a grounding break")).toBeTruthy();
   });
+
+  it("re-using a Recently tool refreshes its recency and navigates", () => {
+    const oldTs = Date.now() - 3600_000;
+    store.set("nilamind_recent_tools", JSON.stringify([{ target: "winddown", timestamp: oldTs }]));
+    const go = vi.fn();
+    render(<TodayScreen go={go} phoneEnabled={false} onEpisode={noop} onOpenCrisis={noop} />);
+    fireEvent.click(screen.getByText("Wind Down"));
+    expect(go).toHaveBeenCalledWith("winddown");
+    const saved = JSON.parse(store.get("nilamind_recent_tools")!) as { target: string; timestamp: number }[];
+    expect(saved[0].target).toBe("winddown");
+    expect(saved[0].timestamp).toBeGreaterThan(oldTs); // recordToolUse refreshed it
+  });
 });
