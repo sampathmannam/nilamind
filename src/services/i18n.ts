@@ -580,6 +580,30 @@ export type I18nKey =
   | "you_fewer_resources"
   | "you_more_resources"
   | "you_footer_disclaimer"
+  | "abt_subtitle"
+  | "abt_whatIs_title"
+  | "abt_whatIs_body"
+  | "abt_story_title"
+  | "abt_howWorks_title"
+  | "abt_howWorks_body"
+  | "abt_canDo_title"
+  | "abt_canDo_1"
+  | "abt_canDo_2"
+  | "abt_canDo_3"
+  | "abt_canDo_4"
+  | "abt_canDo_5"
+  | "abt_canDo_6"
+  | "abt_cannotDo_title"
+  | "abt_cannotDo_1"
+  | "abt_cannotDo_2"
+  | "abt_cannotDo_3"
+  | "abt_cannotDo_4"
+  | "abt_disagree_title"
+  | "abt_disagree_body"
+  | "abt_privacy_title"
+  | "abt_privacy_body"
+  | "abt_research_title"
+  | "abt_research_body"
   // Thought record
   | "tr_subtitle"
   | "tr_step_of"
@@ -1279,6 +1303,30 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     you_fewer_resources: "Show fewer resources",
     you_more_resources: " more resources",
     you_footer_disclaimer: "NilaMind is a support alongside \u2014 not a substitute for \u2014 professional care.",
+    abt_subtitle: "Your on-device AI companion",
+    abt_whatIs_title: "What Nila is",
+    abt_whatIs_body: "Nila is a private, on-device AI companion designed for the harder moments. She listens, suggests evidence-based tools, and helps you notice patterns in how you're doing \u2014 all without any data leaving your phone.",
+    abt_story_title: "Nila's story",
+    abt_howWorks_title: "How it works",
+    abt_howWorks_body: "Nila's brain is an on-device language model (Qwen2.5-1.5B) that runs entirely on your phone \u2014 there is no cloud, no server, no internet round-trip. Everything you type is processed locally and stored encrypted. Nila adapts her responses to your state, time of day, and what she remembers from past conversations.",
+    abt_canDo_title: "What Nila can do",
+    abt_canDo_1: "Listen and respond with empathy, anytime",
+    abt_canDo_2: "Suggest evidence-based coping tools (grounding, breathing, thought records, and more)",
+    abt_canDo_3: "Help you notice patterns in mood, sleep, behaviour, and social rhythm",
+    abt_canDo_4: "Guide you through structured protocols (behavioural activation, social rhythm therapy, self-compassion, ACT, and more)",
+    abt_canDo_5: "Adapt to your state \u2014 calming when elevated, gentle when low",
+    abt_canDo_6: "Reflect back what Nila remembers so your history isn't forgotten between conversations",
+    abt_cannotDo_title: "What Nila cannot do",
+    abt_cannotDo_1: "Nila is not a therapist, doctor, or crisis service",
+    abt_cannotDo_2: "She cannot diagnose, treat, or prescribe",
+    abt_cannotDo_3: "She cannot replace professional mental health care",
+    abt_cannotDo_4: "If you're in crisis, use the crisis resources in the Learn or Reach Out screens",
+    abt_disagree_title: "Nila won't always agree with you",
+    abt_disagree_body: "This is by design. If you're in a manic or elevated state \u2014 feeling like you don't need sleep, that rules don't apply, that everyone is against you, or that you should make big impulsive decisions \u2014 Nila will gently not validate those beliefs. The same holds for harsh self-beliefs: calling yourself a failure or saying everyone hates you. Sycophancy (an AI just agreeing with you) is a documented harm in mental-health AI. Nila's job is to hold the line with warmth, not to make you feel good in the moment at the cost of your safety.",
+    abt_privacy_title: "Privacy",
+    abt_privacy_body: "NilaMind is designed so nothing leaves your phone. All data \u2014 chats, check-ins, diary entries, insights \u2014 is stored locally and encrypted at rest. There are no accounts, no cloud sync, no analytics SDKs, and no data collection.",
+    abt_research_title: "Research basis",
+    abt_research_body: "Every tool and feature in NilaMind is grounded in peer-reviewed research \u2014 CBT, DBT, behavioural activation, social rhythm therapy, ACT, self-compassion, and more. You can explore the full evidence base and citations in the Learn section.",
     tr_subtitle: "Catch a heavy thought, look at it fairly, and try a kinder, truer take.",
     tr_step_of: " of 5",
     tr_step1_title: "Step 1: The Situation",
@@ -1961,6 +2009,30 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     you_fewer_resources: "कम संसाधन दिखाएं",
     you_more_resources: " और संसाधन",
     you_footer_disclaimer: "NilaMind पेशेवर देखभाल के साथ सहायता है — विकल्प नहीं।",
+    abt_subtitle: "आपकी ऑन-डिवाइस AI साथी",
+    abt_whatIs_title: "निला क्या है",
+    abt_whatIs_body: "निला एक निजी, ऑन-डिवाइस AI साथी है जो कठिन पलों के लिए बनाई गई है। वह सुनती है, प्रमाण-आधारित उपकरण सुझाती है, और आपको यह देखने में मदद करती है कि आप कैसा महसूस कर रहे हैं — यह सब बिना किसी डेटा के आपके फ़ोन से बाहर जाए।",
+    abt_story_title: "निला की कहानी",
+    abt_howWorks_title: "यह कैसे काम करता है",
+    abt_howWorks_body: "निला का दिमाग एक ऑन-डिवाइस भाषा मॉडल (Qwen2.5-1.5B) है जो पूरी तरह आपके फ़ोन पर चलता है — कोई क्लाउड नहीं, कोई सर्वर नहीं, इंटरनेट राउंड-ट्रिप नहीं। आप जो भी टाइप करते हैं वह स्थानीय रूप से प्रोसेस होता है और एन्क्रिप्टेड रूप में सहेजा जाता है। निला अपने जवाब आपकी स्थिति, दिन के समय, और पिछली बातचीत से याद रखी गई बातों के अनुसार ढालती है।",
+    abt_canDo_title: "निला क्या कर सकती है",
+    abt_canDo_1: "किसी भी समय सहानुभूति के साथ सुनना और जवाब देना",
+    abt_canDo_2: "प्रमाण-आधारित सामना करने के उपकरण सुझाना (ग्राउंडिंग, ब्रीदिंग, थॉट रिकॉर्ड, और अधिक)",
+    abt_canDo_3: "मूड, नींद, व्यवहार, और सामाजिक लय में पैटर्न देखने में मदद करना",
+    abt_canDo_4: "संरचित प्रोटोकॉल के माध्यम से मार्गदर्शन करना (व्यवहारिक सक्रियण, सामाजिक लय थेरेपी, आत्म-करुणा, ACT, और अधिक)",
+    abt_canDo_5: "आपकी स्थिति के अनुसार ढलना — उत्साहित होने पर शांत करना, उदास होने पर कोमल होना",
+    abt_canDo_6: "निला जो याद रखती है उसे वापस दिखाना ताकि बातचीत के बीच आपका इतिहास न भुलाया जाए",
+    abt_cannotDo_title: "निला क्या नहीं कर सकती",
+    abt_cannotDo_1: "निला कोई थेरेपिस्ट, डॉक्टर, या संकट सेवा नहीं है",
+    abt_cannotDo_2: "वह निदान, उपचार, या दवा नहीं लिख सकती",
+    abt_cannotDo_3: "वह पेशेवर मानसिक स्वास्थ्य देखभाल की जगह नहीं ले सकती",
+    abt_cannotDo_4: "यदि आप संकट में हैं, तो लर्न या रीच आउट स्क्रीन में संकट संसाधनों का उपयोग करें",
+    abt_disagree_title: "निला हमेशा आपसे सहमत नहीं होगी",
+    abt_disagree_body: "यह जानबूझकर है। यदि आप उन्मत्त या उत्साहित स्थिति में हैं — महसूस कर रहे हैं कि आपको नींद की ज़रूरत नहीं, कि नियम आप पर लागू नहीं होते, कि सब आपके खिलाफ हैं, या कि आपको बड़े आवेगी फ़ैसले लेने चाहिए — तो निला धीरे से उन विश्वासों की पुष्टि नहीं करेगी। यही बात कठोर आत्म-विश्वासों पर भी लागू होती है: खुद को असफल कहना या यह कहना कि सब आपसे नफ़रत करते हैं। सिकोफैंसी (AI का बस आपसे सहमत होते रहना) मानसिक-स्वास्थ्य AI में एक दर्ज नुकसान है। निला का काम गर्मजोशी के साथ अपनी बात पर टिके रहना है, न कि आपकी सुरक्षा की कीमत पर पल भर के लिए आपको अच्छा महसूस कराना।",
+    abt_privacy_title: "गोपनीयता",
+    abt_privacy_body: "NilaMind को इस तरह डिज़ाइन किया गया है कि कुछ भी आपके फ़ोन से बाहर नहीं जाता। सारा डेटा — चैट, चेक-इन, डायरी प्रविष्टियां, इनसाइट्स — स्थानीय रूप से और एन्क्रिप्टेड सहेजा जाता है। कोई अकाउंट नहीं, कोई क्लाउड सिंक नहीं, कोई एनालिटिक्स SDK नहीं, और कोई डेटा संग्रह नहीं है।",
+    abt_research_title: "शोध आधार",
+    abt_research_body: "NilaMind का हर उपकरण और सुविधा सहकर्मी-समीक्षित शोध पर आधारित है — CBT, DBT, व्यवहारिक सक्रियण, सामाजिक लय थेरेपी, ACT, आत्म-करुणा, और अधिक। आप लर्न सेक्शन में पूरा प्रमाण आधार और उद्धरण देख सकते हैं।",
     tr_subtitle: "किसी भारी विचार को पकड़ें, उसे निष्पक्ष होकर देखें, और एक दयालु, सच्चा नज़रिया अपनाएं।",
     tr_step_of: " / 5",
     tr_step1_title: "चरण 1: स्थिति",
@@ -2641,6 +2713,30 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     you_fewer_resources: "குறைவான வளங்களைக் காட்டு",
     you_more_resources: " மேலும் வளங்கள்",
     you_footer_disclaimer: "NilaMind தொழில்முறை பரிவுடன் ஆதரவு — மாற்று அல்ல.",
+    abt_subtitle: "உங்கள் ஆன்-டிவைஸ் AI துணை",
+    abt_whatIs_title: "நிலா என்றால் என்ன",
+    abt_whatIs_body: "நிலா கடினமான தருணங்களுக்காக வடிவமைக்கப்பட்ட ஒரு தனிப்பட்ட, ஆன்-டிவைஸ் AI துணை. அவள் கேட்கிறாள், சான்று-அடிப்படையிலான கருவிகளை பரிந்துரைக்கிறாள், மேலும் நீங்கள் எப்படி இருக்கிறீர்கள் என்பதில் உள்ள பேட்டர்ன்களை கவனிக்க உதவுகிறாள் — இவை அனைத்தும் எந்த தரவும் உங்கள் தொலைபேசியை விட்டு வெளியேறாமல்.",
+    abt_story_title: "நிலாவின் கதை",
+    abt_howWorks_title: "இது எப்படி வேலை செய்கிறது",
+    abt_howWorks_body: "நிலாவின் மூளை என்பது முழுவதுமாக உங்கள் தொலைபேசியில் இயங்கும் ஆன்-டிவைஸ் மொழி மாதிரி (Qwen2.5-1.5B) — கிளவுட் இல்லை, சர்வர் இல்லை, இணைய ரவுண்ட்-ட்ரிப் இல்லை. நீங்கள் தட்டச்சு செய்வது அனைத்தும் உள்ளூரில் செயலாக்கப்பட்டு குறியாக்கம் செய்யப்பட்டு சேமிக்கப்படுகிறது. நிலா தனது பதில்களை உங்கள் நிலை, நேரம், மற்றும் முந்தைய உரையாடல்களில் இருந்து நினைவில் வைத்திருப்பதற்கு ஏற்ப மாற்றிக்கொள்கிறாள்.",
+    abt_canDo_title: "நிலாவால் என்ன செய்ய முடியும்",
+    abt_canDo_1: "எப்போது வேண்டுமானாலும் பரிவுடன் கேட்டு பதிலளிக்க முடியும்",
+    abt_canDo_2: "சான்று-அடிப்படையிலான சமாளிக்கும் கருவிகளை பரிந்துரைக்க முடியும் (கிரவுண்டிங், மூச்சுப் பயிற்சி, சிந்தனை பதிவுகள், மற்றும் பல)",
+    abt_canDo_3: "மனநிலை, தூக்கம், நடத்தை, மற்றும் சமூக தாளத்தில் உள்ள பேட்டர்ன்களை கவனிக்க உதவ முடியும்",
+    abt_canDo_4: "கட்டமைக்கப்பட்ட நெறிமுறைகள் மூலம் வழிநடத்த முடியும் (நடத்தை செயல்படுத்தல், சமூக தாள சிகிச்சை, சுய-கருணை, ACT, மற்றும் பல)",
+    abt_canDo_5: "உங்கள் நிலைக்கு ஏற்ப மாறும் — உற்சாகமாக இருக்கும்போது அமைதிப்படுத்துதல், தாழ்வாக இருக்கும்போது மென்மையாக இருத்தல்",
+    abt_canDo_6: "நிலா நினைவில் வைத்திருப்பதை திரும்பக் காட்டும், அதனால் உரையாடல்களுக்கு இடையே உங்கள் வரலாறு மறக்கப்படாது",
+    abt_cannotDo_title: "நிலாவால் என்ன செய்ய முடியாது",
+    abt_cannotDo_1: "நிலா ஒரு சிகிச்சையாளர், மருத்துவர், அல்லது நெருக்கடி சேவை அல்ல",
+    abt_cannotDo_2: "அவளால் நோயறிதல், சிகிச்சை, அல்லது மருந்து பரிந்துரைக்க முடியாது",
+    abt_cannotDo_3: "அவளால் தொழில்முறை மனநல பராமரிப்பை மாற்ற முடியாது",
+    abt_cannotDo_4: "நீங்கள் நெருக்கடியில் இருந்தால், லேர்ன் அல்லது ரீச் அவுட் திரைகளில் உள்ள நெருக்கடி வளங்களைப் பயன்படுத்தவும்",
+    abt_disagree_title: "நிலா எப்போதும் உங்களுடன் உடன்பட மாட்டாள்",
+    abt_disagree_body: "இது வேண்டுமென்றே வடிவமைக்கப்பட்டது. நீங்கள் தீவிர உற்சாக நிலையில் இருந்தால் — உங்களுக்கு தூக்கம் தேவையில்லை என்று உணர்வது, விதிகள் உங்களுக்குப் பொருந்தாது என்பது, அனைவரும் உங்களுக்கு எதிராக இருக்கிறார்கள் என்பது, அல்லது நீங்கள் பெரிய தூண்டுதலான முடிவுகளை எடுக்க வேண்டும் என்பது — நிலா மென்மையாக அந்த நம்பிக்கைகளை உறுதிப்படுத்த மாட்டாள். கடுமையான சுய-நம்பிக்கைகளுக்கும் இது பொருந்தும்: உங்களை தோல்வி என்று அழைப்பது அல்லது அனைவரும் உங்களை வெறுக்கிறார்கள் என்று சொல்வது. சைக்கோஃபன்சி (AI வெறுமனே உங்களுடன் உடன்படுவது) மனநல AI-ல் ஆவணப்படுத்தப்பட்ட ஒரு தீங்கு. நிலாவின் வேலை அன்புடன் உறுதியாக இருப்பதே, உங்கள் பாதுகாப்பின் விலையில் அந்த தருணத்தில் உங்களை நன்றாக உணர வைப்பது அல்ல.",
+    abt_privacy_title: "தனியுரிமை",
+    abt_privacy_body: "எதுவும் உங்கள் தொலைபேசியை விட்டு வெளியேறாதபடி NilaMind வடிவமைக்கப்பட்டுள்ளது. அனைத்து தரவும் — உரையாடல்கள், செக்-இன்கள், நாட்குறிப்பு பதிவுகள், நுண்ணறிவுகள் — உள்ளூரில் மற்றும் குறியாக்கம் செய்யப்பட்டு சேமிக்கப்படுகிறது. கணக்குகள் இல்லை, கிளவுட் ஒத்திசைவு இல்லை, பகுப்பாய்வு SDKகள் இல்லை, தரவு சேகரிப்பும் இல்லை.",
+    abt_research_title: "ஆராய்ச்சி அடிப்படை",
+    abt_research_body: "NilaMind-ல் உள்ள ஒவ்வொரு கருவியும் அம்சமும் சக மதிப்பாய்வு செய்யப்பட்ட ஆராய்ச்சியில் அடிப்படையாக கொண்டவை — CBT, DBT, நடத்தை செயல்படுத்தல், சமூக தாள சிகிச்சை, ACT, சுய-கருணை, மற்றும் பல. முழு சான்று அடிப்படையையும் மேற்கோள்களையும் லேர்ன் பிரிவில் ஆராயலாம்.",
     tr_subtitle: "ஒரு கனமான எண்ணத்தைக் கவனியுங்கள், அதை நியாயமாகப் பரிசீலியுங்கள், மேலும் இரக்கமான, உண்மையான பார்வையை முயற்சிக்கவும்.",
     tr_step_of: " / 5",
     tr_step1_title: "படி 1: சூழ்நிலை",
@@ -3321,6 +3417,30 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     you_fewer_resources: "తక్కువ వనరులు చూపించు",
     you_more_resources: " మరిన్ని వనరులు",
     you_footer_disclaimer: "NilaMind వృత్తిపరమైన సంరక్షణతో పాటు మద్దతు — ప్రత్యామ్నాయం కాదు.",
+    abt_subtitle: "మీ ఆన్-డివైస్ AI సహచరి",
+    abt_whatIs_title: "నిలా అంటే ఏమిటి",
+    abt_whatIs_body: "నిలా కష్టమైన క్షణాల కోసం రూపొందించిన ఒక ప్రైవేట్, ఆన్-డివైస్ AI సహచరి. ఆమె వింటుంది, ఆధారాల-ఆధారిత సాధనాలను సూచిస్తుంది, మరియు మీరు ఎలా ఉన్నారో అందులో నమూనాలను గమనించడంలో సహాయపడుతుంది — ఇదంతా ఏ డేటా మీ ఫోన్ నుండి బయటకు వెళ్లకుండా.",
+    abt_story_title: "నిలా కథ",
+    abt_howWorks_title: "ఇది ఎలా పని చేస్తుంది",
+    abt_howWorks_body: "నిలా మెదడు అనేది పూర్తిగా మీ ఫోన్‌లో నడిచే ఆన్-డివైస్ భాషా మోడల్ (Qwen2.5-1.5B) — క్లౌడ్ లేదు, సర్వర్ లేదు, ఇంటర్నెట్ రౌండ్-ట్రిప్ లేదు. మీరు టైప్ చేసేదంతా స్థానికంగా ప్రాసెస్ చేయబడి, గుప్తీకరించి నిల్వ చేయబడుతుంది. నిలా తన సమాధానాలను మీ స్థితి, రోజు సమయం, మరియు గత సంభాషణల నుండి గుర్తుంచుకున్న దానికి అనుగుణంగా మార్చుకుంటుంది.",
+    abt_canDo_title: "నిలా ఏమి చేయగలదు",
+    abt_canDo_1: "ఎప్పుడైనా సానుభూతితో వినడం మరియు స్పందించడం",
+    abt_canDo_2: "ఆధారాల-ఆధారిత సహాయక సాధనాలను సూచించడం (గ్రౌండింగ్, శ్వాస, ఆలోచన రికార్డులు, మరియు మరిన్ని)",
+    abt_canDo_3: "మూడ్, నిద్ర, ప్రవర్తన, మరియు సామాజిక లయలో నమూనాలను గమనించడంలో సహాయపడటం",
+    abt_canDo_4: "నిర్మాణాత్మక ప్రోటోకాల్‌ల ద్వారా మార్గనిర్దేశం చేయడం (ప్రవర్తనా క్రియాశీలత, సామాజిక లయ చికిత్స, స్వీయ-కరుణ, ACT, మరియు మరిన్ని)",
+    abt_canDo_5: "మీ స్థితికి అనుగుణంగా మారడం — ఉత్సాహంగా ఉన్నప్పుడు శాంతపరచడం, తక్కువగా ఉన్నప్పుడు మృదువుగా ఉండటం",
+    abt_canDo_6: "నిలా గుర్తుంచుకున్నదాన్ని తిరిగి చూపడం, తద్వారా సంభాషణల మధ్య మీ చరిత్ర మరచిపోబడదు",
+    abt_cannotDo_title: "నిలా ఏమి చేయలేదు",
+    abt_cannotDo_1: "నిలా థెరపిస్ట్, డాక్టర్, లేదా సంక్షోభ సేవ కాదు",
+    abt_cannotDo_2: "ఆమె నిర్ధారణ, చికిత్స, లేదా మందులు సూచించలేదు",
+    abt_cannotDo_3: "ఆమె వృత్తిపరమైన మానసిక ఆరోగ్య సంరక్షణను భర్తీ చేయలేదు",
+    abt_cannotDo_4: "మీరు సంక్షోభంలో ఉంటే, లెర్న్ లేదా రీచ్ అవుట్ స్క్రీన్‌లలోని సంక్షోభ వనరులను ఉపయోగించండి",
+    abt_disagree_title: "నిలా ఎల్లప్పుడూ మీతో ఏకీభవించదు",
+    abt_disagree_body: "ఇది ఉద్దేశపూర్వకంగా రూపొందించబడింది. మీరు తీవ్ర ఉత్సాహ స్థితిలో ఉంటే — మీకు నిద్ర అవసరం లేదని, నియమాలు మీకు వర్తించవని, అందరూ మీకు వ్యతిరేకంగా ఉన్నారని, లేదా మీరు పెద్ద హఠాత్తు నిర్ణయాలు తీసుకోవాలని భావిస్తే — నిలా ఆ నమ్మకాలను మృదువుగా ధృవీకరించదు. కఠినమైన స్వీయ-నమ్మకాలకు కూడా ఇది వర్తిస్తుంది: మిమ్మల్ని మీరు వైఫల్యం అని పిలుచుకోవడం లేదా అందరూ మిమ్మల్ని ద్వేషిస్తున్నారని చెప్పడం. సైకోఫాన్సీ (AI కేవలం మీతో ఏకీభవించడం) మానసిక-ఆరోగ్య AIలో నమోదైన హాని. నిలా పని వెచ్చదనంతో స్థిరంగా ఉండటం, మీ భద్రత ఖరీదుతో ఆ క్షణంలో మిమ్మల్ని మంచిగా భావించేలా చేయడం కాదు.",
+    abt_privacy_title: "గోప్యత",
+    abt_privacy_body: "ఏదీ మీ ఫోన్ నుండి బయటకు వెళ్లకుండా NilaMind రూపొందించబడింది. అన్ని డేటా — చాట్‌లు, చెక్-ఇన్‌లు, డైరీ ఎంట్రీలు, అంతర్దృష్టులు — స్థానికంగా మరియు గుప్తీకరించి నిల్వ చేయబడతాయి. ఖాతాలు లేవు, క్లౌడ్ సింక్ లేదు, అనలిటిక్స్ SDKలు లేవు, డేటా సేకరణ లేదు.",
+    abt_research_title: "పరిశోధన ఆధారం",
+    abt_research_body: "NilaMindలోని ప్రతి సాధనం మరియు ఫీచర్ పీర్-రివ్యూడ్ పరిశోధనలో ఆధారపడి ఉంటుంది — CBT, DBT, ప్రవర్తనా క్రియాశీలత, సామాజిక లయ చికిత్స, ACT, స్వీయ-కరుణ, మరియు మరిన్ని. పూర్తి ఆధార స్థావరం మరియు ఉదహరణలను లెర్న్ విభాగంలో అన్వేషించవచ్చు.",
     tr_subtitle: "ఒక బరువైన ఆలోచనను గమనించండి, దాన్ని నిష్పక్షపాతంగా చూడండి, మరింత దయగల, నిజమైన దృక్కోణాన్ని ప్రయత్నించండి.",
     tr_step_of: " / 5",
     tr_step1_title: "దశ 1: పరిస్థితి",
