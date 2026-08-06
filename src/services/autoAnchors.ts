@@ -31,10 +31,12 @@ export function recordFirstOpenToday(): void {
 export function recordLastCloseToday(): void {
   const today = dayKey(new Date());
   try {
-    const raw = secureLocal.getItem(BED_KEY);
-    const existing = raw ? JSON.parse(raw) : null;
-    if (existing?.date === today) return; // already recorded today — don't overwrite with earlier time
-    // Actually, we WANT the LATEST close, so always update
+    // Bed-time proxy = the LAST time the app went to background today, so every background must
+    // overwrite the earlier one. This previously returned early when a value for today already
+    // existed — the line below it ("Actually, we WANT the LATEST close, so always update") says
+    // what was meant, but the guard above it won, so the FIRST background of the day was stored
+    // and never replaced: background the app at 09:00 and your "bed time" read 09:00 for the rest
+    // of the day. Only same-day values are overwritten; a new day starts fresh either way.
     const now = new Date();
     const hhmm = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
     secureLocal.setItem(BED_KEY, JSON.stringify({ date: today, time: hhmm }));

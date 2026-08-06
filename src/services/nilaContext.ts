@@ -664,8 +664,13 @@ export function buildPersonalContext(): string {
     out.push(jitaiNudge);
   }
 
-  // Proactive moment — what the app offered on this session open.
-  // The UI already shows the card; this tells Nila about it so she can reference it naturally.
+  // Proactive moment — what the app WOULD offer on this session open.
+  // CORRECTION (pipeline audit, 2026-08-24): this said "the UI already shows the card", which is
+  // false — computeProactiveMoment's NilaCard is never rendered anywhere; proactiveEngine's own
+  // header says so. This prompt block is therefore its ONLY consumer, which is why the §9
+  // crisis-suppression check had to be added inside computeProactiveMoment itself: there is no UI
+  // layer above it that would have filtered it first. Don't reintroduce "the card is on screen"
+  // phrasing here unless someone actually renders it.
   if (!overBudget()) {
     let proactiveBlock = "";
     try {

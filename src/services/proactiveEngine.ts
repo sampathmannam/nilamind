@@ -35,7 +35,10 @@ function rhythmLowStreak(): number {
 }
 
 const DISMISS_PREFIX = "nilamind_proactive_dismiss_";
-const COOLDOWN_MS = 24 * DAY_MS; // 24 hours between same-type offers
+// DAY_MS is already 24 hours, so `24 * DAY_MS` was 24 DAYS — 24× the documented intent. Dismissing
+// any of the moments that take this default (check-in due, sleep, evening wind-down, medication,
+// diary) silenced that moment for most of a month rather than until tomorrow.
+const COOLDOWN_MS = DAY_MS; // 24 hours between same-type offers
 const MAX_PER_OPEN = 1; // max proactive moments per app session
 
 export type ProactiveMoment = {
@@ -153,6 +156,15 @@ export function medicationLoggedToday(): boolean {
 
 /** Compute the best proactive moment. Returns null if nothing fires (silence is fine). */
 export function computeProactiveMoment(): ProactiveMoment | null {
+  // §9: this is NOT dormant code — the moment it returns is injected into Nila's system prompt via
+  // nilaContext.proactiveContextBlock, so it steers what she says. It was the only proactive
+  // producer with no crisis check, meaning that inside the 24h post-crisis window the model could
+  // still be told to nudge a check-in, a wind-down or a medication log. The sibling
+  // calmSafetyPlanNudge below already honours this latch; every notification path does too. Nudges
+  // never sit next to a crisis — silence is the correct output here.
+  try {
+    if (isSafetySuppressed()) return null;
+  } catch { /* if the latch can't be read, fall through: this must never hard-fail the prompt */ }
   if (!canShowProactive()) return null;
 
   const moments: ProactiveMoment[] = [];

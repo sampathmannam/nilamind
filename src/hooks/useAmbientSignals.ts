@@ -12,8 +12,13 @@ import { isSafetySuppressed } from "../services/notificationSuppress";
 
 // useAmbientSignals — the SERVICE-BASED subset of useNudges' ambient signals, for Home's single
 // AmbientSlot (redesign §5.1). Deliberately excludes every chat-context signal (jitai, calm, pact,
-// welcome-back need messages/hadCrisisRef and belong to chat surfaces; jitai's live surface remains
-// DashboardScreen). The safety-plan computation mirrors useNudges' B3 effect body; evaluation is
+// welcome-back need messages/hadCrisisRef and belong to chat surfaces).
+// CORRECTION (pipeline audit, 2026-08-24): this comment used to claim "jitai's live surface remains
+// DashboardScreen". That is false — DashboardScreen contains no reference to jitai at all. useNudges
+// computes assessJitai on a 5-minute interval and returns it alongside six other values that NO
+// consumer reads (ModeScreen, its only caller, uses just clearForCrisis + clearPactAndWelcome), so
+// the JITAI trigger currently has no surface anywhere. Don't infer from this file that it has one.
+// The safety-plan computation mirrors useNudges' B3 effect body; evaluation is
 // mount-time only — Home remounts on every tab visit, which is the slot's refresh cadence (no
 // 5-minute poll on the Home tab). §9: the 24h crisis-suppression latch (isSafetySuppressed) blanks
 // the slot entirely — never a prompt of any kind next to a crisis.
