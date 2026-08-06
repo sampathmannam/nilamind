@@ -77,9 +77,9 @@ export default function CrisisOverlay({
     >
       {/* Red safety top header. paddingTop clears the edge-to-edge status bar — WITHOUT it the §9 heading
           rendered under the clock/status icons on real devices (2026-07-17 emulator repro). */}
-      <div className="bg-rose-500/10 border-b border-rose-500/25 pb-6 px-4 text-center" style={{ paddingTop: 'calc(var(--safe-top) + 1rem)' }}>
+      <div className="bg-danger/10 border-b border-danger/25 pb-6 px-4 text-center" style={{ paddingTop: 'calc(var(--safe-top) + 1rem)' }}>
         <div className="flex justify-center mb-2">
-          <ShieldAlert className="text-rose-500 w-12 h-12 stroke-[2.5]" />
+          <ShieldAlert className="text-danger w-12 h-12 stroke-[2.5]" />
         </div>
         <h1 id="crisis-overlay-heading" ref={headingRef} tabIndex={-1} className="text-xl font-semibold tracking-tight text-ink mb-1 outline-none">
           You're not alone right now. Let's find something that helps.

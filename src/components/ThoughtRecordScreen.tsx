@@ -364,7 +364,7 @@ export default function ThoughtRecordScreen({ draft }: { draft?: ThoughtRecordDr
               </div>
 
               {aiError && (
-                <p className="text-base text-orange-400 leading-relaxed font-mono">
+                <p className="text-base text-warn-hi leading-relaxed font-mono">
                   {aiError}
                 </p>
               )}

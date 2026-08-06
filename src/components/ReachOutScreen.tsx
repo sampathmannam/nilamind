@@ -134,9 +134,9 @@ export default function ReachOutScreen() {
           <button
             onClick={() => setCrisisElevated(true)}
             id="reachout-support"
-            className="w-full flex items-center gap-3 bg-rose-500/10 border border-rose-500/30 hover:border-rose-500/50 rounded-2xl p-3.5 cursor-pointer text-left transition-colors"
-          >
-            <LifeBuoy className="w-5 h-5 text-rose-400 shrink-0" />
+className="w-full flex items-center gap-3 bg-danger/10 border border-danger/30 hover:border-danger/50 rounded-2xl p-3.5 cursor-pointer text-left transition-colors"
+            >
+            <LifeBuoy className="w-5 h-5 text-danger shrink-0" />
             <span className="flex-1 min-w-0 text-[13px] font-semibold text-rose-200">Need support right now?</span>
           </button>
 
@@ -184,9 +184,9 @@ export default function ReachOutScreen() {
             <button
               onClick={send}
               /* Dark text on the green (matching the crisis-button contrast pattern): white was 4.15:1 /
-                 2.97:1 on hover in the dark theme (fails WCAG AA). text-slate-950 clears AA in both themes
+                  2.97:1 on hover in the dark theme (fails WCAG AA). text-ink clears AA in both themes
                  (dark 4.5/6.3:1, light 5.3/4.85:1 — light emerald-500 darkened a touch in index.css). */
-              className="flex-1 py-3 rounded-xl font-semibold text-xs bg-success hover:opacity-90 text-slate-950 transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-40"
+              className="flex-1 py-3 rounded-xl font-semibold text-xs bg-success hover:opacity-90 text-ink transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-40"
               disabled={!draft.trim()}
             >
               <Send className="w-4 h-4" /> Send it myself

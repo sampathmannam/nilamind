@@ -13,8 +13,8 @@ vi.stubGlobal("localStorage", {
   removeItem: (k: string) => { lstore.delete(k); },
 });
 import {
-  recordDetectionPass, topFireableSignal, surfaceOpener, acknowledgeInflection,
-  dismissLoggedSignal, latestInflectionsForLog, shouldSurfaceToday,
+  recordDetectionPass, topFireableSignal, acknowledgeInflection,
+  dismissLoggedSignal, latestInflectionsForLog,
 } from "./nilaInflection";
 import { detectInflections, emotionDistress, mean, sampleStdev } from "./nilaInflection";
 import type { CheckInEntry } from "../types";
@@ -104,6 +104,10 @@ describe("store + orchestration", () => {
     as("a","2026-05-01","PHQ-9",6), as("b", dayAgo(2), "PHQ-9", 12),
   ]));
 
+  // 2026-08-06: surfaceOpener()/shouldSurfaceToday() were deleted as dead code (a once/day auto-surfaced
+  // "opener" card that never had a caller — see the deletion comment in nilaInflection.ts). The review-log
+  // half (latestInflectionsForLog/dismissLoggedSignal/acknowledgeInflection) IS wired, in
+  // NilaMemoryScreen.tsx's "noticed" section, and stays covered below via direct calls.
   it("recordDetectionPass logs a fired signal once/day and dedups by id", () => {
     seedPHQ();
     recordDetectionPass();
@@ -127,13 +131,6 @@ describe("store + orchestration", () => {
     expect(topFireableSignal()).toBeNull();
     recordDetectionPass();
     expect(latestInflectionsForLog().some(l => l.kind === "screening_change")).toBe(true);
-  });
-
-  it("surfaceOpener marks the day and a second call returns null (one/day cap)", () => {
-    seedPHQ();
-    expect(surfaceOpener()).not.toBeNull();
-    expect(shouldSurfaceToday()).toBe(false);
-    expect(surfaceOpener()).toBeNull();
   });
 
   it("dismissLoggedSignal removes a row from the log view + cools it down", () => {

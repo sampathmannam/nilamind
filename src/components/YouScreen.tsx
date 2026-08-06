@@ -1,43 +1,16 @@
 import { localDateKey } from "../services/storageUtils";
-import React, { useState, useMemo, useEffect } from "react";
-import { ChevronRight, Sparkles, Target, CheckCircle, X, Lightbulb, Heart, Wind, Lock, ShieldCheck } from "lucide-react";
-import CrisisHeaderButton from "./CrisisHeaderButton";
-import ConfettiBurst from "./ConfettiBurst";
+import React, { useMemo, useState, useEffect } from "react";
+import { LayoutDashboard, TrendingUp, Sparkles, BookOpen, Users, Settings as SettingsIcon, ShieldCheck } from "lucide-react";
 
-import { useFocusTrap } from "../hooks/useFocusTrap";
-import { buildYouGroups } from "./youRows";
+import ToolRow from "./ToolRow";
+import Section from "./Section";
+import Card from "./Card";
+import CrisisHeaderButton from "./CrisisHeaderButton";
+import { SkeletonCard, SkeletonList } from "./Skeleton";
 import { useLanguage, t } from "../services/i18n";
 import { computeCompassionateStreak } from "../services/streaks";
-import { SkeletonCard } from "./Skeleton";
 import { loadCheckins } from "../services/checkin";
-import { getIntention, setIntention, completeIntention, clearIntention, INTENTION_OPTIONS, getCompletionAck, markAckShown } from "../services/weeklyIntention";
-import { getCapacityLevel } from "../services/capacitySignal";
-import { getUserState } from "../services/modeEngine";
-import { useUserContext } from "../hooks/useUserContext";
 import { secureLocal } from "../services/secureLocal";
-
-function getWeekSnapshot(): { checkinDays: number; topEmotion: string | null } | null {
-  try {
-    const list = loadCheckins();
-    if (list.length === 0) return null;
-    const d = new Date();
-    const day = d.getDay();
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-    const weekStart = localDateKey(new Date(d.getFullYear(), d.getMonth(), diff));
-    const weekEntries = list.filter((e: any) => e?.date && e.date >= weekStart);
-    if (weekEntries.length === 0) return null;
-    const counts: Record<string, number> = {};
-    for (const e of weekEntries) {
-      const em = (e.emotion || "").replace(/\s*\(Nila\)/g, "").toLowerCase().trim();
-      if (em) counts[em] = (counts[em] || 0) + 1;
-    }
-    let topEmotion: string | null = null, topCount = 0;
-    for (const [em, c] of Object.entries(counts)) {
-      if (c > topCount) { topCount = c; topEmotion = em; }
-    }
-    return { checkinDays: weekEntries.length, topEmotion };
-  } catch { return null; }
-}
 
 function StreakConstellation({ activeDays }: { activeDays: string[] }) {
   const dots: React.ReactNode[] = [];
@@ -91,112 +64,23 @@ function getActiveDaysInRange(): string[] {
   } catch { return []; }
 }
 
-function greeting(timeMode: string): string {
-  if (timeMode === "morning") return t("greeting_morning");
-  if (timeMode === "evening") return t("greeting_evening");
-  if (timeMode === "night") return t("greeting_night");
-  return t("greeting_night");
-}
-
-interface Suggestion {
-  hint: string;
-  label: string;
-  target: string;
-}
-
-function contextSuggestion(timeMode: string, state: string | null): Suggestion | null {
-  if (state === "crisis") return null;
-  if (state === "elevated") return { hint: t("you_elevated_hint"), label: t("you_elevated_label"), target: "dashboard" };
-  if (state === "anxious") return { hint: t("you_anxious_hint"), label: t("you_anxious_label"), target: "insights" };
-  if (state === "low") return { hint: t("you_low_hint"), label: t("you_low_label"), target: "progress" };
-  if (timeMode === "night") return { hint: t("you_night_hint"), label: t("you_night_label"), target: "dashboard" };
-  if (timeMode === "evening") return { hint: t("you_evening_hint"), label: t("you_evening_label"), target: "dashboard" };
-  return null;
-}
-
-function WelcomeCard({
-  greet, onCheckin, onIntention, onDashboard,
-}: {
-  greet: string; onCheckin: () => void; onIntention: () => void; onDashboard: () => void;
-}) {
-  const steps = [
-    { icon: Heart, label: t("you_welcome_checkin_step"), sub: t("you_welcome_checkin_desc"), action: onCheckin },
-    { icon: Target, label: t("you_welcome_intention_step"), sub: t("you_welcome_intention_desc"), action: onIntention },
-    { icon: Sparkles, label: t("you_welcome_dashboard_step"), sub: t("you_welcome_dashboard_desc"), action: onDashboard },
-  ] as const;
-  return (
-    <div className="bg-card rounded-2xl border border-line shadow-sm p-5">
-      <div className="flex items-center gap-3 mb-4">
-        <div className="w-10 h-10 rounded-full bg-accent/15 flex items-center justify-center shrink-0">
-          <Sparkles className="w-5 h-5 text-accent" aria-hidden="true" />
-        </div>
-        <div>
-          <h1 className="editorial text-2xl text-ink">{greet}</h1>
-          <p className="text-xs text-ink-muted mt-0.5">{t("you_welcome_title")}</p>
-        </div>
-      </div>
-      <p className="text-base text-ink-muted leading-relaxed mb-4">
-        {t("you_welcome_body")}
-      </p>
-      <div className="space-y-2">
-        {steps.map((s) => (
-          <button
-            key={s.label}
-            onClick={s.action}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl border border-line bg-card hover:border-line-strong transition-all active:scale-[0.99] cursor-pointer text-left"
-          >
-            <span className="shrink-0 flex items-center justify-center w-9 h-9 rounded-xl bg-accent/10">
-              <s.icon className="w-5 h-5 text-accent" aria-hidden="true" />
-            </span>
-            <span className="flex-1 min-w-0">
-              <span className="block text-sm font-semibold text-ink">{s.label}</span>
-              <span className="block text-[11px] text-ink-muted">{s.sub}</span>
-            </span>
-            <ChevronRight className="w-4 h-4 text-ink-faint shrink-0" aria-hidden="true" />
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) => void; onOpenCrisis: () => void }) {
   useLanguage();
-  const { timeMode, state } = useUserContext();
-  const groups = useMemo(() => {
-    const all = buildYouGroups();
-    if (state !== "anxious") return all;
-    // U6.4 — When anxious: hide dashboard row + entire resources group
-    return all
-      .map((g) => ({
-        ...g,
-        rows: g.rows.filter((r) => r.id !== "dashboard"),
-      }))
-      .filter((g) => g.title !== t("you_group_resources") && g.rows.length > 0);
-  }, [state]);
-  const [showMoreResources, setShowMoreResources] = useState(false);
-  const [confettiActive, setConfettiActive] = useState(false);
-  const weekSnapshot = getWeekSnapshot();
-  const [intention, setIntentionState] = React.useState(getIntention());
-  const [showPicker, setShowPicker] = React.useState(false);
-  const pickerRef = useFocusTrap<HTMLDivElement>(showPicker, () => setShowPicker(false));
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const t = setTimeout(() => setLoading(false), 150);
+    return () => clearTimeout(t);
+  }, []);
+
+  const activeDays = getActiveDaysInRange();
+
   let streak = { current: 0, totalActiveDays: 0, message: "Welcome" };
-  let capacity = "high" as "low" | "medium" | "high";
   try {
     const s = computeCompassionateStreak();
     streak = { current: s.current, totalActiveDays: s.totalActiveDays, message: s.message };
-    capacity = getCapacityLevel(getUserState());
-  } catch {
-    /* ignore */
-  }
-  const activeDays = getActiveDaysInRange();
-  const greet = greeting(timeMode);
-  const suggest = contextSuggestion(timeMode, state);
-  const isFirstRun = streak.totalActiveDays === 0;
-  const isEarlyUser = !isFirstRun && streak.totalActiveDays < 3;
-  // U5.5 — Loading skeleton for async data boundaries
-  const [youLoading] = useState(false);
-  // U5.2 — Storage corruption check
+  } catch { /* ignore */ }
+
   const dataErrors = useMemo(() => {
     const badKeys: string[] = [];
     for (const key of ["nilamind_checkins", "nilamind_episodes", "nilamind_diary", "nilamind_insights"]) {
@@ -210,289 +94,94 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
     return badKeys;
   }, []);
 
-  const handleSetIntention = (text: string) => {
-    const i = setIntention(text);
-    setIntentionState(i);
-    setShowPicker(false);
-  };
-
-  const handleComplete = () => {
-    completeIntention();
-    setIntentionState(getIntention());
-    setConfettiActive(true);
-  };
-
-  const handleClear = () => {
-    clearIntention();
-    setIntentionState(null);
-  };
-
-  const ack = getCompletionAck();
-  useEffect(() => {
-    if (ack) markAckShown();
-  }, [ack]);
+  if (loading) {
+    return (
+      <div className="space-y-4 max-w-md mx-auto animate-fade-in px-4" id="you-hub">
+        <header className="pt-2 flex items-start justify-between gap-3">
+          <h1 className="editorial text-[26px] text-ink tracking-tight">{t("you")}</h1>
+          <CrisisHeaderButton onClick={onOpenCrisis} className="shrink-0" />
+        </header>
+        <SkeletonCard lines={2} />
+        <SkeletonList count={5} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 max-w-md mx-auto animate-fade-in px-4" id="you-hub">
-      {/* U5.2 — Error banner for corrupted storage */}
+      <header className="pt-2 flex items-start justify-between gap-3">
+        <h1 className="editorial text-[26px] text-ink tracking-tight">{t("you")}</h1>
+        <CrisisHeaderButton onClick={onOpenCrisis} className="shrink-0" />
+      </header>
+
       {dataErrors.length > 0 && (
         <div className="bg-warn/10 border border-warn/30 rounded-2xl p-3 text-xs text-ink-muted flex items-center gap-2" role="alert">
           <span>⚠️</span>
-          <span>{t("you_data_error")}</span>
+          <span>Some data couldn't load — you may want to back up your data.</span>
         </div>
       )}
 
-      {/* First-run: welcome card with guided first steps */}
-      {youLoading ? (
-        <SkeletonCard />
-      ) : isFirstRun ? (
-        <WelcomeCard
-          greet={greet}
-          onCheckin={() => go("ema_checkin")}
-          onIntention={() => setShowPicker(true)}
-          onDashboard={() => go("dashboard")}
+      <Card variant="raised" padding="lg" gap="none">
+        <div className="text-center">
+          <span className="text-2xl font-bold text-ink">
+            {streak.current > 0 ? `${streak.current}-day streak` : "Welcome"}
+          </span>
+          <p className="text-xs text-ink-muted mt-1">
+            {streak.current > 0 ? streak.message : "Your journey starts with one check-in"}
+          </p>
+        </div>
+        <div className="mt-3 pt-3 border-t border-line">
+          <StreakConstellation activeDays={activeDays} />
+        </div>
+        <div className="flex items-center justify-center gap-1.5 mt-1.5">
+          <span className="text-xs text-ink-faint">{activeDays.length} of 7 days this week</span>
+        </div>
+      </Card>
+
+      <Section title="Your space">
+        <ToolRow
+          icon={<LayoutDashboard className="w-5 h-5 text-accent" />}
+          label="Dashboard"
+          subtitle="Your daily overview"
+          onPress={() => go("dashboard")}
         />
-      ) : (
-        /* Profile card — personalized + inline progress */
-        <div className="bg-card rounded-2xl border border-line shadow-sm p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-accent/15 flex items-center justify-center shrink-0">
-              <Sparkles className="w-5 h-5 text-accent" aria-hidden="true" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h1 className="editorial text-2xl text-ink">{greet}</h1>
-              <p className="text-xs text-ink-muted mt-0.5">{streak.message}</p>
-              {/* U9.1 + U9.2 — Privacy + crisis-awareness badges. 2026-08-05: emoji-as-icon → Lucide SVG,
-                  matching the same fix in TodayScreen.tsx (consistent icon language, theme-adaptive color). */}
-              <p className="text-[10px] text-ink-faint mt-1 flex items-center gap-3">
-                <span className="flex items-center gap-1"><Lock className="w-2.5 h-2.5" aria-hidden="true" /> {t("you_badge_on_device")}</span>
-                <span className="flex items-center gap-1 text-rose-400/70"><ShieldCheck className="w-2.5 h-2.5" aria-hidden="true" /> {t("you_badge_crisis")}</span>
-              </p>
-            </div>
-          </div>
-          <div className="mt-3 pt-3 border-t border-line">
-            <StreakConstellation activeDays={activeDays} />
-          </div>
-          <div className="flex items-center justify-center gap-1.5 mt-1.5">
-            <span className="text-xs text-ink-faint">
-              {activeDays.length}{t("you_streak_this_week")}
-            </span>
-            {weekSnapshot && weekSnapshot.checkinDays > 0 && (
-              <>
-                <span className="text-xs text-ink-faint">·</span>
-                <span className="text-xs text-ink-faint">
-                  {t("you_mostly")}<span className="text-ink-2 font-medium capitalize">{weekSnapshot.topEmotion || t("you_fallback_emotion")}</span>
-                </span>
-              </>
-            )}
-          </div>
-          {capacity === "low" && (
-            <p className="text-xs text-ink-faint mt-2 text-center italic">
-              {t("you_heavy_encouragement")}
-            </p>
-          )}
-        </div>
-      )}
-
-      {/* Contextual suggestion strip — shown after the first check-in, not on first run */}
-      {!isFirstRun && suggest && (
-        <button
-          onClick={() => go(suggest.target)}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-accent/8 border border-accent/20 text-sm text-ink-2 hover:bg-accent/12 transition-colors cursor-pointer min-h-[44px] focus-ring"
-        >
-          <Heart className="w-4 h-4 text-accent shrink-0" aria-hidden="true" />
-          <span className="flex-1 text-left">{suggest.hint}</span>
-          <span className="text-xs font-medium text-accent shrink-0">{suggest.label} →</span>
-        </button>
-      )}
-
-      {/* Weekly intention — gentle micro-commitment */}
-      {ack && (
-        <div className="bg-card rounded-2xl border border-line shadow-sm p-4 border-l-[3px] border-l-success">
-          <div className="flex items-center gap-3">
-            <CheckCircle className="w-5 h-5 text-success shrink-0" />
-            <p className="text-base text-ink-2 leading-relaxed">{ack}</p>
-          </div>
-        </div>
-      )}
-      {intention && !intention.completed && (
-        <div className="bg-card rounded-2xl border border-line shadow-sm p-4">
-          <div className="flex items-start gap-3">
-            <Target className="w-5 h-5 text-warn shrink-0 mt-0.5" />
-            <div className="flex-1 min-w-0">
-              <p className="text-xs text-ink-muted">{t("you_intention_title")}</p>
-              <p className="text-sm text-ink-2 font-medium mt-0.5">{intention.text}</p>
-              <div className="flex gap-2 mt-3">
-                <button
-                  onClick={handleComplete}
-                  className="px-4 min-h-[44px] inline-flex items-center rounded-lg bg-success/15 hover:bg-success/25 text-accent-hi text-xs font-medium transition-colors cursor-pointer"
-                >
-                  {t("you_intention_done")}
-                </button>
-                <button
-                  onClick={handleClear}
-                  className="px-4 min-h-[44px] inline-flex items-center rounded-lg hover:bg-fill text-ink-faint text-xs font-medium transition-colors cursor-pointer"
-                >
-                  {t("you_intention_clear")}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-      {!isFirstRun && (!intention || intention.completed) && !ack && (
-        <button
-          onClick={() => setShowPicker(true)}
-          className="w-full bg-card hover:bg-fill p-4 rounded-2xl border border-line shadow-sm transition-all active:scale-[0.99] cursor-pointer text-left flex items-center gap-3"
-        >
-          <span className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
-            <Target className="w-5 h-5 text-accent" aria-hidden="true" />
-          </span>
-          <span className="flex-1 min-w-0">
-            <span className="block text-sm font-bold text-ink">{t("you_intention_set_label")}</span>
-            <span className="block text-[11px] text-ink-muted">{t("you_intention_set_desc")}</span>
-          </span>
-          <ChevronRight className="w-5 h-5 text-ink-faint shrink-0" />
-        </button>
-      )}
-
-      {/* Intention picker modal */}
-      {showPicker && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end" onClick={() => setShowPicker(false)}>
-          <div
-            ref={pickerRef}
-            tabIndex={-1}
-            className="w-full bg-page rounded-t-3xl p-5 max-h-[80vh] overflow-y-auto outline-none shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="intention-picker-title"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h2 id="intention-picker-title" className="text-lg font-semibold text-ink">{t("you_intention_picker_title")}</h2>
-              <button onClick={() => setShowPicker(false)} aria-label={t("close")} className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-ink-muted hover:text-ink-2 hover:bg-fill">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <p className="text-xs text-ink-muted mb-4">{t("you_intention_picker_helper")}</p>
-            <div className="space-y-2 max-h-60 overflow-y-auto">
-              {INTENTION_OPTIONS.map((opt) => (
-                <button
-                  key={opt}
-                  onClick={() => { handleSetIntention(opt); }}
-                  className="w-full text-left bg-card border border-line hover:border-line-strong p-3 rounded-xl transition-all cursor-pointer"
-                >
-                  <span className="text-sm text-ink-2">{opt}</span>
-                </button>
-              ))}
-              <div className="pt-2 border-t border-line">
-                <input
-                  type="text"
-                  placeholder={t("you_intention_placeholder")}
-                  className="w-full bg-card border border-line rounded-xl px-3 py-2.5 text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && e.currentTarget.value.trim()) {
-                      handleSetIntention(e.currentTarget.value.trim());
-                    }
-                  }}
-                  autoFocus
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Early-user nudge — habit-building prompt for < 3 check-in days */}
-      {isEarlyUser && (
-        <div className="bg-accent/8 border border-accent/20 rounded-2xl p-4">
-          <p className="text-xs text-ink-muted mb-3">{t("you_nudge_title")}</p>
-          <div className="flex gap-2">
-            <button
-              onClick={() => go("ema_checkin")}
-              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-card border border-line hover:border-line-strong text-xs font-medium text-ink-2 transition-all cursor-pointer min-h-[44px]"
-            >
-              <Heart className="w-3.5 h-3.5" aria-hidden="true" />
-              {t("you_nudge_checkin")}
-            </button>
-            <button
-              onClick={() => go("diary")}
-              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-card border border-line hover:border-line-strong text-xs font-medium text-ink-2 transition-all cursor-pointer min-h-[44px]"
-            >
-              <Wind className="w-3.5 h-3.5" aria-hidden="true" />
-              {t("you_nudge_diary")}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {groups.map((g) => {
-        const visible = showMoreResources ? g.rows : g.rows.filter((r) => !r.more);
-        if (visible.length === 0) return null;
-        return (
-          <section key={g.title} className="space-y-2">
-            <div className="flex items-center gap-2 pl-3 border-l-2 border-accent py-0.5">
-              <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-faint">{g.title}</h2>
-            </div>
-            <div className="space-y-2">
-              {visible.map((r, ri) => (
-                <button
-                  key={r.id}
-                  onClick={() => go(r.id)}
-                  id={`you-${r.id}`}
-                  className={`w-full flex items-center gap-3 transition-all active:scale-[0.99] cursor-pointer text-left focus-ring ${
-                    r.more
-                      ? "bg-card px-3.5 py-3 rounded-xl border border-line hover:border-line-strong"
-                      : "bg-card px-4 py-3 rounded-2xl border border-line hover:border-line-strong"
-                  }`}
-                >
-                  <span className={`shrink-0 flex items-center justify-center w-9 h-9 rounded-xl ${
-                    r.more ? "" : "bg-fill"
-                  }`}>
-                    <r.Icon className={r.more ? "w-4 h-4" : "w-5 h-5"} aria-hidden="true" />
-                  </span>
-                  <span className="flex-1 min-w-0">
-                    <span className={`block font-semibold text-ink ${r.more ? "text-xs" : "text-sm"}`}>{r.label}</span>
-                    <span className={`block text-ink-muted ${r.more ? "text-[11px]" : "text-[11px]"}`}>{r.sub}</span>
-                    {"help" in r && r.help && (
-                      <span className="block text-[10px] text-ink-faint mt-0.5 leading-tight">{r.help}</span>
-                    )}
-                  </span>
-                  <ChevronRight className="shrink-0 w-4 h-4 text-ink-faint" aria-hidden="true" />
-                </button>
-              ))}
-            </div>
-          </section>
-        );
-      })}
-
-      {groups.some((g) => g.rows.some((r) => r.more)) && (
-        <button
-          onClick={() => setShowMoreResources(!showMoreResources)}
-          aria-expanded={showMoreResources}
-          className="w-full flex items-center justify-center gap-2 py-3 min-h-[44px] rounded-xl bg-card border border-dashed border-line hover:border-line-strong text-ink-muted hover:text-ink text-xs font-medium transition-all cursor-pointer"
-        >
-          <Lightbulb className="w-3.5 h-3.5 text-warn/70" aria-hidden="true" />
-          {showMoreResources ? t("you_fewer_resources") : `${groups.flatMap((g) => g.rows).filter((r) => r.more).length}${t("you_more_resources")}`}
-          <ChevronRight className={`w-3 h-3 transition-transform duration-200 ${showMoreResources ? "rotate-90" : ""}`} aria-hidden="true" />
-        </button>
-      )}
-
-      <p className="text-base text-ink-faint text-center leading-relaxed px-4">
-        {t("you_footer_disclaimer")}
-      </p>
-
-      <ConfettiBurst
-        active={confettiActive}
-        onComplete={() => setConfettiActive(false)}
-        duration={1800}
-        count={24}
-      />
-
-      {/* Crisis button — bottom thumb zone, always reachable */}
-      <div className="flex justify-center pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))]">
-        <CrisisHeaderButton onClick={onOpenCrisis} />
-      </div>
+        <ToolRow
+          icon={<TrendingUp className="w-5 h-5 text-success" />}
+          label="Insights"
+          subtitle="Patterns and trends"
+          onPress={() => go("insights")}
+        />
+        <ToolRow
+          icon={<Sparkles className="w-5 h-5 text-fuchsia-400" />}
+          label="Nila Memory"
+          subtitle="What Nila remembers"
+          onPress={() => go("nila_memory")}
+        />
+        <ToolRow
+          icon={<BookOpen className="w-5 h-5 text-accent" />}
+          label="Learn"
+          subtitle="Understanding your mind"
+          onPress={() => go("learn")}
+        />
+        <ToolRow
+          icon={<Users className="w-5 h-5 text-success" />}
+          label="Caregiver"
+          subtitle="Share with someone you trust"
+          onPress={() => go("caregiver_settings")}
+        />
+        <ToolRow
+          icon={<SettingsIcon className="w-5 h-5 text-ink-2" />}
+          label="Settings"
+          subtitle="Preferences and options"
+          onPress={() => go("settings")}
+        />
+        <ToolRow
+          icon={<ShieldCheck className="w-5 h-5 text-success" />}
+          label="Your Data"
+          subtitle="Export and manage your information"
+          onPress={() => go("your_data")}
+        />
+      </Section>
     </div>
   );
 }

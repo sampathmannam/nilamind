@@ -92,7 +92,7 @@ export default function PerformanceDashboard() {
   for (const m of vitals) latestVitals[m.name.toLowerCase()] = m.value;
 
   const ratingColor = (r: string) =>
-    r === "good" ? "text-success" : r === "needs-improvement" ? "text-warn" : "text-rose-400";
+    r === "good" ? "text-success" : r === "needs-improvement" ? "text-warn" : "text-danger";
 
   return (
     <div className="glass rounded-2xl p-4 space-y-4" id="perf-dashboard">
@@ -196,7 +196,7 @@ export default function PerformanceDashboard() {
               {(Object.entries(axisScores) as [string, { pass: number; fail: number; total: number }][]).map(([axis, s]) => (
                 <div key={axis} className="flex items-center justify-between text-xs">
                   <span className="text-ink-2 font-mono text-[11px]">{axis.replace(/_/g, " ")}</span>
-                  <span className={s.fail === 0 ? "text-success" : "text-rose-400"}>
+                  <span className={s.fail === 0 ? "text-success" : "text-danger"}>
                     {s.pass}/{s.total} pass
                   </span>
                 </div>

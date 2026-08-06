@@ -19,6 +19,8 @@ import { offlineBrainMessage } from "../services/nilaReflect";
 import { localLlmLoadState } from "../services/localLlm";
 import { hapticLight } from "./useHaptics";
 import { rememberSession } from "../services/nilaMemory";
+import { selectSkill, formatSkillOffer, type SkillOffer } from "../services/skillCoach";
+import { classify, runAgent } from "../services/agent";
 
 function msg(role: "user" | "assistant", content: string, extra: Partial<Pick<NilaUiMessage, "insight" | "synthetic">> = {}): NilaUiMessage {
   return { role, content, timestamp: Date.now(), ...extra };
@@ -43,6 +45,7 @@ interface ChatSendDeps {
   cancelRequestedRef: React.MutableRefObject<boolean>;
   abortRef: React.MutableRefObject<AbortController | null>;
   crisisPendingRef: React.MutableRefObject<boolean>;
+  setSkillOfferPending?: (v: SkillOffer | null) => void;
 }
 
 export function useChatSend({
@@ -64,6 +67,7 @@ export function useChatSend({
   cancelRequestedRef,
   abortRef,
   crisisPendingRef,
+  setSkillOfferPending,
 }: ChatSendDeps) {
   const handleSendMessage = useCallback(async (text?: string) => {
     const textToSend = text || inputText.trim();
@@ -109,6 +113,30 @@ export function useChatSend({
       return;
     }
 
+    // Agent command shortcuts (2026-08-06 audit: runAgent/classify had zero callers anywhere — the
+    // intent classifier itself was tested but never wired to the live chat). Deterministic pattern
+    // match, no LLM involvement, mirroring the looksLikeArmRequest gate above exactly: explicit crisis
+    // check BEFORE executing, same as every other pre-LLM intercept in this hook. Scoped to the intents
+    // that need no new navigation plumbing (reminder/log_mood/read_dashboard) -- "navigate" is excluded
+    // because ModeScreen's callback props don't cover every AgentView target, and "arm_checkin" is
+    // excluded because looksLikeArmRequest/requestArmedCheckin above already handles that case with its
+    // own elevation gate layered on top of the bare armCheckin() this intent would otherwise call.
+    const agentIntent = classify(textToSend);
+    if (agentIntent && agentIntent.kind !== "navigate" && agentIntent.kind !== "arm_checkin") {
+      setLoading(true);
+      try {
+        if (await shouldBlockForCrisisAsync(textToSend)) { openCrisis(true); return; }
+        crisisPendingRef.current = false;
+        const agentResult = await runAgent(textToSend);
+        if (agentResult.handled) {
+          setMessages((prev) => [...prev, msg("assistant", agentResult.reply)]);
+          return;
+        }
+      } finally {
+        setLoading(false);
+      }
+    }
+
     setProtocolCard(protocolOfferCard(textToSend));
 
     setLoading(true);
@@ -146,6 +174,21 @@ export function useChatSend({
       const insight = await deriveInMomentInsight(textToSend, modeUserState, previousExplainerId);
       if (result.reply) {
         setMessages((prev) => [...prev, msg("assistant", result.reply, { insight: insight ?? undefined })]);
+        // Skill Coach offer (Feature 1 / Phase E): fires AFTER the model reply, ONLY when:
+        //   1. No crisis (sendToNila would have blocked — line 125)
+        //   2. No soft crisis (CrisisPill is already showing — line 130)
+        //   3. No elevation (elevation → no skill offer, per Simon 2022 / skillCoach.ts docstring)
+        // Deterministic pattern match — no LLM involvement.
+        if (!result.softCrisis && detectElevationRisk(textToSend).level === "none") {
+          const skillOffer = selectSkill(textToSend);
+          if (skillOffer) {
+            setMessages((prev) => [...prev, msg("assistant", formatSkillOffer(skillOffer))]);
+            // 2026-08-06 audit fix: the offer text ends with "Tap to log this practice", but that tap
+            // target never existed -- upsertPractice() had zero callers anywhere. Surface a real,
+            // trackable pending-offer state so the UI can render an actual log affordance.
+            setSkillOfferPending?.(skillOffer);
+          }
+        }
         if (result.reachedAI) {
           speakIfEnabled(result.reply);
           if (document.hidden) void notifyReplyReady();

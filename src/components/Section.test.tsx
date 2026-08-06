@@ -16,9 +16,37 @@ describe("Section", () => {
     expect(screen.getByText("Action")).toBeTruthy();
   });
 
+  it("renders icon when provided", () => {
+    render(
+      <Section title="With Icon" icon={<span data-testid="icon">★</span>}>
+        content
+      </Section>,
+    );
+    expect(screen.getByTestId("icon")).toBeTruthy();
+    expect(screen.getByText("With Icon")).toBeTruthy();
+  });
+
+  it("renders without icon", () => {
+    const { container } = render(<Section title="No Icon">content</Section>);
+    expect(screen.getByText("No Icon")).toBeTruthy();
+    expect(container.querySelector("[data-testid='icon']")).toBeNull();
+  });
+
   it("is a semantic <section>", () => {
     const { container } = render(<Section title="Test">content</Section>);
     expect(container.querySelector("section")).toBeTruthy();
+  });
+
+  it("wraps children in a space-y-2 container", () => {
+    const { container } = render(
+      <Section title="T">
+        <p>a</p>
+        <p>b</p>
+      </Section>,
+    );
+    const section = container.querySelector("section");
+    const childDiv = section?.children[1] as HTMLElement;
+    expect(childDiv?.className).toContain("space-y-2");
   });
 });
 

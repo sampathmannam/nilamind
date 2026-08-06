@@ -12,8 +12,7 @@ export type SheetId =
   | "medication"
   | "caregiver"
   | "legal"
-  | "grounding"
-  | "breathing";
+  | "grounding";
 
 // The ModeScreen capture sheets (learn / thought-record / problem-solving / values / safety-plan). Their
 // §9-gated DRAFTS stay local to ModeScreen (computed from the chat); only their PRESENCE lives in the stack,
@@ -144,7 +143,7 @@ export function NavProvider({ children }: { children: React.ReactNode }) {
       case "unknown":
         if (res.target === "caregiver") dispatch({ type: "OPEN_SHEET", id: "caregiver" });
         else if (res.target === "grounding") dispatch({ type: "OPEN_SHEET", id: "grounding" });
-        else if (res.target === "breathing") dispatch({ type: "OPEN_SHEET", id: "breathing" });
+        else if (res.target === "breathing") dispatch({ type: "OPEN_SHEET", id: "grounding" });
         break;
     }
   }, []);

@@ -19,17 +19,17 @@ const rowIds = (phoneEnabled: boolean) =>
 describe("Tools hub rows (redesign §2)", () => {
   it("renders all tool rows in order, when phone is off", () => {
     expect(rowIds(false)).toEqual([
-      "plan", "breathing", "winddown", "sounds", "reach_out", "episode",
-      "ema_checkin", "diary", "dbt_diary_card", "medication",
+      "plan", "winddown", "sounds", "reach_out", "episode",
+      "ema_checkin", "diary", "medication",
       "problem_solving", "values_to_action", "assessment", "social_rhythm", "exposure", "relapse_plan", "chain_analysis",
     ]);
   });
 
   it("appends the phone patterns row only when phone features are enabled", () => {
-    expect(rowIds(false)).not.toContain("behaviour");
+    expect(rowIds(false)).not.toContain("dashboard");
     const withPhone = rowIds(true);
-    expect(withPhone).toContain("behaviour");
-    expect(withPhone.indexOf("behaviour")).toBeGreaterThan(withPhone.indexOf("diary"));
+    expect(withPhone).toContain("dashboard");
+    expect(withPhone.indexOf("dashboard")).toBeGreaterThan(withPhone.indexOf("diary"));
   });
 
   it("groups rows under the redesigned section titles", () => {

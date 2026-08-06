@@ -2,6 +2,7 @@ import React from "react";
 
 interface SectionProps {
   title: string;
+  icon?: React.ReactNode;
   children: React.ReactNode;
   action?: React.ReactNode;
   className?: string;
@@ -23,14 +24,17 @@ export function SectionDivider({ label, className = "" }: { label: string; class
   );
 }
 
-export default function Section({ title, children, action, className = "" }: SectionProps) {
+export default function Section({ title, icon, children, action, className = "" }: SectionProps) {
   return (
-    <section className={`space-y-3 ${className}`.trim()}>
-      <div className="flex items-center justify-between">
-        <h2 className="text-xs font-bold text-ink-muted uppercase tracking-wider">{title}</h2>
+    <section className={`space-y-5 ${className}`.trim()}>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          {icon && <span className="text-ink-muted" aria-hidden="true">{icon}</span>}
+          <h2 className="text-xs font-bold text-ink-muted uppercase tracking-wider">{title}</h2>
+        </div>
         {action && <div className="text-[11px]">{action}</div>}
       </div>
-      {children}
+      <div className="space-y-2">{children}</div>
     </section>
   );
 }

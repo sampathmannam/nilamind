@@ -143,3 +143,48 @@ export function computeInsight(all?: SkillPractice[]): SkillPracticeInsight {
     familyBalance,
   };
 }
+
+/**
+ * Generate a weekly skills-effectiveness synthesis (Feature 9 / Phase H).
+ *
+ * Evidence: Neacsiu et al. 2010 (skills use = mechanism), diary card's own 3-state ratings,
+ * N-of-1 personalization (Phase 16).
+ *
+ * Returns a single-paragraph digest: most-used skill + average urge drop.
+ * Empty string if no practices this week.
+ */
+export function generateWeeklySkillsSynthesis(practices: SkillPractice[]): string {
+  if (practices.length === 0) return "";
+
+  // Group by skill
+  const bySkill = new Map<string, { count: number; urgeDrops: number[] }>();
+  for (const p of practices) {
+    const entry = bySkill.get(p.skillId) ?? { count: 0, urgeDrops: [] };
+    entry.count += 1;
+    if (p.urgeBefore !== undefined && p.intensityAfter !== undefined) {
+      entry.urgeDrops.push(p.urgeBefore - p.intensityAfter);
+    }
+    bySkill.set(p.skillId, entry);
+  }
+
+  // Sort by count descending
+  const sorted = [...bySkill.entries()]
+    .map(([id, data]) => ({
+      id,
+      count: data.count,
+      avgDrop: data.urgeDrops.length > 0
+        ? data.urgeDrops.reduce((s, n) => s + n, 0) / data.urgeDrops.length
+        : null,
+    }))
+    .sort((a, b) => b.count - a.count);
+
+  if (sorted.length === 0) return "";
+
+  const top = sorted[0];
+  const skillName = top.id.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
+  if (top.avgDrop !== null) {
+    return `This week, **${skillName}** was your most-used skill (${top.count} times). On days you used it, your urge dropped an average of ${top.avgDrop.toFixed(1)} points.`;
+  }
+  return `This week, **${skillName}** was your most-used skill (${top.count} times).`;
+}

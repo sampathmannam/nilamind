@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
-  computeInsight, upsertPractice, loadPractices,
+  computeInsight, upsertPractice, loadPractices, generateWeeklySkillsSynthesis,
   type SkillPractice, type SkillFamily,
 } from "./skillsPractice";
 
@@ -166,5 +166,49 @@ describe("upsertPractice", () => {
     const loaded = loadPractices();
     expect(loaded).toHaveLength(1);
     expect(loaded[0].id).toBe("persist-1");
+  });
+});
+
+describe("generateWeeklySkillsSynthesis", () => {
+  it("returns empty string for no practices", () => {
+    expect(generateWeeklySkillsSynthesis([])).toBe("");
+  });
+
+  it("names the most-used skill with count", () => {
+    const practices: SkillPractice[] = [
+      makePractice({ id: "a1", skillId: "urge_surfing", family: "distress" }),
+      makePractice({ id: "a2", skillId: "urge_surfing", family: "distress" }),
+      makePractice({ id: "a3", skillId: "paced_breathing", family: "mindfulness" }),
+    ];
+    const result = generateWeeklySkillsSynthesis(practices);
+    expect(result).toContain("Urge Surfing");
+    expect(result).toContain("2 times");
+  });
+
+  it("includes average urge drop when data is present", () => {
+    const practices: SkillPractice[] = [
+      makePractice({ id: "b1", skillId: "urge_surfing", family: "distress", urgeBefore: 8, intensityAfter: 4 }),
+      makePractice({ id: "b2", skillId: "urge_surfing", family: "distress", urgeBefore: 6, intensityAfter: 3 }),
+    ];
+    const result = generateWeeklySkillsSynthesis(practices);
+    expect(result).toContain("dropped an average of");
+    expect(result).toContain("3.5"); // (8-4 + 6-3) / 2 = 3.5
+  });
+
+  it("omits urge drop when no data has both ratings", () => {
+    const practices: SkillPractice[] = [
+      makePractice({ id: "c1", skillId: "paced_breathing", family: "mindfulness" }),
+    ];
+    const result = generateWeeklySkillsSynthesis(practices);
+    expect(result).toContain("Paced Breathing");
+    expect(result).not.toContain("dropped");
+  });
+
+  it("capitalises skill names from snake_case", () => {
+    const practices: SkillPractice[] = [
+      makePractice({ id: "d1", skillId: "check_the_facts", family: "emotion" }),
+    ];
+    const result = generateWeeklySkillsSynthesis(practices);
+    expect(result).toContain("Check The Facts");
   });
 });

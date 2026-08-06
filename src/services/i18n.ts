@@ -559,7 +559,6 @@ export type I18nKey =
   | "you_more_resources"
   | "you_footer_disclaimer"
   // Thought record
-  | "tr_title"
   | "tr_subtitle"
   | "tr_step_of"
   | "tr_step1_title"
@@ -778,7 +777,7 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     perfTitle: "Performance & Diagnostics",
     perfSub: "Web vitals, model cache, crash log — on this device only",
     tool_group_moment: "In the moment",
-    tool_plan_label: "Grounding & breathing",
+    tool_plan_label: "Breathing & Grounding",
     tool_plan_sub: "Calm your body in a hard minute",
     tool_winddown_label: "Wind down for sleep",
     tool_winddown_sub: "A calm bedtime routine — park the day & settle",
@@ -1236,8 +1235,7 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     you_fewer_resources: "Show fewer resources",
     you_more_resources: " more resources",
     you_footer_disclaimer: "NilaMind is a support alongside \u2014 not a substitute for \u2014 professional care.",
-    tr_title: "CBT Thought Record",
-    tr_subtitle: "Challenging automatic cognitive filters",
+    tr_subtitle: "Catch a heavy thought, look at it fairly, and try a kinder, truer take.",
     tr_step_of: " of 5",
     tr_step1_title: "Step 1: The Situation",
     tr_step1_question: "What happened?",
@@ -1452,7 +1450,7 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     perfTitle: "प्रदर्शन और निदान",
     perfSub: "वेब वाइटल्स, मॉडल कैश, क्रैश लॉग — केवल इस डिवाइस पर",
     tool_group_moment: "इस क्षण में",
-    tool_plan_label: "ग्राउंडिंग और श्वास",
+    tool_plan_label: "श्वास और ग्राउंडिंग",
     tool_plan_sub: "कठिन मिनट में अपने शरीर को शांत करें",
     tool_winddown_label: "नींद के लिए शांत हों",
     tool_winddown_sub: "एक शांत सोने की दिनचर्या — दिन समेटें और टिकें",
@@ -1897,8 +1895,7 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     you_fewer_resources: "कम संसाधन दिखाएं",
     you_more_resources: " और संसाधन",
     you_footer_disclaimer: "NilaMind पेशेवर देखभाल के साथ सहायता है — विकल्प नहीं।",
-    tr_title: "CBT विचार रिकॉर्ड",
-    tr_subtitle: "स्वचालित संज्ञानात्मक फ़िल्टरों को चुनौती देना",
+    tr_subtitle: "किसी भारी विचार को पकड़ें, उसे निष्पक्ष होकर देखें, और एक दयालु, सच्चा नज़रिया अपनाएं।",
     tr_step_of: " / 5",
     tr_step1_title: "चरण 1: स्थिति",
     tr_step1_question: "क्या हुआ?",
@@ -2111,7 +2108,7 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     perfTitle: "செயல்திறன் மற்றும் கண்டறிதல்",
     perfSub: "வலை முக்கிய அளவீடுகள், மாதிரி கேச், க்ராஷ் பதிவு — இந்தச் சாதனத்தில் மட்டும்",
     tool_group_moment: "இந்தத் தருணத்தில்",
-    tool_plan_label: "கிரவுண்டிங் மற்றும் மூச்சு",
+    tool_plan_label: "மூச்சு மற்றும் கிரவுண்டிங்",
     tool_plan_sub: "கடினமான நிமிடத்தில் உங்கள் உடலை அமைதிப்படுத்துங்கள்",
     tool_winddown_label: "தூக்கத்திற்குத் தயாராகுங்கள்",
     tool_winddown_sub: "அமைதியான படுக்கை நேர ஒழுங்கு — நாளை முடித்து அமைதியாக இருங்கள்",
@@ -2556,8 +2553,7 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     you_fewer_resources: "குறைவான வளங்களைக் காட்டு",
     you_more_resources: " மேலும் வளங்கள்",
     you_footer_disclaimer: "NilaMind தொழில்முறை பரிவுடன் ஆதரவு — மாற்று அல்ல.",
-    tr_title: "CBT எண்ணப் பதிவு",
-    tr_subtitle: "தானியங்கு அறிவாற்றல் வடிகட்டிகளை எதிர்கொள்ளுதல்",
+    tr_subtitle: "ஒரு கனமான எண்ணத்தைக் கவனியுங்கள், அதை நியாயமாகப் பரிசீலியுங்கள், மேலும் இரக்கமான, உண்மையான பார்வையை முயற்சிக்கவும்.",
     tr_step_of: " / 5",
     tr_step1_title: "படி 1: சூழ்நிலை",
     tr_step1_question: "என்ன நடந்தது?",
@@ -2770,7 +2766,7 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     perfTitle: "పనితీరు మరియు డయాగ్నాస్టిక్స్",
     perfSub: "వెబ్ వైటల్స్, మోడల్ క్యాచ్, క్రాష్ లాగ్ — ఈ పరికరంలో మాత్రమే",
     tool_group_moment: "ఈ క్షణంలో",
-    tool_plan_label: "గ్రౌండింగ్ మరియు శ్వాస",
+    tool_plan_label: "శ్వాస మరియు గ్రౌండింగ్",
     tool_plan_sub: "కష్టమైన నిమిషంలో మీ శరీరాన్ని శాంతింపజేయండి",
     tool_winddown_label: "నిద్రకు తయారవ్వండి",
     tool_winddown_sub: "ప్రశాంతమైన నిద్రా వేళ దినచర్య — రోజును మూసి స్థిరపడండి",
@@ -3215,8 +3211,7 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     you_fewer_resources: "తక్కువ వనరులు చూపించు",
     you_more_resources: " మరిన్ని వనరులు",
     you_footer_disclaimer: "NilaMind వృత్తిపరమైన సంరక్షణతో పాటు మద్దతు — ప్రత్యామ్నాయం కాదు.",
-    tr_title: "CBT ఆలోచన రికార్డు",
-    tr_subtitle: "స్వయంచాలిత అంతర్జ్ఞాన ఫిల్టర్లను సవాలు చేయడం",
+    tr_subtitle: "ఒక బరువైన ఆలోచనను గమనించండి, దాన్ని నిష్పక్షపాతంగా చూడండి, మరింత దయగల, నిజమైన దృక్కోణాన్ని ప్రయత్నించండి.",
     tr_step_of: " / 5",
     tr_step1_title: "దశ 1: పరిస్థితి",
     tr_step1_question: "ఏమి జరిగింది?",

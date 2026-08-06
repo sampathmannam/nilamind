@@ -50,7 +50,7 @@ export default function CaregiverShareScreen({ selectedContactId }: Props) {
 
       <div className="glass rounded-2xl p-4 space-y-3">
         <div className="flex items-center gap-2 text-sm font-semibold text-ink">
-          <HeartHandshake className="w-4 h-4 text-rose-400" /> {snapshot.headline}
+          <HeartHandshake className="w-4 h-4 text-danger" /> {snapshot.headline}
         </div>
         <ul className="space-y-1.5 text-base text-ink-2 leading-relaxed">
           {snapshot.lines.map((l, i) => (
@@ -61,7 +61,7 @@ export default function CaregiverShareScreen({ selectedContactId }: Props) {
           <p className="text-[11px] font-semibold text-ink-muted mb-1">If they're in crisis:</p>
           <ul className="space-y-1 text-[11px] text-ink-2">
             {snapshot.crisisLines.map((l, i) => (
-              <li key={i} className="flex gap-2"><span className="text-rose-400">•</span><span>{l}</span></li>
+              <li key={i} className="flex gap-2"><span className="text-danger">•</span><span>{l}</span></li>
             ))}
           </ul>
         </div>

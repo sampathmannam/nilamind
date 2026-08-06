@@ -104,7 +104,7 @@ export default function ProblemSolvingScreen({ draft }: { draft?: { problem: str
                 {sol.chosen && <span className="text-xs text-accent-hi font-semibold">✓ Chosen</span>}
               </div>
               {sol.pros.length > 0 && <p className="text-xs text-accent-hi">Pros: {sol.pros.join(", ")}</p>}
-              {sol.cons.length > 0 && <p className="text-xs text-rose-400">Cons: {sol.cons.join(", ")}</p>}
+              {sol.cons.length > 0 && <p className="text-xs text-danger">Cons: {sol.cons.join(", ")}</p>}
               {editingSolution === sol.id ? (
                 <div className="space-y-2">
                   <input value={prosText} onChange={(e) => setProsText(e.target.value)} placeholder="Pros (comma-separated)" className="w-full glass rounded-xl px-3 py-1.5 text-[11px] text-ink-2 placeholder-ink-faint" />

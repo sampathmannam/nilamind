@@ -7,12 +7,8 @@ import { loadMoodHistory } from "../services/moodHistory";
 import { loadAssessments, type AssessmentEntry } from "../services/assessments";
 import { getNo1Insights, type No1Insight } from "../services/nOf1";
 
-interface InsightsScreenProps {
-  onClose?: () => void;
-}
-
 const ICON_MAP: Record<string, React.ReactNode> = {
-  'sleep-short': <Moon className="w-5 h-5 text-rose-400" />,
+  'sleep-short': <Moon className="w-5 h-5 text-danger" />,
   'sleep-long': <Moon className="w-5 h-5 text-accent" />,
   'night-phone': <Smartphone className="w-5 h-5 text-orange-400" />,
   'screen-time': <Activity className="w-5 h-5 text-warn" />,
@@ -20,11 +16,11 @@ const ICON_MAP: Record<string, React.ReactNode> = {
   'movement': <Footprints className="w-5 h-5 text-success" />,
   'left-home': <Footprints className="w-5 h-5 text-accent" />,
   'steps': <Activity className="w-5 h-5 text-lime-400" />,
-  'social-connection': <Users className="w-5 h-5 text-rose-400" />,
+  'social-connection': <Users className="w-5 h-5 text-danger" />,
 };
 
 const DIRECTION_COLORS = {
-  risk: { bg: "bg-rose-500/10", border: "border-rose-500/30", text: "text-rose-300", icon: "text-rose-400" },
+  risk: { bg: "bg-danger/10", border: "border-danger/30", text: "text-rose-300", icon: "text-danger" },
   protective: { bg: "bg-success/10", border: "border-success/30", text: "text-success-hi", icon: "text-success" },
   neutral: { bg: "bg-ink-faint/10", border: "border-line-strong/30", text: "text-ink-2", icon: "text-ink-muted" },
 };
@@ -102,7 +98,7 @@ function LoadingState() {
   );
 }
 
-export default function InsightsScreen({ onClose }: InsightsScreenProps) {
+export default function InsightsScreen() {
   const [behaviourInsights, setBehaviourInsights] = useState<Insight[]>([]);
   const [assessmentInsightsList, setAssessmentInsights] = useState<Insight[]>([]);
   const [no1Insights, setNo1Insights] = useState<No1Insight[]>([]);
@@ -157,8 +153,7 @@ export default function InsightsScreen({ onClose }: InsightsScreenProps) {
       {/* 2026-08-05 declutter: in-body "Your patterns" h1 AND the in-body close button removed — this
           screen renders inside the Sheet, whose header already shows the same title (AUX_LABELS.insights)
           plus its own X close directly above; the user saw a double title AND two stacked close buttons.
-          The onClose prop stays in the signature (App.tsx still passes it) but is intentionally unused
-          now — the Sheet's close is the single dismiss affordance. Description stays. */}
+          The Sheet's close is now the single dismiss affordance. Description stays. */}
       <p className="text-base text-ink-muted leading-relaxed">
         Evidence-based patterns from your check-ins and phone behaviour. Everything stays on this device.
       </p>

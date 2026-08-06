@@ -99,7 +99,7 @@ export default function WindDownScreen() {
 
       {/* ── CRISIS surface (deterministic; worry text already cleared) ── */}
       {stage === "crisis" && (
-        <div className="bg-card border border-rose-500/30 p-5 rounded-2xl space-y-3" id="winddown-crisis">
+        <div className="bg-card border border-danger/30 p-5 rounded-2xl space-y-3" id="winddown-crisis">
           <h3 className="text-sm font-semibold text-rose-200 flex items-center gap-1.5">
             <LifeBuoy className="w-4 h-4" /> Your safety matters more than sleep right now
           </h3>
@@ -243,7 +243,7 @@ export default function WindDownScreen() {
             )}
           </div>
 
-          <p className="text-base text-slate-600 leading-relaxed px-1">
+          <p className="text-base text-ink-faint leading-relaxed px-1">
             These are gentle habits, not rules. If sleep stays hard for weeks — or your body clock feels far off — a
             GP or sleep clinician can help more than tips can.
           </p>

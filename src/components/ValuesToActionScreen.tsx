@@ -49,7 +49,7 @@ const TONE: Record<string, { text: string; bg: string; border: string; bar: stri
   sky: { text: "text-sky-300", bg: "bg-sky-500/10", border: "border-sky-500/40", bar: "bg-sky-500", chipOn: "bg-sky-500/20 border-sky-500/50 text-sky-200" },
   amber: { text: "text-warn-hi", bg: "bg-warn/10", border: "border-warn/40", bar: "bg-warn", chipOn: "bg-warn/20 border-warn/50 text-warn-hi" },
   purple: { text: "text-accent-hi", bg: "bg-accent/10", border: "border-accent/40", bar: "bg-accent", chipOn: "bg-accent/20 border-accent/50 text-accent-hi" },
-  rose: { text: "text-rose-300", bg: "bg-rose-500/10", border: "border-rose-500/40", bar: "bg-rose-500", chipOn: "bg-rose-500/20 border-rose-500/50 text-rose-200" },
+  rose: { text: "text-rose-300", bg: "bg-danger/10", border: "border-danger/40", bar: "bg-danger", chipOn: "bg-danger/20 border-danger/50 text-rose-200" },
 };
 
 const todayStr = () => localDateKey();
@@ -244,13 +244,11 @@ export default function ValuesToActionScreen({ highlightDomains = [] }: { highli
           this screen in the Sheet header directly above (aux "Values work" / CaptureSheets "Do one
           thing"), and the in-body wording DISAGREED with both, so users saw two different titles
           stacked. Description stays. */}
-      <header className="space-y-1">
-        <p className="text-base text-ink-muted leading-relaxed">
-          Start with <span className="text-ink-2 font-semibold">why</span> — what matters and where
-          life has drifted from it — then take one small step. You act first, in tiny steps, and let
-          the feeling catch up. You don't have to feel like it.
-        </p>
-      </header>
+      <p className="text-base text-ink-muted leading-relaxed">
+        Start with <span className="text-ink-2 font-semibold">why</span> — what matters and where
+        life has drifted from it — then take one small step. You act first, in tiny steps, and let
+        the feeling catch up. You don't have to feel like it.
+      </p>
 
       {/* ═══ WHY — Values compass ═══ */}
       <section className="space-y-3" id="vta-why">
@@ -427,7 +425,7 @@ export default function ValuesToActionScreen({ highlightDomains = [] }: { highli
                 <MiniBar label="Avg pleasure" value={insight.avgPleasure} tone="purple" />
               </div>
             ) : (
-              <p className="text-[11px] text-ink-faint">Rate a few activities to see what lifts you most.</p>
+              <p className="text-base text-ink-faint leading-relaxed">Rate a few activities to see what lifts you most.</p>
             )}
             {insight.topCategory && (
               <p className="text-base text-ink-2 leading-relaxed">

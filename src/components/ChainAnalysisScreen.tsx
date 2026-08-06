@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ArrowLeft, ArrowRight, Check, Plus, Trash2 } from "lucide-react";
 import { chainId, suggestSkillForEmotion, prefillVulnerability, type ChainAnalysis, type ChainLink, type VulnerabilityFactors } from "../services/chainAnalysis";
+import { updateSecureArray, type SECURE_KEYS } from "../services/secureData";
 
 type Step = "vulnerability" | "prompting" | "chain" | "behavior" | "consequences" | "intervention";
 
@@ -70,7 +71,8 @@ export default function ChainAnalysisScreen() {
   });
 
   const handleSave = () => {
-    // Persistence will be wired in the same change (Card component handles it)
+    const analysis = buildAnalysis();
+    updateSecureArray("nilamind_chain_analyses", (arr) => [...arr, analysis]);
     setSaved(true);
   };
 

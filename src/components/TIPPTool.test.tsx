@@ -14,6 +14,13 @@ vi.mock("../services/secureLocal", () => ({
   flush: () => {},
 }));
 
+// Phase F: mock elevationGuard so TIPPTool tests exercise the UI, not elevation detection.
+vi.mock("../services/elevationGuard", () => ({
+  detectElevationRisk: () => ({ level: "none", markers: [] }),
+  energyElevationSignal: () => "none",
+  napElevationSignal: () => "none",
+}));
+
 import TIPPTool from "./TIPPTool";
 import { saveTippSafetyFlags, defaultTippSafetyFlags } from "../services/tippSafetyGate";
 

@@ -1,6 +1,6 @@
 import { localDateKey } from "../services/storageUtils";
 import { useState, useEffect } from "react";
-import { Sparkles, X, Trash2, BellRing } from "lucide-react";
+import { Sparkles, X, Trash2, BellRing, Clipboard } from "lucide-react";
 import { JournalEntry } from "../types";
 import { loadJournalEntries, saveJournalEntry, deleteJournalEntry, groupByDate } from "../services/journal";
 import { getDailyPrompt, JournalMode } from "../services/journalPrompt";
@@ -11,6 +11,7 @@ import { saveEmaEntry, emaDateKey } from "../services/ema";
 import { generateTinyId } from "../services/idGen";
 import { hapticMedium } from "../hooks/useHaptics";
 import CrisisCard from "./CrisisCard";
+import DiaryCardScreen from "./DiaryCardScreen";
 
 const MODE_PLACEHOLDER: Record<JournalMode, string> = {
   free: "What's on your mind...",
@@ -24,6 +25,8 @@ const MOOD_OPTIONS: { valence: number; label: string; glyph: string }[] = [
   { valence: 1, label: "Good", glyph: "🙂" },
   { valence: 3, label: "Very good", glyph: "😄" },
 ];
+
+export type JournalTab = "freeWrite" | "dbtCard";
 
 function formatDateHeader(date: string): string {
   const today = localDateKey();
@@ -47,7 +50,12 @@ function moodGlyph(valence?: number): string {
   return closest.glyph;
 }
 
-export default function JournalScreen() {
+interface JournalScreenProps {
+  defaultTab?: JournalTab;
+}
+
+export default function JournalScreen({ defaultTab = "freeWrite" }: JournalScreenProps) {
+  const [activeTab, setActiveTab] = useState<JournalTab>(defaultTab);
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [mode, setMode] = useState<JournalMode>("free");
   const [text, setText] = useState("");
@@ -121,131 +129,167 @@ export default function JournalScreen() {
 
   return (
     <div className="space-y-4 max-w-md mx-auto" id="journal-screen">
-      {/* Composer — always visible, at the top of the feed. */}
-      <div className="glass p-4 rounded-2xl space-y-3">
-        <div className="flex gap-2" role="group" aria-label="Journal mode">
-          {(["free", "gratitude"] as JournalMode[]).map((m) => (
-            <button
-              key={m}
-              onClick={() => setMode(m)}
-              className={`px-4 min-h-[44px] inline-flex items-center rounded-full text-xs font-medium border cursor-pointer transition-all ${
-                mode === m ? "bg-accent/40 border-accent/50 text-accent-hi" : "border-line text-ink-faint hover:text-ink-2 hover:border-line-strong"
-              }`}
-              aria-pressed={mode === m}
-            >
-              {m === "free" ? "Free write" : "Gratitude"}
-            </button>
-          ))}
-        </div>
-
-        {promptLoading && !dailyPrompt && !promptDismissed && (
-          <div className="flex items-start gap-2 bg-page border border-line rounded-xl p-3 text-xs text-ink-muted">
-            <Sparkles className="w-3.5 h-3.5 text-accent shrink-0 mt-0.5" />
-            <span className="flex-1 text-ink-faint italic">Finding a prompt for you…</span>
-          </div>
-        )}
-        {dailyPrompt && !promptDismissed && (
-          <div className="flex items-start gap-2 bg-page border border-line rounded-xl p-3 text-xs text-ink-muted">
-            <Sparkles className="w-3.5 h-3.5 text-accent shrink-0 mt-0.5" />
-            <span className="flex-1">Try writing about: {dailyPrompt}</span>
-            <button onClick={() => setPromptDismissed(true)} aria-label="Dismiss prompt" className="text-slate-600 hover:text-ink-muted cursor-pointer shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center -m-2">
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        )}
-
-        <textarea
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder={MODE_PLACEHOLDER[mode]}
-          aria-label="Journal entry text"
-          className="w-full bg-page border border-line rounded-xl p-3 text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus:border-accent/50 min-h-[80px] resize-y"
-        />
-
-        <div className="flex gap-1.5" role="group" aria-label="Mood">
-          {MOOD_OPTIONS.map((o) => (
-            <button
-              key={o.valence}
-              onClick={() => setValence(o.valence)}
-              aria-label={`Mood: ${o.label}`}
-              aria-pressed={valence === o.valence}
-              className={`flex-1 min-h-[44px] inline-flex items-center justify-center rounded-lg text-lg cursor-pointer border transition-all ${
-                valence === o.valence ? "bg-accent/40 border-accent/50" : "border-line hover:border-line-strong"
-              }`}
-            >
-              {o.glyph}
-            </button>
-          ))}
-        </div>
-
-        {crisis && <CrisisCard id="journal-crisis" heading="What you wrote matters more than this note right now" />}
-
-        <button
-          onClick={handleSave}
-          disabled={!text.trim()}
-          className="w-full font-semibold py-3 rounded-xl bg-accent hover:opacity-90 text-white disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-        >
-          Save entry
-        </button>
-
-        <div className="flex items-center justify-between gap-2 bg-page border border-line rounded-xl p-3">
-          <div className="flex items-center gap-2 text-xs text-ink-muted">
-            <BellRing className="w-3.5 h-3.5" />
-            <span>Remind me to journal</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <input
-              type="time"
-              value={reminderPrefs.time}
-              disabled={!reminderPrefs.enabled}
-              onChange={(e) => handleReminderTimeChange(e.target.value)}
-              aria-label="Journal reminder time"
-              className="bg-transparent text-xs text-ink-2 border border-line rounded-lg px-2 py-1 focus:outline-none disabled:opacity-40"
-            />
-            <button
-              role="switch"
-              aria-checked={reminderPrefs.enabled}
-              aria-label="Toggle journal reminder"
-              onClick={() => handleReminderToggle(!reminderPrefs.enabled)}
-              className={`w-10 h-5.5 rounded-full relative transition-all cursor-pointer ${reminderPrefs.enabled ? "bg-accent" : "bg-fill"}`}
-            >
-              <span className={`absolute top-0.5 w-4.5 h-4.5 rounded-full bg-white transition-all ${reminderPrefs.enabled ? "left-[22px]" : "left-0.5"}`} />
-            </button>
-          </div>
+      {/* Mode toggle tabs */}
+      <div className="glass p-3 rounded-2xl">
+        <div className="flex gap-2" role="tablist" aria-label="Journal mode">
+          <button
+            role="tab"
+            aria-selected={activeTab === "freeWrite"}
+            onClick={() => setActiveTab("freeWrite")}
+            className={`flex-1 min-h-[44px] inline-flex items-center justify-center rounded-xl text-sm font-medium cursor-pointer transition-all ${
+              activeTab === "freeWrite"
+                ? "bg-accent/40 text-accent-hi"
+                : "text-ink-faint hover:text-ink-2"
+            }`}
+          >
+            Free Write
+          </button>
+          <button
+            role="tab"
+            aria-selected={activeTab === "dbtCard"}
+            onClick={() => setActiveTab("dbtCard")}
+            className={`flex-1 min-h-[44px] inline-flex items-center justify-center rounded-xl text-sm font-medium cursor-pointer transition-all ${
+              activeTab === "dbtCard"
+                ? "bg-accent/40 text-accent-hi"
+                : "text-ink-faint hover:text-ink-2"
+            }`}
+          >
+            DBT Card
+          </button>
         </div>
       </div>
 
-      {/* Feed — compact timeline list, grouped by date. */}
-      {groups.map((g) => (
-        <div key={g.date}>
-          <div className="text-[11px] font-semibold text-ink-faint mb-1 mt-3">{formatDateHeader(g.date)}</div>
-          {g.entries.map((e) => (
-            <div key={e.id} className="border-b border-line/60">
-              <button
-                onClick={() => setExpandedId(expandedId === e.id ? null : e.id)}
-                className="w-full flex items-baseline gap-2 py-2 text-left cursor-pointer"
-              >
-                <span className="text-[11px] text-ink-faint w-14 shrink-0">{formatTime(e.timestamp)}</span>
-                <span className="text-xs text-ink-2 flex-1 truncate">
-                  {moodGlyph(e.valence)} {e.text}
-                </span>
-              </button>
-              {expandedId === e.id && (
-                <div className="pb-3 pl-16 pr-2 space-y-2">
-                  <p className="text-sm text-ink-2 whitespace-pre-wrap">{e.text}</p>
+      {activeTab === "freeWrite" ? (
+        <>
+          {/* Composer */}
+          <div className="glass p-4 rounded-2xl space-y-3">
+            <div className="flex gap-2" role="group" aria-label="Journal mode">
+              {(["free", "gratitude"] as JournalMode[]).map((m) => (
+                <button
+                  key={m}
+                  onClick={() => setMode(m)}
+                  className={`px-4 min-h-[44px] inline-flex items-center rounded-full text-xs font-medium border cursor-pointer transition-all ${
+                    mode === m ? "bg-accent/40 border-accent/50 text-accent-hi" : "border-line text-ink-faint hover:text-ink-2 hover:border-line-strong"
+                  }`}
+                  aria-pressed={mode === m}
+                >
+                  {m === "free" ? "Free write" : "Gratitude"}
+                </button>
+              ))}
+            </div>
+
+            {promptLoading && !dailyPrompt && !promptDismissed && (
+              <div className="flex items-start gap-2 bg-page border border-line rounded-xl p-3 text-xs text-ink-muted">
+                <Sparkles className="w-3.5 h-3.5 text-accent shrink-0 mt-0.5" />
+                <span className="flex-1 text-ink-faint italic">Finding a prompt for you…</span>
+              </div>
+            )}
+            {dailyPrompt && !promptDismissed && (
+              <div className="flex items-start gap-2 bg-page border border-line rounded-xl p-3 text-xs text-ink-muted">
+                <Sparkles className="w-3.5 h-3.5 text-accent shrink-0 mt-0.5" />
+                <span className="flex-1">Try writing about: {dailyPrompt}</span>
+                <button onClick={() => setPromptDismissed(true)} aria-label="Dismiss prompt" className="text-slate-600 hover:text-ink-muted cursor-pointer shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center -m-2">
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+
+            <textarea
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder={MODE_PLACEHOLDER[mode]}
+              aria-label="Journal entry text"
+              className="w-full bg-page border border-line rounded-xl p-3 text-sm text-ink-2 placeholder-ink-faint focus:outline-none focus:border-accent/50 min-h-[80px] resize-y"
+            />
+
+            <div className="flex gap-1.5" role="group" aria-label="Mood">
+              {MOOD_OPTIONS.map((o) => (
+                <button
+                  key={o.valence}
+                  onClick={() => setValence(o.valence)}
+                  aria-label={`Mood: ${o.label}`}
+                  aria-pressed={valence === o.valence}
+                  className={`flex-1 min-h-[44px] inline-flex items-center justify-center rounded-lg text-lg cursor-pointer border transition-all ${
+                    valence === o.valence ? "bg-accent/40 border-accent/50" : "border-line hover:border-line-strong"
+                  }`}
+                >
+                  {o.glyph}
+                </button>
+              ))}
+            </div>
+
+            {crisis && <CrisisCard id="journal-crisis" heading="What you wrote matters more than this note right now" />}
+
+            <button
+              onClick={handleSave}
+              disabled={!text.trim()}
+              className="w-full font-semibold py-3 rounded-xl bg-accent hover:opacity-90 text-white disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            >
+              Save entry
+            </button>
+
+            <div className="flex items-center justify-between gap-2 bg-page border border-line rounded-xl p-3">
+              <div className="flex items-center gap-2 text-xs text-ink-muted">
+                <BellRing className="w-3.5 h-3.5" />
+                <span>Remind me to journal</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="time"
+                  value={reminderPrefs.time}
+                  disabled={!reminderPrefs.enabled}
+                  onChange={(e) => handleReminderTimeChange(e.target.value)}
+                  aria-label="Journal reminder time"
+                  className="bg-transparent text-xs text-ink-2 border border-line rounded-lg px-2 py-1 focus:outline-none disabled:opacity-40"
+                />
+                <button
+                  role="switch"
+                  aria-checked={reminderPrefs.enabled}
+                  aria-label="Toggle journal reminder"
+                  onClick={() => handleReminderToggle(!reminderPrefs.enabled)}
+                  className={`w-10 h-5.5 rounded-full relative transition-all cursor-pointer ${reminderPrefs.enabled ? "bg-accent" : "bg-fill"}`}
+                >
+                  <span className={`absolute top-0.5 w-4.5 h-4.5 rounded-full bg-white transition-all ${reminderPrefs.enabled ? "left-[22px]" : "left-0.5"}`} />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Feed */}
+          {groups.map((g) => (
+            <div key={g.date}>
+              <div className="text-[11px] font-semibold text-ink-faint mb-1 mt-3">{formatDateHeader(g.date)}</div>
+              {g.entries.map((e) => (
+                <div key={e.id} className="border-b border-line/60">
                   <button
-                    onClick={() => handleDelete(e.id)}
-                    aria-label="Delete entry"
-                    className="flex items-center gap-1.5 min-h-[44px] text-xs text-rose-400 hover:text-rose-300 cursor-pointer"
+                    onClick={() => setExpandedId(expandedId === e.id ? null : e.id)}
+                    className="w-full flex items-baseline gap-2 py-2 text-left cursor-pointer"
                   >
-                    <Trash2 className="w-3.5 h-3.5" /> Delete entry
+                    <span className="text-[11px] text-ink-faint w-14 shrink-0">{formatTime(e.timestamp)}</span>
+                    <span className="text-xs text-ink-2 flex-1 truncate">
+                      {moodGlyph(e.valence)} {e.text}
+                    </span>
                   </button>
+                  {expandedId === e.id && (
+                    <div className="pb-3 pl-16 pr-2 space-y-2">
+                      <p className="text-sm text-ink-2 whitespace-pre-wrap">{e.text}</p>
+                      <button
+                        onClick={() => handleDelete(e.id)}
+                        aria-label="Delete entry"
+                        className="flex items-center gap-1.5 min-h-[44px] text-xs text-danger hover:text-rose-300 cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> Delete entry
+                      </button>
+                    </div>
+                  )}
                 </div>
-              )}
+              ))}
             </div>
           ))}
-        </div>
-      ))}
+        </>
+      ) : (
+        <DiaryCardScreen />
+      )}
     </div>
   );
 }

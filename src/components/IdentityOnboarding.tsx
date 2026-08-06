@@ -112,7 +112,7 @@ export default function IdentityOnboarding({ onDone }: { onDone: () => void }) {
           <input type="checkbox" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)} id="identity-confirm-saved" className="mt-0.5 accent-blue-500 w-4 h-4" />
           <span className="text-xs text-ink-2">I've written my phrase down somewhere safe.</span>
         </label>
-        {error && <p className="text-[11px] text-rose-400">{error}</p>}
+        {error && <p className="text-[11px] text-danger">{error}</p>}
         <button onClick={finishCreate} disabled={!confirmed || busy} id="identity-finish-create" className="w-full bg-accent hover:opacity-90 disabled:bg-fill disabled:text-ink-faint text-white font-bold py-3.5 rounded-xl text-sm cursor-pointer flex items-center justify-center gap-2">
           {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : "Enter NilaMind"}
         </button>
@@ -149,7 +149,7 @@ export default function IdentityOnboarding({ onDone }: { onDone: () => void }) {
           className="w-full h-20 bg-page border border-line rounded-xl p-3 text-[11px] font-mono text-ink-2 placeholder-ink-faint focus:outline-none focus:border-accent/50 resize-none"
         />
       )}
-      {error && <p className="text-[11px] text-rose-400">{error}</p>}
+      {error && <p className="text-[11px] text-danger">{error}</p>}
       <button onClick={finishRestore} disabled={busy} id="identity-finish-restore" className="w-full bg-accent hover:opacity-90 disabled:bg-fill text-white font-bold py-3.5 rounded-xl text-sm cursor-pointer flex items-center justify-center gap-2">
         {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : "Restore my space"}
       </button>

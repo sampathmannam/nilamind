@@ -55,9 +55,9 @@ async function startAndReachOfflineGuided(intensity: number) {
   fireEvent.change(screen.getByLabelText("Message Nila"), { target: { value: "I feel awful" } });
   fireEvent.click(screen.getByText("Start Episode Support"));
   await waitFor(() => expect(screen.getByText(/how intense/i)).toBeTruthy());
-  fireEvent.click(screen.getByRole("button", { name: "8" }));
+  fireEvent.click(screen.getByRole("button", { name: "Intensity 8 out of 10" }));
   await waitFor(() => expect(screen.getByText(/isn't reachable/i)).toBeTruthy());
-  fireEvent.click(screen.getByRole("button", { name: String(intensity) }));
+  fireEvent.click(screen.getByRole("button", { name: `Intensity ${intensity} out of 10` }));
 }
 
 // Regression (device QA, crisis flow): while waiting for a reply — which can take well over a
@@ -80,7 +80,7 @@ describe("EpisodeSupportScreen — loading state reuses the escalating-reassuran
     fireEvent.change(screen.getByLabelText("Message Nila"), { target: { value: "I feel awful" } });
     fireEvent.click(screen.getByText("Start Episode Support"));
     await waitFor(() => expect(screen.getByText(/how intense/i)).toBeTruthy());
-    fireEvent.click(screen.getByRole("button", { name: "3" }));
+    fireEvent.click(screen.getByRole("button", { name: "Intensity 3 out of 10" }));
 
     await waitFor(() => expect(document.querySelector("#chat-loading")).not.toBeNull());
 

@@ -168,6 +168,8 @@ export interface ClinicianReportInput {
    * responsible for passing the frozen ConversationToneSummary object verbatim.
    */
   conversationTone?: { text: string; daysUsed: number; windowDays: number };
+  /** Weekly skills practice synthesis — most used skill + avg urge drop. */
+  skillsPracticeSynthesis?: string;
 }
 
 function trendLabel(entries: AssessmentTrajectoryEntry[]): string | null {
@@ -749,6 +751,13 @@ if (input.enhancedSocialRhythmDetails) {
          
          lines.push("");
        }
+    }
+
+    // Skills Practice Synthesis — weekly summary of skill usage + effectiveness.
+    if (input.skillsPracticeSynthesis) {
+      lines.push("Skills Practice Summary");
+      lines.push(`  ${input.skillsPracticeSynthesis}`);
+      lines.push("");
     }
 
     // Orb affect accent v2 — machine-inferred conversation tone. Always rendered LAST, deliberately

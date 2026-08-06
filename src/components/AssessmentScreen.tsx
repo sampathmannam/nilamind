@@ -55,7 +55,7 @@ const TONE: Record<
   sky: { text: "text-sky-300", bg: "bg-sky-500/10", border: "border-sky-500/40", bar: "bg-sky-500", stroke: "#38bdf8" },
   amber: { text: "text-warn-hi", bg: "bg-warn/10", border: "border-warn/40", bar: "bg-warn", stroke: "#CE9A3A" },
   orange: { text: "text-orange-300", bg: "bg-orange-500/10", border: "border-orange-500/40", bar: "bg-orange-500", stroke: "#E3A57D" },
-  rose: { text: "text-rose-300", bg: "bg-rose-500/10", border: "border-rose-500/40", bar: "bg-rose-500", stroke: "#B5614E" },
+  rose: { text: "text-rose-300", bg: "bg-danger/10", border: "border-danger/40", bar: "bg-danger", stroke: "#B5614E" },
 };
 
 // Static Tailwind grid classes per response-scale width (PHQ/GAD=4, PSS-4=5, WHO-5=6).
@@ -169,13 +169,11 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
             (AUX_LABELS.assessment) already titles this screen "Screenings" directly above, so users saw
             TWO DIFFERENT titles stacked for the same surface. The Sheet title wins (it matches the Tools
             row that opens it); the description below still carries the "research-validated" framing. */}
-        <header className="space-y-1">
-          <p className="text-base text-ink-muted leading-relaxed">
-            Short, research-validated check-ins — depression (<span className="text-ink-faint">PHQ-9 / quick PHQ-2</span>), anxiety (<span className="text-ink-faint">GAD-7</span>),
-            wellbeing (<span className="text-ink-faint">WHO-5</span>) and stress (<span className="text-ink-faint">PSS-4</span>). They turn a vague "I feel worse" into something you
-            can actually see move.
-          </p>
-        </header>
+        <p className="text-base text-ink-muted leading-relaxed">
+          Short, research-validated check-ins — depression (<span className="text-ink-faint">PHQ-9 / quick PHQ-2</span>), anxiety (<span className="text-ink-faint">GAD-7</span>),
+          wellbeing (<span className="text-ink-faint">WHO-5</span>) and stress (<span className="text-ink-faint">PSS-4</span>). They turn a vague "I feel worse" into something you
+          can actually see move.
+        </p>
 
         <div className="bg-accent/5 border border-accent/20 rounded-xl p-3 flex gap-2.5">
           <Info className="w-4 h-4 text-accent shrink-0 mt-0.5" />
@@ -251,7 +249,7 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
                 </h4>
                 <div className={`flex items-center gap-1.5 text-[11px] ${
                   result.status === "improving" ? "text-success"
-                  : result.status === "deteriorating" ? "text-rose-400"
+                  : result.status === "deteriorating" ? "text-danger"
                   : "text-ink-muted"
                 }`}>
                   <span className="font-semibold capitalize">{result.status}</span>
@@ -339,7 +337,6 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
         {/* Items */}
         <div className="space-y-3">
           {inst.items.map((item, idx) => {
-            const isSafety = inst.safetyItemIndex === idx;
             return (
               <div
                 key={idx}
@@ -347,8 +344,8 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
                 id={`assessment-item-${idx}`}
               >
                 <div className="flex gap-2 mb-3">
-                  <span className="text-[11px] font-mono text-slate-600 shrink-0">{idx + 1}.</span>
-                  <p className={`text-base leading-relaxed ${isSafety ? "text-ink-2" : "text-ink-2"}`}>{item}</p>
+                  <span className="text-[11px] font-mono text-ink-faint shrink-0">{idx + 1}.</span>
+                  <p className="text-base leading-relaxed text-ink-2">{item}</p>
                 </div>
                 <div className={`grid ${COLS[optionsFor(inst, idx).length] ?? "grid-cols-4"} gap-1.5`}>
                   {optionsFor(inst, idx).map((opt, val) => {
@@ -411,7 +408,7 @@ export default function AssessmentScreen({ onActivateCrisis, initialInstrument }
       <div className="space-y-4 max-w-md mx-auto" id="assessment-result">
         {/* Safety banner first if PHQ-9 item 9 endorsed */}
         {result.safetyFlag && (
-          <div className="bg-rose-500/10 border border-rose-500/40 rounded-2xl p-4 space-y-3" id="assessment-safety-banner">
+          <div className="bg-danger/10 border border-danger/40 rounded-2xl p-4 space-y-3" id="assessment-safety-banner">
             <div className="flex items-center gap-2 text-rose-300">
               <ShieldAlert className="w-5 h-5" />
               <h3 className="text-sm font-bold">You're not alone in this</h3>
@@ -577,7 +574,7 @@ function TrendBlock({ instrumentId, history }: { instrumentId: InstrumentId; his
       {status.current && (
         <div className={`flex items-center gap-1.5 text-[11px] ${
           status.current.trend === "reliably_improved" ? "text-success"
-          : status.current.trend === "reliably_deteriorated" ? "text-rose-400"
+          : status.current.trend === "reliably_deteriorated" ? "text-danger"
           : "text-ink-muted"
         }`}>
           <TrendIcon className="w-3.5 h-3.5" />

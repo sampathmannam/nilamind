@@ -65,7 +65,7 @@ export default function AboutNilaScreen() {
       {/* What Nila cannot do */}
       <div className="glass rounded-2xl p-4 border-l-4 border-l-rose-500 space-y-2">
         <h2 className="text-sm font-semibold text-ink flex items-center gap-2">
-          <Shield className="w-4 h-4 text-rose-400" /> What Nila cannot do
+          <Shield className="w-4 h-4 text-danger" /> What Nila cannot do
         </h2>
         <ul className="text-base text-ink-muted leading-relaxed space-y-1.5 list-disc list-inside">
           <li>Nila is <strong className="text-ink-2">not a therapist, doctor, or crisis service</strong></li>

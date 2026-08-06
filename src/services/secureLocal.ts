@@ -83,6 +83,8 @@ export const SENSITIVE_KEYS = [
   "nilamind_caregiver_prefs",
   "nilamind_tipp_safety",
   "nilamind_values_work",
+  // Guided chain analyses — step-by-step behavioral chain records (encrypted at rest).
+  "nilamind_chain_analyses",
   // Phase 21 — passive sensing (encrypted at rest, process-and-discard pipeline).
   "nilamind_signal_features",
   "nilamind_proactive_cards",
@@ -103,8 +105,11 @@ export const SENSITIVE_KEYS = [
   "nilamind_onboarding_mood",
   "nilamind_user_goal",
   "nilamind_error_log",
+  "nilamind_recent_tools",
 ];
-const MIGRATION_VERSION = 4; // v4: encrypt nilamind_medications/med_logs/means_coaching/voice_sessions/pact/protocol_completions/onboarding_mood/user_goal/error_log legacy plaintext
+const MIGRATION_VERSION = 5; // v4: encrypt nilamind_medications/med_logs/means_coaching/voice_sessions/pact/protocol_completions/onboarding_mood/user_goal/error_log legacy plaintext
+// v5: nilamind_recent_tools was briefly written via raw localStorage (2026-08-06 UI/UX redesign, fixed
+// before ship) -- bump so any stray dev/testing plaintext under that key gets swept on next boot.
 
 const cache = new Map<string, string>();
 let hydrated = false;

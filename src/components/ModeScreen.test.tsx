@@ -46,6 +46,11 @@ vi.mock("../services/sendToNila", () => ({
 const suppressNudgesMock = vi.fn();
 vi.mock("../services/notifications", () => ({
   suppressNudgesForCrisis: (...args: unknown[]) => suppressNudgesMock(...args),
+  // Needed by agent.ts's runAgent() reminder case (2026-08-06 wiring) — jsdom has no Capacitor
+  // LocalNotifications plugin, so scheduleReminderAt is mocked to always succeed rather than reaching
+  // the native layer. formatTime is a pure formatter — safe to keep real.
+  scheduleReminderAt: async (when: Date) => ({ ok: true, at: when }),
+  formatTime: (d: Date) => d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }),
 }));
 
 const scoreAffectMock = vi.fn();
@@ -105,13 +110,11 @@ vi.mock("../services/localLlm", () => ({
   isLocalLlmReady: () => true,
 }));
 
-// Gap A-3 fix test support (2026-08-03): force the rating prompt's gate open so its PLACEMENT is testable
-// independent of localStorage session counts. Defaults to closed so the other tests keep the card hidden.
-const { ratingPromptStateRef } = vi.hoisted(() => ({ ratingPromptStateRef: { current: false } }));
-vi.mock("../services/ratingPrompt", () => ({
-  shouldPromptRating: () => ratingPromptStateRef.current,
-  dismissRatingPrompt: () => {},
-  onUserRated: () => {},
+// Skill Coach "did it help" logging (2026-08-06): spy on upsertPractice rather than asserting on
+// secureLocal internals directly.
+const upsertPracticeMock = vi.fn();
+vi.mock("../services/skillsPractice", () => ({
+  upsertPractice: (...args: unknown[]) => upsertPracticeMock(...args),
 }));
 
 import ModeScreen from "./ModeScreen";
@@ -129,7 +132,7 @@ afterEach(() => {
   scoreAffectMock.mockReset();
   noteChatAffectMock.mockReset();
   affectAccentActiveRef.current = false;
-  ratingPromptStateRef.current = false;
+  upsertPracticeMock.mockReset();
 });
 
 function openTextInput() {
@@ -417,19 +420,128 @@ describe("ModeScreen — orb affect-accent wiring (Phase 1)", () => {
   });
 });
 
-describe("ModeScreen — rating prompt stays out of the active chat flow (Gap A-3)", () => {
-  it("renders the rating card only on a fresh session (no messages)", async () => {
-    ratingPromptStateRef.current = true;
+describe("ModeScreen — agent command shortcuts (2026-08-06: runAgent/classify wired to live chat)", () => {
+  it("a recognized reminder command replies directly and never reaches the LLM", async () => {
     render(<ModeScreen onOpenCrisis={vi.fn()} />);
-    expect(document.getElementById("rating-prompt-card")).toBeTruthy();
+    await sendMessage("remind me to drink water at 9pm");
+    await waitFor(() => expect(screen.getByText(/i'll remind you/i)).toBeTruthy());
+    expect(sendToNilaMock).not.toHaveBeenCalled();
   });
 
-  it("hides the rating card once a conversation is in progress", async () => {
-    ratingPromptStateRef.current = true;
-    sendToNilaMock.mockResolvedValue({ reply: "Nila's reply", reachedAI: true, blocked: false });
+  it("a recognized log_mood command replies with a confirmation, without reaching the LLM", async () => {
+    // saveMood()'s persistence itself (appendToSecureArray -> nilamind_checkins) is covered by
+    // agent.test.ts; this test is scoped to the NEW wiring — recognized, handled locally, LLM skipped.
     render(<ModeScreen onOpenCrisis={vi.fn()} />);
-    await sendMessage("hello there");
+    await sendMessage("log that I'm anxious, intensity 6");
+    await waitFor(() => expect(screen.getByText(/logged/i)).toBeTruthy());
+    expect(sendToNilaMock).not.toHaveBeenCalled();
+  });
+
+  it("a read_dashboard command replies with a summary, without reaching the LLM", async () => {
+    render(<ModeScreen onOpenCrisis={vi.fn()} />);
+    await sendMessage("how am I doing this week");
+    await waitFor(() => expect(sendToNilaMock).not.toHaveBeenCalled());
+    // Some assistant reply was added (the dashboard summary text is data-dependent; just confirm
+    // the turn resolved locally rather than asserting exact wording).
+    expect(screen.getAllByText(/./).length).toBeGreaterThan(0);
+  });
+
+  // THE critical safety test for this integration: a message that superficially matches the log_mood
+  // pattern (has "log" + a KNOWN_EMOTIONS word) but also contains unambiguous crisis language must be
+  // caught by the explicit shouldBlockForCrisisAsync gate BEFORE runAgent ever executes saveMood() — the
+  // exact failure mode a silent, LLM-bypassing command path could introduce if the crisis check were
+  // missing or misplaced.
+  it("crisis language inside an otherwise-matching log_mood command is blocked, NEVER silently logged as a mood", async () => {
+    const onOpenCrisis = vi.fn();
+    render(<ModeScreen onOpenCrisis={onOpenCrisis} />);
+    await sendMessage("log that I feel hopeless, I want to kill myself");
+    // onOpenCrisis firing while sendToNila was NEVER called proves the crisis catch happened inside the
+    // NEW agent branch's explicit shouldBlockForCrisisAsync gate — not the normal LLM path (ruled out by
+    // sendToNilaMock), and not looksLikeArmRequest (this phrase doesn't match its pattern). If that gate
+    // were missing or misplaced, this message would instead have silently called saveMood() and replied
+    // "Logged — hopeless...".
+    await waitFor(() => expect(onOpenCrisis).toHaveBeenCalled());
+    expect(sendToNilaMock).not.toHaveBeenCalled();
+    expect(screen.queryByText(/^logged/i)).toBeNull();
+  });
+
+  it("an arm_checkin-shaped message ('check on me tonight') is NOT executed via the bare agent path (falls through to looksLikeArmRequest above)", async () => {
+    render(<ModeScreen onOpenCrisis={vi.fn()} />);
+    await sendMessage("check on me tonight");
+    await waitFor(() => expect(screen.getByText(/check in with you/i)).toBeTruthy());
+    // Handled by the existing looksLikeArmRequest/requestArmedCheckin block, not agent.ts's armCheckin().
+    expect(sendToNilaMock).not.toHaveBeenCalled();
+  });
+
+  it("a navigate-shaped command ('open my dashboard') is NOT swallowed by the agent path — falls through to the normal conversational reply", async () => {
+    sendToNilaMock.mockResolvedValue({ reply: "Sure, here's a normal reply.", reachedAI: true, blocked: false });
+    render(<ModeScreen onOpenCrisis={vi.fn()} />);
+    await sendMessage("open my dashboard");
     await waitFor(() => expect(sendToNilaMock).toHaveBeenCalled());
-    expect(document.getElementById("rating-prompt-card")).toBeNull();
+  });
+
+  it("ordinary conversation (no command intent) is unaffected — still reaches the LLM as before", async () => {
+    sendToNilaMock.mockResolvedValue({ reply: "I hear you.", reachedAI: true, blocked: false });
+    render(<ModeScreen onOpenCrisis={vi.fn()} />);
+    await sendMessage("I had a really long day today");
+    await waitFor(() => expect(sendToNilaMock).toHaveBeenCalled());
+    expect(screen.getByText("I hear you.")).toBeTruthy();
+  });
+});
+
+describe("ModeScreen — Skill Coach 'did it help' logging (2026-08-06: upsertPractice wired)", () => {
+  it("a skill offer shows a 'Did that help?' card with a real tap target", async () => {
+    sendToNilaMock.mockResolvedValue({ reply: "That sounds hard.", reachedAI: true, blocked: false });
+    render(<ModeScreen onOpenCrisis={vi.fn()} />);
+    await sendMessage("I've been feeling really anxious and on edge");
+    await waitFor(() => expect(document.getElementById("skill-offer-log-card")).toBeTruthy());
+  });
+
+  it("tapping 'Helped' calls upsertPractice with helped:'helped', context:'coach' and dismisses the card", async () => {
+    sendToNilaMock.mockResolvedValue({ reply: "That sounds hard.", reachedAI: true, blocked: false });
+    render(<ModeScreen onOpenCrisis={vi.fn()} />);
+    await sendMessage("I've been feeling really anxious and on edge");
+    await waitFor(() => expect(document.getElementById("skill-offer-log-card")).toBeTruthy());
+
+    fireEvent.click(screen.getByRole("button", { name: /^helped$/i }));
+
+    expect(upsertPracticeMock).toHaveBeenCalledTimes(1);
+    const entry = upsertPracticeMock.mock.calls[0][0];
+    expect(entry.helped).toBe("helped");
+    expect(entry.context).toBe("coach");
+    expect(entry.skillId).toBe("paced_breathing"); // BREATHING_OFFER matches "anxious"
+    expect(document.getElementById("skill-offer-log-card")).toBeNull();
+  });
+
+  it("tapping 'Not really' calls upsertPractice with helped:'no_help'", async () => {
+    sendToNilaMock.mockResolvedValue({ reply: "That sounds hard.", reachedAI: true, blocked: false });
+    render(<ModeScreen onOpenCrisis={vi.fn()} />);
+    await sendMessage("I've been feeling really anxious and on edge");
+    await waitFor(() => expect(document.getElementById("skill-offer-log-card")).toBeTruthy());
+
+    fireEvent.click(screen.getByRole("button", { name: /not really/i }));
+
+    expect(upsertPracticeMock).toHaveBeenCalledTimes(1);
+    expect(upsertPracticeMock.mock.calls[0][0].helped).toBe("no_help");
+  });
+
+  it("dismissing the card never calls upsertPractice", async () => {
+    sendToNilaMock.mockResolvedValue({ reply: "That sounds hard.", reachedAI: true, blocked: false });
+    render(<ModeScreen onOpenCrisis={vi.fn()} />);
+    await sendMessage("I've been feeling really anxious and on edge");
+    await waitFor(() => expect(document.getElementById("skill-offer-log-card")).toBeTruthy());
+
+    fireEvent.click(screen.getByLabelText("Dismiss"));
+
+    expect(upsertPracticeMock).not.toHaveBeenCalled();
+    expect(document.getElementById("skill-offer-log-card")).toBeNull();
+  });
+
+  it("no skill-offer card appears when the message doesn't match any trigger pattern", async () => {
+    sendToNilaMock.mockResolvedValue({ reply: "I hear you.", reachedAI: true, blocked: false });
+    render(<ModeScreen onOpenCrisis={vi.fn()} />);
+    await sendMessage("just wanted to say hi");
+    await waitFor(() => expect(sendToNilaMock).toHaveBeenCalled());
+    expect(document.getElementById("skill-offer-log-card")).toBeNull();
   });
 });

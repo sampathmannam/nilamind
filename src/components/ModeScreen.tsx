@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import NilaFace from "./NilaFace";
-import QuickActions from "./QuickActions";
+import Button from "./Button";
 import {
   getCurrentMode,
   getGreeting,
@@ -21,8 +21,6 @@ import NilaHeader from "./NilaHeader";
 import MessageList from "./MessageList";
 import { useChatSend } from "../hooks/useChatSend";
 import ChatLoading from "./ChatLoading";
-import PactNoticeCard from "./PactNoticeCard";
-import WelcomeBackCard from "./welcomeBack";
 import type { CheckInEntry } from "../types";
 import { NilaUiMessage } from "../services/nilaSend";
 import SoftCrisisCard from "./SoftCrisisCard";
@@ -34,8 +32,6 @@ import { safeDraftValueDomains } from "../services/valuesDraft";
 import { safeDraftSafetyPlan, type SafetyPlanDraftFields } from "../services/safetyPlanDraft";
 import CaptureSheets from "./CaptureSheets";
 import { type CaptureSheetId } from "../services/navStore";
-import { selectVisibleNudges } from "./nudgeSelection";
-import NudgeRail from "./NudgeRail";
 import { useNudges } from "../hooks/useNudges";
 import { useCheckinGate } from "../hooks/useCheckinGate";
 import { useCrisisGate } from "../hooks/useCrisisGate";
@@ -46,8 +42,11 @@ import { abandonProtocol } from "../services/protocolProgress";
 import { speakIfEnabled, listenOnce, stopSpeaking } from "../services/voice";
 import { startVoiceSession, endVoiceSession } from "../services/voicePatterns";
 import { checkSttCoherence } from "../services/sttCoherenceGate";
-import { Mic, Send, MicOff, Keyboard, X, Square } from "lucide-react";
-import RatingPromptCard from "./RatingPromptCard";
+import type { SkillOffer } from "../services/skillCoach";
+import { upsertPractice } from "../services/skillsPractice";
+import { localDateKey } from "../services/storageUtils";
+import { Mic, Send, MicOff, Keyboard, X, Square, Wind, Snowflake } from "lucide-react";
+
 import { hapticMedium } from "../hooks/useHaptics";
 
 interface ModeScreenProps {
@@ -90,8 +89,25 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   const [valuesHighlight, setValuesHighlight] = useState<string[]>([]);
   const [safetyPlanDraft, setSafetyPlanDraft] = useState<SafetyPlanDraftFields | undefined>();
   const [protocolCard, setProtocolCard] = useState<ProtocolCard | null>(() => protocolOfferCard(""));
+  // Skill Coach follow-up (2026-08-06 audit fix): skillCoach.ts's offer text ends with "Tap to log this
+  // practice" but that tap target never existed anywhere -- upsertPractice() (skillsPractice.ts) had zero
+  // callers in the whole app, so the DBT skills-use mechanism loop was never actually writable. Mirrors
+  // the protocolCard pattern: a small pending-state card rendered above the input bar.
+  const [skillOfferPending, setSkillOfferPending] = useState<SkillOffer | null>(null);
+  const logSkillPractice = (helped: "helped" | "no_help") => {
+    if (!skillOfferPending) return;
+    upsertPractice({
+      id: `skill_${Date.now()}`,
+      date: localDateKey(),
+      timestamp: new Date().toISOString(),
+      skillId: skillOfferPending.skillId,
+      family: skillOfferPending.family,
+      helped,
+      context: "coach",
+    });
+    setSkillOfferPending(null);
+  };
   const [confirmNewChat, setConfirmNewChat] = useState(false);
-  const [showNudgePanel, setShowNudgePanel] = useState(true);
   const [removableToastIndex, setRemovableToastIndex] = useState<number | null>(null);
 
   // V1.3 — warm cold-start: show a friendly loading screen while the model boots
@@ -114,25 +130,6 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
 
   const hadCrisisRef = useRef(false);
   const nudges = useNudges({ messages, auxView, hadCrisisRef });
-  const {
-    showSafetyPlanReview,
-    showSafetyPlanFollowUp,
-    sleepProdromeNudge,
-    jitaiNudge,
-    calmSafetyNudge,
-    pactNotice,
-    welcomeBack,
-  } = nudges;
-
-  const { safetyPlanCard, visibleNudgeIds, totalNudges } = selectVisibleNudges({
-    safetyPlanFollowUp: showSafetyPlanFollowUp,
-    safetyPlanReview: showSafetyPlanReview,
-    calmSafetyNudgeShow: !!calmSafetyNudge?.show,
-    sleepProdrome: !!sleepProdromeNudge,
-    jitaiShouldNudge: !!jitaiNudge?.shouldNudge,
-    pact: !!pactNotice,
-    welcome: !!welcomeBack,
-  });
 
   const feedback = useMessageFeedback();
   const { ratedMessages, dismissedSkillMessages, suggestionPrompt, suggestionText } = feedback;
@@ -299,10 +296,6 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
     onOpenCapture?.("safety_plan");
   };
 
-  const handleMarkSafetyPlanReviewed = () => nudges.completeSafetyPlanReview();
-
-  const handleMarkSafetyPlanFollowUpDone = () => nudges.completeSafetyPlanFollowUp();
-
   const handleProtocolTap = () => {
     if (!protocolCard) return;
     if (protocolCard.active) {
@@ -438,6 +431,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
     cancelRequestedRef,
     abortRef,
     crisisPendingRef,
+    setSkillOfferPending,
   });
 
   const startNewConversation = () => {
@@ -520,20 +514,20 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           </div>
         )}
 
-        {/* Nila presence */}
-        <div className="w-full max-w-sm flex flex-col items-center text-center gap-3 animate-fade-up">
+        {/* Nila presence — compact inline layout */}
+        <div className="w-full max-w-sm flex items-center gap-3 animate-fade-up px-2">
           <NilaFace
             state={mode.userState}
             onClick={handleVoice}
             onLongPress={() => openCrisis()}
-            size={100}
+            size={48}
             isListening={listening}
             affectAccent={affectAccent}
           />
-          <div className="max-w-xs">
-            <p className="text-[15px] text-ink-2 font-display leading-relaxed">{question}</p>
+          <div className="flex-1 min-w-0">
+            <p className="text-[14px] text-ink-2 font-display leading-snug">{question}</p>
             {mode.userState && mode.userState !== "calm" && (
-              <p className="text-base text-ink-muted mt-1.5 leading-relaxed">
+              <p className="text-xs text-ink-muted mt-0.5 leading-snug">
                 {mode.userState === "anxious" && STATE_MESSAGES.anxious}
                 {mode.userState === "low" && STATE_MESSAGES.low}
                 {mode.userState === "elevated" && STATE_MESSAGES.elevated}
@@ -542,9 +536,14 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           </div>
         </div>
 
-        {/* Quick actions */}
-        <div className="w-full max-w-sm animate-fade-up" style={{ animationDelay: '60ms' }}>
-          <QuickActions onAction={handleQuickAction} timeMode={mode.timeMode} userState={mode.userState} />
+        {/* Quick Calm — compact horizontal bar */}
+        <div className="w-full max-w-sm flex gap-2 animate-fade-up" style={{ animationDelay: '60ms' }}>
+          <Button variant="secondary" size="sm" onClick={() => onOpenGrounding?.(1)} className="flex-1 gap-1.5 py-2 text-xs">
+            <Wind className="w-3.5 h-3.5" /> Breathe
+          </Button>
+          <Button variant="secondary" size="sm" onClick={() => onOpenGrounding?.()} className="flex-1 gap-1.5 py-2 text-xs">
+            <Snowflake className="w-3.5 h-3.5" /> Ground
+          </Button>
         </div>
 
         {/* Messages */}
@@ -596,11 +595,6 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
         )}
       </div>
 
-      {/* Rating prompt lives OUTSIDE the chat scroll area (Gap A-3) and only before the conversation
-          starts (no user-authored message yet — the welcome seed doesn't count) so it never interrupts
-          an active conversation. */}
-      {!messages.some((m) => m.role === "user") && <RatingPromptCard />}
-
       {/* Input bar */}
       <div className="px-4 py-3 border-t border-line/40 bg-page/95 backdrop-blur-sm space-y-2.5 shrink-0">
         {softCrisisCard && (
@@ -610,59 +604,46 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
           />
         )}
 
+        {skillOfferPending && (
+          <div
+            id="skill-offer-log-card"
+            className="w-full flex items-center gap-2 px-4 py-3 rounded-xl bg-accent/10 border border-accent/25 text-xs font-medium min-h-[44px]"
+          >
+            <span className="flex-1 text-ink-2">Did that help?</span>
+            <button
+              onClick={() => logSkillPractice("helped")}
+              className="px-3 py-1.5 rounded-lg bg-accent text-white hover:opacity-90 cursor-pointer min-h-[36px]"
+            >
+              Helped
+            </button>
+            <button
+              onClick={() => logSkillPractice("no_help")}
+              className="px-3 py-1.5 rounded-lg bg-page border border-line text-ink-2 hover:bg-fill cursor-pointer min-h-[36px]"
+            >
+              Not really
+            </button>
+            <button
+              onClick={() => setSkillOfferPending(null)}
+              aria-label="Dismiss"
+              className="p-1.5 text-ink-faint hover:text-ink-2 cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
         {mode.userState === "calm" || mode.userState === null ? (
           <>
-            <NudgeRail
-              visibleNudgeIds={visibleNudgeIds}
-              safetyPlanCard={safetyPlanCard}
-              totalNudges={totalNudges}
-              calmSafetyNudge={calmSafetyNudge}
-              sleepProdromeNudge={sleepProdromeNudge}
-              jitaiNudge={jitaiNudge}
-              onOpenSafetyPlan={handleOpenSafetyPlan}
-              onCompleteReview={handleMarkSafetyPlanReviewed}
-              onCompleteFollowUp={handleMarkSafetyPlanFollowUpDone}
-              onDismissCalm={() => nudges.dismissCalm()}
-              onDismissSleep={() => nudges.dismissSleep()}
-              onOpenWindDown={onOpenWindDown}
-              onQuickAction={handleQuickAction}
-            />
-
-            {(() => {
-              const nudgeItems: { key: string; el: React.ReactNode }[] = [];
-              if (protocolCard) nudgeItems.push({ key: "protocol", el: (
-                <button
-                  onClick={handleProtocolTap}
-                  className="w-full text-left px-4 py-3 rounded-xl bg-accent/10 border border-accent/25 text-accent text-xs font-medium hover:bg-accent/20 transition-colors cursor-pointer min-h-[44px] focus-ring"
-                  id="protocol-card"
-                >
-                  <span className="block">{protocolCard.label}</span>
-                  <span className="block mt-1 text-[10px] font-normal text-ink-muted">{protocolCard.basis}</span>
-                </button>
-              )});
-              if (visibleNudgeIds.has("welcome") && welcomeBack) nudgeItems.push({ key: "welcome", el: (
-                <WelcomeBackCard lastVisitDate={welcomeBack} onDismiss={() => nudges.dismissWelcome()} />
-              )});
-              if (visibleNudgeIds.has("pact") && pactNotice) nudgeItems.push({ key: "pact", el: (
-                <PactNoticeCard notice={pactNotice} onDismiss={() => nudges.dismissPact()} />
-              )});
-              const collapsed = nudgeItems.length >= 2;
-              const visible = collapsed ? showNudgePanel : true;
-              return nudgeItems.length > 0 ? (
-                <div className="space-y-2">
-                  {collapsed && (
-                    <button
-                      onClick={() => setShowNudgePanel(!showNudgePanel)}
-                      className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-fill/50 text-xs text-ink-muted hover:text-ink-2 transition-colors cursor-pointer min-h-[44px] focus-ring"
-                    >
-                      <span>{nudgeItems.length} notification{nudgeItems.length > 1 ? "s" : ""}</span>
-                      <span className={`transition-transform duration-200 ${visible ? "rotate-180" : ""}`}>▾</span>
-                    </button>
-                  )}
-                  {visible && nudgeItems.map((item) => <div key={item.key}>{item.el}</div>)}
-                </div>
-              ) : null;
-            })()}
+            {protocolCard && (
+              <button
+                onClick={handleProtocolTap}
+                className="w-full text-left px-4 py-3 rounded-xl bg-accent/10 border border-accent/25 text-accent text-xs font-medium hover:bg-accent/20 transition-colors cursor-pointer min-h-[44px] focus-ring"
+                id="protocol-card"
+              >
+                <span className="block">{protocolCard.label}</span>
+                <span className="block mt-1 text-[10px] font-normal text-ink-muted">{protocolCard.basis}</span>
+              </button>
+            )}
 
             <div className={`flex flex-wrap gap-2 transition-opacity duration-200 ${inputText.length > 0 || loading ? "opacity-30 pointer-events-none" : ""}`} id="chat-suggestions">
               {(suggestionChipsExpanded ? suggestions.slice(0, 4) : suggestions.slice(0, 2)).map((chip) => (
@@ -716,7 +697,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
               mode.userState === "anxious" || mode.userState === "low"
                 ? "p-4 min-w-[52px] min-h-[52px] bg-accent/20 text-accent border border-accent/30 hover:bg-accent/30 active:scale-95"
                 : listening
-                ? "p-3 min-w-[44px] min-h-[44px] bg-danger/20 text-rose-400 animate-pulse"
+                ? "p-3 min-w-[44px] min-h-[44px] bg-danger/20 text-danger animate-pulse"
                 : loading
                 ? "p-3 min-w-[44px] min-h-[44px] bg-fill text-ink-faint opacity-40 cursor-not-allowed"
                 : "p-3 min-w-[44px] min-h-[44px] bg-card border border-line text-ink-muted hover:text-ink-2 hover:border-line-strong active:scale-95"
@@ -749,7 +730,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                 disabled={!loading && (!inputText.trim() || loading)}
                 className={`p-3 rounded-2xl transition-all cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center focus-ring active:scale-95 ${
                   loading
-                    ? "bg-danger/20 text-rose-400 hover:bg-danger/30"
+                    ? "bg-danger/20 text-danger hover:bg-danger/30"
                     : inputText.trim()
                     ? "bg-accent/20 text-accent hover:bg-accent/30"
                     : "bg-card border border-line text-ink-faint"
@@ -782,7 +763,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
                 disabled={!loading && (!inputText.trim() || loading)}
                 className={`p-3 rounded-2xl transition-all cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center focus-ring active:scale-95 ${
                   loading
-                    ? "bg-danger/20 text-rose-400 hover:bg-danger/30"
+                    ? "bg-danger/20 text-danger hover:bg-danger/30"
                     : inputText.trim()
                     ? "bg-accent/20 text-accent hover:bg-accent/30"
                     : "bg-card border border-line text-ink-faint"

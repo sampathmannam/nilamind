@@ -13,35 +13,56 @@ vi.mock("../services/secureLocal", () => ({
   flush: () => {},
 }));
 
-import GroundingLibraryScreen from "./GroundingLibraryScreen";
+import BreathingScreen from "./BreathingScreen";
 import { GROUNDING_EXERCISES } from "../data";
 import { saveTippSafetyFlags, defaultTippSafetyFlags } from "../services/tippSafetyGate";
 
 afterEach(cleanup);
 beforeEach(() => store.clear());
 
-// 2026-07-12 Wave 3, Group E — the "Cold Reset (TIPP)" card now mounts the unified interactive
-// TIPPTool (was a static paragraph) — same consolidation that already special-cases Box Breathing.
-describe("GroundingLibraryScreen — TIPP consolidation", () => {
-  it("mounts the interactive TIPPTool when the Cold Reset (TIPP) card is expanded", () => {
+describe("BreathingScreen — unified tabbed interface", () => {
+  it("renders the three tab buttons: Breathe, Ground, TIPP", () => {
+    render(<BreathingScreen onClose={() => {}} />);
+    expect(screen.getByRole("tab", { name: /Breathe/i })).toBeTruthy();
+    expect(screen.getByRole("tab", { name: /Ground/i })).toBeTruthy();
+    expect(screen.getByRole("tab", { name: /TIPP/i })).toBeTruthy();
+  });
+
+  it("opens on the Breathe tab by default", () => {
+    render(<BreathingScreen onClose={() => {}} />);
+    expect(screen.getByRole("tab", { name: /Breathe/i }).getAttribute("aria-selected")).toBe("true");
+  });
+
+  it("opens on the Ground tab when defaultTab is 'ground'", () => {
+    render(<BreathingScreen onClose={() => {}} defaultTab="ground" />);
+    expect(screen.getByRole("tab", { name: /Ground/i }).getAttribute("aria-selected")).toBe("true");
+  });
+
+  it("opens on the TIPP tab when defaultTab is 'tipp'", () => {
     saveTippSafetyFlags(defaultTippSafetyFlags());
-    const tippIndex = GROUNDING_EXERCISES.findIndex((e) => e.title === "Cold Reset (TIPP)");
-    render(<GroundingLibraryScreen autoExpand={tippIndex} />);
-    expect(screen.getByRole("tab", { name: /Temperature/i })).toBeTruthy();
-    expect(screen.getByRole("tab", { name: /Paired muscle relaxation/i })).toBeTruthy();
+    render(<BreathingScreen onClose={() => {}} defaultTab="tipp" />);
+    expect(screen.getByRole("tab", { name: /TIPP/i }).getAttribute("aria-selected")).toBe("true");
   });
 
-  it("still mounts BreathingTimer for the Box Breathing card unmodified (zero regression)", () => {
-    const boxIndex = GROUNDING_EXERCISES.findIndex((e) => e.title === "Box Breathing");
-    render(<GroundingLibraryScreen autoExpand={boxIndex} />);
-    expect(screen.getByText("Cyclic sighing")).toBeTruthy(); // BreathingTimer's pattern picker
-    expect(screen.queryByRole("tab")).toBeNull(); // not the TIPP tool
+  it("shows grounding exercises when Ground tab is selected", () => {
+    render(<BreathingScreen onClose={() => {}} defaultTab="ground" />);
+    expect(screen.getByText("Somatic anchors — 100% offline-ready")).toBeTruthy();
+    for (const ex of GROUNDING_EXERCISES) {
+      expect(screen.getByText(ex.title)).toBeTruthy();
+    }
   });
 
-  it("other cards still render plain static steps text, no interactive tool", () => {
-    const scanIndex = GROUNDING_EXERCISES.findIndex((e) => e.title === "Body Scan");
-    render(<GroundingLibraryScreen autoExpand={scanIndex} />);
-    expect(screen.queryByRole("tab")).toBeNull();
-    expect(screen.getByText(/Start at your feet/i)).toBeTruthy();
+  it("shows TIPP tool when TIPP tab is selected", () => {
+    saveTippSafetyFlags(defaultTippSafetyFlags());
+    render(<BreathingScreen onClose={() => {}} defaultTab="tipp" />);
+    expect(screen.getByText(/Each piece here is backed by real research/)).toBeTruthy();
+  });
+
+  it("can expand a grounding exercise card", () => {
+    render(<BreathingScreen onClose={() => {}} defaultTab="ground" />);
+    const firstExercise = GROUNDING_EXERCISES[0];
+    const openButton = screen.getByText(firstExercise.title).closest("button")!;
+    fireEvent.click(openButton);
+    expect(screen.getByText(firstExercise.steps)).toBeTruthy();
   });
 });

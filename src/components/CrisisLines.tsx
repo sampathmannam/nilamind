@@ -5,7 +5,7 @@ import { getCrisisLines } from "../services/crisisResources";
 // plain text for guidance lines). Used everywhere crisis numbers appear so they stay consistent and
 // region-correct. Always renders ≥1 line (registry guarantees a non-empty International fallback).
 const TONES: Record<string, string> = {
-  rose: "text-rose-200 bg-rose-500/10 border-rose-500/30 hover:bg-rose-500/20",
+  rose: "text-rose-200 bg-danger/10 border-danger/30 hover:bg-danger/20",
   amber: "text-warn-hi bg-warn/15 border-warn/30 hover:opacity-90/25",
 };
 

@@ -112,7 +112,7 @@ export default function LearnScreen() {
       </p>
 
       {crisis ? (
-        <div className="bg-card border border-rose-500/30 p-5 rounded-2xl space-y-3" id="learn-crisis">
+        <div className="bg-card border border-danger/30 p-5 rounded-2xl space-y-3" id="learn-crisis">
           <h3 className="text-sm font-semibold text-rose-200 flex items-center gap-1.5">
             <LifeBuoy className="w-4 h-4" /> You matter — support is here right now
           </h3>
@@ -127,9 +127,9 @@ export default function LearnScreen() {
           <button
             onClick={needSupport}
             id="learn-support"
-            className="w-full flex items-center gap-3 bg-rose-500/10 border border-rose-500/30 hover:border-rose-500/50 rounded-2xl p-3.5 cursor-pointer text-left transition-colors"
+            className="w-full flex items-center gap-3 bg-danger/10 border border-danger/30 hover:border-danger/50 rounded-2xl p-3.5 cursor-pointer text-left transition-colors"
           >
-            <LifeBuoy className="w-5 h-5 text-rose-400 shrink-0" />
+            <LifeBuoy className="w-5 h-5 text-danger shrink-0" />
             <span className="flex-1 min-w-0 text-[13px] font-semibold text-rose-200">Need support right now?</span>
           </button>
 
@@ -137,14 +137,14 @@ export default function LearnScreen() {
           <button
             onClick={() => { setQuery(""); setSourceFilter("skill"); setGroupFilter("crisis"); }}
             id="learn-hard-moment"
-            className="w-full flex items-center gap-3 bg-rose-500/10 border border-rose-500/30 hover:border-rose-500/50 rounded-2xl p-3.5 cursor-pointer text-left transition-colors"
+            className="w-full flex items-center gap-3 bg-danger/10 border border-danger/30 hover:border-danger/50 rounded-2xl p-3.5 cursor-pointer text-left transition-colors"
           >
-            <LifeBuoy className="w-5 h-5 text-rose-400 shrink-0" />
+            <LifeBuoy className="w-5 h-5 text-danger shrink-0" />
             <span className="flex-1 min-w-0">
               <span className="block text-[13px] font-semibold text-rose-200">In a hard moment right now?</span>
               <span className="block text-[11px] text-rose-300/80">Jump to the get-through-it skills</span>
             </span>
-            <ChevronRight className="w-5 h-5 text-rose-400/70 shrink-0" />
+            <ChevronRight className="w-5 h-5 text-danger/70 shrink-0" />
           </button>
 
           {/* Emotion-based recommendation from last check-in */}
@@ -277,7 +277,7 @@ function LearnCard({ result, open, onToggle }: { result: LearnResult; open: bool
           {result.source === "understand" && (
             <>
               {detail.emergencyCaveat && (
-                <div className="flex gap-2 items-start bg-rose-500/10 border border-rose-500/30 rounded-lg px-3 py-2">
+                <div className="flex gap-2 items-start bg-danger/10 border border-danger/30 rounded-lg px-3 py-2">
                   <AlertTriangle className="w-3.5 h-3.5 text-rose-300 shrink-0 mt-0.5" />
                   <p className="text-base text-rose-200/90 leading-relaxed">{detail.emergencyCaveat}</p>
                 </div>
@@ -290,7 +290,7 @@ function LearnCard({ result, open, onToggle }: { result: LearnResult; open: bool
               <p className="text-ink-2"><span className="text-ink-faint font-semibold">What it is — </span>{detail.what}</p>
               {detail.why && (
                 <p className="text-ink-2 flex gap-1.5">
-                  <Heart className="w-3.5 h-3.5 text-rose-400/80 shrink-0 mt-0.5" />
+                  <Heart className="w-3.5 h-3.5 text-danger/80 shrink-0 mt-0.5" />
                   <span><span className="text-ink-faint font-semibold">Why it helps — </span>{detail.why}</span>
                 </p>
               )}

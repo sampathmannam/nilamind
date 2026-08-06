@@ -45,7 +45,7 @@ export default function ErrorDisplay({
   const typeConfig = {
     error: {
       icon: AlertCircle,
-      className: "bg-rose-500/10 border-rose-500/20 text-rose-300",
+      className: "bg-danger/10 border-danger/20 text-rose-300",
       label: t("error_default_title", lang) || "Something went wrong",
     },
     warning: {

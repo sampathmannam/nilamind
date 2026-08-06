@@ -85,8 +85,11 @@ export default function Sheet({
         style={{ paddingTop: SAFE_TOP }}
       >
         {/* Heading element (not a bare span) so screen-reader users can navigate by heading and the sheet
-            announces a title landmark. aria-label on the dialog still carries the accessible name. */}
-        <h2 className="text-sm font-semibold text-ink">{title}</h2>
+            announces a title landmark. aria-label on the dialog still carries the accessible name.
+            text-base (not text-sm): every aux screen's lede paragraph is text-base text-ink-muted, so a
+            text-sm title sat visually smaller than the body text beneath it. Same size as the lede, set
+            apart by weight (semibold) + color (text-ink vs text-ink-muted) instead of by size. */}
+        <h2 className="text-base font-semibold text-ink">{title}</h2>
         <button onClick={onClose} className={CLOSE_BTN} aria-label="Close">
           <X className="w-4 h-4" aria-hidden="true" />
         </button>

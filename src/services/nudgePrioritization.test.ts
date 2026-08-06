@@ -8,6 +8,7 @@ describe("selectTopNudge", () => {
     hasReCheckIn: false,
     hasPendingDraft: false,
     hasWellbeingDue: false,
+    hasPleaseAuditDue: false,
     hasAssessmentPrompt: false,
     hasProactiveNudge: false,
   };

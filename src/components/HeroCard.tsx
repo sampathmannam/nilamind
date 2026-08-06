@@ -13,15 +13,15 @@ export default function HeroCard({ onOpenView }: { onOpenView?: (target: string)
   const config = (() => {
     switch (state) {
       case "crisis":
-        return { msg: t("hero_crisis"), label: t("hero_crisis_label"), icon: LifeBuoy, route: "episode", tone: "text-rose-400" };
+        return { msg: t("hero_crisis"), label: t("hero_crisis_label"), icon: LifeBuoy, route: "episode", tone: "text-danger" };
       case "anxious":
         return { msg: t("hero_anxious"), label: t("hero_breathe"), icon: Wind, route: "breathing", tone: "text-blue-400" };
       case "low":
         return { msg: t("hero_low"), label: t("hero_gentle"), icon: Heart, route: "checkin", tone: "text-purple-400" };
       case "elevated":
-        return { msg: t("hero_elevated"), label: t("hero_breathe"), icon: Wind, route: "breathing", tone: "text-emerald-400" };
+        return { msg: t("hero_elevated"), label: t("hero_breathe"), icon: Wind, route: "breathing", tone: "text-success" };
       default:
-        return { msg: t("hero_calm"), label: t("hero_checkin"), icon: Sparkles, route: "checkin", tone: "text-amber-400" };
+        return { msg: t("hero_calm"), label: t("hero_checkin"), icon: Sparkles, route: "checkin", tone: "text-warn" };
     }
   })();
 
