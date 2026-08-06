@@ -6,7 +6,7 @@ import Button from "./Button";
 import ToolRow from "./ToolRow";
 import Section from "./Section";
 import CrisisHeaderButton from "./CrisisHeaderButton";
-import RatingPromptCard from "./RatingPromptCard";
+import AmbientSlot from "./AmbientSlot";
 import { useTimeOfDay, type TimeOfDay } from "../hooks/useTimeOfDay";
 import { getRecentTools, recordToolUse } from "../services/recentTools";
 import { setEmaPrefill } from "../services/emaPrefill";
@@ -172,8 +172,8 @@ export default function TodayScreen({
         </Section>
       )}
 
-      {/* Rating prompt — gated by session count, dismissible */}
-      <RatingPromptCard />
+      {/* Ambient slot — the ONLY place a prompt card may appear on Home, capped at 1 (§5.1) */}
+      <AmbientSlot go={go} />
 
       {/* Crisis support — always visible, subtle */}
       <div className="flex justify-center pt-2 pb-4">
