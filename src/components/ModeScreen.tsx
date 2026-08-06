@@ -42,6 +42,9 @@ import { abandonProtocol } from "../services/protocolProgress";
 import { speakIfEnabled, listenOnce, stopSpeaking } from "../services/voice";
 import { startVoiceSession, endVoiceSession } from "../services/voicePatterns";
 import { checkSttCoherence } from "../services/sttCoherenceGate";
+import type { SkillOffer } from "../services/skillCoach";
+import { upsertPractice } from "../services/skillsPractice";
+import { localDateKey } from "../services/storageUtils";
 import { Mic, Send, MicOff, Keyboard, X, Square, Wind, Snowflake } from "lucide-react";
 
 import { hapticMedium } from "../hooks/useHaptics";
@@ -86,6 +89,24 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
   const [valuesHighlight, setValuesHighlight] = useState<string[]>([]);
   const [safetyPlanDraft, setSafetyPlanDraft] = useState<SafetyPlanDraftFields | undefined>();
   const [protocolCard, setProtocolCard] = useState<ProtocolCard | null>(() => protocolOfferCard(""));
+  // Skill Coach follow-up (2026-08-06 audit fix): skillCoach.ts's offer text ends with "Tap to log this
+  // practice" but that tap target never existed anywhere -- upsertPractice() (skillsPractice.ts) had zero
+  // callers in the whole app, so the DBT skills-use mechanism loop was never actually writable. Mirrors
+  // the protocolCard pattern: a small pending-state card rendered above the input bar.
+  const [skillOfferPending, setSkillOfferPending] = useState<SkillOffer | null>(null);
+  const logSkillPractice = (helped: "helped" | "no_help") => {
+    if (!skillOfferPending) return;
+    upsertPractice({
+      id: `skill_${Date.now()}`,
+      date: localDateKey(),
+      timestamp: new Date().toISOString(),
+      skillId: skillOfferPending.skillId,
+      family: skillOfferPending.family,
+      helped,
+      context: "coach",
+    });
+    setSkillOfferPending(null);
+  };
   const [confirmNewChat, setConfirmNewChat] = useState(false);
   const [removableToastIndex, setRemovableToastIndex] = useState<number | null>(null);
 
@@ -410,6 +431,7 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
     cancelRequestedRef,
     abortRef,
     crisisPendingRef,
+    setSkillOfferPending,
   });
 
   const startNewConversation = () => {
@@ -580,6 +602,34 @@ export default function ModeScreen({ onOpenSettings, onOpenCrisis, onOpenDashboa
             onEscalate={() => { setSoftCrisisCard(false); onOpenCrisis?.(); }}
             onDismiss={() => setSoftCrisisCard(false)}
           />
+        )}
+
+        {skillOfferPending && (
+          <div
+            id="skill-offer-log-card"
+            className="w-full flex items-center gap-2 px-4 py-3 rounded-xl bg-accent/10 border border-accent/25 text-xs font-medium min-h-[44px]"
+          >
+            <span className="flex-1 text-ink-2">Did that help?</span>
+            <button
+              onClick={() => logSkillPractice("helped")}
+              className="px-3 py-1.5 rounded-lg bg-accent text-white hover:opacity-90 cursor-pointer min-h-[36px]"
+            >
+              Helped
+            </button>
+            <button
+              onClick={() => logSkillPractice("no_help")}
+              className="px-3 py-1.5 rounded-lg bg-page border border-line text-ink-2 hover:bg-fill cursor-pointer min-h-[36px]"
+            >
+              Not really
+            </button>
+            <button
+              onClick={() => setSkillOfferPending(null)}
+              aria-label="Dismiss"
+              className="p-1.5 text-ink-faint hover:text-ink-2 cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         )}
 
         {mode.userState === "calm" || mode.userState === null ? (

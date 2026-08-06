@@ -19,7 +19,7 @@ import { offlineBrainMessage } from "../services/nilaReflect";
 import { localLlmLoadState } from "../services/localLlm";
 import { hapticLight } from "./useHaptics";
 import { rememberSession } from "../services/nilaMemory";
-import { selectSkill, formatSkillOffer } from "../services/skillCoach";
+import { selectSkill, formatSkillOffer, type SkillOffer } from "../services/skillCoach";
 import { classify, runAgent } from "../services/agent";
 
 function msg(role: "user" | "assistant", content: string, extra: Partial<Pick<NilaUiMessage, "insight" | "synthetic">> = {}): NilaUiMessage {
@@ -45,6 +45,7 @@ interface ChatSendDeps {
   cancelRequestedRef: React.MutableRefObject<boolean>;
   abortRef: React.MutableRefObject<AbortController | null>;
   crisisPendingRef: React.MutableRefObject<boolean>;
+  setSkillOfferPending?: (v: SkillOffer | null) => void;
 }
 
 export function useChatSend({
@@ -66,6 +67,7 @@ export function useChatSend({
   cancelRequestedRef,
   abortRef,
   crisisPendingRef,
+  setSkillOfferPending,
 }: ChatSendDeps) {
   const handleSendMessage = useCallback(async (text?: string) => {
     const textToSend = text || inputText.trim();
@@ -181,6 +183,10 @@ export function useChatSend({
           const skillOffer = selectSkill(textToSend);
           if (skillOffer) {
             setMessages((prev) => [...prev, msg("assistant", formatSkillOffer(skillOffer))]);
+            // 2026-08-06 audit fix: the offer text ends with "Tap to log this practice", but that tap
+            // target never existed -- upsertPractice() had zero callers anywhere. Surface a real,
+            // trackable pending-offer state so the UI can render an actual log affordance.
+            setSkillOfferPending?.(skillOffer);
           }
         }
         if (result.reachedAI) {

@@ -110,6 +110,13 @@ vi.mock("../services/localLlm", () => ({
   isLocalLlmReady: () => true,
 }));
 
+// Skill Coach "did it help" logging (2026-08-06): spy on upsertPractice rather than asserting on
+// secureLocal internals directly.
+const upsertPracticeMock = vi.fn();
+vi.mock("../services/skillsPractice", () => ({
+  upsertPractice: (...args: unknown[]) => upsertPracticeMock(...args),
+}));
+
 import ModeScreen from "./ModeScreen";
 
 afterEach(() => {
@@ -125,6 +132,7 @@ afterEach(() => {
   scoreAffectMock.mockReset();
   noteChatAffectMock.mockReset();
   affectAccentActiveRef.current = false;
+  upsertPracticeMock.mockReset();
 });
 
 function openTextInput() {
@@ -478,5 +486,62 @@ describe("ModeScreen — agent command shortcuts (2026-08-06: runAgent/classify 
     await sendMessage("I had a really long day today");
     await waitFor(() => expect(sendToNilaMock).toHaveBeenCalled());
     expect(screen.getByText("I hear you.")).toBeTruthy();
+  });
+});
+
+describe("ModeScreen — Skill Coach 'did it help' logging (2026-08-06: upsertPractice wired)", () => {
+  it("a skill offer shows a 'Did that help?' card with a real tap target", async () => {
+    sendToNilaMock.mockResolvedValue({ reply: "That sounds hard.", reachedAI: true, blocked: false });
+    render(<ModeScreen onOpenCrisis={vi.fn()} />);
+    await sendMessage("I've been feeling really anxious and on edge");
+    await waitFor(() => expect(document.getElementById("skill-offer-log-card")).toBeTruthy());
+  });
+
+  it("tapping 'Helped' calls upsertPractice with helped:'helped', context:'coach' and dismisses the card", async () => {
+    sendToNilaMock.mockResolvedValue({ reply: "That sounds hard.", reachedAI: true, blocked: false });
+    render(<ModeScreen onOpenCrisis={vi.fn()} />);
+    await sendMessage("I've been feeling really anxious and on edge");
+    await waitFor(() => expect(document.getElementById("skill-offer-log-card")).toBeTruthy());
+
+    fireEvent.click(screen.getByRole("button", { name: /^helped$/i }));
+
+    expect(upsertPracticeMock).toHaveBeenCalledTimes(1);
+    const entry = upsertPracticeMock.mock.calls[0][0];
+    expect(entry.helped).toBe("helped");
+    expect(entry.context).toBe("coach");
+    expect(entry.skillId).toBe("paced_breathing"); // BREATHING_OFFER matches "anxious"
+    expect(document.getElementById("skill-offer-log-card")).toBeNull();
+  });
+
+  it("tapping 'Not really' calls upsertPractice with helped:'no_help'", async () => {
+    sendToNilaMock.mockResolvedValue({ reply: "That sounds hard.", reachedAI: true, blocked: false });
+    render(<ModeScreen onOpenCrisis={vi.fn()} />);
+    await sendMessage("I've been feeling really anxious and on edge");
+    await waitFor(() => expect(document.getElementById("skill-offer-log-card")).toBeTruthy());
+
+    fireEvent.click(screen.getByRole("button", { name: /not really/i }));
+
+    expect(upsertPracticeMock).toHaveBeenCalledTimes(1);
+    expect(upsertPracticeMock.mock.calls[0][0].helped).toBe("no_help");
+  });
+
+  it("dismissing the card never calls upsertPractice", async () => {
+    sendToNilaMock.mockResolvedValue({ reply: "That sounds hard.", reachedAI: true, blocked: false });
+    render(<ModeScreen onOpenCrisis={vi.fn()} />);
+    await sendMessage("I've been feeling really anxious and on edge");
+    await waitFor(() => expect(document.getElementById("skill-offer-log-card")).toBeTruthy());
+
+    fireEvent.click(screen.getByLabelText("Dismiss"));
+
+    expect(upsertPracticeMock).not.toHaveBeenCalled();
+    expect(document.getElementById("skill-offer-log-card")).toBeNull();
+  });
+
+  it("no skill-offer card appears when the message doesn't match any trigger pattern", async () => {
+    sendToNilaMock.mockResolvedValue({ reply: "I hear you.", reachedAI: true, blocked: false });
+    render(<ModeScreen onOpenCrisis={vi.fn()} />);
+    await sendMessage("just wanted to say hi");
+    await waitFor(() => expect(sendToNilaMock).toHaveBeenCalled());
+    expect(document.getElementById("skill-offer-log-card")).toBeNull();
   });
 });
