@@ -21,7 +21,7 @@ async function closeAnyOverlay(page: Page) {
   await page.waitForTimeout(300);
 }
 
-const TABS = ["Nila", "Today", "Tools", "You"];
+const TABS = ["Nila", "Home", "Tools", "You"]; // "Today" renamed "Home" (redesign 2026-08-06)
 
 test("AUDIT: accessibility per tab", async ({ page }) => {
   test.setTimeout(120_000);
@@ -39,17 +39,35 @@ test("AUDIT: accessibility per tab", async ({ page }) => {
   }
 });
 
-const TILES = [
-  "Grounding & breathing", "Wind down for sleep", "Ambient sounds", "Reach out to someone",
-  "I'm in an episode", "Quick check-in", "Journal", "DBT diary card", "Medications",
-  "Problem-solving", "Values work", "Screenings", "Social rhythm", "Exposure hierarchy",
-  "Relapse prevention plan", "Phone patterns",
+// Redesign 2026-08-06 golden: 9 always-visible top-level rows (the SECTIONS whitelist + search box
+// + "Show more" expander are gone), with Calm/Skills children reached through their hub launcher.
+// Labels resolve from TOOL_META/i18n — this list pins the en values.
+const TILES: { label: string; via?: string }[] = [
+  { label: "I'm in an episode" },
+  { label: "My Safety Plan" },
+  { label: "Calm space" },
+  { label: "Reach out to someone" },
+  { label: "Quick check-in" },
+  { label: "Journal" },
+  { label: "Medications" },
+  { label: "Screenings" },
+  { label: "Skills & programs" },
+  { label: "Breathing & Grounding", via: "Calm space" },
+  { label: "Wind down for sleep", via: "Calm space" },
+  { label: "Ambient sounds", via: "Calm space" },
+  { label: "Problem-solving", via: "Skills & programs" },
+  { label: "Values work", via: "Skills & programs" },
+  { label: "Social rhythm", via: "Skills & programs" },
+  { label: "Exposure hierarchy", via: "Skills & programs" },
+  { label: "Relapse prevention plan", via: "Skills & programs" },
+  { label: "Chain Analysis", via: "Skills & programs" },
+  { label: "Guided Programs", via: "Skills & programs" },
 ];
 
 test("AUDIT: Tools tile → opened screen title", async ({ page }) => {
   test.setTimeout(300_000);
   console.log("\n=== TILE → TITLE (flag if tile label & screen heading share no word) ===");
-  for (const tile of TILES) {
+  for (const { label: tile, via } of TILES) {
     // Fresh boot per tile — bulletproof, no dependency on closing the previous sheet.
     await boot(page);
     let title = "(unreached)";
@@ -57,10 +75,11 @@ test("AUDIT: Tools tile → opened screen title", async ({ page }) => {
     try {
       await page.getByText("Tools", { exact: true }).first().click({ timeout: 8000 });
       await page.waitForTimeout(400);
-      // Type the label into the search box — this reveals EVERY group, incl. the "Skills & practice"
-      // set hidden behind the "Show more" expander (more:true). Without this, 6 tiles are unreachable.
-      await page.getByRole("textbox", { name: "Search tools" }).fill(tile);
-      await page.waitForTimeout(400);
+      if (via) {
+        // Hub child: open its launcher first (progressive disclosure), then tap the child row.
+        await page.getByText(via, { exact: true }).first().click({ timeout: 8000 });
+        await page.waitForTimeout(600);
+      }
       const el = page.getByText(tile, { exact: true }).first();
       await el.scrollIntoViewIfNeeded({ timeout: 8000 }).catch(() => {});
       await el.click({ timeout: 8000 });

@@ -523,7 +523,9 @@ function AppShell() {
             role="tab"
             onClick={() => { setTab(id); hapticLight(); }}
             className={`flex flex-col items-center gap-0.5 py-2 px-4 rounded-lg transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-accent min-w-[44px] min-h-[44px] ${
-              state.tab === id ? "text-accent" : "text-ink-faint hover:text-ink-2"
+              // accent-hi not accent: the 12px active label needs 4.5:1 on the light page (accent
+              // = blue-500 #8E72B4 is 3.77:1 on #FFF6EE; accent-hi = blue-400 #7A5DA0 is 5.04:1).
+              state.tab === id ? "text-accent-hi" : "text-ink-faint hover:text-ink-2"
             }`}
             aria-label={label}
             aria-selected={state.tab === id}

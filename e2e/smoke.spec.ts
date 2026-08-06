@@ -16,7 +16,10 @@ test("a11y: app shell has no serious/critical WCAG 2 A/AA violations", async ({ 
   const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
   const serious = results.violations.filter((v) => ["serious", "critical"].includes(v.impact ?? ""));
   console.log(`axe: ${results.violations.length} total, ${serious.length} serious/critical`);
-  for (const v of serious) console.log(`  [${v.impact}] ${v.id} — ${v.help} (${v.nodes.length} node(s))`);
+  for (const v of serious) {
+    console.log(`  [${v.impact}] ${v.id} — ${v.help} (${v.nodes.length} node(s))`);
+    for (const n of v.nodes.slice(0, 5)) console.log(`      @ ${n.target.join(" ")} :: ${n.failureSummary?.split("\n")[1] ?? ""}`);
+  }
   expect(serious.map((v) => v.id), serious.map((v) => v.id).join(", ")).toEqual([]);
 });
 
