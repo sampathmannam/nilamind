@@ -12,6 +12,7 @@ import { generateTinyId } from "../services/idGen";
 import { hapticMedium } from "../hooks/useHaptics";
 import CrisisCard from "./CrisisCard";
 import DiaryCardScreen from "./DiaryCardScreen";
+import ThoughtRecordScreen from "./ThoughtRecordScreen";
 
 const MODE_PLACEHOLDER: Record<JournalMode, string> = {
   free: "What's on your mind...",
@@ -26,7 +27,9 @@ const MOOD_OPTIONS: { valence: number; label: string; glyph: string }[] = [
   { valence: 3, label: "Very good", glyph: "😄" },
 ];
 
-export type JournalTab = "freeWrite" | "dbtCard";
+// Redesign §5.3: the Journal hub is the ONE structured-writing entry — free write, DBT diary card,
+// and the thought record live behind a single Tools row (the duplicate dbt_diary_card route is gone).
+export type JournalTab = "freeWrite" | "dbtCard" | "thoughtRecord";
 
 function formatDateHeader(date: string): string {
   const today = localDateKey();
@@ -155,6 +158,18 @@ export default function JournalScreen({ defaultTab = "freeWrite" }: JournalScree
             }`}
           >
             DBT Card
+          </button>
+          <button
+            role="tab"
+            aria-selected={activeTab === "thoughtRecord"}
+            onClick={() => setActiveTab("thoughtRecord")}
+            className={`flex-1 min-h-[44px] inline-flex items-center justify-center rounded-xl text-sm font-medium cursor-pointer transition-all ${
+              activeTab === "thoughtRecord"
+                ? "bg-accent/40 text-accent-hi"
+                : "text-ink-faint hover:text-ink-2"
+            }`}
+          >
+            Thought record
           </button>
         </div>
       </div>
@@ -287,8 +302,10 @@ export default function JournalScreen({ defaultTab = "freeWrite" }: JournalScree
             </div>
           ))}
         </>
-      ) : (
+      ) : activeTab === "dbtCard" ? (
         <DiaryCardScreen />
+      ) : (
+        <ThoughtRecordScreen />
       )}
     </div>
   );

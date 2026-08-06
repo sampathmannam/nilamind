@@ -116,7 +116,6 @@ const AUX_LABELS: Partial<Record<AuxView, string>> = {
   exposure: "Exposure hierarchy",
   relapse_plan: "Relapse prevention",
   diary: "Journal",
-  dbt_diary_card: "DBT diary card",
   episode: "Episode support",
   ema_checkin: "Quick check-in",
   episode_marker: "Episode markers",
@@ -155,7 +154,6 @@ function renderAuxView(view: AuxView, onActivateCrisis: () => void, onClose: () 
     case "relapse_plan": return <RelapsePlanScreen />;
     case "progress": return <ProgressDashboard onClose={onClose} />;
     case "diary": return <JournalScreen />;
-    case "dbt_diary_card": return <JournalScreen defaultTab="dbtCard" />;
     case "episode": return <EpisodeSupportScreen onSessionEnded={onClose} onNavigateToGrounding={() => { onClose(); onOpenGrounding(); }} onNavigateToBreathing={() => { onClose(); onOpenGrounding(); }} />;
     case "ema_checkin": return <EmaCheckInScreen onLogged={onClose} onCrisis={() => { onClose(); onActivateCrisis(); }} />;
     case "episode_marker": return <EpisodeMarkerScreen onClose={onClose} />;

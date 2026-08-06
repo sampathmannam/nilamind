@@ -28,7 +28,6 @@ export type AuxView =
   | "caregiver"
   | "episode"
   | "diary"
-  | "dbt_diary_card"
   | "social_rhythm"
   | "ema_checkin"
   | "episode_marker"
@@ -52,7 +51,6 @@ export const KNOWN_AUX_VIEWS: readonly AuxView[] = [
    "dashboard", "your_data", "nila_memory", "winddown",
    "learn", "medication", "problem_solving", "exposure", "relapse_plan", "caregiver", "episode",
    "diary",
-   "dbt_diary_card",
      "social_rhythm",
       "ema_checkin",
       "episode_marker",

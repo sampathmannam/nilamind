@@ -110,6 +110,14 @@ describe("JournalScreen", () => {
     expect(screen.queryByText(/to be deleted/)).toBeNull();
   });
 
+  it("Thought record is the third Journal tab (redesign §5.3 — one structured-writing hub)", () => {
+    render(<JournalScreen />);
+    const tab = screen.getByRole("tab", { name: "Thought record" });
+    fireEvent.click(tab);
+    expect(document.getElementById("thought-record-screen")).toBeTruthy();
+    expect(document.getElementById("journal-crisis")).toBeNull();
+  });
+
   it("renders the reminder toggle, off by default", () => {
     render(<JournalScreen />);
     expect(screen.getByLabelText("Toggle journal reminder").getAttribute("aria-checked")).toBe("false");
