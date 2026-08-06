@@ -87,6 +87,9 @@ export type I18nKey =
   | "crisisSafe"
   | "crisisSafeBlank"
   | "crisisSteadier"
+  | "crisisNoPlanYet"
+  | "crisisBuildPlanLater"
+  | "crisisCheckinOffer"
   // Settings
   | "settingsIntro"
   | "shareTrustedTitle"
@@ -766,8 +769,8 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     enable: "Enable",
     on: "On",
     off: "Off",
-    crisisHeading: "You reached for this. Let's find something that helps.",
-    crisisSub: "That is a strong thing to do. Ground yourself first, or reach a trained listener.",
+    crisisHeading: "You're not alone right now. Let's find something that helps.",
+    crisisSub: "Reaching out is a strong thing to do, whatever brought you here. Ground yourself first, or reach a trained listener.",
     crisisTryFirst: "Try these first",
     crisisGroundingLabel: "5-4-3-2-1 Grounding",
     crisisGroundingSub: "Notice what's around you to settle into the present moment",
@@ -794,6 +797,9 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     crisisSafe: "6. Making my space safer:",
     crisisSafeBlank: "Nothing here yet — that's okay.",
     crisisSteadier: "I feel steadier now",
+    crisisNoPlanYet: "You haven't built a coping plan yet — and this moment isn't the time to start one. Once this passes, I can help you put one together in a couple of minutes.",
+    crisisBuildPlanLater: "Build it when I'm ready",
+    crisisCheckinOffer: "Want a gentle check-in from me in a few hours?",
     settingsIntro: "Application preferences — including a calm \"Soften visuals\" mode if bright or busy screens ever feel like too much.",
     shareTrustedTitle: "Share with a trusted person",
     shareTrustedSub: "Build a wellness snapshot for family support",
@@ -1458,8 +1464,8 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     enable: "सक्षम करें",
     on: "चालू",
     off: "बंद",
-    crisisHeading: "आपने इसे चुना। आइए कुछ ऐसा खोजें जो मदद करे।",
-    crisisSub: "यह करना एक साहसिक कदम है। पहले खुद को स्थिर करें, या किसी प्रशिक्षित श्रोता से बात करें।",
+    crisisHeading: "अभी आप अकेले नहीं हैं। आइए कुछ ऐसा खोजें जो मदद करे।",
+    crisisSub: "मदद मांगना एक साहसिक कदम है, चाहे आप यहां किसी भी वजह से आए हों। पहले खुद को स्थिर करें, या किसी प्रशिक्षित श्रोता से बात करें।",
     crisisTryFirst: "पहले ये आज़माएं",
     crisisGroundingLabel: "5-4-3-2-1 ग्राउंडिंग",
     crisisGroundingSub: "वर्तमान क्षण में आने के लिए अपने आस-पास का ध्यान रखें",
@@ -1486,6 +1492,9 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     crisisSafe: "6. अपना स्थान सुरक्षित बनाना:",
     crisisSafeBlank: "यहाँ अभी कुछ नहीं — वह ठीक है।",
     crisisSteadier: "अब मैं थोड़ा स्थिर महसूस कर रहा/रही हूँ",
+    crisisNoPlanYet: "आपने अभी तक कोई सामना करने की योजना नहीं बनाई है — और यह पल उसे शुरू करने का समय नहीं है। जब यह गुज़र जाए, तो मैं कुछ मिनटों में आपके साथ एक योजना बनाने में मदद कर सकती हूं।",
+    crisisBuildPlanLater: "जब मैं तैयार होऊं, तब बनाऊंगा",
+    crisisCheckinOffer: "क्या आप चाहेंगे कि मैं कुछ घंटों में आपसे धीरे से चेक-इन करूं?",
     settingsIntro: "ऐप प्राथमिकताएँ — जिसमें एक शांत \"दृश्य धीमे करें\" मोड भी शामिल है यदि चमकीली या व्यस्त स्क्रीन कभी बहुत अधिक लगे।",
     shareTrustedTitle: "किसी भरोसेमंद व्यक्ति के साथ साझा करें",
     shareTrustedSub: "परिवार के समर्थन के लिए एक वेलनेस स्नैपशॉट बनाएं",
@@ -2135,8 +2144,8 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     enable: "இயக்கு",
     on: "ஆன்",
     off: "ஆஃப்",
-    crisisHeading: "நீங்கள் இதைத் தேடினீர்கள். உதவிக்கான ஏதாவது கண்டுபிடிப்போம்.",
-    crisisSub: "அது செய்வது வலிமையான ஒன்று. முதலில் உங்களை நிலைநிறுத்துங்கள், அல்லது பயிற்சி பெற்ற கேட்பவருடன் பேசுங்கள்.",
+    crisisHeading: "இப்போது நீங்கள் தனியாக இல்லை. உதவிக்கான ஏதாவது கண்டுபிடிப்போம்.",
+    crisisSub: "நீங்கள் இங்கு எந்த காரணத்திற்காக வந்திருந்தாலும், உதவி நாடுவது ஒரு வலிமையான செயல். முதலில் உங்களை நிலைநிறுத்துங்கள், அல்லது பயிற்சி பெற்ற கேட்பவருடன் பேசுங்கள்.",
     crisisTryFirst: "முதலில் இவற்றை முயற்சிக்கவும்",
     crisisGroundingLabel: "5-4-3-2-1 கிரவுண்டிங்",
     crisisGroundingSub: "தற்போதைய தருணத்தில் இருக்க உங்களைச் சுற்றியுள்ளதைக் கவனியுங்கள்",
@@ -2163,6 +2172,9 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     crisisSafe: "6. என் இடத்தைப் பாதுகாப்பாக மாற்றுதல்:",
     crisisSafeBlank: "இங்கே இன்னும் எதுவும் இல்லை — அது பரவாயில்லை.",
     crisisSteadier: "இப்போது நான் சற்று நிலையானவள்/னன் உணர்கிறேன்",
+    crisisNoPlanYet: "நீங்கள் இன்னும் ஒரு சமாளிக்கும் திட்டத்தை உருவாக்கவில்லை — இந்த தருணம் அதைத் தொடங்க சரியான நேரம் அல்ல. இது கடந்த பிறகு, சில நிமிடங்களில் ஒன்றை உருவாக்க நான் உதவ முடியும்.",
+    crisisBuildPlanLater: "நான் தயாராக இருக்கும்போது அதை உருவாக்குவேன்",
+    crisisCheckinOffer: "சில மணிநேரங்களில் நான் மென்மையாக உங்களிடம் செக்-இன் செய்ய வேண்டுமா?",
     settingsIntro: "பயன்பாட்டு விருப்பங்கள் — பிரகாசமான அல்லது பரபரப்பான திரைகள் அதிகமாக இருந்தால் அமைதியான \"பார்வையை மென்மையாக்கு\" முறை உட்பட.",
     shareTrustedTitle: "நம்பகமான நபருடன் பகிர்",
     shareTrustedSub: "குடும்ப ஆதரவுக்கான நலன் நிலை சித்திரம் உருவாக்கு",
@@ -2812,8 +2824,8 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     enable: "ప్రారంభించు",
     on: "ఆన్",
     off: "ఆఫ్",
-    crisisHeading: "మీరు దీనికోసం వెతికారు. సహాయపడేది ఏదైనా కనుగొందాం.",
-    crisisSub: "అది చేయడం ధైర్యమైన పని. మొదట మిమ్మల్ని స్థిరపరచుకోండి, లేదా శిక్షణ పొందిన వినేవారితో మాట్లాడండి.",
+    crisisHeading: "ఇప్పుడు మీరు ఒంటరి కాదు. సహాయపడేది ఏదైనా కనుగొందాం.",
+    crisisSub: "మీరు ఇక్కడకు ఏ కారణంతో వచ్చినా, సహాయం కోరడం ధైర్యమైన పని. మొదట మిమ్మల్ని స్థిరపరచుకోండి, లేదా శిక్షణ పొందిన వినేవారితో మాట్లాడండి.",
     crisisTryFirst: "మొదట వీటిని ప్రయత్నించండి",
     crisisGroundingLabel: "5-4-3-2-1 గ్రౌండింగ్",
     crisisGroundingSub: "ప్రస్తుత క్షణంలో ఉండడానికి మీ చుట్టూ ఉన్నదానిపై దృష్టి పెట్టండి",
@@ -2840,6 +2852,9 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     crisisSafe: "6. నా ప్రదేశాన్ని సురక్షితంగా మార్చడం:",
     crisisSafeBlank: "ఇక్కడ ఇంకా ఏమీ లేవు — అది సరే.",
     crisisSteadier: "ఇప్పుడు నేను కొంచెం స్థిరంగా ఉన్నాను",
+    crisisNoPlanYet: "మీరు ఇంకా కోపింగ్ ప్లాన్ తయారు చేయలేదు — మరియు ఈ క్షణం దాన్ని ప్రారంభించడానికి సమయం కాదు. ఇది గడిచిన తర్వాత, కొన్ని నిమిషాల్లో దాన్ని కలిసి తయారు చేయడంలో నేను సహాయపడగలను.",
+    crisisBuildPlanLater: "నేను సిద్ధంగా ఉన్నప్పుడు దాన్ని తయారు చేస్తాను",
+    crisisCheckinOffer: "కొన్ని గంటల్లో నేను మృదువుగా చెక్-ఇన్ చేయాలని మీరు కోరుకుంటున్నారా?",
     settingsIntro: "యాప్ ప్రాధాన్యతలు — ప్రకాశవంతమైన లేదా రద్దీ స్క్రీన్‌లు ఎక్కువగా అనిపిస్తే ప్రశాంతమైన \"దృశ్యాలను మృదువుగా చేయి\" మోడ్ కూడా ఉంది.",
     shareTrustedTitle: "నమ్మకమైన వ్యక్తితో షేర్ చేయి",
     shareTrustedSub: "కుటుంబ మద్దతు కోసం వెల్‌నెస్ స్నాప్‌షాట్ రూపొందించు",

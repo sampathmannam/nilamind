@@ -8,6 +8,7 @@ import CrisisLines from "./CrisisLines";
 import { offerPostCrisisCheckIn } from "../services/postCrisisCheckIn";
 import RideTheWaveCard from "./RideTheWaveCard";
 import { useFocusTrap } from "../hooks/useFocusTrap";
+import { t } from "../services/i18n";
 
 interface CrisisOverlayProps {
   isOpen: boolean;
@@ -82,10 +83,10 @@ export default function CrisisOverlay({
           <ShieldAlert className="text-danger w-12 h-12 stroke-[2.5]" />
         </div>
         <h1 id="crisis-overlay-heading" ref={headingRef} tabIndex={-1} className="text-xl font-semibold tracking-tight text-ink mb-1 outline-none">
-          You're not alone right now. Let's find something that helps.
+          {t("crisisHeading")}
         </h1>
         <p className="text-ink-muted text-sm max-w-md mx-auto leading-relaxed">
-          Reaching out is a strong thing to do, whatever brought you here. Ground yourself first, or reach a trained listener.
+          {t("crisisSub")}
         </p>
       </div>
 
@@ -93,7 +94,7 @@ export default function CrisisOverlay({
         {/* Quick solutions — grounding and breathing first */}
         <div className="space-y-3">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-ink-faint">
-            Try these first
+            {t("crisisTryFirst")}
           </h2>
 
           <button
@@ -106,8 +107,8 @@ export default function CrisisOverlay({
           >
             <Heart className="w-6 h-6" />
             <div>
-              <div className="font-semibold text-ink">5-4-3-2-1 Grounding</div>
-              <div className="text-xs text-ink-muted">Notice what's around you to settle into the present moment</div>
+              <div className="font-semibold text-ink">{t("crisisGroundingLabel")}</div>
+              <div className="text-xs text-ink-muted">{t("crisisGroundingSub")}</div>
             </div>
           </button>
 
@@ -121,8 +122,8 @@ export default function CrisisOverlay({
           >
             <Wind className="w-6 h-6" />
             <div>
-              <div className="font-semibold text-ink">Box Breathing (4-4-4-4)</div>
-              <div className="text-xs text-ink-muted">Paced breathing to calm your nervous system</div>
+              <div className="font-semibold text-ink">{t("crisisBreathingLabel")}</div>
+              <div className="text-xs text-ink-muted">{t("crisisBreathingSub")}</div>
             </div>
           </button>
         </div>
@@ -133,24 +134,24 @@ export default function CrisisOverlay({
         {/* Crisis lines — secondary, always available */}
         <div className="space-y-3">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-ink-faint">
-            Or speak with someone now
+            {t("crisisSpeakNow")}
           </h2>
 
           <CrisisLines tone="rose" />
-          <p className="text-xs text-ink-faint text-center">Free, confidential helplines for your region — change in Settings.</p>
+          <p className="text-xs text-ink-faint text-center">{t("crisisHelplineNote")}</p>
         </div>
 
         {/* Your coping plan — decluttered: only sections with real content render */}
         {anyContent ? (
           <div className="space-y-4 pt-2">
             <h2 className="text-xs font-semibold uppercase tracking-wider text-ink-faint">
-              Your coping plan
+              {t("crisisCopingPlan")}
             </h2>
 
             {hasContent(safetyPlan.warningSigns) && (
               <div className="bg-card border border-line p-4 rounded-xl">
                 <h3 className="text-ink font-semibold text-sm mb-1">
-                  1. Warning signs I notice:
+                  {t("crisisWarnSigns")}
                 </h3>
                 <p className="text-ink-2 text-sm whitespace-pre-wrap">{safetyPlan.warningSigns}</p>
               </div>
@@ -159,7 +160,7 @@ export default function CrisisOverlay({
             {hasContent(safetyPlan.internalCoping) && (
               <div className="bg-card border border-line p-4 rounded-xl">
                 <h3 className="text-ink font-semibold text-sm mb-1">
-                  2. Things I can do on my own to cope:
+                  {t("crisisInternalCoping")}
                 </h3>
                 <p className="text-ink-2 text-sm whitespace-pre-wrap">{safetyPlan.internalCoping}</p>
               </div>
@@ -168,7 +169,7 @@ export default function CrisisOverlay({
             {hasContent(safetyPlan.socialDistractors) && (
               <div className="bg-card border border-line p-4 rounded-xl">
                 <h3 className="text-ink font-semibold text-sm mb-1">
-                  3. People and places that distract me:
+                  {t("crisisSocial")}
                 </h3>
                 <p className="text-ink-2 text-sm whitespace-pre-wrap">{safetyPlan.socialDistractors}</p>
               </div>
@@ -177,7 +178,7 @@ export default function CrisisOverlay({
             {hasContent(safetyPlan.trustedPeople) && (
               <div className="bg-card border border-line p-4 rounded-xl">
                 <h3 className="text-ink font-semibold text-sm mb-1">
-                  4. People I can reach out to for help:
+                  {t("crisisTrusted")}
                 </h3>
                 <p className="text-ink-2 text-sm whitespace-pre-wrap">{safetyPlan.trustedPeople}</p>
               </div>
@@ -186,7 +187,7 @@ export default function CrisisOverlay({
             {hasContent(safetyPlan.professionals) && (
               <div className="bg-card border border-line p-4 rounded-xl">
                 <h3 className="text-ink font-semibold text-sm mb-1">
-                  5. Professionals and crisis lines:
+                  {t("crisisProf")}
                 </h3>
                 <p className="text-ink-2 text-sm whitespace-pre-wrap">{safetyPlan.professionals}</p>
               </div>
@@ -195,7 +196,7 @@ export default function CrisisOverlay({
             {hasContent(safetyPlan.safeEnvironment) && (
               <div className="bg-card border border-line p-4 rounded-xl">
                 <h3 className="text-ink font-semibold text-sm mb-1">
-                  6. Making my space safer:
+                  {t("crisisSafe")}
                 </h3>
                 <p className="text-ink-2 text-sm whitespace-pre-wrap">{safetyPlan.safeEnvironment}</p>
               </div>
@@ -204,8 +205,7 @@ export default function CrisisOverlay({
         ) : (
           <div className="bg-card border border-line p-4 rounded-xl text-center space-y-3">
             <p className="text-sm text-ink-2 leading-relaxed">
-              You haven't built a coping plan yet — and this moment isn't the time to start one. Once this
-              passes, I can help you put one together in a couple of minutes.
+              {t("crisisNoPlanYet")}
             </p>
             {onBuildPlanLater && (
               <button
@@ -213,7 +213,7 @@ export default function CrisisOverlay({
                 className="text-xs font-semibold text-rose-300 hover:text-rose-200 underline underline-offset-2 cursor-pointer"
                 id="crisis-build-plan-later-btn"
               >
-                Build it when I'm ready
+                {t("crisisBuildPlanLater")}
               </button>
             )}
           </div>
@@ -235,7 +235,7 @@ export default function CrisisOverlay({
               onChange={(e) => setWantsCheckIn(e.target.checked)}
               className="accent-blue-500 cursor-pointer"
             />
-            Want a gentle check-in from me in a few hours?
+            {t("crisisCheckinOffer")}
           </label>
           <button
             onClick={() => {
@@ -246,7 +246,7 @@ export default function CrisisOverlay({
             id="close-crisis-overlay-btn"
           >
             <ArrowLeft className="w-5 h-5 text-ink-faint" />
-            I feel steadier now
+            {t("crisisSteadier")}
           </button>
         </div>
       </div>
