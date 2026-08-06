@@ -32,7 +32,14 @@ function safeSet(entries: RecentToolEntry[]): void {
   }
 }
 
+// Hubs are doorways, not destinations. Recording a hub open made "Recently"/"Pinned" list the hub
+// AND the child opened through it as sibling rows with the same icon (15-day longitudinal run,
+// 2026-08-24: "Calm space" + "Breathing & Grounding", both wind icons, both "2d ago") — which reads
+// as a duplicate. Only real destinations are worth a shortcut.
+const HUB_IDS = new Set(["calm_hub", "skills_hub"]);
+
 export function recordToolUse(target: string): void {
+  if (HUB_IDS.has(target)) return;
   const entries = safeGet().filter((e) => e.target !== target);
   entries.unshift({ target, timestamp: Date.now() });
   safeSet(entries.slice(0, MAX_ENTRIES));

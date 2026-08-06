@@ -76,7 +76,7 @@ describe("ToolsScreen", () => {
     expect(props.go).toHaveBeenCalledWith("medication");
   });
 
-  it("renders exactly 9 catalog rows when nothing is pinned", async () => {
+  it("renders exactly 9 catalog rows", async () => {
     render(<ToolsScreen {...props} />);
     await waitFor(() => {
       expect(screen.getByText(TOOL_META.calm_hub.label())).toBeTruthy();
@@ -86,18 +86,23 @@ describe("ToolsScreen", () => {
     expect(rowCount).toBe(9);
   });
 
-  it("Pinned rows use the tool's real icon metadata (not a generic pin)", async () => {
-    // Two distinct recorded tools → pinned section appears (PINNED_MIN_USES = 2 distinct entries).
+  // 15-day longitudinal run (2026-08-24): "Pinned" re-rendered rows that were already visible in the
+  // catalog below it, so at day 7 "Calm space" appeared twice on one screen — same icon, same label,
+  // same subtitle. The catalog is 9 rows; a shortcut to a row you can already see is just a duplicate.
+  it("never shows a tool twice on the same screen, however much it has been used", async () => {
     store.set("nilamind_recent_tools", JSON.stringify([
       { target: "calm_hub", timestamp: Date.now() },
       { target: "diary", timestamp: Date.now() - 1000 },
+      { target: "diary", timestamp: Date.now() - 2000 },
     ]));
     render(<ToolsScreen {...props} />);
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Pinned" })).toBeTruthy();
+      expect(screen.getByText(TOOL_META.calm_hub.label())).toBeTruthy();
     });
-    const pinnedSection = screen.getByRole("heading", { name: "Pinned" }).closest("section")!;
-    expect(pinnedSection.querySelectorAll("button").length).toBe(2);
+    expect(screen.queryByRole("heading", { name: "Pinned" })).toBeNull();
+    for (const id of ["calm_hub", "diary", "skills_hub"]) {
+      expect(screen.getAllByText(TOOL_META[id].label()).length, `${id} rendered more than once`).toBe(1);
+    }
   });
 
   it("does not render a search bar", async () => {

@@ -61,3 +61,16 @@ describe("recentTools", () => {
     expect(secureLocal.getItem(KEY)).toBeTruthy();
   });
 });
+
+// 15-day longitudinal run (2026-08-24): opening a child through the Calm hub recorded BOTH the hub
+// and the child, so Home's "Recently" listed "Calm space" and "Breathing & Grounding" as sibling
+// rows with the same wind icon and the same "2d ago" — a doorway masquerading as a destination.
+describe("recentTools — hubs are not destinations", () => {
+  it("ignores hub ids so a hub never appears beside the child opened through it", () => {
+    recordToolUse("calm_hub");
+    recordToolUse("skills_hub");
+    expect(getRecentTools()).toHaveLength(0);
+    recordToolUse("winddown");
+    expect(getRecentTools().map((e) => e.target)).toEqual(["winddown"]);
+  });
+});

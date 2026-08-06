@@ -518,10 +518,13 @@ export default function DashboardScreen({ onOpenView }: { onOpenView?: (target: 
 
   return (
     <div className="space-y-5 max-w-md mx-auto" id="dashboard-screen">
-      <header className="space-y-1">
-        <h1 className="text-2xl font-semibold text-ink flex items-center gap-2">
-          <Activity className="w-5 h-5 text-accent" /> {t("dashboard")}
-          <div className="relative ml-auto">
+      {/* The sheet header already names this screen ("Patterns"); the 15-day run (2026-08-24) caught
+          it naming itself a second time ("Your Dashboard") one line below, in different words. One
+          name, once — the export control keeps its place on the same row. */}
+      <header className="flex items-start gap-2">
+        <p className="text-base text-ink-muted leading-relaxed flex-1">{t("dash_privacy")}</p>
+        <div className="shrink-0">
+          <div className="relative">
             <button
               onClick={() => setShowExportMenu((v) => !v)}
               disabled={exportBusy || checkins.length === 0}
@@ -551,8 +554,7 @@ export default function DashboardScreen({ onOpenView }: { onOpenView?: (target: 
               </div>
             )}
           </div>
-        </h1>
-        <p className="text-base text-ink-muted leading-relaxed">{t("dash_privacy")}</p>
+        </div>
       </header>
 
       {/* Level 1: Hero metric + stat pills — answers "How am I doing?" in 2 seconds */}
@@ -567,34 +569,63 @@ export default function DashboardScreen({ onOpenView }: { onOpenView?: (target: 
         ariaLabel={`${t("mood_avg_7d")}: ${thisAvg != null ? r1(thisAvg) : "no data"}`}
       />
 
-      <StatPillRow>
-        <StatPill
-          icon="😴"
-          value={(() => { const recent = mood.filter((m) => typeof m.sleepHours === "number" && m.sleepHours > 0).slice(-7); return recent.length > 0 ? `${r1(recent.reduce((s, m) => s + (m.sleepHours as number), 0) / recent.length)}h` : "—"; })()}
-          label={t("avg_sleep")}
-        />
-        <StatPill
-          icon="🧘"
-          value={freq14 > 0 ? `${freq14}/14` : "—"}
-          label={t("days_active")}
-        />
-        <StatPill
-          icon="🔥"
-          value={streak.current > 0 ? `${streak.current}d` : "—"}
-          label={t("streak")}
-        />
-      </StatPillRow>
+      {/* Only pills that actually have a number. The 15-day run surfaced "Avg sleep —" holding a
+          full tile after two weeks of use purely to report that nothing was ever logged; an empty
+          tile costs the same scan as a real one and pays nothing back. */}
+      {(() => {
+        const sleepRecent = mood.filter((m) => typeof m.sleepHours === "number" && m.sleepHours > 0).slice(-7);
+        const pills = [
+          sleepRecent.length > 0
+            ? { icon: "😴", value: `${r1(sleepRecent.reduce((s, m) => s + (m.sleepHours as number), 0) / sleepRecent.length)}h`, label: t("avg_sleep") }
+            : null,
+          freq14 > 0 ? { icon: "🧘", value: `${freq14}/14`, label: t("days_active") } : null,
+          streak.current > 0 ? { icon: "🔥", value: `${streak.current}d`, label: t("streak") } : null,
+        ].filter((p): p is { icon: string; value: string; label: string } => p !== null);
+        if (pills.length === 0) return null;
+        return (
+          <StatPillRow>
+            {pills.map((p) => <StatPill key={p.label} icon={p.icon} value={p.value} label={p.label} />)}
+          </StatPillRow>
+        );
+      })()}
 
       {/* State-aware "what now" hero — ONE contextual action (Smashing Mag: Nonori/Teeni
           single-action pattern). Picks a CTA from the user's current derived state so a
           distressed user is never faced with a wall of choices. */}
       <HeroCard onOpenView={onOpenView} />
 
-{/* This-week summary */}
-       <div className="bg-accent/5 border border-accent/20 rounded-2xl p-4">
-          <div className="text-xs uppercase font-mono tracking-widest text-accent mb-1">{t("this_week")}</div>
-         <p className="text-sm text-ink-2 leading-relaxed">{moodSummary}</p>
-       </div>
+      {/* The "This week" block used to sit here restating the hero in prose — the hero already reads
+          "4.1 · mood average (7 days) · ↓3% from last week", and the block said "this week your
+          distress averaged 4.1/10 — about the same as last week" (15-day run, 2026-08-24). Same
+          window, same number, twice. The monthly narrative below survives: it adds range and
+          frequency the hero doesn't carry.
+
+          "Patterns from your data" moved UP to here. It was the one genuinely earned observation on
+          the screen ("Tuesdays have tended to show up with more distress") and it sat ~4 screens
+          down, below every restated average and empty card — the thing worth reading was the thing
+          you had to dig for. */}
+      {observations.length > 0 && (
+        <Card variant="glass" padding="lg" gap="md">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-ink-muted font-mono flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-success" /> Patterns from your data
+          </h2>
+          <ul className="space-y-3">
+            {observations.slice(0, showAllObservations ? observations.length : 3).map((ins, i) => (
+              <li key={i} className="text-base text-ink-2 leading-relaxed flex items-start gap-2 bg-page p-3 rounded-xl border border-line">
+                <span className="text-success font-bold">●</span><span>{ins}</span>
+              </li>
+            ))}
+          </ul>
+          {observations.length > 3 && (
+            <button
+              onClick={() => setShowAllObservations((v) => !v)}
+              className="text-xs font-semibold text-accent hover:text-accent-hi cursor-pointer transition-colors"
+            >
+              {showAllObservations ? `Show less` : `See all ${observations.length} patterns`}
+            </button>
+          )}
+        </Card>
+      )}
 
         {/* Monthly narrative */}
         {monthlyNarrative && (() => {
@@ -761,29 +792,7 @@ export default function DashboardScreen({ onOpenView }: { onOpenView?: (target: 
         )}
       </div>
 
-      {/* Derived observations */}
-      {observations.length > 0 && (
-        <Card variant="glass" padding="lg" gap="md">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-ink-muted font-mono flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-success" /> Patterns from your data
-          </h2>
-          <ul className="space-y-3">
-            {observations.slice(0, showAllObservations ? observations.length : 3).map((ins, i) => (
-              <li key={i} className="text-base text-ink-2 leading-relaxed flex items-start gap-2 bg-page p-3 rounded-xl border border-line">
-                <span className="text-success font-bold">●</span><span>{ins}</span>
-              </li>
-            ))}
-          </ul>
-          {observations.length > 3 && (
-            <button
-              onClick={() => setShowAllObservations((v) => !v)}
-              className="text-xs font-semibold text-accent hover:text-accent-hi cursor-pointer transition-colors"
-            >
-              {showAllObservations ? `Show less` : `See all ${observations.length} patterns`}
-            </button>
-          )}
-        </Card>
-      )}
+      {/* (Derived observations moved above the charts — see the note by the hero.) */}
 
       {/* Daily-behaviour insights (sleep, screen time, steps, etc.) */}
       {behaviourLoading && behaviourInsights.length === 0 && (
