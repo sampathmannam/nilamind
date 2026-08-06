@@ -163,6 +163,23 @@ export type I18nKey =
   | "streak_milestone_reached"
   | "you_nila_memory_label"
   | "you_nila_memory_sub"
+  | "mem_intro"
+  | "mem_addSelf"
+  | "mem_addPlaceholder"
+  | "mem_edit"
+  | "mem_delete"
+  | "mem_thingsToldNila"
+  | "mem_workingOnNow"
+  | "mem_emptyTitle"
+  | "mem_emptyBody"
+  | "kind_workingThrough"
+  | "kind_whatHelps"
+  | "kind_patterns"
+  | "kind_context"
+  | "kind_value"
+  | "mem_patternsNoticed"
+  | "mem_nothingNotable"
+  | "mem_computedNote"
   | "you_settings_label"
   | "you_settings_sub"
   | "you_caregiver_label"
@@ -897,6 +914,23 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     streak_milestone_reached: "Milestone reached — be gentle and proud of showing up.",
     you_nila_memory_label: "What Nila remembers",
     you_nila_memory_sub: "See, edit, or delete what she knows",
+    mem_intro: "The things Nila has come to understand about you over time — kept private on this device. Edit anything that's off, or delete what you'd rather she let go. If she notices something again later, just delete it again.",
+    mem_addSelf: "Add something yourself",
+    mem_addPlaceholder: "What should Nila remember?",
+    mem_edit: "Edit",
+    mem_delete: "Delete",
+    mem_thingsToldNila: "Things you've told Nila",
+    mem_workingOnNow: "What you're working on right now",
+    mem_emptyTitle: "Nothing yet",
+    mem_emptyBody: "As you check in and talk with Nila, she'll gently start to remember what matters to you.",
+    kind_workingThrough: "What you're working through",
+    kind_whatHelps: "What helps you",
+    kind_patterns: "Patterns I've noticed",
+    kind_context: "Your life right now",
+    kind_value: "What matters to you",
+    mem_patternsNoticed: "Patterns Nila's noticed lately",
+    mem_nothingNotable: "Nothing notable yet — Nila watches your own trends quietly.",
+    mem_computedNote: "Computed on your device and never sent anywhere. Nila only mentions these in chat if you turn it on in Settings.",
     you_settings_label: "Settings",
     you_settings_sub: "Voice, reminders, recovery phrase",
     you_caregiver_label: "Share with a trusted person",
@@ -1619,6 +1653,23 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     streak_milestone_reached: "मीलस्टोन पूरा — अपनी उपस्थिति पर गर्व करें।",
     you_nila_memory_label: "नीला क्या याद रखती है",
     you_nila_memory_sub: "देखें, संपादित करें, या हटाएं जो वह जानती है",
+    mem_intro: "समय के साथ निला ने आपके बारे में जो समझा है — यह इस डिवाइस पर निजी रखा जाता है। जो गलत लगे उसे संपादित करें, या जो आप नहीं चाहते उसे हटा दें। अगर वह दोबारा कुछ नोटिस करे, तो बस उसे फिर से हटा दें।",
+    mem_addSelf: "खुद कुछ जोड़ें",
+    mem_addPlaceholder: "निला को क्या याद रखना चाहिए?",
+    mem_edit: "संपादित करें",
+    mem_delete: "हटाएं",
+    mem_thingsToldNila: "जो आपने निला को बताया",
+    mem_workingOnNow: "आप अभी किस पर काम कर रहे हैं",
+    mem_emptyTitle: "अभी कुछ नहीं",
+    mem_emptyBody: "जैसे-जैसे आप चेक-इन करते हैं और निला से बात करते हैं, वह धीरे-धीरे याद रखने लगेगी कि आपके लिए क्या मायने रखता है।",
+    kind_workingThrough: "आप किस चीज़ से जूझ रहे हैं",
+    kind_whatHelps: "आपकी मदद क्या करता है",
+    kind_patterns: "मैंने जो पैटर्न देखे",
+    kind_context: "आपका वर्तमान जीवन",
+    kind_value: "आपके लिए क्या मायने रखता है",
+    mem_patternsNoticed: "निला ने हाल में जो पैटर्न देखे",
+    mem_nothingNotable: "अभी कुछ खास नहीं — निला चुपचाप आपके अपने रुझान देखती है।",
+    mem_computedNote: "आपके डिवाइस पर गणना की जाती है और कभी कहीं नहीं भेजी जाती। निला इनका ज़िक्र चैट में तभी करती है जब आप इसे सेटिंग्स में चालू करते हैं।",
     you_settings_label: "सेटिंग्स",
     you_settings_sub: "आवाज़, रिमाइंडर, रिकवरी वाक्यांश",
     you_caregiver_label: "किसी भरोसेमंद व्यक्ति के साथ साझा करें",
@@ -2326,6 +2377,23 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     streak_milestone_reached: "மைல்கல் அடையப்பட்டது — வருவதில் பெருமை கொள்ளுங்கள்.",
     you_nila_memory_label: "நீலா எதை நினைவில் வைத்திருக்கிறாள்",
     you_nila_memory_sub: "அவள் அறிந்ததைப் பாருங்கள், திருத்துங்கள் அல்லது அழிக்கவும்",
+    mem_intro: "காலப்போக்கில் நிலா உங்களைப் பற்றி புரிந்துகொண்ட விஷயங்கள் — இந்த சாதனத்தில் தனிப்பட்டதாக வைக்கப்பட்டுள்ளன. தவறாக இருப்பதை திருத்துங்கள், அல்லது அவள் மறந்துவிட வேண்டும் என நினைப்பதை அழிக்கவும். அவள் மீண்டும் எதையாவது கவனித்தால், மீண்டும் அதை அழித்துவிடுங்கள்.",
+    mem_addSelf: "நீங்களே ஏதாவது சேர்க்கவும்",
+    mem_addPlaceholder: "நிலா என்ன நினைவில் வைக்க வேண்டும்?",
+    mem_edit: "திருத்து",
+    mem_delete: "அழி",
+    mem_thingsToldNila: "நீங்கள் நிலாவிடம் சொன்னவை",
+    mem_workingOnNow: "நீங்கள் இப்போது எதில் வேலை செய்கிறீர்கள்",
+    mem_emptyTitle: "இன்னும் ஒன்றுமில்லை",
+    mem_emptyBody: "நீங்கள் செக்-இன் செய்து நிலாவுடன் பேசும்போது, உங்களுக்கு என்ன முக்கியம் என்பதை அவள் மெதுவாக நினைவில் வைக்கத் தொடங்குவாள்.",
+    kind_workingThrough: "நீங்கள் எதைச் சமாளித்துக் கொண்டிருக்கிறீர்கள்",
+    kind_whatHelps: "உங்களுக்கு எது உதவுகிறது",
+    kind_patterns: "நான் கவனித்த பேட்டர்ன்கள்",
+    kind_context: "உங்கள் தற்போதைய வாழ்க்கை",
+    kind_value: "உங்களுக்கு என்ன முக்கியம்",
+    mem_patternsNoticed: "நிலா சமீபத்தில் கவனித்த பேட்டர்ன்கள்",
+    mem_nothingNotable: "இன்னும் குறிப்பிடத்தக்கது ஒன்றுமில்லை — நிலா அமைதியாக உங்கள் சொந்த போக்குகளை கவனிக்கிறாள்.",
+    mem_computedNote: "உங்கள் சாதனத்தில் கணக்கிடப்பட்டு எங்கும் அனுப்பப்படுவதில்லை. நீங்கள் அமைப்புகளில் இயக்கினால் மட்டுமே நிலா இவற்றை உரையாடலில் குறிப்பிடுவாள்.",
     you_settings_label: "அமைப்புகள்",
     you_settings_sub: "குரல், நினைவூட்டல்கள், மீட்பு சொற்றொடர்",
     you_caregiver_label: "நம்பகமான நபருடன் பகிர்",
@@ -3033,6 +3101,23 @@ export const DICT: Record<SupportedLang, Partial<Record<I18nKey, string>>> = {
     streak_milestone_reached: "మైలురాయి చేరుకున్నారు — వచ్చినందుకు గర్వపడండి.",
     you_nila_memory_label: "నీలా ఏమి గుర్తుంచుకుంటుంది",
     you_nila_memory_sub: "ఆమె తెలిసినదాన్ని చూడండి, సవరించండి లేదా తొలగించండి",
+    mem_intro: "కాలక్రమేణా నిలా మీ గురించి అర్థం చేసుకున్న విషయాలు — ఇవి ఈ పరికరంలో ప్రైవేట్‌గా ఉంచబడతాయి. తప్పుగా ఉన్నదాన్ని సవరించండి, లేదా ఆమె వదిలేయాలని మీరు కోరుకునేదాన్ని తొలగించండి. ఆమె మళ్ళీ ఏదైనా గమనిస్తే, దాన్ని మళ్ళీ తొలగించండి.",
+    mem_addSelf: "మీరే ఏదైనా జోడించండి",
+    mem_addPlaceholder: "నిలా ఏమి గుర్తుంచుకోవాలి?",
+    mem_edit: "సవరించండి",
+    mem_delete: "తొలగించండి",
+    mem_thingsToldNila: "మీరు నిలాతో చెప్పినవి",
+    mem_workingOnNow: "మీరు ఇప్పుడు దేనిపై పని చేస్తున్నారు",
+    mem_emptyTitle: "ఇంకా ఏమీ లేదు",
+    mem_emptyBody: "మీరు చెక్-ఇన్ చేసి నిలాతో మాట్లాడుతున్న కొద్దీ, మీకు ఏది ముఖ్యమో ఆమె మెల్లగా గుర్తుంచుకోవడం మొదలుపెడుతుంది.",
+    kind_workingThrough: "మీరు దేనితో పోరాడుతున్నారు",
+    kind_whatHelps: "మీకు ఏది సహాయపడుతుంది",
+    kind_patterns: "నేను గమనించిన నమూనాలు",
+    kind_context: "మీ ప్రస్తుత జీవితం",
+    kind_value: "మీకు ఏది ముఖ్యం",
+    mem_patternsNoticed: "నిలా ఇటీవల గమనించిన నమూనాలు",
+    mem_nothingNotable: "ఇంకా గమనార్హమైనది ఏమీ లేదు — నిలా నిశ్శబ్దంగా మీ స్వంత ధోరణులను గమనిస్తుంది.",
+    mem_computedNote: "మీ పరికరంలో లెక్కించబడి ఎక్కడికీ పంపబడదు. మీరు సెట్టింగ్‌లలో ఆన్ చేస్తేనే నిలా వీటిని చాట్‌లో ప్రస్తావిస్తుంది.",
     you_settings_label: "సెట్టింగ్‌లు",
     you_settings_sub: "వాయిస్, రిమైండర్లు, రికవరీ వాక్యం",
     you_caregiver_label: "నమ్మకమైన వ్యక్తితో షేర్ చేయి",

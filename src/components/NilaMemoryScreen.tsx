@@ -10,13 +10,16 @@ import { loadFacts, removeFact, loadFoci, removeFocus, type ProfileFact, type Ac
 import { feedbackSummary, clearFeedback, pendingContributions, type FeedbackSummary, type ReplyFeedback } from "../services/nilaFeedback";
 import { donationCount, clearDonations, buildDonationPreview, confirmDonation, revokeDonation, isDonated, type DonationPreview } from "../services/nilaContributions";
 import EmptyStateShared, { EMPTY_STATES } from "./EmptyState";
+import { t, type I18nKey } from "../services/i18n";
 
-export const KIND_LABELS: Record<InsightKind, string> = {
-  working_through: "What you're working through",
-  what_helps: "What helps you",
-  pattern: "Patterns I've noticed",
-  context: "Your life right now",
-  value: "What matters to you",
+// 2026-08-06 i18n: labels now resolve live via t() (not a static object) so a language switch
+// mid-session updates them, matching every other localized string in the app.
+const KIND_I18N_KEYS: Record<InsightKind, I18nKey> = {
+  working_through: "kind_workingThrough",
+  what_helps: "kind_whatHelps",
+  pattern: "kind_patterns",
+  context: "kind_context",
+  value: "kind_value",
 };
 
 export interface KindGroup { kind: InsightKind; label: string; items: Insight[]; }
@@ -24,7 +27,7 @@ export interface KindGroup { kind: InsightKind; label: string; items: Insight[];
 /** PURE: bucket insights by kind in INSIGHT_KINDS order, omitting empty groups. */
 export function groupByKind(all: Insight[]): KindGroup[] {
   return INSIGHT_KINDS
-    .map((kind) => ({ kind, label: KIND_LABELS[kind], items: all.filter((i) => i.kind === kind) }))
+    .map((kind) => ({ kind, label: t(KIND_I18N_KEYS[kind]), items: all.filter((i) => i.kind === kind) }))
     .filter((g) => g.items.length > 0);
 }
 
@@ -101,15 +104,13 @@ export default function NilaMemoryScreen() {
       {/* 2026-08-05 declutter: in-body "What Nila remembers" h1 removed — the Sheet header
           (AUX_LABELS.nila_memory) already shows the same title directly above. Description stays. */}
       <p className="text-base text-ink-muted leading-relaxed">
-        The things Nila has come to understand about you over time — kept private on this device. Edit
-        anything that's off, or delete what you'd rather she let go. If she notices something again
-        later, just delete it again.
+        {t("mem_intro")}
       </p>
 
       {addingOpen ? (
         <section className="space-y-2 glass rounded-2xl p-3">
           <label className="block text-[11px] font-mono uppercase tracking-widest text-ink-faint" htmlFor="add-insight-kind">
-            Add something yourself
+            {t("mem_addSelf")}
           </label>
           <select
             id="add-insight-kind"
@@ -118,22 +119,22 @@ export default function NilaMemoryScreen() {
             className="w-full text-sm glass rounded-xl p-2 text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           >
             {INSIGHT_KINDS.map((k) => (
-              <option key={k} value={k}>{KIND_LABELS[k]}</option>
+              <option key={k} value={k}>{t(KIND_I18N_KEYS[k])}</option>
             ))}
           </select>
           <textarea
-            aria-label="What should Nila remember?"
-            placeholder="What should Nila remember?"
+            aria-label={t("mem_addPlaceholder")}
+            placeholder={t("mem_addPlaceholder")}
             value={addDraft}
             onChange={(e) => setAddDraft(e.target.value)}
             rows={2}
             className="w-full text-sm glass rounded-xl p-2 text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           />
           <div className="flex items-center gap-2 justify-end">
-            <button onClick={cancelAdd} aria-label="Cancel" className="p-1.5 text-ink-muted hover:text-ink-2 cursor-pointer">
+            <button onClick={cancelAdd} aria-label={t("cancel")} className="p-1.5 text-ink-muted hover:text-ink-2 cursor-pointer">
               <X className="w-4 h-4" />
             </button>
-            <button onClick={saveAdd} disabled={!addDraft.trim()} aria-label="Save" className="p-1.5 text-success hover:text-success-hi disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
+            <button onClick={saveAdd} disabled={!addDraft.trim()} aria-label={t("save")} className="p-1.5 text-success hover:text-success-hi disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
               <Check className="w-4 h-4" />
             </button>
           </div>
@@ -143,19 +144,19 @@ export default function NilaMemoryScreen() {
           onClick={openAdd}
           className="w-full flex items-center gap-2 glass hover:brightness-125 px-4 py-2.5 rounded-xl transition-all active:scale-[0.99] cursor-pointer text-sm font-medium text-ink-2"
         >
-          <Plus className="w-4 h-4 text-accent" aria-hidden="true" /> Add something yourself
+          <Plus className="w-4 h-4 text-accent" aria-hidden="true" /> {t("mem_addSelf")}
         </button>
       )}
 
       {/* User-owned profile tiers — what they told Nila to keep. Deletable here = the consent backstop. */}
       {facts.length > 0 && (
         <section className="space-y-2">
-          <h2 className="text-[11px] font-mono uppercase tracking-widest text-ink-faint px-1">Things you've told Nila</h2>
+          <h2 className="text-[11px] font-mono uppercase tracking-widest text-ink-faint px-1">{t("mem_thingsToldNila")}</h2>
           <div className="glass rounded-2xl divide-y divide-line/70">
             {facts.map((f) => (
               <div key={f.id} className="px-4 py-3 flex items-start gap-2">
                 <span className="flex-1 text-sm text-ink-2 leading-relaxed">{f.text}</span>
-                <button onClick={() => removeF(f.id)} aria-label="Delete" className="p-1 text-ink-faint hover:text-danger shrink-0 cursor-pointer">
+                <button onClick={() => removeF(f.id)} aria-label={t("mem_delete")} className="p-1 text-ink-faint hover:text-danger shrink-0 cursor-pointer">
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
@@ -166,7 +167,7 @@ export default function NilaMemoryScreen() {
 
       {foci.length > 0 && (
         <section className="space-y-2">
-          <h2 className="text-[11px] font-mono uppercase tracking-widest text-ink-faint px-1">What you're working on right now</h2>
+          <h2 className="text-[11px] font-mono uppercase tracking-widest text-ink-faint px-1">{t("mem_workingOnNow")}</h2>
           <div className="glass rounded-2xl divide-y divide-line/70">
             {foci.map((f) => (
               <div key={f.id} className="px-4 py-3 flex items-start gap-2">
@@ -174,7 +175,7 @@ export default function NilaMemoryScreen() {
                   <span className="block text-sm text-ink-2 leading-relaxed">{f.text}</span>
                   {f.when && <span className="block text-xs text-ink-faint mt-0.5">{f.when}</span>}
                 </span>
-                <button onClick={() => removeFo(f.id)} aria-label="Delete" className="p-1 text-ink-faint hover:text-danger shrink-0 cursor-pointer">
+                <button onClick={() => removeFo(f.id)} aria-label={t("mem_delete")} className="p-1 text-ink-faint hover:text-danger shrink-0 cursor-pointer">
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
@@ -186,8 +187,8 @@ export default function NilaMemoryScreen() {
       {groups.length === 0 && facts.length === 0 && foci.length === 0 ? (
         <EmptyStateShared
           nilaState={EMPTY_STATES.noInsights.nilaState}
-          title="Nothing yet"
-          body="As you check in and talk with Nila, she'll gently start to remember what matters to you."
+          title={t("mem_emptyTitle")}
+          body={t("mem_emptyBody")}
         />
       ) : (
         groups.map((g) => (
@@ -199,7 +200,7 @@ export default function NilaMemoryScreen() {
                   {editingId === i.id ? (
                     <div className="space-y-2">
                       <textarea
-                        aria-label="Edit what Nila remembers"
+                        aria-label={t("mem_edit")}
                         value={draft}
                         onChange={(e) => setDraft(e.target.value)}
                         rows={2}
@@ -211,10 +212,10 @@ export default function NilaMemoryScreen() {
                         className="w-full text-sm glass rounded-xl p-2 text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                       />
                       <div className="flex items-center gap-2 justify-end">
-                        <button onClick={cancelEdit} aria-label="Cancel" className="p-1.5 text-ink-muted hover:text-ink-2 cursor-pointer">
+                        <button onClick={cancelEdit} aria-label={t("cancel")} className="p-1.5 text-ink-muted hover:text-ink-2 cursor-pointer">
                           <X className="w-4 h-4" />
                         </button>
-                        <button onClick={() => saveEdit(i.id)} aria-label="Save" className="p-1.5 text-success hover:text-success-hi cursor-pointer">
+                        <button onClick={() => saveEdit(i.id)} aria-label={t("save")} className="p-1.5 text-success hover:text-success-hi cursor-pointer">
                           <Check className="w-4 h-4" />
                         </button>
                       </div>
@@ -222,10 +223,10 @@ export default function NilaMemoryScreen() {
                   ) : (
                     <div className="flex items-start gap-2">
                       <span className="flex-1 text-sm text-ink-2 leading-relaxed">{i.text}</span>
-                      <button onClick={() => startEdit(i)} aria-label="Edit" className="p-1 text-ink-faint hover:text-ink-2 shrink-0 cursor-pointer">
+                      <button onClick={() => startEdit(i)} aria-label={t("mem_edit")} className="p-1 text-ink-faint hover:text-ink-2 shrink-0 cursor-pointer">
                         <Pencil className="w-4 h-4" />
                       </button>
-                      <button onClick={() => remove(i.id)} aria-label="Delete" className="p-1 text-ink-faint hover:text-danger shrink-0 cursor-pointer">
+                      <button onClick={() => remove(i.id)} aria-label={t("mem_delete")} className="p-1 text-ink-faint hover:text-danger shrink-0 cursor-pointer">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
@@ -238,9 +239,9 @@ export default function NilaMemoryScreen() {
       )}
 
       <section className="space-y-2">
-        <h2 className="text-[11px] font-mono uppercase tracking-widest text-ink-faint px-1">Patterns Nila's noticed lately</h2>
+        <h2 className="text-[11px] font-mono uppercase tracking-widest text-ink-faint px-1">{t("mem_patternsNoticed")}</h2>
         {noticed.length === 0 ? (
-          <p className="text-base text-ink-faint px-1 leading-relaxed">Nothing notable yet — Nila watches your own trends quietly.</p>
+          <p className="text-base text-ink-faint px-1 leading-relaxed">{t("mem_nothingNotable")}</p>
         ) : (
           <div className="glass rounded-2xl divide-y divide-line/70">
             {noticed.map((n) => (
@@ -252,7 +253,7 @@ export default function NilaMemoryScreen() {
                   <span className="block text-sm text-ink-2 leading-relaxed">{n.detail}</span>
                   <span className="block text-xs text-ink-faint mt-0.5">{n.basis}</span>
                 </span>
-                <button onClick={() => dismissNoticed(n.id)} aria-label="Dismiss" className="p-1 text-ink-faint hover:text-danger shrink-0 cursor-pointer">
+                <button onClick={() => dismissNoticed(n.id)} aria-label={t("dismiss")} className="p-1 text-ink-faint hover:text-danger shrink-0 cursor-pointer">
                   <X className="w-4 h-4" />
                 </button>
               </div>
@@ -260,10 +261,16 @@ export default function NilaMemoryScreen() {
           </div>
         )}
         <p className="text-base text-ink-faint px-1 leading-relaxed">
-          Computed on your device and never sent anywhere. Nila only mentions these in chat if you turn it on in Settings.
+          {t("mem_computedNote")}
         </p>
       </section>
 
+      {/* i18n scope note (2026-08-06): this section is deliberately left English-only for now.
+          It only renders for users with feedback/donation history (a minority), and its strings
+          need proper tn()-based pluralization (count + reply/replies, count + example/examples)
+          rather than the plain t() used above -- scoped out to keep this pass's translations to
+          content every user actually sees, matching the same scoping call made for LegalScreen's
+          body text. Flagged as follow-up work, not an oversight. */}
       {(fb.total > 0 || donations > 0) && (
         <section className="space-y-2">
           <h2 className="text-[11px] font-mono uppercase tracking-widest text-ink-faint px-1">Helping improve Nila</h2>
