@@ -13,50 +13,45 @@ vi.mock("../services/storageUtils", () => ({
 
 import { setLanguage, DICT } from "../services/i18n";
 
-describe("You hub rows (redesign §2)", () => {
-  it("includes the Resources group rows", () => {
-    for (const id of ["thought_record", "learn", "insights"]) {
-      expect(YOU_ROW_IDS).toContain(id);
-    }
-  });
-  it("retired values_to_action from the You hub (BA now runs as an in-chat protocol, not a standalone screen — PLAN_OF_ACTION A6)", () => {
-    expect(YOU_ROW_IDS).not.toContain("values_to_action");
-    expect(YOU_ROW_IDS).not.toContain("behavioural_activation");
-    expect(YOU_ROW_IDS).not.toContain("values_compass");
-    expect(YOU_ROW_IDS).not.toContain("caregiver");
-  });
-  it("includes the What Nila remembers row", () => {
-    expect(YOU_ROW_IDS).toContain("nila_memory");
-  });
-  it("renders exactly the expected hub rows in order (catches accidental add/remove/reorder)", () => {
+// Redesign 2026-08-06 (§5.4, deliberate golden update): You is 6 curated rows in ONE group.
+// Removed: progress (duplicated the streak card), insights (duplicated the dashboard — merged into
+// "Patterns"), about_nila (now a Settings row), thought_record (lives in the Journal hub),
+// episode_marker (orphaned screen). No 'more' collapsing — everything visible.
+describe("You hub rows (redesign §5.4)", () => {
+  beforeEach(() => { store.clear(); setLanguage("en"); });
+
+  it("renders exactly the 6 curated rows in order", () => {
     const rendered = buildYouGroups().flatMap((g) => g.rows.map((r) => r.id));
     expect(rendered).toEqual([
-      "dashboard", "your_data", "progress", "settings", "caregiver_settings",
-      "about_nila", "insights", "nila_memory", "thought_record", "learn", "episode_marker",
+      "dashboard", "your_data", "nila_memory", "learn", "caregiver_settings", "settings",
     ]);
     expect(YOU_ROW_IDS).toEqual(rendered);
   });
-  it("exposes a Progress dashboard row (UX-8 gamification home)", () => {
-    expect(YOU_ROW_IDS).toContain("progress");
-    const row = buildYouGroups().flatMap((g) => g.rows).find((r) => r.id === "progress");
-    expect(row?.label).toBe("Your progress");
-  });
-  it("buildYouGroups exposes the Manage and Resources groups in order", () => {
-    expect(buildYouGroups().map((g) => g.title)).toEqual(["Manage", "External resources"]);
+
+  it("is a single group (no 'External resources' remainder)", () => {
+    const groups = buildYouGroups();
+    expect(groups.length).toBe(1);
+    expect(groups[0].title).toBe(DICT.en.you_group_manage);
   });
 
-  it("marks informational/niche rows as 'more' (hidden behind a toggle, not shown by default)", () => {
-    const all = buildYouGroups().flatMap((g) => g.rows);
-    const moreIds = all.filter((r) => r.more).map((r) => r.id);
-    expect(moreIds).toEqual(["nila_memory", "thought_record", "learn", "episode_marker"]);
+  it("keeps the merged/moved destinations out", () => {
+    for (const gone of [
+      "progress", "insights", "about_nila", "thought_record", "episode_marker",
+      "values_to_action", "behavioural_activation", "values_compass", "caregiver",
+    ]) {
+      expect(YOU_ROW_IDS, `retired row leaked back: ${gone}`).not.toContain(gone);
+    }
   });
 
-  it("does not mark Manage rows or core Resources (insights, wellbeing) as 'more'", () => {
-    const all = buildYouGroups().flatMap((g) => g.rows);
-    for (const id of ["dashboard", "your_data", "settings", "caregiver_settings", "insights"]) {
-      const row = all.find((r) => r.id === id)!;
-      expect(row).toBeDefined();
-      expect(row.more).toBeUndefined();
+  it("dashboard row is relabeled Patterns (absorbs Insights)", () => {
+    const row = buildYouGroups()[0].rows.find((r) => r.id === "dashboard")!;
+    expect(row.label).toBe(DICT.en.you_dashboard_label);
+    expect(DICT.en.you_dashboard_label).toBe("Patterns");
+  });
+
+  it("no row hides behind a 'more' toggle", () => {
+    for (const r of buildYouGroups().flatMap((g) => g.rows)) {
+      expect(r.more, `row "${r.id}" should not be collapsed`).toBeUndefined();
     }
   });
 });
@@ -64,12 +59,12 @@ describe("You hub rows (redesign §2)", () => {
 describe("You hub localization", () => {
   beforeEach(() => { store.clear(); setLanguage("en"); });
 
-  it("localizes group titles and row labels when language is set", () => {
+  it("localizes group title and row labels when language is set", () => {
     setLanguage("ta");
     const groups = buildYouGroups();
-    expect(groups.map((g) => g.title)).toEqual([DICT.ta.you_group_manage, DICT.ta.you_group_resources]);
-    const about = groups[1].rows.find((r) => r.id === "about_nila")!;
-    expect(about.label).toBe(DICT.ta.you_about_nila_label);
-    expect(about.sub).toBe(DICT.ta.you_about_nila_sub);
+    expect(groups[0].title).toBe(DICT.ta.you_group_manage);
+    const memory = groups[0].rows.find((r) => r.id === "nila_memory")!;
+    expect(memory.label).toBe(DICT.ta.you_nila_memory_label);
+    expect(memory.sub).toBe(DICT.ta.you_nila_memory_sub);
   });
 });

@@ -1,8 +1,8 @@
 import { localDateKey } from "../services/storageUtils";
 import React, { useMemo, useState, useEffect } from "react";
-import { LayoutDashboard, TrendingUp, Sparkles, BookOpen, Users, Settings as SettingsIcon, ShieldCheck } from "lucide-react";
 
 import ToolRow from "./ToolRow";
+import { buildYouGroups } from "./youRows";
 import Section from "./Section";
 import Card from "./Card";
 import CrisisHeaderButton from "./CrisisHeaderButton";
@@ -138,50 +138,21 @@ export default function YouScreen({ go, onOpenCrisis }: { go: (target: string) =
         </div>
       </Card>
 
-      <Section title="Your space">
-        <ToolRow
-          icon={<LayoutDashboard className="w-5 h-5 text-accent" />}
-          label="Dashboard"
-          subtitle="Your daily overview"
-          onPress={() => go("dashboard")}
-        />
-        <ToolRow
-          icon={<TrendingUp className="w-5 h-5 text-success" />}
-          label="Insights"
-          subtitle="Patterns and trends"
-          onPress={() => go("insights")}
-        />
-        <ToolRow
-          icon={<Sparkles className="w-5 h-5 text-fuchsia-400" />}
-          label="Nila Memory"
-          subtitle="What Nila remembers"
-          onPress={() => go("nila_memory")}
-        />
-        <ToolRow
-          icon={<BookOpen className="w-5 h-5 text-accent" />}
-          label="Learn"
-          subtitle="Understanding your mind"
-          onPress={() => go("learn")}
-        />
-        <ToolRow
-          icon={<Users className="w-5 h-5 text-success" />}
-          label="Caregiver"
-          subtitle="Share with someone you trust"
-          onPress={() => go("caregiver_settings")}
-        />
-        <ToolRow
-          icon={<SettingsIcon className="w-5 h-5 text-ink-2" />}
-          label="Settings"
-          subtitle="Preferences and options"
-          onPress={() => go("settings")}
-        />
-        <ToolRow
-          icon={<ShieldCheck className="w-5 h-5 text-success" />}
-          label="Your Data"
-          subtitle="Export and manage your information"
-          onPress={() => go("your_data")}
-        />
-      </Section>
+      {/* Redesign §5.4: rows come from the single i18n'd source (youRows.ts) — the previous
+          hardcoded list here diverged from it and orphaned 4 destinations. */}
+      {buildYouGroups().map((g) => (
+        <Section key={g.title} title={g.title}>
+          {g.rows.map((r) => (
+            <ToolRow
+              key={r.id}
+              icon={<r.Icon className={r.iconClass} aria-hidden="true" />}
+              label={r.label}
+              subtitle={r.sub}
+              onPress={() => go(r.id)}
+            />
+          ))}
+        </Section>
+      ))}
     </div>
   );
 }

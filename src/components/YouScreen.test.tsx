@@ -31,6 +31,7 @@ Object.defineProperty(window, "matchMedia", {
 });
 
 import YouScreen from "./YouScreen";
+import { buildYouGroups } from "./youRows";
 
 afterEach(() => { cleanup(); store.clear(); });
 
@@ -55,39 +56,32 @@ describe("YouScreen — simplified layout", () => {
     });
   });
 
-  it("renders all navigation rows", async () => {
+  it("renders exactly the 6 single-source rows (redesign §5.4 — youRows is the only definition)", async () => {
     render(<YouScreen go={noop} onOpenCrisis={noop} />);
+    const rows = buildYouGroups().flatMap((g) => g.rows);
+    expect(rows.length).toBe(6);
     await waitFor(() => {
-      expect(screen.getByText("Dashboard")).toBeTruthy();
-      expect(screen.getByText("Insights")).toBeTruthy();
-      expect(screen.getByText("Nila Memory")).toBeTruthy();
-      expect(screen.getByText("Learn")).toBeTruthy();
-      expect(screen.getByText("Caregiver")).toBeTruthy();
-      expect(screen.getByText("Settings")).toBeTruthy();
-      expect(screen.getByText("Your Data")).toBeTruthy();
+      for (const r of rows) {
+        expect(screen.getByText(r.label), `row missing: ${r.id}`).toBeTruthy();
+      }
     });
+    // Merged/moved destinations must not resurface as rows here.
+    expect(screen.queryByText("Insights")).toBeNull();
+    expect(screen.queryByText("Your progress")).toBeNull();
+    expect(screen.queryByText("About Nila")).toBeNull();
   });
 
-  it("calls go with correct targets on press", async () => {
+  it("calls go with each row's id on press", async () => {
     const go = vi.fn();
     render(<YouScreen go={go} onOpenCrisis={noop} />);
+    const rows = buildYouGroups().flatMap((g) => g.rows);
     await waitFor(() => {
-      expect(screen.getByText("Dashboard")).toBeTruthy();
+      expect(screen.getByText(rows[0].label)).toBeTruthy();
     });
-    screen.getByText("Dashboard").click();
-    expect(go).toHaveBeenCalledWith("dashboard");
-    screen.getByText("Insights").click();
-    expect(go).toHaveBeenCalledWith("insights");
-    screen.getByText("Nila Memory").click();
-    expect(go).toHaveBeenCalledWith("nila_memory");
-    screen.getByText("Learn").click();
-    expect(go).toHaveBeenCalledWith("learn");
-    screen.getByText("Caregiver").click();
-    expect(go).toHaveBeenCalledWith("caregiver_settings");
-    screen.getByText("Settings").click();
-    expect(go).toHaveBeenCalledWith("settings");
-    screen.getByText("Your Data").click();
-    expect(go).toHaveBeenCalledWith("your_data");
+    for (const r of rows) {
+      screen.getByText(r.label).click();
+      expect(go).toHaveBeenCalledWith(r.id);
+    }
   });
 
   it("does not render contextual suggestion strip", async () => {
