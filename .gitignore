@@ -66,6 +66,10 @@ phone_log.txt
 phone_screenshot.png
 /launch-kit/
 
+# feature-audit.json — exhaustive feature inventory, ~75KB; lives in a planning
+# system, not git (causes merge conflicts and rots fast).
+feature-audit.json
+
 # e2e (Playwright) artifacts
 test-results/
 playwright-report/
