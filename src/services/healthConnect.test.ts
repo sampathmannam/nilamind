@@ -68,4 +68,44 @@ describe("shortSleepSignal — manic-prodrome short-sleep run", () => {
     const nights = [...days(12, 8), night("2026-06-13", 4)];
     expect(shortSleepSignal(nights)!.firing).toBe(false);
   });
+
+  // NILA_AGENT_DESIGN.md §1: "the personal baseline needs 30–60 days before it can alarm; observe +
+  // ask, don't fire, until then" (Lim 2024; Currey & Torous 2022). The signal forms a baseline from
+  // as few as 7 nights, which the doc permits for ASKING — but a median of 7 nights is a far thinner
+  // claim than one of 60, and the copy used to call both "your usual" in identical words.
+  describe("baseline calibration honesty", () => {
+    const longRun = (n: number, hours: number): SleepNight[] =>
+      Array.from({ length: n }, (_, i) => {
+        const d = new Date(Date.UTC(2026, 3, 1) + i * 86400000).toISOString().slice(0, 10);
+        return night(d, hours);
+      });
+
+    it("reports how many nights the baseline came from", () => {
+      const sig = shortSleepSignal([...days(10, 8), night("2026-06-11", 4), night("2026-06-12", 4), night("2026-06-13", 4)])!;
+      expect(sig.baselineNights).toBe(10);
+    });
+
+    it("marks a thin baseline provisional and does not call it 'your usual'", () => {
+      const sig = shortSleepSignal([...days(10, 8), night("2026-06-11", 4), night("2026-06-12", 4), night("2026-06-13", 4)])!;
+      expect(sig.firing, "an ask during calibration is still permitted").toBe(true);
+      expect(sig.provisional).toBe(true);
+      expect(sig.detail).toContain("10-night average so far");
+      expect(sig.detail).not.toContain("your usual");
+    });
+
+    it("treats a baseline past the 30-night calibration window as established", () => {
+      const nights = [...longRun(40, 8), night("2026-05-11", 4), night("2026-05-12", 4), night("2026-05-13", 4)];
+      const sig = shortSleepSignal(nights)!;
+      expect(sig.baselineNights).toBe(40);
+      expect(sig.provisional).toBe(false);
+      expect(sig.detail).toContain("your usual");
+    });
+
+    it("hedges the non-firing copy too, so a quiet result never over-claims a settled norm", () => {
+      const sig = shortSleepSignal(days(12, 8))!;
+      expect(sig.firing).toBe(false);
+      expect(sig.provisional).toBe(true);
+      expect(sig.detail).toContain("night average so far");
+    });
+  });
 });

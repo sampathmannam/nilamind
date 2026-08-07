@@ -53,7 +53,7 @@ const fullUsage: UsageSummary = {
 describe("assessJitai", () => {
   it("returns no nudge when everything is fine", () => {
     const r = assessJitai({
-      sleep: { firing: false, nightsBelow: 0, baselineHours: 7.5, detail: "" },
+      sleep: { firing: false, nightsBelow: 0, baselineHours: 7.5, detail: "", baselineNights: 30, provisional: false },
       moodHistory: mockMoods([3, 4, 4, 3, 2, 3, 4]),
       daysSinceLastCheckin: 0,
       usageAnalytics: emptyUsage,
@@ -64,7 +64,7 @@ describe("assessJitai", () => {
 
   it("detects sleep prodrome", () => {
     const r = assessJitai({
-      sleep: { firing: true, nightsBelow: 3, baselineHours: 7.5, detail: "" },
+      sleep: { firing: true, nightsBelow: 3, baselineHours: 7.5, detail: "", baselineNights: 30, provisional: false },
       moodHistory: mockMoods([3, 4, 4, 3, 3]),
       daysSinceLastCheckin: 0,
       usageAnalytics: emptyUsage,
@@ -119,7 +119,7 @@ describe("assessJitai", () => {
 
   it("prioritizes urgent over noticeable", () => {
     const r = assessJitai({
-      sleep: { firing: true, nightsBelow: 3, baselineHours: 7.5, detail: "" },
+      sleep: { firing: true, nightsBelow: 3, baselineHours: 7.5, detail: "", baselineNights: 30, provisional: false },
       moodHistory: mockMoods([3, 3, 4, 4, 5]),
       lastUserText: "I'm invincible and don't need my meds",
       daysSinceLastCheckin: 0,
@@ -187,7 +187,7 @@ describe("assessJitai", () => {
 
     it("works without usage analytics", () => {
       const r = assessJitai({
-        sleep: { firing: true, nightsBelow: 2, baselineHours: 7.5, detail: "" },
+        sleep: { firing: true, nightsBelow: 2, baselineHours: 7.5, detail: "", baselineNights: 30, provisional: false },
         moodHistory: mockMoods([3, 4, 4, 3, 3]),
         daysSinceLastCheckin: 0,
       });

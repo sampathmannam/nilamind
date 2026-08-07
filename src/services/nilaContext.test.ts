@@ -29,12 +29,12 @@ vi.mock("./secureLocal", async () => {
 describe("trajectoryContextBlock — surfaces the short-sleep manic-prodrome signal to Nila", () => {
   it("returns '' when there is no signal or it isn't firing", () => {
     expect(trajectoryContextBlock(null)).toBe("");
-    const notFiring: SleepSignal = { firing: false, nightsBelow: 0, baselineHours: 7.5, detail: "" };
+    const notFiring: SleepSignal = { firing: false, nightsBelow: 0, baselineHours: 7.5, detail: "", baselineNights: 30, provisional: false };
     expect(trajectoryContextBlock(notFiring)).toBe("");
   });
 
   it("surfaces a firing short-sleep run as a gentle, manic-first heads-up (not an alarm)", () => {
-    const firing: SleepSignal = { firing: true, nightsBelow: 3, baselineHours: 7.5, detail: "3 nights below ~7.5h" };
+    const firing: SleepSignal = { firing: true, nightsBelow: 3, baselineHours: 7.5, detail: "3 nights below ~7.5h", baselineNights: 30, provisional: false };
     const block = trajectoryContextBlock(firing);
     expect(block).toContain("3");                              // the count of short nights
     expect(block.toLowerCase()).toContain("sleep");

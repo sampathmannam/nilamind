@@ -95,10 +95,23 @@ export async function readRecentSleep(days = 60): Promise<SleepNight[]> {
 // Shrinking sleep is the earliest + highest-yield manic prodrome (Lim 2024 npj Digit Med; Lewis 2017
 // Br J Psychiatry; Jackson 2003). We fire on a persistent RUN of nights reduced vs the person's OWN
 // baseline, OR under an absolute short-sleep floor — never on a single off night, and never below baseline.
-const ABS_FLOOR_H = 5;     // nights under this are "short" regardless of baseline (manic red flag)
-const DROP_H = 1.5;        // hours at/below (baseline − this) counts as "reduced"
-const MIN_RUN = 3;         // consecutive reduced nights required to fire
-const MIN_BASELINE = 7;    // need at least this many older nights to form a personal baseline
+// THRESHOLD HONESTY (2026-08-24) — following the discipline assessments.ts uses for MCIDs, where a
+// cited figure and an engineering default are never presented as the same thing. The CITED part is
+// the direction and the shape: shrinking sleep vs the person's OWN baseline is the earliest,
+// highest-yield manic prodrome, and it must be judged within-person, not against a population norm.
+// The exact numbers below are NOT from those papers — none of them publishes an "n hours below
+// baseline for n nights" rule. They are engineering defaults chosen to be conservative (a run, not a
+// single night). Treat them as tunable, and do not cite a paper for them.
+const ABS_FLOOR_H = 5;     // ENGINEERING DEFAULT: nights under this are "short" regardless of baseline
+const DROP_H = 1.5;        // ENGINEERING DEFAULT: hours at/below (baseline − this) counts as "reduced"
+const MIN_RUN = 3;         // ENGINEERING DEFAULT: consecutive reduced nights required to fire
+const MIN_BASELINE = 7;    // ENGINEERING DEFAULT: minimum older nights before any baseline is usable
+
+// CITED: NILA_AGENT_DESIGN.md §1 — "the personal baseline needs 30–60 days before it can alarm;
+// observe + ask, don't fire, until then" (Lim 2024; Currey & Torous 2022). We keep asking below this
+// (an ask during calibration is exactly what the doc permits) but a baseline built from 7 nights is
+// a far thinner claim than one built from 60, and the copy must not present them identically.
+const CALIBRATION_NIGHTS = 30;
 
 function median(xs: number[]): number {
   if (!xs.length) return 0;
@@ -112,6 +125,12 @@ export interface SleepSignal {
   nightsBelow: number;
   baselineHours: number;
   detail: string;
+  /** How many nights the personal baseline was computed from. */
+  baselineNights: number;
+  /** True while the baseline is thinner than the doc's 30–60 day calibration window. The signal
+   *  still asks (calibration permits asking), but callers must not present a provisional baseline
+   *  as an established "your usual". */
+  provisional: boolean;
 }
 
 export interface HealthConnectStatus {
@@ -171,12 +190,19 @@ export function shortSleepSignal(nights: SleepNight[]): SleepSignal | null {
   }
   const firing = run >= MIN_RUN;
   const b = Math.round(baselineHours * 10) / 10;
+  const baselineNights = hrs.length - MIN_RUN;
+  const provisional = baselineNights < CALIBRATION_NIGHTS;
+  // "your usual" is a strong phrase for a median of a handful of nights. While the baseline is still
+  // calibrating, say what it's actually based on instead of implying a settled personal norm.
+  const usual = provisional ? `your ${baselineNights}-night average so far (~${b}h)` : `your usual (~${b}h)`;
   return {
     firing,
     nightsBelow: run,
     baselineHours: b,
+    baselineNights,
+    provisional,
     detail: firing
-      ? `${run} nights running below your usual (~${b}h). Shrinking sleep is the earliest manic warning — worth a gentle check-in, not a conclusion.`
-      : `Sleep is within your usual range (~${b}h).`,
+      ? `${run} nights running below ${usual}. Shrinking sleep is the earliest manic warning — worth a gentle check-in, not a conclusion.`
+      : `Sleep is within ${usual}.`,
   };
 }
