@@ -119,7 +119,19 @@ export function buildTextReport(
     for (const it of pilot.instruments) {
       if (it.baseline && it.endpoint) {
         const dir = it.improved ? "improved" : it.change === 0 ? "no change" : "worsened";
-        lines.push(`- ${it.label}: ${it.baseline.total} -> ${it.endpoint.total} (change ${it.change}, ${dir})`);
+        // Report the RELIABLE-CHANGE band, not just the raw delta. computePilotSummary already
+        // classifies every pair against the instrument's MCID (PHQ-9 5 pts / GAD-7 4 pts, cited;
+        // WHO-5 10 pts, an engineering default) — but the line below used to print only the point
+        // delta and the raw direction, so a 1–2 point PHQ-9 drop was written up as "improved" when
+        // it sits inside measurement noise. That is precisely the over-claim the reliableChange
+        // field exists to prevent, and this is the artifact a reader judges the pilot by.
+        const rc = it.reliableChange;
+        const band = !rc
+          ? " — no established reliable-change threshold for this instrument"
+          : rc.direction === "no_reliable_change"
+            ? ` — within measurement noise (<${rc.threshold}-point ${rc.confidence} threshold): not a reliable change`
+            : ` — reliable ${rc.direction} (>=${rc.threshold}-point ${rc.confidence} threshold)`;
+        lines.push(`- ${it.label}: ${it.baseline.total} -> ${it.endpoint.total} (change ${it.change}, ${dir})${band}`);
       } else if (it.baseline) {
         lines.push(`- ${it.label}: baseline ${it.baseline.total}; endpoint not yet recorded`);
       } else {

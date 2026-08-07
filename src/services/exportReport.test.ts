@@ -134,6 +134,49 @@ describe("buildTextReport", () => {
     expect(buildTextReport([mockEntry()])).not.toContain("Research pilot");
   });
 
+  // The exported report is the artifact a reader judges the pilot by. computePilotSummary already
+  // classifies each pre/post pair against the instrument's MCID, but the report used to print only
+  // the raw delta — so a 2-point PHQ-9 drop was written up as "improved" when it sits inside
+  // measurement noise. These pin the reliable-change band into the report itself.
+  const pilotWith = (reliableChange: unknown, baseline = 15, endpoint = 13, change = -2) =>
+    buildTextReport([mockEntry()], undefined, undefined, {
+      enrolledDay: "2026-06-01", endpointDueDay: "2026-06-29", endpointReached: true, daysRemaining: 0,
+      instruments: [
+        { id: "PHQ-9", label: "PHQ-9 (depression, lower is better)", higherIsBetter: false,
+          baseline: { total: baseline, date: "2026-06-01" }, endpoint: { total: endpoint, date: "2026-06-30" },
+          change, improved: change < 0, reliableChange },
+      ],
+    } as Parameters<typeof buildTextReport>[3]);
+
+  it("marks a sub-MCID change as measurement noise, not an improvement", () => {
+    const text = pilotWith({ direction: "no_reliable_change", delta: -2, threshold: 5, confidence: "cited" });
+    expect(text).toContain("within measurement noise");
+    expect(text).toContain("<5-point cited threshold");
+    expect(text).toContain("not a reliable change");
+  });
+
+  it("marks a change at or beyond the MCID as a reliable improvement, with its threshold", () => {
+    const text = pilotWith({ direction: "improvement", delta: -7, threshold: 5, confidence: "cited" }, 15, 8, -7);
+    expect(text).toContain("reliable improvement");
+    expect(text).toContain(">=5-point cited threshold");
+  });
+
+  it("never presents a heuristic threshold as a cited one", () => {
+    const text = pilotWith({ direction: "improvement", delta: 12, threshold: 10, confidence: "heuristic" }, 40, 52, 12);
+    expect(text).toContain("heuristic threshold");
+    expect(text).not.toContain("10-point cited");
+  });
+
+  it("says so plainly when an instrument has no established threshold", () => {
+    const text = pilotWith(null);
+    expect(text).toContain("no established reliable-change threshold");
+  });
+
+  it("reports a reliable deterioration rather than burying it", () => {
+    const text = pilotWith({ direction: "deterioration", delta: 6, threshold: 5, confidence: "cited" }, 8, 14, 6);
+    expect(text).toContain("reliable deterioration");
+  });
+
   it("renders the assessment trajectory oldest-to-newest and derives the count from the array", () => {
     const a = (over: Partial<AssessmentEntry>): AssessmentEntry => ({
       id: "x", date: "2026-06-01", timestamp: "2026-06-01T10:00:00.000Z", instrument: "PHQ-9",
