@@ -61,6 +61,7 @@
     "@vitest/coverage-v8": "^4.1.10",
     "autoprefixer": "^10.4.21",
     "esbuild": "^0.25.0",
+    "fast-check": "^4.9.0",
     "jsdom": "^29.1.1",
     "opik": "^2.1.32",
     "patch-package": "^8.0.1",

@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    name: Lint, Test, Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run lint
+
+      - name: Unit tests
+        # Exclude the real-model tests (src/**/*realmodel.test.ts) from the PR
+        # gate. Those tests assert exact scores on the actual MiniLM classifier
+        # and are platform-sensitive (x86 vs ARM produce different floating-point
+        # results, and a hard-coded threshold of 0.5796 doesn't tolerate the
+        # cross-platform drift). They run on a separate nightly workflow
+        # (.github/workflows/nightly-realmodel.yml) where the variance doesn't
+        # block merges. See AGENTS.md for the safety-vs-calibration split.
+        run: npx vitest run --exclude '**/*realmodel.test.ts'
+
+      - name: Build
+        run: npm run build
