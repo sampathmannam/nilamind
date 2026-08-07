@@ -1,0 +1,57 @@
+name: Nightly Real-Model Regression
+
+# Runs the real-model classifier tests (src/**/*realmodel.test.ts) on a daily
+# schedule. These tests are intentionally NOT in the PR-time CI gate because
+# they assert exact scores on the actual MiniLM classifier, which has small
+# cross-platform floating-point variance (x86 vs ARM, occasionally between
+# Node versions). The PR-time gate runs the deterministic test suite
+# (see .github/workflows/ci.yml); this workflow is the calibration check.
+#
+# Trigger manually with workflow_dispatch when:
+#   - The MiniLM model weights change
+#   - The classifier code changes (crisisClassifier.ts, safety.ts keywords)
+#   - You want to verify a model / threshold change before merging
+#   - A real device incident suggests the classifier may have drifted
+#
+# Failures here are diagnostic, not blocking. They tell you the model is
+# behaving differently than the test's calibration baseline. Investigate
+# before treating as actionable.
+
+on:
+  schedule:
+    # 02:00 UTC daily. Off-hours for most contributors; not aligned with any
+    # specific release cadence.
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: nightly-realmodel
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  realmodel:
+    name: Real-Model Classifier Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Run only the realmodel tests by pattern. The PR-time gate excludes
+      # them; this is the inverse — we run only them, with a generous timeout
+      # because each test can take up to 60s (the per-test timeout in the file)
+      # and there are 100+ tests.
+      - name: Real-model classifier tests
+        run: npx vitest run '**/*realmodel.test.ts'

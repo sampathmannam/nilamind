@@ -36,7 +36,14 @@ jobs:
         run: npm run lint
 
       - name: Unit tests
-        run: npm test
+        # Exclude the real-model tests (src/**/*realmodel.test.ts) from the PR
+        # gate. Those tests assert exact scores on the actual MiniLM classifier
+        # and are platform-sensitive (x86 vs ARM produce different floating-point
+        # results, and a hard-coded threshold of 0.5796 doesn't tolerate the
+        # cross-platform drift). They run on a separate nightly workflow
+        # (.github/workflows/nightly-realmodel.yml) where the variance doesn't
+        # block merges. See AGENTS.md for the safety-vs-calibration split.
+        run: npx vitest run --exclude '**/*realmodel.test.ts'
 
       - name: Build
         run: npm run build
