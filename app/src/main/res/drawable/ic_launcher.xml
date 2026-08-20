@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Legacy mipmap fallback for the launcher icon.
+
+    minSdk 33 (Android 13) means every device that can install
+    this app reads the adaptive-icon in mipmap-anydpi-v26.
+    AGP still wants a non-anydpi ic_launcher in case the build
+    pipeline walks all the mipmap-* folders; this vector
+    drawable is the cheapest way to satisfy that walk without
+    shipping a PNG.
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/ic_launcher_background" />
+    <item android:drawable="@drawable/ic_launcher_foreground" />
+</layer-list>

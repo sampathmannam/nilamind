@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Adaptive-icon foreground for nilamind.
+
+    The drawing is the lowercase Tamil letter "ந" (na) in a
+    thick serif, centred inside the 108dp adaptive-icon
+    canvas (the safe zone is the inner 72dp; the rest is
+    masked by the launcher). White-on-teal. The character
+    is the first letter of "nilamind" (நிலமை = state /
+    condition in Tamil) and ties the launcher icon to the
+    project name without using Latin type or an English
+    wordmark.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,30 C44,30 36,38 36,48 C36,58 44,66 54,66 C58,66 62,65 65,63 L65,76 L72,76 L72,46 C72,37 64,30 54,30 Z M54,38 C60,38 64,42 64,48 C64,54 60,58 54,58 C48,58 44,54 44,48 C44,42 48,38 54,38 Z" />
+</vector>

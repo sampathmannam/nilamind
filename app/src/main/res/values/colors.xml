@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        Background colour for the adaptive launcher icon.
+        The launcher icon is a single deep-teal roundel — a
+        nod to the clinical-document / case-file aesthetic,
+        not a game or social-network colour.
+    -->
+    <color name="ic_launcher_background">#0F766E</color>
+</resources>

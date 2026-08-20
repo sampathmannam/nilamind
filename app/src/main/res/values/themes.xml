@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        Theme.Nilamind is the bare-minimum Material 3 theme
+        used until the Compose UI takes over. The Compose
+        theme (defined in ui/theme/Theme.kt) is what actually
+        paints the surfaces; this XML theme is only there to
+        satisfy the manifest's android:theme reference and
+        keep the system bars (status / nav) the right tint
+        during the brief moment between activity start and
+        the first Compose composition.
+    -->
+    <style name="Theme.Nilamind" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+</resources>
