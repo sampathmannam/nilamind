@@ -99,13 +99,5 @@ private fun PaperCard(paper: Paper) {
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        if (paper.doi != null) {
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "doi:${paper.doi}",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
     }
 }
